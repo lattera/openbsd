@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/ppp_tty.c,v 1.8.4.1 2001/05/14 22:40:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/ppp_tty.c,v 1.8.4.2 2001/07/04 10:54:18 niklas Exp $	*/
 /*	$NetBSD: ppp_tty.c,v 1.12 1997/03/24 21:23:10 christos Exp $	*/
 
 /*
@@ -352,10 +352,7 @@ pppwrite(tp, uio, flag)
 	return (EMSGSIZE);
     for (mp = &m0; uio->uio_resid; mp = &m->m_next) {
 	MGET(m, M_WAIT, MT_DATA);
-	if ((*mp = m) == NULL) {
-	    m_freem(m0);
-	    return (ENOBUFS);
-	}
+	*mp = m;
 	m->m_len = 0;
 	if (uio->uio_resid >= MCLBYTES / 2)
 	    MCLGET(m, M_DONTWAIT);
@@ -538,7 +535,6 @@ pppasyncstart(sc)
 
 	    /* Calculate the FCS for the first mbuf's worth. */
 	    sc->sc_outfcs = pppfcs(PPP_INITFCS, mtod(m, u_char *), m->m_len);
-	    sc->sc_if.if_lastchange = time;
 	}
 
 	for (;;) {

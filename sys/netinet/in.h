@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.h,v 1.38.2.1 2001/05/14 22:40:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.h,v 1.38.2.2 2001/07/04 10:54:31 niklas Exp $	*/
 /*	$NetBSD: in.h,v 1.20 1996/02/13 23:41:47 christos Exp $	*/
 
 /*
@@ -256,6 +256,12 @@ struct ip_opts {
 #define IP_AUTH_LEVEL		20   /* int; authentication used */
 #define IP_ESP_TRANS_LEVEL	21   /* int; transport encryption */
 #define IP_ESP_NETWORK_LEVEL	22   /* int; full-packet encryption */
+#define IP_IPSEC_LOCAL_ID	23   /* buf; IPsec local ID */
+#define IP_IPSEC_REMOTE_ID	24   /* buf; IPsec remote ID */
+#define IP_IPSEC_LOCAL_CRED	25   /* buf; IPsec local credentials */
+#define IP_IPSEC_REMOTE_CRED	26   /* buf; IPsec remote credentials */
+#define IP_IPSEC_LOCAL_AUTH	27   /* buf; IPsec local auth material */
+#define IP_IPSEC_REMOTE_AUTH	28   /* buf; IPsec remote auth material */
 
 /*
  * Security levels - IPsec, not IPSO
@@ -495,15 +501,67 @@ int	   bindresvport_sa __P((int, struct sockaddr *));
 __END_DECLS
 
 #else
+/*
+ * in_cksum_phdr:
+ *
+ *	Compute significant parts of the IPv4 checksum pseudo-header
+ *	for use in a delayed TCP/UDP checksum calculation.
+ *
+ *	Args:
+ *
+ *		src		Source IP address
+ *		dst		Destination IP address
+ *		lenproto	htons(proto-hdr-len + proto-number)
+ */
+static __inline u_int16_t __attribute__((__unused__))
+in_cksum_phdr(u_int32_t src, u_int32_t dst, u_int32_t lenproto)
+{
+	u_int32_t sum;
+
+	sum = lenproto +
+	      (u_int16_t)(src >> 16) +
+	      (u_int16_t)(src /*& 0xffff*/) +
+	      (u_int16_t)(dst >> 16) +
+	      (u_int16_t)(dst /*& 0xffff*/);
+
+	sum = (u_int16_t)(sum >> 16) + (u_int16_t)(sum /*& 0xffff*/);
+
+	if (sum > 0xffff)
+		sum -= 0xffff;
+
+	return (sum);
+}
+
+/*
+ * in_cksum_addword:
+ *
+ *	Add the two 16-bit network-order values, carry, and return.
+ */
+static __inline u_int16_t __attribute__((__unused__))
+in_cksum_addword(u_int16_t a, u_int16_t b)
+{
+	u_int32_t sum = a + b;
+
+	if (sum > 0xffff)
+		sum -= 0xffff;
+
+	return (sum);
+}
+
 int	   in_broadcast __P((struct in_addr, struct ifnet *));
 int	   in_canforward __P((struct in_addr));
 int	   in_cksum __P((struct mbuf *, int));
+int	   in4_cksum __P((struct mbuf *, u_int8_t, int, int));
+void	   in_delayed_cksum __P((struct mbuf *));
 int	   in_localaddr __P((struct in_addr));
 void	   in_socktrim __P((struct sockaddr_in *));
 char	  *inet_ntoa __P((struct in_addr));
 
+#define	in_hosteq(s,t)	((s).s_addr == (t).s_addr)
+#define	in_nullhost(x)	((x).s_addr == INADDR_ANY)
+
 #define	satosin(sa)	((struct sockaddr_in *)(sa))
 #define	sintosa(sin)	((struct sockaddr *)(sin))
 #define	ifatoia(ifa)	((struct in_ifaddr *)(ifa))
-#endif
-#endif /* !_NETINET_IN_H_ */
+#endif /* _KERNEL */
+#endif /* _NETINET_IN_H_ */

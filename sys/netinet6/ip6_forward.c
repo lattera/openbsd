@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.2 2001/05/14 22:40:18 niklas Exp $	*/
-/*	$KAME: ip6_forward.c,v 1.67 2001/03/29 05:34:31 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.3 2001/07/04 10:55:22 niklas Exp $	*/
+/*	$KAME: ip6_forward.c,v 1.74 2001/06/12 23:54:55 itojun Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -58,8 +58,6 @@
 #include <netkey/key.h>
 #include <netkey/key_debug.h>
 #endif /* IPSEC_IPV6FWD */
-
-#include <net/net_osdep.h>
 
 struct	route_in6 ip6_forward_rt;
 
@@ -127,7 +125,7 @@ ip6_forward(m, srcrt)
 			    ip6_sprintf(&ip6->ip6_src),
 			    ip6_sprintf(&ip6->ip6_dst),
 			    ip6->ip6_nxt,
-			    if_name(m->m_pkthdr.rcvif));
+			    m->m_pkthdr.rcvif->if_xname);
 		}
 		m_freem(m);
 		return;
@@ -351,7 +349,7 @@ ip6_forward(m, srcrt)
 			    ip6_sprintf(&ip6->ip6_src),
 			    ip6_sprintf(&ip6->ip6_dst),
 			    ip6->ip6_nxt,
-			    if_name(m->m_pkthdr.rcvif), if_name(rt->rt_ifp));
+			    m->m_pkthdr.rcvif->if_xname, rt->rt_ifp->if_xname);
 		}
 		if (mcopy)
 			icmp6_error(mcopy, ICMP6_DST_UNREACH,
@@ -414,8 +412,25 @@ ip6_forward(m, srcrt)
 	 * modified by a redirect.
 	 */
 	if (rt->rt_ifp == m->m_pkthdr.rcvif && !srcrt &&
-	    (rt->rt_flags & (RTF_DYNAMIC|RTF_MODIFIED)) == 0)
+	    (rt->rt_flags & (RTF_DYNAMIC|RTF_MODIFIED)) == 0) {
+		if ((rt->rt_ifp->if_flags & IFF_POINTOPOINT) != 0) {
+			/*
+			 * If the incoming interface is equal to the outgoing
+			 * one, and the link attached to the interface is
+			 * point-to-point, then it will be highly probable
+			 * that a routing loop occurs. Thus, we immediately
+			 * drop the packet and send an ICMPv6 error message.
+			 *
+			 * type/code is based on suggestion by Rich Draves.
+			 * not sure if it is the best pick.
+			 */
+			icmp6_error(mcopy, ICMP6_DST_UNREACH,
+				    ICMP6_DST_UNREACH_ADDR, 0);
+			m_freem(m);
+			return;
+		}
 		type = ND_REDIRECT;
+	}
 
 	/*
 	 * Fake scoped addresses. Note that even link-local source or
@@ -445,8 +460,8 @@ ip6_forward(m, srcrt)
 			       "src %s, dst %s, nxt %d, rcvif %s, outif %s\n",
 			       ip6_sprintf(&ip6->ip6_src),
 			       ip6_sprintf(&ip6->ip6_dst),
-			       ip6->ip6_nxt, if_name(m->m_pkthdr.rcvif),
-			       if_name(rt->rt_ifp));
+			       ip6->ip6_nxt, m->m_pkthdr.rcvif->if_xname,
+			       rt->rt_ifp->if_xname);
 		}
 
 		/* we can just use rcvif in forwarding. */

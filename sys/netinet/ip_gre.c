@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/ip_gre.c,v 1.6.2.1 2001/05/14 22:40:10 niklas Exp $ */
+/*      $OpenBSD: src/sys/netinet/ip_gre.c,v 1.6.2.2 2001/07/04 10:54:47 niklas Exp $ */
 /*	$NetBSD: ip_gre.c,v 1.9 1999/10/25 19:18:11 drochner Exp $ */
 
 /*
@@ -57,8 +57,6 @@
 #include <net/route.h>
 #include <net/bpf.h>
 
-#include <machine/cpu.h>
-
 #ifdef INET
 #include <netinet/in.h>
 #include <netinet/in_var.h>
@@ -85,8 +83,6 @@
 
 /* Needs IP headers. */
 #include <net/if_gre.h>
-
-#include <machine/stdarg.h>
 
 struct gre_softc *gre_lookup __P((struct mbuf *, u_int8_t));
 static int gre_input2 __P((struct mbuf *, int, u_char));
@@ -365,8 +361,7 @@ gre_lookup(m, proto)
 	struct gre_softc *sc;
 	int i;
 
-	for (i = 0; i < NGRE; i++) {
-		sc = &gre_softc[i];
+	for (i = 0, sc = gre; i < ngre; i++, sc++) {
 		if ((sc->g_dst.s_addr == ip->ip_src.s_addr) &&
 		    (sc->g_src.s_addr == ip->ip_dst.s_addr) &&
 		    (sc->g_proto == proto) &&

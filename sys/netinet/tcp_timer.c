@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.1 2001/05/14 22:40:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.2 2001/07/04 10:55:09 niklas Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -39,14 +39,11 @@
 #ifndef TUBA_INCLUDE
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/protosw.h>
-#include <sys/errno.h>
 
-#include <net/if.h>
 #include <net/route.h>
 
 #include <netinet/in.h>
@@ -56,12 +53,9 @@
 #include <netinet/ip_var.h>
 #include <netinet/tcp.h>
 #include <netinet/tcp_fsm.h>
-#include <netinet/tcp_seq.h>
 #include <netinet/tcp_timer.h>
 #include <netinet/tcp_var.h>
-#include <netinet/tcpip.h>
 #include <netinet/ip_icmp.h>
-#include <dev/rndvar.h>
 
 int	tcp_keepidle = TCPTV_KEEP_IDLE;
 int	tcp_keepintvl = TCPTV_KEEPINTVL;
@@ -390,7 +384,7 @@ tcp_timers(tp, timer)
 		if (TCPS_HAVEESTABLISHED(tp->t_state) == 0)
 			goto dropit;
 		if (tp->t_inpcb->inp_socket->so_options & SO_KEEPALIVE &&
-		    tp->t_state <= TCPS_CLOSE_WAIT) {
+		    tp->t_state <= TCPS_CLOSING) {
 			if (tp->t_idle >= tcp_keepidle + tcp_maxidle)
 				goto dropit;
 			/*

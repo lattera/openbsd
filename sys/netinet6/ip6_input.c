@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.2 2001/05/14 22:40:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.3 2001/07/04 10:55:23 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -107,8 +107,6 @@
 #include "faith.h"
 #include "gif.h"
 #include "bpfilter.h"
-
-#include <net/net_osdep.h>
 
 extern struct domain inet6domain;
 extern struct ip6protosw inet6sw[];
@@ -260,7 +258,7 @@ ip6_input(m)
 	if (m->m_len < sizeof(struct ip6_hdr)) {
 		struct ifnet *inifp;
 		inifp = m->m_pkthdr.rcvif;
-		if ((m = m_pullup(m, sizeof(struct ip6_hdr))) == 0) {
+		if ((m = m_pullup(m, sizeof(struct ip6_hdr))) == NULL) {
 			ip6stat.ip6s_toosmall++;
 			in6_ifstat_inc(inifp, ifs6_in_hdrerr);
 			return;
@@ -276,6 +274,13 @@ ip6_input(m)
 	}
 
 	ip6stat.ip6s_nxthist[ip6->ip6_nxt]++;
+
+#ifdef ALTQ
+	if (altq_input != NULL && (*altq_input)(m, AF_INET6) == 0) {
+		/* packet is dropped by traffic conditioner */
+		return;
+	}
+#endif
 
 	/*
 	 * Scope check

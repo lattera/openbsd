@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/spx.h,v 1.3.14.1 2001/05/14 22:40:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/spx.h,v 1.3.14.2 2001/07/04 10:55:31 niklas Exp $	*/
 
 /*-
  *
@@ -92,7 +92,7 @@ struct spx {
 
 struct spx_q {
 	TAILQ_ENTRY(spx_q)	list;
-	caddr_t	data;
+	struct mbuf *m;
 };
 
 /*
@@ -191,7 +191,7 @@ void	spx_init __P((void));
 void	spx_input __P((struct mbuf *m, ...));
 int	spx_output __P((struct spxpcb *cb, struct mbuf *m0));
 void	spx_quench __P((struct ipxpcb *ipxp));
-int	spx_reass __P((struct spxpcb *cb, struct spx *si));
+int	spx_reass __P((struct spxpcb *cb, struct mbuf *m0));
 void	spx_setpersist __P((struct spxpcb *cb));
 void	spx_slowtimo __P((void));
 void	spx_template __P((struct spxpcb *cb));

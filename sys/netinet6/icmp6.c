@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.3 2001/05/14 22:40:16 niklas Exp $	*/
-/*	$KAME: icmp6.c,v 1.205 2001/03/21 07:48:57 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.4 2001/07/04 10:55:16 niklas Exp $	*/
+/*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -99,8 +99,6 @@
 
 #include "faith.h"
 
-#include <net/net_osdep.h>
-
 /* inpcb members */
 #define in6pcb		inpcb
 #define in6p_laddr	inp_laddr6
@@ -183,10 +181,6 @@ static int icmp6_notify_error __P((struct mbuf *, int, int, int));
 static struct rtentry *icmp6_mtudisc_clone __P((struct sockaddr *));
 static void icmp6_mtudisc_timeout __P((struct rtentry *, struct rttimer *));
 static void icmp6_redirect_timeout __P((struct rtentry *, struct rttimer *));
-
-#ifdef COMPAT_RFC1885
-static struct route_in6 icmp6_reflect_rt;
-#endif
 
 void
 icmp6_init()
@@ -615,7 +609,7 @@ icmp6_input(mp, offp, proto)
 				m_freem(n0);
 				break;
 			}
-			M_COPY_PKTHDR(n, n0);
+			M_MOVE_PKTHDR(n, n0);
 			/*
 			 * Copy IPv6 and ICMPv6 only.
 			 */
@@ -624,17 +618,16 @@ icmp6_input(mp, offp, proto)
 			nicmp6 = (struct icmp6_hdr *)(nip6 + 1);
 			bcopy(icmp6, nicmp6, sizeof(struct icmp6_hdr));
 			noff = sizeof(struct ip6_hdr);
-			n->m_pkthdr.len = n->m_len =
-				noff + sizeof(struct icmp6_hdr);
+			n->m_len = noff + sizeof(struct icmp6_hdr);
 			/*
 			 * Adjust mbuf. ip6_plen will be adjusted in
 			 * ip6_output().
+			 * n->m_pkthdr.len == n0->m_pkthdr.len at this point.
 			 */
+			n->m_pkthdr.len += noff + sizeof(struct icmp6_hdr);
+			n->m_pkthdr.len -= (off + sizeof(struct icmp6_hdr));
 			m_adj(n0, off + sizeof(struct icmp6_hdr));
-			n->m_pkthdr.len += n0->m_pkthdr.len;
 			n->m_next = n0;
-			n0->m_flags &= ~M_PKTHDR;
-			n0->m_pkthdr.tdbi = NULL;
 		} else {
 			nip6 = mtod(n, struct ip6_hdr *);
 			nicmp6 = (struct icmp6_hdr *)((caddr_t)nip6 + off);
@@ -2016,6 +2009,15 @@ icmp6_rip6_input(mp, off)
 /*
  * Reflect the ip6 packet back to the source.
  * OFF points to the icmp6 header, counted from the top of the mbuf.
+ *
+ * Note: RFC 1885 required that an echo reply should be truncated if it
+ * did not fit in with (return) path MTU, and KAME code supported the
+ * behavior.  However, as a clarification after the RFC, this limitation
+ * was removed in a revised version of the spec, RFC 2463.  We had kept the
+ * old behavior, with a (non-default) ifdef block, while the new version of
+ * the spec was an internet-draft status, and even after the new RFC was
+ * published.  But it would rather make sense to clean the obsoleted part
+ * up, and to make the code simpler at this stage.
  */
 void
 icmp6_reflect(m, off)
@@ -2030,10 +2032,6 @@ icmp6_reflect(m, off)
 	int type, code;
 	struct ifnet *outif = NULL;
 	struct sockaddr_in6 sa6_src, sa6_dst;
-#ifdef COMPAT_RFC1885
-	int mtu = IPV6_MMTU;
-	struct sockaddr_in6 *sin6 = &icmp6_reflect_rt.ro_dst;
-#endif
 
 	/* too short to reflect */
 	if (off < sizeof(struct ip6_hdr)) {
@@ -2106,38 +2104,6 @@ icmp6_reflect(m, off)
 	in6_recoverscope(&sa6_dst, &t, m->m_pkthdr.rcvif);
 	in6_embedscope(&t, &sa6_dst, NULL, NULL);
 
-#ifdef COMPAT_RFC1885
-	/*
-	 * xxx guess MTU
-	 * RFC 1885 requires that echo reply should be truncated if it
-	 * does not fit in with (return) path MTU, but the description was
-	 * removed in the new spec.
-	 */
-	if (icmp6_reflect_rt.ro_rt == 0 ||
-	    ! (IN6_ARE_ADDR_EQUAL(&sin6->sin6_addr, &ip6->ip6_dst))) {
-		if (icmp6_reflect_rt.ro_rt) {
-			icmp6_reflect_rt.ro_rt = 0;
-		}
-		bzero(sin6, sizeof(*sin6));
-		sin6->sin6_family = PF_INET6;
-		sin6->sin6_len = sizeof(struct sockaddr_in6);
-		sin6->sin6_addr = ip6->ip6_dst;
-
-		rtalloc((struct route *)&icmp6_reflect_rt.ro_rt);
-	}
-
-	if (icmp6_reflect_rt.ro_rt == 0)
-		goto bad;
-
-	if ((icmp6_reflect_rt.ro_rt->rt_flags & RTF_HOST)
-	    && mtu < icmp6_reflect_rt.ro_rt->rt_ifp->if_mtu)
-		mtu = icmp6_reflect_rt.ro_rt->rt_rmx.rmx_mtu;
-
-	if (mtu < m->m_pkthdr.len) {
-		plen -= (m->m_pkthdr.len - mtu);
-		m_adj(m, mtu - m->m_pkthdr.len);
-	}
-#endif
 	/*
 	 * If the incoming packet was addressed directly to us(i.e. unicast),
 	 * use dst as the src for the reply.
@@ -2190,7 +2156,8 @@ icmp6_reflect(m, off)
 	if (m->m_pkthdr.rcvif) {
 		/* XXX: This may not be the outgoing interface */
 		ip6->ip6_hlim = nd_ifinfo[m->m_pkthdr.rcvif->if_index].chlim;
-	}
+	} else
+		ip6->ip6_hlim = ip6_defhlim;
 
 	icmp6->icmp6_cksum = 0;
 	icmp6->icmp6_cksum = in6_cksum(m, IPPROTO_ICMPV6,
@@ -2205,11 +2172,8 @@ icmp6_reflect(m, off)
 	m->m_pkthdr.rcvif = NULL;
 #endif /*IPSEC*/
 
-#ifdef COMPAT_RFC1885
-	ip6_output(m, NULL, &icmp6_reflect_rt, 0, NULL, &outif);
-#else
 	ip6_output(m, NULL, NULL, 0, NULL, &outif);
-#endif
+
 	if (outif)
 		icmp6_ifoutstat_inc(outif, type, code);
 
@@ -2746,11 +2710,11 @@ fail:
 		m_freem(m0);
 }
 
-#ifdef HAVE_NRL_INPCB
+/* NRL PCB */
 #define sotoin6pcb	sotoinpcb
 #define in6pcb		inpcb
 #define in6p_icmp6filt	inp_icmp6filt
-#endif
+
 /*
  * ICMPv6 socket option processing.
  */
@@ -2832,11 +2796,11 @@ icmp6_ctloutput(op, so, level, optname, mp)
 
 	return(error);
 }
-#ifdef HAVE_NRL_INPCB
+
+/* NRL PCB */
 #undef sotoin6pcb
 #undef in6pcb
 #undef in6p_icmp6filt
-#endif
 
 /*
  * Perform rate limit check.

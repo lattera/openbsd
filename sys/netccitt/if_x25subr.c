@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.1 2001/05/14 22:40:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.2 2001/07/04 10:54:24 niklas Exp $	*/
 /*	$NetBSD: if_x25subr.c,v 1.13 1996/05/09 22:29:25 scottr Exp $	*/
 
 /*
@@ -182,7 +182,6 @@ x25_ifinput(m, v)
 
 	pk_flowcontrol(lcp, 0, 1);	/* Generate RR */
 	ifp = m->m_pkthdr.rcvif;
-	ifp->if_lastchange = time;
 	switch (m->m_type) {
 	default:
 		if (m)
@@ -346,6 +345,7 @@ x25_ifoutput(ifp, m0, dst, rt)
 		m = m_gethdr(M_NOWAIT, MT_HEADER);
 		if (m == 0)
 			senderr(ENOBUFS);
+		M_MOVE_HDR(m, m0);
 		m->m_pkthdr.len = plen;
 		m->m_next = m0;
 	}

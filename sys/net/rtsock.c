@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.3 2001/05/14 22:40:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.4 2001/07/04 10:54:20 niklas Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -120,9 +120,8 @@ route_usrreq(so, req, m, nam, control)
 
 	if (req == PRU_ATTACH) {
 		MALLOC(rp, struct rawcb *, sizeof(*rp), M_PCB, M_WAITOK);
-		if ((so->so_pcb = rp) != NULL)
-			bzero(so->so_pcb, sizeof(*rp));
-
+		so->so_pcb = rp;
+		bzero(so->so_pcb, sizeof(*rp));
 	}
 	if (req == PRU_DETACH && rp) {
 		int af = rp->rcb_proto.sp_protocol;
@@ -399,13 +398,19 @@ flush:
 	}
 	if (rtm) {
 		m_copyback(m, 0, rtm->rtm_msglen, (caddr_t)rtm);
+		if (m->m_pkthdr.len < rtm->rtm_msglen) {
+			m_freem(m);
+			m = NULL;
+		} else if (m->m_pkthdr.len > rtm->rtm_msglen)
+			m_adj(m, rtm->rtm_msglen - m->m_pkthdr.len);
 		Free(rtm);
 	}
 	if (rp)
 		rp->rcb_proto.sp_family = 0; /* Avoid us */
 	if (dst)
 		route_proto.sp_protocol = dst->sa_family;
-	raw_input(m, &route_proto, &route_src, &route_dst);
+	if (m)
+		raw_input(m, &route_proto, &route_src, &route_dst);
 	if (rp)
 		rp->rcb_proto.sp_family = PF_ROUTE;
     }

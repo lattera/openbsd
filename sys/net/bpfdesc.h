@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.5.4.1 2001/05/14 22:39:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.5.4.2 2001/07/04 10:53:52 niklas Exp $	*/
 /*	$NetBSD: bpfdesc.h,v 1.11 1995/09/27 18:30:42 thorpej Exp $	*/
 
 /*
@@ -41,6 +41,9 @@
  *	@(#)bpfdesc.h	8.1 (Berkeley) 6/10/93
  */
 
+#ifndef _NET_BPFDESC_H_
+#define _NET_BPFDESC_H_
+
 #include <sys/select.h>
 
 /*
@@ -75,6 +78,7 @@ struct bpf_d {
 	u_char		bd_promisc;	/* true if listening promiscuously */
 	u_char		bd_state;	/* idle, waiting, or timed out */
 	u_char		bd_immediate;	/* true to return on packet arrival */
+	int		bd_hdrcmplt;	/* false to fill in src lladdr automatically */
 	int		bd_async;	/* non-zero if packet reception should generate signal */
 	int		bd_sig;		/* signal to send upon packet reception */
 	pid_t		bd_pgid;	/* process or group id for signal */
@@ -98,5 +102,5 @@ struct bpf_if {
 
 #ifdef _KERNEL
 int	 bpf_setf __P((struct bpf_d *, struct bpf_program *));
-#endif
-
+#endif /* _KERNEL */
+#endif /* _NET_BPFDESC_H_ */

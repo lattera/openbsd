@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.2 2001/05/14 22:40:09 niklas Exp $	*/
-
+/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.3 2001/07/04 10:54:41 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -18,8 +17,9 @@
  *
  * Copyright (C) 1995, 1996, 1997, 1998, 1999 by John Ioannidis,
  * Angelos D. Keromytis and Niels Provos.
- *	
- * Permission to use, copy, and modify this software without fee
+ * Copyright (c) 2001 Angelos D. Keromytis.
+ *
+ * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all copies of any software which is or includes a copy or
  * modification of this software. 
@@ -35,8 +35,8 @@
  * PURPOSE.
  */
 
-#ifndef _NETINET_ESP_H_
-#define _NETINET_ESP_H_
+#ifndef _NETINET_IP_ESP_H_
+#define _NETINET_IP_ESP_H_
 
 #define ESP_ALEN	12	/* 96-bit authenticator */
 
@@ -78,4 +78,4 @@ struct espstat
 extern int esp_enable;
 struct espstat espstat;
 #endif /* _KERNEL */
-#endif _NETINET_ESP_H_
+#endif _NETINET_IP_ESP_H_

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.3 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.4 2001/07/04 10:55:18 niklas Exp $	*/
 /*	$KAME: in6.c,v 1.176 2001/02/16 12:49:45 itojun Exp $	*/
 
 /*
@@ -93,8 +93,6 @@
 #include <netinet6/mld6_var.h>
 #include <netinet6/ip6_mroute.h>
 #include <netinet6/in6_ifattach.h>
-
-#include <net/net_osdep.h>
 
 /* backward compatibility for a while... */
 #define COMPAT_IN6IFIOCTL
@@ -429,8 +427,6 @@ in6_control(so, cmd, data, ifp, p)
 		if (ia == NULL) {
 			ia = (struct in6_ifaddr *)
 				malloc(sizeof(*ia), M_IFADDR, M_WAITOK);
-			if (ia == NULL)
-				return (ENOBUFS);
 			bzero((caddr_t)ia, sizeof(*ia));
 			/* Initialize the address and masks */
 			ia->ia_ifa.ifa_addr = (struct sockaddr *)&ia->ia_addr;

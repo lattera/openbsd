@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.2 2001/05/14 22:40:20 niklas Exp $	*/
-/*	$KAME: nd6.c,v 1.137 2001/03/21 21:52:06 jinmei Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.3 2001/07/04 10:55:26 niklas Exp $	*/
+/*	$KAME: nd6.c,v 1.151 2001/06/19 14:24:41 sumikawa Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -62,6 +62,7 @@
 
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
+#include <netinet/ip_ipsp.h>
 
 #include <netinet6/in6_var.h>
 #include <netinet/ip6.h>
@@ -69,8 +70,6 @@
 #include <netinet6/nd6.h>
 #include <netinet6/in6_prefix.h>
 #include <netinet/icmp6.h>
-
-#include <net/net_osdep.h>
 
 #define ND6_SLOWTIMER_INTERVAL (60 * 60) /* 1 hour */
 #define ND6_RECALC_REACHTM_INTERVAL (60 * 120) /* 2 hours */
@@ -619,10 +618,12 @@ nd6_purge(ifp)
 	if (nd6_defifindex == ifp->if_index)
 		nd6_setdefaultiface(0);
 
-	/* refresh default router list */
-	bzero(&drany, sizeof(drany));
-	defrouter_delreq(&drany, 0);
-	defrouter_select();
+	if (!ip6_forwarding && ip6_accept_rtadv) { /* XXX: too restrictive? */
+		/* refresh default router list */
+		bzero(&drany, sizeof(drany));
+		defrouter_delreq(&drany, 0);
+		defrouter_select();
+	}
 
 	/*
 	 * Nuke neighbor cache entries for the ifp.
@@ -729,7 +730,7 @@ nd6_lookup(addr6, create, ifp)
 	    (ifp && rt->rt_ifa->ifa_ifp != ifp)) {
 		if (create) {
 			log(LOG_DEBUG, "nd6_lookup: failed to lookup %s (if = %s)\n",
-			    ip6_sprintf(addr6), ifp ? if_name(ifp) : "unspec");
+			    ip6_sprintf(addr6), ifp ? ifp->if_xname : "unspec");
 			/* xxx more logs... kazu */
 		}
 		return(0);
@@ -1115,7 +1116,7 @@ nd6_rtrequest(req, rt, info)
 			    gate->sa_len < sizeof(null_sdl)) {
 				log(LOG_DEBUG,
 				    "nd6_rtrequest: bad gateway value: %s\n",
-				    if_name(ifp));
+				    ifp->if_xname);
 				break;
 			}
 			SDL(gate)->sdl_type = ifp->if_type;
@@ -1746,6 +1747,21 @@ fail:
 		break;
 	}
 
+	/*
+	 * When the link-layer address of a router changes, select the
+	 * best router again.  In particular, when the neighbor entry is newly
+	 * created, it might affect the selection policy.
+	 * Question: can we restrict the first condition to the "is_newentry"
+	 * case?
+	 * XXX: when we hear an RA from a new router with the link-layer
+	 * address option, defrouter_select() is called twice, since
+	 * defrtrlist_update called the function as well.  However, I believe
+	 * we can compromise the overhead, since it only happens the first
+	 * time.
+	 */
+	if (do_update && ln->ln_router && !ip6_forwarding && ip6_accept_rtadv)
+		defrouter_select();
+
 	return rt;
 }
 
@@ -1793,6 +1809,9 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 	struct llinfo_nd6 *ln = NULL;
 	int error = 0;
 	long time_second = time.tv_sec;
+#ifdef IPSEC
+	struct m_tag *mtag;
+#endif /* IPSEC */
 
 	if (IN6_IS_ADDR_MULTICAST(&dst->sin6_addr))
 		goto sendpkt;
@@ -1954,11 +1973,36 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 	return(0);
 	
   sendpkt:
+#ifdef IPSEC
+	/*
+	 * If the packet needs outgoing IPsec crypto processing and the
+	 * interface doesn't support it, drop it.
+	 */
+	mtag = m_tag_find(m, PACKET_TAG_IPSEC_OUT_CRYPTO_NEEDED, NULL);
+#endif /* IPSEC */
 
 	if ((ifp->if_flags & IFF_LOOPBACK) != 0) {
+#ifdef IPSEC
+		if (mtag != NULL &&
+		    (origifp->if_capabilities & IFCAP_IPSEC) == 0) {
+			/* Tell IPsec to do its own crypto. */
+			ipsp_skipcrypto_unmark((struct tdb_ident *)(mtag + 1));
+			error = EACCES;
+			goto bad;
+		}
+#endif /* IPSEC */
 		return((*ifp->if_output)(origifp, m, (struct sockaddr *)dst,
 					 rt));
 	}
+#ifdef IPSEC
+	if (mtag != NULL &&
+	    (ifp->if_capabilities & IFCAP_IPSEC) == 0) {
+		/* Tell IPsec to do its own crypto. */
+		ipsp_skipcrypto_unmark((struct tdb_ident *)(mtag + 1));
+		error = EACCES;
+		goto bad;
+	}
+#endif /* IPSEC */
 	return((*ifp->if_output)(ifp, m, (struct sockaddr *)dst, rt));
 
   bad:

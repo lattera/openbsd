@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_mroute.c,v 1.19.2.1 2001/05/14 22:40:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_mroute.c,v 1.19.2.2 2001/07/04 10:54:53 niklas Exp $	*/
 /*	$NetBSD: ip_mroute.c,v 1.27 1996/05/07 02:40:50 thorpej Exp $	*/
 
 /*
@@ -1417,8 +1417,7 @@ encap_send(ip, vifp, m)
 	 */
 	ip_copy = mtod(mb_copy, struct ip *);
 	*ip_copy = multicast_encap_iphdr;
-	ip_copy->ip_id = ip_randomid();
-	HTONS(ip_copy->ip_id);
+	ip_copy->ip_id = htons(ip_randomid());
 	ip_copy->ip_len = len;
 	ip_copy->ip_src = vifp->v_lcl_addr;
 	ip_copy->ip_dst = vifp->v_rmt_addr;

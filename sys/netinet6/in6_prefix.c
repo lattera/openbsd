@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.1 2001/05/14 22:40:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.2 2001/07/04 10:55:21 niklas Exp $	*/
 /*	$KAME: in6_prefix.c,v 1.47 2001/03/25 08:41:39 itojun Exp $	*/
 
 /*
@@ -87,8 +87,6 @@
 struct rr_prhead rr_prefix;
 
 struct timeout in6_rr_timer_ch;
-
-#include <net/net_osdep.h>
 
 static void	add_each_addr __P((struct socket *so, struct rr_prefix *rpp,
 				   struct rp_addr *rap));
@@ -577,7 +575,7 @@ add_each_addr(struct socket *so, struct rr_prefix *rpp, struct rp_addr *rap)
 
 	/* init ifra */
 	bzero(&ifra, sizeof(ifra));
-	strncpy(ifra.ifra_name, if_name(rpp->rp_ifp), sizeof(ifra.ifra_name));
+	strncpy(ifra.ifra_name, rpp->rp_ifp->if_xname, sizeof(ifra.ifra_name));
 	ifra.ifra_addr.sin6_family = ifra.ifra_prefixmask.sin6_family =
 		AF_INET6;
 	ifra.ifra_addr.sin6_len = ifra.ifra_prefixmask.sin6_len =

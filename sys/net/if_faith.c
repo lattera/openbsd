@@ -45,12 +45,9 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/kernel.h>
 #include <sys/mbuf.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
 #include <sys/ioctl.h>
-#include <sys/time.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -60,9 +57,7 @@
 
 #ifdef	INET
 #include <netinet/in.h>
-#include <netinet/in_systm.h>
 #include <netinet/in_var.h>
-#include <netinet/ip.h>
 #endif
 
 #ifdef INET6
@@ -70,12 +65,9 @@
 #include <netinet/in.h>
 #endif
 #include <netinet6/in6_var.h>
-#include <netinet/ip6.h>
 #endif
 
 #include "bpfilter.h"
-
-#include <net/net_osdep.h>
 
 static int faithioctl __P((struct ifnet *, u_long, caddr_t));
 int faithoutput __P((struct ifnet *, register struct mbuf *, struct sockaddr *,

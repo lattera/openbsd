@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ecn.c,v 1.1.2.1 2001/05/14 22:40:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ecn.c,v 1.1.2.2 2001/07/04 10:54:39 niklas Exp $	*/
 /*	$KAME: ip_ecn.c,v 1.9 2000/10/01 12:44:48 itojun Exp $	*/
 
 /*
@@ -35,15 +35,9 @@
  * http://www.aciri.org/floyd/papers/draft-ipsec-ecn-00.txt
  */
 
-#if (defined(__FreeBSD__) && __FreeBSD__ >= 3) || defined(__NetBSD__)
-#include "opt_inet.h"
-#endif
-
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
-#include <sys/errno.h>
 
 #ifdef INET
 #include <netinet/in.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7.2.1 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_gif.c,v 1.7.2.2 2001/07/04 10:55:19 niklas Exp $	*/
 /*	$KAME: in6_gif.c,v 1.43 2001/01/22 07:27:17 itojun Exp $	*/
 
 /*
@@ -66,8 +66,6 @@
 
 #include <net/if_gif.h>
 
-#include <net/net_osdep.h>
-
 #include "bridge.h"
 
 #ifndef offsetof
@@ -122,7 +120,7 @@ in6_gif_output(ifp, family, m, rt)
 	    {
 		if (m->m_len < sizeof(struct ip)) {
 			m = m_pullup(m, sizeof(struct ip));
-			if (!m)
+			if (m == NULL)
 				return ENOBUFS;
 		}
 		hlen = (mtod(m, struct ip *)->ip_hl) << 2;
@@ -167,7 +165,7 @@ in6_gif_output(ifp, family, m, rt)
 
 	/* encapsulate into IPv6 packet */
 	mp = NULL;
-	error = ipip_output(m, &tdb, &mp, hlen, poff, NULL);
+	error = ipip_output(m, &tdb, &mp, hlen, poff);
 	if (error)
 	        return error;
 	else if (mp == NULL)
@@ -250,6 +248,8 @@ int in6_gif_input(mp, offp, proto)
 
 	if (gifp) {
 	        m->m_pkthdr.rcvif = gifp;
+		gifp->if_ipackets++;
+		gifp->if_ibytes += m->m_pkthdr.len;
 		ipip_input(m, *offp);
 		return IPPROTO_DONE;
 	}

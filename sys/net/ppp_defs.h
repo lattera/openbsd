@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/ppp_defs.h,v 1.10 1999/12/08 06:50:18 itojun Exp $	*/
+/*	$OpenBSD: src/sys/net/ppp_defs.h,v 1.10.2.1 2001/07/04 10:54:17 niklas Exp $	*/
 /*	$NetBSD: ppp_defs.h,v 1.1 1995/07/04 06:28:26 paulus Exp $	*/
 
 /*
@@ -166,5 +166,4 @@ struct ppp_idle {
 #define __P(x)	()
 #endif
 #endif
-
 #endif /* _PPP_DEFS_H_ */

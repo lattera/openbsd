@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.4 2001/05/14 22:39:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.5 2001/07/04 10:53:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -33,6 +33,7 @@
 
 #include "bpfilter.h"
 #include "gif.h"
+#include "pf.h"
 
 #include <sys/param.h>
 #include <sys/proc.h>
@@ -51,6 +52,10 @@
 #include <net/route.h>
 #include <net/netisr.h>
 
+#if NPF > 0
+#include <net/pfvar.h>
+#endif
+
 #ifdef INET
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
@@ -60,10 +65,6 @@
 #include <netinet/ip_ipsp.h>
 
 #include <net/if_enc.h>
-#ifdef IPFILTER
-#include <netinet/ip_fil_compat.h>
-#include <netinet/ip_fil.h>
-#endif
 #endif
 
 #if NBPFILTER > 0
@@ -141,7 +142,7 @@ u_int8_t bridge_filterrule __P((struct brl_head *, struct ether_header *));
 	 (a)->ether_addr_octet[2] == 0x5e)
 
 
-#if defined(INET) && (defined(IPFILTER) || defined(IPFILTER_LKM))
+#if NPF > 0
 /*
  * Filter hooks
  */
@@ -268,7 +269,7 @@ bridge_ioctl(ifp, cmd, data)
 		}
 #if NGIF > 0
 		else if (ifs->if_type == IFT_GIF) {
-		        /* Nothing needed */
+			/* Nothing needed */
 		}
 #endif /* NGIF */
 		else {
@@ -696,7 +697,7 @@ bridge_init(sc)
 		for (i = 0; i < BRIDGE_RTABLE_SIZE; i++) {
 			LIST_INIT(&sc->sc_rts[i]);
 		}
-		get_random_bytes(&sc->sc_hashkey, sizeof(sc->sc_hashkey));
+		sc->sc_hashkey = arc4random();
 	}
 	ifp->if_flags |= IFF_RUNNING;
 
@@ -741,7 +742,12 @@ bridge_output(ifp, m, sa, rt)
 	struct ifnet *dst_if;
 	struct ether_addr *src, *dst;
 	struct bridge_softc *sc;
-	int s;
+	int s, error, len;
+	short mflags;
+	ALTQ_DECL(struct altq_pktattr pktattr;)
+#ifdef IPSEC
+	struct m_tag *mtag;
+#endif /* IPSEC */
 
 	if (m->m_len < sizeof(*eh)) {
 		m = m_pullup(m, sizeof(*eh));
@@ -770,15 +776,41 @@ bridge_output(ifp, m, sa, rt)
 	 * get there, send to all interfaces.
 	 */
 	dst_if = bridge_rtlookup(sc, dst);
-	if (dst_if == NULL || eh->ether_dhost[0] & 1) {
+	if (dst_if == NULL || ETHER_IS_MULTICAST(eh->ether_dhost)) {
 		struct bridge_iflist *p;
 		struct mbuf *mc;
 		int used = 0;
+
+#ifdef IPSEC
+		/*
+		 * Don't send out the packet if IPsec is needed, and
+		 * notify IPsec to do its own crypto for now.
+		 */
+		if ((mtag = m_tag_find(m, PACKET_TAG_IPSEC_OUT_CRYPTO_NEEDED,
+		    NULL)) != NULL) {
+			ipsp_skipcrypto_unmark((struct tdb_ident *)(mtag + 1));
+			m_freem(m);
+			splx(s);
+			return (0);
+		}
+#endif /* IPSEC */
+
+		/* Catch packets that need TCP/UDP/IP hardware checksumming */
+		if (m->m_pkthdr.csum & M_IPV4_CSUM_OUT ||
+		    m->m_pkthdr.csum & M_TCPV4_CSUM_OUT ||
+		    m->m_pkthdr.csum & M_UDPV4_CSUM_OUT) {
+			m_freem(m);
+			splx(s);
+			return (0);
+		}
 
 		LIST_FOREACH(p, &sc->sc_iflist, next) {
 			dst_if = p->ifp;
 			if ((dst_if->if_flags & IFF_RUNNING) == 0)
 				continue;
+#ifdef ALTQ
+			if (ALTQ_IS_ENABLED(&dst_if->if_snd) == 0)
+#endif
 			if (IF_QFULL(&dst_if->if_snd)) {
 				IF_DROP(&dst_if->if_snd);
 				sc->sc_if.if_oerrors++;
@@ -794,14 +826,22 @@ bridge_output(ifp, m, sa, rt)
 					continue;
 				}
 			}
-
+			len = mc->m_pkthdr.len;
+			mflags = mc->m_flags;
+#ifdef ALTQ
+			if (ALTQ_IS_ENABLED(&dst_if->if_snd))
+				altq_etherclassify(&dst_if->if_snd, mc, &pktattr);
+#endif
+			IFQ_ENQUEUE(&dst_if->if_snd, mc, &pktattr, error);
+			if (error) {
+				sc->sc_if.if_oerrors++;
+				continue;
+			}
 			sc->sc_if.if_opackets++;
-			sc->sc_if.if_obytes += mc->m_pkthdr.len;
-			dst_if->if_lastchange = time;
-			dst_if->if_obytes += mc->m_pkthdr.len;
-			IF_ENQUEUE(&dst_if->if_snd, mc);
-			if (mc->m_flags & M_MCAST)
-				ifp->if_omcasts++;
+			sc->sc_if.if_obytes += len;
+			dst_if->if_obytes += len;
+			if (mflags & M_MCAST)
+				dst_if->if_omcasts++;
 			if ((dst_if->if_flags & IFF_OACTIVE) == 0)
 				(*dst_if->if_start)(dst_if);
 		}
@@ -817,19 +857,22 @@ sendunicast:
 		splx(s);
 		return (0);
 	}
-	if (IF_QFULL(&dst_if->if_snd)) {
-		IF_DROP(&dst_if->if_snd);
+	len = m->m_pkthdr.len;
+	mflags = m->m_flags;
+#ifdef ALTQ
+	if (ALTQ_IS_ENABLED(&dst_if->if_snd))
+		altq_etherclassify(&dst_if->if_snd, m, &pktattr);
+#endif
+	IFQ_ENQUEUE(&dst_if->if_snd, m, &pktattr, error);
+	if (error) {
 		sc->sc_if.if_oerrors++;
-		m_freem(m);
 		splx(s);
 		return (0);
 	}
 	sc->sc_if.if_opackets++;
-	sc->sc_if.if_obytes += m->m_pkthdr.len;
-	dst_if->if_lastchange = time;
-	dst_if->if_obytes += m->m_pkthdr.len;
-	IF_ENQUEUE(&dst_if->if_snd, m);
-	if (m->m_flags & M_MCAST)
+	sc->sc_if.if_obytes += len;
+	dst_if->if_obytes += len;
+	if (mflags & M_MCAST)
 		dst_if->if_omcasts++;
 	if ((dst_if->if_flags & IFF_OACTIVE) == 0)
 		(*dst_if->if_start)(dst_if);
@@ -877,11 +920,13 @@ bridgeintr_frame(sc, m)
 	struct bridge_softc *sc;
 	struct mbuf *m;
 {
-	int s;
+	int s, error, len;
 	struct ifnet *src_if, *dst_if;
 	struct bridge_iflist *ifl;
 	struct ether_addr *dst, *src;
 	struct ether_header eh;
+	short mflags;
+	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	if ((sc->sc_if.if_flags & IFF_RUNNING) == 0) {
 		m_freem(m);
@@ -895,7 +940,6 @@ bridgeintr_frame(sc, m)
 		bpf_mtap(sc->sc_if.if_bpf, m);
 #endif
 
-	sc->sc_if.if_lastchange = time;
 	sc->sc_if.if_ipackets++;
 	sc->sc_if.if_ibytes += m->m_pkthdr.len;
 
@@ -909,9 +953,9 @@ bridgeintr_frame(sc, m)
 	}
 
 	if ((ifl->bif_flags & IFBIF_STP) &&
-	    ((ifl->bif_state == BSTP_IFSTATE_BLOCKING) ||
-	     (ifl->bif_state == BSTP_IFSTATE_LISTENING) ||
-	     (ifl->bif_state == BSTP_IFSTATE_DISABLED))) {
+	    (ifl->bif_state == BSTP_IFSTATE_BLOCKING ||
+	    ifl->bif_state == BSTP_IFSTATE_LISTENING ||
+	    ifl->bif_state == BSTP_IFSTATE_DISABLED)) {
 		m_freem(m);
 		return;
 	}
@@ -930,12 +974,9 @@ bridgeintr_frame(sc, m)
 	 */
 	if ((ifl->bif_flags & IFBIF_LEARNING) &&
 	    (eh.ether_shost[0] & 1) == 0 &&
-	    !(eh.ether_shost[0] == 0 &&
-	      eh.ether_shost[1] == 0 &&
-	      eh.ether_shost[2] == 0 &&
-	      eh.ether_shost[3] == 0 &&
-	      eh.ether_shost[4] == 0 &&
-	      eh.ether_shost[5] == 0))
+	    !(eh.ether_shost[0] == 0 && eh.ether_shost[1] == 0 &&
+	    eh.ether_shost[2] == 0 && eh.ether_shost[3] == 0 &&
+	    eh.ether_shost[4] == 0 && eh.ether_shost[5] == 0))
 		bridge_rtupdate(sc, src, src_if, 0, IFBAF_DYNAMIC);
 
 	if ((ifl->bif_flags & IFBIF_STP) &&
@@ -1002,7 +1043,7 @@ bridgeintr_frame(sc, m)
 		return;
 	}
 
-#if defined(INET) && (defined(IPFILTER) || defined(IPFILTER_LKM))
+#if NPF > 0
 	m = bridge_filter(sc, src_if, &eh, m);
 	if (m == NULL)
 		return;
@@ -1038,7 +1079,7 @@ bridgeintr_frame(sc, m)
 	}
 	if ((ifl->bif_flags & IFBIF_STP) &&
 	    (ifl->bif_state == BSTP_IFSTATE_DISABLED ||
-	     ifl->bif_state == BSTP_IFSTATE_BLOCKING)) {
+	    ifl->bif_state == BSTP_IFSTATE_BLOCKING)) {
 		m_freem(m);
 		return;
 	}
@@ -1046,20 +1087,23 @@ bridgeintr_frame(sc, m)
 		m_freem(m);
 		return;
 	}
+#ifdef ALTQ
+	if (ALTQ_IS_ENABLED(&dst_if->if_snd))
+		altq_etherclassify(&dst_if->if_snd, m, &pktattr);
+#endif
+	len = m->m_pkthdr.len;
+	mflags = m->m_flags;
 	s = splimp();
-	if (IF_QFULL(&dst_if->if_snd)) {
-		IF_DROP(&dst_if->if_snd);
+	IFQ_ENQUEUE(&dst_if->if_snd, m, &pktattr, error);
+	if (error) {
 		sc->sc_if.if_oerrors++;
-		m_freem(m);
 		splx(s);
 		return;
 	}
 	sc->sc_if.if_opackets++;
-	sc->sc_if.if_obytes += m->m_pkthdr.len;
-	dst_if->if_lastchange = time;
-	dst_if->if_obytes += m->m_pkthdr.len;
-	IF_ENQUEUE(&dst_if->if_snd, m);
-	if (m->m_flags & M_MCAST)
+	sc->sc_if.if_obytes += len;
+	dst_if->if_obytes += len;
+	if (mflags & M_MCAST)
 		dst_if->if_omcasts++;
 	if ((dst_if->if_flags & IFF_OACTIVE) == 0)
 		(*dst_if->if_start)(dst_if);
@@ -1118,8 +1162,8 @@ bridge_input(ifp, eh, m)
 		 */
 		if ((ifl->bif_flags & IFBIF_STP) &&
 		    ((ifl->bif_state == BSTP_IFSTATE_BLOCKING) ||
-		     (ifl->bif_state == BSTP_IFSTATE_LISTENING) ||
-		     (ifl->bif_state == BSTP_IFSTATE_DISABLED)))
+		    (ifl->bif_state == BSTP_IFSTATE_LISTENING) ||
+		    (ifl->bif_state == BSTP_IFSTATE_DISABLED)))
 			return (m);
 
 		/*
@@ -1164,8 +1208,8 @@ bridge_input(ifp, eh, m)
 	 */
 	if ((ifl->bif_flags & IFBIF_STP) &&
 	    ((ifl->bif_state == BSTP_IFSTATE_BLOCKING) ||
-	     (ifl->bif_state == BSTP_IFSTATE_LISTENING) ||
-	     (ifl->bif_state == BSTP_IFSTATE_DISABLED)))
+	    (ifl->bif_state == BSTP_IFSTATE_LISTENING) ||
+	    (ifl->bif_state == BSTP_IFSTATE_DISABLED)))
 		return (m);
 
 
@@ -1225,7 +1269,9 @@ bridge_broadcast(sc, ifp, eh, m)
 	struct bridge_iflist *p;
 	struct mbuf *mc;
 	struct ifnet *dst_if;
-	int used = 0;
+	int error, len, used = 0;
+	short mflags;
+	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	LIST_FOREACH(p, &sc->sc_iflist, next) {
 		/*
@@ -1238,7 +1284,7 @@ bridge_broadcast(sc, ifp, eh, m)
 
 		if ((p->bif_flags & IFBIF_STP) &&
 		    (p->bif_state == BSTP_IFSTATE_BLOCKING ||
-		     p->bif_state == BSTP_IFSTATE_DISABLED))
+		    p->bif_state == BSTP_IFSTATE_DISABLED))
 			continue;
 
 		if ((p->bif_flags & IFBIF_DISCOVER) == 0 &&
@@ -1248,11 +1294,19 @@ bridge_broadcast(sc, ifp, eh, m)
 		if ((dst_if->if_flags & IFF_RUNNING) == 0)
 			continue;
 
+#ifdef ALTQ
+		if (ALTQ_IS_ENABLED(&dst_if->if_snd) == 0)
+#endif
 		if (IF_QFULL(&dst_if->if_snd)) {
 			IF_DROP(&dst_if->if_snd);
 			sc->sc_if.if_oerrors++;
 			continue;
 		}
+
+		/* Drop non-IP frames if the appropriate flag is set. */
+		if (p->bif_flags & IFBIF_BLOCKNONIP &&
+		    bridge_blocknonip(eh, m))
+			continue;
 
 		if (bridge_filterrule(&p->bif_brlout, eh) == BRL_ACTION_BLOCK)
 			continue;
@@ -1269,18 +1323,19 @@ bridge_broadcast(sc, ifp, eh, m)
 			}
 		}
 
-		if (p->bif_flags & IFBIF_BLOCKNONIP &&
-		    bridge_blocknonip(eh, mc)) {
-			m_freem(mc);
+#ifdef ALTQ
+		if (ALTQ_IS_ENABLED(&dst_if->if_snd))
+			altq_etherclassify(&dst_if->if_snd, mc, &pktattr);
+#endif
+		IFQ_ENQUEUE(&dst_if->if_snd, mc, &pktattr, error);
+		if (error) {
+			sc->sc_if.if_oerrors++;
 			continue;
 		}
-
 		sc->sc_if.if_opackets++;
-		sc->sc_if.if_obytes += mc->m_pkthdr.len;
-		dst_if->if_obytes += m->m_pkthdr.len;
-		dst_if->if_lastchange = time;
-		IF_ENQUEUE(&dst_if->if_snd, mc);
-		if (mc->m_flags & M_MCAST)
+		sc->sc_if.if_obytes += len;
+		dst_if->if_obytes += len;
+		if (mflags & M_MCAST)
 			dst_if->if_omcasts++;
 		if ((dst_if->if_flags & IFF_OACTIVE) == 0)
 			(*dst_if->if_start)(dst_if);
@@ -1313,7 +1368,7 @@ bridge_rtupdate(sc, ea, ifp, setflags, flags)
 			for (h = 0; h < BRIDGE_RTABLE_SIZE; h++) {
 				LIST_INIT(&sc->sc_rts[h]);
 			}
-			get_random_bytes(&sc->sc_hashkey, sizeof(sc->sc_hashkey));
+			sc->sc_hashkey = arc4random();
 		} else
 			goto done;
 	}
@@ -1758,10 +1813,8 @@ bridge_blocknonip(eh, m)
 	    llc.llc_snap.org_code[0] == 0 &&
 	    llc.llc_snap.org_code[1] == 0 &&
 	    llc.llc_snap.org_code[2] == 0 &&
-	    (etype == ETHERTYPE_ARP ||
-	     etype == ETHERTYPE_REVARP ||
-	     etype == ETHERTYPE_IP ||
-	     etype == ETHERTYPE_IPV6)) {
+	    (etype == ETHERTYPE_ARP || etype == ETHERTYPE_REVARP ||
+	    etype == ETHERTYPE_IP || etype == ETHERTYPE_IPV6)) {
 		return (0);
 	}
 
@@ -1847,8 +1900,7 @@ bridge_flushrule(bif)
 	return (0);
 }
 
-#if defined(INET) && (defined(IPFILTER) || defined(IPFILTER_LKM))
-
+#if NPF > 0
 /*
  * Filter IP packets by peeking into the ethernet frame.  This violates
  * the ISO model, but allows us to act as a IP filter at the data link
@@ -1866,9 +1918,6 @@ bridge_filter(sc, ifp, eh, m)
 	int hassnap = 0;
 	struct ip *ip;
 	int hlen;
-
-	if (fr_checkp == NULL)
-		return (m);
 
 	if (eh->ether_type != htons(ETHERTYPE_IP)) {
 		if (eh->ether_type > ETHERMTU ||
@@ -1910,7 +1959,7 @@ bridge_filter(sc, ifp, eh, m)
 	if (hlen < sizeof(struct ip))
 		goto dropit;
 	if (hlen > m->m_len) {
-		if ((m = m_pullup(m, sizeof(struct ip))) == NULL)
+		if ((m = m_pullup(m, hlen)) == NULL)
 			return (NULL);
 		ip = mtod(m, struct ip *);
 	}
@@ -1935,8 +1984,8 @@ bridge_filter(sc, ifp, eh, m)
 	}
 
 	/* Finally, we get to filter the packet! */
-	if (fr_checkp && (*fr_checkp)(ip, hlen, ifp, 0, &m))
-		return (NULL);
+	if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
+		goto dropit;
 
 	/* Rebuild the IP header */
 	if (m->m_len < hlen && ((m = m_pullup(m, hlen)) == NULL))

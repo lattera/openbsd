@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.1 2001/05/14 22:40:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.2 2001/07/04 10:55:23 niklas Exp $	*/
 /*	$KAME: ip6_output.c,v 1.172 2001/03/25 09:55:56 itojun Exp $	*/
 
 /*
@@ -103,8 +103,6 @@ extern int ipsec_esp_trans_default_level;
 extern int ipsec_esp_network_default_level;
 #endif /* IPSEC */
 
-#include <net/net_osdep.h>
-
 struct ip6_exthdrs {
 	struct mbuf *ip6e_ip6;
 	struct mbuf *ip6e_hbh;
@@ -159,7 +157,9 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	int hdrsplit = 0;
 	u_int8_t sproto = 0;
 #ifdef IPSEC
+	struct m_tag *mtag;
 	union sockaddr_union sdst;
+	struct tdb_ident *tdbi;
 	u_int32_t sspi;
 	struct inpcb *inp;
 	struct tdb *tdb;
@@ -196,10 +196,6 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	}
 
 #ifdef IPSEC
-	/* Disallow nested IPsec for now */
-	if (flags & IPV6_ENCAPSULATED)
-		goto done_spd;
-
 	/*
 	 * splnet is chosen over spltdb because we are not allowed to
 	 * lower the level, and udp6_output calls us in splnet(). XXX check
@@ -211,15 +207,24 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 	 * from a transport protocol.
 	 */
 	ip6 = mtod(m, struct ip6_hdr *);
-	if (inp && inp->inp_tdb_out &&
-	    inp->inp_tdb_out->tdb_dst.sa.sa_family == AF_INET6 &&
-	    IN6_ARE_ADDR_EQUAL(&inp->inp_tdb_out->tdb_dst.sin6.sin6_addr,
-		  &ip6->ip6_dst)) {
-	        tdb = inp->inp_tdb_out;
-	} else {
-	        tdb = ipsp_spd_lookup(m, AF_INET6, sizeof(struct ip6_hdr),
-	            &error, IPSP_DIRECTION_OUT, NULL, NULL);
+
+	/* Do we have any pending SAs to apply ? */
+	mtag = m_tag_find(m, PACKET_TAG_IPSEC_PENDING_TDB, NULL);
+	if (mtag != NULL) {
+#ifdef DIAGNOSTIC
+		if (mtag->m_tag_len != sizeof (struct tdb_ident))
+			panic("ip6_output: tag of length %d (should be %d",
+			    mtag->m_tag_len, sizeof (struct tdb_ident));
+#endif
+		tdbi = (struct tdb_ident *)(mtag + 1);
+		tdb = gettdb(tdbi->spi, &tdbi->dst, tdbi->proto);
+		if (tdb == NULL)
+			error = -EINVAL;
+		m_tag_delete(m, mtag);
 	}
+	else
+		tdb = ipsp_spd_lookup(m, AF_INET6, sizeof(struct ip6_hdr),
+		    &error, IPSP_DIRECTION_OUT, NULL, inp);
 
 	if (tdb == NULL) {
 	        splx(s);
@@ -244,12 +249,6 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 			goto freehdrs;
 		}
 	} else {
-	        /* We need to do IPsec */
-	        bcopy(&tdb->tdb_dst, &sdst, sizeof(sdst));
-		sspi = tdb->tdb_spi;
-		sproto = tdb->tdb_sproto;
-	        splx(s);
-
 		/*
 		 * If the socket has set the bypass flags and SA destination
 		 * matches the IP destination, skip IPsec. This allows
@@ -261,11 +260,34 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 		    inp->inp_seclevel[SL_ESP_NETWORK] == IPSEC_LEVEL_BYPASS &&
 		    sdst.sa.sa_family == AF_INET6 &&
 		    IN6_ARE_ADDR_EQUAL(&sdst.sin6.sin6_addr, &ip6->ip6_dst)) {
+			splx(s);
 		        sproto = 0; /* mark as no-IPsec-needed */
 			goto done_spd;
 		}
 
-		/* XXX Take into consideration socket requirements ? */
+		/* Loop detection */
+		for (mtag = m_tag_first(m); mtag != NULL;
+		    mtag = m_tag_next(m, mtag)) {
+			if (mtag->m_tag_id != PACKET_TAG_IPSEC_OUT_DONE &&
+			    mtag->m_tag_id !=
+			    PACKET_TAG_IPSEC_OUT_CRYPTO_NEEDED)
+				continue;
+			tdbi = (struct tdb_ident *)(mtag + 1);
+			if (tdbi->spi == tdb->tdb_spi &&
+			    tdbi->proto == tdb->tdb_sproto &&
+			    !bcmp(&tdbi->dst, &tdb->tdb_dst,
+			    sizeof(union sockaddr_union))) {
+				splx(s);
+				sproto = 0; /* mark as no-IPsec-needed */
+				goto done_spd;
+			}
+		}
+
+	        /* We need to do IPsec */
+	        bcopy(&tdb->tdb_dst, &sdst, sizeof(sdst));
+		sspi = tdb->tdb_spi;
+		sproto = tdb->tdb_sproto;
+	        splx(s);
 
 #if 1 /* XXX */
 		/* if we have any extension header, we cannot perform IPsec */
@@ -511,48 +533,6 @@ skip_ipsec2:;
 		dst->sin6_len = sizeof(struct sockaddr_in6);
 		dst->sin6_addr = ip6->ip6_dst;
 	}
-#if 0 /*KAME IPSEC*/
-	if (needipsec && needipsectun) {
-		struct ipsec_output_state state;
-
-		bzero(&exthdrs, sizeof(exthdrs));
-		exthdrs.ip6e_ip6 = m;
-
-		bzero(&state, sizeof(state));
-		state.m = m;
-		state.ro = (struct route *)ro;
-		state.dst = (struct sockaddr *)dst;
-
-		error = ipsec6_output_tunnel(&state, sp, flags);
-
-		m = state.m;
-		ro = (struct route_in6 *)state.ro;
-		dst = (struct sockaddr_in6 *)state.dst;
-		if (error) {
-			/* mbuf is already reclaimed in ipsec6_output_tunnel. */
-			m0 = m = NULL;
-			m = NULL;
-			switch (error) {
-			case EHOSTUNREACH:
-			case ENETUNREACH:
-			case EMSGSIZE:
-			case ENOBUFS:
-			case ENOMEM:
-				break;
-			default:
-				printf("ip6_output (ipsec): error code %d\n", error);
-				/*fall through*/
-			case ENOENT:
-				/* don't show these error codes to the user */
-				error = 0;
-				break;
-			}
-			goto bad;
-		}
-
-		exthdrs.ip6e_ip6 = m;
-	}
-#endif /*IPSEC*/
 #ifdef IPSEC
 	/*
 	 * Check if the packet needs encapsulation.
@@ -574,8 +554,8 @@ skip_ipsec2:;
 				ip6->ip6_hlim = opt->ip6po_hlim & 0xff;
 
 			/*
-			 * XXX what should we do if ip6_hlim == 0 and the packet
-			 * gets tunnelled?
+			 * XXX what should we do if ip6_hlim == 0 and the
+			 * packet gets tunnelled?
 			 */
 		}
 
@@ -594,8 +574,7 @@ skip_ipsec2:;
 		m->m_flags &= ~(M_BCAST | M_MCAST);	/* just in case */
 
 		/* Callee frees mbuf */
-		/* XXX Should use last argument */
-		error = ipsp_process_packet(m, tdb, AF_INET6, 0, NULL);
+		error = ipsp_process_packet(m, tdb, AF_INET6, 0);
 		splx(s);
 		return error;  /* Nothing more to be done */
 	}
@@ -1775,8 +1754,6 @@ ip6_setmoptions(optname, im6op, m)
 		im6o = (struct ip6_moptions *)
 			malloc(sizeof(*im6o), M_IPMOPTS, M_WAITOK);
 
-		if (im6o == NULL)
-			return(ENOBUFS);
 		*im6op = im6o;
 		im6o->im6o_multicast_ifp = NULL;
 		im6o->im6o_multicast_hlim = ip6_defmcasthlim;
@@ -1940,10 +1917,7 @@ ip6_setmoptions(optname, im6op, m)
 		 * address list for the given interface.
 		 */
 		imm = malloc(sizeof(*imm), M_IPMADDR, M_WAITOK);
-		if (imm == NULL) {
-			error = ENOBUFS;
-			break;
-		}
+
 		if ((imm->i6mm_maddr =
 		     in6_addmulti(&mreq->ipv6mr_multiaddr, ifp, &error)) == NULL) {
 			free(imm, M_IPMADDR);
@@ -2336,10 +2310,8 @@ ip6_splithdr(m, exthdrs)
 			m_freem(m);
 			return ENOBUFS;
 		}
-		M_COPY_PKTHDR(mh, m);
+		M_MOVE_PKTHDR(mh, m);
 		MH_ALIGN(mh, sizeof(*ip6));
-		m->m_flags &= ~M_PKTHDR;
-		m->m_pkthdr.tdbi = NULL;
 		m->m_len -= sizeof(*ip6);
 		m->m_data += sizeof(*ip6);
 		mh->m_next = m;

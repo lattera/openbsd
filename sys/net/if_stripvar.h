@@ -1,6 +1,8 @@
-/*	$OpenBSD: src/sys/net/Attic/if_stripvar.h,v 1.4.14.1 2001/05/14 22:40:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_stripvar.h,v 1.4.14.2 2001/07/04 10:54:09 niklas Exp $	*/
 /*	$NetBSD: if_stripvar.h,v 1.2.4.1 1996/08/05 20:37:51 jtc Exp $	*/
 
+#ifndef _NET_IF_STRIPVAR_H_
+#define _NET_IF_STRIPVAR_H_
 /*
  * Definitions for SLIP interface data structures
  * 
@@ -37,6 +39,8 @@ struct st_softc {
 
 	caddr_t	sc_bpf;			/* BPF data */
 	struct timeout sc_timo;
+
+	struct timeval sc_lastpacket;	/* for watchdog */
 };
 
 
@@ -61,3 +65,4 @@ int	stripoutput __P((struct ifnet *,
 void	stripstart __P((struct tty *));
 int	striptioctl __P((struct tty *, u_long, caddr_t, int));
 #endif /* _KERNEL */
+#endif /* _NET_IF_STRIPVAR_H_ */

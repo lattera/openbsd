@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/zlib.h,v 1.2.14.1 2001/05/14 22:40:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/zlib.h,v 1.2.14.2 2001/07/04 10:54:21 niklas Exp $	*/
 /*	$NetBSD: zlib.h,v 1.1 1996/03/15 02:28:17 paulus Exp $	*/
 
 /*
@@ -33,8 +33,8 @@
   gzip@prep.ai.mit.edu    madler@alumni.caltech.edu
  */
 
-#ifndef _ZLIB_H
-#define _ZLIB_H
+#ifndef _NET_ZLIB_H_
+#define _NET_ZLIB_H_
 
 /* #include "zconf.h" */	/* included directly here */
 
@@ -628,5 +628,4 @@ extern uLong adler32 OF((uLong adler, Bytef *buf, uInt len));
 #ifndef _Z_UTIL_H
     struct internal_state {int dummy;}; /* hack for buggy compilers */
 #endif
-
-#endif /* _ZLIB_H */
+#endif /* _NET_ZLIB_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4.4.1 2001/05/14 22:40:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4.4.2 2001/07/04 10:54:13 niklas Exp $	*/
 
 /*
  * Copyright 1998 Massachusetts Institute of Technology
@@ -32,7 +32,7 @@
  */
 
 #ifndef _NET_IF_VLAN_VAR_H_
-#define	_NET_IF_VLAN_VAR_H_	1
+#define _NET_IF_VLAN_VAR_H_
 
 #ifdef _KERNEL
 struct vlan_mc_entry {
@@ -87,8 +87,6 @@ struct	vlanreq {
 
 #ifdef _KERNEL
 extern	int vlan_input(register struct ether_header *eh, struct mbuf *m);
-extern	int vlan_input_tag(struct ether_header *eh,
-			struct mbuf *m, u_int16_t t);
+extern	int vlan_input_tag(struct mbuf *m, u_int16_t t);
 #endif /* _KERNEL */
-
 #endif /* _NET_IF_VLAN_VAR_H_ */

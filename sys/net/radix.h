@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/radix.h,v 1.3.16.1 2001/05/14 22:40:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/radix.h,v 1.3.16.2 2001/07/04 10:54:18 niklas Exp $	*/
 /*	$NetBSD: radix.h,v 1.8 1996/02/13 22:00:37 christos Exp $	*/
 
 /*
@@ -167,5 +167,4 @@ struct radix_node
 	 *rn_search __P((void *, struct radix_node *)),
 	 *rn_search_m __P((void *, struct radix_node *, void *));
 #endif /* define(_KERNEL) || defined(_ROUTED) */
-
-#endif /* !_NET_RADIX_H_ */
+#endif /* _NET_RADIX_H_ */

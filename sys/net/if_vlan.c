@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.1 2001/05/14 22:40:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.2 2001/07/04 10:54:12 niklas Exp $ */
 /*
  * Copyright 1998 Massachusetts Institute of Technology
  *
@@ -136,7 +136,7 @@ int vlan_setmulti(struct ifnet *ifp)
 	while (enm != NULL) {
 		mc = malloc(sizeof(struct vlan_mc_entry), M_DEVBUF, M_NOWAIT);
 		bcopy(enm->enm_addrlo,
-		      (void *) &mc->mc_addr, ETHER_ADDR_LEN);
+		    (void *) &mc->mc_addr, ETHER_ADDR_LEN);
 		SLIST_INSERT_HEAD(&sc->vlan_mc_listhead, mc, mc_entries);
 		error = ether_addmulti(ifr_p, &sc->ifv_ac);
 		if (error)
@@ -165,13 +165,14 @@ vlanattach(void *dummy)
 		ifp->if_start = vlan_start;
 		ifp->if_ioctl = vlan_ioctl;
 		ifp->if_output = ether_output;
-		ifp->if_snd.ifq_maxlen = ifqmaxlen;
+		IFQ_SET_MAXLEN(&ifp->if_snd, ifqmaxlen);
+		IFQ_SET_READY(&ifp->if_snd);
 		if_attach(ifp);
 		ether_ifattach(ifp);
 
 		/* Now undo some of the damage... */
-		ifp->if_data.ifi_type = IFT_8021_VLAN;
-		ifp->if_data.ifi_hdrlen = EVL_ENCAPLEN;
+		ifp->if_type = IFT_8021_VLAN;
+		ifp->if_hdrlen = EVL_ENCAPLEN;
 	}
 }
 
@@ -182,13 +183,15 @@ vlan_start(struct ifnet *ifp)
 	struct ifnet *p;
 	struct ether_vlan_header *evl;
 	struct mbuf *m, *m0;
+	int error;
+	ALTQ_DECL(struct altq_pktattr pktattr;)
 
 	ifv = ifp->if_softc;
 	p = ifv->ifv_p;
 
 	ifp->if_flags |= IFF_OACTIVE;
 	for (;;) {
-		IF_DEQUEUE(&ifp->if_snd, m);
+		IFQ_DEQUEUE(&ifp->if_snd, m);
 		if (m == NULL)
 			break;
 
@@ -200,6 +203,26 @@ vlan_start(struct ifnet *ifp)
 			m_freem(m);
 			continue;
 		}
+
+#ifdef ALTQ
+		/*
+		 * If ALTQ is enabled on the parent interface, do
+		 * classification; the queueing discipline might
+		 * not require classification, but might require
+		 * the address family/header pointer in the pktattr.
+		 */
+		if (ALTQ_IS_ENABLED(&p->if_snd)) {
+			switch (p->if_type) {
+			case IFT_ETHER:
+				altq_etherclassify(&p->if_snd, m, &pktattr);
+				break;
+#ifdef DIAGNOSTIC
+			default:
+				panic("vlan_start: impossible (altq)");
+#endif
+			}
+		}
+#endif /* ALTQ */
 
 #if NBPFILTER > 0
 		if (ifp->if_bpf)
@@ -247,10 +270,9 @@ vlan_start(struct ifnet *ifp)
 				continue;
 			}
 
-			if (m0->m_flags & M_PKTHDR) {
-				M_COPY_PKTHDR(m0, m);
-				m->m_flags &= ~M_PKTHDR;
-			}
+			if (m0->m_flags & M_PKTHDR)
+				M_MOVE_PKTHDR(m0, m);
+
 			m0->m_flags &= ~M_PROTO1;
 			m0->m_next = m;
 			m0->m_len = sizeof(struct ether_vlan_header);
@@ -272,17 +294,16 @@ vlan_start(struct ifnet *ifp)
 		 * Send it, precisely as ether_output() would have.
 		 * We are already running at splimp.
 		 */
-		if (IF_QFULL(&p->if_snd)) {
-			IF_DROP(&p->if_snd);
-				/* XXX stats */
-			ifp->if_oerrors++;
-			m_freem(m);
-			continue;
-		}
 		p->if_obytes += m->m_pkthdr.len;
 		if (m->m_flags & M_MCAST)
 			p->if_omcasts++;
-		IF_ENQUEUE(&p->if_snd, m);
+		IFQ_ENQUEUE(&p->if_snd, m, &pktattr, error);
+		if (error) {
+			/* mbuf is already freed */
+			ifp->if_oerrors++;
+			continue;
+		}
+
 		ifp->if_opackets++;
 		if ((p->if_flags & IFF_OACTIVE) == 0)
 			p->if_start(p);
@@ -293,10 +314,11 @@ vlan_start(struct ifnet *ifp)
 }
 
 int
-vlan_input_tag(struct ether_header *eh, struct mbuf *m, u_int16_t t)
+vlan_input_tag(struct mbuf *m, u_int16_t t)
 {
 	int i;
 	struct ifvlan *ifv;
+	struct ether_vlan_header vh;
 
 	for (i = 0; i < NVLAN; i++) {
 		ifv = &ifv_softc[i];
@@ -304,16 +326,31 @@ vlan_input_tag(struct ether_header *eh, struct mbuf *m, u_int16_t t)
 			break;
 	}
 
-	if (i >= NVLAN || (ifv->ifv_if.if_flags & (IFF_UP|IFF_RUNNING)) !=
+	if (i >= NVLAN) {
+		if (m->m_pkthdr.len < sizeof(struct ether_header))
+			return (-1);
+		m_copydata(m, 0, sizeof(struct ether_header), (caddr_t)&vh);
+		vh.evl_proto = vh.evl_encap_proto;
+		vh.evl_tag = htons(t);
+		vh.evl_encap_proto = htons(ETHERTYPE_8021Q);
+		M_PREPEND(m, EVL_ENCAPLEN, M_DONTWAIT);
+		if (m == NULL)
+			return (-1);
+		m_copyback(m, 0, sizeof(struct ether_vlan_header), (caddr_t)&vh);
+		ether_input_mbuf(m->m_pkthdr.rcvif, m);
+		return (-1);
+	}
+
+	if ((ifv->ifv_if.if_flags & (IFF_UP|IFF_RUNNING)) !=
 	    (IFF_UP|IFF_RUNNING)) {
 		m_freem(m);
-		return -1;	/* so the parent can take note */
+		return (-1);
 	}
 
 	/*
 	 * Having found a valid vlan interface corresponding to
 	 * the given source interface and vlan tag, run the
-	 * the real packet through ethert_input().
+	 * the real packet through ether_input().
 	 */
 	m->m_pkthdr.rcvif = &ifv->ifv_if;
 
@@ -325,15 +362,11 @@ vlan_input_tag(struct ether_header *eh, struct mbuf *m, u_int16_t t)
 		 * drivers to know about VLANs and we're not ready for
 		 * that yet.
 		 */
-		struct mbuf m0;
-		m0.m_next = m;
-		m0.m_len = sizeof(struct ether_header);
-		m0.m_data = (char *)eh;
-		bpf_mtap(ifv->ifv_if.if_bpf, &m0);
+		bpf_mtap(ifv->ifv_if.if_bpf, m);
 	}
 #endif
 	ifv->ifv_if.if_ipackets++;
-	ether_input(&ifv->ifv_if, eh, m);
+	ether_input_mbuf(&ifv->ifv_if, m);
 	return 0;
 }
 
@@ -406,7 +439,7 @@ vlan_config(struct ifvlan *ifv, struct ifnet *p)
 	struct ifaddr *ifa1, *ifa2;
 	struct sockaddr_dl *sdl1, *sdl2;
 
-	if (p->if_data.ifi_type != IFT_ETHER)
+	if (p->if_type != IFT_ETHER)
 		return EPROTONOSUPPORT;
 	if (ifv->ifv_p)
 		return EBUSY;
@@ -547,7 +580,7 @@ vlan_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 
 			sa = (struct sockaddr *) &ifr->ifr_data;
 			bcopy(((struct arpcom *)ifp->if_softc)->ac_enaddr,
-			      (caddr_t) sa->sa_data, ETHER_ADDR_LEN);
+			    (caddr_t) sa->sa_data, ETHER_ADDR_LEN);
 		}
 		break;
 

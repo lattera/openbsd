@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_dl.h,v 1.2.14.1 2001/05/14 22:40:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_dl.h,v 1.2.14.2 2001/07/04 10:53:58 niklas Exp $	*/
 /*	$NetBSD: if_dl.h,v 1.8 1995/03/26 20:30:13 jtc Exp $	*/
 
 /*
@@ -54,6 +54,9 @@
  * expected that all drivers for an interface of a given if_type will agree.
  */
 
+#ifndef _NET_IF_DL_H_
+#define _NET_IF_DL_H_
+
 /*
  * Structure of a Link-Level sockaddr:
  */
@@ -80,4 +83,5 @@ void	link_addr __P((const char *, struct sockaddr_dl *));
 char	*link_ntoa __P((const struct sockaddr_dl *));
 __END_DECLS
 
-#endif /* !_KERNEL */
+#endif /* _KERNEL */
+#endif /* _NET_IF_DL_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_inet.c,v 1.3 1996/04/21 22:29:45 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_inet.c,v 1.3.16.1 2001/07/04 10:55:38 niklas Exp $	*/
 /*	$NetBSD: tp_inet.c,v 1.11 1996/03/16 23:13:49 christos Exp $	*/
 
 /*-
@@ -454,6 +454,7 @@ tpip_output_dg(m0, va_alist)
 		error = ENOBUFS;
 		goto bad;
 	}
+	M_MOVE_HDR(m, m0);
 	m->m_next = m0;
 	MH_ALIGN(m, sizeof(struct ip));
 	m->m_len = sizeof(struct ip);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.1 2001/05/14 22:40:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.2 2001/07/04 10:54:19 niklas Exp $	*/
 /*	$NetBSD: route.h,v 1.9 1996/02/13 22:00:49 christos Exp $	*/
 
 /*
@@ -35,6 +35,9 @@
  *
  *	@(#)route.h	8.3 (Berkeley) 4/19/94
  */
+
+#ifndef _NET_ROUTE_H_
+#define _NET_ROUTE_H_
 
 #include <sys/queue.h>
 
@@ -328,3 +331,4 @@ int	 rtrequest __P((int, struct sockaddr *,
 			struct rtentry **));
 int	 rtrequest1 __P((int, struct rt_addrinfo *, struct rtentry **));
 #endif /* _KERNEL */
+#endif /* _NET_ROUTE_H_ */

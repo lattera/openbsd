@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.2 2001/05/14 22:40:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.3 2001/07/04 10:54:36 niklas Exp $	*/
 /*	$KAME: ip6.h,v 1.14 2000/10/09 01:04:09 itojun Exp $	*/
 
 /*
@@ -294,6 +294,5 @@ do {									\
 		}							\
 	}								\
 } while (0)
-#endif /*_KERNEL*/
-
-#endif /* not _NETINET_IP6_H_ */
+#endif /* _KERNEL */
+#endif /* _NETINET_IP6_H_ */

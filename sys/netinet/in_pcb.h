@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22.2.1 2001/05/14 22:40:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22.2.2 2001/07/04 10:54:34 niklas Exp $	*/
 /*	$NetBSD: in_pcb.h,v 1.14 1996/02/13 23:42:00 christos Exp $	*/
 
 /*
@@ -64,6 +64,9 @@
  *
  *	@(#)in_pcb.h	8.1 (Berkeley) 6/10/93
  */
+
+#ifndef _NETINET_IN_PCB_H_
+#define _NETINET_IN_PCB_H_
 
 #include <sys/queue.h>
 #include <netinet/ip6.h>
@@ -133,6 +136,12 @@ struct inpcb {
 #define SR_WAIT           3             /* Waiting for SA */
 	TAILQ_ENTRY(inpcb) inp_tdb_in_next, inp_tdb_out_next;
 	struct tdb     *inp_tdb_in, *inp_tdb_out;
+	struct ipsec_ref *inp_ipsec_localid;
+	struct ipsec_ref *inp_ipsec_remoteid;
+	struct ipsec_ref *inp_ipsec_localcred;
+	struct ipsec_ref *inp_ipsec_remotecred;
+	struct ipsec_ref *inp_ipsec_localauth;
+	struct ipsec_ref *inp_ipsec_remoteauth;
 #define	inp_flowinfo	inp_hu.hu_ipv6.ip6_flow
 
 	int	in6p_cksum;
@@ -272,4 +281,5 @@ struct 	in6_addr *in6_selectsrc __P((struct sockaddr_in6 *,
 				     struct in6_addr *, int *));
 int	in6_selecthlim __P((struct inpcb *, struct ifnet *));
 int	in6_pcbsetport __P((struct in6_addr *, struct inpcb *));
-#endif
+#endif /* _KERNEL */
+#endif /* _NETINET_IN_PCB_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp.h,v 1.8 1999/07/06 20:17:52 cmetz Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp.h,v 1.8.4.1 2001/07/04 10:55:03 niklas Exp $	*/
 /*	$NetBSD: tcp.h,v 1.8 1995/04/17 05:32:58 cgd Exp $	*/
 
 /*
@@ -123,4 +123,4 @@ struct tcphdr {
 #define	TCP_SIGNATURE_ENABLE	0x04   /* enable TCP MD5 signature option */
 #define	TCP_SACK_DISABLE	0x300  /* disable SACKs (if enabled by def.) */
 
-#endif /* !_NETINET_TCP_H_ */
+#endif /* _NETINET_TCP_H_ */

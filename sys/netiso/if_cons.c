@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/if_cons.c,v 1.2 1996/03/04 10:35:21 mickey Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/if_cons.c,v 1.2.16.1 2001/07/04 10:55:34 niklas Exp $	*/
 /*	$NetBSD: if_cons.c,v 1.7 1996/02/13 22:09:44 christos Exp $	*/
 
 /*-
@@ -595,8 +595,6 @@ make_partial_x25_packet(isop, lcp)
 		return 0;
 	}
 	MGETHDR(m, M_WAITOK, MT_DATA);
-	if (m == 0)
-		return ENOBUFS;
 	buf = mtod(m, caddr_t);
 	ptr = buf;
 
