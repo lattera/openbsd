@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.12 2004/03/23 08:02:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.13 2004/04/06 13:32:29 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
@@ -54,6 +54,7 @@
 
 #include <machine/cpu.h>
 #include <machine/intr.h>
+#include <machine/npx.h>
 #include <machine/pio.h>
 #include <machine/cpufunc.h>
 #include <machine/pcb.h>
@@ -340,6 +341,19 @@ asm (".text\n\t"
 	"popl	%eax\n\t"
 	"ret\n\t");
 
+void
+npxinit(struct cpu_info *ci)
+{
+	lcr0(rcr0() & ~(CR0_EM|CR0_TS));
+	fninit();
+	if (npx586bug1(4195835, 3145727) != 0) {
+		i386_fpu_fdivbug = 1;
+		printf("%s: WARNING: Pentium FDIV bug detected!\n",
+		    ci->ci_dev.dv_xname);
+	}
+	lcr0(rcr0() | (CR0_TS));
+}
+
 /*
  * Attach routine - announce which it is, and wire into system
  */
@@ -369,13 +383,7 @@ npxattach(parent, self, aux)
 		return;
 	}
 
-	lcr0(rcr0() & ~(CR0_EM|CR0_TS));
-	fninit();
-	if (npx586bug1(4195835, 3145727) != 0) {
-		i386_fpu_fdivbug = 1;
-		printf("WARNING: Pentium FDIV bug detected!\n");
-	}
-	lcr0(rcr0() | (CR0_TS));
+	npxinit(&cpu_info_primary);
 	i386_fpu_present = 1;
 
 #ifdef I686_CPU
@@ -413,9 +421,9 @@ npxintr(arg)
 	union sigval sv;
 
 	uvmexp.traps++;
-	IPRINTF(("Intr"));
+	IPRINTF(("%s: fp intr\n", ci->ci_dev.dv_xname));
 
-	if (p == 0 || npx_type == NPX_NONE) {
+	if (p == NULL || npx_type == NPX_NONE) {
 		/* XXX no %p in stand/printf.c.  Cast to quiet gcc -Wall. */
 		printf("npxintr: p = %lx, curproc = %lx, npx_type = %d\n",
 		       (u_long) p, (u_long) curproc, npx_type);
@@ -544,7 +552,7 @@ npxintr(arg)
 /*
  * Implement device not available (DNA) exception
  *
- * If the we were the last process to use the FPU, we can simply return.
+ * If we were the last process to use the FPU, we can simply return.
  * Otherwise, we save the previous state, if necessary, and restore our last
  * saved state.
  */
@@ -566,11 +574,16 @@ npxdna_xmm(struct cpu_info *ci)
 	}
 
 	s = splipi();		/* lock out IPI's while we clean house.. */
+
 #ifdef MULTIPROCESSOR
 	p = ci->ci_curproc;
 #else
 	p = curproc;
 #endif
+
+	IPRINTF(("%s: dna for %lx%s\n", ci->ci_dev.dv_xname, (u_long)p,
+	    (p->p_md.md_flags & MDP_USEDFPU) ? " (used fpu)" : ""));
+
 	/*
 	 * XXX should have a fast-path here when no save/restore is necessary
 	 */
@@ -580,17 +593,19 @@ npxdna_xmm(struct cpu_info *ci)
 	 * initialization).
 	 */
 	if (ci->ci_fpcurproc != NULL) {
-		IPRINTF(("Save"));
+		IPRINTF(("%s: fp save %lx\n", ci->ci_dev.dv_xname,
+		    (u_long)ci->ci_fpcurproc));
 		npxsave_cpu(ci, 1);
 	} else {
 		clts();
-		IPRINTF(("Init"));
+		IPRINTF(("%s: fp init\n", ci->ci_dev.dv_xname));
 		fninit();
 		fwait();
 		stts();
 	}
 	splx(s);
 
+	IPRINTF(("%s: done saving\n", ci->ci_dev.dv_xname));
 	KDASSERT(ci->ci_fpcurproc == NULL);
 #ifndef MULTIPROCESSOR
 	KDASSERT(p->p_addr->u_pcb.pcb_fpcpu == NULL);
@@ -636,24 +651,28 @@ npxdna_s87(struct cpu_info *ci)
 	p = curproc;
 #endif
 
-	IPRINTF(("%s: dna for %p\n", ci->ci_dev->dv_xname, p));
+	IPRINTF(("%s: dna for %lx%s\n", ci->ci_dev.dv_xname, (u_long)p,
+	    (p->p_md.md_flags & MDP_USEDFPU) ? " (used fpu)" : ""));
+
 	/*
 	 * If someone else was using our FPU, save their state (which does an
 	 * implicit initialization); otherwise, initialize the FPU state to
 	 * clear any exceptions.
 	 */
-	if (ci->ci_fpcurproc != NULL)
+	if (ci->ci_fpcurproc != NULL) {
+		IPRINTF(("%s: fp save %lx\n", ci->ci_dev.dv_xname,
+		    (u_long)ci->ci_fpcurproc));
 		npxsave_cpu(ci, 1);
-	else {
+	} else {
 		clts();
-		IPRINTF(("%s: fp init\n", ci->ci_dev->dv_xname));
+		IPRINTF(("%s: fp init\n", ci->ci_dev.dv_xname));
 		fninit();
 		fwait();
 		stts();
 	}
 	splx(s);
 
-	IPRINTF(("%s: done saving\n", ci->ci_dev->dv_xname));
+	IPRINTF(("%s: done saving\n", ci->ci_dev.dv_xname));
 	KDASSERT(ci->ci_fpcurproc == NULL);
 #ifndef MULTIPROCESSOR
 	KDASSERT(p->p_addr->u_pcb.pcb_fpcpu == NULL);
@@ -691,6 +710,14 @@ npxdna_s87(struct cpu_info *ci)
 	return (1);
 }
 
+/*
+ * The FNSAVE instruction clears the FPU state.  Rather than reloading the FPU
+ * immediately, we clear fpcurproc and turn on CR0_TS to force a DNA and a
+ * reload of the FPU state the next time we try to use it.  This routine
+ * is only called when forking, core dumping, or debugging, or swapping,
+ * so the lazy reload at worst forces us to trap once per fork(), and at best
+ * saves us a reload once per fork().
+ */
 void
 npxsave_cpu(struct cpu_info *ci, int save)
 {
@@ -703,8 +730,8 @@ npxsave_cpu(struct cpu_info *ci, int save)
 	if (p == NULL)
 		return;
 
-	IPRINTF(("%s: fp cpu %s %p\n", ci->ci_dev->dv_xname,
-	    save? "save" : "flush", p));
+	IPRINTF(("%s: fp cpu %s %lx\n", ci->ci_dev.dv_xname,
+	    save ? "save" : "flush", (u_long)p));
 
 	if (save) {
 #ifdef DIAGNOSTIC
@@ -728,6 +755,8 @@ npxsave_cpu(struct cpu_info *ci, int save)
 		ci->ci_fpsaving = 1;
 		fpu_save(&p->p_addr->u_pcb.pcb_savefpu);
 		ci->ci_fpsaving = 0;
+		/* It is unclear if this is needed. */
+		fwait();
 	}
 
 	/*
@@ -745,13 +774,6 @@ npxsave_cpu(struct cpu_info *ci, int save)
 
 /*
  * Save p's FPU state, which may be on this processor or another processor.
- *
- * The FNSAVE instruction clears the FPU state.  Rather than reloading the FPU
- * immediately, we clear fpcurproc and turn on CR0_TS to force a DNA and a
- * reload of the FPU state the next time we try to use it.  This routine
- * is only called when forking, core dumping, or debugging, or swapping,
- * so the lazy reload at worst forces us to trap once per fork(), and at best
- * saves us a reload once per fork().
  */
  void
 npxsave_proc(struct proc *p, int save)
@@ -766,8 +788,8 @@ npxsave_proc(struct proc *p, int save)
 	if (oci == NULL)
 		return;
 
-	IPRINTF(("%s: fp proc %s %p\n", ci->ci_dev->dv_xname,
-	    save? "save" : "flush", p));
+	IPRINTF(("%s: fp proc %s %lx\n", ci->ci_dev.dv_xname,
+	    save ? "save" : "flush", (u_long)p));
 
 #if defined(MULTIPROCESSOR)
 	if (oci == ci) {
@@ -779,10 +801,8 @@ npxsave_proc(struct proc *p, int save)
 		int spincount;
 #endif
 
-		IPRINTF(("%s: fp ipi to %s %s %p\n",
-		    ci->ci_dev->dv_xname,
-		    oci->ci_dev->dv_xname,
-		    save? "save" : "flush", p));
+		IPRINTF(("%s: fp ipi to %s %s %lx\n", ci->ci_dev.dv_xname,
+		    oci->ci_dev.dv_xname, save ? "save" : "flush", (u_long)p));
 
 		i386_send_ipi(oci,
 		    save ? I386_IPI_SYNCH_FPU : I386_IPI_FLUSH_FPU);
@@ -794,7 +814,7 @@ npxsave_proc(struct proc *p, int save)
 #ifdef DIAGNOSTIC
 		{
 			spincount++;
-			if (spincount > 10000000) {
+			if (spincount > 100000000) {
 				panic("fp_save ipi didn't");
 			}
 		}
