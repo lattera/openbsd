@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/Attic/hpux_machdep.h,v 1.5 1997/04/16 11:56:34 downsj Exp $	*/
-/*	$NetBSD: hpux_machdep.h,v 1.7 1997/04/01 20:05:14 scottr Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/Attic/kbdconf.c,v 1.1 1997/04/16 11:56:39 downsj Exp $	*/
+/*	$NetBSD: kbdconf.c,v 1.1 1997/04/14 19:00:12 thorpej Exp $	*/
 
 /*-
- * Copyright (c) 1996, 1997 The NetBSD Foundation, Inc.
+ * Copyright (c) 1997 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -37,49 +37,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MACHINE_HPUX_MACHDEP_H_
-#define _MACHINE_HPUX_MACHDEP_H_
-
-/*    
- * Information pushed on stack when a signal is delivered.
- * This is used by the kernel to restore state following
- * execution of the signal handler.  It is also made available
- * to the handler to allow it to restore state properly if
- * a non-standard exit is performed. 
+/*
+ * Keyboard support configuration.
  */
-struct hpuxsigcontext {
-	int	hsc_syscall;		/* ??? (syscall number?) */
-	char	hsc_action;		/* ??? */
-	char	hsc_pad1;
-	char	hsc_pad2;
-	char	hsc_onstack;		/* sigstack state to restore */
-	int	hsc_mask;		/* signal mask to restore */
-	int	hsc_sp;			/* sp to restore */
-	short	hsc_ps;			/* psl to restore */
-	int	hsc_pc;			/* pc to restore */
 
-	/*
-	 * The following are not actually used by HP-UX.  They exist
-	 * for the convenience of the compatibility code.
-	 */
-	short	_hsc_pad;
-	int	_hsc_ap;		/* pointer to hpuxsigstate */
+#ifdef ITECONSOLE
+
+#include <sys/param.h>
+
+#include "samachdep.h"
+#include "kbdvar.h"
+
+#ifndef SMALL
+
+/*
+ * Note, these are arranged in order of preference.  The first `init'
+ * routine to report success gets to play.
+ */
+struct kbdsw kbdsw[] = {
+#ifdef HIL_KEYBOARD
+	{ hilkbd_getc, hilkbd_nmi, hilkbd_init },
+#endif
+#ifdef DOMAIN_KEYBOARD
+	{ dnkbd_getc, dnkbd_nmi, dnkbd_init },
+#endif
+	{ NULL, NULL, NULL },
 };
 
-#ifdef _KERNEL
-struct exec_package;
-struct exec_vmcmd;
+#endif /* SMALL */
 
-int	hpux_cpu_makecmds __P((struct proc *, struct exec_package *));
-int	hpux_cpu_vmcmd __P((struct proc *, struct exec_vmcmd *));
-void	hpux_cpu_bsd_to_hpux_stat __P((struct stat *, struct hpux_stat *));
-void	hpux_cpu_uname __P((struct hpux_utsname *));
-int	hpux_cpu_sysconf_arch __P((void));
-int	hpux_to_bsd_uoff __P((int *, int *, struct proc *));
-
-void	hpux_sendsig __P((sig_t, int, int, u_long, int, union sigval));
-void	hpux_setregs __P((struct proc *, struct exec_package *,
-	    u_long, register_t *));
-#endif /* _KERNEL */
-
-#endif /* ! _MACHINE_HPUX_MACHDEP_H_ */
+#endif /* ITECONSOLE */

@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/isr.h,v 1.3 1997/01/12 15:13:18 downsj Exp $	*/
-/*	$NetBSD: isr.h,v 1.7 1996/12/09 03:04:47 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/stand/Attic/kbdvar.h,v 1.1 1997/04/16 11:56:39 downsj Exp $	*/
+/*	$NetBSD: kbdvar.h,v 1.1 1997/04/14 19:00:13 thorpej Exp $	*/
 
 /*-
- * Copyright (c) 1996 The NetBSD Foundation, Inc.
+ * Copyright (c) 1997 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -37,42 +37,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/queue.h>
-
 /*
- * The location and size of the autovectored interrupt portion
- * of the vector table.
+ * Structure definitions and prototypes for the indirect keyboard driver
+ * for standalone ITE.
  */
-#define ISRLOC		0x18
-#define NISR		8
 
-struct isr {
-	LIST_ENTRY(isr) isr_link;
-	int		(*isr_func) __P((void *));
-	void		*isr_arg;
-	int		isr_ipl;
-	int		isr_priority;
+struct kbdsw {
+	int	(*k_getc) __P((void));	/* get character */
+	void	(*k_nmi) __P((void));	/* handle non-maskable interrupt */
+	int	(*k_init) __P((void));	/* probe/initialize keyboard */
 };
 
-/*
- * ISR priorities.  These are not the same as interrupt levels.
- * These serve 2 purposes:
- *	- properly order ISRs in the list
- *	- compute levels for spl*() calls.
- */
-#define ISRPRI_BIO		0
-#define ISRPRI_NET		1
-#define ISRPRI_TTY		2
-#define ISRPRI_TTYNOBUF		3
+#ifdef ITECONSOLE
 
-/*
- * Convert PSL values to IPLs and vice-versa.
- */
-#define	PSLTOIPL(x)	(((x) >> 8) & 0xf)
-#define	IPLTOPSL(x)	((((x) & 0xf) << 8) | PSL_S)
+extern struct kbdsw kbdsw[];
 
-void	isrinit __P((void));
-void	*isrlink __P((int (*)(void *), void *, int, int));
-void	isrunlink __P((void *));
-void	isrdispatch __P((int));
-void	isrprintlevels __P((void));
+#ifdef HIL_KEYBOARD
+int	hilkbd_getc __P((void));
+void	hilkbd_nmi __P((void));
+int	hilkbd_init __P((void));
+#endif
+
+#ifdef DOMAIN_KEYBOARD
+int	dnkbd_getc __P((void));
+void	dnkbd_nmi __P((void));
+int	dnkbd_init __P((void));
+#endif
+#endif /* ITECONSOLE */
