@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)info_nis.c	8.1 (Berkeley) 6/6/93
- *	$Id: info_nis.c,v 1.4 2001/03/02 06:22:02 deraadt Exp $
+ *	$Id: info_nis.c,v 1.5 2002/07/18 00:50:23 pvalchev Exp $
  */
 
 /*
@@ -207,7 +207,7 @@ int nis_search(mnt_map *m, char *map, char *key, char **val, time_t *tp)
 	} else {
 		/*
 		 * NIS+ server without yp_order
-		 * Check if timeout has expired to invalidate the cache 
+		 * Check if timeout has expired to invalidate the cache
 		 */
 		order = time(NULL);
 		if ((time_t)order - *tp > am_timeo) {

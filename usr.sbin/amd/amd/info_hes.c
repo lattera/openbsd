@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)info_hes.c	8.1 (Berkeley) 6/6/93
- *	$Id: info_hes.c,v 1.7 2002/06/11 05:29:54 itojun Exp $
+ *	$Id: info_hes.c,v 1.8 2002/07/18 00:50:23 pvalchev Exp $
  */
 
 /*
@@ -273,7 +273,7 @@ hs_res_send(char *buf, int buflen, char *answer, int anslen)
 				      sizeof(struct in_addr));
 				server.sin_family = AF_INET;
 				server.sin_port = htons(NAMESERVER_PORT);
-					
+
 				if (connect(s, &server,
 					    sizeof(struct sockaddr)) < 0) {
 					(void) close(s);
@@ -458,7 +458,7 @@ hs_strip_our_domain(char *name)
 {
 	char *end_pos;
 	short targ_len, cur_len;
-	
+
 	targ_len = strlen(hs_domain);
 	cur_len = strlen(name);
 	if (cur_len <= targ_len)
