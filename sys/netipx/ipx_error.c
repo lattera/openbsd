@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_error.c,v 1.1 1996/08/16 09:15:58 mickey Exp $	*/
-/*	$NOWHERE: ipx_error.c,v 1.2 1996/05/07 09:49:40 mickey Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_error.c,v 1.2 1996/10/26 09:34:49 mickey Exp $	*/
 
 /*-
  *
