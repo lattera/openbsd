@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/mpbiosreg.h,v 1.1.2.2 2001/07/15 15:13:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/mpbiosreg.h,v 1.1.2.3 2004/03/14 17:42:51 niklas Exp $	*/
 /* $NetBSD: mpbiosreg.h,v 1.1.2.3 2000/02/29 13:17:51 sommerfeld Exp $ */
 
 /*-
@@ -148,6 +148,7 @@ struct mpbios_int {
 	u_int8_t  src_bus_id;
 	u_int8_t  src_bus_irq;
 	u_int8_t  dst_apic_id;
+#define MPS_ALL_APICS	0xff
 	u_int8_t  dst_apic_int;
 };
 
