@@ -30,6 +30,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/tcpip.h>
 #include <net/if.h>
+#include "ip_fil_compat.h"
 #include <netdb.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
@@ -38,6 +39,7 @@
 
 #ifndef	lint
 static	char	sccsid[] = "@(#)ipft_hx.c	1.1 3/9/96 (C) 1996 Darren Reed";
+static	char	rcsid[] = "$Id: ipft_hx.c,v 1.1.1.1 1996/06/23 07:27:17 darrenr Exp $";
 #endif
 
 extern	int	opts;

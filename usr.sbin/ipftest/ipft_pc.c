@@ -30,6 +30,10 @@
 #include "ipt.h"
 #include "pcap.h"
 
+#ifndef	lint
+static	char	rcsid[] = "$Id: ipft_pc.c,v 1.1.1.1 1996/06/23 07:27:17 darrenr Exp $";
+#endif
+
 struct	llc	{
 	int	lc_sz;	/* LLC header length */
 	int	lc_to;	/* LLC Type offset */

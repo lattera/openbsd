@@ -56,6 +56,7 @@ tcpdump -nqte
 
 #ifndef lint
 static char sccsid[] = "@(#)ipft_td.c	1.8 2/4/96 (C)1995 Darren Reed";
+static	char	rcsid[] = "$Id: ipft_td.c,v 1.1.1.1 1996/06/23 07:27:15 darrenr Exp $";
 #endif
 
 static	int	tcpd_open(), tcpd_close(), tcpd_readip();
