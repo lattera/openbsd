@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/lcavar.h,v 1.6.14.1 2001/04/18 16:01:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/lcavar.h,v 1.6.14.2 2002/03/06 00:47:44 niklas Exp $	*/
 /* $NetBSD: lcavar.h,v 1.7 1997/06/06 23:54:32 thorpej Exp $ */
 
 /*
@@ -41,7 +41,7 @@
 struct lca_config {
 	int	lc_initted;
 
-	bus_space_tag_t lc_iot, lc_memt;
+	struct alpha_bus_space lc_iot, lc_memt;
 	struct alpha_pci_chipset lc_pc;
 
 	struct alpha_bus_dma_tag lc_dmat_direct;
@@ -65,5 +65,5 @@ void	lca_init __P((struct lca_config *, int));
 void	lca_pci_init __P((pci_chipset_tag_t, void *));
 void	lca_dma_init __P((struct lca_config *));
 
-bus_space_tag_t lca_bus_io_init __P((void *));
-bus_space_tag_t lca_bus_mem_init __P((void *));
+void	lca_bus_io_init __P((bus_space_tag_t, void *));
+void	lca_bus_mem_init __P((bus_space_tag_t, void *));

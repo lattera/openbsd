@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/pmap.h,v 1.4.14.3 2001/12/05 00:39:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/pmap.h,v 1.4.14.4 2002/03/06 00:47:44 niklas Exp $ */
 /* $NetBSD: pmap.h,v 1.37 2000/11/19 03:16:35 thorpej Exp $ */
 
 /*-
@@ -193,7 +193,7 @@ void	pmap_tlb_shootdown_q_drain(u_long, boolean_t);
  
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_wired_count(pmap)		((pmap)->pm_stats.wired_count)
-#define pmap_update()			/* nothing */
+#define pmap_update(pmap)		/* nothing (yet) */
 
 extern	pt_entry_t *VPT;		/* Virtual Page Table */
 

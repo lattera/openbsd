@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/vmparam.h,v 1.4.14.3 2001/12/05 00:39:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/vmparam.h,v 1.4.14.4 2002/03/06 00:47:44 niklas Exp $ */
 /* $NetBSD: vmparam.h,v 1.18 2000/05/22 17:13:54 thorpej Exp $ */
 
 /*
@@ -122,8 +122,6 @@
 #define VM_MAX_KERNEL_ADDRESS	((vaddr_t)ALPHA_K1SEG_END)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*NBPG)
 #define VM_PHYS_SIZE		(USRIOSIZE*NBPG)
 
 /* some Alpha-specific constants */

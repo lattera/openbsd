@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.7 2001/12/05 00:39:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/machdep.c,v 1.30.2.8 2002/03/06 00:47:43 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.210 2000/06/01 17:12:38 thorpej Exp $ */
 
 /*-
@@ -69,7 +69,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/sched.h>
 #include <sys/buf.h>
@@ -143,14 +142,19 @@ int	nbuf = NBUF;
 #else
 int	nbuf = 0;
 #endif
+
+#ifndef BUFCACHEPERCENT
+#define BUFCACHEPERCENT 10
+#endif
+
 #ifdef	BUFPAGES
 int	bufpages = BUFPAGES;
 #else
 int	bufpages = 0;
 #endif
+int	bufcachepercent = BUFCACHEPERCENT;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int	maxmem;			/* max memory per process */
@@ -817,16 +821,13 @@ allocsys(v)
 	valloc(msqids, struct msqid_ds, msginfo.msgmni);
 #endif
 
-#ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 10
-#endif
 	/*
 	 * Determine how many buffers to allocate.
 	 * We allocate 10% of memory for buffer space.  Insure a
 	 * minimum of 16 buffers.
 	 */
 	if (bufpages == 0)
-		bufpages = (physmem / (100/BUFCACHEPERCENT));
+		bufpages = (physmem / (100/bufcachepercent));
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -860,7 +861,7 @@ consinit()
 #include <dev/ic/pckbcvar.h>
 
 /*
- * This is called by the pbkbc driver if no pckbd is configured.
+ * This is called by the pckbc driver if no pckbd is configured.
  * On the i386, it is used to glue in the old, deprecated console
  * code.  On the Alpha, it does nothing.
  */
@@ -942,6 +943,7 @@ cpu_startup()
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
+		pmap_update(pmap_kernel());
 	}
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -955,9 +957,6 @@ cpu_startup()
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-			VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 #if defined(DEBUG)
 	pmapdebug = opmapdebug;
@@ -1981,18 +1980,14 @@ cpu_exec_ecoff_hook(p, epp)
 	struct exec_package *epp;
 {
 	struct ecoff_exechdr *execp = (struct ecoff_exechdr *)epp->ep_hdr;
-#ifdef COMPAT_OSF1
-	extern struct emul emul_osf1;
-#endif
 	extern struct emul emul_native;
 	int error;
-	extern int osf1_exec_ecoff_hook(struct proc *p,
-					struct exec_package *epp);
+	extern int osf1_exec_ecoff_hook(struct proc *, struct exec_package *);
 
 	switch (execp->f.f_magic) {
 #ifdef COMPAT_OSF1
 	case ECOFF_MAGIC_ALPHA:
-		epp->ep_emul = &emul_osf1;
+		error = osf1_exec_ecoff_hook(p, epp);
 		break;
 #endif
 

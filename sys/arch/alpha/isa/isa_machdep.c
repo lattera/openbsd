@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/isa/isa_machdep.c,v 1.6.10.3 2001/11/13 21:00:49 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/isa/isa_machdep.c,v 1.6.10.4 2002/03/06 00:47:44 niklas Exp $ */
 /* $NetBSD: isa_machdep.c,v 1.12 1998/08/07 10:26:39 drochner Exp $ */
 
 /*
@@ -54,11 +54,16 @@
 #if (NPCPPI > 0)
 #include <dev/isa/pcppivar.h>
 
-int isabeepmatch __P((struct device *, struct cfdata *, void *));
+int isabeepmatch __P((struct device *, void *, void *));
 void isabeepattach __P((struct device *, struct device *, void *));
+void isabeep __P((int, int));
 
 struct cfattach isabeep_ca = {
 	sizeof(struct device), isabeepmatch, isabeepattach
+};
+
+struct cfdriver isabeep_cd = {
+	NULL, "isabeep", DV_DULL
 };
 
 static int ppi_attached;
@@ -82,7 +87,7 @@ isa_display_console(iot, memt)
 int
 isabeepmatch(parent, match, aux)
 	struct device *parent;
-	struct cfdata *match;
+	void *match;
 	void *aux;
 {
 	return (!ppi_attached);
@@ -98,16 +103,12 @@ isabeepattach(parent, self, aux)
 	ppicookie = ((struct pcppi_attach_args *)aux)->pa_cookie;
 	ppi_attached = 1;
 }
-#endif
 
-#if 0
 void
 isabeep(pitch, period)
 	int pitch, period;
 {
-#if (NPCPPI > 0)
 	if (ppi_attached)
 		pcppi_bell(ppicookie, pitch, period, 0);
-#endif
 }
 #endif

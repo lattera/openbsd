@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.29.4.1 2001/04/18 16:00:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.29.4.2 2002/03/06 00:47:43 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -367,6 +367,8 @@ readdoslabel(bp, strat, lp, osdep, partoffp, cylp, spoofonly)
 		while (wander && n < 8 && loop < 8) {
 		        loop++;
 			wander = 0;
+			if (part_blkno < extoff)
+				part_blkno = extoff;
 
 			/* read boot record */
 			bp->b_blkno = part_blkno;

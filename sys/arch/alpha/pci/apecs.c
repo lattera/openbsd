@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/apecs.c,v 1.8.14.3 2001/11/13 21:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/apecs.c,v 1.8.14.4 2002/03/06 00:47:44 niklas Exp $	*/
 /*	$NetBSD: apecs.c,v 1.16 1996/12/05 01:39:34 cgd Exp $	*/
 
 /*-
@@ -149,8 +149,8 @@ apecs_init(acp, mallocsafe)
 
 	if (!acp->ac_initted) {
 		/* don't do these twice since they set up extents */
-		acp->ac_iot = apecs_bus_io_init(acp);
-		acp->ac_memt = apecs_bus_mem_init(acp);
+		apecs_bus_io_init(&acp->ac_iot, acp);
+		apecs_bus_mem_init(&acp->ac_memt, acp);
 
 #if 0
 		/*
@@ -239,8 +239,8 @@ apecsattach(parent, self, aux)
 	}
 
 	pba.pba_busname = "pci";
-	pba.pba_iot = acp->ac_iot;
-	pba.pba_memt = acp->ac_memt;
+	pba.pba_iot = &acp->ac_iot;
+	pba.pba_memt = &acp->ac_memt;
 	pba.pba_dmat =
 	    alphabus_dma_get_tag(&acp->ac_dmat_direct, ALPHA_BUS_PCI);
 	pba.pba_pc = &acp->ac_pc;

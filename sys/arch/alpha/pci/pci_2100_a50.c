@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/pci_2100_a50.c,v 1.12.6.3 2001/11/13 21:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/pci_2100_a50.c,v 1.12.6.4 2002/03/06 00:47:44 niklas Exp $	*/
 /*	$NetBSD: pci_2100_a50.c,v 1.12 1996/11/13 21:13:29 cgd Exp $	*/
 
 /*
@@ -66,7 +66,7 @@ void
 pci_2100_a50_pickintr(acp)
 	struct apecs_config *acp;
 {
-	bus_space_tag_t iot = acp->ac_iot;
+	bus_space_tag_t iot = &acp->ac_iot;
 	pci_chipset_tag_t pc = &acp->ac_pc;
 	pcireg_t sioclass;
 	int sioII;

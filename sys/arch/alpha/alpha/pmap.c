@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.5 2001/12/05 00:39:08 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/pmap.c,v 1.6.4.6 2002/03/06 00:47:43 niklas Exp $ */
 /* $NetBSD: pmap.c,v 1.154 2000/12/07 22:18:55 thorpej Exp $ */
 
 /*-
@@ -512,8 +512,12 @@ void	pmap_l3pt_delref(pmap_t, vaddr_t, pt_entry_t *, long,
 void	pmap_l2pt_delref(pmap_t, pt_entry_t *, pt_entry_t *, long);
 void	pmap_l1pt_delref(pmap_t, pt_entry_t *, long);
 
-void	*pmap_l1pt_alloc(unsigned long, int, int);
-void	pmap_l1pt_free(void *, unsigned long, int);
+void	*pmap_l1pt_alloc(struct pool *, int);
+void	pmap_l1pt_free(struct pool *, void *);
+
+struct pool_allocator pmap_l1pt_allocator = {
+	pmap_l1pt_alloc, pmap_l1pt_free, 0,
+};
 
 int	pmap_l1pt_ctor(void *, void *, int);
 
@@ -525,8 +529,11 @@ void	pmap_pv_remove(pmap_t, paddr_t, vaddr_t, boolean_t,
 	    struct pv_entry **);
 struct	pv_entry *pmap_pv_alloc(void);
 void	pmap_pv_free(struct pv_entry *);
-void	*pmap_pv_page_alloc(u_long, int, int);
-void	pmap_pv_page_free(void *, u_long, int);
+void	*pmap_pv_page_alloc(struct pool *, int);
+void	pmap_pv_page_free(struct pool *, void *);
+struct pool_allocator pmap_pv_allocator = {
+	pmap_pv_page_alloc, pmap_pv_page_free, 0,
+};
 #ifdef DEBUG
 void	pmap_pv_dump(paddr_t);
 #endif
@@ -802,11 +809,16 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 #endif
 
 	/*
+	 * Compute the number of pages kmem_map will have.
+	 */
+	kmeminit_nkmempages();
+
+	/*
 	 * Figure out how many PTE's are necessary to map the kernel.
 	 */
-	lev3mapsize = (VM_PHYS_SIZE + (ubc_nwins << ubc_winshift) +
+	lev3mapsize = (VM_PHYS_SIZE +
 		nbuf * MAXBSIZE + 16 * NCARGS + PAGER_MAP_SIZE) / NBPG +
-		(maxproc * UPAGES) + NKMEMCLUSTERS;
+		(maxproc * UPAGES) + nkmempages;
 
 #ifdef SYSVSHM
 	lev3mapsize += shminfo.shmall;
@@ -942,19 +954,17 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 	 */
 	pmap_ncpuids = ncpuids;
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, 0, "pmappl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	    &pool_allocator_nointr);
 	pool_init(&pmap_l1pt_pool, PAGE_SIZE, 0, 0, 0, "l1ptpl",
-	    0, pmap_l1pt_alloc, pmap_l1pt_free, M_VMPMAP);
+	    &pmap_l1pt_allocator);
 	pool_cache_init(&pmap_l1pt_cache, &pmap_l1pt_pool, pmap_l1pt_ctor,
 	    NULL, NULL);
 	pool_init(&pmap_asn_pool, pmap_ncpuids * sizeof(u_int), 0, 0, 0,
-	    "pmasnpl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	    "pmasnpl", &pool_allocator_nointr);
 	pool_init(&pmap_asngen_pool, pmap_ncpuids * sizeof(u_long), 0, 0, 0,
-	    "pmasngenpl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	    "pmasngenpl", &pool_allocator_nointr);
 	pool_init(&pmap_pv_pool, sizeof(struct pv_entry), 0, 0, 0, "pvpl",
-	    0, pmap_pv_page_alloc, pmap_pv_page_free, M_VMPMAP);
+	    &pmap_pv_allocator);
 
 	TAILQ_INIT(&pmap_all_pmaps);
 
@@ -998,7 +1008,7 @@ pmap_bootstrap(paddr_t ptaddr, u_int maxasn, u_long ncpuids)
 	 */
 	pool_init(&pmap_tlb_shootdown_job_pool,
 	    sizeof(struct pmap_tlb_shootdown_job), 0, 0, 0, "pmaptlbpl",
-	    0, NULL, NULL, M_VMPMAP);
+	    NULL);
 	for (i = 0; i < ALPHA_MAXPROCS; i++) {
 		TAILQ_INIT(&pmap_tlb_shootdown_q[i].pq_head);
 		simple_lock_init(&pmap_tlb_shootdown_q[i].pq_slock);
@@ -1295,6 +1305,7 @@ pmap_destroy(pmap_t pmap)
 			printf("pmap_release: %ld level 3 tables left\n",
 			    pmap->pm_nlev3);
 		pmap_remove(pmap, VM_MIN_ADDRESS, VM_MAX_ADDRESS);
+		pmap_update(pmap);
 		if (pmap->pm_lev1map != kernel_lev1map)
 			panic("pmap_release: pmap_remove() didn't");
 	}
@@ -3197,7 +3208,7 @@ pmap_pv_free(struct pv_entry *pv)
  *	Allocate a page for the pv_entry pool.
  */
 void *
-pmap_pv_page_alloc(u_long size, int flags, int mtype)
+pmap_pv_page_alloc(struct pool *pp, int flags)
 {
 	paddr_t pg;
 
@@ -3212,7 +3223,7 @@ pmap_pv_page_alloc(u_long size, int flags, int mtype)
  *	Free a pv_entry pool page.
  */
 void
-pmap_pv_page_free(void *v, u_long size, int mtype)
+pmap_pv_page_free(struct pool *pp, void *v)
 {
 
 	pmap_physpage_free(ALPHA_K0SEG_TO_PHYS((vaddr_t)v));
@@ -3594,7 +3605,7 @@ pmap_l1pt_ctor(void *arg, void *object, int flags)
  *	Page alloctor for L1 PT pages.
  */
 void *
-pmap_l1pt_alloc(unsigned long sz, int flags, int mtype)
+pmap_l1pt_alloc(struct pool *pp, int flags)
 {
 	paddr_t ptpa;
 
@@ -3621,7 +3632,7 @@ pmap_l1pt_alloc(unsigned long sz, int flags, int mtype)
  *	Page freer for L1 PT pages.
  */
 void
-pmap_l1pt_free(void *v, unsigned long sz, int mtype)
+pmap_l1pt_free(struct pool *pp, void *v)
 {
 
 	pmap_physpage_free(ALPHA_K0SEG_TO_PHYS((vaddr_t) v));
