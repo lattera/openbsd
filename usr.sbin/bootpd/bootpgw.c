@@ -26,7 +26,7 @@ SOFTWARE.
 ************************************************************************/
 
 #ifndef lint
-static char rcsid[] = "$Id: bootpgw.c,v 1.4 1995/07/24 13:38:10 ws Exp $";
+static char rcsid[] = "$Id: bootpgw.c,v 1.1.1.1 1995/10/18 08:47:26 deraadt Exp $";
 #endif
 
 /*
@@ -151,7 +151,7 @@ struct in_addr my_ip_addr;
  * main server loop is started.
  */
 
-void
+int
 main(argc, argv)
 	int argc;
 	char **argv;
