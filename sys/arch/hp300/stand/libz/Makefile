@@ -1,10 +1,9 @@
-#	$OpenBSD: src/sys/arch/hp300/stand/libz/Makefile,v 1.2 2003/12/17 04:28:48 millert Exp $
+#	$OpenBSD: src/sys/arch/hp300/stand/libz/Makefile,v 1.3 2003/12/17 05:01:06 millert Exp $
 
 S=${.CURDIR}/../../../..
 ZDST=${.OBJDIR}
-SADIR=${.CURDIR}/..
 
 .PATH: ${S}/lib/libz
 
 .include "${S}/lib/libz/Makefile"
-CFLAGS+=-msoft-float ${SACFLAGS} -I${S}/lib/libsa ${DEBUGFLAGS}
+CFLAGS+=-msoft-float
