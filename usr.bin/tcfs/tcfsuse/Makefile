@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/tcfs/tcfsuse/Attic/Makefile,v 1.3 2000/06/20 08:36:18 fgsch Exp $
+
 .PATH:		${.CURDIR}/..
 
 PROG=	tcfsuse

@@ -1,3 +1,5 @@
+#	$OpenBSD: src/usr.bin/tcfs/lib/Attic/Makefile,v 1.2 2000/06/20 08:36:17 fgsch Exp $
+
 .PATH:		${.CURDIR}/..
 
 LIB=	tcfs
