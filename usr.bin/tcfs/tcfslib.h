@@ -8,18 +8,7 @@
 
 /*
  *	Base utility set v0.1
- *
- *	  $Source: /usr/src/tcfs-utils_0.1/include/RCS/tcfslib.h,v $
- *	   $State: Exp $
- *	$Revision: 1.1 $
- *	  $Author: luicat $
- *	    $Date: 2000/01/14 13:45:28 $
- *
  */
-
-/* RCS_HEADER_ENDS_HERE */
-
-
 
 #include <unistd.h>
 #include "tcfsdefines.h"

@@ -8,20 +8,7 @@
 
 /*
  *	Base utility set v0.1
- *
- *	  $Source: /usr/src/tcfs-utils_0.1/bin/RCS/tcfsputkey.c,v $
- *	   $State: Exp $
- *	$Revision: 1.1 $
- *	  $Author: luicat $
- *	    $Date: 2000/01/14 13:44:04 $
- *
  */
-
-static const char *RCSid="$id: $";
-
-/* RCS_HEADER_ENDS_HERE */
-
-
 
 #include <stdio.h>
 #include <sys/types.h>

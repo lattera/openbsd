@@ -8,19 +8,7 @@
 
 /*
  *	Base utility set v0.1
- *
- *	  $Source: /usr/src/tcfs-utils_0.1/include/RCS/tcfserrors.h,v $
- *	   $State: Exp $
- *	$Revision: 1.1 $
- *	  $Author: luicat $
- *	    $Date: 2000/01/14 13:45:28 $
- *
  */
-
-/* RCS_HEADER_ENDS_HERE */
-
-
-
 
 #ifndef _ERRORS_H
 #define _ERRORS_H
