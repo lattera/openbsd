@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/mcreg.h,v 1.3 1996/04/28 11:03:24 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

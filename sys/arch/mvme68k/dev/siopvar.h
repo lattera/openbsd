@@ -1,4 +1,4 @@
-/*	$Id: siopvar.h,v 1.2 1995/11/07 08:49:34 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/siopvar.h,v 1.4 1996/04/28 11:03:33 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

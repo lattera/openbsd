@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/scc.h,v 1.3 1996/04/28 11:03:29 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt

@@ -1,4 +1,4 @@
-;	$Id$
+;	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/siop_script.ss,v 1.3 1996/04/28 11:03:31 deraadt Exp $
 
 ;
 ; Copyright (c) 1995 Michael L. Hitch

@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/i82586.h,v 1.3 1996/04/28 11:03:20 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

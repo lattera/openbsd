@@ -1,4 +1,4 @@
-/*	$Id: siop.c,v 1.3 1995/11/30 09:51:26 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/siop.c,v 1.5 1996/04/28 11:03:30 deraadt Exp $ */
 
 /*
  * Copyright (c) 1994 Michael L. Hitch

@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_lereg.h,v 1.3 1996/04/28 11:03:22 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
