@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/libexec/ld.so/Makefile,v 1.1 2002/02/05 21:47:23 matthieu Exp $
+#	$OpenBSD: src/regress/libexec/ld.so/Makefile,v 1.2 2002/02/17 06:04:11 art Exp $
 
-SUBDIR+= elf
+SUBDIR+= elf weak
 
 regress: _SUBDIRUSE
 
