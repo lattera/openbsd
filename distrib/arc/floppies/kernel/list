@@ -1,4 +1,0 @@
-#	$OpenBSD: src/distrib/arc/floppies/kernel/Attic/list,v 1.2 2000/03/01 22:09:57 todd Exp $
-
-# copy the kernel
-COPY	${OBJDIR}/bsd	bsd
