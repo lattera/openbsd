@@ -1,5 +1,3 @@
-/*	$NetBSD: aic7xxx_asm.c,v 1.4 1996/05/20 00:48:48 thorpej Exp $	*/
-
 /*+M*************************************************************************
  * Adaptec AIC7770/AIC7870 sequencer code assembler.
  *
@@ -45,7 +43,7 @@
  * are token separators.
  *
  *-M*************************************************************************/
-static char id[] = "$NetBSD: aic7xxx_asm.c,v 1.4 1996/05/20 00:48:48 thorpej Exp $";
+static char id[] = "$Id: aic7xxx_asm.c,v 1.12 1996/03/31 03:02:35 gibbs Exp $";
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
