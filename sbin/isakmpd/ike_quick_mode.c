@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.70.2.1 2004/03/17 14:59:17 brad Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.70.2.2 2004/06/11 03:08:02 brad Exp $	*/
 /*	$EOM: ike_quick_mode.c,v 1.139 2001/01/26 10:43:17 niklas Exp $	*/
 
 /*
@@ -1518,6 +1518,9 @@ responder_recv_HASH_SA_NONCE (struct message *msg)
   free (my_hash);
   my_hash = 0;
 
+  /* Mark message as authenticated. */
+  msg->flags |= MSG_AUTHENTICATED;
+
   kep = TAILQ_FIRST (&msg->payload[ISAKMP_PAYLOAD_KEY_EXCH]);
   if (kep)
     ie->pfs = 1;
@@ -1967,6 +1970,9 @@ responder_recv_HASH (struct message *msg)
       goto cleanup;
     }
   free (my_hash);
+
+  /* Mark message as authenticated. */
+  msg->flags |= MSG_AUTHENTICATED;
 
   post_quick_mode (msg);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/message.h,v 1.16 2003/06/04 07:31:17 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/message.h,v 1.16.2.1 2004/06/11 03:08:03 brad Exp $	*/
 /*	$EOM: message.h,v 1.51 2000/10/10 12:36:39 provos Exp $	*/
 
 /*
@@ -159,6 +159,9 @@ struct message {
 
 /* This message should be kept on the prioritized sendq.  */
 #define MSG_PRIORITIZED	8
+
+/* This message has successfully been authenticated. */
+#define MSG_AUTHENTICATED	16
 
 TAILQ_HEAD(msg_head, message);
 
