@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.1 2000/04/18 19:35:30 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.1.2.1 2000/08/03 04:33:40 jason Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -109,6 +109,7 @@
  */
 
 #include "bpfilter.h"
+#include "vlan.h"
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -1632,7 +1633,17 @@ void dc_rxeof(sc)
 		 * it should simply get re-used next time this descriptor
 	 	 * comes up in the ring.
 		 */
-		if (rxstat & DC_RXSTAT_RXERR) {
+		if (rxstat & DC_RXSTAT_RXERR
+#if NVLAN > 0
+		/*
+		 * If VLANs are enabled, allow frames up to 4 bytes
+		 * longer than the MTU. This should really check if
+		 * the giant packet has a vlan tag
+		 */
+		 && ((rxstat & (DC_RXSTAT_GIANT|DC_RXSTAT_LASTFRAG)) == 0
+		 && total_len <= ifp->if_mtu + 4) 
+#endif
+		    ) {
 			ifp->if_ierrors++;
 			if (rxstat & DC_RXSTAT_COLLSEEN)
 				ifp->if_collisions++;
