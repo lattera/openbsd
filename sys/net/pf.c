@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.389.2.4 2004/04/30 23:27:57 brad Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.389.2.5 2004/07/17 03:32:12 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -4478,12 +4478,12 @@ pf_route(struct mbuf **m, struct pf_rule *r, int dir, struct ifnet *oifp,
     struct pf_state *s)
 {
 	struct mbuf		*m0, *m1;
+	struct m_tag		*mtag;
 	struct route		 iproute;
 	struct route		*ro;
 	struct sockaddr_in	*dst;
 	struct ip		*ip;
 	struct ifnet		*ifp = NULL;
-	struct m_tag		*mtag;
 	struct pf_addr		 naddr;
 	int			 error = 0;
 
@@ -4491,18 +4491,30 @@ pf_route(struct mbuf **m, struct pf_rule *r, int dir, struct ifnet *oifp,
 	    (dir != PF_IN && dir != PF_OUT) || oifp == NULL)
 		panic("pf_route: invalid parameters");
 
-	if (r->rt == PF_DUPTO) {
-		m0 = *m;
-		mtag = m_tag_find(m0, PACKET_TAG_PF_ROUTED, NULL);
-		if (mtag == NULL) {
-			mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 0, M_NOWAIT);
-			if (mtag == NULL)
-				goto bad;
-			m_tag_prepend(m0, mtag);
+	if ((mtag = m_tag_find(*m, PACKET_TAG_PF_ROUTED, NULL)) == NULL) {
+		if ((mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 1, M_NOWAIT)) ==
+		    NULL) {
+			m0 = *m;
+			*m = NULL;
+			goto bad;
 		}
-		m0 = m_copym2(*m, 0, M_COPYALL, M_NOWAIT);
-		if (m0 == NULL)
+		*(char *)(mtag + 1) = 1;
+		m_tag_prepend(*m, mtag);
+	} else {
+		if (*(char *)(mtag + 1) > 3) {
+			m0 = *m;
+			*m = NULL;
+			goto bad;
+		}
+		(*(char *)(mtag + 1))++;
+	}
+
+	if (r->rt == PF_DUPTO) {
+		if ((m0 = m_copym2(*m, 0, M_COPYALL, M_NOWAIT)) == NULL)
 			return;
+		if ((mtag = m_tag_copy(mtag)) == NULL)
+			goto bad;
+		m_tag_prepend(m0, mtag);
 	} else {
 		if ((r->rt == PF_REPLYTO) == (r->direction == dir))
 			return;
@@ -4549,16 +4561,8 @@ pf_route(struct mbuf **m, struct pf_rule *r, int dir, struct ifnet *oifp,
 			ifp = s->rt_ifp;
 		}
 	}
-
 	if (ifp == NULL)
 		goto bad;
-
-	if (m_tag_find(m0, PACKET_TAG_PF_ROUTED, NULL) != NULL)
-		goto bad;
-	mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 0, M_NOWAIT);
-	if (mtag == NULL)
-		goto bad;
-	m_tag_prepend(m0, mtag);
 
 	if (oifp != ifp) {
 		if (pf_test(PF_OUT, ifp, &m0) != PF_PASS)
@@ -4655,18 +4659,30 @@ pf_route6(struct mbuf **m, struct pf_rule *r, int dir, struct ifnet *oifp,
 	    (dir != PF_IN && dir != PF_OUT) || oifp == NULL)
 		panic("pf_route6: invalid parameters");
 
-	if (r->rt == PF_DUPTO) {
-		m0 = *m;
-		mtag = m_tag_find(m0, PACKET_TAG_PF_ROUTED, NULL);
-		if (mtag == NULL) {
-			mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 0, M_NOWAIT);
-			if (mtag == NULL)
-				goto bad;
-			m_tag_prepend(m0, mtag);
+	if ((mtag = m_tag_find(*m, PACKET_TAG_PF_ROUTED, NULL)) == NULL) {
+		if ((mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 1, M_NOWAIT)) ==
+		    NULL) {
+			m0 = *m;
+			*m = NULL;
+			goto bad;
 		}
-		m0 = m_copym2(*m, 0, M_COPYALL, M_NOWAIT);
-		if (m0 == NULL)
+		*(char *)(mtag + 1) = 1;
+		m_tag_prepend(*m, mtag);
+	} else {
+		if (*(char *)(mtag + 1) > 3) {
+			m0 = *m;
+			*m = NULL;
+			goto bad;
+		}
+		(*(char *)(mtag + 1))++;
+	}
+
+	if (r->rt == PF_DUPTO) {
+		if ((m0 = m_copym2(*m, 0, M_COPYALL, M_NOWAIT)) == NULL)
 			return;
+		if ((mtag = m_tag_copy(mtag)) == NULL)
+			goto bad;
+		m_tag_prepend(m0, mtag);
 	} else {
 		if ((r->rt == PF_REPLYTO) == (r->direction == dir))
 			return;
@@ -4709,22 +4725,17 @@ pf_route6(struct mbuf **m, struct pf_rule *r, int dir, struct ifnet *oifp,
 			    &s->rt_addr, AF_INET6);
 		ifp = s->rt_ifp;
 	}
-
 	if (ifp == NULL)
 		goto bad;
 
 	if (oifp != ifp) {
-		mtag = m_tag_find(m0, PACKET_TAG_PF_ROUTED, NULL);
-		if (mtag == NULL) {
-			mtag = m_tag_get(PACKET_TAG_PF_ROUTED, 0, M_NOWAIT);
-			if (mtag == NULL)
-				goto bad;
-			m_tag_prepend(m0, mtag);
-			if (pf_test6(PF_OUT, ifp, &m0) != PF_PASS)
-				goto bad;
-			else if (m0 == NULL)
-				goto done;
-		}
+		if (pf_test6(PF_OUT, ifp, &m0) != PF_PASS)
+			goto bad;
+		else if (m0 == NULL)
+			goto done;
+		if (m0->m_len < sizeof(struct ip6_hdr))
+			panic("pf_route6: m0->m_len < sizeof(struct ip6_hdr)");
+		ip6 = mtod(m0, struct ip6_hdr *);
 	}
 
 	/*
