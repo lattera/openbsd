@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap.h,v 1.2 1996/02/26 07:20:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap.h,v 1.3 1996/02/29 13:08:04 niklas Exp $	*/
+/*	$NetBSD: umap.h,v 1.6 1996/02/09 22:41:00 christos Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
