@@ -1,3 +1,5 @@
+.\"	$OpenBSD: src/share/doc/papers/fsinterface/Attic/fsinterface.ms,v 1.3 2001/02/03 08:14:57 niklas Exp $
+.\"
 .\" Copyright (c) 1986 The Regents of the University of California.
 .\" All rights reserved.
 .\"
