@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/salloc.c,v 1.3 1997/04/01 07:35:18 todd Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/salloc.c,v 1.4 2001/05/02 22:56:53 millert Exp $	*/
 
 /*
  * Copyright (c) 1991 Carnegie Mellon University
@@ -40,7 +40,7 @@
 
 
 char *salloc(p)
-char *p;
+const char *p;
 {
 	register char *q;
 	register int l;
