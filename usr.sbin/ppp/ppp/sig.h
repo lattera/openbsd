@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: sig.h,v 1.12 1998/05/21 21:48:23 brian Exp $
+ *	$Id: sig.h,v 1.2 1999/02/06 03:22:47 brian Exp $
  */
 
 typedef void (*sig_type)(int);
@@ -32,4 +32,4 @@ typedef void (*sig_type)(int);
 extern sig_type sig_signal(int, sig_type);
 
 /* Call this when you want things to *actually* happen */
-extern void sig_Handle(void);
+extern int sig_Handle(void);
