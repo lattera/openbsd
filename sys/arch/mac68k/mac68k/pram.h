@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pram.h,v 1.3 1996/05/26 18:36:31 briggs Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pram.h,v 1.4 1997/02/23 06:05:05 briggs Exp $	*/
 /*	$NetBSD: pram.h,v 1.3 1996/05/05 06:18:53 briggs Exp $	*/
 
 /*
@@ -72,4 +72,12 @@ void 		setPramTime(unsigned long time);
 
 unsigned long	pram_readtime __P((void));
 void		pram_settime __P((unsigned long));
+
+#ifdef HWDIRECT		/* These functions exist only when ADB/PRAM/RTC
+			 * access is done via the HWDIRECT method. */
+
+unsigned long getPramTimeII(void);
+void setPramTimeII(unsigned long);
+
+#endif
 
