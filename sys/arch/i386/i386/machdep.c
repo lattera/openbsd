@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.24 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.25 2004/04/21 09:33:08 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -3756,6 +3756,9 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	u_long pa, endpa;
 	vaddr_t va;
 	pt_entry_t *pte;
+#ifdef MULTIPROCESSOR
+	u_int32_t cpumask = 0;
+#endif
 
 	pa = i386_trunc_page(bpa);
 	endpa = i386_round_page(bpa + size);
@@ -3785,9 +3788,17 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 				*pte &= ~PG_N;
 			else
 				*pte |= PG_N;
+#ifdef MULTIPROCESSOR
+			pmap_tlb_shootdown(pmap_kernel(), va, *pte,
+			    &cpumask);
+#else
 			pmap_update_pg(va);
+#endif
 		}
 	}
+#ifdef MULTIPROCESSOR
+	pmap_tlb_shootnow(cpumask);
+#endif
 	pmap_update(pmap_kernel());
 
 	return 0;

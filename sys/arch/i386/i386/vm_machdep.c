@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.12 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.13 2004/04/21 09:33:08 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -236,6 +236,9 @@ pagemove(from, to, size)
 {
 	pt_entry_t *fpte, *tpte;
 	pt_entry_t ofpte, otpte;
+#ifdef MULTIPROCESSOR
+	u_int32_t cpumask = 0;
+#endif
 
 #ifdef DIAGNOSTIC
 	if ((size & PAGE_MASK) != 0)
@@ -248,23 +251,37 @@ pagemove(from, to, size)
 		otpte = *tpte;
 		*tpte++ = *fpte;
 		*fpte++ = 0;
-#if defined(I386_CPU)
+#if defined(I386_CPU) && !defined(MULTIPROCESSOR)
 		if (cpu_class != CPUCLASS_386)
 #endif
 		{
 			if (otpte & PG_V)
-				pmap_update_pg((vaddr_t) to);
+#ifdef MULTIPROCESSOR
+				pmap_tlb_shootdown(pmap_kernel(), (vaddr_t)to,
+				    otpte, &cpumask);
+#else
+				pmap_update_pg((vaddr_to)to);
+#endif
 			if (ofpte & PG_V)
-				pmap_update_pg((vaddr_t) from);
+#ifdef MULTIPROCESSOR
+				pmap_tlb_shootdown(pmap_kernel(),
+				    (vaddr_t)from, ofpte, &cpumask);
+#else
+				pmap_update_pg((vaddr_to)from);
+#endif
 		}
 
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
 	}
+#ifdef MULTIPROCESSOR
+	pmap_tlb_shootnow(cpumask);
+#else
 #if defined(I386_CPU)
 	if (cpu_class == CPUCLASS_386)
 		tlbflush();		
+#endif
 #endif
 }
 
