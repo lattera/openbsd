@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/if_ie.c,v 1.5 1996/05/16 02:55:36 chuck Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/if_ie.c,v 1.6 1999/01/11 05:11:41 millert Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -150,7 +150,7 @@ ie_error(nif, str, ier)
 	char   *str;
 	volatile struct iereg *ier;
 {
-	panic("ie%d: unknown error\n", nif->nif_unit);
+	panic("ie%d: unknown error", nif->nif_unit);
 }
 
 ieack(ier, iem)
