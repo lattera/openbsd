@@ -1,4 +1,4 @@
-/* $Id: r1r2.c,v 1.2 2001/07/30 20:02:08 rees Exp $ */
+/* $Id: r1r2.c,v 1.3 2001/08/01 21:51:52 rees Exp $ */
 
 /*
 copyright 1999
@@ -175,5 +175,21 @@ int
 sectok_dump_reply(unsigned char *p, int n, int sw)
 {
     return sectok_fdump_reply(stdout, p, n, sw);
+}
+#else
+int
+sectok_dump_reply(unsigned char *p, int n, int sw)
+{
+    int i;
+
+    hidefield(printfield->id);
+    for (i = 0; i < n; i++)
+	palmprintf("%d:%x ", i + 1, p[i]);
+    if (n)
+	palmprintf("\n");
+    if (sw)
+	palmprintf("%s\n", sectok_get_sw(sw));
+    showfield(printfield->id);
+    return n;
 }
 #endif
