@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11.10.4 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11.10.5 2003/05/13 19:21:30 ho Exp $	*/
 /*	$NetBSD: procfs_subr.c,v 1.15 1996/02/12 15:01:42 christos Exp $	*/
 
 /*
@@ -103,6 +103,12 @@ procfs_allocvp(mp, vpp, pid, pfs_type)
 	struct vnode *vp;
 	int error;
 
+	/*
+	 * Lock the vp list, getnewvnode can sleep.
+	 */
+	error = lockmgr(&pfs_vlock, LK_EXCLUSIVE, NULL, p);
+	if (error)
+		return (error);
 loop:
 	for (pfs = pfshead.tqh_first; pfs != NULL; pfs = pfs->list.tqe_next) {
 		vp = PFSTOV(pfs);
@@ -112,14 +118,9 @@ loop:
 			if (vget(vp, 0, p))
 				goto loop;
 			*vpp = vp;
-			return (0);
+			goto out;
 		}
 	}
-
-	/*
-	 * Lock the vp list, getnewvnode can sleep.
-	 */
-	lockmgr(&pfs_vlock, LK_EXCLUSIVE, NULL, p);
 
 	if ((error = getnewvnode(VT_PROCFS, mp, procfs_vnodeop_p, vpp)) != 0)
 		goto out;

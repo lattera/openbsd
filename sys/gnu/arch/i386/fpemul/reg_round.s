@@ -1,5 +1,5 @@
 	.file "reg_round.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_round.s,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_round.s,v 1.1.16.2 2003/05/13 19:21:27 ho Exp $	*/
 /*
  *  reg_round.S
  *
@@ -399,7 +399,7 @@ LRound_nearest_64:
 	jne	LDo_64_round_up
 
 	/* Now test for round-to-even */
-	testb	$1,%ebx
+	testb	$1,%bl
 	jz	LCheck_truncate_64
 
 LDo_64_round_up:

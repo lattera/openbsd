@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.10 2003/04/04 14:59:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.11 2003/05/13 19:21:28 ho Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -222,7 +222,7 @@ panic(const char *fmt, ...)
 	if (panicstr)
 		bootopt |= RB_NOSYNC;
 	else {
-		vsprintf(panicbuf, fmt, ap);
+		vsnprintf(panicbuf, sizeof panicbuf, fmt, ap);
 		panicstr = panicbuf;
 	}
 	va_end(ap);
@@ -314,7 +314,7 @@ logpri(level)
 	char snbuf[KPRINTF_BUFSIZE];
 
 	kputchar('<', TOLOG, NULL);
-	sprintf(snbuf, "%d", level);
+	snprintf(snbuf, sizeof snbuf, "%d", level);
 	for (p = snbuf ; *p ; p++)
 		kputchar(*p, TOLOG, NULL);
 	kputchar('>', TOLOG, NULL);
@@ -569,6 +569,9 @@ vprintf(fmt, ap)
 	consintr = savintr;		/* reenable interrupts */
 }
 
+__warn_references(sprintf,
+    "warning: sprintf() is often misused, please use snprintf()");
+
 /*
  * sprintf: print a message to a buffer
  */
@@ -585,11 +588,13 @@ sprintf(char *buf, const char *fmt, ...)
 	return(retval);
 }
 
+__warn_references(vsprintf,
+    "warning: vsprintf() is often misused, please use vsnprintf()");
+
 /*
  * vsprintf: print a message to the provided buffer [already have a
  *	va_list]
  */
-
 int
 vsprintf(buf, fmt, ap)
 	char *buf;
@@ -812,11 +817,11 @@ reswitch:	switch (ch) {
 			_uquad = va_arg(ap, u_int);
 			b = va_arg(ap, char *);
 			if (*b == 8)
-				sprintf(buf, "%llo", _uquad);
+				snprintf(buf, sizeof buf, "%llo", _uquad);
 			else if (*b == 10)
-				sprintf(buf, "%lld", _uquad);
+				snprintf(buf, sizeof buf, "%lld", _uquad);
 			else if (*b == 16)
-				sprintf(buf, "%llx", _uquad);
+				snprintf(buf, sizeof buf, "%llx", _uquad);
 			else
 				break;
 			b++;

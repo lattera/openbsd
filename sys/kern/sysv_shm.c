@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.7 2003/03/28 00:41:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.8 2003/05/13 19:21:28 ho Exp $	*/
 /*	$NetBSD: sysv_shm.c,v 1.50 1998/10/21 22:24:29 tron Exp $	*/
 
 /*
@@ -76,7 +76,7 @@
 
 #include <uvm/uvm_extern.h>
 
-struct shminfo shminfo;
+extern struct shminfo shminfo;
 struct shmid_ds **shmsegs;	/* linear mapping of shmid -> shmseg */
 struct pool shm_pool;
 unsigned short *shmseqs;	/* array of shm sequence numbers */
@@ -273,8 +273,7 @@ sys_shmat(struct proc *p, void *v, register_t *retval)
 			return (EINVAL);
 	} else {
 		/* This is just a hint to uvm_map() about where to put it. */
-		attach_va = round_page((vaddr_t)p->p_vmspace->vm_taddr +
-		    MAXTSIZ + MAXDSIZ);
+		attach_va = uvm_map_hint(p, prot);
 	}
 	shm_handle = shmseg->shm_internal;
 	uao_reference(shm_handle->shm_object);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.4 2003/05/13 19:21:26 ho Exp $	*/
 /*	$KAME: altq_var.h,v 1.8 2001/02/09 09:44:41 kjc Exp $	*/
 
 /*
@@ -94,7 +94,7 @@ typedef void (timeout_t)(void *);
 
 extern int pfaltq_running;
 
-struct ifnet; struct mbuf;;
+struct ifnet; struct mbuf;
 struct pf_altq; struct pf_qstats;
 
 void *altq_lookup(char *, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/cd9660.c,v 1.7 1998/05/30 02:29:56 mickey Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/cd9660.c,v 1.7.8.1 2003/05/13 19:21:29 ho Exp $	*/
 /*	$NetBSD: cd9660.c,v 1.1 1996/09/30 16:01:19 ws Exp $	*/
 
 /*
@@ -196,6 +196,12 @@ cd9660_open(path, f)
 	bno = isonum_732(pp->block) + isonum_711(pp->extlen);
 	
 	rc = ENOENT;
+	/*
+	 * Remove extra separators
+	 */
+	while (*path == '/')
+		path++;
+
 	while (*path) {
 		if ((void *)pp >= buf + psize)
 			break;

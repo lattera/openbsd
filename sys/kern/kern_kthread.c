@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.6 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.7 2003/05/13 19:21:28 ho Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -89,7 +89,7 @@ kthread_create(void (*func)(void *), void *arg,
 
 	/* Name it as specified. */
 	va_start(ap, fmt);
-	vsprintf(p2->p_comm, fmt, ap);
+	vsnprintf(p2->p_comm, sizeof p2->p_comm, fmt, ap);
 	va_end(ap);
 
 	/* All done! */

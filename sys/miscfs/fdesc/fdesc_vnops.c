@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.6 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.7 2003/05/13 19:21:29 ho Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -710,7 +710,8 @@ fdesc_readdir(v)
 				if (fd_getfile(fdp, i - 2) == NULL)
 					continue;
 				d.d_fileno = i - 2 + FD_STDIN;
-				d.d_namlen = sprintf(d.d_name, "%d", i - 2);
+				d.d_namlen = snprintf(d.d_name, sizeof d.d_name,
+				    "%d", i - 2);
 				d.d_type = DT_UNKNOWN;
 				break;
 			}

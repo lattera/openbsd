@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.12.2.6 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vnops.c,v 1.12.2.7 2003/05/13 19:21:27 ho Exp $	*/
 /*	$NetBSD: cd9660_vnops.c,v 1.42 1997/10/16 23:56:57 christos Exp $	*/
 
 /*-
@@ -665,7 +665,8 @@ cd9660_readdir(v)
 				error = iso_uiodir(idp,&idp->current,idp->curroff);
 			break;
 		default:	/* ISO_FTYPE_DEFAULT || ISO_FTYPE_9660 */
-			strcpy(idp->current.d_name,"..");
+			strlcpy(idp->current.d_name,"..",
+			    sizeof idp->current.d_name);
 			if (idp->current.d_namlen == 1 && ep->name[0] == 0) {
 				idp->current.d_namlen = 1;
 				error = iso_uiodir(idp,&idp->current,idp->curroff);

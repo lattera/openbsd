@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_priq.c,v 1.1.2.3 2003/03/27 22:28:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_priq.c,v 1.1.2.4 2003/05/13 19:21:26 ho Exp $	*/
 /*	$KAME: altq_priq.c,v 1.1 2000/10/18 09:15:23 kjc Exp $	*/
 /*
  * Copyright (C) 2000
@@ -135,22 +135,17 @@ priq_add_queue(struct pf_altq *a)
 	/* check parameters */
 	if (a->priority >= PRIQ_MAXPRI)
 		return (EINVAL);
-
-	if (a->qid != 0) {
-		/* qid is tied to priority with priq */
-		if (a->qid != a->priority + 1)
-			return (EINVAL);
-		if (clh_to_clp(pif, a->qid) != NULL)
-			return (EBUSY);
-	}
+	if (a->qid == 0)
+		return (EINVAL);
+	if (a->qid > PRIQ_MAXQID)
+		return (EINVAL);
+	if (clh_to_clp(pif, a->qid) != NULL)
+		return (EBUSY);
 
 	cl = priq_class_create(pif, a->priority, a->qlimit,
 	    a->pq_u.priq_opts.flags, a->qid);
 	if (cl == NULL)
 		return (ENOMEM);
-
-	/* return handle to user space. */
-	a->qid = cl->cl_handle;
 
 	return (0);
 }
@@ -300,10 +295,7 @@ priq_class_create(struct priq_if *pif, int pri, int qlimit, int flags, int qid)
 	if (pri > pif->pif_maxpri)
 		pif->pif_maxpri = pri;
 	cl->cl_pif = pif;
-	if (qid)
-		cl->cl_handle = qid;
-	else
-		cl->cl_handle = pri + 1;
+	cl->cl_handle = qid;
 
 #ifdef ALTQ_RED
 	if (flags & (PRCF_RED|PRCF_RIO)) {
@@ -573,8 +565,11 @@ clh_to_clp(struct priq_if *pif, u_int32_t chandle)
 
 	if (chandle == 0)
 		return (NULL);
-	idx = chandle - 1;
-	if (idx >= PRIQ_MAXPRI)
-		return (NULL);
-	return (pif->pif_classes[idx]);
+
+	for (idx = pif->pif_maxpri; idx >= 0; idx--)
+		if (pif->pif_classes[idx] != NULL &&
+		    pif->pif_classes[idx]->cl_handle == chandle)
+			return (pif->pif_classes[idx]);
+
+	return (NULL);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.7 2003/03/28 00:00:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.8 2003/05/13 19:21:29 ho Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -329,21 +329,27 @@ kernfs_xread(kt, off, bufp, len)
 		struct timeval tv;
 
 		microtime(&tv);
-		sprintf(*bufp, "%ld %ld\n", tv.tv_sec, tv.tv_usec);
+		snprintf(*bufp, len, "%ld %ld\n", tv.tv_sec, tv.tv_usec);
 		break;
 	}
 
 	case KTT_INT: {
 		int *ip = kt->kt_data;
 
-		sprintf(*bufp, "%d\n", *ip);
+		snprintf(*bufp, len, "%d\n", *ip);
 		break;
 	}
 
 	case KTT_STRING: {
 		char *cp = kt->kt_data;
+		size_t end = strlen(cp);
 
-		*bufp = cp;
+		if (end && cp[end - 1] != '\n') {
+			strlcpy(*bufp, cp, len - 1);
+			strlcat(*bufp, "\n", len);
+		} else
+			*bufp = cp;
+
 		break;
 	}
 
@@ -408,17 +414,17 @@ kernfs_xread(kt, off, bufp, len)
 
 	case KTT_AVENRUN:
 		averunnable.fscale = FSCALE;
-		sprintf(*bufp, "%d %d %d %ld\n",
+		snprintf(*bufp, len, "%d %d %d %ld\n",
 		    averunnable.ldavg[0], averunnable.ldavg[1],
 		    averunnable.ldavg[2], averunnable.fscale);
 		break;
 
 	case KTT_USERMEM:
-		sprintf(*bufp, "%u\n", ctob(physmem - uvmexp.wired));
+		snprintf(*bufp, len, "%u\n", ctob(physmem - uvmexp.wired));
 		break;
 
 	case KTT_PHYSMEM:
-		sprintf(*bufp, "%u\n", ctob(physmem));
+		snprintf(*bufp, len, "%u\n", ctob(physmem));
 		break;
 
 #ifdef IPSEC
@@ -536,7 +542,7 @@ kernfs_lookup(v)
 		return(error);
 	}
 
-	vn_lock(*vpp, LK_SHARED | LK_RETRY, p);
+	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, p);
 
 	if (wantpunlock) {
 		VOP_UNLOCK(dvp, 0, p);

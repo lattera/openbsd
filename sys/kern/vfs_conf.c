@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.14.2.2 2003/03/28 00:41:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.14.2.3 2003/05/13 19:21:28 ho Exp $	*/
 /*	$NetBSD: vfs_conf.c,v 1.21.4.1 1995/11/01 00:06:26 jtc Exp $	*/
 
 /*
@@ -127,10 +127,6 @@ extern	struct vfsops kernfs_vfsops;
 extern	struct vfsops procfs_vfsops;
 #endif
 
-#ifdef AFS
-extern	struct vfsops afs_vfsops;
-#endif
-
 #ifdef CD9660
 extern	struct vfsops cd9660_vfsops;
 #endif
@@ -192,11 +188,6 @@ static struct vfsconf vfsconflist[] = {
         /* Sun-compatible Network Filesystem */
 #ifdef NFSCLIENT
         { &nfs_vfsops, MOUNT_NFS, 2, 0, 0, nfs_mountroot, NULL },
-#endif
-
-        /* Andrew Filesystem */
-#ifdef AFS
-        { &afs_vfsops, MOUNT_AFS, 13, 0, 0, afs_mountroot, NULL },
 #endif
 
 	/* XFS */

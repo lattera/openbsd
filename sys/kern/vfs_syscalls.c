@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.62.2.9 2003/03/28 00:41:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.62.2.10 2003/05/13 19:21:29 ho Exp $	*/
 /*	$NetBSD: vfs_syscalls.c,v 1.71 1996/04/23 10:29:02 mycroft Exp $	*/
 
 /*
@@ -347,10 +347,6 @@ checkdirs(olddp)
 	if (VFS_ROOT(olddp->v_mountedhere, &newdp))
 		panic("mount: lost mount");
 	for (p = LIST_FIRST(&allproc); p != 0; p = LIST_NEXT(p, p_list)) {
-		/*
-		 * XXX - we have a race with fork here. We should probably
-		 *       check if the process is SIDL before we fiddle with it.
-		 */
 		fdp = p->p_fd;
 		if (fdp->fd_cdir == olddp) {
 			vrele(fdp->fd_cdir);
@@ -430,29 +426,34 @@ sys_unmount(p, v, retval)
 	if (vfs_busy(mp, LK_EXCLUSIVE, NULL, p))
 		return (EBUSY);
 
-	return (dounmount(mp, SCARG(uap, flags), p));
+	return (dounmount(mp, SCARG(uap, flags), p, vp));
 }
 
 /*
  * Do the actual file system unmount.
  */
 int
-dounmount(struct mount *mp, int flags, struct proc *p)
+dounmount(struct mount *mp, int flags, struct proc *p, struct vnode *olddp)
 {
 	struct vnode *coveredvp;
+	struct proc *p2;
 	int error;
+	int hadsyncer = 0;
 
  	mp->mnt_flag &=~ MNT_ASYNC;
  	cache_purgevfs(mp);	/* remove cache entries for this file sys */
- 	if (mp->mnt_syncer != NULL)
+ 	if (mp->mnt_syncer != NULL) {
+		hadsyncer = 1;
  		vgone(mp->mnt_syncer);
+		mp->mnt_syncer = NULL;
+	}
 	if (((mp->mnt_flag & MNT_RDONLY) ||
 	    (error = VFS_SYNC(mp, MNT_WAIT, p->p_ucred, p)) == 0) ||
  	    (flags & MNT_FORCE))
  		error = VFS_UNMOUNT(mp, flags, p);
 	simple_lock(&mountlist_slock);
  	if (error) {
- 		if ((mp->mnt_flag & MNT_RDONLY) == 0 && mp->mnt_syncer == NULL)
+ 		if ((mp->mnt_flag & MNT_RDONLY) == 0 && hadsyncer)
  			(void) vfs_allocate_syncvnode(mp);
 		lockmgr(&mp->mnt_lock, LK_RELEASE | LK_INTERLOCK,
 		    &mountlist_slock, p);
@@ -460,7 +461,30 @@ dounmount(struct mount *mp, int flags, struct proc *p)
 	}
 	CIRCLEQ_REMOVE(&mountlist, mp, mnt_list);
 	if ((coveredvp = mp->mnt_vnodecovered) != NULLVP) {
-		coveredvp->v_mountedhere = (struct mount *)0;
+		if (olddp) {
+			/* 
+			 * Try to put processes back in a real directory
+			 * after a forced unmount.
+			 * XXX We're not holding a ref on olddp, which may
+			 * change, so compare id numbers.
+			 */
+			LIST_FOREACH(p2, &allproc, p_list) {
+				struct filedesc *fdp = p2->p_fd;
+				if (fdp->fd_cdir &&
+				    fdp->fd_cdir->v_id == olddp->v_id) {
+					vrele(fdp->fd_cdir);
+					vref(coveredvp);
+					fdp->fd_cdir = coveredvp;
+				}
+				if (fdp->fd_rdir &&
+				    fdp->fd_rdir->v_id == olddp->v_id) {
+					vrele(fdp->fd_rdir);
+					vref(coveredvp);
+					fdp->fd_rdir = coveredvp;
+				}
+			}
+		}
+		coveredvp->v_mountedhere = NULL;
  		vrele(coveredvp);
  	}
 	mp->mnt_vfc->vfc_refcount--;
@@ -2607,7 +2631,7 @@ sys_revoke(p, v, retval)
 	if (p->p_ucred->cr_uid != vattr.va_uid &&
 	    (error = suser(p->p_ucred, &p->p_acflag)))
 		goto out;
-	if (vp->v_usecount > 1 || (vp->v_flag & VALIASED))
+	if (vp->v_usecount > 1 || (vp->v_flag & (VALIASED | VLAYER)))
 		VOP_REVOKE(vp, REVOKEALL);
 out:
 	vrele(vp);
