@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.228 2002/11/29 17:14:18 henning Exp $	*/
+/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.229 2002/11/30 13:53:14 mickey Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -50,6 +50,7 @@
 #include <grp.h>
 #include <md5.h>
 
+#include "pf_print_state.h"
 #include "pfctl_parser.h"
 #include "pfctl_altq.h"
 
