@@ -1,20 +1,19 @@
 package Opcode;
 
-use 5.006_001;
-
-use strict;
+require 5.005_64;
 
 our($VERSION, $XS_VERSION, @ISA, @EXPORT_OK);
 
-$VERSION = "1.05";
+$VERSION = "1.04";
 $XS_VERSION = "1.03";
 
+use strict;
 use Carp;
 use Exporter ();
 use XSLoader ();
+@ISA = qw(Exporter);
 
 BEGIN {
-    @ISA = qw(Exporter);
     @EXPORT_OK = qw(
 	opset ops_to_opset
 	opset_to_ops opset_to_hex invert_opset
@@ -414,8 +413,6 @@ These are a hotchpotch of opcodes still waiting to be considered
     getppid getpgrp setpgrp getpriority setpriority localtime gmtime
 
     entertry leavetry -- can be used to 'hide' fatal errors
-
-    custom -- where should this go
 
 =item :base_math
 
