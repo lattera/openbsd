@@ -1,7 +1,7 @@
 /*
  * OpenBSD/mips machine-dependent thread macros
  *
- * $OpenBSD: src/lib/libc_r/arch/mips/Attic/uthread_machdep.h,v 1.1 1998/11/09 03:13:14 d Exp $
+ * $OpenBSD: src/lib/libc_r/arch/mips/Attic/uthread_machdep.h,v 1.2 1998/11/20 11:15:37 d Exp $
  */
 
 #include <machine/regnum.h>

@@ -1,9 +1,9 @@
-#	$Id: Makefile.inc,v 1.9 1998/04/30 09:04:08 jb Exp $
-#	$OpenBSD: src/lib/libpthread/sys/Attic/Makefile.inc,v 1.1 1998/08/27 09:00:48 d Exp $
+#	$Id: Makefile.inc,v 1.1 1998/08/27 09:00:48 d Exp $
+#	$OpenBSD: src/lib/libpthread/sys/Attic/Makefile.inc,v 1.2 1998/11/20 11:15:38 d Exp $
 
 .PATH:	 ${.CURDIR}/sys ${.CURDIR}/arch/${MACHINE_ARCH}
 
-SRCS+=	uthread_error.c _atomic_lock.S _sys_aliases.S
+SRCS+=	uthread_error.c _atomic_lock.c _sys_aliases.S slow_atomic_lock.c
 
 _sys_aliases.S: ${.CURDIR}/Makefile ${LIBCSRCDIR}/sys/Makefile.inc
 	(echo '#include "SYS.h"'; \
