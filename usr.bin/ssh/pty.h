@@ -13,7 +13,7 @@
  * tty.
  */
 
-/* RCSID("$Id: pty.h,v 1.2 1999/11/24 00:26:02 deraadt Exp $"); */
+/* RCSID("$Id: pty.h,v 1.3 1999/11/24 19:53:49 markus Exp $"); */
 
 #ifndef PTY_H
 #define PTY_H
@@ -24,7 +24,7 @@
  * descriptors for the pty and tty sides and the name of the tty side are
  * returned (the buffer must be able to hold at least 64 characters).
  */
-int     pty_allocate(int *ptyfd, int *ttyfd, char *ttyname);
+int     pty_allocate(int *ptyfd, int *ttyfd, char *ttyname, int ttynamelen);
 
 /*
  * Releases the tty.  Its ownership is returned to root, and permissions to
