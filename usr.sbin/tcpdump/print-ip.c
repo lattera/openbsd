@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.7 1999/09/16 20:58:47 brad Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.8 1999/10/06 01:46:40 deraadt Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -484,6 +484,21 @@ ip_print(register const u_char *bp, register u_int length)
 #endif
 		case IPPROTO_AH:
 			ah_print(cp, len, (const u_char *)ip);
+			break;
+
+#ifndef IPPROTO_MOBILE
+#define IPPROTO_MOBILE 55
+#endif
+		case IPPROTO_MOBILE:
+			if (vflag)
+				(void)printf("mobile %s > %s: ",
+					     ipaddr_string(&ip->ip_src),
+					     ipaddr_string(&ip->ip_dst));
+			mobile_print(cp, len);
+			if (! vflag) {
+				printf(" (mobile encap)");
+				return;
+			}
 			break;
 
 		default:
