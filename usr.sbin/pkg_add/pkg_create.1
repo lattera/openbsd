@@ -1,0 +1,468 @@
+.\"	$OpenBSD: src/usr.sbin/pkg_add/pkg_create.1,v 1.11 2004/08/10 12:50:14 espie Exp $
+.\"
+.\" FreeBSD install - a package for the installation and maintenance
+.\" of non-core utilities.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" Jordan K. Hubbard
+.\"
+.\"
+.\"     @(#)pkg_create.1
+.\"	from FreeBSD Id: pkg_create.1,v 1.19 1997/05/02 22:00:05 max Exp
+.\"
+.\" hacked up by John Kohl for NetBSD--fixed a few bugs, extended keywords,
+.\" added dependency tracking, etc.
+.\"
+.\" [jkh] Took John's changes back and made some additional extensions for
+.\" better integration with FreeBSD's new ports collection.
+.\"
+.Dd April 21, 1995
+.Dt PKG_CREATE 1
+.Os
+.Sh NAME
+.Nm pkg_create
+.Nd create binary software package for distribution
+.Sh SYNOPSIS
+.Nm pkg_create
+.Bk -words
+.Op Fl hv
+.Op Fl A Ar arches
+.Op Fl B Ar pkg-destdir
+.Op Fl P Ar dpkgs
+.Op Fl C Ar cpkgs
+.Op Fl p Ar prefix
+.Op Fl i Ar iscript
+.Op Fl k Ar dscript
+.Op Fl r Ar rscript
+.Op Fl S Ar pkg-destdir
+.Op Fl D Ar displayfile
+.Op Fl L Ar localbase
+.Fl c Ar comment
+.Fl d Ar description
+.Fl f Ar packlist
+.Ar pkg-name
+.Ek
+.Sh DESCRIPTION
+The
+.Nm
+command creates a binary package named
+.Ar pkg-name ,
+for subsequent use with
+.Xr pkg_add 1 ,
+.Xr pkg_delete 1
+and
+.Xr pkg_info 1 .
+.Ar pkg-name
+will traditionally have a
+.Pa .tgz
+extension, to denote the underlying binary format.
+.Pp
+Use of the
+.Xr ports 7
+infrastructure instead of manual
+.Nm
+invocation is strongly recommended.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl A Ar arches
+Register a list of architectures for which this package should install.
+.Ar arches
+is a comma-separated list of architectures.
+Use
+.Sq *
+to mean any architecture (e.g., arch-independent packages).
+.It Fl f Ar packinglist
+Fetch
+.Dq packing list
+for package from the file
+.Ar packinglist
+or stdin if
+.Ar packinglist
+is a dash
+.Dq \&- .
+.It Fl c [ Ar \&- ] Ns Ar desc
+Fetch package
+.Dq one line description
+from file
+.Ar desc
+or, if preceded by
+.Dq \&- ,
+the argument itself.
+This string should also
+give some idea of which version of the product (if any) the package
+represents.
+.It Fl d [ Ar \&- ] Ns Ar desc
+Fetch long description for package from file
+.Ar desc
+or, if preceded by
+.Dq \&- ,
+the argument itself.
+.It Fl v
+Turn on verbose output.
+.It Fl h
+Force
+.Xr tar 1
+to follow symbolic links, so that the files they point to
+are dumped, rather than the links themselves (deprecated).
+.It Fl i Ar iscript
+Set
+.Ar iscript
+to be the install procedure for the package.
+This can be any executable program (or shell script).
+It will be invoked automatically
+when the package is later installed.
+.It Fl P Ar dpkgs
+Set the initial package dependency list to
+.Ar dpkgs 
+(deprecated).
+.It Fl C Ar cpkgs
+Set the initial package conflict list to
+.Ar cpkgs 
+(deprecated).
+.It Fl p Ar prefix
+Set
+.Ar prefix
+as the initial directory
+.Dq base
+to start from in selecting files for
+the package, and to record as the base for installing the package.
+.It Fl S Ar pkg-destdir
+.It Fl B Ar pkg-destdir
+Set
+.Ar pkg-destdir
+as the prefix to prepend to any file to select for the package.
+Prefer
+.Fl B .
+.It Fl L Ar localbase
+Record
+.Ar localbase
+as the localbase used in the package.
+By default,
+.Pa /usr/local .
+Packages built with another localbase can only be installed by using
+the same localbase in
+.Xr pkg_add 1 ,
+to prevent errors.
+.It Fl k Ar dscript
+Set
+.Ar dscript
+to be the de-install procedure for the package.
+This can be any executable program (or shell script).
+It will be invoked automatically
+when the package is later (if ever) de-installed.
+.It Fl r Ar rscript
+Set
+.Ar rscript
+to be the
+.Dq requirements
+procedure for the package.
+This can be any executable program (or shell script).
+It will be invoked automatically
+at installation/deinstallation time to determine whether or not
+installation/deinstallation should proceed.
+.It Fl D Ar displayfile
+Display the file (using
+.Xr more 1 )
+after installing the package.
+Useful for things like
+legal notices on almost-free software, etc.
+.El
+.Sh PACKING LIST DETAILS
+The
+.Dq packing list
+format (see
+.Fl f )
+is fairly simple, being basically a list of filenames and directory names
+to include in the package.
+.Pp
+Directory names are denoted by a trailing slash.
+.Pp
+There are a few annotations that can be inserted for better control.
+All these commands start with an 
+.Sq @ .
+Here is a list:
+.Bl -tag -width indent
+.It Cm @file Ar filename
+Default annotation, to use if
+.Ar filename
+begins with @.
+.Ar filename
+is always a relative path, relative to the current
+.Cm @cwd .
+.It Cm @man Ar filename
+Specialized version of
+.Cm @file ,
+to handle manual pages.
+.It Cm @info Ar filename
+Specialized version of
+.Cm @file ,
+to handle GNU info files.
+Automatically grab
+.Pa filename-*
+chapter files, run
+.Xr install-info 1
+as needed.
+.It Cm @lib Ar filename
+Specialized version of
+.Cm @file ,
+to handle shared libraries.
+Satisfy LIB_DEPENDS,
+run
+.Xr ldconfig 8
+as needed.
+.It Cm @arch Ar arches
+List of architectures for which this package is intended.
+.It Cm @cwd Ar pathname
+Set the package current directory.
+All subsequent filenames will be assumed relative to 
+.Ar pathname .
+.It Cm @exec Ar command
+Execute
+.Ar command
+during
+.Xr pkg_add 1 .
+If
+.Ar command
+contains any of the following sequences somewhere in it, they will
+be expanded inline.
+For the following examples, assume that
+.Cm @cwd
+is set to
+.Pa /usr/local
+and the last extracted file was
+.Pa bin/emacs .
+.Bl -tag -width indent
+.It Cm "\&%F"
+Expands to the last filename extracted (as specified); in the example case,
+.Pa bin/emacs .
+.It Cm "\&%D"
+Expands to the current directory prefix, as set with
+.Cm @cwd ;
+in the example case
+.Pa /usr/local .
+.It Cm "\&%B"
+Expands to the
+.Dq basename
+of the fully qualified filename, that
+is the current directory prefix, plus the last filespec, minus
+the trailing filename.
+In the example case, that would be
+.Pa /usr/local/bin .
+.It Cm "\&%f"
+Expands to the
+.Dq filename
+part of the fully qualified name, or
+the converse of
+.Cm \&%B ;
+in the example case,
+.Pa emacs .
+.El
+.It Cm @unexec Ar command
+Execute
+.Ar command
+during
+.Xr pkg_delete 1 .
+Expansion of special
+.Cm \&%
+sequences is the same as for
+.Cm @exec .
+.It Cm @mode Ar mode
+Set default permission for all subsequently extracted files to
+.Ar mode .
+Format is the same as that used by the
+.Xr chmod 1
+command.
+Use without an arg to set back to default (extraction) permissions.
+.It Cm @owner Ar user
+Set default ownership for all subsequently extracted files to
+.Ar user .
+Use without an arg to set back to default (extraction)
+ownership.
+.It Cm @group Ar group
+Set default group ownership for all subsequently extracted files to
+.Ar group .
+Use without an arg to set back to default (extraction)
+group ownership.
+.It Cm @comment Ar string
+Imbed a comment in the packing list.
+Useful in trying to document some particularly hairy sequence that
+may trip someone up later.
+.It Cm @ignore
+Used internally to tell extraction to ignore the next file (don't
+copy it anywhere), as it's used for some special purpose.
+.It Cm @localbase Ar base
+Used internally to record the settings of
+.Fl L
+option.
+.It Cm @name Ar pkgname
+Set the name of the package.
+This name is potentially different than the name of
+the file it came in, and is used when keeping track of the package
+for later deinstallation.
+Note that
+.Nm
+will derive this field from the package name and add it automatically
+if none is given.
+.It Cm @dir Ar directoryname
+Create directory 
+.Pa directoryname 
+at 
+.Xr pkg_add 1
+time, taking 
+.Cm @mode ,
+.Cm @group ,
+.Cm @owner
+into account, and remove it during
+.Xr pkg_delete 1 .
+Directories to remove can be shared between packages.
+If
+.Ar name
+does not begin with an @, same as
+.Dl name/
+.It Cm @dirrm Ar directoryname
+Declare directory
+.Pa directoryname
+to be deleted at deinstall time.
+Deprecated, use
+.Dl directoryname/
+instead, as it handles proper directory creation as well.
+.It Cm @mandir Ar directoryname
+Specialized version of
+.Cm @dir ,
+to handle manual directories: instruct user to add/remove the
+directory to 
+.Xr man.conf 5 ,
+remove
+.Xr apropos 1
+database when needed.
+.It Cm @fontdir Ar directoryname
+Specialized version of
+.Cm @dir ,
+to handle font directories: create
+.Pa font.alias
+from
+.Pa font.alias-*
+fragments, execute
+.Xr mkfontdir 1 ,
+.Xr fc-cache 1
+when needed.
+Delete extra files at
+.Xr pkg_delete 1
+time.
+.It Cm @extra Ar filename
+Declare extra file
+.Pa filename
+to be deleted at deinstall time, if user sets
+.Fl c
+option.
+Those files are extra configuration files that are normally not deleted.
+.Ar filename
+can be an absolute path.
+If
+.Pa filename
+ends with a slash, it is a directory.
+.It Cm @extraunexec Ar command
+Extra
+.Ar command
+to execute when removing extra files.
+.It Cm @sample Ar filename
+Last preceding
+.Cm @file
+item is a sample configuration file, to be copied to
+.Ar filename
+at
+.Xr pkg_add 1
+time and to be removed at
+.Xr pkg_delete 1
+time.
+During installation, existing configuration files are untouched.
+During deinstallation, configuration files are only removed if unchanged.
+.Ar filename
+can be an absolute path.
+If
+.Ar filename
+ends with a slash,
+it refers to a configuration directory instead.
+.It Cm @display Ar name
+Declare
+.Pa name
+as the file to be displayed at install time (see
+.Fl D
+above).
+.It Cm @pkgdep Ar pkgname
+Declare a dependency on the
+.Ar pkgname
+package.
+The
+.Ar pkgname
+package must be installed before this package may be
+installed, and this package must be deinstalled before the
+.Ar pkgname
+package is deinstalled.
+Multiple
+.Cm @pkgdep
+directives may be used if the package depends on multiple other packages.
+.It Cm @pkgcfl Ar pkgcflname
+Declare a conflict to the
+.Ar pkgcflname
+package.
+The
+.Ar pkgcflname
+package must
+.Em not
+be installed if
+.Ar pkgname
+package gets installed because they install the same files and thus conflict.
+.Ar pkgcflname
+may use
+.Xr fnmatch 3
+wildcards.
+.It Cm @option Ar name
+Effects vary depending on
+.Ar name .
+Some options are not documented yet.
+.Bl -tag -width indent
+.It Ar no-default-conflict
+By default, a package conflicts with other versions of the same package.
+With this option, the older package version will still be noticed, but the
+installation will proceed anyway.
+.El
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width PKG_DESTDIR
+.It Ev PKG_DESTDIR
+Default value for
+.Ar pkg-destdir ,
+if no
+.Fl B
+or
+.Fl S
+option is specified.
+.El
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_info 1 ,
+.Xr tar 1 ,
+.Xr sysconf 3
+.Sh HISTORY
+The
+.Nm
+command first appeared in
+.Fx .
+.Sh AUTHORS
+.Bl -tag -width indent -compact
+.It "Jordan Hubbard"
+initial design
+.It "Marc Espie"
+complete rewrite.
+.El
