@@ -1,0 +1,43 @@
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		installboot	The OpenBSD/MACHINE boot loader
+				installation program.
+		bootxx		The OpenBSD/MACHINE boot block.
+		bootsd		The OpenBSD/MACHINE disk boot loader.
+		bootst		The OpenBSD/MACHINE tape boot loader.
+		rboot		A standalone bootrom for the MVME147, in
+				S-records format.
+		sboot		A network bootloader for the MVME147, in
+				S-records format.
+		stboot		A VID tape block.
+
+These files can be used to make a boot tape suitable for installation.
+They can also be used to configure an NFS server to support installation
+"over the network".  See the section "Getting the OpenBSD system onto
+Useful Media" for more information.
+
+DistributionDescription(nine)
+
+OpenBSDbase(21.7,65.9,shared)
+
+OpenBSDcomp(15.2,45.2,shared)
+
+OpenBSDetc(1.1,3.3)
+
+OpenBSDgame(2.8,6.6)
+
+OpenBSDman(5.6,20.2)
+
+OpenBSDmisc(1.7,5.6)
+
+OpenBSDxbase
+
+OpenBSDxfont
+
+OpenBSDxshare
