@@ -1,0 +1,116 @@
+.\" $OpenBSD: src/usr.sbin/bgpctl/bgpctl.8,v 1.15 2004/03/12 17:42:25 claudio Exp $
+.\"
+.\" Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd December 22, 2003
+.Dt BGPCTL 8
+.Os
+.Sh NAME
+.Nm bgpctl
+.Nd "control the Border Gateway Protocol daemon"
+.Sh SYNOPSIS
+.Nm bgpctl
+.Op Cm command
+.Sh DESCRIPTION
+The
+.Nm
+program controls the
+.Xr bgpd 8
+daemon.
+The commands are as follows:
+.Bl -tag -width xxxxxx
+.It Li show summary
+Show a list of all neighbors, including information about the session state
+and message counters.
+.It Li show neighbor Ar address Ar modifier
+Show detailed information about the neighbor identified by
+.Ar address ,
+according to the given
+.Ar modifier :
+.Pp
+.Bl -tag -width messages -compact
+.It Li messages
+Show statistics about sent and received BGP messages.
+.It Li timers
+Show the BGP timers.
+.El
+.It Li show rib Ar filter
+Show routes from the bgpd Routing Information Base.
+.Ar filter
+can be an IP address, a CIDR prefix, an AS filter or nothing:
+.Pp
+.Bl -tag -width <address>/<len>_all -compact
+.It Li <address>
+Show best matching route for address.
+.It Li <address>/<len>
+Show RIB entry for this CIDR prefix.
+.It Li <address>/<len> all
+Show all entries in the specified range.
+.It Li as <as>
+Show all entries with <as> anywhere in the AS path.
+.It Li source-as <as>
+Show all entries with <as> as rightmost AS.
+.It Li transit-as <as>
+Show all entries with <as> anywhere but rightmost.
+.El
+.It Li show fib Ar filter
+Show routes from bgpd's view of the Forward Information Base.
+.Ar filter
+can be an IP address, in which case the route to this address is shown,
+or a flag:
+.Pp
+.Bl -tag -width connected -compact
+.It Li connected
+Show only connected routes.
+.It Li static
+Show only static routes.
+.It Li bgp
+Show only routes originating from
+.Xr bgpd 8
+itself.
+.It Li nexthop
+Show only routes required to reach a BGP nexthop.
+.El
+.It Li show nexthop
+Show the list of BGP Nexthops and the result of their validity check.
+.It Li show interface
+Show the interface states.
+.It Li reload
+Reload the configuration file.
+.It Li fib couple
+Insert the learned routes into the Forward Information Base aka the kernel
+routing table.
+.It Li fib decouple
+Remove the learned routes from the Forward Information Base aka the kernel
+routing table.
+.It Li neighbor Ar address up
+Take the bgp session to the specified neighbor up.
+.It Li neighbor Ar address down
+Take the bgp session to the specified neighbor down.
+.El
+.Sh FILES
+.Bl -tag -width "/etc/bgpd.conf" -compact
+.It Pa /etc/bgpd.conf
+.Nm
+configuration file.
+.El
+.Sh SEE ALSO
+.Xr bgpd.conf 5 ,
+.Xr bgpd 8
+.Sh HISTORY
+The
+.Nm
+program first appeared in
+.Ox 3.5 .
