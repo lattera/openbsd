@@ -1,9 +1,11 @@
-/*	$OpenBSD: src/sys/kern/subr_xxx.c,v 1.6 1997/11/06 05:58:20 csapuntz Exp $	*/
-/*	$NetBSD: subr_xxx.c,v 1.10 1996/02/04 02:16:51 christos Exp $	*/
-
 /*
- * Copyright (c) 1982, 1986, 1991, 1993
+ * Copyright (c) 1995
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley
+ * by Pace Willisson (pace@blitz.com).  The Rock Ridge Extension
+ * Support code is derived from software contributed to Berkeley
+ * by Atsushi Murai (amurai@spec.co.jp).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,81 +35,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)subr_xxx.c	8.1 (Berkeley) 6/10/93
+ *	@(#)cd9660_mount.h	8.1 (Berkeley) 5/24/95
  */
 
 /*
- * Miscellaneous trivial functions, including many
- * that are often inline-expanded or done in assembler.
+ * Arguments to mount ISO 9660 filesystems.
  */
-#include <sys/param.h>
-#include <sys/systm.h>
-
-#include <machine/cpu.h>
-
-/*
- * Unsupported device function (e.g. writing to read-only device).
- */
-int
-enodev()
-{
-
-	return (ENODEV);
-}
-
-/*
- * Unconfigured device function; driver not configured.
- */
-int
-enxio()
-{
-
-	return (ENXIO);
-}
-
-/*
- * Unsupported ioctl function.
- */
-int
-enoioctl()
-{
-
-	return (ENOTTY);
-}
-
-/*
- * Unsupported system function.
- * This is used for an otherwise-reasonable operation
- * that is not supported by the current system binary.
- */
-int
-enosys ()
-{
-
-	return (ENOSYS);
-}
-
-/*
- * Return error for operation not supported
- * on a specific object or file type.
- */
-/*ARGSUSED*/
-int
-eopnotsupp(v)
-	void *v;
-{
-
-	return (EOPNOTSUPP);
-}
-
-/*
- * Generic null operation, always returns success.
- */
-/*ARGSUSED*/
-int
-nullop(v)
-	void *v;
-{
-
-	return (0);
-}
+#define	ISOFSMNT_NORRIP	0x00000001	/* disable Rock Ridge Ext.*/
+#define	ISOFSMNT_GENS	0x00000002	/* enable generation numbers */
+#define	ISOFSMNT_EXTATT	0x00000004	/* enable extended attributes */
