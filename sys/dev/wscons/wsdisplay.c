@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.3 2001/10/31 03:22:50 nate Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.4 2001/11/13 21:10:04 niklas Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -1260,10 +1260,10 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 	return (EINVAL);
 }
 
-int
+paddr_t
 wsdisplaymmap(dev, offset, prot)
 	dev_t dev;
-	int offset;		/* XXX */
+	off_t offset;
 	int prot;
 {
 	struct wsdisplay_softc *sc = wsdisplay_cd.cd_devs[WSDISPLAYUNIT(dev)];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.3 2001/10/31 03:22:45 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.4 2001/11/13 21:10:01 niklas Exp $ */
 /*	$NetBSD: auvia.c,v 1.7 2000/11/15 21:06:33 jdolecek Exp $	*/
 
 /*-
@@ -53,7 +53,7 @@
 #include <sys/device.h>
 #include <sys/audioio.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/pcivar.h>
@@ -103,7 +103,7 @@ int	auvia_query_devinfo(void *, mixer_devinfo_t *);
 void *	auvia_malloc(void *, int, size_t, int, int);
 void	auvia_free(void *, void *, int);
 size_t	auvia_round_buffersize(void *, int, size_t);
-int	auvia_mappage(void *, void *, int, int);
+paddr_t	auvia_mappage(void *, void *, off_t, int);
 int	auvia_get_props(void *);
 int	auvia_build_dma_ops(struct auvia_softc *, struct auvia_softc_chan *,
 	struct auvia_dma *, void *, void *, int);
@@ -767,8 +767,8 @@ auvia_round_buffersize(void *addr, int direction, size_t size)
 }
 
 
-int
-auvia_mappage(void *addr, void *mem, int off, int prot)
+paddr_t
+auvia_mappage(void *addr, void *mem, off_t off, int prot)
 {
 	struct auvia_softc *sc = addr;
 	struct auvia_dma *p;

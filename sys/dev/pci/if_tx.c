@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.4 2001/10/31 03:22:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.5 2001/11/13 21:10:02 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_tx.c,v 1.45 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -115,7 +115,7 @@
 #include <net/bpf.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>

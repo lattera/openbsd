@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/isadma.c,v 1.22 1999/01/11 01:49:00 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/isadma.c,v 1.22.6.1 2001/11/13 21:10:01 niklas Exp $	*/
 /*	$NetBSD: isadma.c,v 1.32 1997/09/05 01:48:33 thorpej Exp $	*/
 
 /*-
@@ -47,7 +47,7 @@
 #include <sys/proc.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 
@@ -352,10 +352,14 @@ isa_dmastart(isadev, chan, addr, nbytes, p, flags, busdmaflags)
 #endif
 
 	if (flags & DMAMODE_READ) {
-		bus_dmamap_sync(sc->sc_dmat, dmam, BUS_DMASYNC_PREREAD);
+		bus_dmamap_sync(sc->sc_dmat, dmam, 0,
+		dmam->dm_mapsize,
+		BUS_DMASYNC_PREREAD);
 		sc->sc_dmareads |= (1 << chan);
 	} else {
-		bus_dmamap_sync(sc->sc_dmat, dmam, BUS_DMASYNC_PREWRITE);
+		bus_dmamap_sync(sc->sc_dmat, dmam, 0,
+		dmam->dm_mapsize,
+		BUS_DMASYNC_PREWRITE);
 		sc->sc_dmareads &= ~(1 << chan);
 	}
 
@@ -531,7 +535,8 @@ isa_dmadone(isadev, chan)
 		printf("%s: isa_dmadone: channel %d not finished\n",
 		    sc->sc_dev.dv_xname, chan);
 
-	bus_dmamap_sync(sc->sc_dmat, dmam,
+	bus_dmamap_sync(sc->sc_dmat, dmam, 0,
+	    dmam->dm_mapsize,
 	    (sc->sc_dmareads & (1 << chan)) ? BUS_DMASYNC_POSTREAD :
 	    BUS_DMASYNC_POSTWRITE);
 
@@ -726,10 +731,10 @@ isa_free(addr, pool)
 	free(m, pool);
 }
 
-int
+paddr_t
 isa_mappage(mem, off, prot)
 	void *mem;
-	int off;
+	off_t off;
 	int prot;
 {
 	struct isa_mem *m;

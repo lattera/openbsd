@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ess.c,v 1.2.4.2 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ess.c,v 1.2.4.3 2001/11/13 21:10:01 niklas Exp $	*/
 /*	$NetBSD: ess.c,v 1.44.4.1 1999/06/21 01:18:00 thorpej Exp $	*/
 
 /*
@@ -151,7 +151,7 @@ int	ess_get_port __P((void *, mixer_ctrl_t *));
 void   *ess_malloc __P((void *, unsigned long, int, int));
 void	ess_free __P((void *, void *, int));
 unsigned long ess_round_buffersize __P((void *, unsigned long));
-int	ess_mappage __P((void *, void *, int, int));
+paddr_t	ess_mappage __P((void *, void *, off_t, int));
 
 
 int	ess_query_devinfo __P((void *, mixer_devinfo_t *));
@@ -2191,11 +2191,11 @@ ess_round_buffersize(addr, size)
 	return (size);
 }
 
-int
+paddr_t
 ess_mappage(addr, mem, off, prot)
 	void *addr;
 	void *mem;
-	int off;
+	off_t off;
 	int prot;
 {
 	return (isa_mappage(mem, off, prot));

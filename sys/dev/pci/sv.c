@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/sv.c,v 1.7.4.2 2001/10/31 03:22:48 nate Exp $ */
+/*      $OpenBSD: src/sys/dev/pci/sv.c,v 1.7.4.3 2001/11/13 21:10:03 niklas Exp $ */
 
 /*
  * Copyright (c) 1998 Constantine Paul Sapuntzakis
@@ -160,7 +160,7 @@ int	sv_query_devinfo __P((void *, mixer_devinfo_t *));
 void   *sv_malloc __P((void *, u_long, int, int));
 void	sv_free __P((void *, void *, int));
 u_long	sv_round __P((void *, u_long));
-int	sv_mappage __P((void *, void *, int, int));
+paddr_t	sv_mappage __P((void *, void *, off_t, int));
 int	sv_get_props __P((void *));
 
 void    sv_dumpregs __P((struct sv_softc *sc));
@@ -1491,11 +1491,11 @@ sv_round(addr, size)
 	return (size);
 }
 
-int
+paddr_t
 sv_mappage(addr, mem, off, prot)
 	void *addr;
         void *mem;
-        int off;
+        off_t off;
 	int prot;
 {
 	struct sv_softc *sc = addr;

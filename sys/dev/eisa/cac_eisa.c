@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/cac_eisa.c,v 1.1.4.1 2001/05/14 22:23:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/cac_eisa.c,v 1.1.4.2 2001/11/13 21:09:59 niklas Exp $	*/
 /*	$NetBSD: cac_eisa.c,v 1.1 2000/09/01 12:15:20 ad Exp $	*/
 
 /*-
@@ -244,8 +244,8 @@ cac_eisa_l0_submit(struct cac_softc *sc, struct cac_ccb *ccb)
 	size = letoh16(ccb->ccb_hdr.size) << 2;
 	ccb->ccb_hdr.size = 0;
 
-	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
-	    BUS_DMASYNC_PREWRITE | BUS_DMASYNC_PREREAD);
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap, (caddr_t)ccb - sc->sc_ccbs,
+	    sizeof(struct cac_ccb), BUS_DMASYNC_PREWRITE | BUS_DMASYNC_PREREAD);
 
 	cac_outb(sc, CAC_EISAREG_SYSTEM_DOORBELL, CAC_EISA_CHANNEL_CLEAR);
 	cac_outl(sc, CAC_EISAREG_LIST_ADDR, ccb->ccb_paddr);
@@ -275,7 +275,7 @@ cac_eisa_l0_completed(struct cac_softc *sc)
 	off = (off & ~3) - sc->sc_ccbs_paddr;
 	ccb = (struct cac_ccb *)(sc->sc_ccbs + off);
 
-	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap, off, sizeof(struct cac_ccb),
 	    BUS_DMASYNC_POSTWRITE | BUS_DMASYNC_POSTREAD);
 
 	ccb->ccb_req.error = status;

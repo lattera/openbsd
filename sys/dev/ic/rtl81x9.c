@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.3 2001/10/31 03:22:43 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.4 2001/11/13 21:10:00 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -114,7 +114,7 @@
 #include <net/bpf.h>
 #endif
 
-#include <vm/vm.h>	/* for vtophys */
+#include <uvm/uvm_extern.h>	/* for vtophys */
 #include <machine/bus.h>
 
 #include <dev/mii/mii.h>

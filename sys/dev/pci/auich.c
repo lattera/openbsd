@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.3 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.4 2001/11/13 21:10:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000,2001 Michael Shalayeff
@@ -220,7 +220,7 @@ int auich_query_devinfo __P((void *, mixer_devinfo_t *));
 void *auich_allocm __P((void *, u_long, int, int));
 void auich_freem __P((void *, void *, int));
 u_long auich_round_buffersize __P((void *, u_long));
-int auich_mappage __P((void *, void *, int, int));
+paddr_t auich_mappage __P((void *, void *, off_t, int));
 int auich_get_props __P((void *));
 int auich_trigger_output __P((void *, void *, void *, int, void (*)(void *),
     void *, struct audio_params *));
@@ -770,11 +770,11 @@ auich_round_buffersize(v, size)
 	return size;
 }
 
-int
+paddr_t
 auich_mappage(v, mem, off, prot)
 	void *v;
 	void *mem;
-	int off;
+	off_t off;
 	int prot;
 {
 	struct auich_softc *sc = v;

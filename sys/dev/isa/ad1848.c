@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.2 2001/05/14 22:24:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.3 2001/11/13 21:10:01 niklas Exp $	*/
 /*	$NetBSD: ad1848.c,v 1.45 1998/01/30 02:02:38 augustss Exp $	*/
 
 /*
@@ -80,7 +80,7 @@
 #include <machine/bus.h>
 
 #include <sys/audioio.h>
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/audio_if.h>
 #include <dev/auconv.h>
@@ -1670,11 +1670,11 @@ ad1848_round(addr, size)
 	return size;
 }
 
-int
+paddr_t
 ad1848_mappage(addr, mem, off, prot)
 	void *addr;
         void *mem;
-        int off;
+        off_t off;
 	int prot;
 {
 	return isa_mappage(mem, off, prot);

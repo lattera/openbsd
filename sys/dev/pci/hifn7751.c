@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.6.2.4 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.6.2.5 2001/11/13 21:10:01 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -48,7 +48,7 @@
 #include <sys/mbuf.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <crypto/cryptodev.h>
 #include <dev/rndvar.h>
@@ -106,14 +106,6 @@ void	hifn_abort __P((struct hifn_softc *));
 
 struct hifn_stats hifnstats;
 
-#ifdef __HAS_NEW_BUS_DMAMAP_SYNC
-#define hifn_bus_dmamap_sync(t, m, o, l, f) \
-    bus_dmamap_sync((t), (m), (o), (l), (f))
-#else
-#define hifn_bus_dmamap_sync(t, m, o, l, f) \
-    bus_dmamap_sync((t), (m), (f))
-#endif
-
 int
 hifn_probe(parent, match, aux)
 	struct device *parent;
@@ -154,6 +146,9 @@ hifn_attach(parent, self, aux)
 	int rseg;
 	caddr_t kva;
 
+	sc->sc_pci_pc = pa->pa_pc;
+	sc->sc_pci_tag = pa->pa_tag;
+
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_HIFN &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_HIFN_7951)
 		sc->sc_flags = HIFN_HAS_RNG | HIFN_HAS_PUBLIC;
@@ -185,6 +180,10 @@ hifn_attach(parent, self, aux)
 		goto fail_io0;
 	}
 
+	cmd = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	cmd &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, cmd);
+
 	sc->sc_dmat = pa->pa_dmat;
 	if (bus_dmamap_create(sc->sc_dmat, sizeof(*sc->sc_dma), 1,
 	    sizeof(*sc->sc_dma), 0, BUS_DMA_NOWAIT, &sc->sc_dmamap)) {
@@ -192,19 +191,16 @@ hifn_attach(parent, self, aux)
 		goto fail_io1;
 	}
 	if (bus_dmamem_alloc(sc->sc_dmat, sizeof(*sc->sc_dma), PAGE_SIZE, 0,
-	    sc->sc_dmamap->dm_segs, 1, &sc->sc_dmamap->dm_nsegs,
-	    BUS_DMA_NOWAIT)) {
+	    sc->sc_dmasegs, 1, &sc->sc_dmansegs, BUS_DMA_NOWAIT)) {
 		printf(": can't alloc dma buffer\n");
 		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmamap);
 		goto fail_io1;
 	}
-	if (bus_dmamem_map(sc->sc_dmat, sc->sc_dmamap->dm_segs,
-	    sc->sc_dmamap->dm_nsegs, sizeof(*sc->sc_dma), &kva,
-	    BUS_DMA_NOWAIT)) {
+	if (bus_dmamem_map(sc->sc_dmat, sc->sc_dmasegs, sc->sc_dmansegs,
+	    sizeof(*sc->sc_dma), &kva, BUS_DMA_NOWAIT)) {
 		printf(": can't map dma buffers (%lu bytes)\n",
 		    (u_long)sizeof(*sc->sc_dma));
-		bus_dmamem_free(sc->sc_dmat, sc->sc_dmamap->dm_segs,
-		    sc->sc_dmamap->dm_nsegs);
+		bus_dmamem_free(sc->sc_dmat, sc->sc_dmasegs, sc->sc_dmansegs);
 		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmamap);
 		goto fail_io1;
 	}
@@ -212,8 +208,7 @@ hifn_attach(parent, self, aux)
 	    sizeof(*sc->sc_dma), NULL, BUS_DMA_NOWAIT)) {
 		printf(": can't load dma map\n");
 		bus_dmamem_unmap(sc->sc_dmat, kva, sizeof(*sc->sc_dma));
-		bus_dmamem_free(sc->sc_dmat, sc->sc_dmamap->dm_segs,
-		    sc->sc_dmamap->dm_nsegs);
+		bus_dmamem_free(sc->sc_dmat, sc->sc_dmasegs, sc->sc_dmansegs);
 		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmamap);
 		goto fail_io1;
 	}
@@ -283,7 +278,7 @@ hifn_attach(parent, self, aux)
 	printf(", %d%cB %cram, %s\n", rseg, rbase,
 	    sc->sc_drammodel ? 'd' : 's', intrstr);
 
-	sc->sc_cid = crypto_get_driverid();
+	sc->sc_cid = crypto_get_driverid(0);
 	if (sc->sc_cid < 0)
 		goto fail_intr;
 
@@ -311,7 +306,7 @@ hifn_attach(parent, self, aux)
 		    NULL, NULL, NULL);
 	}
 
-	hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap, 0,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap, 0,
 	    sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 
@@ -328,8 +323,7 @@ fail_intr:
 fail_mem:
 	bus_dmamap_unload(sc->sc_dmat, sc->sc_dmamap);
 	bus_dmamem_unmap(sc->sc_dmat, kva, sizeof(*sc->sc_dma));
-	bus_dmamem_free(sc->sc_dmat, sc->sc_dmamap->dm_segs,
-	    sc->sc_dmamap->dm_nsegs);
+	bus_dmamem_free(sc->sc_dmat, sc->sc_dmasegs, sc->sc_dmansegs);
 	bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmamap);
 
 	/* Turn off DMA polling */
@@ -438,6 +432,8 @@ hifn_reset_board(sc, full)
 	struct hifn_softc *sc;
 	int full;
 {
+	u_int32_t reg;
+
 	/*
 	 * Set polling in the DMA configuration register to zero.  0x7 avoids
 	 * resetting the board and zeros out the other fields.
@@ -468,6 +464,10 @@ hifn_reset_board(sc, full)
 	    HIFN_DMACNFG_DMARESET | HIFN_DMACNFG_MODE);
 
 	hifn_puc_wait(sc);
+
+	reg = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	reg &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, reg);
 }
 
 u_int32_t
@@ -837,10 +837,10 @@ hifn_writeramaddr(sc, addr, data, slot)
 	const u_int32_t masks = HIFN_D_VALID | HIFN_D_LAST | HIFN_D_MASKDONEIRQ;
 	int r;
 
-	wc.masks = 3 << 13;
-	wc.session_num = addr >> 14;
-	wc.total_source_count = 8;
-	wc.total_dest_count = addr & 0x3fff;;
+	wc.masks = htole16(3 << 13);
+	wc.session_num = htole16(addr >> 14);
+	wc.total_source_count = htole16(8);
+	wc.total_dest_count = htole16(addr & 0x3fff);
 
 	WRITE_REG_1(sc, HIFN_1_DMA_CSR,
 	    HIFN_DMACSR_C_CTRL_ENA | HIFN_DMACSR_S_CTRL_ENA |
@@ -851,34 +851,34 @@ hifn_writeramaddr(sc, addr, data, slot)
 	*(hifn_base_command_t *)dma->command_bufs[slot] = wc;
 	bcopy(data, &dma->test_src, sizeof(dma->test_src));
 
-	dma->srcr[slot].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, test_src);
-	dma->dstr[slot].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, test_dst);
+	dma->srcr[slot].p = htole32(sc->sc_dmamap->dm_segs[0].ds_addr
+	    + offsetof(struct hifn_dma, test_src));
+	dma->dstr[slot].p = htole32(sc->sc_dmamap->dm_segs[0].ds_addr
+	    + offsetof(struct hifn_dma, test_dst));
 
-	dma->cmdr[slot].l = 16 | masks;
-	dma->srcr[slot].l = 8 | masks;
-	dma->dstr[slot].l = 4 | masks;
-	dma->resr[slot].l = 4 | masks;
+	dma->cmdr[slot].l = htole32(16 | masks);
+	dma->srcr[slot].l = htole32(8 | masks);
+	dma->dstr[slot].l = htole32(4 | masks);
+	dma->resr[slot].l = htole32(4 | masks);
 
-	hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 
 	DELAY(3000);	/* let write command execute */
 
-	hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 
-	if (dma->resr[slot].l & HIFN_D_VALID) {
+	if (letoh32(dma->resr[slot].l) & HIFN_D_VALID) {
 		printf("\n%s: writeramaddr error -- "
 		    "result[%d](addr %d) valid still set\n",
 		    sc->sc_dv.dv_xname, slot, addr);
 		r = -1;
 		return (-1);
 	} else
-	    r = 0;
+		r = 0;
 
 	WRITE_REG_1(sc, HIFN_1_DMA_CSR,
 	    HIFN_DMACSR_C_CTRL_DIS | HIFN_DMACSR_S_CTRL_DIS |
@@ -898,10 +898,10 @@ hifn_readramaddr(sc, addr, data, slot)
 	const u_int32_t masks = HIFN_D_VALID | HIFN_D_LAST | HIFN_D_MASKDONEIRQ;
 	int r;
 
-	rc.masks = 2 << 13;
-	rc.session_num = addr >> 14;
-	rc.total_source_count = addr & 0x3fff;
-	rc.total_dest_count = 8;
+	rc.masks = htole16(2 << 13);
+	rc.session_num = htole16(addr >> 14);
+	rc.total_source_count = htole16(addr & 0x3fff);
+	rc.total_dest_count = htole16(8);
 
 	WRITE_REG_1(sc, HIFN_1_DMA_CSR,
 	    HIFN_DMACSR_C_CTRL_ENA | HIFN_DMACSR_S_CTRL_ENA |
@@ -910,28 +910,28 @@ hifn_readramaddr(sc, addr, data, slot)
 	bzero(dma->command_bufs[slot], HIFN_MAX_COMMAND);
 	*(hifn_base_command_t *)dma->command_bufs[slot] = rc;
 
-	dma->srcr[slot].p = sc->sc_dmamap->dm_segs[0].ds_addr +
-	    offsetof(struct hifn_dma, test_src);
+	dma->srcr[slot].p = htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+	    offsetof(struct hifn_dma, test_src));
 	dma->test_src = 0;
-	dma->dstr[slot].p =  sc->sc_dmamap->dm_segs[0].ds_addr +
-	    offsetof(struct hifn_dma, test_dst);
+	dma->dstr[slot].p =  htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+	    offsetof(struct hifn_dma, test_dst));
 	dma->test_dst = 0;
-	dma->cmdr[slot].l = 8 | masks;
-	dma->srcr[slot].l = 8 | masks;
-	dma->dstr[slot].l = 8 | masks;
-	dma->resr[slot].l = HIFN_MAX_RESULT | masks;
+	dma->cmdr[slot].l = htole32(8 | masks);
+	dma->srcr[slot].l = htole32(8 | masks);
+	dma->dstr[slot].l = htole32(8 | masks);
+	dma->resr[slot].l = htole32(HIFN_MAX_RESULT | masks);
 
-	hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 
 	DELAY(3000);	/* let read command execute */
 
-	hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+	bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 	    0, sc->sc_dmamap->dm_mapsize,
 	    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 
-	if (dma->resr[slot].l & HIFN_D_VALID) {
+	if (letoh32(dma->resr[slot].l) & HIFN_D_VALID) {
 		printf("\n%s: readramaddr error -- "
 		    "result[%d](addr %d) valid still set\n",
 		    sc->sc_dv.dv_xname, slot, addr);
@@ -956,24 +956,34 @@ hifn_init_dma(sc)
 	struct hifn_softc *sc;
 {
 	struct hifn_dma *dma = sc->sc_dma;
+	u_int32_t reg;
 	int i;
+
+	reg = pci_conf_read(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT);
+	reg &= 0xffff0000;
+	pci_conf_write(sc->sc_pci_pc, sc->sc_pci_tag, HIFN_RETRY_TIMEOUT, reg);
 
 	/* initialize static pointer values */
 	for (i = 0; i < HIFN_D_CMD_RSIZE; i++)
-		dma->cmdr[i].p = sc->sc_dmamap->dm_segs[0].ds_addr +
-		    offsetof(struct hifn_dma, command_bufs[i][0]);
+		dma->cmdr[i].p = htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		    offsetof(struct hifn_dma, command_bufs[i][0]));
 	for (i = 0; i < HIFN_D_RES_RSIZE; i++)
-		dma->resr[i].p = sc->sc_dmamap->dm_segs[0].ds_addr +
-		    offsetof(struct hifn_dma, result_bufs[i][0]);
+		dma->resr[i].p = htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		    offsetof(struct hifn_dma, result_bufs[i][0]));
 
-	dma->cmdr[HIFN_D_CMD_RSIZE].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, cmdr[0]);
-	dma->srcr[HIFN_D_SRC_RSIZE].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, srcr[0]);
-	dma->dstr[HIFN_D_DST_RSIZE].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, dstr[0]);
-	dma->resr[HIFN_D_RES_RSIZE].p = sc->sc_dmamap->dm_segs[0].ds_addr
-	    + offsetof(struct hifn_dma, resr[0]);
+	dma->cmdr[HIFN_D_CMD_RSIZE].p =
+	    htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		offsetof(struct hifn_dma, cmdr[0]));
+	dma->srcr[HIFN_D_SRC_RSIZE].p =
+	    htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		offsetof(struct hifn_dma, srcr[0]));
+	dma->dstr[HIFN_D_DST_RSIZE].p =
+	    htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		offsetof(struct hifn_dma, dstr[0]));
+	dma->resr[HIFN_D_RES_RSIZE].p =
+	    htole32(sc->sc_dmamap->dm_segs[0].ds_addr +
+		offsetof(struct hifn_dma, resr[0]));
+
 	dma->cmdu = dma->srcu = dma->dstu = dma->resu = 0;
 	dma->cmdi = dma->srci = dma->dsti = dma->resi = 0;
 	dma->cmdk = dma->srck = dma->dstk = dma->resk = 0;
@@ -1332,13 +1342,13 @@ hifn_crypto(sc, cmd, crp)
 #endif
 
 	if (cmd->src_map == cmd->dst_map)
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 		    0, cmd->src_map->dm_mapsize,
 		    BUS_DMASYNC_PREWRITE|BUS_DMASYNC_PREREAD);
 	else {
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 		    0, cmd->src_map->dm_mapsize, BUS_DMASYNC_PREWRITE);
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
 		    0, cmd->dst_map->dm_mapsize, BUS_DMASYNC_PREREAD);
 	}
 
@@ -1539,6 +1549,7 @@ hifn_intr(arg)
 	restart = dmacsr & (HIFN_DMACSR_C_ABORT | HIFN_DMACSR_S_ABORT |
 	    HIFN_DMACSR_D_ABORT | HIFN_DMACSR_R_ABORT);
 	if (restart) {
+		printf("%s: abort, resetting.\n");
 		hifnstats.hst_abort++;
 		hifn_abort(sc);
 		return (1);
@@ -1975,14 +1986,14 @@ hifn_abort(sc)
 			hifn_callback(sc, cmd, macbuf);
 		} else {
 			if (cmd->src_map == cmd->dst_map)
-				hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+				bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 				    0, cmd->src_map->dm_mapsize,
 				    BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
 			else {
-				hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+				bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 				    0, cmd->src_map->dm_mapsize,
 				    BUS_DMASYNC_POSTWRITE);
-				hifn_bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
+				bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
 				    0, cmd->dst_map->dm_mapsize,
 				    BUS_DMASYNC_POSTREAD);
 			}
@@ -2041,13 +2052,13 @@ hifn_callback(sc, cmd, macbuf)
 	int totlen, i, u;
 
 	if (cmd->src_map == cmd->dst_map)
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 		    0, cmd->src_map->dm_mapsize,
 		    BUS_DMASYNC_POSTWRITE | BUS_DMASYNC_POSTREAD);
 	else {
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->src_map,
 		    0, cmd->src_map->dm_mapsize, BUS_DMASYNC_POSTWRITE);
-		hifn_bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
+		bus_dmamap_sync(sc->sc_dmat, cmd->dst_map,
 		    0, cmd->dst_map->dm_mapsize, BUS_DMASYNC_POSTREAD);
 	}
 
@@ -2081,11 +2092,11 @@ hifn_callback(sc, cmd, macbuf)
 
 	i = dma->dstk; u = dma->dstu;
 	while (u != 0) {
-		hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 		    offsetof(struct hifn_dma, dstr[i]), sizeof(struct hifn_desc),
 		    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 		if (dma->dstr[i].l & HIFN_D_VALID) {
-			hifn_bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
+			bus_dmamap_sync(sc->sc_dmat, sc->sc_dmamap,
 			    offsetof(struct hifn_dma, dstr[i]),
 			    sizeof(struct hifn_desc),
 			    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);

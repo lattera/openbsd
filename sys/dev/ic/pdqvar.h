@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/pdqvar.h,v 1.11.6.2 2001/10/31 03:22:43 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/pdqvar.h,v 1.11.6.3 2001/11/13 21:10:00 niklas Exp $	*/
 /*	$NetBSD: pdqvar.h,v 1.11 1996/10/25 21:33:37 cgd Exp $	*/
 
 /*-
@@ -70,7 +70,6 @@ enum _pdq_type_t {
 #include <sys/mbuf.h>
 #endif /* M_CAST */
 #include <sys/malloc.h>
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #define	PDQ_USE_MBUFS

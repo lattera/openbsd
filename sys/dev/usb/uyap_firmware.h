@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/uyap_firmware.h,v 1.1.4.1 2001/05/14 22:26:27 niklas Exp $ */
-/*	$NetBSD:  $	*/
+/*	$OpenBSD: src/sys/dev/usb/Attic/uyap_firmware.h,v 1.1.4.2 2001/11/13 21:10:04 niklas Exp $ */
+/*	$NetBSD: uyap_firmware.h,v 1.2 2001/01/16 03:10:09 augustss Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.

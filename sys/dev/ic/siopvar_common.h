@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.3 2001/10/31 03:22:43 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.4 2001/11/13 21:10:01 niklas Exp $ */
 /*	$NetBSD: siopvar_common.h,v 1.10 2001/01/26 21:58:56 bouyer Exp $	*/
 
 /*
@@ -38,10 +38,10 @@
 #endif
 
 /* tables used by SCRIPT */
-typedef struct scr_table {
+struct scr_table {
 	u_int32_t count;
 	u_int32_t addr;
-} scr_table_t ;
+} __attribute__((__packed__));
 
 /* Number of scatter/gather entries */
 #define SIOP_NSG	(MAXPHYS/NBPG + 1)	/* XXX NBPG */
@@ -57,19 +57,19 @@ typedef struct scr_table {
  * transfer. 
  */
 struct siop_xfer_common {
-	u_int8_t msg_out[16];	    /*  0 */
-	u_int8_t msg_in[16];	    /* 16 */
-	u_int32_t status;	    /* 32 */
-	u_int32_t pad1;		    /* 36 */
-	u_int32_t id;		    /* 40 */
-	u_int32_t pad2;		    /* 44 */
-	scr_table_t t_msgin;	    /* 48 */
-	scr_table_t t_extmsgin;	    /* 56 */
-	scr_table_t t_extmsgdata;   /* 64 */
-	scr_table_t t_msgout;	    /* 72 */
-	scr_table_t cmd;	    /* 80 */
-	scr_table_t t_status;	    /* 88 */
-	scr_table_t data[SIOP_NSG]; /* 96 */
+	u_int8_t msg_out[16];	         /*  0 */
+	u_int8_t msg_in[16];	         /* 16 */
+	u_int32_t status;	         /* 32 */
+	u_int32_t pad1;		         /* 36 */
+	u_int32_t id;		         /* 40 */
+	u_int32_t pad2;		         /* 44 */
+	struct scr_table t_msgin;	 /* 48 */
+	struct scr_table t_extmsgin;	 /* 56 */
+	struct scr_table t_extmsgdata;   /* 64 */
+	struct scr_table t_msgout;	 /* 72 */
+	struct scr_table cmd;	         /* 80 */
+	struct scr_table t_status;	 /* 88 */
+	struct scr_table data[SIOP_NSG]; /* 96 */
 } __attribute__((__packed__));
 
 /* status can hold the SCSI_* status values, and 2 additional values: */
@@ -182,14 +182,6 @@ struct siop_lunsw {
 	u_int32_t lunsw_size; /* size of this lun sw */
 };
 
-#ifdef __HAS_NEW_BUS_DMAMAP_SYNC
-#define	siop_bus_dmamap_sync(tag, map, off, len, op)	\
-    bus_dmamap_sync((tag), (map), (off), (len), (op))
-#else
-#define	siop_bus_dmamap_sync(tag, map, off, len, op)	\
-    bus_dmamap_sync((tag), (map), (op))
-#endif
-
 static __inline__ void siop_table_sync __P((struct siop_cmd *, int));
 static __inline__ void
 siop_table_sync(siop_cmd, ops)
@@ -201,7 +193,7 @@ siop_table_sync(siop_cmd, ops)
         
         offset = siop_cmd->dsa -
 		siop_cmd->siop_cbdp->xferdma->dm_segs[0].ds_addr;
-	siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->siop_cbdp->xferdma, offset,
+	bus_dmamap_sync(sc->sc_dmat, siop_cmd->siop_cbdp->xferdma, offset,
             sizeof(struct siop_xfer), ops);
 }
 

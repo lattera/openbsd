@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.6 2001/10/31 03:22:47 nate Exp $
+	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.7 2001/11/13 21:10:02 niklas Exp $
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
 /*
@@ -499,8 +499,9 @@ vendor LINEARSYS	0x1254	Linear Systems
 vendor ASIX		0x125b	ASIX
 vendor AURORA		0x125c	Aurora Technologies
 vendor ESSTECH		0x125d	ESS
-vendor INTERSIL		0x126c	Intersil
+vendor INTERSIL		0x1260	Intersil
 vendor NORTEL		0x126c	Nortel Networks
+vendor SMI		0x126f	Silicon Motion
 vendor ENSONIQ		0x1274	Ensoniq
 vendor NETAPP		0x1275	Network Appliance
 vendor TRANSMETA	0x1279	Transmeta
@@ -532,6 +533,7 @@ vendor TRIWARE		0x13c1	3ware
 vendor SUNDANCE		0x13f0	Sundance
 vendor CMI		0x13f6	C-Media Electronics
 vendor LAVA		0x1407	Lava
+vendor TAMARACK		0x143d	Tamarack Microelectronics
 vendor OXFORD		0x14d2	Oxford
 vendor INVERTEX		0x14e1	Invertex
 vendor AIRONET		0x14b9	Aironet
@@ -546,6 +548,7 @@ vendor VMWARE		0x15ad	VMware
 vendor EUMITCOM		0x1638	Eumitcom
 vendor NETSEC		0x1660	NetSec
 vendor GLOBALSUN	0x16ab	Global Sun
+vendor ANTARES		0x1754	Antares Microsystems
 vendor SYMPHONY2	0x1c1c	Symphony Labs
 vendor TEKRAM2		0x1de1	Tekram Technology
 vendor HINT		0x3388	Hint
@@ -796,6 +799,9 @@ product AMI MEGARAID		0x1960	MegaRAID
 product AMI MEGARAID428		0x9010	MegaRAID Series 428
 product AMI MEGARAID434		0x9060	MegaRAID Series 434
 
+/* Antares Microsystems, Inc. products */
+product ANTARES TC9021		0x1021	Antares Gigabit Ethernet
+
 /* Apple products */
 product APPLE BANDIT		0x0001	Bandit
 product APPLE GC		0x0002	GC
@@ -852,6 +858,7 @@ product ATI MACH64_LI		0x4c49	Mach64 LI
 product ATI MOBILITY_1		0x4c4d	Mobility 1
 product ATI MACH64_LP		0x4c50	Mach64 LP
 product ATI RAGE_PM		0x4c52	Rage P/M
+product ATI RADEON_M		0x4c59  Radeon Mobility
 product ATI RAGE_FURY		0x5046	Rage Fury
 product ATI RAGE128_PK		0x5052	Rage 128 PK
 product ATI RADEON_AIW		0x5144	AIW Radeon
@@ -1112,12 +1119,16 @@ product ENSONIQ AUDIOPCI	0x5000	AudioPCI
 product ENSONIQ CT5880		0x5880	CT5880
 
 /* ESS Technology Inc products */
+product ESSTECH	ES336H		0x0000	ES366H Fax/Modem (early)
 product ESSTECH	MAESTROII	0x1968	Maestro II
 product ESSTECH SOLO1		0x1969	SOLO-1 AudioDrive
 product ESSTECH MAESTRO2E	0x1978	Maestro 2E
 product ESSTECH ES1989		0x1988	ES1989
+product ESSTECH ES1989M		0x1989	ES1989 Modem
 product ESSTECH MAESTRO3	0x1998	Maestro 3
 product ESSTECH ES1983		0x1999	ES1983 Modem
+product ESSTECH	ES336H_N	0x2808	ES366H Fax/Modem
+product ESSTECH SUPERLINK	0x2838	ES2838/2839 SuperLink Modem
 product ESSTECH 2898		0x2898	ES2898 Modem
 
 /* Essential Communications products */
@@ -1361,18 +1372,18 @@ product LMC SSI			0x0005	SSI
 product LMC DS1			0x0006	DS1
 
 /* Lava */
+product LAVA TWOSP_2S		0x0100	Dual Serial
+product LAVA IOFLEX_2S_0	0x0110	Serial
+product LAVA IOFLEX_2S_1	0x0111	Serial
+product LAVA OCTOPUS550_0	0x0180	Quad Serial
+product LAVA OCTOPUS550_1	0x0181	Quad Serial
+product LAVA LAVAPORT_0		0x0201	Serial
+product LAVA LAVAPORT_1		0x0202	Serial
+product LAVA 650		0x0600	Serial
 product LAVA TWOSP_1P		0x8000	Parallel
 product LAVA PARALLEL2		0x8001	Dual Parallel
 product LAVA PARALLEL2A		0x8002	Dual Parallel
 product LAVA PARALLELB		0x8003	Dual Parallel B
-product LAVA TWOSP_2S		0x0100	Dual Serial
-product LAVA IOFLEX_2S_0	0x0110	Serial
-product LAVA IOFLEX_2S_1	0x0111	Serial
-product LAVA LAVAPORT_0		0x0201	Serial
-product LAVA LAVAPORT_1		0x0202	Serial
-product LAVA 650		0x0600	Serial
-product LAVA OCTOPUS950_0	0x0180	Quad Serial
-product LAVA OCTOPUS950_1	0x0181	Quad Serial
 
 /* LeadTek Research */
 product LEADTEK S3_805		0x0000	S3 805
@@ -1427,6 +1438,15 @@ product MACRONIX MX98727	0x0532	PMAC 98727
 product MACRONIX MX86250	0x8625	MX86250
 
 /* Madge Networks products */
+product MADGE SMARTRN		0x0001	Smart 16/4 PCI Ringnode
+product MADGE SMARTRN2		0x0002	Smart 16/4 PCI Ringnode Mk2
+product MADGE SMARTRN3		0x0003	Smart 16/4 PCI Ringnode Mk3
+product MADGE SMARTRN1		0x0004	Smart 16/4 PCI Ringnode Mk1
+product MADGE 164CB		0x0006	16/4 Cardbus Adapter
+product MADGE PRESTO		0x0007	Presto PCI Adapter
+product MADGE SMARTHSRN100	0x0009	Smart 100/16/4 PCI-HS Ringnode
+product MADGE SMARTRN100	0x000a	Smart 100/16/4 PCI Ringnode
+product MADGE 164CB2		0x000b	16/4 CardBus Adapter Mk2
 product MADGE COLLAGE25		0x1000	Collage 25 ATM adapter
 product MADGE COLLAGE155	0x1001	Collage 155 ATM adapter
 
@@ -1454,8 +1474,10 @@ product MITSUBISHIELEC GUI	0x0304	GUI Accel
 product MOT MPC106		0x0002	MPC106 Host-PCI
 product MOT SM56		0x5600	SM56
 product MOT RAVEN		0x4801	Raven Host-PCI
+
 /* Mylex products */
 product MYLEX 960P		0x0001	DAC960P RAID
+product MYLEX ACCELERAID	0x0050	AcceleRAID
 
 /* Mutech products */
 product MUTECH MV1000		0x0001	MV1000
@@ -1775,6 +1797,7 @@ product SIS SiS530		0x0530	SiS530 Host-PCI
 product SIS 85C601		0x0601	85C601 EIDE
 product SIS 620			0x0620	620 Host-PCI
 product SIS 630			0x0630	630 Host-PCI
+product SIS 730			0x0730	730 Host-PCI
 product SIS 900			0x0900	900 10/100BaseTX
 product SIS 7016		0x7016	7016 10/100BaseTX
 product SIS 5511		0x5511	5511
@@ -1798,6 +1821,15 @@ product SIS 5597_USB		0x7001	5597/5598 USB
 product SMC 37C665		0x1000	FDC 37C665
 product SMC 37C922		0x1001	FDC 37C922
 product SMC 83C170		0x0005	83C170 (EPIC/100)
+
+/* Silicon Motion, Inc. products */
+product SMI SM710		0x0710	LynxEM
+product SMI SM712		0x0712	LynxEM+
+product SMI SM720		0x0720	Lynx3DM
+product SMI SM810		0x0810	LynxE
+product SMI SM811		0x0811	LynxE+
+product SMI SM820		0x0820	Lynx3D
+product SMI SM910		0x0910	910
 
 /* SNC products */
 product SNI PIRAHNA		0x0002	Pirahna 2-port
@@ -1829,6 +1861,7 @@ product SUN US_IIe		0xa001	UltraSPARC IIe PCI
 
 /* Sundance products */
 product SUNDANCE ST201		0x0201	ST201
+product SUNDANCE ST2021		0x2021	ST2021 Gigabit Ethernet
 
 /* Surecom products */
 product SURECOM NE34		0x0e34	Surecom NE-34
@@ -1839,6 +1872,10 @@ product SYMPHONY 82C103		0x0103	82C103
 product SYMPHONY 82C105		0x0105	82C105
 product SYMPHONY2 82C101	0x0001	82C101
 product SYMPHONY 82C565		0x0565	82C565 PCI-ISA
+
+/* Tamarack Microelectronics */
+product TAMARACK TC9021		0x1021	Tamarack TC9021 GigE
+product TAMARACK TC9021_ALT	0x9021	Tamarack TC9021 GigE (alt ID)
 
 /* Tekram Technology products (1st ID)*/
 product TEKRAM 	DC290		0xdc29	DC-290(M)
@@ -2084,7 +2121,7 @@ product VLSI 82C975		0x0200	82C975
 product VLSI 82C925		0x0280	82C925
 
 /* VMware */
-product VMWARE VIRTUAL		0x0710	Virtual
+product VMWARE VIRTUAL		0x0710	Virtual SVGA
 
 /* Weitek products */
 product WEITEK P9000		0x9001	P9000

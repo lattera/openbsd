@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.457 2001/10/25 16:43:02 mickey Exp 
+ *		OpenBSD: pcidevs,v 1.462 2001/11/09 00:49:41 millert Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -743,6 +743,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MegaRAID Series 434",
 	},
 	{
+	    PCI_VENDOR_ANTARES, PCI_PRODUCT_ANTARES_TC9021,
+	    "Antares Gigabit Ethernet",
+	},
+	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_BANDIT,
 	    "Bandit",
 	},
@@ -937,6 +941,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RAGE_PM,
 	    "Rage P/M",
+	},
+	{
+	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RADEON_M,
+	    "Radeon Mobility",
 	},
 	{
 	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RAGE_FURY,
@@ -1687,6 +1695,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "CT5880",
 	},
 	{
+	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_ES336H,
+	    "ES366H Fax/Modem (early)",
+	},
+	{
 	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_MAESTROII,
 	    "Maestro II",
 	},
@@ -1703,12 +1715,24 @@ static const struct pci_known_product pci_known_products[] = {
 	    "ES1989",
 	},
 	{
+	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_ES1989M,
+	    "ES1989 Modem",
+	},
+	{
 	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_MAESTRO3,
 	    "Maestro 3",
 	},
 	{
 	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_ES1983,
 	    "ES1983 Modem",
+	},
+	{
+	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_ES336H_N,
+	    "ES366H Fax/Modem",
+	},
+	{
+	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_SUPERLINK,
+	    "ES2838/2839 SuperLink Modem",
 	},
 	{
 	    PCI_VENDOR_ESSTECH, PCI_PRODUCT_ESSTECH_2898,
@@ -2467,22 +2491,6 @@ static const struct pci_known_product pci_known_products[] = {
 	    "DS1",
 	},
 	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_TWOSP_1P,
-	    "Parallel",
-	},
-	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLEL2,
-	    "Dual Parallel",
-	},
-	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLEL2A,
-	    "Dual Parallel",
-	},
-	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLELB,
-	    "Dual Parallel B",
-	},
-	{
 	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_TWOSP_2S,
 	    "Dual Serial",
 	},
@@ -2493,6 +2501,14 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_IOFLEX_2S_1,
 	    "Serial",
+	},
+	{
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_OCTOPUS550_0,
+	    "Quad Serial",
+	},
+	{
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_OCTOPUS550_1,
+	    "Quad Serial",
 	},
 	{
 	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_LAVAPORT_0,
@@ -2507,12 +2523,20 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Serial",
 	},
 	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_OCTOPUS950_0,
-	    "Quad Serial",
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_TWOSP_1P,
+	    "Parallel",
 	},
 	{
-	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_OCTOPUS950_1,
-	    "Quad Serial",
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLEL2,
+	    "Dual Parallel",
+	},
+	{
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLEL2A,
+	    "Dual Parallel",
+	},
+	{
+	    PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_PARALLELB,
+	    "Dual Parallel B",
 	},
 	{
 	    PCI_VENDOR_LEADTEK, PCI_PRODUCT_LEADTEK_S3_805,
@@ -2675,6 +2699,42 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MX86250",
 	},
 	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTRN,
+	    "Smart 16/4 PCI Ringnode",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTRN2,
+	    "Smart 16/4 PCI Ringnode Mk2",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTRN3,
+	    "Smart 16/4 PCI Ringnode Mk3",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTRN1,
+	    "Smart 16/4 PCI Ringnode Mk1",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_164CB,
+	    "16/4 Cardbus Adapter",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_PRESTO,
+	    "Presto PCI Adapter",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTHSRN100,
+	    "Smart 100/16/4 PCI-HS Ringnode",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_SMARTRN100,
+	    "Smart 100/16/4 PCI Ringnode",
+	},
+	{
+	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_164CB2,
+	    "16/4 CardBus Adapter Mk2",
+	},
+	{
 	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_COLLAGE25,
 	    "Collage 25 ATM adapter",
 	},
@@ -2753,6 +2813,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_MYLEX, PCI_PRODUCT_MYLEX_960P,
 	    "DAC960P RAID",
+	},
+	{
+	    PCI_VENDOR_MYLEX, PCI_PRODUCT_MYLEX_ACCELERAID,
+	    "AcceleRAID",
 	},
 	{
 	    PCI_VENDOR_MUTECH, PCI_PRODUCT_MUTECH_MV1000,
@@ -3695,6 +3759,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "630 Host-PCI",
 	},
 	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_730,
+	    "730 Host-PCI",
+	},
+	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_900,
 	    "900 10/100BaseTX",
 	},
@@ -3777,6 +3845,34 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_SMC, PCI_PRODUCT_SMC_83C170,
 	    "83C170 (EPIC/100)",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM710,
+	    "LynxEM",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM712,
+	    "LynxEM+",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM720,
+	    "Lynx3DM",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM810,
+	    "LynxE",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM811,
+	    "LynxE+",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM820,
+	    "Lynx3D",
+	},
+	{
+	    PCI_VENDOR_SMI, PCI_PRODUCT_SMI_SM910,
+	    "910",
 	},
 	{
 	    PCI_VENDOR_SNI, PCI_PRODUCT_SNI_PIRAHNA,
@@ -3863,6 +3959,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "ST201",
 	},
 	{
+	    PCI_VENDOR_SUNDANCE, PCI_PRODUCT_SUNDANCE_ST2021,
+	    "ST2021 Gigabit Ethernet",
+	},
+	{
 	    PCI_VENDOR_SURECOM, PCI_PRODUCT_SURECOM_NE34,
 	    "Surecom NE-34",
 	},
@@ -3885,6 +3985,14 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_SYMPHONY, PCI_PRODUCT_SYMPHONY_82C565,
 	    "82C565 PCI-ISA",
+	},
+	{
+	    PCI_VENDOR_TAMARACK, PCI_PRODUCT_TAMARACK_TC9021,
+	    "Tamarack TC9021 GigE",
+	},
+	{
+	    PCI_VENDOR_TAMARACK, PCI_PRODUCT_TAMARACK_TC9021_ALT,
+	    "Tamarack TC9021 GigE (alt ID)",
 	},
 	{
 	    PCI_VENDOR_TEKRAM, PCI_PRODUCT_TEKRAM_DC290,
@@ -4716,7 +4824,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_VMWARE, PCI_PRODUCT_VMWARE_VIRTUAL,
-	    "Virtual",
+	    "Virtual SVGA",
 	},
 	{
 	    PCI_VENDOR_WEITEK, PCI_PRODUCT_WEITEK_P9000,
@@ -6675,6 +6783,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	    "Nortel Networks",
 	},
 	{
+	    PCI_VENDOR_SMI,
+	    "Silicon Motion",
+	},
+	{
 	    PCI_VENDOR_ENSONIQ,
 	    "Ensoniq",
 	},
@@ -6799,6 +6911,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	    "Lava",
 	},
 	{
+	    PCI_VENDOR_TAMARACK,
+	    "Tamarack Microelectronics",
+	},
+	{
 	    PCI_VENDOR_OXFORD,
 	    "Oxford",
 	},
@@ -6853,6 +6969,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_GLOBALSUN,
 	    "Global Sun",
+	},
+	{
+	    PCI_VENDOR_ANTARES,
+	    "Antares Microsystems",
 	},
 	{
 	    PCI_VENDOR_SYMPHONY2,

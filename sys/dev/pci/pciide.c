@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.3 2001/10/31 03:22:47 nate Exp $     */
+/*      $OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.4 2001/11/13 21:10:03 niklas Exp $     */
 /*	$NetBSD: pciide.c,v 1.127 2001/08/03 01:31:08 tsutsui Exp $	*/
 
 /*
@@ -92,7 +92,7 @@ int wdcdebug_pciide_mask = 0;
 #include <sys/device.h>
 #include <sys/malloc.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/endian.h>
 
@@ -1032,16 +1032,10 @@ pciide_dma_init(v, channel, drive, databuf, datalen, flags)
 		return error;
 	}
 
-#ifdef __HAVE_NEW_BUS_DMAMAP_SYNC
 	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_xfer, 0,
 	    dma_maps->dmamap_xfer->dm_mapsize,		
 	    (flags & WDC_DMA_READ) ?
 	    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
-#else
-	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_xfer,
-	    (flags & WDC_DMA_READ) ?
-	    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
-#endif
 
 	for (seg = 0; seg < dma_maps->dmamap_xfer->dm_nsegs; seg++) {
 #ifdef DIAGNOSTIC
@@ -1071,14 +1065,9 @@ pciide_dma_init(v, channel, drive, databuf, datalen, flags)
 	dma_maps->dma_table[dma_maps->dmamap_xfer->dm_nsegs -1].byte_count |=
 	    htole32(IDEDMA_BYTE_COUNT_EOT);
 
-#ifdef __HAVE_NEW_BUS_DMAMAP_SYNC
 	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_table, 0, 
 	    dma_maps->dmamap_table->dm_mapsize,
 	    BUS_DMASYNC_PREWRITE);
-#else
-	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_table, 
-	    BUS_DMASYNC_PREWRITE);
-#endif
 
 	/* Maps are ready. Start DMA function */
 #ifdef DIAGNOSTIC
@@ -1148,16 +1137,10 @@ pciide_dma_finish(v, channel, drive)
 	    0x00 : IDEDMA_CMD_WRITE);
 
 	/* Unload the map of the data buffer */
-#ifdef __HAVE_NEW_BUS_DMAMAP_SYNC
 	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_xfer, 0, 
 	    dma_maps->dmamap_xfer->dm_mapsize,
 	    (dma_maps->dma_flags & WDC_DMA_READ) ?
 	    BUS_DMASYNC_POSTREAD : BUS_DMASYNC_POSTWRITE);
-#else
-	bus_dmamap_sync(sc->sc_dmat, dma_maps->dmamap_xfer, 
-	    (dma_maps->dma_flags & WDC_DMA_READ) ?
-	    BUS_DMASYNC_POSTREAD : BUS_DMASYNC_POSTWRITE);
-#endif
 	bus_dmamap_unload(sc->sc_dmat, dma_maps->dmamap_xfer);
 
 	/* Clear status bits */
@@ -2432,10 +2415,12 @@ cmd_pci_intr(arg)
 		if ((i == 0 && (priirq & CMD_CONF_DRV0_INTR)) ||
 		    (i == 1 && (secirq & CMD_ARTTIM23_IRQ))) {
 			crv = wdcintr(wdc_cp);
-			if (crv == 0)
+			if (crv == 0) {
+#if 0
 				printf("%s:%d: bogus intr\n",
 				    sc->sc_wdcdev.sc_dev.dv_xname, i);
-			else
+#endif
+			} else
 				rv = 1;
 		}
 	}

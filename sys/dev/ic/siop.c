@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.3 2001/10/31 03:22:43 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.4 2001/11/13 21:10:00 niklas Exp $ */
 /*	$NetBSD: siop.c,v 1.39 2001/02/11 18:04:49 bouyer Exp $	*/
 
 /*
@@ -126,7 +126,7 @@ siop_script_sync(sc, ops)
 	int ops;
 {
 	if ((sc->features & SF_CHIP_RAM) == 0)
-		siop_bus_dmamap_sync(sc->sc_dmat, sc->sc_scriptdma,
+		bus_dmamap_sync(sc->sc_dmat, sc->sc_scriptdma,
 		    0, PAGE_SIZE, ops);
 }
 
@@ -905,7 +905,7 @@ scintr:
 			if (offset < SIOP_NSG) {
 				bcopy(&siop_cmd->siop_tables.data[offset],
 				    &siop_cmd->siop_tables.data[0],
-				    (SIOP_NSG - offset) * sizeof(scr_table_t));
+				    (SIOP_NSG - offset) * sizeof(struct scr_table));
 				siop_table_sync(siop_cmd,
 				    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 			}
@@ -1049,7 +1049,7 @@ siop_scsicmd_end(siop_cmd)
 	}
 	if (siop_cmd->status != CMDST_SENSE_DONE &&
 	    xs->flags & (SCSI_DATA_IN | SCSI_DATA_OUT)) {
-		siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
+		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    (xs->flags & SCSI_DATA_IN) ?
 		    BUS_DMASYNC_POSTREAD : BUS_DMASYNC_POSTWRITE);
@@ -1086,10 +1086,10 @@ siop_scsicmd_end(siop_cmd)
 			bus_dmamap_unload(sc->sc_dmat, siop_cmd->dmamap_cmd);
 			goto out;
 		}
-		siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
+		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    BUS_DMASYNC_PREREAD);
-		siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
+		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    BUS_DMASYNC_PREWRITE);
 
@@ -1098,7 +1098,7 @@ siop_scsicmd_end(siop_cmd)
 		TAILQ_INSERT_HEAD(&sc->urgent_list, siop_cmd, next);
 		return;
 	} else if (siop_cmd->status == CMDST_SENSE_DONE) {
-		siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
+		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    BUS_DMASYNC_POSTREAD);
 		bus_dmamap_unload(sc->sc_dmat, siop_cmd->dmamap_data);
@@ -1348,12 +1348,12 @@ siop_scsicmd(xs)
 			splx(s);
 			return(TRY_AGAIN_LATER);
 		}
-		siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
+		bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_data,
 		    0, siop_cmd->dmamap_data->dm_mapsize,
 		    (xs->flags & SCSI_DATA_IN) ?
 		    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
 	}
-	siop_bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
+	bus_dmamap_sync(sc->sc_dmat, siop_cmd->dmamap_cmd,
 	    0, siop_cmd->dmamap_data->dm_mapsize,
 	    BUS_DMASYNC_PREWRITE);
 

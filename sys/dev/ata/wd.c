@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.3 2001/10/31 03:22:40 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.4 2001/11/13 21:09:59 niklas Exp $ */
 /*	$NetBSD: wd.c,v 1.193 1999/02/28 17:15:27 explorer Exp $ */
 
 /*
@@ -90,7 +90,7 @@
 #endif
 #include <sys/vnode.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/intr.h>
 #include <machine/bus.h>

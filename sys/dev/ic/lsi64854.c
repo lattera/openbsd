@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/lsi64854.c,v 1.3.4.1 2001/10/31 03:22:42 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/lsi64854.c,v 1.3.4.2 2001/11/13 21:10:00 niklas Exp $	*/
 /*	$NetBSD: lsi64854.c,v 1.18 2001/06/04 20:56:51 mrg Exp $ */
 
 /*-
@@ -44,7 +44,6 @@
 #include <sys/errno.h>
 #include <sys/device.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>

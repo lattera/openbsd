@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.4 2001/10/31 03:22:41 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.5 2001/11/13 21:10:00 niklas Exp $ */
 /* $NetBSD: adw.c,v 1.23 2000/05/27 18:24:50 dante Exp $	 */
 
 /*
@@ -54,7 +54,7 @@
 #include <machine/bus.h>
 #include <machine/intr.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -854,7 +854,7 @@ adw_build_req(xs, ccb, flags)
 			adw_free_ccb(sc, ccb);
 			return (0);
 		}
-		adw_bus_dmamap_sync(dmat, ccb->dmamap_xfer,
+		bus_dmamap_sync(dmat, ccb->dmamap_xfer,
 		    0, ccb->dmamap_xfer->dm_mapsize,
 		    (xs->flags & SCSI_DATA_IN) ?
 		    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
@@ -1206,7 +1206,7 @@ adw_isr_callback(sc, scsiq)
          */
 	dmat = sc->sc_dmat;
 	if (xs->datalen) {
-		adw_bus_dmamap_sync(dmat, ccb->dmamap_xfer,
+		bus_dmamap_sync(dmat, ccb->dmamap_xfer,
 		    0, ccb->dmamap_xfer->dm_mapsize,
 		    ((xs->flags & SCSI_DATA_IN) ?
 		        BUS_DMASYNC_POSTREAD : BUS_DMASYNC_POSTWRITE));
@@ -1233,32 +1233,32 @@ NO_ERROR:
 		switch (scsiq->host_status) {
 		case QHSTA_NO_ERROR:
 			switch (scsiq->scsi_status) {
-			case SCSI_STATUS_CONDITION_MET:
-			case SCSI_STATUS_INTERMID:
-			case SCSI_STATUS_INTERMID_COND_MET:
+			case SCSI_COND_MET:
+			case SCSI_INTERM:
+			case SCSI_INTERM_COND_MET:
 				/*
 				 * These non-zero status values are 
 				 * not really error conditions.
 				 *
 				 * XXX - would it be too paranoid to 
-				 *       add SCSI_STATUS_GOOD here in
+				 *       add SCSI_OK here in
 				 *       case the docs are wrong re
 				 *       QD_NO_ERROR?
 				 */
 				goto NO_ERROR;
 
-			case SCSI_STATUS_CHECK_CONDITION:
-			case SCSI_STATUS_CMD_TERMINATED:
-			case SCSI_STATUS_ACA_ACTIVE:
+			case SCSI_CHECK:
+			case SCSI_TERMINATED:
+			case SCSI_ACA_ACTIVE:
 				s1 = &ccb->scsi_sense;
 				s2 = &xs->sense;
 				*s2 = *s1;
 				xs->error = XS_SENSE;
 				break;
 
-			case SCSI_STATUS_TARGET_BUSY:
-			case SCSI_STATUS_QUEUE_FULL:
-			case SCSI_STATUS_RSERV_CONFLICT:
+			case SCSI_BUSY:
+			case SCSI_QUEUE_FULL:
+			case SCSI_RESV_CONFLICT:
 				sc->sc_freeze_dev[scsiq->target_id] = 1;
 				xs->error = XS_BUSY;
 				break;

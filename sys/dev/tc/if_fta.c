@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.1 2001/10/31 03:22:49 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/Attic/if_fta.c,v 1.6.2.2 2001/11/13 21:10:04 niklas Exp $	*/
 /*	$NetBSD: if_fta.c,v 1.7 1996/10/22 21:37:26 cgd Exp $	*/
 
 /*-
@@ -56,7 +56,7 @@
 #endif
 #include <net/if_fddi.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/tc/tcvar.h>
 #include <dev/ic/pdqvar.h>

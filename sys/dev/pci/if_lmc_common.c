@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lmc_common.c,v 1.3.2.1 2001/10/31 03:22:46 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_lmc_common.c,v 1.3.2.2 2001/11/13 21:10:02 niklas Exp $ */
 /*	$NetBSD: if_lmc_common.c,v 1.1 1999/03/25 03:32:43 explorer Exp $	*/
 
 /*-
@@ -101,7 +101,7 @@
 #include <net/bpfdesc.h>
 #endif
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <net/if_sppp.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.3 2001/10/31 03:22:41 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.4 2001/11/13 21:10:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -569,7 +569,7 @@ struct an_ltv_status {
 	u_int16_t		an_max_noise_prev_sec;	/* 0x7A */
 	u_int16_t		an_avg_noise_prev_min;	/* 0x7C */
 	u_int16_t		an_max_noise_prev_min;	/* 0x7E */
-	u_int16_t		an_spare[3];		/* 0x80 */
+	u_int16_t		an_spare[4];		/* 0x80 */
 };
 
 #define AN_STATUS_OPMODE_CONFIGURED		0x0001

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.5 2001/10/31 03:22:46 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.6 2001/11/13 21:10:02 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -109,7 +109,7 @@
 #include <net/bpf.h>
 #endif
 
-#include <vm/vm.h>              /* for vtophys */
+#include <uvm/uvm_extern.h>              /* for vtophys */
 
 #include <sys/device.h>
 

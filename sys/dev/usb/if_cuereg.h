@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/if_cuereg.h,v 1.4.2.2 2001/07/04 10:43:43 niklas Exp $ */
-/*	$NetBSD: if_cuereg.h,v 1.11 2000/04/08 20:54:38 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/if_cuereg.h,v 1.4.2.3 2001/11/13 21:10:04 niklas Exp $ */
+/*	$NetBSD: if_cuereg.h,v 1.14 2001/01/21 22:09:24 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.1 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.2 2001/11/13 21:10:02 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -106,8 +106,8 @@
 #include <net/bpf.h>
 #endif
 
-#include <vm/vm.h>              /* for vtophys */
-#include <vm/pmap.h>            /* for vtophys */
+#include <uvm/uvm_extern.h>              /* for vtophys */
+#include <uvm/uvm_pmap.h>            /* for vtophys */
 
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
@@ -959,7 +959,6 @@ void lge_rxeof(sc, cnt)
 	struct lge_softc	*sc;
 	int			cnt;
 {
-        struct ether_header	*eh;
         struct mbuf		*m;
         struct ifnet		*ifp;
 	struct lge_rx_desc	*cur_rx;
@@ -1015,10 +1014,6 @@ void lge_rxeof(sc, cnt)
 		}
 
 		ifp->if_ipackets++;
-		eh = mtod(m, struct ether_header *);
-
-		/* Remove header from mbuf and pass it on. */
-		m_adj(m, sizeof(struct ether_header));
 
 #if NBPFILTER > 0
 		/*
@@ -1063,7 +1058,7 @@ void lge_rxeof(sc, cnt)
 				m->m_pkthdr.csum |= M_UDP_CSUM_IN_OK;
 		}
 
-		ether_input(ifp, eh, m);
+		ether_input_mbuf(ifp, m);
 	}
 
 	sc->lge_cdata.lge_rx_cons = i;

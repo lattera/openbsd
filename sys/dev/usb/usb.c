@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/usb.c,v 1.7.2.2 2001/07/04 10:43:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/usb.c,v 1.7.2.3 2001/11/13 21:10:04 niklas Exp $	*/
 /*	$NetBSD: usb.c,v 1.53 2001/01/23 17:04:30 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb.c,v 1.20 1999/11/17 22:33:46 n_hibma Exp $	*/
 
@@ -232,7 +232,7 @@ usb_add_task(usbd_device_handle dev, struct usb_task *task)
 		TAILQ_INSERT_TAIL(&sc->sc_tasks, task, next);
 		task->onqueue = 1;
 	} else
-	DPRINTFN(3,("usb_add_task: sc=%p task=%p on q\n", sc, task));
+		DPRINTFN(3,("usb_add_task: sc=%p task=%p on q\n", sc, task));
 	wakeup(&sc->sc_tasks);
 	splx(s);
 }

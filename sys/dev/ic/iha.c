@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.2 2001/10/31 03:22:42 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.3 2001/11/13 21:10:00 niklas Exp $ */
 /*
  * Initio INI-9xxxU/UW SCSI Device Driver
  *
@@ -308,7 +308,7 @@ iha_scsi_cmd(xs)
 		} else
 			pScb->SCB_BufPAddr = dm->dm_segs[0].ds_addr;
 
-		iha_bus_dmamap_sync(sc->sc_dmat, pScb->SCB_Dmamap, 
+		bus_dmamap_sync(sc->sc_dmat, pScb->SCB_Dmamap, 
 		    0, pScb->SCB_Dmamap->dm_mapsize,
 		    (pScb->SCB_Flags & SCSI_DATA_IN) ?
 		    BUS_DMASYNC_PREREAD : BUS_DMASYNC_PREWRITE);
@@ -864,7 +864,7 @@ iha_scsi_label:
 		while ((pScb = iha_pop_done_scb(sc)) != NULL) {
 
 			switch (pScb->SCB_TaStat) {
-			case SCSI_CMD_TERMINATED:
+			case SCSI_TERMINATED:
 			case SCSI_ACA_ACTIVE:
 			case SCSI_CHECK:
 				pScb->SCB_Tcs->TCS_Flags &= 
@@ -2417,20 +2417,20 @@ iha_done_scb(sc, pScb)
 		case HOST_OK:
 			switch (pScb->SCB_TaStat) {
 			case SCSI_OK:
-			case SCSI_CONDITION_MET:
+			case SCSI_COND_MET:
 			case SCSI_INTERM:
 			case SCSI_INTERM_COND_MET:
 				xs->resid = pScb->SCB_BufLen;
 				xs->error = XS_NOERROR;
 				break;
 
-			case SCSI_RSERV_CONFLICT:
+			case SCSI_RESV_CONFLICT:
 			case SCSI_BUSY:
 			case SCSI_QUEUE_FULL:
 				xs->error = XS_BUSY;
 				break;
 
-			case SCSI_CMD_TERMINATED:
+			case SCSI_TERMINATED:
 			case SCSI_ACA_ACTIVE:
 			case SCSI_CHECK:
 				s1 = &pScb->SCB_ScsiSenseData;
@@ -2473,7 +2473,7 @@ iha_done_scb(sc, pScb)
 		}
 
 		if (xs->datalen > 0) {
-			iha_bus_dmamap_sync(sc->sc_dmat, pScb->SCB_Dmamap,
+			bus_dmamap_sync(sc->sc_dmat, pScb->SCB_Dmamap,
 			    0, pScb->SCB_Dmamap->dm_mapsize,
 			    ((xs->flags & SCSI_DATA_IN) ? 
 				BUS_DMASYNC_POSTREAD : BUS_DMASYNC_POSTWRITE));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.1 2001/10/31 03:22:42 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.2 2001/11/13 21:10:00 niklas Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -51,7 +51,6 @@
 
 #include <machine/endian.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
  
 #include <net/if.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.3 2001/10/31 03:22:40 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ksyms.c,v 1.5.2.4 2001/11/13 21:09:59 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  * Copyright (c) 2001 Artur Grabowski <art@openbsd.org>
@@ -41,7 +41,7 @@
 
 #include <machine/cpu.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 extern char *esym;				/* end of symbol table */
 #ifdef __sparc64__
@@ -224,10 +224,11 @@ ksymsread(dev, uio, flags)
 
 /* XXX - not yet */
 #if 0
-int
+paddr_t
 ksymsmmap(dev, off, prot)
 	dev_t dev;
-	int off, prot;
+	off_t off;
+	int prot;
 {
 	vaddr_t va;
 	paddr_t pa;

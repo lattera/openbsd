@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/iha.h,v 1.2.4.2 2001/10/31 03:22:42 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/iha.h,v 1.2.4.3 2001/11/13 21:10:00 niklas Exp $ */
 /*
  * Initio INI-9xxxU/UW SCSI Device Driver
  *
@@ -47,12 +47,6 @@
 #define IHA_MAX_TARGETS		16
 #define IHA_MAX_SCB		32
 #define IHA_MAX_EXTENDED_MSG	 4 /* SDTR(3) and WDTR(4) only */
-
-#define SCSI_CONDITION_MET    0x04 /* SCSI Status codes not defined */
-#define SCSI_INTERM_COND_MET  0x14 /*     in scsi_all.h             */
-#define SCSI_RSERV_CONFLICT   0x18
-#define SCSI_CMD_TERMINATED   0x22
-#define SCSI_ACA_ACTIVE	      0x30
 
 /*
  *   Scatter-Gather Element Structure
@@ -445,15 +439,5 @@ int  iha_scsi_cmd   __P((struct scsi_xfer *));
 int  iha_intr	    __P((void *));
 void iha_minphys    __P((struct buf *));
 int  iha_init_tulip __P((struct iha_softc *));
-
-#ifdef __HAS_NEW_BUS_DMAMAP_SYNC
-#define	iha_bus_dmamap_sync(tag, map, off, len, op)	\
-    bus_dmamap_sync((tag), (map), (off), (len), (op))
-#else
-#define	iha_bus_dmamap_sync(tag, map, off, len, op)	\
-    bus_dmamap_sync((tag), (map), (op))
-#endif
-
-
 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.3 2001/10/31 03:22:43 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.4 2001/11/13 21:10:00 niklas Exp $ */
 /*	$NetBSD: siop_common.c,v 1.12 2001/02/11 18:04:50 bouyer Exp $	*/
 
 /*
@@ -560,7 +560,7 @@ siop_sdp(siop_cmd)
 	/* save data pointer. Handle async only for now */
 	int offset, dbc, sstat;
 	struct siop_softc *sc = siop_cmd->siop_sc;
-	scr_table_t *table; /* table to patch */
+	struct scr_table *table; /* table to patch */
 
 	if ((siop_cmd->xs->flags & (SCSI_DATA_OUT | SCSI_DATA_IN))
 	    == 0)

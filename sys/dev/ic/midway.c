@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25.4.2 2001/07/04 10:40:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25.4.3 2001/11/13 21:10:00 niklas Exp $	*/
 /*	(sync'd to midway.c 1.68)	*/
 
 /*
@@ -132,7 +132,7 @@
 #include <net/if.h>
 #include <net/if_atm.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #ifdef INET
 #include <netinet/if_atm.h>

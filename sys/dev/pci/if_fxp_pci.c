@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.3 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.4 2001/11/13 21:10:02 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -64,7 +64,7 @@
 
 #include <netinet/if_ether.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/bus.h>

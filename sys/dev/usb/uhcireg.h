@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/uhcireg.h,v 1.2.4.2 2001/07/04 10:43:53 niklas Exp $ */
-/*	$NetBSD: uhcireg.h,v 1.13 2000/08/13 18:20:15 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uhcireg.h,v 1.2.4.3 2001/11/13 21:10:04 niklas Exp $ */
+/*	$NetBSD: uhcireg.h,v 1.14 2001/08/06 15:15:08 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhcireg.h,v 1.12 1999/11/17 22:33:42 n_hibma Exp $ */
 
 /*
@@ -106,6 +106,9 @@
 #define UHCI_PORTSC_OCI		0x0400
 #define UHCI_PORTSC_OCIC	0x0800
 #define UHCI_PORTSC_SUSP	0x1000
+
+#define URWMASK(x) \
+  ((x) & (UHCI_PORTSC_SUSP | UHCI_PORTSC_PR | UHCI_PORTSC_RD | UHCI_PORTSC_PE))
 
 #define UHCI_FRAMELIST_COUNT	1024
 #define UHCI_FRAMELIST_ALIGN	4096

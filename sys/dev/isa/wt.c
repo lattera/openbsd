@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/wt.c,v 1.12.10.1 2001/05/14 22:24:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/wt.c,v 1.12.10.2 2001/11/13 21:10:01 niklas Exp $	*/
 /*	$NetBSD: wt.c,v 1.33 1996/05/12 23:54:22 mycroft Exp $	*/
 
 /*
@@ -64,7 +64,7 @@
 #include <sys/conf.h>
 #include <sys/timeout.h>
 
-#include <vm/vm_param.h>
+#include <uvm/uvm_param.h>
 
 #include <machine/intr.h>
 #include <machine/pio.h>

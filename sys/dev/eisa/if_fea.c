@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.8.2.1 2001/10/31 03:22:41 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.8.2.2 2001/11/13 21:09:59 niklas Exp $	*/
 /*	$NetBSD: if_fea.c,v 1.9 1996/10/21 22:31:05 thorpej Exp $	*/
 
 /*-
@@ -65,7 +65,7 @@
 
 #include <net/if_fddi.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/bus.h>

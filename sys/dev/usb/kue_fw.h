@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/kue_fw.h,v 1.4.4.1 2001/05/14 22:26:19 niklas Exp $ */
-/*	$NetBSD: kue_fw.h,v 1.2 2000/03/27 12:33:54 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/Attic/kue_fw.h,v 1.4.4.2 2001/11/13 21:10:04 niklas Exp $ */
+/*	$NetBSD: kue_fw.h,v 1.3 2001/01/19 08:54:21 jdolecek Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.

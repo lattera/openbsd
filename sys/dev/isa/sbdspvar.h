@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sbdspvar.h,v 1.11.4.1 2001/05/14 22:24:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sbdspvar.h,v 1.11.4.2 2001/11/13 21:10:01 niklas Exp $	*/
 /*	$NetBSD: sbdspvar.h,v 1.37 1998/08/10 00:20:39 mycroft Exp $	*/
 
 /*
@@ -243,7 +243,7 @@ int	sbdsp_mixer_query_devinfo __P((void *, mixer_devinfo_t *));
 void	*sb_malloc __P((void *, unsigned long, int, int));
 void	sb_free __P((void *, void *, int));
 unsigned long sb_round __P((void *, unsigned long));
-int	sb_mappage __P((void *, void *, int, int));
+paddr_t	sb_mappage __P((void *, void *, off_t, int));
 
 int	sbdsp_get_props __P((void *));
 

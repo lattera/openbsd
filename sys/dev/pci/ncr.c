@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.4 2001/10/31 03:22:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.5 2001/11/13 21:10:02 niklas Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -225,8 +225,7 @@
 #else
 #include <sys/timeout.h>
 #endif
-#include <vm/vm.h>
-#include <vm/vm_extern.h>
+#include <uvm/uvm_extern.h>
 #endif /* KERNEL */
 
 
@@ -1467,7 +1466,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.4 2001/10/31 03:22:46 nate Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.5 2001/11/13 21:10:02 niklas Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11

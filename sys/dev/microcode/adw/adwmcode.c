@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.c,v 1.1.4.1 2001/05/14 22:24:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.c,v 1.1.4.2 2001/11/13 21:10:01 niklas Exp $ */
 /*      $NetBSD: adwmcode.c,v 1.5 2000/05/27 18:24:50 dante Exp $        */
 
 /*
@@ -70,7 +70,7 @@
 #include <machine/bus.h>
 #include <machine/intr.h>
 
-#include <vm/vm.h>
+#include <uvm/uvm_extern.h>
 
 #include "adwmcode.h"
 

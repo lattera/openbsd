@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.3 2001/10/31 03:22:48 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.4 2001/11/13 21:10:03 niklas Exp $ */
 /* $NetBSD: tga.c,v 1.31 2001/02/11 19:34:58 nathanw Exp $ */
 
 /*
@@ -55,7 +55,6 @@
 #include <dev/rasops/rasops.h>
 #include <dev/wsfont/wsfont.h>
 
-#include <vm/vm.h>
 #include <uvm/uvm_extern.h>
 
 #ifdef __alpha__
