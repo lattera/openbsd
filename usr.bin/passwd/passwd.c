@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)passwd.c	5.5 (Berkeley) 7/6/91";*/
-static char rcsid[] = "$Id: passwd.c,v 1.7 1995/02/12 17:45:56 phil Exp $";
+static char rcsid[] = "$Id: passwd.c,v 1.1.1.1 1995/10/18 08:45:54 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -80,21 +80,6 @@ main(argc, argv)
 	basename = strrchr(argv[0], '/');
 	if (basename == NULL)
 		basename = argv[0];
-	if (strcmp(basename, "yppasswd") == 0) {
-#ifdef YP
-		if (!use_yp) {
-			fprintf(stderr, "yppasswd: YP not in use.\n");
-			exit (1);
-		}
-		use_kerberos = 0;
-		use_yp = 1;
-		force_yp = 1;
-#else
-		fprintf(stderr, "yppasswd: YP not compiled in\n");
-		exit(1);
-#endif
-	}
-
 	
 	while ((ch = getopt(argc, argv, "lky")) != EOF)
 		switch (ch) {
