@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: cipher.c,v 1.21 2000/03/28 20:24:49 markus Exp $");
+RCSID("$Id: cipher.c,v 1.22 2000/04/04 21:37:27 markus Exp $");
 
 #include "ssh.h"
 #include "cipher.h"
@@ -20,7 +20,7 @@ RCSID("$Id: cipher.c,v 1.21 2000/03/28 20:24:49 markus Exp $");
 #include <ssl/md5.h>
 
 /*
- * What kind of tripple DES are these 2 routines?
+ * What kind of triple DES are these 2 routines?
  *
  * Why is there a redundant initialization vector?
  *
