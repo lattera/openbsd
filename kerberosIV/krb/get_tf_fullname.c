@@ -1,7 +1,7 @@
 /*
  * This software may now be redistributed outside the US.
  *
- * $Source: /usr/src/kerberosIV/lib/krb/RCS/get_tf_fullname.c,v $
+ * $Source: /cvs/src/kerberosIV/krb/get_tf_fullname.c,v $
  *
  * $Locker:  $
  */
@@ -38,8 +38,8 @@ or implied warranty.
  * krb_get_tf_fullname() takes four arguments: the name of the 
  * ticket file, and variables for name, instance, and realm to be
  * returned in.  Since the realm of a ticket file is not really fully 
- * supported, the realm used will be that of the the first ticket in 
- * the file as this is the one that was obtained with a password by
+ * supported, the realm used will be that of the first ticket in the
+ * file as this is the one that was obtained with a password by
  * krb_get_in_tkt().
  */
 
