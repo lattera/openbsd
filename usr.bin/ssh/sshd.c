@@ -18,7 +18,7 @@ agent connections.
 */
 
 #include "includes.h"
-RCSID("$Id: sshd.c,v 1.58 1999/11/18 14:00:49 markus Exp $");
+RCSID("$Id: sshd.c,v 1.59 1999/11/19 19:58:18 markus Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -170,7 +170,10 @@ void main_sigchld_handler(int sig)
 {
   int save_errno = errno;
   int status;
-  wait(&status);
+
+  while (waitpid(-1, &status, WNOHANG) > 0)
+	;
+
   signal(SIGCHLD, main_sigchld_handler);
   errno = save_errno;
 }
