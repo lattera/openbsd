@@ -12,8 +12,6 @@
 
 # Author: Paul Eggert <eggert@twinsun.com>
 
-# $Id: rcs2log.sh,v 1.5 1996/10/16 15:28:42 jimb Exp $
-
 # Copyright 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
