@@ -1,0 +1,57 @@
+#	$OpenBSD: src/gnu/lib/libiberty/Makefile.bsd-wrapper,v 1.6 2003/12/28 20:11:50 espie Exp $
+
+LIB=		iberty
+CPPFLAGS+=	-DHAVE_CONFIG_H -I$(.CURDIR) -I$(.CURDIR)/include -I$(.OBJDIR)
+
+HOST_FILES!=	cat $(.OBJDIR)/needed-list 2>/dev/null||true
+
+.PATH: ${.CURDIR}/src
+
+SRCS=		argv.c choose-temp.c concat.c cplus-dem.c cp-demangle.c \
+		dyn-string.c \
+		fdmatch.c getopt.c getopt1.c getpwd.c getruntime.c \
+		hashtab.c hex.c fibheap.c partition.c \
+		floatformat.c make-temp-file.c make-relative-prefix.c \
+		objalloc.c obstack.c oldhashtab.c \
+		pexecute.c safe-ctype.c spaces.c splay-tree.c \
+		strerror.c strsignal.c \
+		xatexit.c xexit.c xmalloc.c xmemdup xstrerror.c xstrdup.c \
+		physmem.c lbasename.c lrealpath.c \
+		$(HOST_FILES)
+
+#		choose-temp.c fnmatch.c objalloc.c pexecute.c xstrdup.c \
+#		basename.c vasprintf.c 
+
+# XXX -- These files are generated during the PREREQ variable assignment.
+CLEANFILES+=	config.h config.status needed-list 
+
+# XXX -- Why are these not removed by the generated Makefile?
+CLEANFILES+=	insque.o insque.go insque.po insque.so 
+
+# and more
+CLEANFILES+=	Makefile config.cache config.log stamp-h xhost-mkfrag \
+		testsuite/Makefile libiberty.info
+
+
+depend:	needed-list
+
+needed-list: config.status
+	${MAKE} ${GNUCFLAGS} CC=${CC} needed-list
+
+config.status: Makefile.in configure 
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
+	/bin/sh ${.CURDIR}/src/configure \
+		--prefix=/usr --with-local-prefix=/usr ${CF} \
+		&& touch config.status
+
+all:	libiberty.info
+
+libiberty.info:
+	makeinfo --no-split -I${.CURDIR}/src ${.CURDIR}/src/libiberty.texi
+
+afterinstall:
+	${INSTALL} ${INSTALL_COPY} -o ${DOCOWN} -g ${DOCGRP} -m ${DOCMODE} \
+	    libiberty.info $(DESTDIR)/usr/share/info
+
+.include <bsd.lib.mk>
