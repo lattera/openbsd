@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/npx.h,v 1.3.14.3 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/npx.h,v 1.3.14.4 2004/04/06 13:36:19 niklas Exp $	*/
 /*	$NetBSD: npx.h,v 1.11 1994/10/27 04:16:11 cgd Exp $	*/
 
 /*-
@@ -180,5 +180,7 @@ struct	emcsts {
 
 void    process_xmm_to_s87(const struct savexmm *, struct save87 *);
 void    process_s87_to_xmm(const struct save87 *, struct savexmm *);
+
+void	npxinit(struct cpu_info *);
 
 #endif /* !_I386_NPX_H_ */
