@@ -1,5 +1,5 @@
 /*
-**	$Id: identd.c,v 1.3 1996/12/22 03:41:14 tholo Exp $
+**	$Id: identd.c,v 1.4 1997/07/23 20:36:27 kstailey Exp $
 **
 ** identd.c			  A TCP/IP link identification protocol server
 **
@@ -178,10 +178,12 @@ child_handler()
 #else
   int status;
 #endif
+  int save_errno = errno;
 
   while (wait3(&status, WNOHANG, NULL) > 0)
     ;
   
+  errno = save_errno;
 #ifndef SIGRETURN_TYPE_IS_VOID
   return 0;
 #endif
