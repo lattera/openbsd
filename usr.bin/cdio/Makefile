@@ -1,8 +1,8 @@
-#	$OpenBSD: src/usr.bin/cdio/Makefile,v 1.2 2002/04/18 20:18:31 espie Exp $
+#	$OpenBSD: src/usr.bin/cdio/Makefile,v 1.3 2003/02/13 05:48:38 fgsch Exp $
 
 PROG=	cdio
-DPADD=	${LIBUTIL}
-LDADD=	-lutil
+DPADD=	${LIBUTIL} ${LIBEDIT} ${LIBTERMCAP}
+LDADD=	-lutil -ledit -ltermcap
 SRCS=	cdio.c cddb.c
 CDIAGFLAGS=-Wall -W -Wmissing-prototypes -pedantic
 
