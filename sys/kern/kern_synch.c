@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.8 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.9 2003/05/15 16:45:54 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -750,10 +750,8 @@ mi_switch()
 	struct rlimit *rlim;
 	long s, u;
 	struct timeval tv;
-#ifdef notyet
 #if defined(MULTIPROCESSOR)
 	int hold_count;
-#endif
 #endif
 
 	SCHED_ASSERT_LOCKED();
@@ -765,11 +763,7 @@ mi_switch()
 	 * selects a new process and removes it from the run queue.
 	 */
 	if (p->p_flag & P_BIGLOCK)
-#ifdef notyet
 		hold_count = spinlock_release_all(&kernel_lock);
-#else
-		KERNEL_UNLOCK();
-#endif
 #endif
 
 	/*
@@ -830,11 +824,7 @@ mi_switch()
 	 * we reacquire the interlock.
 	 */
 	if (p->p_flag & P_BIGLOCK)
-#ifdef notyet
 		spinlock_acquire_count(&kernel_lock, hold_count);
-#else
-		KERNEL_LOCK(LK_CANRECURSE|LK_EXCLUSIVE);
-#endif
 #endif
 }
 

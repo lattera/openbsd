@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.7 2003/05/15 04:08:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.8 2003/05/15 16:45:54 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -60,6 +60,7 @@ struct lock {
 	int	lk_sharecount;		/* # of accepted shared locks */
 	int	lk_waitcount;		/* # of processes sleeping for lock */
 	short	lk_exclusivecount;	/* # of recursive exclusive locks */
+	short	lk_recurselevel;	/* lvl above which recursion ok */
 
 	/*
 	 * This is the sleep message for sleep locks, and a simple name
@@ -88,7 +89,6 @@ struct lock {
 	} lk_un;
 
 #define	lk_lockholder	lk_un.lk_un_sleep.lk_sleep_lockholder
-#define	lk_locklwp	lk_un.lk_un_sleep.lk_sleep_locklwp
 #define	lk_prio		lk_un.lk_un_sleep.lk_sleep_prio
 #define	lk_timo		lk_un.lk_un_sleep.lk_sleep_timo
 
@@ -211,7 +211,7 @@ void	lockinit(struct lock *, int prio, char *wmesg, int timo,
 			int flags);
 int	lockmgr(__volatile struct lock *, u_int flags,
 			struct simplelock *, struct proc *p);
-void    lockmgr_printinfo(struct lock *);
+void	lockmgr_printinfo(__volatile struct lock *);
 int	lockstatus(struct lock *);
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
@@ -222,6 +222,19 @@ int	lockstatus(struct lock *);
 #else
 #define spinlockinit(lkp, name, flags)	(void)(lkp)
 #define spinlockmgr(lkp, flags, intrlk)	(0)
+#endif
+
+#if defined(LOCKDEBUG)
+int	_spinlock_release_all(__volatile struct lock *, const char *, int);
+void	_spinlock_acquire_count(__volatile struct lock *, int, const char *,
+	    int);
+
+#define	spinlock_release_all(l)	_spinlock_release_all((l), __FILE__, __LINE__)
+#define	spinlock_acquire_count(l, c) _spinlock_acquire_count((l), (c),	\
+					__FILE__, __LINE__)
+#else
+int	spinlock_release_all(__volatile struct lock *);
+void	spinlock_acquire_count(__volatile struct lock *, int);
 #endif
 
 #ifdef LOCKDEBUG
