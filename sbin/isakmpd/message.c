@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.69.2.1 2004/06/09 20:48:47 brad Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.69.2.2 2004/06/11 02:34:56 brad Exp $	*/
 /*	$EOM: message.c,v 1.156 2000/10/10 12:36:39 provos Exp $	*/
 
 /*
@@ -476,6 +476,13 @@ message_validate_delete (struct message *msg, struct payload *p)
   int i;
   char *addr;
 
+  /* Only accpet authenticated DELETEs. */
+  if ((msg->flags & MSG_AUTHENTICATED) == 0)
+    {
+      log_print("message_validate_delete: got unauthenticated DELETE");
+      return -1;
+    }
+
   doi = doi_lookup (GET_ISAKMP_DELETE_DOI (p->p));
   if (!doi)
     {
@@ -579,9 +586,10 @@ message_validate_hash (struct message *msg, struct payload *p)
   u_int8_t message_id[ISAKMP_HDR_MESSAGE_ID_LEN];
   size_t rest_len;
 
-  if (msg->exchange)	/* active exchange validates hash payload. */
+  /* active exchanges other than INFORMATIONAL validates hash payload. */
+  if (msg->exchange && (msg->exchange->type != ISAKMP_EXCH_INFO))
     return 0;
-
+ 
   if (isakmp_sa == NULL)
     {
       log_print ("message_validate_hash: invalid hash information");
@@ -656,6 +664,9 @@ message_validate_hash (struct message *msg, struct payload *p)
 
   /* Mark the HASH as handled. */
   hashp->flags |= PL_MARK;
+
+  /* Mark message as authenticated. */
+  msg->flags |= MSG_AUTHENTICATED;
 
   return 0;
 }
