@@ -29,6 +29,9 @@ Report problems and direct all questions to:
 
 /*
  * $Log: rcs.c,v $
+ * Revision 1.1  1996/08/12 04:08:12  millert
+ * rcs 5.7 + OpenBSD changes
+ *
  * Revision 5.21  1995/06/16 06:19:24  eggert
  * Update FSF address.
  *
@@ -276,7 +279,7 @@ static struct delrevpair delrev;
 static struct hshentry *cuthead, *cuttail, *delstrt;
 static struct hshentries *gendeltas;
 
-mainProg(rcsId, "rcs", "$Id: rcs.c,v 5.21 1995/06/16 06:19:24 eggert Exp $")
+mainProg(rcsId, "rcs", "$Id: rcs.c,v 1.1 1996/08/12 04:08:12 millert Exp $")
 {
 	static char const cmdusage[] =
 		"\nrcs usage: rcs -{ae}logins -Afile -{blu}[rev] -cstring -{iILqTU} -ksubst -mrev:msg -{nN}name[:[rev]] -orange -sstate[:rev] -t[text] -Vn -xsuff -zzone file ...";
@@ -1035,7 +1038,7 @@ sendmail(Delta, who)
 	    efaterror(messagefile);
         }
 
-	aprintf(mailmess, "Subject: Broken lock on %s\n\nYour lock on revision %s of file %s\nhas been broken by %s for the following reason:\n",
+	aprintf(mailmess, "To: %s\nSubject: Broken lock on %s\n\nYour lock on revision %s of file %s\nhas been broken by %s for the following reason:\n", who,
 		basefilename(RCSname), Delta, getfullRCSname(), getcaller()
 	);
 	aputs("State the reason for breaking the lock:\n(terminate with single '.' or end of file)\n>> ", stderr);
@@ -1061,7 +1064,7 @@ sendmail(Delta, who)
         }
 	Orewind(mailmess);
 	aflush(mailmess);
-	status = run(fileno(mailmess), (char*)0, SENDMAIL, who, (char*)0);
+	status = run(fileno(mailmess), (char*)0, SENDMAIL, "-t", (char*)0);
 	Ozclose(&mailmess);
 	if (status == 0)
 		return true;
