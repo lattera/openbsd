@@ -34,7 +34,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)prim.c	5.8 (Berkeley) 6/1/90"; */
-static char *rcsid = "$Id: prim.c,v 1.4 1994/12/24 17:17:12 cgd Exp $";
+static char *rcsid = "$Id: prim.c,v 1.1.1.1 1995/10/18 08:45:49 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -640,7 +640,7 @@ search(search_forward, pattern, n, wantmatch)
 		}
 		else
 			regfree(cpattern);
-		if (regcomp(cpattern, pattern, 0))
+		if (regcomp(cpattern, pattern, REG_EXTENDED))
 		{
 			error("Invalid pattern");
 			return(0);
