@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.6 1997/02/07 06:47:06 mickey Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.4.4.7 1997/04/13 04:48:13 mickey Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -860,16 +860,22 @@ int
 kernfs_inactive(v)
 	void *v;
 {
+#if defined(KERNFS_DIAGNOSTIC) || defined(DDB)
 	struct vop_inactive_args /* {
 		struct vnode *a_vp;
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
+#endif
+#ifdef DDB
 	struct kernfs_node *kfs = VTOKERN(vp);
 	db_symtab_t	st;
+#endif
 
 #ifdef KERNFS_DIAGNOSTIC
 	printf("kernfs_inactive(%x)\n", vp);
 #endif
+
+#ifdef DDB
 	if (kfs == NULL || kfs->kf_type != Ksymtab)
 		return 0;
 
@@ -878,6 +884,7 @@ kernfs_inactive(v)
 
 	if (st == NULL)
 		vgone(vp);
+#endif
 	return (0);
 }
 
