@@ -14,7 +14,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: ac.c,v 1.3 1994/05/01 04:39:35 cgd Exp $";
+static char rcsid[] = "$Id: ac.c,v 1.1.1.1 1995/10/18 08:47:09 deraadt Exp $";
 #endif
 
 #include <sys/types.h>
@@ -460,7 +460,7 @@ ac(fp)
 	struct utmp_list *lp, *head = NULL;
 	struct utmp usr;
 	struct tm *ltm;
-	time_t secs;
+	time_t secs = 0;
 	int day = -1;
 	
 	while (fread((char *)&usr, sizeof(usr), 1, fp) == 1) {
