@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/ic/monitors.h,v 1.2 2001/07/04 09:03:03 niklas Exp $ */
 /* $NetBSD$ */
 
 /*-
