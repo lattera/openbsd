@@ -14,7 +14,7 @@ The authentication agent program.
 */
 
 #include "includes.h"
-RCSID("$Id: ssh-agent.c,v 1.9 1999/10/04 20:45:01 markus Exp $");
+RCSID("$Id: ssh-agent.c,v 1.10 1999/10/05 22:18:52 markus Exp $");
 
 #include "ssh.h"
 #include "rsa.h"
@@ -51,7 +51,7 @@ Identity *identities = NULL;
 
 int max_fd = 0;
 
-/* pid of agent == parent of shell */
+/* pid of shell == parent of agent */
 int parent_pid = -1;
 
 /* pathname and directory for AUTH_SOCKET */
