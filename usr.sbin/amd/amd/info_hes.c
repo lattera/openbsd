@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)info_hes.c	8.1 (Berkeley) 6/6/93
- *	$Id: info_hes.c,v 1.4 1997/12/17 07:40:42 deraadt Exp $
+ *	$Id: info_hes.c,v 1.5 2001/08/12 12:03:03 heko Exp $
  */
 
 /*
@@ -653,7 +653,8 @@ char *domain;
 #ifdef DEBUG
 				dlog("hs_get_ns_list: Saving name %s", name);
 #endif
-				strncpy(nsname[numns], name, MAXDATA);
+				strlcpy(nsname[numns], name,
+				    sizeof(nsname[numns]));
 				nshaveaddr[numns] = 0;
 				numns++;
 			}

@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)fsi_analyze.c	8.1 (Berkeley) 6/6/93
- *	$Id: fsi_analyze.c,v 1.3 1994/06/13 20:50:08 mycroft Exp $
+ *	$Id: fsi_analyze.c,v 1.1.1.1 1995/10/18 08:47:18 deraadt Exp $
  */
 
 /*
@@ -122,10 +122,10 @@ char *hn;
 		d = strrchr(p, '.');
 		if (d) {
 			*d = 0;
-			strcat(path, d+1);
-			strcat(path, "/");
+			strlcat(path, d+1, sizeof(path));
+			strlcat(path, "/", sizeof(path));
 		} else {
-			strcat(path, p);
+			strlcat(path, p, sizeof(path));
 		}
 	} while (d);
 
