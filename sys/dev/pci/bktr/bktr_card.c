@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_card.c,v 1.1.4.2 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_card.c,v 1.1.4.3 2002/03/30 08:22:04 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_card.c,v 1.16 2000/10/31 13:09:56 roger Exp $ */
 
 /*
@@ -413,7 +413,7 @@ readEEProm( bktr_ptr_t bktr, int offset, int count, u_char *data )
  * XXX FIXME: use offset & count args
  */
 int
-signCard( bktr_ptr_t bktr, int offset, int count, u_char* sig )
+signCard( bktr_ptr_t bktr, int offset, int count, u_char *sig )
 {
 	int	x;
 

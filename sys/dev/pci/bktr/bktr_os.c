@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.5 2002/03/06 02:11:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.c,v 1.1.4.6 2002/03/30 08:22:04 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_os.c,v 1.20 2000/10/20 08:16:53 roger Exp $ */
 
 /*
@@ -821,7 +821,7 @@ int bktr_poll( dev_t dev, int events, struct proc *p)
 
 static bktr_reg_t brooktree[ NBKTR ];
 
-static const char*	bktr_probe( pcici_t tag, pcidi_t type );
+static const char      *bktr_probe( pcici_t tag, pcidi_t type );
 static void		bktr_attach( pcici_t tag, int unit );
 static void		bktr_intr(void *arg) { common_bktr_intr(arg); }
 
@@ -872,7 +872,7 @@ SYSINIT(bktrdev,SI_SUB_DRIVERS,SI_ORDER_MIDDLE+CDEV_MAJOR,bktr_drvinit,NULL)
 /*
  * the boot time probe routine.
  */
-static const char*
+static const char *
 bktr_probe( pcici_t tag, pcidi_t type )
 {
         unsigned int rev = pci_conf_read( tag, PCIR_REVID) & 0x000000ff;
@@ -960,7 +960,7 @@ bktr_attach( pcici_t tag, int unit )
 	/*
 	 * setup the interrupt handling routine
 	 */
-	pci_map_int(tag, bktr_intr, (void*) bktr, &tty_imask);
+	pci_map_int(tag, bktr_intr, (void *) bktr, &tty_imask);
 
 
 	/* Update the Device Control Register */
@@ -1302,23 +1302,23 @@ static	int		bktr_intr(void *arg) { return common_bktr_intr(arg); }
 #define bktr_mmap       bktrmmap
 
 #ifdef __OpenBSD__
-int	bktr_open __P((dev_t, int, int, struct proc *));
-int	bktr_close __P((dev_t, int, int, struct proc *));
-int	bktr_read __P((dev_t, struct uio *, int));
-int	bktr_write __P((dev_t, struct uio *, int));
-int	bktr_ioctl __P((dev_t, ioctl_cmd_t, caddr_t, int, struct proc *));
-paddr_t	bktr_mmap __P((dev_t, off_t, int));
+int	bktr_open(dev_t, int, int, struct proc *);
+int	bktr_close(dev_t, int, int, struct proc *);
+int	bktr_read(dev_t, struct uio *, int);
+int	bktr_write(dev_t, struct uio *, int);
+int	bktr_ioctl(dev_t, ioctl_cmd_t, caddr_t, int, struct proc *);
+paddr_t	bktr_mmap(dev_t, off_t, int);
 #endif
 
 vm_offset_t vm_page_alloc_contig(vm_offset_t, vm_offset_t,
                                  vm_offset_t, vm_offset_t);
 
 #if defined(__OpenBSD__)
-static int      bktr_probe __P((struct device *, void *, void *));
+static int      bktr_probe(struct device *, void *, void *);
 #else
-static int      bktr_probe __P((struct device *, struct cfdata *, void *));
+static int      bktr_probe(struct device *, struct cfdata *, void *);
 #endif
-static void     bktr_attach __P((struct device *, struct device *, void *));
+static void     bktr_attach(struct device *, struct device *, void *);
 
 struct cfattach bktr_ca = {
         sizeof(struct bktr_softc), bktr_probe, bktr_attach
