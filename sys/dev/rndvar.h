@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rndvar.h,v 1.11.12.3 2001/10/31 03:22:40 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/rndvar.h,v 1.11.12.4 2002/03/28 15:03:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996,2000 Michael Shalayeff.
@@ -89,10 +89,10 @@ extern struct rndstats rndstats;
 #define	add_audio_randomness(d)	enqueue_randomness(RND_SRC_AUDIO, (int)(d))
 #define	add_video_randomness(d)	enqueue_randomness(RND_SRC_VIDEO, (int)(d))
 
-void enqueue_randomness __P((int, int));
-void get_random_bytes __P((void *, size_t));
-u_int32_t arc4random __P((void));
-int arc4random_8 __P((void));
+void enqueue_randomness(int, int);
+void get_random_bytes(void *, size_t);
+u_int32_t arc4random(void);
+int arc4random_8(void);
 
 #endif /* _KERNEL */
 

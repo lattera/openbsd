@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/README,v 1.2.14.1 2001/05/14 22:32:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/README,v 1.2.14.2 2002/03/28 15:02:01 niklas Exp $	*/
 /*	$NetBSD: README,v 1.4 1994/06/29 06:34:43 cgd Exp $	*/
 
 saute procfs lyonnais
@@ -49,8 +49,14 @@ are:
 			a multi-proc kernel would need to do some
 			synchronisation.
 
+	fpregs	- r/w.	same as regs, but for floating point registers
+			when available.
+
 	cmdline - r/o.	process command line parameters, separated
 			by NULs
+
+Note that regs and fpregs are not available if the kernel is compiled
+without option PTRACE.
 
 this then looks like:
 
@@ -111,6 +117,9 @@ the basic sequence of commands written to "ctl" would be
 	<signame>	- deliver signal <signame> and continue running.
 	detach		- continue execution of the target process
 			  and remove it from control by the debug process
+
+Note that attach, wait, step, run and detach are not available if the
+kernel is compiled without option PTRACE.
 
 in a normal debugging environment, where the target is fork/exec'd by
 the debugger, the debugger should fork and the child should stop itself

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfsdiskless.h,v 1.5.12.1 2001/12/05 01:02:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfsdiskless.h,v 1.5.12.2 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: nfsdiskless.h,v 1.9 1996/02/18 11:54:00 fvdl Exp $	*/
 
 /*
@@ -64,8 +64,8 @@ struct nfs_diskless {
 	struct nfs_dlmount nd_swap; 	/* Mount info for swap */
 };
 
-int nfs_boot_init __P((struct nfs_diskless *nd, struct proc *procp));
-int nfs_boot_getfh __P((struct sockaddr_in *bpsin, char *key,
-		struct nfs_dlmount *ndmntp, int retries));
+int nfs_boot_init(struct nfs_diskless *nd, struct proc *procp);
+int nfs_boot_getfh(struct sockaddr_in *bpsin, char *key,
+		struct nfs_dlmount *ndmntp, int retries);
 #endif	/* _NFS_DISKLESS_H_ */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_subs.c,v 1.28.2.6 2002/03/06 02:17:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_subs.c,v 1.28.2.7 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: nfs_subs.c,v 1.27.4.3 1996/07/08 20:34:24 jtc Exp $	*/
 
 /*
@@ -86,7 +86,7 @@
 #define INLINE
 #endif
 
-int	nfs_attrtimeo __P((struct nfsnode *np));
+int	nfs_attrtimeo(struct nfsnode *np);
 
 /*
  * Data items converted to xdr at startup, since they are constant
@@ -1119,7 +1119,7 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
 	struct vnode *vp = *vpp;
 	struct vattr *vap;
 	struct nfs_fattr *fp;
-	extern int (**spec_nfsv2nodeop_p) __P((void *));
+	extern int (**spec_nfsv2nodeop_p)(void *);
 	struct nfsnode *np;
 	int32_t t1;
 	caddr_t cp2;
@@ -1173,7 +1173,7 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
 #ifndef FIFO
 			return (EOPNOTSUPP);
 #else
-			extern int (**fifo_nfsv2nodeop_p) __P((void *));
+			extern int (**fifo_nfsv2nodeop_p)(void *);
 			vp->v_op = fifo_nfsv2nodeop_p;
 #endif /* FIFO */
 		}

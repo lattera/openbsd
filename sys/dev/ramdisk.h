@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.h,v 1.4 1996/04/21 22:19:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.h,v 1.4.16.1 2002/03/28 15:03:52 niklas Exp $	*/
 /*	$NetBSD: ramdisk.h,v 1.4 1996/03/22 23:02:04 gwr Exp $	*/
 
 /*
@@ -86,6 +86,6 @@ struct rd_conf {
  * called by the ramdisk driver to allow machine-dependent to
  * match/configure and/or load each ramdisk unit.
  */
-extern void rd_attach_hook __P((int unit, struct rd_conf *));
-extern void rd_open_hook   __P((int unit, struct rd_conf *));
+extern void rd_attach_hook(int unit, struct rd_conf *);
+extern void rd_open_hook(int unit, struct rd_conf *);
 #endif

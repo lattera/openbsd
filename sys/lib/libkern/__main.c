@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/__main.c,v 1.2 1996/04/19 16:09:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/__main.c,v 1.2.16.1 2002/03/28 15:02:00 niklas Exp $	*/
 /*	$NetBSD: __main.c,v 1.4 1996/03/14 18:52:03 christos Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 
 #include <sys/types.h>
 
-void __main __P((void));
+void __main(void);
 
 void
 __main()

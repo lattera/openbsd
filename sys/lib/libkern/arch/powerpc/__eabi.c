@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/powerpc/__eabi.c,v 1.2.14.1 2001/10/31 03:26:30 nate Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/powerpc/__eabi.c,v 1.2.14.2 2002/03/28 15:02:00 niklas Exp $	*/
 /*	$NetBSD: __main.c,v 1.3 1994/10/26 06:42:13 cgd Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 
 #include <sys/cdefs.h>
 
-void __eabi __P((void));
+void __eabi(void);
 
 void
 __eabi()

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.30.2.5 2002/03/06 02:17:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.30.2.6 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: nfs_vfsops.c,v 1.46.4.1 1996/05/25 22:40:35 fvdl Exp $	*/
 
 /*
@@ -75,11 +75,9 @@
 extern struct nfsstats nfsstats;
 extern int nfs_ticks;
 
-int nfs_sysctl
-    __P((int *, u_int, void *, size_t *, void *, size_t, struct proc *));
-int nfs_checkexp
-    __P((struct mount *mp, struct mbuf *nam,
-	 int *extflagsp, struct ucred **credanonp));
+int nfs_sysctl(int *, u_int, void *, size_t *, void *, size_t, struct proc *);
+int nfs_checkexp(struct mount *mp, struct mbuf *nam,
+	 int *extflagsp, struct ucred **credanonp);
 
 /*
  * nfs vfs operations.
@@ -103,8 +101,7 @@ struct vfsops nfs_vfsops = {
 extern u_int32_t nfs_procids[NFS_NPROCS];
 extern u_int32_t nfs_prog, nfs_vers;
 
-struct mount *nfs_mount_diskless
-    __P((struct nfs_dlmount *, char *, int));
+struct mount *nfs_mount_diskless(struct nfs_dlmount *, char *, int);
 
 #define TRUE	1
 #define	FALSE	0

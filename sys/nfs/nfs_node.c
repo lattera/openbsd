@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.13.4.3 2002/03/06 02:17:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.13.4.4 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: nfs_node.c,v 1.16 1996/02/18 11:53:42 fvdl Exp $	*/
 
 /*
@@ -118,7 +118,7 @@ nfs_nget(mntp, fhp, fhsize, npp)
 	struct nfsnode *np;
 	struct nfsnodehashhead *nhpp;
 	struct vnode *vp;
-	extern int (**nfsv2_vnodeop_p)__P((void *));
+	extern int (**nfsv2_vnodeop_p)(void *);
 	struct vnode *nvp;
 	int error;
 

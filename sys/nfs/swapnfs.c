@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/Attic/swapnfs.c,v 1.2.16.1 2002/03/06 02:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/Attic/swapnfs.c,v 1.2.16.2 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: swapnfs.c,v 1.9 1995/04/30 07:03:13 cgd Exp $	*/
 
 /*
@@ -56,4 +56,4 @@ struct	swdevt swdevt[] = {
         { NODEV, 0, 0 }
 };
 
-int (*mountroot) __P((void)) = nfs_mountroot;
+int (*mountroot)(void) = nfs_mountroot;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_regs.c,v 1.4.12.1 2001/05/14 22:32:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_regs.c,v 1.4.12.2 2002/03/28 15:02:01 niklas Exp $	*/
 /*	$NetBSD: procfs_regs.c,v 1.9 1995/08/13 09:06:07 mycroft Exp $	*/
 
 /*
@@ -57,7 +57,6 @@ procfs_doregs(curp, p, pfs, uio)
 	struct pfsnode *pfs;
 	struct uio *uio;
 {
-#if defined(PT_GETREGS) || defined(PT_SETREGS)
 	int error;
 	struct reg r;
 	char *kv;
@@ -93,9 +92,6 @@ procfs_doregs(curp, p, pfs, uio)
 
 	uio->uio_offset = 0;
 	return (error);
-#else
-	return (EINVAL);
-#endif
 }
 
 int
@@ -104,9 +100,5 @@ procfs_validregs(p, mp)
 	struct mount *mp;
 {
 
-#if defined(PT_SETREGS) || defined(PT_GETREGS)
 	return ((p->p_flag & P_SYSTEM) == 0);
-#else
-	return (0);
-#endif
 }

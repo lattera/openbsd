@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc.h,v 1.5.10.1 2001/07/04 10:49:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc.h,v 1.5.10.2 2002/03/28 15:02:00 niklas Exp $	*/
 /*	$NetBSD: fdesc.h,v 1.9 1996/02/09 22:40:03 christos Exp $	*/
 
 /*
@@ -71,9 +71,9 @@ struct fdescnode {
 #define	VTOFDESC(vp) ((struct fdescnode *)(vp)->v_data)
 
 extern dev_t devctty;
-extern int fdesc_init __P((struct vfsconf *));
-extern int fdesc_root __P((struct mount *, struct vnode **));
-extern int fdesc_allocvp __P((fdntype, int, struct mount *, struct vnode **));
-extern int (**fdesc_vnodeop_p) __P((void *));
+extern int fdesc_init(struct vfsconf *);
+extern int fdesc_root(struct mount *, struct vnode **);
+extern int fdesc_allocvp(fdntype, int, struct mount *, struct vnode **);
+extern int (**fdesc_vnodeop_p)(void *);
 extern struct vfsops fdesc_vfsops;
 #endif /* _KERNEL */

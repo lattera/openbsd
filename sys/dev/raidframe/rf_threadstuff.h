@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_threadstuff.h,v 1.5.2.1 2001/05/14 22:26:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_threadstuff.h,v 1.5.2.2 2002/03/28 15:03:52 niklas Exp $	*/
 /*	$NetBSD: rf_threadstuff.h,v 1.8 2000/06/11 03:35:38 oster Exp $	*/
 /*
  * Copyright (c) 1995 Carnegie-Mellon University.
@@ -95,7 +95,7 @@ typedef void *RF_ThreadArg_t;
 #define RF_SIGNAL_COND(_c_)            wakeup(&(_c_))
 #define RF_BROADCAST_COND(_c_)         wakeup(&(_c_))
 #define	RF_CREATE_THREAD(_handle_, _func_, _arg_, _name_) \
-	kthread_create((void (*) __P((void *)))(_func_), (void *)(_arg_), \
+	kthread_create((void (*)(void *))(_func_), (void *)(_arg_), \
 	    (struct proc **)&(_handle_), _name_)
 
 struct RF_ThreadGroup_s {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.16.2.3 2002/03/06 02:17:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.16.2.4 2002/03/28 15:02:48 niklas Exp $	*/
 /*	$NetBSD: nfs_socket.c,v 1.27 1996/04/15 20:20:00 thorpej Exp $	*/
 
 /*
@@ -1772,9 +1772,9 @@ nfs_msg(p, server, msg)
 }
 
 #ifdef NFSSERVER
-int (*nfsrv3_procs[NFS_NPROCS]) __P((struct nfsrv_descript *,
+int (*nfsrv3_procs[NFS_NPROCS])(struct nfsrv_descript *,
 				    struct nfssvc_sock *, struct proc *,
-				    struct mbuf **)) = {
+				    struct mbuf **) = {
 	nfsrv_null,
 	nfsrv_getattr,
 	nfsrv_setattr,
