@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.4 2001/07/14 10:02:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.5 2001/07/15 13:38:16 ho Exp $	*/
 /*	$NetBSD: pmap.c,v 1.84 2000/02/21 02:01:24 chs Exp $	*/
 
 /*
@@ -265,8 +265,6 @@
  * locking data structures
  */
 
-#ifdef notyet /* XXX */
-
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
 struct lock pmap_main_lock;
 simple_lock_data_t pvalloc_lock;
@@ -284,8 +282,6 @@ simple_lock_data_t pmap_tmpptp_lock;
      spinlockmgr(&pmap_main_lock, LK_EXCLUSIVE, (void *) 0)
 #define PMAP_HEAD_TO_MAP_UNLOCK() \
      spinlockmgr(&pmap_main_lock, LK_RELEASE, (void *) 0)
-
-#endif /* XXX notyet */
 
 #else
 
@@ -903,7 +899,6 @@ pmap_bootstrap(kva_start)
 	 * init the static-global locks and global lists.
 	 */
 
-#ifdef notyet /* XXX */
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
 	spinlockinit(&pmap_main_lock, "pmaplk", 0);
 	simple_lock_init(&pvalloc_lock);
@@ -912,7 +907,6 @@ pmap_bootstrap(kva_start)
 	simple_lock_init(&pmap_zero_page_lock);
 	simple_lock_init(&pmap_tmpptp_lock);
 #endif
-#endif /* XXX notyet */
 	LIST_INIT(&pmaps);
 	TAILQ_INIT(&pv_freepages);
 	TAILQ_INIT(&pv_unusedpgs);
