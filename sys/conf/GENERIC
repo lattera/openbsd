@@ -1,11 +1,9 @@
-#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.5 2002/03/28 11:43:03 niklas Exp $
+#	$OpenBSD: src/sys/conf/GENERIC,v 1.61.2.6 2003/03/27 23:53:48 niklas Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
 
 #option		INSECURE	# default to secure
-
-option		NTP		# hooks supporting the Network Time Protocol
 
 option		DDB		# in-kernel debugger
 #option		DDB_SAFE_CONSOLE # allow break into ddb during boot
@@ -40,6 +38,7 @@ option		MFS		# memory file system
 #option		XFS		# xfs filesystem
 
 option		TCP_SACK	# Selective Acknowledgements for TCP
+option		TCP_ECN		# Explicit Congestion Notification for TCP
 #option		TCP_FACK	# Forward Acknowledgements for TCP
 #option		TCP_SIGNATURE	# TCP MD5 Signatures, for BGP routing sessions
 
@@ -51,11 +50,12 @@ option		MSDOSFS		# MS-DOS file system
 option		FDESC		# /dev/fd
 option		FIFO		# FIFOs; RECOMMENDED
 option		KERNFS		# /kern
-option		NULLFS		# loopback file system
 option		PORTAL		# dynamically created filesystem objects
 option		PROCFS		# /proc
-option		UMAPFS		# NULLFS + uid and gid remapping
-option		UNION		# union file system
+# layer filesystems.  not yet functional
+#option		NULLFS		# loopback file system
+#option		UMAPFS		# NULLFS + uid and gid remapping
+#option		UNION		# union file system
 
 #option		GATEWAY		# packet forwarding
 option		INET		# IP + ICMP + TCP + UDP
@@ -76,8 +76,9 @@ option		PPP_BSDCOMP	# PPP BSD compression
 option		PPP_DEFLATE
 #option		MROUTING	# Multicast router
 
-pseudo-device	pf	1	# packet filter
-pseudo-device	pflog	1	# pf log if
+pseudo-device	pf		# packet filter
+pseudo-device	pflog		# pf log if
+pseudo-device	pfsync		# pf sync if
 pseudo-device	loop	2	# network loopback
 pseudo-device	bpfilter 8	# packet filter
 pseudo-device	sl	2	# CSLIP
@@ -95,6 +96,7 @@ pseudo-device	tb	1	# tablet line discipline
 pseudo-device	vnd	4	# paging to files
 pseudo-device	ccd	4	# concatenated disk devices
 pseudo-device	ksyms	1	# kernel symbols device
+pseudo-device	systrace 1	# system call tracing device
 
 # for IPv6
 pseudo-device	gif	4	# IPv[46] over IPv[46] tunnel (RFC1933)

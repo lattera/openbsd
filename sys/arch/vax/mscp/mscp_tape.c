@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mscp/mscp_tape.c,v 1.3.12.4 2002/03/28 11:26:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/mscp/mscp_tape.c,v 1.3.12.5 2003/03/27 23:52:20 niklas Exp $ */
 /*	$NetBSD: mscp_tape.c,v 1.16 2001/11/13 07:38:28 lukem Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -257,6 +257,7 @@ mtstrategy(bp)
 {
 	int unit;
 	struct mt_softc *mt;
+	int s;
 
 	/*
 	 * Make sure this is a reasonable drive to use.
@@ -273,7 +274,9 @@ mtstrategy(bp)
 
 bad:
 	bp->b_flags |= B_ERROR;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 int
@@ -299,8 +302,11 @@ mtiodone(usc, bp)
 	struct device *usc;
 	struct buf *bp;
 {
+	int s;
 
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/stand/common/version.c,v 1.2 1999/06/22 15:30:03 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/stand/common/version.c,v 1.2.4.1 2003/03/27 23:49:26 niklas Exp $	*/
 /*	$NetBSD: version.c,v 1.4 1995/09/16 23:20:39 pk Exp $ */
 
 /*
@@ -41,6 +41,7 @@
  *
  *	2.0	OpenBSD reorganization.
  *	2.1	Bumped RELOC
+ *	2.2	ELF support added.
  */
 
-char *version = "2.1";
+char *version = "2.2";

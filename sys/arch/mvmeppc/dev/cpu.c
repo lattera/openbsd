@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/cpu.c,v 1.1.2.3 2003/03/27 23:52:16 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -69,7 +69,8 @@ cpumatch(parent, cfdata, aux)
 
 	return (1);
 }
-void config_l2cr();
+
+void config_l2cr(void);
 
 static void
 cpuattach(parent, dev, aux)
@@ -144,9 +145,9 @@ cpuattach(parent, dev, aux)
 	}
 
 	if (clock_freq != 0) {
-		/* Openfirmware stores clock in HZ, not Mhz */
+		/* Openfirmware stores clock in HZ, not MHz */
 		clock_freq /= 1000000;
-		printf(": %d Mhz", clock_freq);
+		printf(": %d MHz", clock_freq);
 
 	}
 #endif

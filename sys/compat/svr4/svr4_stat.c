@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.3 2002/03/28 11:28:07 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_stat.c,v 1.17.4.4 2003/03/27 23:53:48 niklas Exp $	 */
 /*	$NetBSD: svr4_stat.c,v 1.21 1996/04/22 01:16:07 christos Exp $	 */
 
 /*
@@ -654,9 +654,11 @@ svr4_sys_systeminfo(p, v, retval)
 		return 0;
 
 	if (len > rlen) {
+		char nul = 0;
+
 		/* if str overruns buffer, put NUL in last place */
 		len = rlen - 1;
-		if (subyte(SCARG(uap, buf) + len, 0) < 0)
+		if (copyout(&nul, SCARG(uap, buf), sizeof(char)) != 0)
 			return EFAULT;
 	}
 

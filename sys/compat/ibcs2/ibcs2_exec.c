@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_exec.c,v 1.10.2.3 2002/03/28 11:28:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_exec.c,v 1.10.2.4 2003/03/27 23:53:47 niklas Exp $	*/
 /*	$NetBSD: ibcs2_exec.c,v 1.12 1996/10/12 02:13:52 thorpej Exp $	*/
 
 /*
@@ -298,7 +298,7 @@ coff_find_section(p, vp, fp, sh, s_type)
 	for (i = 0; i < fp->f_nscns; i++, pos += sizeof(struct coff_scnhdr)) {
 		siz = sizeof(struct coff_scnhdr);
 		error = vn_rdwr(UIO_READ, vp, (caddr_t) sh,
-		    siz, pos, UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred,
+		    siz, pos, UIO_SYSSPACE, 0, p->p_ucred,
 		    &resid, p);
 		if (error) {
 			DPRINTF(("section hdr %d read error %d\n", i, error));
@@ -619,7 +619,7 @@ exec_ibcs2_xout_prep_nmagic(p, epp, xp, xep)
 	xs = (struct xseg *)malloc(xep->xe_segsize, M_TEMP, M_WAITOK);
 	error = vn_rdwr(UIO_READ, epp->ep_vp, (caddr_t)xs,
 			xep->xe_segsize, xep->xe_segpos,
-			UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred,
+			UIO_SYSSPACE, 0, p->p_ucred,
 			&resid, p);
 	if (error) {
 		DPRINTF(("segment table read error %d\n", error));

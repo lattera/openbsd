@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.6 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.7 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -187,12 +187,7 @@ typedef struct pmap *pmap_t;
  *
  * THIS SHOULD BE PART OF THE CORE MAP
  */
-struct pvlist {
-	struct		pvlist *pv_next;	/* next pvlist, if any */
-	struct		pmap *pv_pmap;		/* pmap of this va */
-	vaddr_t		pv_va;			/* virtual address */
-	int		pv_flags;		/* flags (below) */
-};
+/* XXX - struct pvlist moved to vmparam.h because of include ordering issues */
 
 /*
  * Flags in pv_flags.  Note that PV_MOD must be 1 and PV_REF must be 2
@@ -266,8 +261,6 @@ int             pmap_dumpmmu(int (*)(dev_t, daddr_t, caddr_t, size_t), daddr_t);
 #define	pmap_kernel()	(&kernel_pmap_store)
 #define	pmap_resident_count(pmap)	pmap_count_ptes(pmap)
 
-#define PMAP_ACTIVATE(pmap, pcb, iscurproc)
-#define PMAP_DEACTIVATE(pmap, pcb)
 #define PMAP_PREFER(fo, ap)		pmap_prefer((fo), (ap))
 
 #define PMAP_EXCLUDE_DECLS	/* tells MI pmap.h *not* to include decls */
@@ -315,7 +308,6 @@ void		pmap_writetext(unsigned char *, int);
 #if defined(SUN4) || defined(SUN4C)
 boolean_t	pmap_clear_modify4_4c(struct vm_page *);
 boolean_t	pmap_clear_reference4_4c(struct vm_page *);
-void		pmap_copy_page4_4c(paddr_t, paddr_t);
 int		pmap_enter4_4c(pmap_t, vaddr_t, paddr_t, vm_prot_t, int);
 boolean_t	pmap_extract4_4c(pmap_t, vaddr_t, paddr_t *);
 boolean_t	pmap_is_modified4_4c(struct vm_page *);
@@ -324,7 +316,8 @@ void		pmap_kenter_pa4_4c(vaddr_t, paddr_t, vm_prot_t);
 void		pmap_kremove4_4c(vaddr_t, vsize_t);
 void		pmap_page_protect4_4c(struct vm_page *, vm_prot_t);
 void		pmap_protect4_4c(pmap_t, vaddr_t, vaddr_t, vm_prot_t);
-void		pmap_zero_page4_4c(paddr_t);
+void		pmap_copy_page4_4c(struct vm_page *, struct vm_page *);
+void		pmap_zero_page4_4c(struct vm_page *);
 void		pmap_changeprot4_4c(pmap_t, vaddr_t, vm_prot_t, int);
 #endif
 
@@ -333,7 +326,6 @@ void		pmap_changeprot4_4c(pmap_t, vaddr_t, vm_prot_t, int);
 #if defined(SUN4M)
 boolean_t	pmap_clear_modify4m(struct vm_page *);
 boolean_t	pmap_clear_reference4m(struct vm_page *);
-void		pmap_copy_page4m(paddr_t, paddr_t);
 int		pmap_enter4m(pmap_t, vaddr_t, paddr_t, vm_prot_t, int);
 boolean_t	pmap_extract4m(pmap_t, vaddr_t, paddr_t *);
 boolean_t	pmap_is_modified4m(struct vm_page *);
@@ -342,7 +334,8 @@ void		pmap_kenter_pa4m(vaddr_t, paddr_t, vm_prot_t);
 void		pmap_kremove4m(vaddr_t, vsize_t);
 void		pmap_page_protect4m(struct vm_page *, vm_prot_t);
 void		pmap_protect4m(pmap_t, vaddr_t, vaddr_t, vm_prot_t);
-void		pmap_zero_page4m(paddr_t);
+void		pmap_copy_page4m(struct vm_page *, struct vm_page *);
+void		pmap_zero_page4m(struct vm_page *);
 void		pmap_changeprot4m(pmap_t, vaddr_t, vm_prot_t, int);
 #endif /* defined SUN4M */
 
@@ -382,7 +375,6 @@ void		pmap_changeprot4m(pmap_t, vaddr_t, vm_prot_t, int);
 
 extern boolean_t	(*pmap_clear_modify_p)(struct vm_page *);
 extern boolean_t	(*pmap_clear_reference_p)(struct vm_page *);
-extern void		(*pmap_copy_page_p)(paddr_t, paddr_t);
 extern int		(*pmap_enter_p)(pmap_t, vaddr_t, paddr_t,
 					     vm_prot_t, int);
 extern boolean_t	(*pmap_extract_p)(pmap_t, vaddr_t, paddr_t *);
@@ -394,7 +386,8 @@ extern void		(*pmap_page_protect_p)(struct vm_page *,
 						    vm_prot_t);
 extern void		(*pmap_protect_p)(pmap_t, vaddr_t, vaddr_t,
 					       vm_prot_t);
-extern void		(*pmap_zero_page_p)(paddr_t);
+extern void		(*pmap_copy_page_p)(struct vm_page *, struct vm_page *);
+extern void		(*pmap_zero_page_p)(struct vm_page *);
 extern void		(*pmap_changeprot_p)(pmap_t, vaddr_t,
 						  vm_prot_t, int);
 

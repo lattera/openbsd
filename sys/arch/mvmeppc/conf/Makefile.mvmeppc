@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.1.2.2 2002/03/06 02:04:45 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/Makefile.mvmeppc,v 1.1.2.3 2003/03/27 23:52:16 niklas Exp $
 #
 # Makefile for OpenBSD PowerPC
 #
@@ -25,10 +25,6 @@
 
 .include <bsd.own.mk>
 
-AS?=	as
-CC?=	cc
-CPP?=	cpp
-LD?=	ld
 MKDEP?=	mkdep
 STRIP?=	strip
 SIZE?=	size
@@ -42,8 +38,11 @@ PPC=	$S/arch/mvmeppc
 INCLUDES=	-I. -I$S/arch -I$S -nostdinc -L${DESTDIR}/usr/include
 CPPFLAGS=	${INCLUDES} ${IDENT} -D_KERNEL \
 		-Dpowerpc -D__mvmeppc__
-CWARNFLAGS=	-Werror -Wreturn-type
-CFLAGS=		${DEBUG} ${CWARNFLAGS} -O2 -msoft-float
+CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
+		-Wno-uninitialized -Wno-format -Wno-main
+CMACHFLAGS=	-msoft-float -Wa,-m7400 -fno-stack-protector
+COPTS?=		-O2
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE
 LINKFLAGS=	-N -Ttext 100074 -e start
 STRIPFLAGS=	-g -X -x
@@ -116,7 +115,7 @@ LINKFLAGS+=	-S
 
 %LOAD
 
-assym.h: $S/kern/genassym.sh ${PPC}/mvmeppc/genassym.cf
+assym.h: $S/kern/genassym.sh ${PPC}/mvmeppc/genassym.cf Makefile
 	sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
 	    < ${PPC}/mvmeppc/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mscp/mscp_subr.c,v 1.2.12.3 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/mscp/mscp_subr.c,v 1.2.12.4 2003/03/27 23:52:20 niklas Exp $	*/
 /*	$NetBSD: mscp_subr.c,v 1.18 2001/11/13 07:38:28 lukem Exp $	*/
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -719,7 +719,7 @@ static char *cntlr_msgs[] = {
 	unknown_msg,
 	"serdes overrun",	/* 1 = Serialiser/Deserialiser Overrun */
 	"edc",			/* 2 = Error Detection Code? */
-	"inconsistant internal data struct",/* 3 = Internal Error */
+	"inconsistent internal data struct",/* 3 = Internal Error */
 };
 
 /*

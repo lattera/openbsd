@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/ecb3_enc.c,v 1.1.2.1 2000/03/02 07:04:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/ecb3_enc.c,v 1.1.2.2 2003/03/27 23:53:48 niklas Exp $	*/
 
 /* lib/des/ecb3_enc.c */
 /* Copyright (C) 1995 Eric Young (eay@mincom.oz.au)
@@ -57,9 +57,9 @@ des_key_schedule ks2;
 des_key_schedule ks3;
 int encrypt;
 	{
-	register unsigned long l0,l1;
+	register u_int32_t l0,l1;
 	register unsigned char *in,*out;
-	unsigned long ll[2];
+	u_int32_t ll[2];
 
 	in=(unsigned char *)input;
 	out=(unsigned char *)output;

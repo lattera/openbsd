@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/sgec.c,v 1.2.4.3 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/sgec.c,v 1.2.4.4 2003/03/27 23:52:19 niklas Exp $	*/
 /*      $NetBSD: sgec.c,v 1.5 2000/06/04 02:14:14 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.
@@ -593,7 +593,7 @@ ze_add_rxbuf(sc, i)
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_rcvmap[i],
 	    m->m_ext.ext_buf, m->m_ext.ext_size, NULL, BUS_DMA_NOWAIT);
 	if (error)
-		panic("%s: can't load rx DMA map %d, error = %d\n",
+		panic("%s: can't load rx DMA map %d, error = %d",
 		    sc->sc_dev.dv_xname, i, error);
 	sc->sc_rxmbuf[i] = m;
 

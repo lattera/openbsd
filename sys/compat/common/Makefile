@@ -1,13 +1,16 @@
-#	$OpenBSD: src/sys/compat/common/Attic/Makefile,v 1.7.4.3 2001/10/31 03:11:45 nate Exp $
+#	$OpenBSD: src/sys/compat/common/Attic/Makefile,v 1.7.4.4 2003/03/27 23:53:47 niklas Exp $
 #	$NetBSD: Makefile,v 1.8 1996/05/18 15:52:19 christos Exp $
 
 LIB=	compat
 NOPIC=
 
+MACHINE=	${XMACHINE}
+MACHINE_ARCH=	${XMACHINE_ARCH}
+
 .PATH:	${COMPATDIR}
 
 SRCS=	compat_exec.c compat_util.c compat_dir.c compat_vm.c kern_exit_43.c \
-	kern_ipc_23.c kern_info_09.c kern_info_43.c kern_prot_43.c \
+	kern_ipc_23.c kern_info_09.c kern_info_43.c \
 	kern_resource_43.c kern_sig_43.c tty_43.c uipc_syscalls_43.c \
 	vfs_syscalls_25.c vfs_syscalls_43.c vm_43.c
 

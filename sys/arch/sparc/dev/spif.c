@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.4 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spif.c,v 1.6.4.5 2003/03/27 23:49:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -58,11 +58,11 @@
 #include <sparc/dev/spifreg.h>
 #include <sparc/dev/spifvar.h>
 
-#if PIL_TTY == 1
+#if IPL_TTY == 1
 # define IE_MSOFT IE_L1
-#elif PIL_TTY == 4
+#elif IPL_TTY == 4
 # define IE_MSOFT IE_L4
-#elif PIL_TTY == 6
+#elif IPL_TTY == 6
 # define IE_MSOFT IE_L6
 #else
 # error "no suitable software interrupt bit"
@@ -203,24 +203,24 @@ spifattach(parent, self, aux)
 	sc->sc_regs->stc.gscr1 = 0;
 	sc->sc_regs->stc.gscr2 = 0;
 	sc->sc_regs->stc.gscr3 = 0;
-	printf(": rev %x chiprev %x osc %sMhz stcpri %d ppcpri %d softpri %d\n",
+	printf(": rev %x chiprev %x osc %sMHz stcpri %d ppcpri %d softpri %d\n",
 	    sc->sc_rev, sc->sc_rev2, clockfreq(sc->sc_osc),
-	    stcpri, ppcpri, PIL_TTY);
+	    stcpri, ppcpri, IPL_TTY);
 
 	(void)config_found(self, sttymatch, NULL);
 	(void)config_found(self, sbppmatch, NULL);
 
 	sc->sc_ppcih.ih_fun = spifppcintr;
 	sc->sc_ppcih.ih_arg = sc;
-	intr_establish(ppcpri, &sc->sc_ppcih);
+	intr_establish(ppcpri, &sc->sc_ppcih, -1);
 
 	sc->sc_stcih.ih_fun = spifstcintr;
 	sc->sc_stcih.ih_arg = sc;
-	intr_establish(stcpri, &sc->sc_stcih);
+	intr_establish(stcpri, &sc->sc_stcih, -1);
 
 	sc->sc_softih.ih_fun = spifsoftintr;
 	sc->sc_softih.ih_arg = sc;
-	intr_establish(PIL_TTY, &sc->sc_softih);
+	intr_establish(IPL_TTY, &sc->sc_softih, IPL_TTY);
 
 	sbus_establish(&sc->sc_sd, &sc->sc_dev);
 }
@@ -724,7 +724,6 @@ spifstcintr_rxexception(sc, needsoftp)
 {
 	struct stty_port *sp;
 	u_int8_t channel, *ptr;
-	int cnt;
 
 	channel = CD180_GSCR_CHANNEL(sc->sc_regs->stc.gscr1);
 	sp = &sc->sc_ttys->sc_port[channel];
@@ -740,10 +739,8 @@ spifstcintr_rxexception(sc, needsoftp)
 		SET(sp->sp_flags, STTYF_RING_OVERFLOW);
 	}
 	sc->sc_regs->stc.eosrr = 0;
-	if (cnt) {
-		*needsoftp = 1;
-		sp->sp_rput = ptr;
-	}
+	*needsoftp = 1;
+	sp->sp_rput = ptr;
 	return (1);
 }
 
@@ -885,7 +882,7 @@ spifstcintr(vsc)
 	if (needsoft) {
 #if defined(SUN4M)
 		if (CPU_ISSUN4M)
-			raise(0, PIL_TTY);
+			raise(0, IPL_TTY);
 		else
 #endif
 			ienab_bis(IE_MSOFT);

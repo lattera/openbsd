@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.3 2002/03/28 11:26:46 niklas Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.9.6.4 2003/03/27 23:52:19 niklas Exp $      */
 /*      $NetBSD: cpu.h,v 1.41 1999/10/21 20:01:36 ragge Exp $      */
 
 /*
@@ -118,10 +118,6 @@ struct device;
 /* Some low-level prototypes */
 int	badaddr(caddr_t, int);
 void	cpu_swapin(struct proc *);
-int	hp_getdev(int, int, struct device **);
-int	sd_getdev(int, int, int, int, char **);
-int	ra_getdev(int, int, int, char **);
-int	bdevtomaj(int);
 void	dumpconf(void);
 void	dumpsys(void);
 void	swapconf(void);

@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/compat/svr4/Attic/syscalls.master,v 1.26.4.2 2002/03/28 11:28:07 niklas Exp $
+	$OpenBSD: src/sys/compat/svr4/Attic/syscalls.master,v 1.26.4.3 2003/03/27 23:53:48 niklas Exp $
 ;	$NetBSD: syscalls.master,v 1.17 1996/02/10 17:12:51 christos Exp $
 
 ;	@(#)syscalls.master	8.1 (Berkeley) 7/19/93
@@ -311,8 +311,8 @@
 200	STD		{ int svr4_sys_facl(int fd, int cmd, int num, \
 			    struct svr4_aclent *buf); }
 201	UNIMPL		door
-202	NOARGS		{ int compat_43_sys_setreuid(int ruid, int euid); }
-203	NOARGS		{ int compat_43_sys_setregid(int rgid, int egid); }
+202	NOARGS		{ int sys_setreuid(uid_t ruid, uid_t euid); }
+203	NOARGS		{ int sys_setregid(gid_t rgid, gid_t egid); }
 204	UNIMPL		install_utrap
 205	UNIMPL		signotify
 206	UNIMPL		schedctl
@@ -385,10 +385,5 @@
 246	NOARGS		{ int sys_setsockopt(int s, int level, int name, \
 			    const void *val, int valsize); }
 247	UNIMPL		sockconfig
-#ifdef NTP
-248	NOARGS		{ int sys_ntp_gettime(struct ntptimeval *ntvp); }
-249	NOARGS		{ int sys_ntp_adjtime(struct timex *tp); }
-#else
 248	UNIMPL		ntp_gettime
 249	UNIMPL		ntp_adjtime
-#endif

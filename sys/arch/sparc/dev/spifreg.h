@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.5.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.5.4.3 2003/03/27 23:49:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -326,7 +326,7 @@ struct stcregs {
  *
  * The *iack registers are read/written with the IACK bit set.  When
  * the interrupt routine starts, it reads the MRAR, TRAR, and RRAR registers
- * from this mapping.  This signals an interrupt acknowlegement cycle.
+ * from this mapping.  This signals an interrupt acknowledgement cycle.
  * (NOTE: these are not really the MRAR, TRAR, and RRAR... They are copies
  * of the GSVR, I just mapped them to the same location as the mrar, trar,
  * and rrar because it seemed appropriate).
@@ -387,8 +387,8 @@ struct spifregs {
 /*
  * "verosc" node tells which oscillator we have.
  */
-#define	SPIF_OSC9	1		/* 9.8304 Mhz */
-#define	SPIF_OSC10	2		/* 10Mhz */
+#define	SPIF_OSC9	1		/* 9.8304 MHz */
+#define	SPIF_OSC10	2		/* 10MHz */
 
 /*
  * There are two interrupts, serial gets interrupt[0], and parallel

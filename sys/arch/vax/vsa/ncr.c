@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vsa/ncr.c,v 1.4.6.3 2001/11/13 21:04:19 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vsa/ncr.c,v 1.4.6.4 2003/03/27 23:52:20 niklas Exp $ */
 /*	$NetBSD: ncr.c,v 1.32 2000/06/25 16:00:43 ragge Exp $	*/
 
 /*-
@@ -481,27 +481,3 @@ si_dma_stop(ncr_sc)
 	if (sc->onlyscsi == 0)
 		vsbus_dma_intr(); /* Try to start more transfers */
 }
-
-int 
-sd_getdev (adaptor, controller, part, unit, uname) 
-	int adaptor, controller, part, unit;
-	char **uname;
-{
-	struct sd_softc *sd;
-	struct scsi_link *sl;
-	int i;
-
-	for (i = 0; i < sd_cd.cd_ndevs; i++) {
-		if ((sd = sd_cd.cd_devs[i]) == 0)
-			continue;
-
-		sl = sd->sc_link;
-		if (sl->target == unit && sl->scsibus == adaptor && 
-			sl->lun == part) {
-			*uname = sd->sc_dev.dv_xname;
-			return i;
-		}
-	}
-	return -1;
-}
-

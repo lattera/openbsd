@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3.4.4 2001/11/13 21:04:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3.4.5 2003/03/27 23:52:20 niklas Exp $	*/
 /* $NetBSD: sgmap.c,v 1.8 2000/06/29 07:14:34 mrg Exp $ */
 
 /*-
@@ -91,7 +91,7 @@ vax_sgmap_init(t, sgmap, name, sgvabase, sgvasize, ptva, minptalign)
 			minptalign = ptsize;
 		if (bus_dmamem_alloc(t, ptsize, minptalign, 0, &seg, 1, &rseg,
 		    BUS_DMA_NOWAIT)) {
-			panic("unable to allocate page table for sgmap `%s'\n",
+			panic("unable to allocate page table for sgmap `%s'",
 			    name);
 			goto die;
 		}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.9.8.2 2002/03/28 11:26:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.9.8.3 2003/03/27 23:52:19 niklas Exp $ */
 /*	$NetBSD: hp.c,v 1.22 2000/02/12 16:09:33 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -208,7 +208,9 @@ hpstrategy(bp)
 
 done:
 	bp->b_resid = bp->b_bcount;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 /*

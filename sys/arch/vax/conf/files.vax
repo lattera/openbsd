@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/files.vax,v 1.8.12.3 2002/03/30 08:27:12 niklas Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/files.vax,v 1.8.12.4 2003/03/27 23:52:19 niklas Exp $
 #       $NetBSD: files.vax,v 1.60 1999/08/27 20:04:32 ragge Exp $
 #
 # new style config file for vax architecture
@@ -7,7 +7,7 @@
 # maxpartitions must be first item in files.${ARCH}.newconf
 maxpartitions 16
 
-maxusers 8 32 64
+maxusers 2 8 64
 
 device	mainbus { }
 attach	mainbus at root
@@ -350,6 +350,7 @@ file	arch/vax/vax/ns_cksum.c		ns
 file	arch/vax/vax/disksubr.c		disk | tape
 file	arch/vax/vax/db_machdep.c	ddb
 file	arch/vax/vax/db_disasm.c	ddb
+file	arch/vax/vax/opcodes.c
 file	arch/vax/uba/uba_dma.c		uba
 
 # builtin NCR53C95 SCSI Controller on VAXstation 4000 VLC/60/9x

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dirent.h,v 1.2 1996/04/17 05:23:43 mickey Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_dirent.h,v 1.2.16.1 2003/03/27 23:53:47 niklas Exp $	*/
 /*	$NetBSD: linux_dirent.h,v 1.3 1995/10/07 06:26:59 mycroft Exp $	*/
 
 /*
@@ -41,6 +41,14 @@ struct linux_dirent {
 	linux_ino_t	d_ino;
 	linux_off_t	d_off;
 	u_short		d_reclen;
+	char		d_name[LINUX_MAXNAMLEN + 1];
+};
+
+struct linux_dirent64 {
+	linux_ino64_t	d_ino;
+	linux_off64_t	d_off;
+	u_short		d_reclen;
+	u_char		d_type;
 	char		d_name[LINUX_MAXNAMLEN + 1];
 };
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/if_en_sbus.c,v 1.3.12.1 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/if_en_sbus.c,v 1.3.12.2 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: if_en_sbus.c,v 1.4 1997/05/24 20:16:22 pk Exp $	*/
 
 /*
@@ -161,7 +161,7 @@ void *aux;
   }
   scs->sc_ih.ih_fun = en_intr;
   scs->sc_ih.ih_arg = sc;
-  intr_establish(EN_IPL, &scs->sc_ih);
+  intr_establish(EN_IPL, &scs->sc_ih, IPL_NET);
 
   /*
    * done SBUS specific stuff

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/crypto/criov.c,v 1.6.2.3 2002/03/06 02:07:09 niklas Exp $	*/
+/*      $OpenBSD: src/sys/crypto/criov.c,v 1.6.2.4 2003/03/27 23:53:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Theo de Raadt
@@ -144,9 +144,9 @@ cuio_apply(struct uio *uio, int off, int len,
 	unsigned int count;
 
 	if (len < 0)
-		panic("%s: len %d < 0", __FUNCTION__, len);
+		panic("%s: len %d < 0", __func__, len);
 	if (off < 0)
-		panic("%s: off %d < 0", __FUNCTION__, off);
+		panic("%s: off %d < 0", __func__, off);
 	
 	ind = 0;
 	while (off > 0) {

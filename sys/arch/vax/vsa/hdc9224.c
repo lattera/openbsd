@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/hdc9224.c,v 1.5.12.2 2002/03/28 11:26:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vsa/hdc9224.c,v 1.5.12.3 2003/03/27 23:52:20 niklas Exp $ */
 /*	$NetBSD: hdc9224.c,v 1.6 1997/03/15 16:32:22 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -445,7 +445,9 @@ done:
 	 * Correctly set the buf to indicate a completed xfer
 	 */
 	bp->b_resid = 0;	/* ??? bertram */
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 int

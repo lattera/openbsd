@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.14.2.6 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/vmparam.h,v 1.14.2.7 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.13 1997/07/12 16:20:03 perry Exp $	*/
 
 /*
@@ -107,9 +107,6 @@
 #define VM_MIN_KERNEL_ADDRESS	((vaddr_t)KERNBASE)
 #define VM_MAX_KERNEL_ADDRESS	((vaddr_t)0xfe000000)
 
-/* virtual sizes (bytes) for various kernel submaps */
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*PAGE_SIZE)
-
 #define VM_PHYSSEG_MAX		32	/* we only have one "hole" */
 #define VM_PHYSSEG_STRAT	VM_PSTRAT_BSEARCH
 #define VM_PHYSSEG_NOADD		/* can't add RAM after vm_mem_init */
@@ -117,9 +114,27 @@
 /*
  * pmap specific data stored in the vm_physmem[] array
  */
-struct pmap_physseg {
-	struct pvlist *pv_head;
+
+
+/* XXX - belongs in pmap.h, but put here because of ordering issues */
+struct pvlist {
+	struct		pvlist *pv_next;	/* next pvlist, if any */
+	struct		pmap *pv_pmap;		/* pmap of this va */
+	vaddr_t		pv_va;			/* virtual address */
+	int		pv_flags;		/* flags (below) */
 };
+
+#define __HAVE_VM_PAGE_MD
+struct vm_page_md {
+	struct pvlist pv_head;
+};
+
+#define VM_MDPAGE_INIT(pg) do {			\
+	(pg)->mdpage.pv_head.pv_next = NULL;	\
+	(pg)->mdpage.pv_head.pv_pmap = NULL;	\
+	(pg)->mdpage.pv_head.pv_va = 0;		\
+	(pg)->mdpage.pv_head.pv_flags = 0;	\
+} while (0)
 
 #define VM_NFREELIST		1
 #define VM_FREELIST_DEFAULT	0

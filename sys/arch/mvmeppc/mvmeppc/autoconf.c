@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/autoconf.c,v 1.1.2.3 2002/03/28 10:36:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/autoconf.c,v 1.1.2.4 2003/03/27 23:52:17 niklas Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -61,6 +61,7 @@
 #include <sys/device.h>
 
 #include <machine/autoconf.h>
+#include <machine/bugio.h>
 
 struct  device *parsedisk(char *, int, int, dev_t *);
 void    setroot(void);
@@ -73,7 +74,8 @@ struct device * getdevunit(char *, int);
 static struct devmap * findtype(char **);
 void makebootdev(char *cp);
 int getpno(char **);
-void diskconf();
+void diskconf(void);
+void calc_delayconst(void);	/* clock.c */
 
 /*
  * The following several variables are related to

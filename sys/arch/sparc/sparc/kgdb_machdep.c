@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/kgdb_machdep.c,v 1.1.12.4 2002/03/28 10:57:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/sparc/kgdb_machdep.c,v 1.1.12.5 2003/03/27 23:49:26 niklas Exp $ */
 /*	$NetBSD: kgdb_machdep.c,v 1.1 1997/08/31 21:22:45 pk Exp $ */
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -106,7 +106,7 @@
 
 #if defined(SUN4M)
 #define getpte4m(va) \
-	lda(((vm_offset_t)va & 0xFFFFF000) | ASI_SRMMUFP_L3, ASI_SRMMUFP)
+	lda(((vaddr_t)va & 0xFFFFF000) | ASI_SRMMUFP_L3, ASI_SRMMUFP)
 #endif
 
 #if defined(SUN4) || defined(SUN4C)
@@ -295,18 +295,16 @@ kgdb_setregs(regs, gdb_regs)
  * Determine if memory at [va..(va+len)] is valid.
  */
 int
-kgdb_acc(va, len)
-	vm_offset_t va;
-	size_t len;
+kgdb_acc(vaddr_t va, size_t len)
 {
 	int pte;
-	vm_offset_t eva;
+	vaddr_t eva;
 
 	eva = round_page(va + len);
 	va = trunc_page(va);
 
 	/* XXX icky: valid address but causes timeout */
-	if (va >= (vm_offset_t)0xfffff000)
+	if (va >= (vaddr_t)0xfffff000)
 		return (0);
 
 	for (; va < eva; va += NBPG) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_termios.h,v 1.3 1996/04/18 21:21:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_termios.h,v 1.3.16.1 2003/03/27 23:53:47 niklas Exp $	*/
 
 #define LINUX_TCGETS		_LINUX_IO('T', 1)
 #define LINUX_TCSETS		_LINUX_IO('T', 2)
@@ -238,3 +238,14 @@ struct linux_termios {
 #define LINUX_N_SLIP		1
 #define LINUX_N_MOUSE		2
 #define LINUX_N_PPP		3
+
+/* values passed to TIOCLINUX ioctl */
+#define LINUX_TIOCLINUX_COPY		 2
+#define LINUX_TIOCLINUX_PASTE		 3
+#define LINUX_TIOCLINUX_UNBLANK		 4
+#define LINUX_TIOCLINUX_LOADLUT		 5
+#define LINUX_TIOCLINUX_READSHIFT	 6
+#define LINUX_TIOCLINUX_READMOUSE	 7
+#define LINUX_TIOCLINUX_VESABLANK	10
+#define LINUX_TIOCLINUX_KERNMSG		11
+#define LINUX_TIOCLINUX_CURCONS		12

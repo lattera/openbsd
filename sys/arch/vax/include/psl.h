@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/psl.h,v 1.4.12.1 2001/05/14 21:38:03 niklas Exp $      */
+/*      $OpenBSD: src/sys/arch/vax/include/psl.h,v 1.4.12.2 2003/03/27 23:52:19 niklas Exp $      */
 /*      $NetBSD: psl.h,v 1.6 1997/06/07 12:15:28 ragge Exp $      */
 
 /*
@@ -105,7 +105,6 @@
  * Macros to decode processor status word.
  */
 #define	CLKF_USERMODE(framep)	((((framep)->ps) & (PSL_U)) == PSL_U)
-#define	CLKF_BASEPRI(framep)	((((framep)->ps) & (PSL_IPL1F)) == 0)
 #define	CLKF_PC(framep)		((framep)->pc)
 #define	CLKF_INTR(framep)	((((framep)->ps) & (PSL_IS)) == PSL_IS)
 #define PSL2IPL(ps)             ((ps) >> 16)

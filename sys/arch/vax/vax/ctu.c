@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/ctu.c,v 1.3.12.2 2002/03/28 11:26:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/ctu.c,v 1.3.12.3 2003/03/27 23:52:20 niklas Exp $ */
 /*	$NetBSD: ctu.c,v 1.10 2000/03/23 06:46:44 thorpej Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -181,7 +181,9 @@ ctustrategy(bp)
 #endif
 
 	if (bp->b_blkno >= 512) {
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		return;
 	}
 	bp->b_rawblkno = bp->b_blkno;

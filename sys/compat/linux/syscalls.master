@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/compat/linux/syscalls.master,v 1.14.2.6 2002/03/28 11:28:06 niklas Exp $
+	$OpenBSD: src/sys/compat/linux/syscalls.master,v 1.14.2.7 2003/03/27 23:53:47 niklas Exp $
 ;	$NetBSD: syscalls.master,v 1.15 1995/12/18 14:35:10 fvdl Exp $
 
 ;	@(#)syscalls.master	8.1 (Berkeley) 7/19/93
@@ -68,12 +68,12 @@
 18	STD		{ int linux_sys_ostat(void); }
 19	NOARGS		{ long compat_43_sys_lseek(int fd, long offset, \
 			    int whence); }
-20	NOARGS		{ pid_t sys_getpid(void); }
+20	STD		{ pid_t linux_sys_getpid(void); }
 21	STD		{ int linux_sys_mount(char *specialfile, char *dir, \
 			    char *filesystemtype, long rwflag, void *data); }
 22	STD		{ int linux_sys_umount(char *specialfile); }
 23	NOARGS		linux_setuid16 { int sys_setuid(uid_t uid); }
-24	NOARGS		linux_getuid16 { uid_t sys_getuid(void); }
+24	STD		linux_getuid16 { uid_t linux_sys_getuid(void); }
 25	STD		{ int linux_sys_stime(linux_time_t *t); }
 #ifdef PTRACE
 26	STD		{ int linux_sys_ptrace(void); }
@@ -101,7 +101,7 @@
 44	STD		{ int linux_sys_prof(void); }
 45	STD		{ int linux_sys_brk(char *nsize); }
 46	NOARGS		linux_setgid16 { int sys_setgid(gid_t gid); }
-47	NOARGS		linux_getgid16 { gid_t sys_getgid(void); }
+47	STD		linux_getgid16 { gid_t linux_sys_getgid(void); }
 48	STD		{ int linux_sys_signal(int sig, \
 			    linux_handler_t handler); }
 49	NOARGS		linux_geteuid16 { uid_t sys_geteuid(void); }
@@ -269,19 +269,19 @@
 				struct timespec *rmtp); }
 163	STD		{ int linux_sys_mremap(void *old_address, size_t old_size, \
 			    size_t new_size, long flags); }
-164	STD		{ int linux_sys_setresuid16(uid_t ruid, uid_t euid, \
-			    uid_t suid); }
-165	NOARGS		linux_getresuid16 { int linux_sys_getresuid( \
-			    uid_t *ruid, uid_t *euid, uid_t *suid); }
+164	STD		{ int linux_sys_setresuid16(u_int16_t ruid, \
+			    u_int16_t euid, u_int16_t suid); }
+165	STD		{ int linux_sys_getresuid16(u_int16_t *ruid, \
+			    u_int16_t *euid, u_int16_t *suid); }
 166	STD		{ int linux_sys_vm86(void); }
 167	STD		{ int linux_sys_query_module(void); }
 168	NOARGS		{ int sys_poll(struct pollfd *fds, u_int nfds, \
 			    int timeout); }
 169	STD		{ int linux_sys_nfsservctl(void); }
-170	STD		{ int linux_sys_setresgid16(gid_t rgid, gid_t egid, \
-			    gid_t sgid); }
-171	STD		{ int linux_sys_getresgid16(gid_t *rgid, gid_t *egid, \
-			    gid_t *sgid); }
+170	STD		{ int linux_sys_setresgid16(u_int16_t rgid, \
+			    u_int16_t egid, u_int16_t sgid); }
+171	STD		{ int linux_sys_getresgid16(u_int16_t *rgid, \
+			    u_int16_t *egid, u_int16_t *sgid); }
 172	STD		{ int linux_sys_prctl(void); }
 173	STD     	{ int linux_sys_rt_sigreturn( \
 	                    struct linux_rt_sigframe *sfp); }
@@ -327,8 +327,8 @@
 197     STD        	{ int linux_sys_fstat64(int fd, \
 			    struct linux_stat64 *sp); }
 198	NOARGS		{ int linux_sys_lchown(void); }
-199	NOARGS		{ uid_t sys_getuid(void); }
-200	NOARGS		{ gid_t sys_getgid(void); }
+199	STD		{ uid_t linux_sys_getuid(void); }
+200	STD		{ gid_t linux_sys_getgid(void); }
 201	NOARGS		{ uid_t sys_geteuid(void); }
 202	NOARGS		{ gid_t sys_getegid(void); }
 203	NOARGS		{ int linux_sys_setreuid(void); }
@@ -336,11 +336,14 @@
 205	NOARGS		{ int sys_getgroups(u_int gidsetsize, gid_t *gidset); }
 206	NOARGS		{ int sys_setgroups(u_int gidsetsize, gid_t *gidset); }
 207	NOARGS		{ int linux_sys_fchown(void); }
-208	NOARGS		{ int linux_sys_setresuid(void); }
-209	STD		{ int linux_sys_getresuid(uid_t *ruid, uid_t *euid, \
+208	NOARGS		{ int sys_setresuid(uid_t ruid, uid_t euid, \
+			    uid_t suid); }
+209	NOARGS		{ int sys_getresuid(uid_t *ruid, uid_t *euid, \
 			    uid_t *suid); }
-210	NOARGS		{ int linux_sys_setresgid(void); }
-211	NOARGS		{ int linux_sys_getresgid(void); }
+210	NOARGS		{ int sys_setresgid(gid_t rgid, gid_t egid, \
+			    gid_t sgid); }
+211	NOARGS		{ int sys_getresgid(gid_t *rgid, gid_t *egid, \
+			    gid_t *sgid); }
 212	NOARGS		{ int linux_sys_chown(void); }
 213	NOARGS		{ int sys_setuid(uid_t uid); }
 214	NOARGS		{ int sys_setgid(gid_t gid); }
@@ -349,5 +352,6 @@
 217	NOARGS		{ int linux_sys_pivot_root(void); }
 218	NOARGS		{ int linux_sys_mincore(void); }
 219	NOARGS		{ int linux_sys_madvise(void); }
-220	NOARGS		{ int linux_sys_getdents64(void); }
+220	STD		{ int linux_sys_getdents64(int fd, void *dirent, \
+			    unsigned count); }
 221	STD		{ int linux_sys_fcntl64(u_int fd, u_int cmd, void *arg); }

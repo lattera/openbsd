@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.3 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/conf.h,v 1.10.4.4 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.8 1996/12/31 07:12:43 mrg Exp $	*/
 
 /*
@@ -48,35 +48,11 @@ cdev_decl(zs);
 bdev_decl(fd);
 cdev_decl(fd);
 
-cdev_decl(fb);
-
 /* open, close, read, write, ioctl, select */
 #define	cdev_gen_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
 	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) nullop, \
 	0, dev_init(c,n,select), (dev_type_mmap((*))) enodev }
-
-cdev_decl(ms);
-
-cdev_decl(kbd);
-
-cdev_decl(bwtwo);
-
-cdev_decl(cgtwo);
-
-cdev_decl(cgthree);
-
-cdev_decl(cgfour);
-
-cdev_decl(cgsix);
-
-cdev_decl(cgeight);
-
-cdev_decl(tcx);
-
-cdev_decl(cgfourteen);
-
-cdev_decl(p9100);
 
 bdev_decl(xd);
 cdev_decl(xd);
@@ -120,4 +96,9 @@ cdev_decl(flash);
 	(dev_type_mmap((*))) enodev }
 cdev_decl(fga);
 
-cdev_decl(ksyms);
+#define	cdev_daadio_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) nullop, 0, seltrue, \
+	(dev_type_mmap((*))) enodev }
+cdev_decl(daadio);

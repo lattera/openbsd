@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.7 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.8 2003/03/27 23:49:26 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.58 1997/09/12 08:55:01 pk Exp $ */
 
 /*
@@ -64,6 +64,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -237,8 +240,11 @@ userret(p, pc, oticks)
 	/*
 	 * If profiling, charge recent system time to the trapped pc.
 	 */
-	if (p->p_flag & P_PROFIL)
-		addupc_task(p, pc, (int)(p->p_sticks - oticks));
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
+	}
 
 	curpriority = p->p_priority;
 }
@@ -855,7 +861,15 @@ mem_access_fault4m(type, sfsr, sfva, tf)
 	if ((sfsr & SFSR_FT) == SFSR_FT_NONE)
 		goto out;	/* No fault. Why were we called? */
 
-	ftype = sfsr & SFSR_AT_STORE ? VM_PROT_WRITE : VM_PROT_READ;
+	if ((sfsr & SFSR_AT_STORE)) {
+		/* stores are never text faults. */
+		ftype = VM_PROT_WRITE;
+	} else {
+		ftype = VM_PROT_READ;
+		if ((sfsr & SFSR_AT_TEXT) || (type == T_TEXTFAULT)) {
+			ftype |= VM_PROT_EXECUTE;
+		}
+	}
 
 	/*
 	 * NOTE: the per-CPU fault status register readers (in locore)
@@ -1097,7 +1111,12 @@ syscall(code, tf, pc)
 #endif
 	rval[0] = 0;
 	rval[1] = tf->tf_out[1];
-	error = (*callp->sy_call)(p, &args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, &args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, &args, rval);
 
 	switch (error) {
 	case 0:

@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.5 2002/03/28 11:43:03 niklas Exp $
+#	$OpenBSD: src/sys/conf/newvers.sh,v 1.22.2.6 2003/03/27 23:53:48 niklas Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
@@ -61,17 +61,20 @@ id=`basename ${d}`
 #		VERSION
 #	src/etc/root/root.mail
 #		VERSION and other bits
+#	src/sys/arch/macppc/stand/tbxidata/bsd.tbxi
+#		change	/X.X/macppc/bsd.rd
 
 ost="OpenBSD"
-osr="3.0"
+osr="3.3"
 
 cat >vers.c <<eof
 const char ostype[] = "${ost}";
 const char osrelease[] = "${osr}";
 const char osversion[] = "${id}#${v}";
-const char sccs[8] = { ' ', ' ', ' ', ' ', '@', '(', '#', ')' };
+const char sccs[] =
+    "    @(#)${ost} ${osr} (${id}) #${v}: ${t}\n";
 const char version[] =
-    "${ost} ${osr}-current (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
+    "${ost} ${osr} (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
 eof
 
 expr ${v} + 1 > version

@@ -1,6 +1,7 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/stand/Attic/Makefile.inc,v 1.1 2001/06/26 21:57:58 smurph Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/stand/Attic/Makefile.inc,v 1.1.2.1 2003/03/27 23:52:17 niklas Exp $
 
 MDEC_DIR?=/usr/mdec
+CFLAGS+=	-fno-stack-protector
 
 # Load addresses for first and second stage bootstraps 
 STAGE1_RELOC=4000

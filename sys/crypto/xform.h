@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.h,v 1.1.2.5 2002/03/06 02:07:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.h,v 1.1.2.6 2003/03/27 23:53:48 niklas Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -12,7 +12,7 @@
  * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all source code copies of any software which is or includes a copy or
- * modification of this software. 
+ * modification of this software.
  *
  * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR
  * IMPLIED WARRANTY. IN PARTICULAR, NONE OF THE AUTHORS MAKES ANY
@@ -33,7 +33,7 @@ struct auth_hash {
 	int type;
 	char *name;
 	u_int16_t keysize;
-	u_int16_t hashsize; 
+	u_int16_t hashsize;
 	u_int16_t authsize;
 	u_int16_t ctxsize;
 	void (*Init) (void *);
@@ -73,6 +73,7 @@ extern struct enc_xform enc_xform_cast5;
 extern struct enc_xform enc_xform_skipjack;
 extern struct enc_xform enc_xform_rijndael128;
 extern struct enc_xform enc_xform_arc4;
+extern struct enc_xform enc_xform_null;
 
 extern struct auth_hash auth_hash_md5;
 extern struct auth_hash auth_hash_sha1;
@@ -83,4 +84,6 @@ extern struct auth_hash auth_hash_hmac_sha1_96;
 extern struct auth_hash auth_hash_hmac_ripemd_160_96;
 
 extern struct comp_algo comp_algo_deflate;
+extern struct comp_algo comp_algo_lzs;
+
 #endif /* _CRYPTO_XFORM_H_ */

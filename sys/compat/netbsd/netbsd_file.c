@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_file.c,v 1.1.4.2 2002/03/28 11:28:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_file.c,v 1.1.4.3 2003/03/27 23:53:47 niklas Exp $	*/
 /*	$NetBSD: freebsd_file.c,v 1.3 1996/05/03 17:03:09 christos Exp $	*/
 
 /*
@@ -597,7 +597,6 @@ netbsd_sys_fstatfs(p, v, retval)
 		return (error);
 	mp = ((struct vnode *)fp->f_data)->v_mount;
 	sp = &mp->mnt_stat;
-	FREF(fp);
 	error = VFS_STATFS(mp, sp, p);
 	FRELE(fp);
 	if (error)

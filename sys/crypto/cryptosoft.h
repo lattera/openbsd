@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptosoft.h,v 1.1.2.6 2002/03/28 11:43:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptosoft.h,v 1.1.2.7 2003/03/27 23:53:48 niklas Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -12,7 +12,7 @@
  * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all source code copies of any software which is or includes a copy or
- * modification of this software. 
+ * modification of this software.
  *
  * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR
  * IMPLIED WARRANTY. IN PARTICULAR, NONE OF THE AUTHORS MAKES ANY

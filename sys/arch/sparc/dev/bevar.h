@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/bevar.h,v 1.10.6.1 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/bevar.h,v 1.10.6.2 2003/03/27 23:49:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Theo de Raadt and Jason L. Wright.
@@ -45,10 +45,13 @@ struct besoftc {
 	int	sc_channel;		/* channel number */
 	int	sc_burst;
 	int	sc_tcvr_type;
+	int	sc_tx_intr;
 
 	struct	be_bufs *sc_bufs, *sc_bufs_dva;
 	struct	be_desc *sc_desc, *sc_desc_dva;
 
 	int	sc_no_td, sc_first_td, sc_last_td;
 	int	sc_last_rd;
+
+	struct timeout sc_tick;
 };

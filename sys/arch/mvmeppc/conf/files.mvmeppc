@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/files.mvmeppc,v 1.1.2.1 2001/10/31 03:01:20 nate Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/conf/Attic/files.mvmeppc,v 1.1.2.2 2003/03/27 23:52:16 niklas Exp $
 
 #
 # powerpc-specific configuration info
@@ -9,10 +9,7 @@ maxusers 2 8 64
 
 file	dev/cons.c
 file	dev/cninit.c
-file    arch/mvmeppc/ddb/db_memrw.c		ddb
-file    arch/mvmeppc/ddb/db_disasm.c		ddb
-file    arch/mvmeppc/ddb/db_interface.c		ddb
-file    arch/mvmeppc/ddb/db_trace.c		ddb
+file	arch/mvmeppc/mvmeppc/db_interface.c
 
 file    arch/mvmeppc/dev/bugio.c
 file	arch/mvmeppc/dev/clock.c
@@ -27,7 +24,7 @@ file	arch/mvmeppc/mvmeppc/bus_dma.c
 file	arch/mvmeppc/mvmeppc/ppc1_machdep.c
 
 #
-# Media Indepedent Interface (mii)
+# Media Independent Interface (mii)
 #
 include "../../../dev/mii/files.mii"
 

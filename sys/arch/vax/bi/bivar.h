@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/vax/bi/Attic/bivar.h,v 1.2.12.2 2002/03/28 11:26:46 niklas Exp $ */
-/*	$NetBSD: bivar.h,v 1.5 2000/03/26 11:45:04 ragge Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/bi/Attic/bivar.h,v 1.2.12.3 2003/03/27 23:52:19 niklas Exp $ */
+/*	$NetBSD: bivar.h,v 1.8 2000/07/26 12:41:40 ragge Exp $ */
 /*
  * Copyright (c) 1996, 1999 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -69,6 +69,13 @@ struct bi_list {
 	char *bl_name;		/* DEC name */
 };
 
+/* bl_havedriver field meaning */
+#define	DT_UNSUPP	0	/* pseudo define */
+#define	DT_HAVDRV	1	/* device have driver */
+#define	DT_ADAPT	2	/* is an adapter */
+#define	DT_QUIET	4	/* don't complain when not conf'ed */
+#define	DT_VEC		8	/* uses a interrupt vector */
+
 /* Prototype */
-void	bi_attach(struct bi_softc *);
-void	bi_intr_establish(void *, int, void (*)(void *), void *);
+void bi_attach (struct bi_softc *);
+void bi_intr_establish (void *, int, void (*)(void *), void *, struct evcnt *);

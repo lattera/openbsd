@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/stdarg.h,v 1.4 1997/08/08 08:26:50 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/stdarg.h,v 1.4.12.1 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.10 1996/12/27 20:55:28 pk Exp $ */
 
 /*
@@ -106,6 +106,13 @@ typedef _BSD_VA_LIST_	va_list;
 	(__builtin_classify_type(*(type *)0) >= __RECORD_TYPE_CLASS ?	\
 	 *__va_arg(ap, type *) : __va_size(type) == 8 ?			\
 	 __va_8byte(ap, type) : __va_arg(ap, type))
+
+#if !defined(_ANSI_SOURCE) && \
+    (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE) || \
+     defined(_ISOC99_SOURCE) || (__STDC_VERSION__ - 0) >= 199901L)
+#define va_copy(dest, src) \
+	((dest) = (src))
+#endif
 
 #define va_end(ap)	((void)0)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/db_disasm.c,v 1.4.4.1 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/db_disasm.c,v 1.4.4.2 2003/03/27 23:49:26 niklas Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.9 1996/03/31 23:45:07 pk Exp $ */
 
 /*
@@ -908,17 +908,17 @@ db_disasm(loc, altfmt)
 		case 'm':
 			db_printsym(
 				(db_addr_t)(loc + (4 * (insn & 0x3fffff))),
-				DB_STGY_ANY);
+				DB_STGY_ANY, db_printf);
 			break;
 		case 'u':
 			db_printsym(
 				(db_addr_t)(loc + (4 * (insn & 0x7ffff))),
-				DB_STGY_ANY);
+				DB_STGY_ANY, db_printf);
 			break;
 		case 'n':
 			db_printsym(
 				(db_addr_t)(loc + (4 * (insn & 0x3fffffff))),
-				DB_STGY_PROC);
+				DB_STGY_PROC, db_printf);
 			break;
 		case 's':
 			db_printf("%%asi");

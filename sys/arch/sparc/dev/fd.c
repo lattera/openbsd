@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fd.c,v 1.23.8.2 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fd.c,v 1.23.8.3 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: fd.c,v 1.51 1997/05/24 20:16:19 pk Exp $	*/
 
 /*-
@@ -250,7 +250,7 @@ void	fd_do_eject(struct fd_softc *);
 void	fd_mountroot_hook(struct device *);
 static void fdconf(struct fdc_softc *);
 
-#if PIL_FDSOFT == 4
+#if IPL_FDSOFT == 4
 #define IE_FDSOFT	IE_L4
 #else
 #error 4
@@ -260,12 +260,12 @@ static void fdconf(struct fdc_softc *);
 #if defined(SUN4M)
 #define FD_SET_SWINTR do {		\
 	if (CPU_ISSUN4M)		\
-		raise(0, PIL_FDSOFT);	\
+		raise(0, IPL_FDSOFT);	\
 	else				\
-		ienab_bis(IE_L4);	\
+		ienab_bis(IE_FDSOFT);	\
 } while(0)
 #else
-#define AUDIO_SET_SWINTR ienab_bis(IE_FDSOFT)
+#define FD_SET_SWINTR ienab_bis(IE_FDSOFT)
 #endif /* defined(SUN4M) */
 #endif /* FDC_C_HANDLER */
 
@@ -388,14 +388,14 @@ fdcattach(parent, self, aux)
 #ifdef FDC_C_HANDLER
 	fdc->sc_hih.ih_fun = (void *)fdchwintr;
 	fdc->sc_hih.ih_arg = fdc;
-	intr_establish(pri, &fdc->sc_hih);
+	intr_establish(pri, &fdc->sc_hih, IPL_FD);
 #else
 	fdciop = &fdc->sc_io;
 	intr_fasttrap(pri, fdchwintr);
 #endif
 	fdc->sc_sih.ih_fun = (void *)fdcswintr;
 	fdc->sc_sih.ih_arg = fdc;
-	intr_establish(PIL_FDSOFT, &fdc->sc_sih);
+	intr_establish(IPL_FDSOFT, &fdc->sc_sih, IPL_BIO);
 
 	/* Assume a 82077 */
 	fdc->sc_reg_msr = &((struct fdreg_77 *)fdc->sc_reg)->fd_msr;
@@ -446,7 +446,7 @@ fdcattach(parent, self, aux)
 
 	evcnt_attach(&fdc->sc_dev, "intr", &fdc->sc_intrcnt);
 
-	printf(" pri %d, softpri %d: chip 8207%c\n", pri, PIL_FDSOFT, code);
+	printf(" pri %d, softpri %d: chip 8207%c\n", pri, IPL_FDSOFT, code);
 
 	/*
 	 * Controller and drives are represented by one and the same
@@ -718,7 +718,9 @@ bad:
 	bp->b_flags |= B_ERROR;
 done:
 	/* Toss transfer; we're done early. */
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 void
@@ -1033,7 +1035,7 @@ fdcstatus(dv, n, s)
 		printf("\n");
 		break;
 	case 2:
-		printf(" (st0 %s cyl %d)\n",
+		printf(" (st0 %b cyl %d)\n",
 		    fdc->sc_status[0], NE7_ST0BITS,
 		    fdc->sc_status[1]);
 		break;
@@ -1129,7 +1131,7 @@ fdchwintr(fdc)
 		if ((msr & NE7_NDM) == 0) {
 			fdcresult(fdc);
 			fdc->sc_istate = ISTATE_IDLE;
-			ienab_bis(IE_FDSOFT);
+			FD_SET_SWINTR;
 			printf("fdc: overrun: tc = %d\n", fdc->sc_tc);
 			break;
 		}
@@ -1148,7 +1150,7 @@ fdchwintr(fdc)
 		}
 	}
 done:
-	sc->sc_intrcnt.ev_count++;
+	fdc->sc_intrcnt.ev_count++;
 	return (1);
 }
 #endif
@@ -1780,7 +1782,9 @@ fdformat(dev, finfo, p)
 	if (rv == EWOULDBLOCK) {
 		/* timed out */
 		rv = EIO;
+		s = splbio();
 		biodone(bp);
+		splx(s);
 	}
 	if (bp->b_flags & B_ERROR) {
 		rv = bp->b_error;

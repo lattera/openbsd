@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5.2.2 2002/03/06 02:04:46 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5.2.3 2003/03/27 23:52:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -34,11 +34,12 @@
  */
 #include <sys/param.h>
 #include <sys/buf.h>
-#include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/systm.h>
 #include <sys/tty.h>
 #include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include "wd.h"
 bdev_decl(wd);
@@ -79,9 +80,6 @@ struct bdevsw bdevsw[] = {
 };
 int nblkdev = sizeof bdevsw / sizeof bdevsw[0];
 
-#define mmread	mmrw
-#define	mmwrite	mmrw
-cdev_decl(mm);
 #include "pty.h"
 
 #include "bugtty.h"
@@ -115,11 +113,10 @@ cdev_decl(xfs_dev);
 #endif  
  
 #include "ksyms.h"
-cdev_decl(ksyms);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
+#include "systrace.h"
 
 struct cdevsw cdevsw[] = {
         cdev_cn_init(1,cn),             /* 0: virtual console */
@@ -176,7 +173,7 @@ struct cdevsw cdevsw[] = {
         cdev_notdef(),                  /* 47 */
         cdev_notdef(),                  /* 48 */
         cdev_notdef(),                  /* 49 */ 
-        cdev_notdef(),                  /* 50 */ 
+        cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */ 
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
@@ -204,7 +201,6 @@ struct cdevsw cdevsw[] = {
 	cdev_notdef(),			/* 68: i4b phone device */
 	cdev_notdef(),			/* 69: i4b phone device */
 	cdev_notdef(),			/* 70: i4b phone device */
-	cdev_altq_init(NALTQ,altq),	/* 71: ALTQ control interface */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 

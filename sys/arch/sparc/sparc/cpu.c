@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.6 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cpu.c,v 1.22.2.7 2003/03/27 23:49:26 niklas Exp $	*/
 /*	$NetBSD: cpu.c,v 1.56 1997/09/15 20:52:36 pk Exp $ */
 
 /*
@@ -1339,6 +1339,7 @@ extern int _divreplace, _divreplace_end, _div;
 extern int _udivreplace, _udivreplace_end, _udiv;
 extern int _remreplace, _remreplace_end, _rem;
 extern int _uremreplace, _uremreplace_end, _urem;
+int	v8mul;	/* flag whether cpu has hardware mul, div, and rem */
 
 struct replace {
 	void *from, *frome, *to;
@@ -1366,4 +1367,5 @@ replacemul()
 		bcopy(ireplace[i].from, ireplace[i].to,
 		    ireplace[i].frome - ireplace[i].from);
 	splx(s);
+	v8mul = 1;
 }

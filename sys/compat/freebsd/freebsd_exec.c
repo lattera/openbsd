@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.3 2001/11/13 21:05:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/freebsd/Attic/freebsd_exec.c,v 1.8.2.4 2003/03/27 23:53:47 niklas Exp $	*/
 /*	$NetBSD: freebsd_exec.c,v 1.2 1996/05/18 16:02:08 christos Exp $	*/
 
 /*
@@ -158,7 +158,7 @@ freebsd_elf_probe(p, epp, itp, pos, os)
 	size_t len;
 
 	brand = elf32_check_brand(eh);
-	if (brand == NULL || strcmp(brand, "FreeBSD"))
+	if ((brand == NULL || strcmp(brand, "FreeBSD")) && eh->e_ident[EI_PAD] != 9)
 		return (EINVAL);
 	if (itp[0]) {
 		if ((error = emul_find(p, NULL, freebsd_emul_path, itp, &bp, 0)))

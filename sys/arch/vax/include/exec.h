@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/exec.h,v 1.5.12.1 2001/05/14 21:37:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/exec.h,v 1.5.12.2 2003/03/27 23:52:19 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.4 1995/09/23 14:57:40 ragge Exp $	*/
 
 /*
@@ -50,5 +50,11 @@ struct relocation_info_vax {
 #define _NLIST_DO_AOUT
 
 #define _KERN_DO_AOUT
+
+#define ARCH_ELFSIZE		32
+
+#define ELF_TARG_CLASS		ELFCLASS32
+#define ELF_TARG_DATA		ELFDATA2LSB
+#define ELF_TARG_MACH		EM_VAX
 
 #endif  /* _VAX_EXEC_H_ */

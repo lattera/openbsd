@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.6 2002/03/06 02:07:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/conf/param.c,v 1.7.2.7 2003/03/27 23:53:48 niklas Exp $	*/
 /*	$NetBSD: param.c,v 1.16 1996/03/12 03:08:40 mrg Exp $	*/
 
 /*
@@ -107,6 +107,8 @@ int	mcllowat = MCLLOWAT;
 
 int	fscale = FSCALE;	/* kernel uses `FSCALE', user uses `fscale' */
 
+int	shmseg = 8;
+int 	shmmaxpgs = SHMMAXPGS;
 /*
  * Values in support of System V compatible shared memory.	XXX
  */
@@ -157,12 +159,6 @@ struct	msginfo msginfo = {
 	MSGSEG		/* number of message segments */
 };
 #endif
-
-/*
- * These are initialized at bootstrap time
- * to values dependent on memory size
- */
-int	nbuf;
 
 /*
  * These have to be allocated somewhere; allocating

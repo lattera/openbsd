@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.7 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/if_ie.c,v 1.12.4.8 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.33 1997/07/29 17:55:38 fair Exp $	*/
 
 /*-
@@ -536,7 +536,7 @@ ieattach(parent, self, aux)
 		 */
 
 		ie_map = uvm_map_create(pmap_kernel(), (vaddr_t)IEOB_ADBASE,
-			(vaddr_t)IEOB_ADBASE + sc->sc_msize, 1);
+		    (vaddr_t)IEOB_ADBASE + sc->sc_msize, VM_MAP_INTRSAFE);
 		if (ie_map == NULL) panic("ie_map");
 		sc->sc_maddr = (caddr_t) uvm_km_alloc(ie_map, sc->sc_msize);
 		if (sc->sc_maddr == NULL) panic("ie kmem_alloc");
@@ -669,14 +669,14 @@ ieattach(parent, self, aux)
 	case BUS_OBIO:
 		sc->sc_ih.ih_fun = ieintr;
 		sc->sc_ih.ih_arg = sc;
-		intr_establish(pri, &sc->sc_ih);
+		intr_establish(pri, &sc->sc_ih, IPL_NET);
 		break;
 	case BUS_VME16:
 	case BUS_VME32:
 		sc->sc_ih.ih_fun = ieintr;
 		sc->sc_ih.ih_arg = sc;
 		vmeintr_establish(ca->ca_ra.ra_intr[0].int_vec, pri,
-		    &sc->sc_ih);
+		    &sc->sc_ih, IPL_NET);
 		break;
 #endif /* SUN4 */
 	}
@@ -1444,7 +1444,12 @@ iestart(ifp)
 		  printf("%s: tbuf overflow\n", sc->sc_dev.dv_xname);
 
 		m_freem(m0);
-		len = max(len, ETHER_MIN_LEN);
+
+		if (len < ETHER_MIN_LEN - ETHER_CRC_LEN) {
+			bzero(buffer, ETHER_MIN_LEN - ETHER_CRC_LEN - len);
+			len = ETHER_MIN_LEN - ETHER_CRC_LEN;
+			buffer += ETHER_MIN_LEN - ETHER_CRC_LEN;
+		}
 		sc->xmit_buffs[sc->xchead]->ie_xmit_flags = SWAP(len);
 
 		sc->xmit_free--;

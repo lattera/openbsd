@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.4 2002/03/28 11:43:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.h,v 1.9.2.5 2003/03/27 23:53:48 niklas Exp $	*/
 
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
@@ -44,6 +44,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #ifndef _CRYPTO_CRYPTO_H_
@@ -88,12 +93,16 @@
 #define CRYPTO_MD5		13
 #define CRYPTO_SHA1		14
 #define CRYPTO_DEFLATE_COMP	15 /* Deflate compression algorithm */
-#define CRYPTO_ALGORITHM_MAX	15 /* Keep updated - see below */
+#define CRYPTO_NULL		16
+#define CRYPTO_LZS_COMP		17 /* LZS compression algorithm */
+#define CRYPTO_ALGORITHM_MAX	17 /* Keep updated - see below */
+
+#define	CRYPTO_ALGORITHM_ALL	(CRYPTO_ALGORITHM_MAX + 1)
 
 /* Algorithm flags */
-#define	CRYPTO_ALG_FLAG_SUPPORTED	0x00000001 /* Algorithm is supported */
-#define	CRYPTO_ALG_FLAG_RNG_ENABLE	0x00000002 /* Has HW RNG for DH/DSA */
-#define	CRYPTO_ALG_FLAG_DSA_SHA		0x00000004 /* Can do SHA on msg */
+#define	CRYPTO_ALG_FLAG_SUPPORTED	0x01 /* Algorithm is supported */
+#define	CRYPTO_ALG_FLAG_RNG_ENABLE	0x02 /* Has HW RNG for DH/DSA */
+#define	CRYPTO_ALG_FLAG_DSA_SHA		0x04 /* Can do SHA on msg */
 
 /* Standard initialization structure beginning */
 struct cryptoini {
@@ -117,7 +126,7 @@ struct cryptodesc {
 					   place, so don't copy. */
 #define	CRD_F_IV_EXPLICIT	0x04	/* IV explicitly provided */
 #define	CRD_F_DSA_SHA_NEEDED	0x08	/* Compute SHA-1 of buffer for DSA */
-#define CRD_F_COMP		0x0f    /* Set when doing compression */
+#define CRD_F_COMP		0x10    /* Set when doing compression */
 
 	struct cryptoini	CRD_INI; /* Initialization/context data */
 #define crd_iv		CRD_INI.cri_iv
@@ -168,25 +177,72 @@ struct cryptop {
 #define CRYPTO_OP_DECRYPT	0x0
 #define CRYPTO_OP_ENCRYPT	0x1
 
+/* bignum parameter, in packed bytes, ... */
+struct crparam {
+	caddr_t		crp_p;
+	u_int		crp_nbits;
+};
+
+#define CRK_MAXPARAM	8
+
+struct crypt_kop {
+	u_int		crk_op;		/* ie. CRK_MOD_EXP or other */
+	u_int		crk_status;	/* return status */
+	u_short		crk_iparams;	/* # of input parameters */
+	u_short		crk_oparams;	/* # of output parameters */
+	u_int		crk_pad1;
+	struct crparam	crk_param[CRK_MAXPARAM];
+};
+#define CRK_MOD_EXP		0
+#define CRK_MOD_EXP_CRT		1
+#define CRK_DSA_SIGN		2
+#define CRK_DSA_VERIFY		3
+#define CRK_DH_COMPUTE_KEY	4
+#define CRK_ALGORITHM_MAX	4 /* Keep updated - see below */
+
+#define CRF_MOD_EXP		(1 << CRK_MOD_EXP)
+#define CRF_MOD_EXP_CRT		(1 << CRK_MOD_EXP_CRT)
+#define CRF_DSA_SIGN		(1 << CRK_DSA_SIGN)
+#define CRF_DSA_VERIFY		(1 << CRK_DSA_VERIFY)
+#define CRF_DH_COMPUTE_KEY	(1 << CRK_DH_COMPUTE_KEY)
+
+struct cryptkop {
+	u_int		krp_op;		/* ie. CRK_MOD_EXP or other */
+	u_int		krp_status;	/* return status */
+	u_short		krp_iparams;	/* # of input parameters */
+	u_short		krp_oparams;	/* # of output parameters */
+	u_int32_t	krp_hid;
+	struct crparam	krp_param[CRK_MAXPARAM];	/* kvm */
+	int		(*krp_callback)(struct cryptkop *);
+	struct cryptkop *krp_next;
+};
+
 /* Crypto capabilities structure */
 struct cryptocap {
-	u_int32_t	cc_sessions;
+	u_int64_t	cc_operations;	/* Counter of how many ops done */
+	u_int64_t	cc_bytes;	/* Counter of how many bytes done */
+	u_int64_t	cc_koperations;	/* How many PK ops done */
 
-	/*
-	 * Largest possible operator length (in bits) for each type of
-	 * encryption algorithm.
-	 */
-	u_int16_t	cc_max_op_len[CRYPTO_ALGORITHM_MAX + 1];
+	u_int32_t	cc_sessions;	/* How many sessions allocated */
 
-	u_int8_t	cc_alg[CRYPTO_ALGORITHM_MAX + 1];
+	/* Symmetric/hash algorithms supported */
+	int		cc_alg[CRYPTO_ALGORITHM_MAX + 1];
+
+	/* Asymmetric algorithms supported */
+	int		cc_kalg[CRK_ALGORITHM_MAX + 1];
+
+	int		cc_queued;	/* Operations queued */
 
 	u_int8_t	cc_flags;
-#define CRYPTOCAP_F_CLEANUP   0x1
-#define CRYPTOCAP_F_SOFTWARE  0x02
+#define CRYPTOCAP_F_CLEANUP     0x01
+#define CRYPTOCAP_F_SOFTWARE    0x02
+#define CRYPTOCAP_F_ENCRYPT_MAC 0x04 /* Can do encrypt-then-MAC (IPsec) */
+#define CRYPTOCAP_F_MAC_ENCRYPT 0x08 /* Can do MAC-then-encrypt (TLS) */
 
 	int		(*cc_newsession) (u_int32_t *, struct cryptoini *);
 	int		(*cc_process) (struct cryptop *);
 	int		(*cc_freesession) (u_int64_t);
+	int		(*cc_kprocess) (struct cryptkop *);
 };
 
 /*
@@ -222,27 +278,6 @@ struct crypt_op {
 
 #define CRYPTO_MAX_MAC_LEN	20
 
-/* bignum parameter, in packed bytes, ... */
-struct crparam {
-	caddr_t		crp_p;
-	u_int		crp_nbits;
-};
-
-#define CRK_MAXPARAM	8
-struct crypt_kop {
-	u_int		crk_op;		/* ie. CRK_MOD_EXP or other */
-	u_int		crk_status;	/* return status */
-	u_short		crk_iparams;	/* # of input parameters */
-	u_short		crk_oparams;	/* # of output parameters */
-	u_int		crk_pad1;
-	struct crparam	crk_param[CRK_MAXPARAM];
-};
-#define CRK_MOD_EXP		0
-#define CRK_MOD_EXP_CRT		1
-#define CRK_DSA_SIGN		2
-#define CRK_DSA_VERIFY		3
-#define CRK_DH_COMPUTE_KEY	4
-
 /*
  * done against open of /dev/crypto, to get a cloned descriptor.
  * Please use F_SETFD against the cloned descriptor.
@@ -255,23 +290,25 @@ struct crypt_kop {
 #define CIOCCRYPT	_IOWR('c', 103, struct crypt_op)
 #define CIOCKEY		_IOWR('c', 104, struct crypt_kop)
 
-#define CIOCSYMFEAT	_IOR('c', 105, u_int32_t)
-#define CRSFEAT_RSA	0x00000001	/* supports all basic RSA ops */
-#define CRSFEAT_DSA	0x00000002	/* supports all basic DSA ops */
-#define CRSFEAT_DH	0x00000004	/* supports all basic DH ops */
+#define CIOCASYMFEAT	_IOR('c', 105, u_int32_t)
 
 #ifdef _KERNEL
 int	crypto_newsession(u_int64_t *, struct cryptoini *, int);
 int	crypto_freesession(u_int64_t);
 int	crypto_dispatch(struct cryptop *);
-int	crypto_register(u_int32_t, int, u_int16_t, u_int32_t,
+int	crypto_kdispatch(struct cryptkop *);
+int	crypto_register(u_int32_t, int *,
 	    int (*)(u_int32_t *, struct cryptoini *), int (*)(u_int64_t),
 	    int (*)(struct cryptop *));
+int	crypto_kregister(u_int32_t, int *, int (*)(struct cryptkop *));
 int	crypto_unregister(u_int32_t, int);
 int32_t	crypto_get_driverid(u_int8_t);
 void	crypto_thread(void);
 int	crypto_invoke(struct cryptop *);
+int	crypto_kinvoke(struct cryptkop *);
 void	crypto_done(struct cryptop *);
+void	crypto_kdone(struct cryptkop *);
+int	crypto_getfeat(int *);
 
 void	cuio_copydata(struct uio *, int, int, caddr_t);
 void	cuio_copyback(struct uio *, int, int, caddr_t);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.9.12.5 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.9.12.6 2003/03/27 23:52:20 niklas Exp $	*/
 /*	$NetBSD: locore.c,v 1.43 2000/03/26 11:39:45 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -49,8 +49,9 @@
 #include <machine/pte.h>
 #include <machine/pmap.h>
 #include <machine/nexus.h>
+#include <machine/rpb.h>
 
-void	start(void);
+void	start(struct rpb *);
 void	main(void);
 
 extern	paddr_t avail_end;
@@ -84,7 +85,7 @@ extern struct cpu_dep ka680_calls;
  * management is disabled, and no interrupt system is active.
  */
 void
-start()
+start(struct rpb *prpb)
 {
 	extern char cpu_model[];
 	extern void *scratch;
@@ -163,7 +164,7 @@ start()
 		dep_call = &ka48_calls;
 		switch((vax_siedata >> 8) & 0xFF) {
 		case VAX_STYP_45:
-			strcat(cpu_model, "3100/m{30,40}");
+			strcpy(cpu_model, "MicroVAX 3100/m{30,40}");
 			break;
 		case VAX_STYP_48:
 			strcpy(cpu_model, "VAXstation 4000/VLC");
@@ -232,46 +233,51 @@ start()
 #if VAX660
 	case VAX_BTYP_660:
 		dep_call = &ka660_calls;
-		strcpy(cpu_model,"VAX 4000/200");
+		strcpy(cpu_model,"VAX 4000 200");
 		break;
 #endif
 #if VAX670
 	case VAX_BTYP_670:
 		dep_call = &ka670_calls;
-		strcpy(cpu_model,"VAX 4000/300");
+		strcpy(cpu_model,"VAX 4000 300");
 		break;
 #endif
 #if VAX680
 	case VAX_BTYP_1301:
 		dep_call = &ka680_calls;
+		strcpy(cpu_model,"VAX 4000 ");
 		switch((vax_siedata & 0xff00) >> 8) {
 		case VAX_STYP_675:
-			strcpy(cpu_model,"VAX 4000 400");
+			strcat(cpu_model,"400");
 			break;
 		case VAX_STYP_680:
-			strcpy(cpu_model,"VAX 4000 500");
+			strcat(cpu_model,"500");
 			break;
 		case VAX_STYP_690:
-			strcpy(cpu_model,"VAX 4000 600");
+			strcat(cpu_model,"600");
 			break;
 		default:
-			strcpy(cpu_model,"VAX - Unknown Omega Class");
+			strcat(cpu_model,"- Unknown Omega Class");
 		}
 		break;
 	case VAX_BTYP_1305:
 		dep_call = &ka680_calls;
+		strcpy(cpu_model,"VAX 4000 ");
 		switch((vax_siedata & 0xff00) >> 8) {
 		case VAX_STYP_681:
-			strcpy(cpu_model,"VAX 4000 500A");
+			strcat(cpu_model,"500A");
 			break;
 		case VAX_STYP_691:
-			strcpy(cpu_model,"VAX 4000 605A");
+			strcat(cpu_model,"605A");
 			break;
 		case VAX_STYP_694:
-			strcpy(cpu_model,"VAX 4000 705A");
+			if (vax_cpudata & 0x1000)
+				strcat(cpu_model,"705A");
+			else
+				strcat(cpu_model,"700A");
 			break;
 		default:
-			strcpy(cpu_model,"VAX - Unknown Legacy Class");
+			strcat(cpu_model,"- Unknown Legacy Class");
 		}
 		break;
 #endif
@@ -287,16 +293,30 @@ start()
 		asm("halt");
 	}
 
-        /*
-         * Machines older than MicroVAX II have their boot blocks
-         * loaded directly or the boot program loaded from console
-         * media, so we need to figure out their memory size.
-         * This is not easily done on MicroVAXen, so we get it from
-         * VMB instead.
-         */
-        if (avail_end == 0)
-                while (badaddr((caddr_t)avail_end, 4) == 0)
-                        avail_end += VAX_NBPG * 128;
+	/*
+	 * Machines older than MicroVAX II have their boot blocks
+	 * loaded directly or the boot program loaded from console
+	 * media, so we need to figure out their memory size.
+	 * This is not easily done on MicroVAXen, so we get it from
+	 * VMB instead.
+	 *
+	 * In post-1.4 a RPB is always provided from the boot blocks.
+	 */
+#if 1 /* compat with old bootblocks */
+	if (prpb == 0) {
+		bzero((caddr_t)proc0paddr + REDZONEADDR, sizeof(struct rpb));
+		prpb = (struct rpb *)(proc0paddr + REDZONEADDR);
+		prpb->pfncnt = avail_end >> VAX_PGSHIFT;
+		prpb->rpb_base = (void *)-1;    /* RPB is fake */
+	} else
+#endif
+	bcopy(prpb, (caddr_t)proc0paddr + REDZONEADDR, sizeof(struct rpb));
+	if (prpb->pfncnt)
+		avail_end = prpb->pfncnt << VAX_PGSHIFT;
+	else
+		while (badaddr((caddr_t)avail_end, 4) == 0)
+			avail_end += VAX_NBPG * 128;
+	boothowto = prpb->rpb_bootr5;
 
         avail_end = TRUNC_PAGE(avail_end); /* be sure */
 

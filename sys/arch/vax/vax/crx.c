@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/crx.c,v 1.1.8.2 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/crx.c,v 1.1.8.3 2003/03/27 23:52:20 niklas Exp $	*/
 /*	$NetBSD: crx.c,v 1.4 2000/01/24 02:40:33 matt Exp $	*/
 /*
  * Copyright (c) 1988 Regents of the University of California.
@@ -157,7 +157,7 @@ crxrw(dev, uio, flags)
 	i = spl4();
 	while (rs->rs_flags & RS_BUSY) {
 		rs->rs_flags |= RS_WANT;
-		sleep((caddr_t) &rx50state, PRIBIO);
+		tsleep((caddr_t) &rx50state, PRIBIO, "crxrw", 0);
 	}
 	rs->rs_flags |= RS_BUSY;
 	rs->rs_drive = rx50unit(dev);
@@ -208,7 +208,7 @@ crxrw(dev, uio, flags)
 			printf("crx: sleeping on I/O\n");
 			printf("crxopen: ka820port = %x\n", ka820port_ptr->csr);
 #endif
-			sleep((caddr_t) &rs->rs_blkno, PRIBIO);
+			tsleep((caddr_t) &rs->rs_blkno, PRIBIO, "crxrw", 0);
 		}
 		splx(i);
 		if (rs->rs_flags & RS_ERROR) {

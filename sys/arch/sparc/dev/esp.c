@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15.6.3 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15.6.4 2003/03/27 23:49:25 niklas Exp $	*/
 /*	$NetBSD: esp.c,v 1.69 1997/08/27 11:24:18 bouyer Exp $	*/
 
 /*
@@ -254,7 +254,7 @@ espattach(parent, self, aux)
 		sc->sc_freq = ((struct sbus_softc *)
 		    sc->sc_dev.dv_parent)->sc_clockfreq;
 
-	/* gimme Mhz */
+	/* gimme MHz */
 	sc->sc_freq /= 1000000;
 
 	if (dmachild) {
@@ -376,7 +376,7 @@ espattach(parent, self, aux)
 	/* and the interuppts */
 	esc->sc_ih.ih_fun = (void *) ncr53c9x_intr;
 	esc->sc_ih.ih_arg = sc;
-	intr_establish(esc->sc_pri, &esc->sc_ih);
+	intr_establish(esc->sc_pri, &esc->sc_ih, IPL_BIO);
 	evcnt_attach(&sc->sc_dev, "intr", &sc->sc_intrcnt);
 
 	/*

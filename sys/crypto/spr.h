@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/spr.h,v 1.1.2.1 2000/03/02 07:04:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/spr.h,v 1.1.2.2 2003/03/27 23:53:48 niklas Exp $	*/
 
 /* lib/des/spr.h */
 /* Copyright (C) 1995 Eric Young (eay@mincom.oz.au)
@@ -47,7 +47,7 @@
  * [including the GNU Public Licence.]
  */
 
-static const unsigned long des_SPtrans[8][64]={
+static const u_int32_t des_SPtrans[8][64]={
 {
 /* nibble 0 */
 0x00820200L, 0x00020000L, 0x80800000L, 0x80820200L,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.4 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.5 2003/03/27 23:52:20 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -151,9 +151,15 @@ ka48_steal_pages()
 	ka48_cache_enable();
 }
 
+#define	KA48_CPMBX	0x38
+#define	KA48_HLT_HALT	0xcf	/* 11001111 */
+#define	KA48_HLT_BOOT	0x8b	/* 10001011 */
+
 static void
 ka48_halt()
 {
+	if (((u_int8_t *) clk_page)[KA48_CPMBX] != KA48_HLT_HALT)
+		((u_int8_t *) clk_page)[KA48_CPMBX] = KA48_HLT_HALT;
 	asm("halt");
 }
 
@@ -161,5 +167,7 @@ static void
 ka48_reboot(arg)
 	int arg;
 {
+	if (((u_int8_t *) clk_page)[KA48_CPMBX] != KA48_HLT_BOOT)
+		((u_int8_t *) clk_page)[KA48_CPMBX] = KA48_HLT_BOOT;
 	asm("halt");
 }

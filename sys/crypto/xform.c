@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.5 2002/03/06 02:07:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.6 2003/03/27 23:53:48 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -84,6 +84,10 @@ void blf_zerokey(u_int8_t **);
 void cast5_zerokey(u_int8_t **);
 void skipjack_zerokey(u_int8_t **);
 void rijndael128_zerokey(u_int8_t **);
+void null_encrypt(caddr_t, u_int8_t *);
+void null_zerokey(u_int8_t **);
+void null_setkey(u_int8_t **, u_int8_t *, int);
+void null_decrypt(caddr_t, u_int8_t *);
 
 int MD5Update_int(void *, u_int8_t *, u_int16_t);
 int SHA1Update_int(void *, u_int8_t *, u_int16_t);
@@ -91,6 +95,7 @@ int RMD160Update_int(void *, u_int8_t *, u_int16_t);
 
 u_int32_t deflate_compress(u_int8_t *, u_int32_t, u_int8_t **);
 u_int32_t deflate_decompress(u_int8_t *, u_int32_t, u_int8_t **);
+u_int32_t lzs_dummy(u_int8_t *, u_int32_t, u_int8_t **);
 
 /* Encryption instances */
 struct enc_xform enc_xform_des = {
@@ -156,6 +161,15 @@ struct enc_xform enc_xform_arc4 = {
 	NULL,
 };
 
+struct enc_xform enc_xform_null = {
+	CRYPTO_NULL, "NULL",
+	8, 24, 24,
+	null_encrypt,
+	null_decrypt,
+	null_setkey,
+	null_zerokey,
+};
+
 /* Authentication instances */
 struct auth_hash auth_hash_hmac_md5_96 = {
 	CRYPTO_MD5_HMAC, "HMAC-MD5",
@@ -179,17 +193,17 @@ struct auth_hash auth_hash_hmac_ripemd_160_96 = {
 };
 
 struct auth_hash auth_hash_key_md5 = {
-	CRYPTO_MD5_KPDK, "Keyed MD5", 
+	CRYPTO_MD5_KPDK, "Keyed MD5",
 	0, 16, 16, sizeof(MD5_CTX),
 	(void (*)(void *)) MD5Init, MD5Update_int,
-	(void (*)(u_int8_t *, void *)) MD5Final 
+	(void (*)(u_int8_t *, void *)) MD5Final
 };
 
 struct auth_hash auth_hash_key_sha1 = {
 	CRYPTO_SHA1_KPDK, "Keyed SHA1",
 	0, 20, 20, sizeof(SHA1_CTX),
 	(void (*)(void *)) SHA1Init, SHA1Update_int,
-	(void (*)(u_int8_t *, void *)) SHA1Final 
+	(void (*)(u_int8_t *, void *)) SHA1Final
 };
 
 struct auth_hash auth_hash_md5 = {
@@ -203,7 +217,7 @@ struct auth_hash auth_hash_sha1 = {
 	CRYPTO_SHA1, "SHA1",
 	0, 20, 20, sizeof(SHA1_CTX),
 	(void (*)(void *)) SHA1Init, SHA1Update_int,
-	(void (*)(u_int8_t *, void *)) SHA1Final 
+	(void (*)(u_int8_t *, void *)) SHA1Final
 };
 
 /* Compression instance */
@@ -211,6 +225,12 @@ struct comp_algo comp_algo_deflate = {
 	CRYPTO_DEFLATE_COMP, "Deflate",
 	90, deflate_compress,
 	deflate_decompress
+};
+
+struct comp_algo comp_algo_lzs = {
+	CRYPTO_LZS_COMP, "LZS",
+	90, lzs_dummy,
+	lzs_dummy
 };
 
 /*
@@ -303,6 +323,26 @@ blf_zerokey(u_int8_t **sched)
 }
 
 void
+null_setkey(u_int8_t **sched, u_int8_t *key, int len)
+{
+}
+
+void
+null_zerokey(u_int8_t **sched)
+{
+}
+
+void
+null_encrypt(caddr_t key, u_int8_t *blk)
+{
+}
+
+void
+null_decrypt(caddr_t key, u_int8_t *blk)
+{
+}
+
+void
 cast5_encrypt(caddr_t key, u_int8_t *blk)
 {
 	cast_encrypt((cast_key *) key, blk, blk);
@@ -317,8 +357,8 @@ cast5_decrypt(caddr_t key, u_int8_t *blk)
 void
 cast5_setkey(u_int8_t **sched, u_int8_t *key, int len)
 {
-	MALLOC(*sched, u_int8_t *, sizeof(blf_ctx), M_CRYPTO_DATA, M_WAITOK);
-	bzero(*sched, sizeof(blf_ctx));
+	MALLOC(*sched, u_int8_t *, sizeof(cast_key), M_CRYPTO_DATA, M_WAITOK);
+	bzero(*sched, sizeof(cast_key));
 	cast_setkey((cast_key *)*sched, key, len);
 }
 
@@ -444,4 +484,14 @@ deflate_decompress(data, size, out)
 	u_int8_t **out;
 {
 	return deflate_global(data, size, 1, out);
+}
+
+u_int32_t
+lzs_dummy(data, size, out)
+	u_int8_t *data;
+	u_int32_t size;
+	u_int8_t **out;
+{
+	*out = NULL;
+	return (0);
 }

@@ -1,8 +1,10 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.8 2002/03/30 08:27:12 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.9 2003/03/27 23:52:20 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
- * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
+ * Copyright (c) 2002, Hugh Graham.
+ * Copyright (c) 2002, Miodrag Vallat.
+ * Copyright (c) 1994, 1996, 1998 Ludd, University of Lule}, Sweden.
  * Copyright (c) 1993 Adam Glass
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1982, 1986, 1990 The Regents of the University of California.
@@ -10,6 +12,9 @@
  * 
  * Changed for the VAX port (and for readability) /IC
  * 
+ * This code is derived from software contributed to Ludd by
+ * Bertram Barth.
+ *
  * This code is derived from software contributed to Berkeley by the Systems
  * Programming Group of the University of Utah Computer Science Department.
  * 
@@ -76,12 +81,6 @@
 #ifdef SYSVMSG
 #include <sys/msg.h>
 #endif
-#ifdef SYSVSEM
-#include <sys/sem.h>
-#endif
-#ifdef SYSVSHM
-#include <sys/shm.h>
-#endif
 
 #include <net/netisr.h>
 #include <net/if.h>
@@ -118,6 +117,7 @@
 #include <ddb/db_sym.h>
 #include <ddb/db_extern.h>
 #endif
+#include <vax/vax/db_disasm.h>
 
 #include "smg.h"
 
@@ -152,6 +152,7 @@ char		cpu_model[100];
 int		physmem;
 int		dumpsize = 0;
 int		cold = 1; /* coldstart */
+struct cpmbx	*cpmbx;
 
 /*
  * XXX some storage space must be allocated statically because of
@@ -380,30 +381,32 @@ sys_sigreturn(p, v, retval)
 	} *uap = v;
 	struct trapframe *scf;
 	struct sigcontext *cntx;
+	struct sigcontext ksc;
 
 	scf = p->p_addr->u_pcb.framep;
 	cntx = SCARG(uap, sigcntxp);
 
-	if (uvm_useracc((caddr_t)cntx, sizeof (*cntx), B_READ) == 0)
-		return EINVAL;
+	if (copyin((caddr_t)cntx, (caddr_t)&ksc, sizeof(struct sigcontext)))
+		return (EINVAL);
+
 	/* Compatibility mode? */
-	if ((cntx->sc_ps & (PSL_IPL | PSL_IS)) ||
-	    ((cntx->sc_ps & (PSL_U | PSL_PREVU)) != (PSL_U | PSL_PREVU)) ||
-	    (cntx->sc_ps & PSL_CM)) {
+	if ((ksc.sc_ps & (PSL_IPL | PSL_IS)) ||
+	    ((ksc.sc_ps & (PSL_U | PSL_PREVU)) != (PSL_U | PSL_PREVU)) ||
+	    (ksc.sc_ps & PSL_CM)) {
 		return (EINVAL);
 	}
-	if (cntx->sc_onstack & 01)
+	if (ksc.sc_onstack & 01)
 		p->p_sigacts->ps_sigstk.ss_flags |= SS_ONSTACK;
 	else
 		p->p_sigacts->ps_sigstk.ss_flags &= ~SS_ONSTACK;
 	/* Restore signal mask. */
-    p->p_sigmask = cntx->sc_mask & ~sigcantmask;
+	p->p_sigmask = ksc.sc_mask & ~sigcantmask;
 
-	scf->fp = cntx->sc_fp;
-	scf->ap = cntx->sc_ap;
-	scf->pc = cntx->sc_pc;
-	scf->sp = cntx->sc_sp;
-	scf->psl = cntx->sc_ps;
+	scf->fp = ksc.sc_fp;
+	scf->ap = ksc.sc_ap;
+	scf->pc = ksc.sc_pc;
+	scf->sp = ksc.sc_sp;
+	scf->psl = ksc.sc_ps;
 	return (EJUSTRETURN);
 }
 
@@ -418,6 +421,9 @@ struct trampframe {
 				 * argument */
 };
 
+/*
+ * XXX no siginfo implementation!!!!
+ */
 void
 sendsig(catcher, sig, mask, code, type, val)
 	sig_t		catcher;
@@ -431,7 +437,6 @@ sendsig(catcher, sig, mask, code, type, val)
 	struct	trapframe *syscf;
 	struct	sigcontext *sigctx, gsigctx;
 	struct	trampframe *trampf, gtrampf;
-	extern	char sigcode[], esigcode[];
 	unsigned	cursp;
 	int	onstack;
 
@@ -482,7 +487,7 @@ printf("sendsig: signal %x  catcher %x\n", sig, catcher);
 	    copyout(&gsigctx, sigctx, sizeof(gsigctx)))
 		sigexit(p, SIGILL);
 
-	syscf->pc = (unsigned) (((char *) PS_STRINGS) - (esigcode - sigcode));
+	syscf->pc = p->p_sigcode;
 	syscf->psl = PSL_U | PSL_PREVU;
 	syscf->ap = (unsigned) sigctx-8;
 	syscf->sp = cursp;
@@ -787,19 +792,6 @@ allocsys(v)
     register caddr_t v;
 {
 
-#ifdef SYSVSHM
-    shminfo.shmmax = shmmaxpgs;
-    shminfo.shmall = shmmaxpgs;
-    shminfo.shmseg = shmseg;
-    VALLOC(shmsegs, struct shmid_ds, shminfo.shmmni);
-#endif
-#ifdef SYSVSEM
-    VALLOC(sema, struct semid_ds, seminfo.semmni);
-    VALLOC(sem, struct sem, seminfo.semmns);
-
-    /* This is pretty disgusting! */
-    VALLOC(semu, int, (seminfo.semmnu * seminfo.semusz) / sizeof(int));
-#endif
 #ifdef SYSVMSG
     VALLOC(msgpool, char, msginfo.msgmax);
     VALLOC(msgmaps, struct msgmap, msginfo.msgseg);
@@ -835,3 +827,160 @@ allocsys(v)
     return (v);
 }
 
+/*
+ * The following is a very stripped-down db_disasm.c, with only the logic
+ * to skip instructions.
+ */
+
+long skip_operand(long ib, int size);
+
+static __inline__ u_int8_t
+get_byte(ib)
+	long    ib;
+{
+	return *((u_int8_t *)ib);
+}
+
+long
+skip_opcode(ib)
+	long    ib;
+{
+	u_int opc;
+	int size;
+	char *argp;	/* pointer into argument-list */
+
+	opc = get_byte(ib++);
+	if (opc >= 0xfd) {
+		/* two byte op-code */
+		opc = opc << 8;
+		opc += get_byte(ib++);
+		argp = vax_inst2[INDEX_OPCODE(opc)].argdesc;
+	} else
+		argp = vax_inst[opc].argdesc;
+
+	if (argp == NULL)
+		return ib;
+
+	while (*argp) {
+		switch (*argp) {
+
+		case 'b':	/* branch displacement */
+			switch (*(++argp)) {
+			case 'b':
+				ib++;
+				break;
+			case 'w':
+				ib += 2;
+				break;
+			case 'l':
+				ib += 4;
+				break;
+			}
+			break;
+
+		case 'a':	/* absolute adressing mode */
+			/* FALLTHROUGH */
+		default:
+			switch (*(++argp)) {
+			case 'b':	/* Byte */
+				size = 1;
+				break;
+			case 'w':	/* Word */
+				size = 2;
+				break;
+			case 'l':	/* Long-Word */
+			case 'f':	/* F_Floating */
+				size = 4;
+				break;
+			case 'q':	/* Quad-Word */
+			case 'd':	/* D_Floating */
+			case 'g':	/* G_Floating */
+				size = 8;
+				break;
+			case 'o':	/* Octa-Word */
+			case 'h':	/* H_Floating */
+				size = 16;
+				break;
+			default:
+				size = 0;
+			}
+			ib = skip_operand(ib, size);
+		}
+
+		if (!*argp || !*++argp)
+			break;
+		if (*argp++ != ',')
+			break;
+	}
+
+	return ib;
+}
+
+long
+skip_operand(ib, size)
+	long    ib;
+	int	size;
+{
+	int c = get_byte(ib++);
+
+	switch (c >> 4) { /* mode */
+	case 4:		/* indexed */
+		ib = skip_operand(ib, 0);
+		break;
+
+	case 9:		/* autoincrement deferred */
+		if (c == 0x9f) {	/* pc: immediate deferred */
+			/*
+			 * addresses are always longwords!
+			 */
+			ib += 4;
+		}
+		break;
+	case 8:		/* autoincrement */
+		if (c == 0x8f) {	/* pc: immediate ==> special syntax */
+			ib += size;
+		}
+		break;
+
+	case 11:	/* byte displacement deferred/ relative deferred  */
+	case 10:	/* byte displacement / relative mode */
+		ib++;
+		break;
+
+	case 13:		/* word displacement deferred */
+	case 12:		/* word displacement */
+		ib += 2;
+		break;
+
+	case 15:		/* long displacement referred */
+	case 14:		/* long displacement */
+		ib += 4;
+		break;
+	}
+
+	return ib;
+}
+
+void
+generic_halt()
+{
+	if (cpmbx->user_halt != UHALT_DEFAULT) {
+		if (cpmbx->mbox_halt != 0)
+			cpmbx->mbox_halt = 0;	/* let console override */
+	} else if (cpmbx->mbox_halt != MHALT_HALT)
+		cpmbx->mbox_halt = MHALT_HALT;	/* the os decides */
+
+	asm("halt");
+}
+
+void
+generic_reboot(int arg)
+{
+	if (cpmbx->user_halt != UHALT_DEFAULT) {
+		if (cpmbx->mbox_halt != 0)
+			cpmbx->mbox_halt = 0;
+	} else if (cpmbx->mbox_halt != MHALT_REBOOT)
+		cpmbx->mbox_halt = MHALT_REBOOT;
+
+	asm("halt");
+}

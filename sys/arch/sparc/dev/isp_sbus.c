@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/isp_sbus.c,v 1.10.2.6 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/isp_sbus.c,v 1.10.2.7 2003/03/27 23:49:25 niklas Exp $	*/
 /*
  * SBus specific probe and attach routines for Qlogic ISP SCSI adapters.
  *
@@ -81,7 +81,7 @@ static struct ispmdvec mdvec = {
 	NULL,
 	NULL,
 	NULL,
-	ISP_1000_RISC_CODE,
+	(u_int16_t *) ISP_1000_RISC_CODE,
 	BIU_BURST_ENABLE|BIU_SBUS_CONF1_FIFO_32
 };
 
@@ -218,7 +218,7 @@ isp_sbus_attach(struct device *parent, struct device *self, void *aux)
 	/* Establish interrupt channel */
 	sbc->sbus_ih.ih_fun = (void *) isp_sbus_intr;
 	sbc->sbus_ih.ih_arg = sbc;
-	intr_establish(sbc->sbus_pri, &sbc->sbus_ih);
+	intr_establish(sbc->sbus_pri, &sbc->sbus_ih, IPL_BIO);
 
 	/*
 	 * Set up logging levels.
@@ -412,7 +412,7 @@ isp_sbus_dmasetup(struct ispsoftc *isp, struct scsi_xfer *xs, ispreq_t *rq,
 	}
 
 	if (sbc->sbus_kdma_allocs[isp_handle_index(rq->req_handle)] != 0) {
-		panic("%s: kdma handle already allocated\n", isp->isp_name);
+		panic("%s: kdma handle already allocated", isp->isp_name);
 		/* NOTREACHED */
 	}
 	if (XS_CDBLEN(xs) > 12) {
@@ -468,7 +468,7 @@ isp_sbus_dmateardown(struct ispsoftc *isp, XS_T *xs, u_int16_t handle)
 		cpuinfo.cache_flush(xs->data, xs->datalen - xs->resid);
 	}
 	if (sbc->sbus_kdma_allocs[isp_handle_index(handle)] == (vaddr_t) 0) {
-		panic("%s: kdma handle not already allocated\n", isp->isp_name);
+		panic("%s: kdma handle not already allocated", isp->isp_name);
 		/* NOTREACHED */
 	}
 	kdvma = sbc->sbus_kdma_allocs[isp_handle_index(handle)];

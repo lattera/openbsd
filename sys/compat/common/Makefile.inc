@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/compat/common/Attic/Makefile.inc,v 1.6 1997/05/30 09:40:57 niklas Exp $
+#	$OpenBSD: src/sys/compat/common/Attic/Makefile.inc,v 1.6.12.1 2003/03/27 23:53:47 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.5 1996/05/20 17:23:59 mrg Exp $
 #
 #	NOTE: $S must correspond to the top of the 'sys' tree
@@ -14,6 +14,7 @@ COMPATMAKE= \
 	    CC="${CC}" CFLAGS="${CFLAGS:S/-I./-I${PWD}\/./g}" \
 	    LD="${LD}" AR="${AR}" RANLIB="${RANLIB}" LORDER="${LORDER}" \
 	    NM="${NM}" \
+	    XMACHINE='${MACHINE}' XMACHINE_ARCH='${MACHINE_ARCH}' \
 	    CPPFLAGS="${CPPFLAGS:S/-I./-I${PWD}\/./g}" \
 	    COMPATDIR="${COMPATDIR}"
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.4 2002/03/30 08:35:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.5 2003/03/27 23:53:48 niklas Exp $ */
 
 /**
  * rijndael-alg-fst.c
@@ -1225,7 +1225,7 @@ rijndael_set_key(rijndael_ctx *ctx, u_char *key, int bits, int encrypt)
 		memset(ctx->dk, 0, sizeof(ctx->dk));
 	} else {
 		ctx->decrypt = 1;
-		memcpy(ctx->dk, ctx->ek, sizeof(ctx->ek));
+		memcpy(ctx->dk, ctx->ek, sizeof(ctx->dk));
 		rijndaelKeySetupDec(ctx->dk, key, bits, ctx->Nr);
 	}
 }

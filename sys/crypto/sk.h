@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/sk.h,v 1.1.2.1 2000/03/02 07:04:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/sk.h,v 1.1.2.2 2003/03/27 23:53:48 niklas Exp $	*/
 
 /* lib/des/sk.h */
 /* Copyright (C) 1995 Eric Young (eay@mincom.oz.au)
@@ -47,7 +47,7 @@
  * [including the GNU Public Licence.]
  */
 
-static const unsigned long des_skb[8][64]={
+static const u_int32_t des_skb[8][64]={
 {
 /* for C bits (numbered as per FIPS 46) 1 2 3 4 5 6 */
 0x00000000L,0x00000010L,0x20000000L,0x20000010L,

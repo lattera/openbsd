@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.4.4.4 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.4.4.5 2003/03/27 23:49:25 niklas Exp $	*/
 /*
  * magma.c
  *
@@ -71,11 +71,11 @@
 /*
  * Select tty soft interrupt bit based on TTY ipl. (stole from zs.c)
  */
-#if PIL_TTY == 1
+#if IPL_TTY == 1
 # define IE_MSOFT IE_L1
-#elif PIL_TTY == 4
+#elif IPL_TTY == 4
 # define IE_MSOFT IE_L4
-#elif PIL_TTY == 6
+#elif IPL_TTY == 6
 # define IE_MSOFT IE_L6
 #else
 # error "no suitable software interrupt bit"
@@ -396,7 +396,7 @@ void *base;
 	}
 
 	dprintf((" addr 0x%x", sc));
-	printf(" pri %d softpri %d:", ra->ra_intr[0].int_pri, PIL_TTY);
+	printf(" pri %d softpri %d:", ra->ra_intr[0].int_pri, IPL_TTY);
 	printf(" %s\n", card->mb_realname);
 
 	sc->ms_board = card;
@@ -422,7 +422,7 @@ void *base;
 		/* seemingly the Magma drivers just ignore the propstring */
 		cd->cd_chiprev = cd1400_read_reg(cd, CD1400_GFRCR);
 
-		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMhz\n", sc->ms_dev.dv_xname, chip, cd->cd_reg, cd->cd_chiprev, cd->cd_clock));
+		dprintf(("%s attach CD1400 %d addr 0x%x rev %x clock %dMHz\n", sc->ms_dev.dv_xname, chip, cd->cd_reg, cd->cd_chiprev, cd->cd_clock));
 
 		/* clear GFRCR */
 		cd1400_write_reg(cd, CD1400_GFRCR, 0x00);
@@ -465,11 +465,11 @@ void *base;
 	 */
 	sc->ms_hardint.ih_fun = magma_hard;
 	sc->ms_hardint.ih_arg = sc;
-	intr_establish(ra->ra_intr[0].int_pri, &sc->ms_hardint);
+	intr_establish(ra->ra_intr[0].int_pri, &sc->ms_hardint, -1);
 
 	sc->ms_softint.ih_fun = magma_soft;
 	sc->ms_softint.ih_arg = sc;
-	intr_establish(PIL_TTY, &sc->ms_softint);
+	intr_establish(IPL_TTY, &sc->ms_softint, IPL_TTY);
 }
 
 /*
@@ -686,7 +686,7 @@ int needsoftint = 0;
 	if( needsoftint ) {	/* trigger the soft interrupt */
 #if defined(SUN4M)
 		if( CPU_ISSUN4M )
-			raise(0, PIL_TTY);
+			raise(0, IPL_TTY);
 		else
 #endif
 			ienab_bis(IE_MSOFT);

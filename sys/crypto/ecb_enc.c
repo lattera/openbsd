@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/ecb_enc.c,v 1.1.2.1 2000/03/02 07:04:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/ecb_enc.c,v 1.1.2.2 2003/03/27 23:53:48 niklas Exp $	*/
 
 /* lib/des/ecb_enc.c */
 /* Copyright (C) 1995 Eric Young (eay@mincom.oz.au)
@@ -58,9 +58,9 @@ des_cblock (*output);
 des_key_schedule ks;
 int encrypt;
 	{
-	register unsigned long l0,l1;
+	register u_int32_t l0,l1;
 	register unsigned char *in,*out;
-	unsigned long ll[2];
+	u_int32_t ll[2];
 
 	in=(unsigned char *)input;
 	out=(unsigned char *)output;
@@ -73,23 +73,23 @@ int encrypt;
 	}
 
 void des_encrypt(data, ks, encrypt)
-unsigned long *data;
+u_int32_t *data;
 des_key_schedule ks;
 int encrypt;
 	{
-	register unsigned long l,r,t,u;
+	register u_int32_t l,r,t,u;
 #ifdef DES_USE_PTR
 	register unsigned char *des_SP=(unsigned char *)des_SPtrans;
 #endif
 #ifdef MSDOS
 	union fudge {
-		unsigned long  l;
+		u_int32_t  l;
 		unsigned short s[2];
 		unsigned char  c[4];
 		} U,T;
 #endif
 	register int i;
-	register unsigned long *s;
+	register u_int32_t *s;
 
 	u=data[0];
 	r=data[1];
@@ -108,7 +108,7 @@ int encrypt;
 	l&=0xffffffffL;
 	r&=0xffffffffL;
 
-	s=(unsigned long *)ks;
+	s=(u_int32_t *)ks;
 	/* I don't know if it is worth the effort of loop unrolling the
 	 * inner loop */
 	if (encrypt)
@@ -140,23 +140,23 @@ int encrypt;
 	}
 
 void des_encrypt2(data, ks, encrypt)
-unsigned long *data;
+u_int32_t *data;
 des_key_schedule ks;
 int encrypt;
 	{
-	register unsigned long l,r,t,u;
+	register u_int32_t l,r,t,u;
 #ifdef DES_USE_PTR
 	register unsigned char *des_SP=(unsigned char *)des_SPtrans;
 #endif
 #ifdef MSDOS
 	union fudge {
-		unsigned long  l;
+		u_int32_t  l;
 		unsigned short s[2];
 		unsigned char  c[4];
 		} U,T;
 #endif
 	register int i;
-	register unsigned long *s;
+	register u_int32_t *s;
 
 	u=data[0];
 	r=data[1];
@@ -174,7 +174,7 @@ int encrypt;
 	l&=0xffffffffL;
 	r&=0xffffffffL;
 
-	s=(unsigned long *)ks;
+	s=(u_int32_t *)ks;
 	/* I don't know if it is worth the effort of loop unrolling the
 	 * inner loop */
 	if (encrypt)

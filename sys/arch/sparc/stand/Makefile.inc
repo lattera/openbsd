@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/stand/Makefile.inc,v 1.8.4.2 2001/05/14 21:37:20 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/stand/Makefile.inc,v 1.8.4.3 2003/03/27 23:49:26 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.5 1996/02/01 22:33:01 mycroft Exp $
 
 BINDIR=	/usr/mdec
@@ -11,6 +11,8 @@ RELOC_SUN4M=	0x440000
 # Note: a `RELOC' value of 0x380000 seems to work on most machines
 RELOC?=		${RELOC_TEST}
 RELOC2!=	perl -e 'printf "0x%x", ${RELOC_TEST} + 0x40000'
+
+CFLAGS+=	-fno-stack-protector
 
 DEFS=		-DSTANDALONE -DRELOC=${RELOC} -DSUN4 -DSUN4C -DSUN_BOOTPARAMS
 

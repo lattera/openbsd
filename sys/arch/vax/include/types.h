@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/Attic/types.h,v 1.9.6.1 2001/05/14 21:38:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/Attic/types.h,v 1.9.6.2 2003/03/27 23:52:19 niklas Exp $	*/
 /*	$NetBSD: types.h,v 1.14 1998/08/13 02:10:49 eeh Exp $	*/
 
 /*-
@@ -76,5 +76,7 @@ typedef unsigned long long       uint64_t;
 typedef unsigned long long      u_int64_t;
 
 typedef int32_t                 register_t;
+
+#define	__HAVE_DEVICE_REGISTER
 
 #endif	/* _MACHTYPES_H_ */

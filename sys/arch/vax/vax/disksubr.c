@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.5 2002/03/28 11:26:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.6 2003/03/27 23:52:20 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1999/06/30 18:48:06 ragge Exp $	*/
 
 /*
@@ -168,6 +168,12 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 			*lp = *dlp;
 		}
 	}
+
+#if defined(CD9660)
+	if (msg && iso_disklabelspoof(dev, strat, lp) == 0)
+		msg = NULL;
+#endif
+
 	bp->b_flags = B_INVAL | B_AGE | B_READ;
 	brelse(bp);
 	return (msg);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_signal.c,v 1.4.6.3 2001/10/31 03:11:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_signal.c,v 1.4.6.4 2003/03/27 23:53:47 niklas Exp $	*/
 /*	$NetBSD: linux_signal.c,v 1.10 1996/04/04 23:51:36 christos Exp $	*/
 
 /*
@@ -354,7 +354,7 @@ bsd_to_linux_sigaction(bsa, lsa)
 int
 linux_to_bsd_signal(int linuxsig, int *bsdsig)
 {
-	if (linuxsig < 0 || linuxsig > LINUX__NSIG)
+	if (linuxsig < 0 || linuxsig >= LINUX__NSIG)
 		return (EINVAL);
 
 	*bsdsig = linux_to_bsd_sig[linuxsig];
@@ -364,7 +364,7 @@ linux_to_bsd_signal(int linuxsig, int *bsdsig)
 int
 bsd_to_linux_signal(int bsdsig, int *linuxsig)
 {
-	if (bsdsig < 0 || bsdsig > NSIG)
+	if (bsdsig < 0 || bsdsig >= NSIG)
 		return (EINVAL);
 
 	*linuxsig = bsd_to_linux_sig[bsdsig];
