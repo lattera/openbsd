@@ -1,5 +1,5 @@
 /* session.c -- The user windowing interface to Info.
-   $Id: session.c,v 1.12 1997/07/24 21:34:00 karl Exp $
+   $Id: session.c,v 1.13 1998/02/22 22:38:30 karl Exp $
 
    Copyright (C) 1993, 96, 97 Free Software Foundation, Inc.
 
@@ -4206,7 +4206,20 @@ info_get_input_char ()
          out how many characters are currently buffered, we
          should stay with away from stream I/O.
          --Egil Kvaleberg <egilk@sn.no>, January 1997.  */
+#ifdef EINTR
+      /* Keep reading if we got EINTR, so that we don't just exit.
+         --Andreas Schwab <schwab@issan.informatik.uni-dortmund.de>,
+         22 Dec 1997.  */
+      {
+        int n;
+        do
+	  n = read (tty, &c, 1);
+        while (n == -1 && errno == EINTR);
+        rawkey = n == 1 ? c : EOF;
+      }
+#else
       rawkey = (read (tty, &c, 1) == 1) ? c : EOF;
+#endif
 
       keystroke = rawkey;
 
