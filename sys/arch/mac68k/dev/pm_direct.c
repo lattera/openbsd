@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.1 1997/02/23 06:04:56 briggs Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.2 1997/04/06 16:35:18 briggs Exp $	*/
 /*  pm_direct.c 1.22 01/09/97 Takashi Hamada */
 
 /*
@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/systm.h>
+#include <sys/time.h>
 
 #include <machine/adbsys.h>
 #include <machine/cpu.h>
