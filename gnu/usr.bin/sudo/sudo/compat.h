@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/sudo/sudo/Attic/compat.h,v 1.3 1997/11/23 07:15:41 millert Exp $	*/
+
 /*
  *  CU sudo version 1.5.3
  *
@@ -17,7 +19,7 @@
  *
  *  Please send bugs, changes, problems to sudo-bugs@courtesan.com
  *
- *  $Id: compat.h,v 1.28 1996/11/14 02:37:16 millert Exp $
+ *  Id: compat.h,v 1.29 1997/05/21 15:57:26 millert Exp $
  */
 
 #ifndef _SUDO_COMPAT_H
@@ -138,7 +140,7 @@
 #  ifdef __hpux
 #    define seteuid(_EUID)	(setresuid(UID_NO_CHANGE, _EUID, UID_NO_CHANGE))
 #  else
-#    define seteuid(_EUID)	(setresuid(UID_NO_CHANGE, _EUID))
+#    define seteuid(_EUID)	(setreuid(UID_NO_CHANGE, _EUID))
 #  endif /* __hpux */
 #endif /* HAVE_SETEUID */
 

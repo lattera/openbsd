@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/sudo/visudo/Attic/visudo.c,v 1.5 1997/11/23 07:15:52 millert Exp $	*/
+
 /*
  *  CU sudo version 1.5.3
  *
@@ -26,7 +28,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: visudo.c,v 1.3 1996/11/17 16:34:08 millert Exp $";
+static char rcsid[] = "Id: visudo.c,v 1.80 1996/11/14 02:37:16 millert Exp millert $";
 #endif /* lint */
 
 #include "config.h"

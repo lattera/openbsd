@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/sudo/sudo/Attic/tgetpass.c,v 1.4 1997/11/23 07:15:50 millert Exp $	*/
+
 /*
  *  CU sudo version 1.5.3
  *
@@ -27,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: tgetpass.c,v 1.50 1996/11/14 02:37:16 millert Exp $";
+static char rcsid[] = "Id: tgetpass.c,v 1.50 1996/11/14 02:37:16 millert Exp millert $";
 #endif /* lint */
 
 #include "config.h"
