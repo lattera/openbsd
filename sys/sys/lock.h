@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.13 2004/02/20 12:43:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.14 2004/03/14 17:40:32 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -318,17 +318,20 @@ __mp_lock(struct __mp_lock *lock)
 #else
 		{
 			int got_it;
-			int ticks = __mp_lock_spinout;
-
 			do {
-				got_it =
-				    __cpu_simple_lock_try(&lock->mpl_lock);
-			} while (!got_it && ticks-- > 0);
-			if (!got_it) {
- 				db_printf("__mp_lock(0x%x): lock spun out",
-				    lock);
-				Debugger();
-			}
+				int ticks = __mp_lock_spinout;
+
+				do {
+					got_it = __cpu_simple_lock_try(
+					    &lock->mpl_lock);
+				} while (!got_it && ticks-- > 0);
+				if (!got_it) {
+ 					db_printf(
+					    "__mp_lock(0x%x): lock spun out",
+					    lock);
+					Debugger();
+				}
+			} while (!got_it);
 		}
 #endif
 		lock->mpl_cpu = cpu_number();
