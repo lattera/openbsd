@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libkern/arch/i386/htonl.S,v 1.2 1996/09/27 06:47:45 mickey Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -34,14 +36,9 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)htonl.s	5.3 (Berkeley) 12/17/90
- *	$Id: htonl.S,v 1.4 1995/10/07 09:27:04 mycroft Exp $
  */
 
 #include <machine/asm.h>
-
-#if defined(LIBC_SCCS)
-RCSID("$Id: htonl.S,v 1.4 1995/10/07 09:27:04 mycroft Exp $")
-#endif
 
 /* netorder = htonl(hostorder) */
 ENTRY(htonl)

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/lib/libkern/arch/i386/SYS.h,v 1.2 1996/09/27 06:47:44 mickey Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -34,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)SYS.h	5.5 (Berkeley) 5/7/91
- *	$Id: SYS.h,v 1.5 1995/10/07 09:27:00 mycroft Exp $
  */
 
 #include <machine/asm.h>
