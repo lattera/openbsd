@@ -31,11 +31,12 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: startkey.c,v 1.1.1.1 1997/07/18 22:50:23 provos Exp $";
+static char rcsid[] = "$Id: startkey.c,v 1.2 1997/07/22 11:18:26 provos Exp $";
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
