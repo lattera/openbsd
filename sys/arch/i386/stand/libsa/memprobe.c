@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33 1999/09/30 06:29:57 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/memprobe.c,v 1.33.4.1 2000/02/19 17:53:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -40,7 +40,6 @@
 #include "libsa.h"
 
 u_int cnvmem, extmem;		/* XXX - compatibility */
-
 
 /* Check gateA20
  *

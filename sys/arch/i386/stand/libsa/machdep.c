@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.28 1999/08/25 00:54:19 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/machdep.c,v 1.28.4.1 2000/02/19 17:53:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -60,8 +60,8 @@ machdep()
 #ifndef _TEST
 	apmprobe();   CKPT('4');
 	pciprobe();   CKPT('5');
-/*	smpprobe();   CKPT('6'); */
-	memprobe();   CKPT('7');
+	memprobe();   CKPT('6');
+	smpprobe();   CKPT('7');
 	printf("\n");
 
 	diskprobe();  CKPT('8');
