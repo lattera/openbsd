@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.22 2003/06/03 01:52:41 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.23 2003/06/04 17:37:16 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2001, 2003 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -44,7 +44,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.22 2003/06/03 01:52:41 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.23 2003/06/04 17:37:16 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -149,7 +149,8 @@ main(int argc, char **argv)
 			termwidth = win.ws_col;
 		else
 			termwidth = 80;
-	}
+	} else
+		termwidth = 80;
 	setlinebuf(stdout);
 
 	if (argc == optind) {
