@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/csu/mvme88k/Attic/crt0.c,v 1.4 1997/06/24 17:15:51 tholo Exp $	*/
+
 /*   
  *   Mach Operating System
  *   Copyright (c) 1991, 1992 Carnegie Mellon University
@@ -24,6 +26,10 @@
  *   any improvements or extensions that they make and grant Carnegie Mellon 
  *   the rights to redistribute these changes.
  */
+
+#if defined(LIBC_SCCS) && !defined(lint)
+static char rcsid[] = "$OpenBSD: src/lib/csu/mvme88k/Attic/crt0.c,v 1.4 1997/06/24 17:15:51 tholo Exp $";
+#endif /* LIBC_SCCS and not lint */
 
 /* 
  *   Author :   Jeffrey Friedl
