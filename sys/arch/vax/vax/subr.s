@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.6 2004/02/19 10:50:03 niklas Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/subr.s,v 1.6.12.7 2004/06/07 15:58:33 tedu Exp $     */
 /*	$NetBSD: subr.s,v 1.32 1999/03/25 00:41:48 mrg Exp $	   */
 
 /*
@@ -306,6 +306,7 @@ noque:	.asciz	"swtch"
 	bbsc	r3,_whichqs,2f		# no, clear bit in whichqs
 2:	clrl	4(r2)			# clear proc backpointer
 	clrl	_want_resched		# we are now changing process
+	movb	$SONPROC,P_STAT(r2)	# p->p_stat = SONPROC
 	movl	r2,_curproc		# set new process running
 	cmpl	r0,r2			# Same process?
 	bneq	1f			# No, continue
