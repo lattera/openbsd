@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.6 2000/08/01 16:44:33 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.6.2.1 2001/09/16 15:22:03 miod Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -1023,6 +1023,7 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 	int error;
 	char *type, typebuf[16], *emul, emulbuf[16];
 	void *buf;
+	size_t fontsz;
 #if defined(COMPAT_14) && NWSKBD > 0
 	struct wsmux_device wsmuxdata;
 #endif
@@ -1065,10 +1066,12 @@ wsdisplay_cfg_ioctl(sc, cmd, data, flag, p)
 			d->name = typebuf;
 		} else
 			d->name = "loaded"; /* ??? */
-		buf = malloc(d->fontheight * d->stride * d->numchars,
-			     M_DEVBUF, M_WAITOK);
-		error = copyin(d->data, buf,
-			       d->fontheight * d->stride * d->numchars);
+		fontsz = d->fontheight * d->stride * d->numchars;
+		if (fontsz > WSDISPLAY_MAXFONTSZ)
+			return (EINVAL);
+
+		buf = malloc(fontsz, M_DEVBUF, M_WAITOK);
+		error = copyin(d->data, buf, fontsz);
 		if (error) {
 			free(buf, M_DEVBUF);
 			return (error);

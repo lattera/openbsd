@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.3 2000/10/14 18:04:07 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.3.2.1 2001/09/16 15:22:03 miod Exp $ */
 /* $NetBSD: tga.c,v 1.15 1999/12/06 19:25:59 drochner Exp $ */
 
 /*
@@ -668,7 +668,8 @@ tga_builtin_set_cursor(dc, cursorp)
 {
         struct ramdac_funcs *dcrf = dc->dc_ramdac_funcs;
         struct ramdac_cookie *dcrc = dc->dc_ramdac_cookie;
-	int count, error, v;
+	u_int count, v;
+	int error;
 
 	v = cursorp->which;
 	if (v & WSDISPLAY_CURSOR_DOCMAP) {
@@ -727,7 +728,8 @@ tga_builtin_get_cursor(dc, cursorp)
 {
         struct ramdac_funcs *dcrf = dc->dc_ramdac_funcs;
         struct ramdac_cookie *dcrc = dc->dc_ramdac_cookie;
-        int count, error;
+        int error;
+        u_int count;
 
         cursorp->which = WSDISPLAY_CURSOR_DOALL &
             ~(WSDISPLAY_CURSOR_DOHOT | WSDISPLAY_CURSOR_DOCMAP);

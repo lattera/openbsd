@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.3 2000/08/01 13:51:17 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.3.2.1 2001/09/16 15:22:03 miod Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -136,6 +136,7 @@ struct wskbd_keyrepeat_data {
 /* Manipulate keysym groups. */
 struct wskbd_map_data {
 	u_int	maplen;				/* number of entries in map */
+#define WSKBDIO_MAXMAPLEN	65536
 	struct wscons_keymap *map;		/* map to get or set */
 };
 #define WSKBDIO_GETMAP		_IOWR('W', 13, struct wskbd_map_data)
@@ -303,7 +304,8 @@ struct wsdisplay_font {
 #define WSDISPLAY_FONTENC_ISO 0
 #define WSDISPLAY_FONTENC_IBM 1
 #define WSDISPLAY_FONTENC_PCVT 2
-	int fontwidth, fontheight, stride;
+	u_int fontwidth, fontheight, stride;
+#define	WSDISPLAY_MAXFONTSZ	(512 * 1024)
 	int bitorder, byteorder;
 #define	WSDISPLAY_FONTORDER_KNOWN	0	/* i.e, no need to convert */
 #define	WSDISPLAY_FONTORDER_L2R		1
