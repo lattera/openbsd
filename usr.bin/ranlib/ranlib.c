@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ranlib/Attic/ranlib.c,v 1.3 1997/01/15 23:43:04 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/ranlib/Attic/ranlib.c,v 1.4 1999/09/21 13:15:43 espie Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -44,7 +44,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)ranlib.c	5.6 (Berkeley) 2/26/91";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/ranlib/Attic/ranlib.c,v 1.3 1997/01/15 23:43:04 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/ranlib/Attic/ranlib.c,v 1.4 1999/09/21 13:15:43 espie Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -52,11 +52,17 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/ranlib/Attic/ranlib.c,v 1.3 1997/01
 #include <stdio.h>
 #include <stdlib.h>
 #include <archive.h>
+#include "extern.h"
 
 CHDR chdr;
 u_int options;				/* UNUSED -- keep open_archive happy */
+
 char *archive;
 
+static void
+usage();
+
+int
 main(argc, argv)
 	int argc;
 	char **argv;
@@ -84,6 +90,7 @@ main(argc, argv)
 	exit(eval);
 }
 
+static void
 usage()
 {
 	(void)fprintf(stderr, "usage: ranlib [-t] archive ...\n");

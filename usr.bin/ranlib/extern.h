@@ -1,11 +1,8 @@
-/*	$OpenBSD: src/usr.bin/ranlib/Attic/touch.c,v 1.3 1999/09/21 13:15:43 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/ranlib/Attic/extern.h,v 1.1 1999/09/21 13:15:43 espie Exp $ */
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Hugh Smith at The University of Guelph.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,55 +33,21 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-/*static char sccsid[] = "from: @(#)touch.c	5.3 (Berkeley) 3/12/91";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/ranlib/Attic/touch.c,v 1.3 1999/09/21 13:15:43 espie Exp $";
-#endif /* not lint */
+/* misc.c */
+extern int tmp __P((void));
+extern void *emalloc __P((size_t));
+extern void badfmt __P((void));
+extern void error __P((const char *));
+extern const char *rname __P((const char *));
+extern char *tname;			/* temporary file "name" */
 
-#include <sys/types.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <ranlib.h>
-#include <ar.h>
-#include <time.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <archive.h>
-#include "extern.h"
+/* touch.c */
+extern int touch __P((void));
+extern void settime __P((int));
 
-extern CHDR chdr;			/* converted header */
+/* build.c */
+extern int build __P((void));
 
-int
-touch()
-{
-	int afd;
+/* main.c */
+extern char *archive;			/* archive name */
 
-	afd = open_archive(O_RDWR);
-
-	if (!get_arobj(afd) ||
-	    strncmp(RANLIBMAG, chdr.name, sizeof(RANLIBMAG) - 1)) {
-		(void)fprintf(stderr,
-		    "ranlib: %s: no symbol table.\n", archive);
-		return(1);
-	}
-	settime(afd);
-	close_archive(afd);
-	return(0);
-}
-
-void
-settime(afd)
-	int afd;
-{
-	struct ar_hdr *hdr;
-	off_t size;
-	char buf[50];
-
-	size = SARMAG + sizeof(hdr->ar_name);
-	if (lseek(afd, size, SEEK_SET) == (off_t)-1)
-		error(archive);
-	(void)sprintf(buf, "%-12ld", (long int)time((time_t *)NULL) + RANLIBSKEW);
-	if (write(afd, buf, sizeof(hdr->ar_date)) != sizeof(hdr->ar_date))
-		error(archive);
-}
