@@ -10,7 +10,7 @@
  *
  * S/KEY misc routines.
  *
- * $Id: skeysubr.c,v 1.8 1996/09/30 23:26:28 millert Exp $
+ * $Id: skeysubr.c,v 1.9 1996/09/30 23:54:38 millert Exp $
  */
 
 #include <stdio.h>
@@ -366,7 +366,7 @@ btoa8(out, in)
 /* Convert hex digit to binary integer */
 int
 htoi(c)
-	register char c;
+	register int c;
 {
 	if ('0' <= c && c <= '9')
 		return c - '0';
