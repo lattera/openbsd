@@ -1,4 +1,4 @@
-/*	$Id: iwicontrol.c,v 1.5 2004/10/27 21:39:05 damien Exp $	*/
+/*	$Id: iwicontrol.c,v 1.6 2004/11/22 21:34:28 damien Exp $	*/
 
 /*-
  * Copyright (c) 2004
@@ -102,7 +102,7 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s [interface] [-r]\n", __progname);
+	fprintf(stderr, "usage: %s [-i interface] [-r]\n", __progname);
 
 	exit(EX_USAGE);
 }
