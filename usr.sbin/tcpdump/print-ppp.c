@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.7 1999/02/11 12:48:29 mickey Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.8 1999/02/16 03:45:11 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ppp.c,v 1.6 1997/07/25 20:12:27 mickey Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ppp.c,v 1.7 1999/02/11 12:48:29 mickey Exp $ (LBL)";
 #endif
 
 #ifdef PPP
@@ -333,7 +333,7 @@ print_lcp_config_options(p)
 					printf("MD5");
 					break;
 				case 0x80:
-					printf("Micro$oft");
+					printf("Microsoft");
 					break;
 				}
 			} else if(*(p+2) == 0xc2 && *(p+3) == 0x27)
@@ -466,8 +466,7 @@ handle_ipcp(p, length)
 
 	length -= 4;
 	
-	switch(*(p+8))
-	{
+	switch(*(p+8)) {
 	case IPCP_2ADDR:
 		printf(", IP-Addresses");
 		printf(", Src=%d.%d.%d.%d",
