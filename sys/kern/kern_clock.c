@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.13 2004/06/06 21:46:12 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.14 2004/06/10 11:40:33 niklas Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -153,24 +153,20 @@ initclocks()
 	if (profhz == 0)
 		profhz = i;
 	psratio = profhz / i;
-	rrticks_init = hz / 10;
 }
 
 /*
  * The real-time timer, interrupting hz times per second.
  */
 void
-hardclock(frame)
-	register struct clockframe *frame;
+hardclock(struct clockframe *frame)
 {
-	register struct proc *p;
-	register int delta;
+	struct proc *p;
+	int delta;
 	extern int tickdelta;
 	extern long timedelta;
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	struct cpu_info *ci = curcpu();
-#else
-	extern int rrticks;
 #endif
 
 	p = curproc;
@@ -196,8 +192,8 @@ hardclock(frame)
 	if (stathz == 0)
 		statclock(frame);
 
-#if defined(MULTIPROCESSOR)
-	if (--rrticks <= 0)
+#if defined(__HAVE_CPUINFO)
+	if (--ci->ci_schedstate.spc_rrticks <= 0)
 		roundrobin(ci);
 
 	/*
@@ -206,10 +202,6 @@ hardclock(frame)
 	 */
 	if (CPU_IS_PRIMARY(ci) == 0)
 		return;
-#else
-	if (--rrticks <= 0)
-		roundrobin(0);
-
 #endif
 
 	/*
@@ -410,22 +402,21 @@ stopprofclock(p)
  * do process and kernel statistics.
  */
 void
-statclock(frame)
-	register struct clockframe *frame;
+statclock(struct clockframe *frame)
 {
 #ifdef GPROF
 	struct gmonparam *g;
 	int i;
 #endif
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	struct cpu_info *ci = curcpu();
 	struct schedstate_percpu *spc = &ci->ci_schedstate;
 #else
 	static int schedclk;
 #endif
-	struct proc *p;
+	struct proc *p = curproc;
 
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	/*
 	 * Notice changes in divisor frequency, and adjust clock
 	 * frequency accordingly.
@@ -443,11 +434,9 @@ statclock(frame)
 /* XXX Kludgey */
 #define pscnt spc->spc_pscnt
 #define cp_time spc->spc_cp_time
-
 #endif
 
 	if (CLKF_USERMODE(frame)) {
-		p = curproc;
 		if (p->p_flag & P_PROFIL)
 			addupc_intr(p, CLKF_PC(frame));
 		if (--pscnt > 0)
@@ -489,7 +478,6 @@ statclock(frame)
 		 * so that we know how much of its real time was spent
 		 * in ``non-process'' (i.e., interrupt) work.
 		 */
-		p = curproc;
 		if (CLKF_INTR(frame)) {
 			if (p != NULL)
 				p->p_iticks++;
@@ -502,7 +490,7 @@ statclock(frame)
 	}
 	pscnt = psdiv;
 
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 #undef psdiv
 #undef cp_time
 #endif
@@ -513,9 +501,16 @@ statclock(frame)
 		 * If no schedclock is provided, call it here at ~~12-25 Hz;
 		 * ~~16 Hz is best
 		 */
-		if (schedhz == 0)
+		if (schedhz == 0) {
+#ifdef __HAVE_CPUINFO
+			if ((++curcpu()->ci_schedstate.spc_schedticks & 3) ==
+			    0)
+				schedclock(p);
+#else
 			if ((++schedclk & 3) == 0)
 				schedclock(p);
+#endif
+		}
 	}
 }
 

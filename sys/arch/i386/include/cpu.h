@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.28 2004/06/08 20:17:09 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.29 2004/06/10 11:40:25 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -179,8 +179,7 @@ extern struct cpu_info *cpu_info_list;
 #define CPU_START_CLEANUP(_ci)	((_ci)->ci_func->cleanup(_ci))
 
 #define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
-#define curcpu()		(cpu_info[cpu_number()])
-#define curpcb			curcpu()->ci_curpcb
+#define	curcpu()		(cpu_info[cpu_number()])
 
 #define CPU_IS_PRIMARY(ci)	((ci)->ci_flags & CPUF_PRIMARY)
 
@@ -190,32 +189,14 @@ extern u_long		 cpus_running;
 extern void cpu_boot_secondary_processors __P((void));
 extern void cpu_init_idle_pcbs __P((void));
 
-#define want_resched (curcpu()->ci_want_resched)
-#define astpending (curcpu()->ci_astpending)
-
-#define runtime (curcpu()->ci_schedstate.spc_runtime)
-#define rrticks (curcpu()->ci_schedstate.spc_rrticks)
-#define schedclk (curcpu()->ci_schedstate.spc_schedticks)
-
-/*
- * Preemt the current process if in interrupt from user monre,
- * or after the current trap/syscall if in system mode.
- */
-extern void need_resched __P((struct cpu_info *));
-
 #else /* MULTIPROCESSOR */
 
 #define I386_MAXPROCS		1
 
-/*
- * Preempt the current process if in interrupt from user mode,
- * or after the current trap/syscall if in system mode.
- */
-int	want_resched;		/* resched() was called */
-#define	need_resched(ci)	(want_resched = 1, setsoftast())
-
 #define cpu_number()		0
 #define	curcpu()		(&cpu_info_primary)
+
+#define CPU_IS_PRIMARY(ci)	1
 
 /*
  * definitions of cpu-dependent requirements
@@ -223,7 +204,18 @@ int	want_resched;		/* resched() was called */
  */
 #define	cpu_swapin(p)			/* nothing */
 
-#endif /* !MULTIPROCESSOR */
+#endif
+
+#define curpcb			curcpu()->ci_curpcb
+
+#define want_resched (curcpu()->ci_want_resched)
+#define astpending (curcpu()->ci_astpending)
+
+/*
+ * Preemt the current process if in interrupt from user monre,
+ * or after the current trap/syscall if in system mode.
+ */
+extern void need_resched __P((struct cpu_info *));
 
 #define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
 #define	CLKF_PC(frame)		((frame)->if_eip)

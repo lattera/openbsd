@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/kernel.h,v 1.5.16.4 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/kernel.h,v 1.5.16.5 2004/06/10 11:40:35 niklas Exp $	*/
 /*	$NetBSD: kernel.h,v 1.11 1995/03/03 01:24:16 cgd Exp $	*/
 
 /*-
@@ -49,7 +49,7 @@ extern int domainnamelen;
 /* 1.2 */
 extern volatile struct timeval mono_time;
 extern struct timeval boottime;
-#ifndef MULTIPROCESSOR
+#ifndef __HAVE_CPUINFO
 extern struct timeval runtime;
 #endif
 extern volatile struct timeval time;

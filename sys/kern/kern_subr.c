@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.10 2004/06/08 20:15:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_subr.c,v 1.10.2.11 2004/06/10 11:40:33 niklas Exp $	*/
 /*	$NetBSD: kern_subr.c,v 1.15 1996/04/09 17:21:56 ragge Exp $	*/
 
 /*
@@ -78,7 +78,7 @@ uiomove(cp, n, uio)
 		switch (uio->uio_segflg) {
 
 		case UIO_USERSPACE:
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 			if (curcpu()->ci_schedstate.spc_schedflags &
 			    SPCF_SHOULDYIELD)
 #else

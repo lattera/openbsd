@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.29 2004/06/09 18:59:29 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.30 2004/06/10 11:40:24 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -98,6 +98,10 @@
 	movl	_C_LABEL(lapic_id),reg	;		\
 	shrl	$LAPIC_ID_SHIFT,reg	; 		\
 	movl	_C_LABEL(cpu_info)(,reg,4),reg
+#else
+#define	GET_CPUINFO(reg)				\
+	leal	_C_LABEL(cpu_info_primary),reg
+#endif
 
 #define	GET_CURPROC(reg, treg)				\
 	GET_CPUINFO(treg)			;	\
@@ -135,25 +139,6 @@
                
 #define	CLEAR_ASTPENDING(cireg)				\
 	movl	$0,CPU_INFO_ASTPENDING(cireg)
-
-#else
-
-#define	GET_CURPROC(reg,treg)		movl	_C_LABEL(curproc),reg
-#define	CLEAR_CURPROC(treg)		movl	$0,_C_LABEL(curproc)
-#define	SET_CURPROC(reg,treg)		movl	reg,_C_LABEL(curproc)
-#define	PUSH_CURPROC(treg)		pushl	_C_LABEL(curproc)
-
-#define	GET_CURPCB(reg)			movl	_C_LABEL(curpcb),reg    
-#define	SET_CURPCB(reg,treg)		movl	reg,_C_LABEL(curpcb)
-
-#define	CHECK_ASTPENDING(treg)		cmpb	$0,_C_LABEL(astpending) 
-#define	CLEAR_ASTPENDING(treg)		movb	$0,_C_LABEL(astpending)
-       
-#define	CLEAR_RESCHED(treg)				\
-	xorl	%eax,%eax			;	\
-	movl	%eax,_C_LABEL(want_resched)	; 
-       
-#endif
 
 /*
  * These are used on interrupt or trap entry or exit.

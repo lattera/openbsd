@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.31 2004/06/08 21:41:38 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.32 2004/06/10 11:40:24 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -1423,7 +1423,6 @@ intel686_cpu_setup(const char *cpu_device, int model, int step)
 #if !defined(SMALL_KERNEL) && defined(I686_CPU)
 	p3_step = step;
 	update_cpuspeed = p3_update_cpuspeed;
-	update_cpuspeed();
 #endif
 }
 
@@ -1435,7 +1434,6 @@ intel686_p4_cpu_setup(const char *cpu_device, int model, int step)
 #if !defined(SMALL_KERNEL) && defined(I686_CPU)
 	p4_model = model;
 	update_cpuspeed = p4_update_cpuspeed;
-	update_cpuspeed();
 #endif
 }
 
@@ -3245,7 +3243,6 @@ cpu_initclocks()
 	(*initclock_func)();
 }
 
-#ifdef MULTIPROCESSOR
 void
 need_resched(struct cpu_info *ci)
 {
@@ -3253,6 +3250,7 @@ need_resched(struct cpu_info *ci)
 	ci->ci_astpending = 1;
 }
 
+#ifdef MULTIPROCESSOR
 /* Allocate an IDT vector slot within the given range.
  * XXX needs locking to avoid MP allocation races.
  */

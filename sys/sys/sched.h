@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.11 2004/06/06 23:36:26 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.12 2004/06/10 11:40:35 niklas Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -80,12 +80,6 @@
  * Posix defines a <sched.h> which may want to include <sys/sched.h>
  */
 
-/* spc_flags */
-#define SPCF_SEENRR             0x0001  /* process has seen roundrobin() */
-#define SPCF_SHOULDYIELD        0x0002  /* process should yield the CPU */
-
-#define SPCF_SWITCHCLEAR        (SPCF_SEENRR|SPCF_SHOULDYIELD)
-
 #ifdef	_KERNEL
 
 #define	PPQ	(128 / NQS)		/* priorities per queue */
@@ -97,8 +91,9 @@ extern int rrticks_init;		/* ticks per roundrobin() */
 
 #ifdef	_SYS_PROC_H_
 void schedclock(struct proc *);
+#ifdef __HAVE_CPUINFO
 void roundrobin(struct cpu_info *);
-
+#endif
 static __inline void scheduler_fork_hook(
 	struct proc *parent, struct proc *child);
 static __inline void scheduler_wait_hook(

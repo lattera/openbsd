@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.16 2004/06/07 20:41:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.17 2004/06/10 11:40:33 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -204,12 +204,9 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	timeout_set(&p2->p_sleep_to, endtsleep, p2);
 	timeout_set(&p2->p_realit_to, realitexpire, p2);
 
-#if defined(MULTIPROCESSOR)
-	/*
-	 * zero child's CPU pointer so we don't get trash.
-	 */
+#if defined(__HAVE_CPUINFO)
 	p2->p_cpu = NULL;
-#endif /* ! MULTIPROCESSOR */
+#endif
 
 	/*
 	 * Duplicate sub-structures as needed.

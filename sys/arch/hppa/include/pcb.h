@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pcb.h,v 1.6.2.2 2004/06/05 23:10:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pcb.h,v 1.6.2.3 2004/06/10 11:40:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2004 Michael Shalayeff
@@ -37,6 +37,7 @@ struct pcb {
 	u_int pcb_onfault;		/* SW copy fault handler */
 	pa_space_t pcb_space;		/* copy pmap_space, for asm's sake */
 	vaddr_t pcb_uva;		/* KVA for U-area */
+	u_int pcb_ksp;			/* kernel sp for ctxsw */
 };
 
 struct md_coredump {

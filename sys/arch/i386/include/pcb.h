@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.6 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.7 2004/06/10 11:40:25 niklas Exp $	*/
 /*	$NetBSD: pcb.h,v 1.21 1996/01/08 13:51:42 mycroft Exp $	*/
 
 /*-
@@ -88,11 +88,5 @@ struct pcb {
 struct md_coredump {
 	long	md_pad[8];
 };    
-
-#ifdef _KERNEL
-#ifndef MULTIPROCESSOR
-struct pcb *curpcb;		/* our current running pcb */
-#endif
-#endif
 
 #endif /* _I386_PCB_H_ */

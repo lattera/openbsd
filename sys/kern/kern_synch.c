@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.15 2004/06/06 21:46:12 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.16 2004/06/10 11:40:33 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -54,13 +54,13 @@
 
 #include <machine/cpu.h>
 
-#ifndef MULTIPROCESSOR
+#ifndef __HAVE_CPUINFO
 u_char	curpriority;		/* usrpri of curproc */
-int	rrticks;		/* number of hardclock ticks left to
-				   roundrobin() */
 #endif
 int	lbolt;			/* once a second sleep address */
+#ifdef __HAVE_CPUINFO
 int	rrticks_init;		/* # of hardclock ticks per roundrobin() */
+#endif
 
 int whichqs;			/* Bit mask summary of non-empty Q's. */
 struct prochd qs[NQS];
@@ -69,7 +69,11 @@ struct SIMPLELOCK sched_lock;
 
 void scheduler_start(void);
 
+#ifdef __HAVE_CPUINFO
 void roundrobin(struct cpu_info *);
+#else
+void roundrobin(void *);
+#endif
 void schedcpu(void *);
 void updatepri(struct proc *);
 void endtsleep(void *);
@@ -77,27 +81,36 @@ void endtsleep(void *);
 void
 scheduler_start()
 {
+#ifndef __HAVE_CPUINFO
+	static struct timeout roundrobin_to;
+#endif
 	static struct timeout schedcpu_to;
 
 	/*
 	 * We avoid polluting the global namespace by keeping the scheduler
 	 * timeouts static in this function.
-	 * We setup the timeout here and kick schedcpu once to
+	 * We setup the timeouts here and kick schedcpu and roundrobin once to
 	 * make them do their job.
 	 */
 
+#ifndef __HAVE_CPUINFO
+	timeout_set(&schedcpu_to, schedcpu, &roundrobin_to);
+#endif
 	timeout_set(&schedcpu_to, schedcpu, &schedcpu_to);
 
+#ifdef __HAVE_CPUINFO
+	rrticks_init = hz / 10;
+#else
+	roundrobin(&roundrobin_to);
+#endif
 	schedcpu(&schedcpu_to);
 }
 
 /*
  * Force switch among equal priority processes every 100ms.
- *
- * XXX We badly need to unify MULTIPROCESSOR with not MULTIPROCESSOR.
  */
 /* ARGSUSED */
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 void
 roundrobin(struct cpu_info *ci)
 {
@@ -125,12 +138,11 @@ roundrobin(struct cpu_info *ci)
 }
 #else
 void
-roundrobin(struct cpu_info *ci)
+roundrobin(void *arg)
 {
+	struct timeout *to = (struct timeout *)arg;
 	struct proc *p = curproc;
 	int s;
-
-	rrticks = rrticks_init;
 
 	if (p != NULL) {
 		s = splstatclock();
@@ -148,6 +160,7 @@ roundrobin(struct cpu_info *ci)
 	}
 
 	need_resched(0);
+	timeout_add(to, hz / 10);
 }
 #endif
 
@@ -483,7 +496,7 @@ ltsleep(ident, priority, wmesg, timo, interlock)
 	splx(s);
 
 resume:
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	p->p_cpu->ci_schedstate.spc_curpriority = p->p_usrpri;
 #else
 	curpriority = p->p_usrpri;
@@ -638,10 +651,12 @@ restart:
 				 */
 				if ((p->p_flag & P_INMEM) != 0) {
 					setrunqueue(p);
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 					KASSERT(p->p_cpu != NULL);
-#endif
 					need_resched(p->p_cpu);
+#else
+					need_resched(0);
+#endif
 				} else {
 					wakeup((caddr_t)&proc0);
 				}
@@ -725,7 +740,9 @@ mi_switch()
 	struct timeval tv;
 #if defined(MULTIPROCESSOR)
 	int hold_count;
-	struct schedstate_percpu *spc;
+#endif
+#ifdef __HAVE_CPUINFO
+	struct schedstate_percpu *spc = &p->p_cpu->ci_schedstate;
 #endif
 
 	SCHED_ASSERT_LOCKED();
@@ -742,8 +759,6 @@ mi_switch()
 #else
 		hold_count = __mp_release_all(&kernel_lock);
 #endif
-
-	spc = &p->p_cpu->ci_schedstate;
 #endif
 
 	/*
@@ -751,8 +766,18 @@ mi_switch()
 	 * process was running, and add that to its total so far.
 	 */
 	microtime(&tv);
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	if (timercmp(&tv, &spc->spc_runtime, <)) {
+#if 0
+		printf("time is not monotonic! "
+		    "tv=%lu.%06lu, runtime=%lu.%06lu\n",
+		    tv.tv_sec, tv.tv_usec, spc->spc_runtime.tv_sec,
+		    spc->spc_runtime.tv_usec);
+#endif
+	} else {
+		timersub(&tv, &spc->spc_runtime, &tv);
+		timeradd(&p->p_rtime, &tv, &p->p_rtime);
+	}
 #else
 	if (timercmp(&tv, &runtime, <)) {
 #if 0
@@ -760,15 +785,11 @@ mi_switch()
 		    "tv=%lu.%06lu, runtime=%lu.%06lu\n",
 		    tv.tv_sec, tv.tv_usec, runtime.tv_sec, runtime.tv_usec);
 #endif
-#endif
 	} else {
-#ifdef MULTIPROCESSOR
-		timersub(&tv, &spc->spc_runtime, &tv);
-#else
 		timersub(&tv, &runtime, &tv);
-#endif
 		timeradd(&p->p_rtime, &tv, &p->p_rtime);
 	}
+#endif
 
 	/*
 	 * Check if the process exceeds its cpu resource allocation.
@@ -789,7 +810,7 @@ mi_switch()
 	 * Process is about to yield the CPU; clear the appropriate
 	 * scheduling flags.
 	 */
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	spc->spc_schedflags &= ~SPCF_SWITCHCLEAR;
 #else
 	p->p_schedflags &= ~PSCHED_SWITCHCLEAR;
@@ -812,7 +833,7 @@ mi_switch()
 	 * be running on a new CPU now, so don't use the cache'd
 	 * schedstate_percpu pointer.
 	 */
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	KDASSERT(p->p_cpu != NULL);
 	KDASSERT(p->p_cpu == curcpu());
 	microtime(&p->p_cpu->ci_schedstate.spc_runtime);
@@ -852,7 +873,7 @@ rqinit()
 static __inline void
 resched_proc(struct proc *p, u_char pri)
 {
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	struct cpu_info *ci;
 #endif
 
@@ -878,7 +899,7 @@ resched_proc(struct proc *p, u_char pri)
 	 * There is also the issue of locking the other CPU's
 	 * sched state, which we currently do not do.
 	 */
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	ci = (p->p_cpu != NULL) ? p->p_cpu : curcpu();
 	if (pri < ci->ci_schedstate.spc_curpriority)
 		need_resched(ci);

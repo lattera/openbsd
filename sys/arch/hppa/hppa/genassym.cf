@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/hppa/genassym.cf,v 1.15.2.8 2004/06/07 18:46:50 tedu Exp $
+#	$OpenBSD: src/sys/arch/hppa/hppa/genassym.cf,v 1.15.2.9 2004/06/10 11:40:23 niklas Exp $
 
 #
 # Copyright (c) 1982, 1990, 1993
@@ -149,9 +149,13 @@ member	pcb_fpregs
 member	pcb_onfault
 member	pcb_space
 member	pcb_uva
+member	pcb_ksp
 
 struct	user
 member	u_pcb
+
+struct	uvm
+member	page_idle_zero
 
 # system calls
 export	SYSCALLGATE

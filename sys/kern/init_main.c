@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.23 2004/06/08 19:39:49 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.24 2004/06/10 11:40:33 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -110,7 +110,7 @@ struct	pcred cred0;
 struct	plimit limit0;
 struct	vmspace vmspace0;
 struct	sigacts sigacts0;
-#ifndef curproc
+#if !defined(__HAVE_CPUINFO) && !defined(curproc)
 struct	proc *curproc;
 #endif
 struct	proc *initproc;
@@ -122,7 +122,7 @@ void	(*md_diskconf)(void) = NULL;
 struct	vnode *rootvp, *swapdev_vp;
 int	boothowto;
 struct	timeval boottime;
-#ifndef MULTIPROCESSOR
+#ifndef __HAVE_CPUINFO
 struct	timeval runtime;
 #endif
 int	ncpus =  1;
@@ -198,7 +198,7 @@ main(framep)
 	 * any possible traps/probes to simplify trap processing.
 	 */
 	curproc = p = &proc0;
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	p->p_cpu = curcpu();
 #endif
 
@@ -426,7 +426,7 @@ main(framep)
 	 * from the file system.  Reset p->p_rtime as it may have been
 	 * munched in mi_switch() after the time got set.
 	 */
-#ifdef MULTIPROCESSOR
+#ifdef __HAVE_CPUINFO
 	p->p_stats->p_start = mono_time = boottime = time;
 	p->p_cpu->ci_schedstate.spc_runtime = time;
 #else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.9 2004/06/05 23:10:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.10 2004/06/10 11:40:28 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 1996/09/30 16:34:29 ws Exp $	*/
 
 /*-
@@ -119,8 +119,8 @@ boolean_t pteclrbits(paddr_t pa, u_int mask, u_int clear);
  * Really simple. 0x0->0x80000000 contain 1->1 mappings of the physical
  * memory. - XXX
  */
-#define PMAP_MAP_POOLPAGE(pg)		((vaddr_t)VM_PAGE_TO_PHYS(pg))
-#define PMAP_UNMAP_POOLPAGE(va)		PHYS_TO_VM_PAGE((paddr_t)va)
+#define pmap_map_direct(pg)		((vaddr_t)VM_PAGE_TO_PHYS(pg))
+#define pmap_unmap_direct(va)		PHYS_TO_VM_PAGE((paddr_t)va)
 
 void pmap_bootstrap(u_int kernelstart, u_int kernelend);
 

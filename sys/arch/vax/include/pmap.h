@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.9 2004/06/05 23:11:02 niklas Exp $     */
+/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.10 2004/06/10 11:40:31 niklas Exp $     */
 /*	$NetBSD: pmap.h,v 1.37 1999/08/01 13:48:07 ragge Exp $	   */
 
 /* 
@@ -108,8 +108,8 @@ extern	struct pmap kernel_pmap_store;
  * Real nice (fast) routines to get the virtual address of a physical page
  * (and vice versa).
  */
-#define PMAP_MAP_POOLPAGE(pg)	(VM_PAGE_TO_PHYS(pg) | KERNBASE)
-#define PMAP_UNMAP_POOLPAGE(va) PHYS_TO_VM_PAGE((va) & ~KERNBASE)
+#define pmap_map_direct(pg)	(VM_PAGE_TO_PHYS(pg) | KERNBASE)
+#define pmap_unmap_direct(va) PHYS_TO_VM_PAGE((va) & ~KERNBASE)
 
 #define PMAP_STEAL_MEMORY
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.17 2004/06/05 23:09:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.18 2004/06/10 11:40:24 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -132,7 +132,7 @@ userret(p, pc, oticks)
 		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
 	}                   
 
-	curpriority = p->p_priority;
+	p->p_cpu->ci_schedstate.spc_curpriority = p->p_priority;
 }
 
 char	*trap_type[] = {

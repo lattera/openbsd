@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.21 2004/06/06 22:26:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.22 2004/06/10 11:40:25 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -46,9 +46,6 @@
 extern volatile u_int32_t lapic_tpr;	/* Current interrupt priority level. */
 
 extern volatile u_int32_t ipending;	/* Interrupts pending. */
-#ifndef MULTIPROCESSOR
-extern volatile u_int32_t astpending;	/* Async software traps (softints) pending. */
-#endif
 extern int imask[];	/* Bitmasks telling what interrupts are blocked. */
 extern int iunmask[];	/* Bitmasks telling what interrupts are accepted. */
 
