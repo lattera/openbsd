@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.6 1999/07/28 20:41:36 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ip.c,v 1.7 1999/09/16 20:58:47 brad Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -73,7 +73,7 @@ struct tr_query {
 	u_int  tr_src;			/* traceroute source */
 	u_int  tr_dst;			/* traceroute destination */
 	u_int  tr_raddr;		/* traceroute response address */
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	struct {
 		u_int   ttl : 8;	/* traceroute response ttl */
 		u_int   qid : 24;	/* traceroute query id */
