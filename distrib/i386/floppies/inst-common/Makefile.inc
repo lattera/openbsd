@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.1.1.1 1995/10/18 08:37:33 deraadt Exp $
+#	$Id: Makefile.inc,v 1.2 1996/02/02 07:24:30 dm Exp $
 
 # TOP is assumed to be defined by Makefile including this one.
 
@@ -9,7 +9,7 @@ MOUNT_POINT?=	/mnt
 VND?=		vnd0
 VND_DEV=	/dev/${VND}a
 VND_RDEV=	/dev/r${VND}a
-IMAGE?=		xxx-${REV}.fs
+IMAGE?=		xxx${REV}.fs
 MDEC=		${DESTDIR}/usr/mdec
 
 LISTS=		${COMMONDIR}/list ${.CURDIR}/list
