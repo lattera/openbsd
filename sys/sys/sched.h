@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.10 2004/06/06 23:31:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.11 2004/06/06 23:36:26 deraadt Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -79,32 +79,6 @@
 /*
  * Posix defines a <sched.h> which may want to include <sys/sched.h>
  */
-
-/*
- * CPU states.
- * XXX Not really scheduler state, but no other good place to put
- * it right now, and it really is per-CPU.
- */
-#define CP_USER         0
-#define CP_NICE         1
-#define CP_SYS          2
-#define CP_INTR         3
-#define CP_IDLE         4
-#define CPUSTATES       5
-
-/*
- * Per-CPU scheduler state.
- */
-struct schedstate_percpu {
-        struct timeval spc_runtime;     /* time curproc started running */
-        __volatile int spc_schedflags;  /* flags; see below */
-        u_int spc_schedticks;           /* ticks for schedclock() */
-        u_int64_t spc_cp_time[CPUSTATES]; /* CPU state statistics */
-        u_char spc_curpriority;         /* usrpri of curproc */
-	int spc_rrticks;		/* ticks until roundrobin() */
-	int spc_pscnt;			/* prof/stat counter */
-	int spc_psdiv;			/* prof/stat divisor */	
-};
 
 /* spc_flags */
 #define SPCF_SEENRR             0x0001  /* process has seen roundrobin() */

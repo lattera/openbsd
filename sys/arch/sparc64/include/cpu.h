@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.8 2004/06/06 05:23:39 tedu Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.9 2004/06/06 23:36:28 deraadt Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 2001/06/14 22:56:58 thorpej Exp $ */
 
 /*
@@ -75,33 +75,7 @@
 #include <machine/reg.h>
 #include <machine/intr.h>
 
-/*#include <sys/sched.h> */
-
-/*
- * CPU states.
- * XXX Not really scheduler state, but no other good place to put
- * it right now, and it really is per-CPU.
- */
-#define CP_USER         0
-#define CP_NICE         1
-#define CP_SYS          2
-#define CP_INTR         3
-#define CP_IDLE         4
-#define CPUSTATES       5
- 
-/*
- * Per-CPU scheduler state.
- */
-struct schedstate_percpu {
-	struct timeval spc_runtime;     /* time curproc started running */
-	__volatile int spc_flags;       /* flags; see below */
-	u_int spc_schedticks;           /* ticks for schedclock() */
-	u_int64_t spc_cp_time[CPUSTATES]; /* CPU state statistics */
-	u_char spc_curpriority;         /* usrpri of curproc */
-	int spc_rrticks;                /* ticks until roundrobin() */
-	int spc_pscnt;			/* prof/stat counter */
-	int spc_psdiv;			/* prof/stat divisor */
-};
+#include <sys/proc.h>
 
 /*
  * The cpu_info structure is part of a 64KB structure mapped both the kernel
