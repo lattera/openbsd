@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3.4.6 2004/02/19 10:49:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3.4.7 2004/06/05 23:10:52 niklas Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*
@@ -303,8 +303,11 @@ vgafb_ioctl(void *v, u_long cmd, caddr_t data, int flag, struct proc *p)
 
 		switch (dp->param) {
 		case WSDISPLAYIO_PARAM_BRIGHTNESS:
-			of_setbrightness(dp->curval);
-			return 0;
+			if (cons_backlight_available == 1) {
+				of_setbrightness(dp->curval);
+				return 0;
+			} else
+				return -1;
 		case WSDISPLAYIO_PARAM_BACKLIGHT:
 			if (cons_backlight_available != 0) {
 				vgafb_burn(vc,
@@ -505,7 +508,8 @@ vgafb_burn(void *v, u_int on, u_int flags)
 {
 	struct vgafb_config *vc = v;
 
-	if (vc->vc_backlight_on != on) {
+	if (cons_backlight_available == 1 &&
+	    vc->vc_backlight_on != on) {
 		if (on == WSDISPLAYIO_VIDEO_ON) {
 			OF_call_method_1("backlight-on", cons_display_ofh, 0);
 		} else {

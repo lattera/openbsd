@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syscallargs.h,v 1.43.2.9 2004/02/19 11:01:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/syscallargs.h,v 1.43.2.10 2004/06/05 23:13:10 niklas Exp $	*/
 
 /*
  * System call argument lists.
@@ -932,7 +932,7 @@ struct sys_semget_args {
 	syscallarg(int) semflg;
 };
 
-struct sys_semop_args {
+struct compat_35_sys_semop_args {
 	syscallarg(int) semid;
 	syscallarg(struct sembuf *) sops;
 	syscallarg(u_int) nsops;
@@ -980,7 +980,7 @@ struct sys_shmdt_args {
 	syscallarg(const void *) shmaddr;
 };
 
-struct sys_shmget_args {
+struct compat_35_sys_shmget_args {
 	syscallarg(key_t) key;
 	syscallarg(int) size;
 	syscallarg(int) shmflg;
@@ -1222,6 +1222,18 @@ struct sys_sigaltstack_args {
 	syscallarg(struct sigaltstack *) oss;
 };
 
+struct sys_shmget_args {
+	syscallarg(key_t) key;
+	syscallarg(size_t) size;
+	syscallarg(int) shmflg;
+};
+
+struct sys_semop_args {
+	syscallarg(int) semid;
+	syscallarg(struct sembuf *) sops;
+	syscallarg(size_t) nsops;
+};
+
 /*
  * System call prototypes.
  */
@@ -1281,7 +1293,10 @@ int	sys_getgid(struct proc *, void *, register_t *);
 int	sys_sigprocmask(struct proc *, void *, register_t *);
 int	sys_getlogin(struct proc *, void *, register_t *);
 int	sys_setlogin(struct proc *, void *, register_t *);
+#ifdef ACCOUNTING
 int	sys_acct(struct proc *, void *, register_t *);
+#else
+#endif
 int	sys_sigpending(struct proc *, void *, register_t *);
 int	sys_osigaltstack(struct proc *, void *, register_t *);
 int	sys_ioctl(struct proc *, void *, register_t *);
@@ -1383,15 +1398,15 @@ int	compat_09_sys_getdomainname(struct proc *, void *, register_t *);
 int	compat_09_sys_setdomainname(struct proc *, void *, register_t *);
 int	compat_09_sys_uname(struct proc *, void *, register_t *);
 int	sys_sysarch(struct proc *, void *, register_t *);
-#if defined(SYSVSEM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSEM) && !defined(__LP64__)
 int	compat_10_sys_semsys(struct proc *, void *, register_t *);
 #else
 #endif
-#if defined(SYSVMSG) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVMSG) && !defined(__LP64__)
 int	compat_10_sys_msgsys(struct proc *, void *, register_t *);
 #else
 #endif
-#if defined(SYSVSHM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSHM) && !defined(__LP64__)
 int	compat_10_sys_shmsys(struct proc *, void *, register_t *);
 #else
 #endif
@@ -1443,7 +1458,7 @@ int	sys_lkmnosys(struct proc *, void *, register_t *);
 #ifdef SYSVSEM
 int	compat_23_sys___semctl(struct proc *, void *, register_t *);
 int	sys_semget(struct proc *, void *, register_t *);
-int	sys_semop(struct proc *, void *, register_t *);
+int	compat_35_sys_semop(struct proc *, void *, register_t *);
 #else
 #endif
 #ifdef SYSVMSG
@@ -1457,7 +1472,7 @@ int	sys_msgrcv(struct proc *, void *, register_t *);
 int	sys_shmat(struct proc *, void *, register_t *);
 int	compat_23_sys_shmctl(struct proc *, void *, register_t *);
 int	sys_shmdt(struct proc *, void *, register_t *);
-int	sys_shmget(struct proc *, void *, register_t *);
+int	compat_35_sys_shmget(struct proc *, void *, register_t *);
 #else
 #endif
 int	sys_clock_gettime(struct proc *, void *, register_t *);
@@ -1514,3 +1529,11 @@ int	sys_setresgid(struct proc *, void *, register_t *);
 int	sys_mquery(struct proc *, void *, register_t *);
 int	sys_closefrom(struct proc *, void *, register_t *);
 int	sys_sigaltstack(struct proc *, void *, register_t *);
+#ifdef SYSVSHM
+int	sys_shmget(struct proc *, void *, register_t *);
+#else
+#endif
+#ifdef SYSVSEM
+int	sys_semop(struct proc *, void *, register_t *);
+#else
+#endif

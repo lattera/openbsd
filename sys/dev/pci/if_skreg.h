@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_skreg.h,v 1.4.4.5 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_skreg.h,v 1.4.4.6 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -1447,4 +1447,3 @@ struct skc_attach_args {
 
 #define SK_MAXUNIT	256
 #define SK_TIMEOUT	1000
-#define ETHER_ALIGN	2

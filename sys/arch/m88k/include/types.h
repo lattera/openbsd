@@ -1,5 +1,5 @@
 /*	$NetBSD: types.h,v 1.7 1995/07/05 17:46:11 pk Exp $ */
-/*	$OpenBSD: src/sys/arch/m88k/include/Attic/types.h,v 1.1 2004/04/26 12:34:05 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/include/Attic/types.h,v 1.1.2.1 2004/06/05 23:09:48 niklas Exp $ */
 
 /*
  * Copyright (c) 1992, 1993

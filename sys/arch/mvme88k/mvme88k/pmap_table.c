@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.1.4.6 2004/02/19 10:49:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.1.4.7 2004/06/05 23:09:51 niklas Exp $	*/
 
 /*
  * Mach Operating System
@@ -45,7 +45,6 @@
 const pmap_table_entry
 m187_board_table[] = {
 	{ BUG187_START, BUG187_START, round_page(BUG187_SIZE), RW, CI },
-	{ SRAM_START  , SRAM_START  , round_page(SRAM_SIZE)  , RW, CG },
 	{ OBIO_START  , OBIO_START  , round_page(OBIO_SIZE)  , RW, CI },
 	{ 0, 0, 0xffffffff, 0, 0 },
 };

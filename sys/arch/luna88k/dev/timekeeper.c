@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/luna88k/dev/timekeeper.c,v 1.2 2004/05/07 14:11:05 aoyama Exp $ */
+/* $OpenBSD: src/sys/arch/luna88k/dev/timekeeper.c,v 1.2.2.1 2004/06/05 23:09:46 niklas Exp $ */
 /* $NetBSD: timekeeper.c,v 1.1 2000/01/05 08:48:56 nisimura Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug_i386.S,v 1.9.10.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug_i386.S,v 1.9.10.3 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -122,5 +122,3 @@ ENTRY(check_regs)
 	movl	$0x47374736, (%edi)
 #endif
 	ret
-
-

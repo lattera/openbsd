@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.2.6 2004/02/19 10:49:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.2.7 2004/06/05 23:10:50 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University
@@ -131,6 +131,8 @@ extern struct pv_entry	*pv_table;	/* array of entries, one per page */
 
 extern pt_entry_t	*Sysmap;
 extern char		*vmmap;		/* map for mem, dumps, etc. */
+
+void	pmap_proc_iflush(struct proc *, vaddr_t, vsize_t);
 
 #ifdef M68K_MMU_HP
 void	pmap_prefer(vaddr_t, vaddr_t *);

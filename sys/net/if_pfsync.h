@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pfsync.h,v 1.2.4.1 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pfsync.h,v 1.2.4.2 2004/06/05 23:11:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -29,6 +29,9 @@
 #ifndef _NET_IF_PFSYNC_H_
 #define _NET_IF_PFSYNC_H_
 
+
+#define PFSYNC_ID_LEN	sizeof(u_int64_t)
+
 struct pfsync_state_scrub {
 	u_int16_t	pfss_flags;
 	u_int8_t	pfss_ttl;	/* stashed TTL		*/
@@ -56,7 +59,7 @@ struct pfsync_state_peer {
 } __packed;
 
 struct pfsync_state {
-	u_int64_t	 id;
+	u_int32_t	 id[2];
 	char		 ifname[IFNAMSIZ];
 	struct pfsync_state_host lan;
 	struct pfsync_state_host gwy;
@@ -83,7 +86,7 @@ struct pfsync_state {
 } __packed;
 
 struct pfsync_state_upd {
-	u_int64_t		id;
+	u_int32_t		id[2];
 	struct pfsync_state_peer	src;
 	struct pfsync_state_peer	dst;
 	u_int32_t		creatorid;
@@ -94,7 +97,7 @@ struct pfsync_state_upd {
 } __packed;
 
 struct pfsync_state_del {
-	u_int64_t		id;
+	u_int32_t		id[2];
 	u_int32_t		creatorid;
 	struct {
 		u_int8_t	state;
@@ -106,14 +109,24 @@ struct pfsync_state_del {
 } __packed;
 
 struct pfsync_state_upd_req {
-	u_int64_t		id;
+	u_int32_t		id[2];
 	u_int32_t		creatorid;
 	u_int32_t		pad;
 } __packed;
 
 struct pfsync_state_clr {
+	char			ifname[IFNAMSIZ];
 	u_int32_t		creatorid;
 	u_int32_t		pad;
+} __packed;
+
+struct pfsync_state_bus {
+	u_int32_t		creatorid;
+	u_int32_t		endtime;
+	u_int8_t		status;
+#define PFSYNC_BUS_START	1
+#define PFSYNC_BUS_END		2
+	u_int8_t		pad[7];
 } __packed;
 
 #ifdef _KERNEL
@@ -123,8 +136,11 @@ union sc_statep {
 	struct pfsync_state_upd	*u;
 	struct pfsync_state_del	*d;
 	struct pfsync_state_clr	*c;
+	struct pfsync_state_bus	*b;
 	struct pfsync_state_upd_req	*r;
 };
+
+extern int	pfsync_sync_ok;
 
 struct pfsync_softc {
 	struct ifnet		 sc_if;
@@ -132,11 +148,16 @@ struct pfsync_softc {
 
 	struct ip_moptions	 sc_imo;
 	struct timeout		 sc_tmo;
+	struct timeout		 sc_bulk_tmo;
+	struct timeout		 sc_bulkfail_tmo;
 	struct in_addr		 sc_sendaddr;
 	struct mbuf		*sc_mbuf;	/* current cummulative mbuf */
 	struct mbuf		*sc_mbuf_net;	/* current cummulative mbuf */
 	union sc_statep		 sc_statep;
 	union sc_statep		 sc_statep_net;
+	u_int32_t		 sc_ureq_received;
+	u_int32_t		 sc_ureq_sent;
+	int			 sc_bulk_tries;
 	int			 sc_maxcount;	/* number of states in mtu */
 	int			 sc_maxupdates;	/* number of updates/state */
 };
@@ -157,33 +178,39 @@ struct pfsync_header {
 #define	PFSYNC_ACT_INS_F	6	/* insert fragment */
 #define	PFSYNC_ACT_DEL_F	7	/* delete fragments */
 #define	PFSYNC_ACT_UREQ		8	/* request "uncompressed" state */
-#define	PFSYNC_ACT_MAX		9
+#define PFSYNC_ACT_BUS		9	/* Bulk Update Status */
+#define	PFSYNC_ACT_MAX		10
 	u_int8_t count;
 } __packed;
 
+#define PFSYNC_BULKPACKETS	1	/* # of packets per timeout */
+#define PFSYNC_MAX_BULKTRIES	12	
 #define PFSYNC_HDRLEN	sizeof(struct pfsync_header)
 #define	PFSYNC_ACTIONS \
 	"CLR ST", "INS ST", "UPD ST", "DEL ST", \
-	"UPD ST COMP", "DEL ST COMP", "INS FR", "DEL FR", "UPD REQ"
+	"UPD ST COMP", "DEL ST COMP", "INS FR", "DEL FR", \
+	"UPD REQ", "BLK UPD STAT"
 
 #define PFSYNC_DFLTTL		255
 
 struct pfsyncstats {
-	u_long	pfsyncs_ipackets;	/* total input packets, IPv4 */
-	u_long	pfsyncs_ipackets6;	/* total input packets, IPv6 */
-	u_long	pfsyncs_badif;		/* not the right interface */
-	u_long	pfsyncs_badttl;		/* TTL is not PFSYNC_DFLTTL */
-	u_long	pfsyncs_hdrops;		/* packets shorter than header */
-	u_long	pfsyncs_badver;		/* bad (incl unsupp) version */
-	u_long	pfsyncs_badact;		/* bad action */
-	u_long	pfsyncs_badlen;		/* data length does not match */
-	u_long	pfsyncs_badauth;	/* bad authentication */
-	u_long	pfsyncs_badstate;	/* insert/lookup failed */
+	u_int64_t	pfsyncs_ipackets;	/* total input packets, IPv4 */
+	u_int64_t	pfsyncs_ipackets6;	/* total input packets, IPv6 */
+	u_int64_t	pfsyncs_badif;		/* not the right interface */
+	u_int64_t	pfsyncs_badttl;		/* TTL is not PFSYNC_DFLTTL */
+	u_int64_t	pfsyncs_hdrops;		/* packets shorter than hdr */
+	u_int64_t	pfsyncs_badver;		/* bad (incl unsupp) version */
+	u_int64_t	pfsyncs_badact;		/* bad action */
+	u_int64_t	pfsyncs_badlen;		/* data length does not match */
+	u_int64_t	pfsyncs_badauth;	/* bad authentication */
+	u_int64_t	pfsyncs_stale;		/* stale state */
+	u_int64_t	pfsyncs_badval;		/* bad values */
+	u_int64_t	pfsyncs_badstate;	/* insert/lookup failed */
 
-	u_long	pfsyncs_opackets;	/* total output packets, IPv4 */
-	u_long	pfsyncs_opackets6;	/* total output packets, IPv6 */
-	u_long	pfsyncs_onomem;		/* no memory for an mbuf for a send */
-	u_long	pfsyncs_oerrors;	/* ip output error */
+	u_int64_t	pfsyncs_opackets;	/* total output packets, IPv4 */
+	u_int64_t	pfsyncs_opackets6;	/* total output packets, IPv6 */
+	u_int64_t	pfsyncs_onomem;		/* no memory for an mbuf */
+	u_int64_t	pfsyncs_oerrors;	/* ip output error */
 };
 
 /*
@@ -230,10 +257,11 @@ struct pfsyncreq {
 
 #ifdef _KERNEL
 void pfsync_input(struct mbuf *, ...);
-int pfsync_clear_states(u_int32_t);
+int pfsync_clear_states(u_int32_t, char *);
 int pfsync_pack_state(u_int8_t, struct pf_state *, int);
 #define pfsync_insert_state(st)	do {				\
-	if (st->rule.ptr->rule_flag & PFRULE_NOSYNC)		\
+	if ((st->rule.ptr->rule_flag & PFRULE_NOSYNC) ||	\
+	    (st->proto == IPPROTO_PFSYNC))			\
 		st->sync_flags |= PFSTATE_NOSYNC;		\
 	else if (!st->sync_flags)				\
 		pfsync_pack_state(PFSYNC_ACT_INS, (st), 1);	\

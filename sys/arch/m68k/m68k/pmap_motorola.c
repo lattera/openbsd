@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.3.2.6 2004/02/19 10:49:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.3.2.7 2004/06/05 23:10:51 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -2694,6 +2694,15 @@ pmap_ptpage_delref(ptpva)
 	    ("ptpage delref: pg %p now %d\n", pg, pg->wire_count));
 	simple_unlock(&uvm.kernel_object->vmobjlock);
 	return (rv);
+}
+
+void
+pmap_proc_iflush(p, va, len)
+	struct proc	*p;
+	vaddr_t		va;
+	vsize_t		len;
+{
+	(void)cachectl(p, 0x80000004, va, len);
 }
 
 #ifdef DEBUG

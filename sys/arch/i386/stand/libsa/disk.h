@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/disk.h,v 1.1.10.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/disk.h,v 1.1.10.3 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -49,4 +49,3 @@ extern struct diskinfo *bootdev_dip;
 void dump_diskinfo(void);
 
 #endif /* _DISKPROBE_H */
-

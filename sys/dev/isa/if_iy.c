@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.6 2004/02/19 10:56:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.7 2004/06/05 23:12:46 niklas Exp $	*/
 /*	$NetBSD: if_iy.c,v 1.4 1996/05/12 23:52:53 mycroft Exp $	*/
 /* #define IYDEBUG */
 /* #define IYMEMDEBUG */
@@ -56,7 +56,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #ifdef INET

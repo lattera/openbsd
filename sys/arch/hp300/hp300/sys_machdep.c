@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/sys_machdep.c,v 1.5.12.4 2003/06/07 11:11:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/sys_machdep.c,v 1.5.12.5 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.17 1997/05/19 10:15:00 veego Exp $	*/
 
 /*
@@ -70,7 +70,8 @@
  */
 /*ARGSUSED1*/
 int
-cachectl(req, addr, len)
+cachectl(p, req, addr, len)
+	struct proc *p;
 	int req;
 	vaddr_t	addr;
 	int len;
@@ -86,7 +87,7 @@ cachectl(req, addr, len)
 #ifdef COMPAT_HPUX
 		extern struct emul emul_hpux;
 
-		if ((curproc->p_emul == &emul_hpux) &&
+		if ((p->p_emul == &emul_hpux) &&
 		    len != 16 && len != NBPG)
 			doall = 1;
 #endif
@@ -114,7 +115,7 @@ cachectl(req, addr, len)
 			if (!doall &&
 			    (pa == 0 || ((int)addr & PGOFSET) == 0)) {
 				if (pmap_extract(
-				    curproc->p_vmspace->vm_map.pmap,
+				    p->p_vmspace->vm_map.pmap,
 				    addr, &pa) == FALSE)
 					doall = 1;
 			}

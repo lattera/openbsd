@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.9 2004/02/19 10:56:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.10 2004/06/05 23:12:36 niklas Exp $	*/
 /*	$NetBSD: ccd.c,v 1.33 1996/05/05 04:21:14 thorpej Exp $	*/
 
 /*-
@@ -1013,7 +1013,8 @@ ccdintr(cs, bp)
 	 */
 	if (bp->b_flags & B_ERROR)
 		bp->b_resid = bp->b_bcount;
-	disk_unbusy(&cs->sc_dkdev, (bp->b_bcount - bp->b_resid));
+	disk_unbusy(&cs->sc_dkdev, (bp->b_bcount - bp->b_resid),
+	    (bp->b_flags & B_READ));
 	biodone(bp);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.10 2004/02/19 10:48:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.11 2004/06/05 23:08:59 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -201,6 +201,8 @@ cdev_decl(pci);
 #endif
 
 #include "pf.h"
+#include "hotplug.h"
+#include "gpio.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -308,7 +310,10 @@ struct cdevsw	cdevsw[] =
 	cdev_usbdev_init(NUSCANNER,uscanner),	/* 77: USB scanners */
 	cdev_systrace_init(NSYSTRACE,systrace),	/* 78: system call tracing */
  	cdev_oci_init(NBIO,bio),	/* 79: ioctl tunnel */
-	cdev_ch_init(NGPR,gpr)		/* 80: GPR400 SmartCard reader */
+	cdev_ch_init(NGPR,gpr),		/* 80: GPR400 SmartCard reader */
+	cdev_ptm_init(NPTY,ptm),	/* 81: pseudo-tty ptm device */
+	cdev_hotplug_init(NHOTPLUG,hotplug), /* 82: devices hot plugging */
+	cdev_gpio_init(NGPIO,gpio),	/* 83: GPIO interface */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

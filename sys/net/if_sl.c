@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_sl.c,v 1.9.4.7 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_sl.c,v 1.9.4.8 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: if_sl.c,v 1.39.4.1 1996/06/02 16:26:31 thorpej Exp $	*/
 
 /*
@@ -883,6 +883,8 @@ slinput(c, tp)
 			sc->sc_if.if_ierrors++;
 			sc->sc_if.if_iqdrops++;
 			m_freem(m);
+			if (!ipintrq.ifq_congestion)
+				if_congestion(&ipintrq);
 		} else {
 			IF_ENQUEUE(&ipintrq, m);
 			schednetisr(NETISR_IP);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/locore.S,v 1.3 2004/05/10 10:30:24 aoyama Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/locore.S,v 1.3.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur

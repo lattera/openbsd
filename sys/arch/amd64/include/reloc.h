@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/amd64/include/reloc.h,v 1.1 2004/02/10 14:30:05 drahn Exp $ */
+/* $OpenBSD: src/sys/arch/amd64/include/reloc.h,v 1.1.4.1 2004/06/05 23:09:25 niklas Exp $ */
 
 /*
  * Copyright (c) 2002,2003 Dale Rahn

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3.4.7 2004/02/19 10:49:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/p9100.c,v 1.3.4.8 2004/06/05 23:10:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003, Miodrag Vallat.
@@ -323,14 +323,8 @@ p9100attach(struct device *parent, struct device *self, void *args)
 	/*
 	 * Plug-in accelerated console operations if we can.
 	 */
-	if (sc->sc_sunfb.sf_depth == 8) {
-		sc->sc_sunfb.sf_ro.ri_ops.copycols = p9100_ras_copycols;
-		sc->sc_sunfb.sf_ro.ri_ops.copyrows = p9100_ras_copyrows;
-		sc->sc_sunfb.sf_ro.ri_ops.erasecols = p9100_ras_erasecols;
-		sc->sc_sunfb.sf_ro.ri_ops.eraserows = p9100_ras_eraserows;
-		sc->sc_sunfb.sf_ro.ri_do_cursor = p9100_ras_do_cursor;
+	if (sc->sc_sunfb.sf_depth == 8)
 		p9100_ras_init(sc);
-	}
 
 	p9100_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;
 	p9100_stdscreen.nrows = sc->sc_sunfb.sf_ro.ri_rows;
@@ -424,7 +418,7 @@ p9100_ioctl(void *v, u_long cmd, caddr_t data, int flags, struct proc *p)
 		case WSDISPLAYIO_PARAM_BACKLIGHT:
 			dp->min = 0;
 			dp->max = 1;
-			dp->curval = tadpole_get_video();
+			dp->curval = tadpole_get_video() & TV_ON;
 			break;
 		default:
 			return (-1);
@@ -612,8 +606,17 @@ p9100_drain(struct p9100_softc *sc)
 void
 p9100_ras_init(struct p9100_softc *sc)
 {
+	sc->sc_sunfb.sf_ro.ri_ops.copycols = p9100_ras_copycols;
+	sc->sc_sunfb.sf_ro.ri_ops.copyrows = p9100_ras_copyrows;
+#if NTCTRL > 0
+	if (tadpole_get_video() & TV_ACCEL) {
+		sc->sc_sunfb.sf_ro.ri_ops.erasecols = p9100_ras_erasecols;
+		sc->sc_sunfb.sf_ro.ri_ops.eraserows = p9100_ras_eraserows;
+		sc->sc_sunfb.sf_ro.ri_do_cursor = p9100_ras_do_cursor;
+	}
+#endif
 	/*
-	 * Setup safe defaults for the parameter and drawing engine, in
+	 * Setup safe defaults for the parameter and drawing engines, in
 	 * order to minimize the operations to do for ri_ops.
 	 */
 
@@ -638,6 +641,10 @@ p9100_ras_init(struct p9100_softc *sc)
 
 	P9100_SELECT_PE(sc);
 	P9100_WRITE_CMD(sc, P9000_PE_WINOFFSET, 0);
+	P9100_WRITE_CMD(sc, P9000_PE_INDEX, 0);
+	P9100_WRITE_CMD(sc, P9000_PE_WINMIN, 0);
+	P9100_WRITE_CMD(sc, P9000_PE_WINMAX,
+	    P9000_COORDS(sc->sc_sunfb.sf_width - 1, sc->sc_sunfb.sf_height - 1));
 }
 
 void
@@ -792,7 +799,8 @@ p9100_ras_do_cursor(struct rasops_info *ri)
 
 	P9100_SELECT_DE_LOW(sc);
 	P9100_WRITE_CMD(sc, P9000_DE_RASTER,
-	    (~P9100_RASTER_DST) & P9100_RASTER_MASK);
+	    (P9100_RASTER_PATTERN ^ P9100_RASTER_DST) & P9100_RASTER_MASK);
+	P9100_WRITE_CMD(sc, P9100_DE_COLOR0, P9100_COLOR8(WSCOL_BLACK));
 
 	P9100_SELECT_COORD(sc, P9000_LC_RECT);
 	P9100_WRITE_CMD(sc, P9000_LC_RECT + P9000_COORD_XY,

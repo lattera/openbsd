@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.12 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.13 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -40,6 +40,7 @@
 #include <sys/proc.h>
 #include <sys/mount.h>
 #include <sys/malloc.h>
+#include <sys/pool.h>
 #include <sys/namei.h>
 #include <sys/vnode.h>
 #include <sys/file.h>
@@ -209,7 +210,7 @@ bad2:
 	 * close the vnode, free the pathname buf, and punt.
 	 */
 	vn_close(vp, FREAD, p->p_ucred, p);
-	FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, ndp->ni_cnd.cn_pnbuf);
 	return (error);
 
 bad1:
@@ -217,7 +218,7 @@ bad1:
 	 * free the namei pathname buffer, and put the vnode
 	 * (which we don't yet have open).
 	 */
-	FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, ndp->ni_cnd.cn_pnbuf);
 	vput(vp);
 	return (error);
 }
@@ -272,6 +273,7 @@ sys_execve(p, v, retval)
 	pack.ep_hdrlen = exec_maxhdrsz;
 	pack.ep_hdrvalid = 0;
 	pack.ep_ndp = &nid;
+	pack.ep_interp = NULL;
 	pack.ep_emul_arg = NULL;
 	VMCMDSET_INIT(&pack.ep_vmcmds);
 	pack.ep_vap = &attr;
@@ -563,7 +565,7 @@ sys_execve(p, v, retval)
 
 	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
 
-	FREE(nid.ni_cnd.cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
 	vn_close(pack.ep_vp, FREAD, cred, p);
 
 	/*
@@ -584,7 +586,7 @@ sys_execve(p, v, retval)
 
 	/* map the process's signal trampoline code */
 	if (exec_sigcode_map(p, pack.ep_emul))
-		goto exec_abort;
+		goto free_pack_abort;
 
 	if (p->p_flag & P_TRACED)
 		psignal(p, SIGTRAP);
@@ -630,9 +632,13 @@ bad:
 		pack.ep_flags &= ~EXEC_HASFD;
 		(void) fdrelease(p, pack.ep_fd);
 	}
+	if (pack.ep_interp != NULL)
+		FREE(pack.ep_interp, M_TEMP);
+	if (pack.ep_emul_arg != NULL)
+		FREE(pack.ep_emul_arg, M_TEMP);
 	/* close and put the exec'd file */
 	vn_close(pack.ep_vp, FREAD, cred, p);
-	FREE(nid.ni_cnd.cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
 	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
 
 freehdr:
@@ -648,9 +654,11 @@ exec_abort:
 	 */
 	uvm_deallocate(&vm->vm_map, VM_MIN_ADDRESS,
 		VM_MAXUSER_ADDRESS - VM_MIN_ADDRESS);
-	if (pack.ep_emul_arg)
+	if (pack.ep_interp != NULL)
+		FREE(pack.ep_interp, M_TEMP);
+	if (pack.ep_emul_arg != NULL)
 		FREE(pack.ep_emul_arg, M_TEMP);
-	FREE(nid.ni_cnd.cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
 	vn_close(pack.ep_vp, FREAD, cred, p);
 	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
 
@@ -738,6 +746,7 @@ exec_sigcode_map(struct proc *p, struct emul *e)
 		    0, 0, UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW,
 		    UVM_INH_SHARE, UVM_ADV_RANDOM, 0)))) {
 			printf("kernel mapping failed %d\n", r);
+			uao_detach(e->e_sigobject);
 			return (ENOMEM);
 		}
 		memcpy((void *)va, e->e_sigcode, sz);
@@ -751,6 +760,7 @@ exec_sigcode_map(struct proc *p, struct emul *e)
 	    e->e_sigobject, 0, 0, UVM_MAPFLAG(UVM_PROT_RX, UVM_PROT_RX,
 	    UVM_INH_SHARE, UVM_ADV_RANDOM, 0))) {
 		printf("user mapping failed\n");
+		uao_detach(e->e_sigobject);
 		return (ENOMEM);
 	}
 

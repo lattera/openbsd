@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ieee1394/Attic/fwscsi.c,v 1.12.4.2 2004/02/19 10:56:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ieee1394/Attic/fwscsi.c,v 1.12.4.3 2004/06/05 23:12:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Thierry Deval.  All rights reserved.
@@ -301,7 +301,6 @@ fwscsi_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_adapter_link.adapter_softc = sc;
 	sc->sc_adapter_link.flags = 0;
 	sc->sc_adapter_link.inquiry_flags = 0;
-	sc->sc_adapter_link.inquiry_flags2 = 0;
 	sc->sc_adapter_link.quirks |= SDEV_NOTAGS | SDEV_ONLYBIG;
 
 	sc->sc_speed = fwsc->sc_sc1394.sc1394_link_speed;

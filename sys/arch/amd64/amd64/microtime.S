@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/Attic/microtime.S,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/Attic/microtime.S,v 1.1.2.1 2004/06/05 23:09:24 niklas Exp $	*/
 /*	$NetBSD: microtime.S,v 1.1 2003/04/26 18:39:30 fvdl Exp $	*/
 
 /*-
@@ -43,7 +43,7 @@
 #define	IRQ_BIT(irq_num)	(1 << ((irq_num) & 7))
 #define	IRQ_BYTE(irq_num)	((irq_num) >> 3)
 
-ENTRY(i8254_microtime)
+ENTRY(microtime)
 	# clear registers and do whatever we can up front
 	xorl	%edx,%edx
 	movl	$(TIMER_SEL0|TIMER_LATCH),%eax
@@ -95,6 +95,7 @@ ENTRY(i8254_microtime)
 	# time.tv_usec
 2: 	leaq	_C_LABEL(isa_timer_msb_table)(%rip),%rsi
 	movw	(%rsi,%rax,2),%ax
+	leaq	_C_LABEL(isa_timer_lsb_table)(%rip),%rsi
 	subw	(%rsi,%rdx,2),%ax
 	addq	%rax,%r9		# add msb increment
 

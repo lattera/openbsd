@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.11 2004/02/19 11:01:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.12 2004/06/05 23:13:09 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.33 1996/05/03 20:03:32 christos Exp $	*/
 
 /*-
@@ -275,7 +275,13 @@ extern struct cdevsw cdevsw[];
 	dev_init(c,n,tty), dev_init(c,n,poll), (dev_type_mmap((*))) enodev, \
 	D_TTY | D_KQFILTER, dev_init(c,n,kqfilter) }
 
-/* open, close, read, ioctl, poll, kqfilter -- XXX should be a generic device */
+/* open, close, read, write, ioctl, mmap */
+#define cdev_ptm_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+	0, (dev_type_poll((*))) enodev, (dev_type_mmap((*))) enodev }
+
+/* open, close, read, ioctl, poll, kqfilter XXX should be a generic device */
 #define cdev_log_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
 	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
@@ -459,7 +465,21 @@ void	randomattach(void);
 	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
 	(dev_type_stop((*))) enodev, 0, seltrue, \
 	dev_init(c,n,mmap) }
-				 
+
+/* open, close, read, ioctl, poll, kqfilter */
+#define cdev_hotplug_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) enodev, 0, dev_init(c,n,poll), \
+	(dev_type_mmap((*))) enodev, D_KQFILTER, dev_init(c,n,kqfilter) }
+
+/* open, close, ioctl */
+#define cdev_gpio_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+	(dev_type_stop((*))) enodev, 0, (dev_type_poll((*))) enodev, \
+	(dev_type_mmap((*))) enodev }
+
 /* symbolic sleep message strings */
 extern char devopn[], devio[], devwait[], devin[], devout[];
 extern char devioc[], devcls[];
@@ -532,6 +552,8 @@ cdev_decl(pts);
 #define	ptctty		ptytty
 #define	ptcioctl	ptyioctl
 cdev_decl(ptc);
+
+cdev_decl(ptm);
 
 cdev_decl(ctty);
 
@@ -614,6 +636,9 @@ cdev_decl(ucom);
 cdev_decl(ulpt);
 cdev_decl(uscanner);
 cdev_decl(urio);
+
+cdev_decl(hotplug);
+cdev_decl(gpio);
 
 #endif
 

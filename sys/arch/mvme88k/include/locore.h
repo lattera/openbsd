@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.7 2004/02/19 10:49:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/locore.h,v 1.5.6.8 2004/06/05 23:09:50 niklas Exp $	*/
 
 #ifndef _MACHINE_LOCORE_H_
 #define _MACHINE_LOCORE_H_
@@ -52,7 +52,7 @@ void _doboot(void);
 vaddr_t get_slave_stack(void);
 void slave_pre_main(void);
 int slave_main(void);
-int intr_findvec(int start, int end);
+int intr_findvec(int, int, int);
 void bugsyscall(void);
 void myetheraddr(u_char *cp);
 void dosoftint(void);

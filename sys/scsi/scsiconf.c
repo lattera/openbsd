@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.10 2004/02/19 11:01:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.11 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: scsiconf.c,v 1.57 1996/05/02 01:09:01 neil Exp $	*/
 
 /*
@@ -109,6 +109,9 @@ int scsidebug_targets = SCSIDEBUG_TARGETS;
 int scsidebug_luns = SCSIDEBUG_LUNS;
 int scsidebug_level = SCSIDEBUG_LEVEL;
 
+int scsiforcelun_buses = SCSIFORCELUN_BUSES;
+int scsiforcelun_targets = SCSIFORCELUN_TARGETS;
+
 int scsi_autoconf = SCSI_AUTOCONF;
 
 int scsibusprint(void *, const char *);
@@ -118,19 +121,10 @@ scsiprint(aux, pnp)
 	void *aux;
 	const char *pnp;
 {
-#ifndef __OpenBSD__
-	struct scsi_link *l = aux;
-#endif
-
 	/* only "scsibus"es can attach to "scsi"s; easy. */
 	if (pnp)
 		printf("scsibus at %s", pnp);
 
-#ifndef __OpenBSD__
-	/* don't print channel if the controller says there can be only one. */
-	if (l->channel != SCSI_CHANNEL_ONLY_ONE)
-		printf(" channel %d", l->channel);
-#endif
 	return (UNCONF);
 }
 
@@ -302,14 +296,22 @@ scsi_probe_bus(bus, target, lun)
 		maxlun = scsi->adapter_link->luns - 1;
 		minlun = 0;
 	} else {
-		if (lun < 0 || lun > 7)
+		if (lun < 0 || lun >= scsi->adapter_link->luns)
 			return EINVAL;
-		maxlun = minlun = lun;
+		maxlun = lun;
+		if (lun == 0 || scsi->sc_link[target][0] == NULL)
+			minlun = 0;
+		else
+			minlun = lun;
 	}
 
 	for (target = mintarget; target <= maxtarget; target++)
 		if (target != scsi_addr) {
 			bzero(&inqbuflun0, sizeof inqbuflun0);
+			if (minlun != 0 &&
+			    (scsi_inquire(scsi->sc_link[target][0], &inqbuflun0,
+			    0) != 0))
+				continue;
 			for (lun = minlun; lun <= maxlun; lun++)
 				if (scsi_probedev(scsi, &inqbuflun0, target,
 				    lun) == EINVAL)
@@ -398,11 +400,6 @@ const struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
 	 "DEC     ", "RZ55     (C) DEC", ""},     SDEV_AUTOSAVE},
 	{{T_DIRECT, T_FIXED,
 	 "EMULEX  ", "MD21/S2     ESDI", "A00"},  SDEV_AUTOSAVE},
-	/* Gives non-media hardware failure in response to start-unit command */
-	{{T_DIRECT, T_FIXED,
-	 "HITACHI", "DK515C",            "CP15"}, SDEV_NOSTARTUNIT},
-	{{T_DIRECT, T_FIXED,
-	 "HITACHI", "DK515C",            "CP16"}, SDEV_NOSTARTUNIT},
 	{{T_DIRECT, T_FIXED,
 	 "IBMRAID ", "0662S",            ""},     SDEV_AUTOSAVE},
 	{{T_DIRECT, T_FIXED,
@@ -430,9 +427,6 @@ const struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
 	 "IOMEGA", "ZIP 250",		 ""},	  SDEV_NOMODESENSE},
 	{{T_DIRECT, T_FIXED,
 	 "IBM", "0661467",               "G"},    SDEV_NOMODESENSE},
-	/* Letting the motor run kills floppy drives and disks quit fast. */
-	{{T_DIRECT, T_REMOV,
-	 "TEAC", "FC-1",                 ""},     SDEV_NOSTARTUNIT},
         {{T_DIRECT, T_FIXED,
          "MICROP", "4421-07",		 ""},     SDEV_NOTAGS},
         {{T_DIRECT, T_FIXED,
@@ -454,10 +448,6 @@ const struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
 	/* ATAPI device quirks */
         {{T_CDROM, T_REMOV,
          "ALPS ELECTRIC CO.,LTD. DC544C", "", "SW03D"}, ADEV_NOTUR},
-        {{T_CDROM, T_REMOV,
-         "BCD-16X", "", ""},                    SDEV_NOSTARTUNIT},
-        {{T_CDROM, T_REMOV,
-         "BCD-24X", "", ""},                    SDEV_NOSTARTUNIT},
         {{T_CDROM, T_REMOV,
          "CR-2801TE", "", "1.07"},              ADEV_NOSENSE},
         {{T_CDROM, T_REMOV,
@@ -618,7 +608,7 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 	struct scsi_link *sc_link;
 	static struct scsi_inquiry_data inqbuf;
 	const struct scsi_quirk_inquiry_pattern *finger;
-	int priority, rslt;
+	int priority, rslt = 0;
 	struct scsibus_attach_args sa;
 	struct cfdata *cf;
 
@@ -635,7 +625,6 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 	sc_link->lun = lun;
 	sc_link->device = &probe_switch;
 	sc_link->inquiry_flags = 0;
-	sc_link->inquiry_flags2 = 0;
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("scsi_link created.\n"));
 
@@ -657,7 +646,7 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 		sc_link->flags |= scsidebug_level;
 #endif /* SCSIDEBUG */
 
-#if defined(mvme68k) || defined(mvme88k)
+#if defined(mvme68k)
 	if (lun == 0) {
 		/* XXX some drivers depend on this */
 		scsi_test_unit_ready(sc_link, TEST_READY_RETRIES_DEFAULT,
@@ -673,31 +662,11 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 #endif /* SCSI_2_DEF */
 
 	/* Now go ask the device all about itself. */
-	bzero(&inqbuf, sizeof(inqbuf));
-
-	memset(&inqbuf.vendor, ' ', sizeof inqbuf.vendor);
-	memset(&inqbuf.product, ' ', sizeof inqbuf.product);
-	memset(&inqbuf.revision, ' ', sizeof inqbuf.revision);
-	memset(&inqbuf.extra, ' ', sizeof inqbuf.extra);
-
 	rslt = scsi_inquire(sc_link, &inqbuf, scsi_autoconf | SCSI_SILENT);
-
-	if (lun == 0 && rslt != 0) {
-		/* A bad LUN 0 INQUIRY means no further LUNs possible. */
-		SC_DEBUG(sc_link, SDEV_DB2, ("No LUN 0. rslt == %i\n", rslt));
-		rslt = EINVAL;
-		goto bad;
-	} else if (rslt != 0) {
-		/* Just a failed LUN INQUIRY, try the next LUN. */
-		SC_DEBUG(sc_link, SDEV_DB2, ("Bad LUN. rslt == %i\n", rslt));
-		rslt = 0;
-		goto bad;
-	} else if (lun == 0) {
-		bcopy(&inqbuf, inqbuflun0, sizeof *inqbuflun0);
-	} else if (memcmp(&inqbuf, inqbuflun0, sizeof inqbuf) == 0) {
-		/* The device can't distinguish between LUNs. */
-		SC_DEBUG(sc_link, SDEV_DB1, ("IDENTIFY not supported.\n"));
-		rslt = EINVAL;
+	if (rslt != 0) {
+		SC_DEBUG(sc_link, SDEV_DB2, ("Bad LUN. rslt = %i\n", rslt));
+		if (lun == 0)
+			rslt = EINVAL;
 		goto bad;
 	}
 
@@ -710,12 +679,27 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 		goto bad;
 
 	case SID_QUAL_LU_OK:
-		if ((inqbuf.device & SID_TYPE) == T_NODEVICE)
+		if ((inqbuf.device & SID_TYPE) == T_NODEVICE) {
+			SC_DEBUG(sc_link, SDEV_DB1,
+		    	    ("Bad LUN. SID_TYPE = T_NODEVICE\n"));
 			goto bad;
+		}
 		break;
 
 	default:
 		break;
+	}
+
+	if (lun == 0)
+		bcopy(&inqbuf, inqbuflun0, sizeof *inqbuflun0);
+	else if (((1 << sc_link->scsibus) & scsiforcelun_buses) &&
+	    ((1 << target) & scsiforcelun_targets))
+		    ;
+	else if (memcmp(&inqbuf, inqbuflun0, sizeof inqbuf) == 0) {
+		/* The device doesn't distinguish between LUNs. */
+		SC_DEBUG(sc_link, SDEV_DB1, ("IDENTIFY not supported.\n"));
+		rslt = EINVAL;
+		goto bad;
 	}
 
 	finger = (const struct scsi_quirk_inquiry_pattern *)scsi_inqmatch(
@@ -746,7 +730,6 @@ scsi_probedev(scsi, inqbuflun0, target, lun)
 	 * Save INQUIRY "flags" (SID_Linked, etc.) for low-level drivers.
 	 */
 	sc_link->inquiry_flags = inqbuf.flags;
-	sc_link->inquiry_flags2 = inqbuf.flags2;
 
 	/*
 	 * note what BASIC type of device it is

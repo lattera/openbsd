@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.7 2004/02/19 10:56:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.8 2004/06/05 23:12:41 niklas Exp $	*/
 /*	$NetBSD: if_fxpvar.h,v 1.1 1997/06/05 02:01:58 thorpej Exp $	*/
 
 /*                  
@@ -46,10 +46,10 @@
 #define FXP_NTXCB	128
 
 /*
- * Number of receive frame area buffers. These are large so chose
- * wisely.
+ * Minimum and maximum number of receive frame area buffers. 
  */
-#define FXP_NRFABUFS	64
+#define FXP_NRFABUFS_MIN	4
+#define FXP_NRFABUFS_MAX	64	/* These are large so choose wisely. */
 
 /*
  * NOTE: Elements are ordered for optimal cacheline behavior, and NOT
@@ -87,6 +87,7 @@ struct fxp_softc {
 #define	FXPF_HAS_RESUME_BUG	0x08	/* has the resume bug */
 #define	FXPF_FIX_RESUME_BUG	0x10	/* currently need to work-around
 					   the resume bug */
+#define	FXPF_DISABLE_STANDBY	0x20	/* currently need to work-around */
 	struct timeout stats_update_to; /* Pointer to timeout structure */
 	int rx_idle_secs;		/* # of seconds RX has been idle */
 	struct fxp_cb_tx *cbl_base;	/* base of TxCB list */
@@ -95,6 +96,7 @@ struct fxp_softc {
 	int phy_10Mbps_only;		/* PHY is 10Mbps-only device */
 	int eeprom_size;		/* size of serial EEPROM */
 	int not_82557;			/* yes if we are 82558/82559 */
+	int rx_bufs;			/* how many rx buffers allocated? */
 	void *sc_sdhook;		/* shutdownhook */
 	void *sc_powerhook;		/* powerhook */
 	struct fxp_txsw txs[FXP_NTXCB];
@@ -104,7 +106,7 @@ struct fxp_softc {
 	bus_dma_segment_t sc_cb_seg;
 	int sc_cb_nseg;
 	struct fxp_ctrl *sc_ctrl;
-	bus_dmamap_t sc_rxmaps[FXP_NRFABUFS];
+	bus_dmamap_t sc_rxmaps[FXP_NRFABUFS_MAX];
 	int sc_rxfree;
 };
 

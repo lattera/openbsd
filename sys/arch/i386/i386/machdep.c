@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.26 2004/06/05 17:19:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.27 2004/06/05 23:08:59 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -101,10 +101,6 @@
 #include <sys/msg.h>
 #endif
 
-#ifdef CRYPTO
-#include <crypto/cryptodev.h>
-#endif
-
 #ifdef KGDB
 #include <sys/kgdb.h>
 #endif
@@ -113,8 +109,6 @@
 #include <stand/boot/bootarg.h>
 
 #include <uvm/uvm_extern.h>
-
-#include <sys/sysctl.h>
 
 #define _I386_BUS_DMA_PRIVATE
 #include <machine/bus.h>
@@ -251,6 +245,8 @@ struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int kbd_reset;
+int p4_model;
+int setperf_prio = 0;		/* for concurrent handlers */
 
 void (*delay_func) __P((int)) = i8254_delay;
 void (*microtime_func) __P((struct timeval *)) = i8254_microtime;
@@ -329,12 +325,15 @@ void	cyrix3_cpu_setup(const char *, int, int);
 void	cyrix6x86_cpu_setup(const char *, int, int);
 void	natsem6x86_cpu_setup(const char *, int, int);
 void	intel586_cpu_setup(const char *, int, int);
+void	intel686_common_cpu_setup(const char *, int, int);
 void	intel686_cpu_setup(const char *, int, int);
+void	intel686_p4_cpu_setup(const char *, int, int);
 void	tm86_cpu_setup(const char *, int, int);
 char *	intel686_cpu_name(int);
 char *	cyrix3_cpu_name(int, int);
 char *	tm86_cpu_name(int);
-void	viac3_rnd(void *);
+int	p4_cpuspeed(int *);
+int	pentium_cpuspeed(int *);
 
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
 static __inline u_char
@@ -350,6 +349,7 @@ cyrix_write_reg(u_char reg, u_char data)
 	outb(0x22, reg);
 	outb(0x23, data);
 }
+#endif
 
 /*
  * cpuid instruction.  request in eax, result in eax, ebx, ecx, edx.
@@ -368,7 +368,6 @@ cpuid(u_int32_t ax, u_int32_t *regs)
 	    :"0" (ax), "S" (regs)
 	    :"bx", "cx", "dx");
 }
-#endif
 
 /*
  * Machine-dependent startup code
@@ -788,7 +787,7 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				0, 0, 0, 0,
 				"Pentium 4"	/* Default */
 			},
-			intel686_cpu_setup
+			intel686_p4_cpu_setup
 		} }
 	},
 	{
@@ -1109,6 +1108,8 @@ const struct cpu_cpuid_feature i386_cpuid_features[] = {
 };
 
 const struct cpu_cpuid_feature i386_cpuid_ecxfeatures[] = {
+	{ CPUIDECX_PNI,		"PNI" },
+	{ CPUIDECX_MWAIT,	"MWAIT" },
 	{ CPUIDECX_EST,		"EST" },
 	{ CPUIDECX_TM2,		"TM2" },
 	{ CPUIDECX_CNXTID,	"CNXT-ID" },
@@ -1126,359 +1127,11 @@ winchip_cpu_setup(cpu_device, model, step)
 		curcpu()->ci_feature_flags &= ~CPUID_TSC;
 		/* Disable RDTSC instruction from user-level. */
 		lcr4(rcr4() | CR4_TSD);
-		printf("%s: broken TSC disabled\n", curcpu()->ci_dev.dv_xname);
+		printf("%s: TSC disabled\n", curcpu()->ci_dev.dv_xname);
 		break;
 	}
 #endif
 }
-
-#if defined(I686_CPU)
-/*
- * Note, the VIA C3 Nehemiah provides 4 internal 8-byte buffers, which
- * store random data, and can be accessed a lot quicker than waiting
- * for new data to be generated.  As we are using every 8th bit only
- * due to whitening. Since the RNG generates in excess of 21KB/s at
- * it's worst, collecting 64 bytes worth of entropy should not affect
- * things significantly.
- *
- * Note, due to some weirdness in the RNG, we need at least 7 bytes
- * extra on the end of our buffer.  Also, there is an outside chance
- * that the VIA RNG can "wedge", as the generated bit-rate is variable.
- * We could do all sorts of startup testing and things, but
- * frankly, I don't really see the point.  If the RNG wedges, then the
- * chances of you having a defective CPU are very high.  Let it wedge.
- *
- * Adding to the whole confusion, in order to access the RNG, we need
- * to have FXSR support enabled, and the correct FPU enable bits must
- * be there to enable the FPU in kernel.  It would be nice if all this
- * mumbo-jumbo was not needed in order to use the RNG.  Oh well, life
- * does go on...
- */
-#define VIAC3_RNG_BUFSIZ	16		/* 32bit words */
-struct timeout viac3_rnd_tmo;
-int viac3_rnd_present = 0;
-
-void
-viac3_rnd(void *v)
-{
-	struct timeout *tmo = v;
-	unsigned int *p, i, rv, creg0, len = VIAC3_RNG_BUFSIZ;
-	static int buffer[VIAC3_RNG_BUFSIZ + 2];
-
-	creg0 = rcr0();		/* Permit access to SIMD/FPU path */
-	lcr0(creg0 & ~(CR0_EM|CR0_TS));
-
-	/*
-	 * Here we collect the random data from the VIA C3 RNG.  We make
-	 * sure that we turn on maximum whitening (%edx[0,1] == "11"), so
-	 * that we get the best random data possible.
-	 */
-	__asm __volatile("rep xstore-rng"
-	    : "=a" (rv) : "d" (3), "D" (buffer), "c" (len*sizeof(int))
-	    : "memory", "cc");
-
-	lcr0(creg0);
-
-	for (i = 0, p = buffer; i < VIAC3_RNG_BUFSIZ; i++, p++)
-		add_true_randomness(*p);
-
-	timeout_add(tmo, (hz>100)?(hz/100):1);
-}
-
-#ifdef CRYPTO
-
-struct viac3_session {
-	u_int8_t ses_iv[16];
-	int ses_klen, ses_used;
-};
-
-struct viac3_softc {
-	/* operand stuff, must be 128 bit aligned */
-	u_int32_t		op_cw[4];
-	u_int8_t		op_iv[16];
-	u_int8_t		op_key[32];
-	void			*op_buf;
-	u_int32_t		pad[2];
-
-	/* normal softc stuff */
-	int32_t			sc_cid;
-	int			sc_nsessions;
-	struct viac3_session	*sc_sessions;
-};
-
-#define VIAC3_SESSION(sid)		((sid) & 0x0fffffff)
-#define	VIAC3_SID(crd,ses)		(((crd) << 28) | ((ses) & 0x0fffffff))
-
-static struct viac3_softc *vc3_sc;
-int viac3_crypto_present;
-
-void viac3_crypto_setup(void);
-int viac3_crypto_newsession(u_int32_t *, struct cryptoini *);
-int viac3_crypto_process(struct cryptop *);
-int viac3_crypto_freesession(u_int64_t);
-void viac3_crypto(void *, void *, void *, void *, int, void *, int);
-
-void
-viac3_crypto_setup(void)
-{
-	int algs[CRYPTO_ALGORITHM_MAX + 1];
-
-	if ((vc3_sc = malloc(sizeof(*vc3_sc), M_DEVBUF, M_NOWAIT)) == NULL)
-		return;		/* YYY bitch? */
-	bzero(vc3_sc, sizeof(*vc3_sc));
-
-	bzero(algs, sizeof(algs));
-	algs[CRYPTO_AES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
-
-	vc3_sc->sc_cid = crypto_get_driverid(0);
-	if (vc3_sc->sc_cid < 0)
-		return;		/* YYY bitch? */
-
-	crypto_register(vc3_sc->sc_cid, algs, viac3_crypto_newsession,
-	    viac3_crypto_freesession, viac3_crypto_process);
-	i386_has_xcrypt = 1;
-}
-
-int
-viac3_crypto_newsession(u_int32_t *sidp, struct cryptoini *cri)
-{
-	struct viac3_softc *sc = vc3_sc;
-	struct viac3_session *ses = NULL;
-	int sesn;
-
-	if (sc == NULL || sidp == NULL || cri == NULL)
-		return (EINVAL);
-	if (cri->cri_next != NULL || cri->cri_alg != CRYPTO_AES_CBC)
-		return (EINVAL);
-	/* Initial version doesn't work for 192/256 */
-	if (cri->cri_klen != 128)
-		return (EINVAL);
-	if (sc->sc_sessions == NULL) {
-		ses = sc->sc_sessions = (struct viac3_session *)malloc(
-		    sizeof(*ses), M_DEVBUF, M_NOWAIT);
-		if (ses == NULL)
-			return (ENOMEM);
-		sesn = 0;
-		sc->sc_nsessions = 1;
-	} else {
-		for (sesn = 0; sesn < sc->sc_nsessions; sesn++) {
-			if (sc->sc_sessions[sesn].ses_used == 0) {
-				ses = &sc->sc_sessions[sesn];
-				break;
-			}
-		}
-
-		if (ses == NULL) {
-			sesn = sc->sc_nsessions;
-			ses = (struct viac3_session *)malloc((sesn + 1) *
-			    sizeof(*ses), M_DEVBUF, M_NOWAIT);
-			if (ses == NULL)
-				return (ENOMEM);
-			bcopy(sc->sc_sessions, ses, sesn * sizeof(*ses));
-			bzero(sc->sc_sessions, sesn * sizeof(*ses));
-			free(sc->sc_sessions, M_DEVBUF);
-			sc->sc_sessions = ses;
-			ses = &sc->sc_sessions[sesn];
-			sc->sc_nsessions++;
-		}
-	}
-
-	bzero(ses, sizeof(*ses));
-	ses->ses_used = 1;
-
-	get_random_bytes(ses->ses_iv, sizeof(ses->ses_iv));
-	ses->ses_klen = cri->cri_klen;
-	bcopy(cri->cri_key, cri->cri_key, ses->ses_klen / 8);
-
-	*sidp = VIAC3_SID(0, sesn);
-	return (0);
-}
-
-int
-viac3_crypto_freesession(u_int64_t tid)
-{
-	struct viac3_softc *sc = vc3_sc;
-	int sesn;
-	u_int32_t sid = ((u_int32_t)tid) & 0xffffffff;
-
-	if (sc == NULL)
-		return (EINVAL);
-	sesn = VIAC3_SESSION(sid);
-	if (sesn >= sc->sc_nsessions)
-		return (EINVAL);
-	bzero(&sc->sc_sessions[sesn], sizeof(sc->sc_sessions[sesn]));
-	return (0);
-}
-
-int
-viac3_crypto_process(struct cryptop *crp)
-{
-	struct viac3_softc *sc = vc3_sc;
-	int sesn, err = 0;
-	struct cryptodesc *crd;
-	struct viac3_session *ses;
-
-	if (crp == NULL || crp->crp_callback == NULL) {
-		err = EINVAL;
-		goto out;
-	}
-	sesn = VIAC3_SESSION(crp->crp_sid);
-	if (sesn >= sc->sc_nsessions) {
-		err = EINVAL;
-		goto out;
-	}
-	ses = &sc->sc_sessions[sesn];
-
-	crd = crp->crp_desc;
-	if (crd == NULL || crd->crd_next != NULL ||
-	    crd->crd_alg != CRYPTO_AES_CBC || crd->crd_klen != 128) {
-		err = EINVAL;
-		goto out;
-	}
-
-	bcopy(crd->crd_key, sc->op_key, crd->crd_klen / 8);
-
-	if ((crd->crd_len % 16) != 0) {
-		err = EINVAL;
-		goto out;
-	}
-
-	sc->op_buf = (char *)malloc(crd->crd_len, M_DEVBUF, M_NOWAIT);
-	if (sc->op_buf == NULL) {
-		err = ENOMEM;
-		goto out;
-	}
-
-	sc->op_cw[0] = C3_CRYPT_CWLO_ALG_AES | C3_CRYPT_CWLO_KEYGEN_HW |
-	    C3_CRYPT_CWLO_NORMAL | C3_CRYPT_CWLO_KEY128;
-	sc->op_cw[1] = sc->op_cw[2] = sc->op_cw[3] = 0;
-	if (crd->crd_flags & CRD_F_ENCRYPT) {
-		sc->op_cw[0] |= C3_CRYPT_CWLO_ENCRYPT;
-		if (crd->crd_flags & CRD_F_IV_EXPLICIT)
-			bcopy(crd->crd_iv, sc->op_iv, 16);
-		else
-			bcopy(ses->ses_iv, sc->op_iv, 16);
-
-		if ((crd->crd_flags & CRD_F_IV_PRESENT) == 0) {
-			if (crp->crp_flags & CRYPTO_F_IMBUF)
-				m_copyback((struct mbuf *)crp->crp_buf,
-				    crd->crd_inject, 16, sc->op_iv);
-			else if (crp->crp_flags & CRYPTO_F_IOV)
-				cuio_copyback((struct uio *)crp->crp_buf,
-				    crd->crd_inject, 16, sc->op_iv);
-			else
-				bcopy(sc->op_iv,
-				    crp->crp_buf + crd->crd_inject, 16);
-		}
-	} else {
-		sc->op_cw[0] |= C3_CRYPT_CWLO_DECRYPT;
-		if (crd->crd_flags & CRD_F_IV_EXPLICIT)
-			bcopy(crd->crd_iv, sc->op_iv, 16);
-		else {
-			if (crp->crp_flags & CRYPTO_F_IMBUF)
-				m_copydata((struct mbuf *)crp->crp_buf,
-				    crd->crd_inject, 16, sc->op_iv);
-			else if (crp->crp_flags & CRYPTO_F_IOV)
-				cuio_copydata((struct uio *)crp->crp_buf,
-				    crd->crd_inject, 16, sc->op_iv);
-			else
-				bcopy(crp->crp_buf + crd->crd_inject,
-				    sc->op_iv, 16);
-		}
-	}
-
-	if (crp->crp_flags & CRYPTO_F_IMBUF)
-		m_copydata((struct mbuf *)crp->crp_buf,
-		    crd->crd_skip, crd->crd_len, sc->op_buf);
-	else if (crp->crp_flags & CRYPTO_F_IOV)
-		cuio_copydata((struct uio *)crp->crp_buf,
-		    crd->crd_skip, crd->crd_len, sc->op_buf);
-	else
-		bcopy(crp->crp_buf + crd->crd_skip, sc->op_buf, crd->crd_len);
-
-	viac3_crypto(&sc->op_cw, sc->op_buf, sc->op_buf, sc->op_key,
-	    crd->crd_len / 16, sc->op_iv, VIAC3_CRYPTOP_CBC);
-
-	if (crp->crp_flags & CRYPTO_F_IMBUF)
-		m_copyback((struct mbuf *)crp->crp_buf,
-		    crd->crd_skip, crd->crd_len, sc->op_buf);
-	else if (crp->crp_flags & CRYPTO_F_IOV)
-		cuio_copyback((struct uio *)crp->crp_buf,
-		    crd->crd_skip, crd->crd_len, sc->op_buf);
-	else
-		bcopy(sc->op_buf, crp->crp_buf + crd->crd_skip, crd->crd_len);
-
-	/* copy out last block for use as next session IV */
-	if (crd->crd_flags & CRD_F_ENCRYPT) {
-		if (crp->crp_flags & CRYPTO_F_IMBUF)
-			m_copydata((struct mbuf *)crp->crp_buf,
-			    crd->crd_skip + crd->crd_len - 16, 16, ses->ses_iv);
-		else if (crp->crp_flags & CRYPTO_F_IOV)
-			cuio_copydata((struct uio *)crp->crp_buf,
-			    crd->crd_skip + crd->crd_len - 16, 16, sc->op_iv);
-		else
-			bcopy(crp->crp_buf + crd->crd_skip + crd->crd_len - 16,
-			    sc->op_iv, 16);
-	}
-
-out:
-	if (sc->op_buf != NULL) {
-		free(sc->op_buf, M_DEVBUF);
-		sc->op_buf = NULL;
-	}
-	crp->crp_etype = err;
-	crypto_done(crp);
-	return (err);
-}
-
-void
-viac3_crypto(void *cw, void *src, void *dst, void *key, int rep,
-    void *iv, int type)
-{
-	unsigned int creg0;
-
-	creg0 = rcr0();		/* Permit access to SIMD/FPU path */
-	lcr0(creg0 & ~(CR0_EM|CR0_TS));
-
-	/* Do the deed */
-	switch (type) {
-	case VIAC3_CRYPTOP_RNG:
-		__asm __volatile("rep xstore-rng" :
-		    : "a" (iv), "b" (key), "c" (rep), "d" (cw), "S" (src), "D" (dst)
-		    : "memory", "cc");
-		break;
-	case VIAC3_CRYPTOP_ECB:
-		__asm __volatile("pushfl; popfl");
-		__asm __volatile("rep xcrypt-ecb" :
-		    : "a" (iv), "b" (key), "c" (rep), "d" (cw), "S" (src), "D" (dst)
-		    : "memory", "cc");
-		break;
-	case VIAC3_CRYPTOP_CBC:
-		__asm __volatile("pushfl; popfl");
-		__asm __volatile("rep xcrypt-cbc" :
-		    : "a" (iv), "b" (key), "c" (rep), "d" (cw), "S" (src), "D" (dst)
-		    : "memory", "cc");
-		break;
-	case VIAC3_CRYPTOP_CFB:
-		__asm __volatile("pushfl; popfl");
-		__asm __volatile("rep xcrypt-cfb" :
-		    : "a" (iv), "b" (key), "c" (rep), "d" (cw), "S" (src), "D" (dst)
-		    : "memory", "cc");
-		break;
-	case VIAC3_CRYPTOP_OFB:
-		__asm __volatile("pushfl; popfl");
-		__asm __volatile("rep xcrypt-ofb" :
-		    : "a" (iv), "b" (key), "c" (rep), "d" (cw), "S" (src), "D" (dst)
-		    : "memory", "cc");
-		break;
-	}
-
-	lcr0(creg0);
-}
-
-#endif /* CRYPTO */
-
-#endif /* defined(I686_CPU) */
 
 void
 cyrix3_cpu_setup(cpu_device, model, step)
@@ -1534,6 +1187,8 @@ cyrix3_cpu_setup(cpu_device, model, step)
 		if (val & 0x44)
 			printf("%s:", cpu_device);
 		if (val & 0x4) {
+			extern int viac3_rnd_present;
+
 			if (!(val & 0x8)) {
 				u_int64_t msreg;
 
@@ -1545,9 +1200,11 @@ cyrix3_cpu_setup(cpu_device, model, step)
 			printf(" RNG");
 		}
 
-#ifdef CRYPTO
 		/* Enable AES engine if present and disabled */
 		if (val & 0x40) {
+#ifdef CRYPTO
+			extern int viac3_crypto_present;
+
 			if (!(val & 0x80)) {
 				u_int64_t msreg;
 
@@ -1556,9 +1213,9 @@ cyrix3_cpu_setup(cpu_device, model, step)
 				wrmsr(0x1107, msreg);
 			}
 			viac3_crypto_present = 1;
+#endif /* CRYPTO */
 			printf(" AES");
 		}
-#endif /* CRYPTO */
 
 		printf("\n");
 		break;
@@ -1597,6 +1254,7 @@ cyrix6x86_cpu_setup(cpu_device, model, step)
 		/* Unset the TSC bit until calibrate_delay() gets fixed. */
 		clock_broken_latch = 1;
 		curcpu()->ci_feature_flags &= ~CPUID_TSC;
+		printf("%s: TSC disabled\n", cpu_device);
 		break;
 	}
 #endif
@@ -1627,6 +1285,7 @@ natsem6x86_cpu_setup(cpu_device, model, step)
 	switch (model) {
 	case 4:
 		cpu_feature &= ~CPUID_TSC;
+		printf("%s: TSC disabled\n", cpu_device);
 		break;
 	}
 	cpuresetfn = natsem6x86_cpureset;
@@ -1666,6 +1325,12 @@ amd_family5_setup(cpu_device, model, step)
 		 * XXX the pmap somehow.  How does the MP branch do this?
 		 */
 		break;
+	case 12:
+	case 13:
+#ifndef SMALL_KERNEL
+		k6_powernow_init();
+#endif
+		break;
 	}
 }
 
@@ -1674,7 +1339,7 @@ amd_family6_setup(cpu_device, model, step)
 	const char *cpu_device;
 	int model, step;
 {
-#if !defined(SMALL_KERNEL) && defined (I686_CPU)
+#if !defined(SMALL_KERNEL) && defined(I686_CPU)
 	extern void (*pagezero)(void *, size_t);
 	extern void sse2_pagezero(void *, size_t);
 	extern void i686_pagezero(void *, size_t);
@@ -1687,14 +1352,47 @@ amd_family6_setup(cpu_device, model, step)
 }
 
 void
-intel686_cpu_setup(cpu_device, model, step)
-	const char *cpu_device;
-	int model, step;
+intel686_common_cpu_setup(const char *cpu_device, int model, int step)
+{
+	/*
+	 * Make sure SYSENTER is disabled.
+	 */
+	if (cpu_feature & CPUID_SEP)
+		wrmsr(MSR_SYSENTER_CS, 0);
+
+#if !defined(SMALL_KERNEL) && defined(I686_CPU)
+	if (cpu_ecxfeature & CPUIDECX_EST) {
+		if (rdmsr(MSR_MISC_ENABLE) & (1 << 16))
+			est_init(cpu_device);
+		else
+			printf("%s: Enhanced SpeedStep disabled by BIOS\n",
+			    cpu_device);
+	} else if ((cpu_feature & (CPUID_ACPI | CPUID_TM)) ==
+	    (CPUID_ACPI | CPUID_TM))
+		p4tcc_init(model, step);
+
+	{
+	extern void (*pagezero)(void *, size_t);
+	extern void sse2_pagezero(void *, size_t);
+	extern void i686_pagezero(void *, size_t);
+
+	if (cpu_feature & CPUID_SSE2)
+		pagezero = sse2_pagezero;
+	else
+		pagezero = i686_pagezero;
+	}
+#endif
+}
+
+void
+intel686_cpu_setup(const char *cpu_device, int model, int step)
 {
         struct cpu_info *ci = curcpu();
   	/* XXX SMP int model = (ci->ci_signature >> 4) & 15; */
 	/* XXX SMP int step = ci->ci_signature & 15; */
 	u_quad_t msr119;
+
+	intel686_common_cpu_setup(cpu_device, model, step);
 
 	/*
 	 * Original PPro returns SYSCALL in CPUID but is non-functional.
@@ -1702,12 +1400,6 @@ intel686_cpu_setup(cpu_device, model, step)
 	 */
 	if ((model == 1) && (step < 3))
 		ci->ci_feature_flags &= ~CPUID_SEP;
-
-	/*
-	 * Make sure SYSENTER is disabled.
-	 */
-	if (cpu_feature & CPUID_SEP)
-		wrmsr(MSR_SYSENTER_CS, 0);
 
 	/*
 	 * Disable the Pentium3 serial number.
@@ -1722,27 +1414,17 @@ intel686_cpu_setup(cpu_device, model, step)
 		ci->ci_feature_flags &= ~CPUID_SER;
 		ci->ci_level = 2;
 	}
-#if !defined(SMALL_KERNEL) && defined (I686_CPU)
-	if (cpu_ecxfeature & CPUIDECX_EST) {
-		if (rdmsr(MSR_MISC_ENABLE) & (1 << 16))
-			est_init(cpu_device);
-		else
-			 printf("%s: Enhanced SpeedStep disabled by BIOS\n",
-			     cpu_device);
-	} else if ((cpu_feature & (CPUID_ACPI | CPUID_TM)) ==
-	    (CPUID_ACPI | CPUID_TM))
-		p4tcc_init(model, step);
+}
 
-	{
-	extern void (*pagezero)(void *, size_t);
-	extern void sse2_pagezero(void *, size_t);
-	extern void i686_pagezero(void *, size_t);
+void
+intel686_p4_cpu_setup(const char *cpu_device, int model, int step)
+{
+	intel686_common_cpu_setup(cpu_device, model, step);
 
-	if (cpu_feature & CPUID_SSE2)
-		pagezero = sse2_pagezero;
-	else
-		pagezero = i686_pagezero;
-	pagezero = bzero;
+#if !defined(SMALL_KERNEL) && defined(I686_CPU)
+	if (cpu_cpuspeed == NULL) {
+		p4_model = model;
+		cpu_cpuspeed = p4_cpuspeed;
 	}
 #endif
 }
@@ -1752,7 +1434,7 @@ tm86_cpu_setup(cpu_device, model, step)
 	const char *cpu_device;
 	int model, step;
 {
-#if !defined(SMALL_KERNEL) && defined (I586_CPU)
+#if !defined(SMALL_KERNEL) && defined(I586_CPU)
 	longrun_init();
 #endif
 }
@@ -2278,6 +1960,13 @@ old_identifycpu()
 	if (cpu_setup != NULL)
 		cpu_setup(cpu_device, model, step);
 
+#ifndef SMALL_KERNEL
+#if defined(I586_CPU) || defined(I686_CPU)
+	if (cpu_cpuspeed == NULL && pentium_mhz != 0)
+		cpu_cpuspeed = pentium_cpuspeed;
+#endif
+#endif
+
 	cpu_class = class;
 
 	/*
@@ -2368,6 +2057,59 @@ old_identifycpu()
 #endif /* I686_CPU */
 
 }
+
+#ifndef SMALL_KERNEL
+#ifdef I686_CPU
+int
+p4_cpuspeed(int *freq)
+{
+	u_int64_t msr;
+	int bus, mult;
+
+	msr = rdmsr(MSR_EBC_FREQUENCY_ID);
+	if (p4_model < 2) {
+		bus = (msr >> 21) & 0x7;
+		switch (bus) {
+		case 0:
+			bus = 100;
+			break;
+		case 1:
+			bus = 133;
+			break;
+		}
+	} else {
+		bus = (msr >> 16) & 0x7;
+		switch (bus) {
+		case 0:
+			bus = 100;
+			break;
+		case 1:
+			bus = 133;
+			break;
+		case 2:
+			bus = 200;
+			break;
+		}
+	}
+	mult = ((msr >> 24) & 0xff);
+	*freq = bus * mult;
+	/* 133MHz actually means 133.(3)MHz */
+	if (bus == 133)
+		*freq += mult / 3;
+
+	return (0);
+}
+#endif	/* I686_CPU */
+
+#if defined(I586_CPU) || defined(I686_CPU)
+int
+pentium_cpuspeed(int *freq)
+{
+	*freq = pentium_mhz;
+	return (0);
+}
+#endif
+#endif	/* !SMALL_KERNEL */
 
 #ifdef COMPAT_IBCS2
 void ibcs2_sendsig(sig_t, int, int, u_long, int, union sigval);
@@ -2591,7 +2333,12 @@ boot(howto)
 	int howto;
 {
 	if (cold) {
-		howto |= RB_HALT;
+		/*
+		 * If the system is cold, just halt, unless the user
+		 * explicitly asked for reboot.
+		 */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
 		goto haltsys;
 	}
 
@@ -3755,6 +3502,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	u_long pa, endpa;
 	vaddr_t va;
 	pt_entry_t *pte;
+	bus_size_t map_size;
 #ifdef MULTIPROCESSOR
 	u_int32_t cpumask = 0;
 #endif
@@ -3763,17 +3511,20 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	endpa = i386_round_page(bpa + size);
 
 #ifdef DIAGNOSTIC
-	if (endpa <= pa)
+	if (endpa <= pa && endpa != 0)
 		panic("bus_mem_add_mapping: overflow");
 #endif
 
-	va = uvm_km_valloc(kernel_map, endpa - pa);
+	map_size = endpa - pa;
+
+	va = uvm_km_valloc(kernel_map, map_size);
 	if (va == 0)
 		return (ENOMEM);
 
 	*bshp = (bus_space_handle_t)(va + (bpa & PGOFSET));
 
-	for (; pa < endpa; pa += PAGE_SIZE, va += PAGE_SIZE) {
+	for (; map_size > 0;
+	    pa += PAGE_SIZE, va += PAGE_SIZE, map_size -= PAGE_SIZE) {
 		pmap_kenter_pa(va, pa, VM_PROT_READ | VM_PROT_WRITE);
 
 		/*
@@ -3849,6 +3600,47 @@ ok:
 		printf("bus_space_unmap: %s 0x%lx, size 0x%lx\n",
 		    (t == I386_BUS_SPACE_IO) ? "port" : "pa", bpa, size);
 		printf("bus_space_unmap: can't free region\n");
+	}
+}
+
+void
+_bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size,
+    bus_addr_t *adrp)
+{
+	u_long va, endva;
+	bus_addr_t bpa;
+
+	/*
+	 * Find the correct bus physical address.
+	 */
+	if (t == I386_BUS_SPACE_IO) {
+		bpa = bsh;
+	} else if (t == I386_BUS_SPACE_MEM) {
+		bpa = (bus_addr_t)ISA_PHYSADDR(bsh);
+		if (IOM_BEGIN <= bpa && bpa <= IOM_END)
+			goto ok;
+
+		va = i386_trunc_page(bsh);
+		endva = i386_round_page(bsh + size);
+
+#ifdef DIAGNOSTIC
+		if (endva <= va)
+			panic("_bus_space_unmap: overflow");
+#endif
+
+		(void) pmap_extract(pmap_kernel(), va, &bpa);
+		bpa += (bsh & PGOFSET);
+
+		/*
+		 * Free the kernel virtual mapping.
+		 */
+		uvm_km_free(kernel_map, va, endva - va);
+	} else
+		panic("bus_space_unmap: bad bus space tag");
+
+ok:
+	if (adrp != NULL) {
+		*adrp = bpa;
 	}
 }
 
@@ -4512,5 +4304,58 @@ i386_softintunlock(void)
 }
 #endif
 
-/* If SMALL_KERNEL this results in an out of line definition of splx.  */
-SPLX_OUTLINED_BODY
+#if 0
+/*
+ * Software interrupt registration
+ *
+ * We hand-code this to ensure that it's atomic.
+ */
+void
+softintr(mask)
+	int mask;
+{
+	__asm __volatile("orl %1, %0" : "=m"(ipending) : "ir" (mask));
+
+}
+
+/*
+ * Raise current interrupt priority level, and return the old one.
+ */
+int
+splraise(ncpl)
+	int ncpl;
+{
+	int ocpl = cpl;
+
+	if (ncpl > ocpl)
+		cpl = ncpl;
+	return (ocpl);
+}
+
+/*
+ * Restore an old interrupt priority level.  If any thereby unmasked
+ * interrupts are pending, call Xspllower() to process them.
+ */
+void
+splx(ncpl)
+	int ncpl;
+{
+	cpl = ncpl;
+	if (ipending & IUNMASK(ncpl))
+		Xspllower();
+}
+
+/*
+ * Same as splx(), but we return the old value of spl, for the
+ * benefit of some splsoftclock() callers.
+ */
+int
+spllower(ncpl)
+	int ncpl;
+{
+	int ocpl = cpl;
+
+	splx(ncpl);
+	return (ocpl);
+}
+#endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.26.2.11 2004/02/19 10:57:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.26.2.12 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: nfs_vnops.c,v 1.62.4.1 1996/07/08 20:26:52 jtc Exp $	*/
 
 /*
@@ -45,10 +45,12 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #include <sys/resourcevar.h>
+#include <sys/poll.h>
 #include <sys/proc.h>
 #include <sys/mount.h>
 #include <sys/buf.h>
 #include <sys/malloc.h>
+#include <sys/pool.h>
 #include <sys/mbuf.h>
 #include <sys/conf.h>
 #include <sys/namei.h>
@@ -163,7 +165,7 @@ struct vnodeopv_entry_desc fifo_nfsv2nodeop_entries[] = {
 	{ &vop_write_desc, nfsfifo_write },	/* write */
 	{ &vop_fsync_desc, nfs_fsync },		/* fsync */
 	{ &vop_inactive_desc, nfs_inactive },	/* inactive */
-	{ &vop_reclaim_desc, nfs_reclaim },	/* reclaim */
+	{ &vop_reclaim_desc, nfsfifo_reclaim },	/* reclaim */
 	{ &vop_lock_desc, nfs_lock },		/* lock */
 	{ &vop_unlock_desc, nfs_unlock },	/* unlock */
 	{ &vop_print_desc, nfs_print },		/* print */
@@ -1204,7 +1206,7 @@ nfs_mknodrpc(dvp, vpp, cnp, vap)
 			cache_enter(dvp, newvp, cnp);
 		*vpp = newvp;
 	}
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VTONFS(dvp)->n_flag |= NMODIFIED;
 	if (!wccflag)
 		VTONFS(dvp)->n_attrstamp = 0;
@@ -1334,7 +1336,7 @@ again:
 			cache_enter(dvp, newvp, cnp);
 		*ap->a_vpp = newvp;
 	}
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VTONFS(dvp)->n_flag |= NMODIFIED;
 	if (!wccflag)
 		VTONFS(dvp)->n_attrstamp = 0;
@@ -1408,7 +1410,7 @@ nfs_remove(v)
 			error = 0;
 	} else if (!np->n_sillyrename)
 		error = nfs_sillyrename(dvp, vp, cnp);
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	np->n_attrstamp = 0;
 	vrele(dvp);
 	vrele(vp);
@@ -1611,11 +1613,10 @@ nfs_link(v)
 	caddr_t bpos, dpos, cp2;
 	int error = 0, wccflag = NFSV3_WCCRATTR, attrflag = 0;
 	struct mbuf *mreq, *mrep, *md, *mb, *mb2;
-	int v3 = NFS_ISV3(vp);
-
+	int v3;
 
 	if (dvp->v_mount != vp->v_mount) {
-		FREE(cnp->cn_pnbuf, M_NAMEI);
+		pool_put(&namei_pool, cnp->cn_pnbuf);
 		if (vp == dvp)
 			vrele(dvp);
 		else
@@ -1630,6 +1631,7 @@ nfs_link(v)
 	 */
 	VOP_FSYNC(vp, cnp->cn_cred, MNT_WAIT, cnp->cn_proc);
 
+	v3 = NFS_ISV3(vp);
 	nfsstats.rpccnt[NFSPROC_LINK]++;
 	nfsm_reqhead(vp, NFSPROC_LINK,
 		NFSX_FH(v3)*2 + NFSX_UNSIGNED + nfsm_rndup(cnp->cn_namelen));
@@ -1642,7 +1644,7 @@ nfs_link(v)
 		nfsm_wcc_data(dvp, wccflag);
 	}
 	nfsm_reqdone;
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VTONFS(dvp)->n_flag |= NMODIFIED;
 	if (!attrflag)
 		VTONFS(vp)->n_attrstamp = 0;
@@ -1711,7 +1713,7 @@ nfs_symlink(v)
 	nfsm_reqdone;
 	if (newvp)
 		vrele(newvp);
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VTONFS(dvp)->n_flag |= NMODIFIED;
 	if (!wccflag)
 		VTONFS(dvp)->n_attrstamp = 0;
@@ -1801,7 +1803,7 @@ nfs_mkdir(v)
 			vrele(newvp);
 	} else
 		*ap->a_vpp = newvp;
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	vrele(dvp);
 	return (error);
 }
@@ -1832,7 +1834,7 @@ nfs_rmdir(v)
 	if (dvp == vp) {
 		vrele(dvp);
 		vrele(dvp);
-		FREE(cnp->cn_pnbuf, M_NAMEI);
+		pool_put(&namei_pool, cnp->cn_pnbuf);
 		return (EINVAL);
 	}
 	nfsstats.rpccnt[NFSPROC_RMDIR]++;
@@ -1844,7 +1846,7 @@ nfs_rmdir(v)
 	if (v3)
 		nfsm_wcc_data(dvp, wccflag);
 	nfsm_reqdone;
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VTONFS(dvp)->n_flag |= NMODIFIED;
 	if (!wccflag)
 		VTONFS(dvp)->n_attrstamp = 0;
@@ -3064,6 +3066,23 @@ nfsspec_access(v)
 	    ap->a_cred));
 }
 
+/* ARGSUSED */
+int
+nfs_poll(v)
+        void *v;
+{
+	struct vop_poll_args /* {
+		struct vnode *a_vp;
+		int  a_events;
+		struct proc *a_p;
+	} */ *ap = v;
+
+	/*
+	 * We should really check to see if I/O is possible.
+	 */
+	return (ap->a_events & (POLLIN | POLLOUT | POLLRDNORM | POLLWRNORM));
+}
+
 /*
  * Read wrapper for special devices.
  */
@@ -3238,5 +3257,12 @@ nfsfifo_close(v)
 		}
 	}
 	return (VOCALL(fifo_vnodeop_p, VOFFSET(vop_close), ap));
+}
+
+int
+nfsfifo_reclaim(void *v)
+{
+	fifo_reclaim(v);
+	return (nfs_reclaim(v));
 }
 #endif /* ! FIFO */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.6 2004/02/19 10:51:29 niklas Exp $ */
+/*	$OpenBSD: src/sys/compat/linux/linux_dummy.c,v 1.4.4.7 2004/06/05 23:12:34 niklas Exp $ */
 
 /*-
  * Copyright (c) 1994-1995 Søren Schmidt
@@ -115,7 +115,6 @@ DUMMY(chown);			/* #212 */
 DUMMY(setfsgid);		/* #216 */
 DUMMY(pivot_root);		/* #217 */
 DUMMY(mincore);			/* #218 */
-DUMMY(madvise);			/* #219 */
 DUMMY(fadvise64);		/* #250 */
 
 #define DUMMY_XATTR(s)							\

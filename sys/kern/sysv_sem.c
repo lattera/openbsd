@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.3.8.7 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.3.8.8 2004/06/05 23:13:02 niklas Exp $	*/
 /*	$NetBSD: sysv_sem.c,v 1.26 1996/02/09 19:00:25 christos Exp $	*/
 
 /*
@@ -500,23 +500,23 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 	struct sys_semop_args /* {
 		syscallarg(int) semid;
 		syscallarg(struct sembuf *) sops;
-		syscallarg(u_int) nsops;
+		syscallarg(size_t) nsops;
 	} */ *uap = v;
 #define	NSOPS	8
 	struct sembuf sopbuf[NSOPS];
 	int semid = SCARG(uap, semid);
-	u_int nsops = SCARG(uap, nsops);
+	size_t nsops = SCARG(uap, nsops);
 	struct sembuf *sops;
 	struct semid_ds *semaptr;
 	struct sembuf *sopptr = NULL;
 	struct sem *semptr = NULL;
 	struct sem_undo *suptr = NULL;
 	struct ucred *cred = p->p_ucred;
-	u_int i, j;
+	size_t i, j;
 	int do_wakeup, do_undos, error;
 
-	DPRINTF(("call to semop(%d, %p, %u)\n", semid, SCARG(uap, sops),
-	    nsops));
+	DPRINTF(("call to semop(%d, %p, %lu)\n", semid, SCARG(uap, sops),
+	    (u_long)nsops));
 
 	semid = IPCID_TO_IX(semid);	/* Convert back to zero origin */
 
@@ -535,9 +535,9 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 	if (nsops == 0) {
 		*retval = 0;
 		return (0);
-	} else if (nsops > (u_int)seminfo.semopm) {
-		DPRINTF(("too many sops (max=%d, nsops=%u)\n", seminfo.semopm,
-		    nsops));
+	} else if (nsops > (size_t)seminfo.semopm) {
+		DPRINTF(("too many sops (max=%d, nsops=%lu)\n", seminfo.semopm,
+		    (u_long)nsops));
 		return (E2BIG);
 	}
 
@@ -643,12 +643,6 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 
 		suptr = NULL;	/* sem_undo may have been reallocated */
 
-		if (error != 0) {
-			error = EINTR;
-			goto done2;
-		}
-		DPRINTF(("semop:  good morning!\n"));
-
 		/*
 		 * Make sure that the semaphore still exists
 		 */
@@ -666,6 +660,17 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 			semptr->semzcnt--;
 		else
 			semptr->semncnt--;
+
+		/*
+		 * Is it really morning, or was our sleep interrupted?
+		 * (Delayed check of tsleep() return code because we
+		 * need to decrement sem[nz]cnt either way.)
+		 */
+		if (error != 0) {
+			error = EINTR;
+			goto done2;
+		}
+		DPRINTF(("semop:  good morning!\n"));
 	}
 
 done:
@@ -762,17 +767,13 @@ semexit(struct proc *p)
 	}
 
 	/*
-	 * No (i.e. we are in case 1 or 2).
-	 *
-	 * If there is no undo vector, skip to the end and unlock the
-	 * semaphore facility if necessary.
+	 * If there is no undo vector, skip to the end.
 	 */
 	if (suptr == NULL)
 		return;
 
 	/*
-	 * We are now in case 1 or 2, and we have an undo vector for this
-	 * process.
+	 * We now have an undo vector for this process.
 	 */
 	DPRINTF(("proc @%p has undo structure with %d entries\n", p,
 	    suptr->un_cnt));

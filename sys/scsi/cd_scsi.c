@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/Attic/cd_scsi.c,v 1.1.4.3 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/Attic/cd_scsi.c,v 1.1.4.4 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: cd_scsi.c,v 1.14 1998/08/31 22:28:06 cgd Exp $	*/
 
 /*-
@@ -53,10 +53,6 @@
  *
  * Ported to run under 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
  */
-
-#ifndef __OpenBSD__
-#include "rnd.h"
-#endif
 
 #include <sys/types.h>
 #include <sys/param.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2.2.1 2004/02/19 10:48:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/p4tcc.c,v 1.2.2.2 2004/06/05 23:09:00 niklas Exp $ */
 /*
  * Copyright (c) 2003 Ted Unangst
  * All rights reserved.
@@ -59,12 +59,13 @@ static struct {
 
 #define TCC_LEVELS sizeof(tcc) / sizeof(tcc[0])
 
-extern int (*cpu_cpuspeed)(void *, size_t *, void *, size_t);
-extern int (*cpu_setperf)(void *, size_t *, void *, size_t);
+extern int setperf_prio;
 
 void
 p4tcc_init(int model, int step)
 {
+	if (setperf_prio > 1)
+		return;
 
 	switch (step) {
 	case 0x22:	/* errata O50 P44 and Z21 */
@@ -88,13 +89,13 @@ p4tcc_init(int model, int step)
 	}
 
 	cpu_setperf = p4tcc_setperf;
-
+	setperf_prio = 1;
 }
 
 #if 0
 /* possible? not sure */
 int
-p4tcc_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+p4tcc_cpuspeed(int *)
 {
 
 	return EINVAL;
@@ -102,21 +103,10 @@ p4tcc_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
 #endif
 
 int
-p4tcc_setperf(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+p4tcc_setperf(int level)
 {
-	int i, error;
+	int i;
 	uint64_t msreg;
-	static uint level = 100;
-	uint olevel;
-
-	olevel = level;
-	if ((error = sysctl_int(oldp, oldlenp, newp, newlen, &level)))
-		return (error);
-	if (level == olevel)
-		return (0);
-
-	if (level > 100)
-		level = 100;
 
 	for (i = 0; i < TCC_LEVELS; i++) {
 		if (level >= tcc[i].level)

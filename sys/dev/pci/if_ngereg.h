@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ngereg.h,v 1.2.2.1 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_ngereg.h,v 1.2.2.2 2004/06/05 23:12:50 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -678,7 +678,6 @@ struct nge_softc {
 	bus_space_read_4(sc->nge_btag, sc->nge_bhandle, reg)
 
 #define NGE_TIMEOUT		1000
-#define ETHER_ALIGN		2
 #define NGE_RXLEN		1536
 #define NGE_MIN_FRAMELEN	60
 

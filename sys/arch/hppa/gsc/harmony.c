@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/harmony.c,v 1.17.4.3 2004/02/19 10:48:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/harmony.c,v 1.17.4.4 2004/06/05 23:10:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Jason L. Wright (jason@thought.net)
@@ -232,8 +232,8 @@ harmony_attach(parent, self, aux)
 	    offsetof(struct harmony_empty, playback[0][0]),
 	    PLAYBACK_EMPTYS * HARMONY_BUFSIZE, BUS_DMASYNC_PREWRITE);
 
-	(void)gsc_intr_establish((struct gsc_softc *)parent,
-	    IPL_AUDIO, ga->ga_irq, harmony_intr, sc, sc->sc_dv.dv_xname);
+	(void)gsc_intr_establish((struct gsc_softc *)parent, ga->ga_irq,
+	    IPL_AUDIO, harmony_intr, sc, sc->sc_dv.dv_xname);
 
 	/* set defaults */
 	sc->sc_in_port = HARMONY_IN_LINE;

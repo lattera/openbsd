@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/rgephy.c,v 1.1 2004/06/05 05:49:29 pvalchev Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/rgephy.c,v 1.1.2.1 2004/06/05 23:12:48 niklas Exp $	*/
 /*
  * Copyright (c) 2003
  *	Bill Paul <wpaul@windriver.com>.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/Attic/va-m88k.h,v 1.2 2004/05/19 21:40:30 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/include/Attic/va-m88k.h,v 1.2.2.1 2004/06/05 23:09:48 niklas Exp $	*/
 
 /* Define __gnuc_va_list.  */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.12 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.13 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -762,18 +762,18 @@ trapsignal(p, signum, code, type, sigval)
 	register struct sigacts *ps = p->p_sigacts;
 	int mask;
 
-#ifdef KTRACE
-	if (KTRPOINT(p, KTR_PSIG)) {
-		siginfo_t si;
-
-		initsiginfo(&si, signum, code, type, sigval);
-		ktrpsig(p, signum, ps->ps_sigact[signum],
-		    p->p_sigmask, code, &si);
-	}
-#endif
 	mask = sigmask(signum);
 	if ((p->p_flag & P_TRACED) == 0 && (p->p_sigcatch & mask) != 0 &&
 	    (p->p_sigmask & mask) == 0) {
+#ifdef KTRACE
+		if (KTRPOINT(p, KTR_PSIG)) {
+			siginfo_t si;
+
+			initsiginfo(&si, signum, code, type, sigval);
+			ktrpsig(p, signum, ps->ps_sigact[signum],
+			    p->p_sigmask, type, &si);
+		}
+#endif
 		p->p_stats->p_ru.ru_nsignals++;
 		(*p->p_emul->e_sendsig)(ps->ps_sigact[signum], signum,
 		    p->p_sigmask, code, type, sigval);
@@ -785,7 +785,10 @@ trapsignal(p, signum, code, type, sigval)
 			ps->ps_sigact[signum] = SIG_DFL;
 		}
 	} else {
+		ps->ps_sig = signum;
 		ps->ps_code = code;	/* XXX for core dump/debugger */
+		ps->ps_type = type;
+		ps->ps_sigval = sigval;
 		psignal(p, signum);
 	}
 }
@@ -1218,8 +1221,8 @@ postsig(signum)
 	sig_t action;
 	u_long code;
 	int mask, returnmask;
-	union sigval null_sigval;
-	int s;
+	union sigval sigval;
+	int s, type;
 
 #ifdef DIAGNOSTIC
 	if (signum == 0)
@@ -1231,21 +1234,26 @@ postsig(signum)
 	mask = sigmask(signum);
 	p->p_siglist &= ~mask;
 	action = ps->ps_sigact[signum];
+	sigval.sival_ptr = 0;
+	type = SI_USER;
 
 	if (ps->ps_sig != signum) {
 		code = 0;
+		type = SI_USER;
+		sigval.sival_ptr = 0;
 	} else {
 		code = ps->ps_code;
+		type = ps->ps_type;
+		sigval = ps->ps_sigval;
 	}
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_PSIG)) {
 		siginfo_t si;
 		
-		null_sigval.sival_ptr = 0;
-		initsiginfo(&si, signum, 0, SI_USER, null_sigval);
+		initsiginfo(&si, signum, code, type, sigval);
 		ktrpsig(p, signum, action, ps->ps_flags & SAS_OLDMASK ?
-		    ps->ps_oldmask : p->p_sigmask, code, &si);
+		    ps->ps_oldmask : p->p_sigmask, type, &si);
 	}
 #endif
 	if (action == SIG_DFL) {
@@ -1288,11 +1296,14 @@ postsig(signum)
 		splx(s);
 		p->p_stats->p_ru.ru_nsignals++;
 		if (ps->ps_sig == signum) {
+			ps->ps_sig = 0;
 			ps->ps_code = 0;
+			ps->ps_type = SI_USER;
+			ps->ps_sigval.sival_ptr = NULL;
 		}
-		null_sigval.sival_ptr = 0;
+
 		(*p->p_emul->e_sendsig)(action, signum, returnmask, code,
-		    SI_USER, null_sigval);
+		    type, sigval);
 	}
 
 	KERNEL_PROC_UNLOCK(p);

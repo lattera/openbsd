@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.6.8.6 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.6.8.7 2004/06/05 23:13:05 niklas Exp $	*/
 /*	$NetBSD: fifo.h,v 1.10 1996/02/09 22:40:15 christos Exp $	*/
 
 /*
@@ -64,8 +64,8 @@ int	fifo_kqfilter(void *);
 #define fifo_readdir	fifo_badop
 #define fifo_readlink	fifo_badop
 #define fifo_abortop	fifo_badop
-int fifo_inactive(void *);
-#define fifo_reclaim	nullop
+int	fifo_inactive(void *);
+int	fifo_reclaim(void *);
 #define fifo_lock       vop_generic_lock
 #define fifo_unlock     vop_generic_unlock
 int	fifo_bmap(void *);

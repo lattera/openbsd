@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/dev/isa/if_el.c,v 1.12.6.4 2003/03/28 00:38:15 niklas Exp $       */
+/*    $OpenBSD: src/sys/dev/isa/if_el.c,v 1.12.6.5 2004/06/05 23:12:45 niklas Exp $       */
 /*	$NetBSD: if_el.c,v 1.39 1996/05/12 23:52:32 mycroft Exp $	*/
 
 /*
@@ -44,7 +44,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/locore.S,v 1.3.2.1 2004/02/22 22:08:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/locore.S,v 1.3.2.2 2004/06/05 23:09:24 niklas Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 2003/04/26 19:34:45 fvdl Exp $	*/
 
 /*
@@ -124,8 +124,6 @@
 #include <sys/syscall.h>
 
 #include <machine/param.h>
-#include <machine/pte.h>
-#include <machine/pmap.h>
 #include <machine/segments.h>
 #include <machine/specialreg.h>
 #include <machine/trap.h>
@@ -145,12 +143,12 @@
 #include <machine/asm.h>
 
 #if defined(MULTIPROCESSOR)
-        
+
 #define SET_CURPROC(proc,cpu)			\
 	movq	CPUVAR(SELF),cpu	;	\
 	movq	proc,CPUVAR(CURPROC)      ;	\
 	movq	cpu,P_CPU(proc)
-        
+
 #else
 
 #define SET_CURPROC(proc,tcpu)		movq	proc,CPUVAR(CURPROC)
@@ -160,7 +158,7 @@
 
 #define GET_CURPCB(reg)			movq	CPUVAR(CURPCB),reg      
 #define SET_CURPCB(reg)			movq	reg,CPUVAR(CURPCB)
-        
+
 
 /* XXX temporary kluge; these should not be here */
 /* Get definitions for IOM_BEGIN, IOM_END, and IOM_SIZE */
@@ -191,9 +189,10 @@ _C_LABEL(lapic_isr):
 	.globl	_C_LABEL(cpu_id),_C_LABEL(cpu_vendor), _C_LABEL(cpu_brand_id)
 	.globl	_C_LABEL(cpuid_level),_C_LABEL(cpu_feature)
 	.globl	_C_LABEL(esym),_C_LABEL(boothowto),_C_LABEL(bootdev)
-	.globl	_C_LABEL(bootinfo),_C_LABEL(atdevbase)
+	.globl	_C_LABEL(bootinfo), _C_LABEL(bootinfo_size), _C_LABEL(atdevbase)
 	.globl	_C_LABEL(proc0paddr),_C_LABEL(PTDpaddr)
 	.globl	_C_LABEL(biosbasemem),_C_LABEL(biosextmem)
+	.globl	_C_LABEL(bootapiver)
 	.globl	_C_LABEL(gdtstore)
 _C_LABEL(cpu):		.long	0	# are we 386, 386sx, or 486,
 					#   or Pentium, or..
@@ -207,6 +206,7 @@ _C_LABEL(cpu_vendor):	.space	16	# vendor string returned by `cpuid'
 _C_LABEL(cpu_brand_id):	.long	0	# brand ID from 'cpuid' instruction
 _C_LABEL(esym):		.quad	0	# ptr to end of syms
 _C_LABEL(atdevbase):	.quad	0	# location of start of iomem in virtual
+_C_LABEL(bootapiver):	.long	0	# /boot API version
 _C_LABEL(proc0paddr):	.quad	0
 _C_LABEL(PTDpaddr):	.quad	0	# paddr of PTD, for libkvm
 #ifndef REALBASEMEM
@@ -248,7 +248,7 @@ tmpstk:
 
 /*
  * Some hackage to deal with 64bit symbols in 32 bit mode.
- * This may not be needed it things are cleaned up a little.
+ * This may not be needed if things are cleaned up a little.
  */
 
 
@@ -263,14 +263,14 @@ start:	movw	$0x1234,0x472			# warm boot
 
 	/*
 	 * Load parameters from stack
-	 * (howto, bootdev, bootapiver, esym, cnvmem, extmem, ac, av)
+	 * (howto, bootdev, bootapiver, esym, extmem, cnvmem, ac, av)
 	 */
 	movl	4(%esp),%eax
-	movl	%eax,RELOC(_C_LABEL(boothowto))
+	movl	%eax, RELOC(boothowto)
 	movl	8(%esp),%eax
-	movl	%eax,RELOC(_C_LABEL(bootdev))
+	movl	%eax, RELOC(bootdev)
 
-        movl    16(%esp), %eax
+	movl	16(%esp), %eax
 	testl   %eax,%eax
 	jz      1f
 	addl    $KERNBASE_LO,%eax
@@ -278,10 +278,34 @@ start:	movw	$0x1234,0x472			# warm boot
 	movl    %eax,(%ebp)
 	movl    $KERNBASE_HI,4(%ebp)
 1:
-        movl    20(%esp), %eax
+	movl	20(%esp), %eax
 	movl	%eax, RELOC(biosextmem)
-        movl    24(%esp), %eax
+	movl	24(%esp), %eax
 	movl	%eax, RELOC(biosbasemem)
+
+	movl	12(%esp), %eax
+	movl	%eax, RELOC(bootapiver)
+
+	/*
+	 * Copy the boot arguments to bootinfo[] in machdep.c.
+	 *
+	 * We are passed the size of bootinfo[] in bootinfo_size, and
+	 * we report how much data /boot passed us back in the same variable.
+	 *
+	 * machdep.c can then take action if bootinfo_size >= bootinfo[]
+	 * (which would meant that we may have been passed too much data).
+	 */
+ 	movl	28(%esp), %eax
+	movl	%eax, %ecx
+	cmpl	RELOC(bootinfo_size), %ecx	/* Too much? */
+	jnc	bi_size_ok
+	movl	RELOC(bootinfo_size), %ecx	/* Only copy this much */
+bi_size_ok:
+	movl	%eax, RELOC(bootinfo_size)	/* Report full amount */
+ 
+	movl	$RELOC(bootinfo), %edi		/* Destination */
+	movl	32(%esp), %esi			/* Source */
+	rep movsb				/* Copy this many bytes */
 
 	/* First, reset the PSL. */
 	pushl	$PSL_MBO
@@ -300,6 +324,11 @@ start:	movw	$0x1234,0x472			# warm boot
 	cpuid
 	movl	%eax,RELOC(cpu_id)
 	movl	%edx,RELOC(cpu_feature)
+
+	movl	$0x80000001, %eax
+	cpuid
+	andl	$CPUID_NXE, %edx	/* other bits may clash */
+	orl     %edx, RELOC(cpu_feature)
 
 	/* Brand ID is bits 0-7 of %ebx */
 	andl	$255,%ebx
@@ -602,7 +631,7 @@ NENTRY(sigcode)
 	movq	%rsp,%rdi
 	pushq	%rdi			/* fake return address */
 	movq	$SYS_sigreturn,%rax
-	syscall
+	int	$0x80
 	movq	$SYS_exit,%rax
 	syscall
 	.globl	_C_LABEL(esigcode)
@@ -1065,7 +1094,7 @@ IDTVEC(syscall)
 	movq	CPUVAR(CURPROC),%r14
 	movq	%rsp,P_MD_REGS(%r14)	# save pointer to frame
 	andl	$~MDP_IRET,P_MD_FLAGS(%r14)
-	call	*P_MD_SYSCALL(%r14)
+	call	_C_LABEL(syscall)
 1:	/* Check for ASTs on exit to user mode. */
 	cli
 	CHECK_ASTPENDING(%r11)
@@ -1162,7 +1191,7 @@ osyscall1:
 	sti
 	movq	CPUVAR(CURPROC),%rdx
 	movq	%rsp,P_MD_REGS(%rdx)	# save pointer to frame
-	call	*P_MD_SYSCALL(%rdx)
+	call	_C_LABEL(syscall)
 _C_LABEL(osyscall_return):
 2:	/* Check for ASTs on exit to user mode. */
 	cli

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6.4.6 2004/02/19 10:50:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/disksubr.c,v 1.6.4.7 2004/06/05 23:11:00 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.13 2000/12/17 22:39:18 pk Exp $ */
 
 /*
@@ -91,6 +91,8 @@ readdisklabel(dev, strat, lp, clp, spoofonly)
 	int error, i;
 
 	/* minimal requirements for archtypal disk label */
+	if (lp->d_secsize < DEV_BSIZE)
+		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
 		lp->d_secperunit = 0x1fffffff;
 	lp->d_npartitions = RAW_PART+1;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.11 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_sk.c,v 1.5.2.12 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -172,7 +172,8 @@ int sk_marv_miibus_readreg(struct device *, int, int);
 void sk_marv_miibus_writereg(struct device *, int, int, int);
 void sk_marv_miibus_statchg(struct device *);
 
-u_int32_t sk_calchash(caddr_t);
+u_int32_t sk_xmac_hash(caddr_t);
+u_int32_t sk_yukon_hash(caddr_t);
 void sk_setfilt(struct sk_if_softc *, caddr_t, int);
 void sk_setmulti(struct sk_if_softc *);
 void sk_tick(void *);
@@ -530,23 +531,26 @@ sk_marv_miibus_statchg(dev)
 		     SK_YU_READ_2(((struct sk_if_softc *)dev), YUKON_GPCR)));
 }
 
-#define SK_BITS		6
-#define SK_POLY	0xEDB88320
+#define XMAC_POLY	0xEDB88320
+#define GMAC_POLY	0x04C11DB7L
+#define HASH_BITS	6
+  
+u_int32_t
+sk_xmac_hash(caddr_t addr)
+{
+	u_int32_t crc;
+
+	crc = ether_crc32_le(addr, ETHER_ADDR_LEN);
+	return (~crc & ((1 << HASH_BITS) - 1));
+}
 
 u_int32_t
-sk_calchash(caddr_t addr)
+sk_yukon_hash(caddr_t addr)
 {
-	u_int32_t		idx, bit, data, crc;
+	u_int32_t crc;
 
-	/* Compute CRC for the address value. */
-	crc = 0xFFFFFFFF; /* initial value */
-
-	for (idx = 0; idx < 6; idx++) {
-		for (data = *addr++, bit = 0; bit < 8; bit++, data >>= 1)
-			crc = (crc >> 1) ^ (((crc ^ data) & 1) ? SK_POLY : 0);
-	}
-
-	return (~crc & ((1 << SK_BITS) - 1));
+	crc = ether_crc32_be(addr, ETHER_ADDR_LEN);
+	return (crc & ((1 << HASH_BITS) - 1));
 }
 
 void
@@ -613,7 +617,15 @@ allmulti:
 				i++;
 			}
 			else {
-				h = sk_calchash(enm->enm_addrlo);
+				switch(sc->sk_type) {
+				case SK_GENESIS:
+					h = sk_xmac_hash(enm->enm_addrlo);
+					break;
+					
+				case SK_YUKON:
+					h = sk_yukon_hash(enm->enm_addrlo);
+					break;
+				}
 				if (h < 32)
 					hashes[0] |= (1 << h);
 				else
@@ -746,11 +758,8 @@ sk_newbuf(struct sk_if_softc *sc_if, int i, struct mbuf *m,
 
 	if (m == NULL) {
 		MGETHDR(m_new, M_DONTWAIT, MT_DATA);
-		if (m_new == NULL) {
-			printf("%s: no memory for rx list -- "
-			    "packet dropped!\n", sc_if->sk_dev.dv_xname);
+		if (m_new == NULL)
 			return(ENOBUFS);
-		}
 
 		/* Allocate the jumbo buffer */
 		MCLGET(m_new, M_DONTWAIT);
@@ -1645,9 +1654,6 @@ sk_rxeof(struct sk_if_softc *sc_if)
 			    total_len + ETHER_ALIGN, 0, ifp, NULL);
 			sk_newbuf(sc_if, cur, m, dmamap);
 			if (m0 == NULL) {
-				printf("%s: no receive buffers "
-				    "available -- packet dropped!\n",
-				    sc_if->sk_dev.dv_xname);
 				ifp->if_ierrors++;
 				continue;
 			}
@@ -2299,12 +2305,9 @@ void sk_init_yukon(sc_if)
 		SK_YU_WRITE_2(sc_if, YUKON_SAL2 + i * 4, reg);
 	}
 
-	/* clear all Multicast filter hash registers */
+	/* Set multicast filter */
 	DPRINTFN(6, ("sk_init_yukon: 11\n"));
-	SK_YU_WRITE_2(sc_if, YUKON_MCAH1, 0);
-	SK_YU_WRITE_2(sc_if, YUKON_MCAH2, 0);
-	SK_YU_WRITE_2(sc_if, YUKON_MCAH3, 0);
-	SK_YU_WRITE_2(sc_if, YUKON_MCAH4, 0);
+	sk_setmulti(sc_if);
 
 	/* enable interrupt mask for counter overflows */
 	DPRINTFN(6, ("sk_init_yukon: 12\n"));

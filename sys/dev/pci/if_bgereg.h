@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/if_bgereg.h,v 1.2.4.4 2004/02/19 10:56:26 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_bgereg.h,v 1.2.4.5 2004/06/05 23:12:49 niklas Exp $ */
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2001
@@ -2036,8 +2036,6 @@ struct bge_gib {
  * boundary.
  */
 
-#define ETHER_ALIGN 2
-
 #define BGE_FRAMELEN		1518
 #define BGE_MAX_FRAMELEN	1536
 #define BGE_JUMBO_FRAMELEN	9018
@@ -2139,7 +2137,7 @@ struct bge_ring_data {
  * no attempt is made to allocate physically contiguous memory.
  * 
  */
-#ifdef __alpha__ /* XXX - should be conditional on pointer size */
+#ifdef __LP64__
 #define BGE_NTXSEG      30
 #else
 #define BGE_NTXSEG      31

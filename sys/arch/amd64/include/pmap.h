@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/pmap.h,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/pmap.h,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 2003/04/26 18:39:46 fvdl Exp $	*/
 
 /*
@@ -420,6 +420,8 @@ extern pd_entry_t *pdes[];
 #define pmap_phys_address(ppn)		ptob(ppn)
 #define pmap_valid_entry(E) 		((E) & PG_V) /* is PDE or PTE valid? */
 
+#define pmap_proc_iflush(p,va,len)	/* nothing */
+
 
 /*
  * prototypes
@@ -572,6 +574,7 @@ kvtopte(vaddr_t va)
 
 #define pmap_pte_set(p, n)		x86_atomic_testset_u64(p, n)
 #define pmap_pte_clearbits(p, b)	x86_atomic_clearbits_u64(p, b)
+#define pmap_pte_setbits(p, b)		x86_atomic_setbits_u64(p, b)
 #define pmap_cpu_has_pg_n()		(1)
 #define pmap_cpu_has_invlpg		(1)
 

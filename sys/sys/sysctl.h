@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.13 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.14 2004/06/05 23:13:10 niklas Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -179,7 +179,8 @@ struct ctlname {
 #define	KERN_WATCHDOG		64	/* node: watchdog */
 #define	KERN_EMUL		65	/* node: emuls */
 #define	KERN_PROC2		66	/* struct: process entries */
-#define	KERN_MAXID		67	/* number of valid kern ids */
+#define	KERN_MAXCLUSTERS	67	/* number of mclusters */
+#define	KERN_MAXID		68	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -249,6 +250,7 @@ struct ctlname {
  	{ "watchdog", CTLTYPE_NODE }, \
  	{ "emul", CTLTYPE_NODE }, \
  	{ "proc2", CTLTYPE_STRUCT }, \
+ 	{ "maxclusters", CTLTYPE_INT }, \
 }
 
 /*
@@ -636,6 +638,7 @@ typedef int (sysctlfn)(int *, u_int, void *, size_t *, void *, size_t, struct pr
 
 int sysctl_int(void *, size_t *, void *, size_t, int *);
 int sysctl_rdint(void *, size_t *, void *, int);
+int sysctl_int_arr(int **, int *, u_int, void *, size_t *, void *, size_t);
 int sysctl_quad(void *, size_t *, void *, size_t, int64_t *);
 int sysctl_rdquad(void *, size_t *, void *, int64_t);
 int sysctl_string(void *, size_t *, void *, size_t, char *, int);
@@ -684,8 +687,10 @@ int vfs_sysctl(int *, u_int, void *, size_t *, void *, size_t,
 int sysctl_sysvipc(int *, u_int, void *, size_t *);
 int sysctl_wdog(int *, u_int, void *, size_t *, void *, size_t);
 
-extern int (*cpu_cpuspeed)(void *, size_t *, void *, size_t);
-extern int (*cpu_setperf)(void *, size_t *, void *, size_t);
+extern int (*cpu_cpuspeed)(int *);
+extern int (*cpu_setperf)(int);
+
+int bpf_sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 void sysctl_init(void);
 

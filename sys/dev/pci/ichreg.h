@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ichreg.h,v 1.1 2004/02/19 21:35:56 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ichreg.h,v 1.1.4.1 2004/06/05 23:12:49 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.8 2004/02/19 10:57:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.6.2.9 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: nd6.c,v 1.280 2002/06/08 19:52:07 itojun Exp $	*/
 
 /*
@@ -1742,11 +1742,8 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 			    1)) != NULL)
 			{
 				rt->rt_refcnt--;
-				if (rt->rt_ifp != ifp) {
-					/* XXX: loop care? */
-					return nd6_output(ifp, origifp, m0,
-					    dst, rt);
-				}
+				if (rt->rt_ifp != ifp)
+					senderr(EHOSTUNREACH);
 			} else
 				senderr(EHOSTUNREACH);
 		}

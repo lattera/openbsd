@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.19.2.5 2003/03/28 00:06:54 niklas Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.19.2.6 2004/06/05 23:11:25 niklas Exp $ */
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -355,12 +355,10 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 				ipo->ipo_tdb->tdb_dst.sa.sa_len))
 				goto nomatchout;
 
-			if (!ipsp_aux_match(ipo->ipo_tdb->tdb_srcid,
-			    ipo->ipo_srcid, ipo->ipo_tdb->tdb_dstid,
-			    ipo->ipo_dstid, ipo->ipo_tdb->tdb_local_cred,
-			    ipo->ipo_local_cred, NULL, NULL,
-			    &ipo->ipo_tdb->tdb_filter, &ipo->ipo_addr,
-			    &ipo->ipo_tdb->tdb_filtermask, &ipo->ipo_mask))
+			if (!ipsp_aux_match(ipo->ipo_tdb,
+			    ipo->ipo_srcid, ipo->ipo_dstid,
+			    ipo->ipo_local_cred, NULL,
+			    &ipo->ipo_addr, &ipo->ipo_mask))
 				goto nomatchout;
 
 			/* Cached entry is good. */
@@ -966,12 +964,11 @@ ipsp_spd_inp(struct mbuf *m, int af, int hlen, int *error, int direction,
 			if (tdbp->tdb_sproto == inp->inp_ipo->ipo_sproto &&
 			    !bcmp(&tdbp->tdb_src, &inp->inp_ipo->ipo_dst,
 				SA_LEN(&tdbp->tdb_src.sa)) &&
-			    ipsp_aux_match(tdbp->tdb_srcid,
-				inp->inp_ipo->ipo_srcid, tdbp->tdb_dstid,
-				inp->inp_ipo->ipo_dstid, NULL, NULL,
-				NULL, NULL, &tdbp->tdb_filter,
+			    ipsp_aux_match(tdbp,
+				inp->inp_ipo->ipo_srcid, 
+				inp->inp_ipo->ipo_dstid,
+				NULL, NULL,
 				&inp->inp_ipo->ipo_addr,
-				&tdbp->tdb_filtermask,
 				&inp->inp_ipo->ipo_mask))
 				goto justreturn;
 			else {
@@ -992,11 +989,11 @@ ipsp_spd_inp(struct mbuf *m, int af, int hlen, int *error, int direction,
 			    tdbp->tdb_sproto == inp->inp_ipo->ipo_sproto &&
 			    !bcmp(&tdbp->tdb_src, &inp->inp_ipo->ipo_dst,
 				SA_LEN(&tdbp->tdb_src.sa)) &&
-			    ipsp_aux_match(tdbp->tdb_srcid,
-				inp->inp_ipo->ipo_srcid, tdbp->tdb_dstid,
-				inp->inp_ipo->ipo_dstid, NULL, NULL,
-				NULL, NULL, &tdbp->tdb_filter,
-				&inp->inp_ipo->ipo_addr, &tdbp->tdb_filtermask,
+			    ipsp_aux_match(tdbp,
+				inp->inp_ipo->ipo_srcid,
+				inp->inp_ipo->ipo_dstid,
+				NULL, NULL,
+				&inp->inp_ipo->ipo_addr,
 				&inp->inp_ipo->ipo_mask))
 				goto justreturn;
 

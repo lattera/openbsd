@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/cpu.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/cpu.h,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.34 2003/06/23 11:01:08 martin Exp $	*/
 
 /*
@@ -59,7 +59,8 @@
 #define	CPU_BOOTED_KERNEL	3	/* string: kernel we booted */
 #define	CPU_CONSDEV		4	/* struct: dev_t of our console */
 #define	CPU_POWERSAVE		5	/* int: use CPU powersave mode */
-#define	CPU_MAXID		6	/* number of valid machdep ids */
+#define	CPU_ALLOWAPERTURE	6	/* int: allow mmap of /dev/xf86 */
+#define	CPU_MAXID		7	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
@@ -68,6 +69,7 @@
 	{ "booted_kernel", CTLTYPE_STRING }, \
 	{ "console_device", CTLTYPE_STRUCT }, \
 	{ "powersave", CTLTYPE_INT }, \
+	{ "allowaperture", CTLTYPE_INT }, \
 }    
 
 #ifdef _KERNEL
@@ -264,8 +266,8 @@ extern int want_resched;	/* resched() was called */
  */
 
 struct device;
-void	cpu_attach	__P((struct device *));
-int	cpu_alloc_idlepcb	__P((struct cpu_info *));
+void	cpu_attach	(struct device *);
+int	cpu_alloc_idlepcb	(struct cpu_info *);
 #endif
 
 
@@ -274,24 +276,24 @@ int	cpu_alloc_idlepcb	__P((struct cpu_info *));
  */
 
 /* locore.S */
-void atomic_set_bit	__P((u_int *address, u_int setmask));
-void atomic_clear_bit	__P((u_int *address, u_int clearmask));
+void atomic_set_bit	(u_int *address, u_int setmask);
+void atomic_clear_bit	(u_int *address, u_int clearmask);
 
 /* cpuswitch.S */
 struct pcb;
-void	savectx		__P((struct pcb *pcb));
+void	savectx		(struct pcb *pcb);
 
 /* ast.c */
-void userret		__P((register struct proc *p));
+void userret (register struct proc *p, u_int32_t pc, quad_t ticks);
 
 /* machdep.h */
-void bootsync		__P((void));
+void bootsync		(void);
 
 /* fault.c */
-int badaddr_read	__P((void *, size_t, void *));
+int badaddr_read	(void *, size_t, void *);
 
 /* syscall.c */
-void swi_handler	__P((trapframe_t *));
+void swi_handler	(trapframe_t *);
 
 #endif	/* !_LOCORE */
 

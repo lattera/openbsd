@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/include/Attic/bootconfig.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/include/Attic/bootconfig.h,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: bootconfig.h,v 1.2 2001/06/21 22:08:28 chris Exp $	*/
 
 /*
@@ -67,7 +67,7 @@ extern BootConfig bootconfig;
 #define BOOTOPT_TYPE_HEXINT		4
 #define BOOTOPT_TYPE_MASK		7
 
-int get_bootconf_option __P((char *string, char *option, int type, void *result));
+int get_bootconf_option (char *string, char *option, int type, void *result);
 
 extern char *boot_args;
 extern char *boot_file;

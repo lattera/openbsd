@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_exec.c,v 1.6.2.2 2001/11/13 21:05:48 niklas Exp $	 */
+/*	$OpenBSD: src/sys/compat/netbsd/Attic/netbsd_exec.c,v 1.6.2.3 2004/06/05 23:12:34 niklas Exp $	 */
 /*	$NetBSD: svr4_exec.c,v 1.16 1995/10/14 20:24:20 christos Exp $	 */
 
 /*
@@ -58,7 +58,7 @@ extern struct sysent netbsd_sysent[];
 extern char *netbsd_syscallnames[];
 #endif
 
-struct emul emul_elf64_netbsd = {
+struct emul emul_netbsd_elf64 = {
 	"netbsd",
 	NULL,
 	netbsd_sendsig,
@@ -101,7 +101,7 @@ netbsd_elf64_probe(p, epp, itp, pos, os)
 			return (error);
 		free(bp, M_TEMP);
 	}
-	epp->ep_emul = &emul_elf64_netbsd;
+	epp->ep_emul = &emul_netbsd_elf64;
 	*pos = ELF64_NO_ADDR;
 	if (*os == OOS_NULL)
 		*os = OOS_NETBSD;

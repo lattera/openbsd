@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7.16.7 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/process_machdep.c,v 1.7.16.8 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.22 1996/05/03 19:42:25 christos Exp $	*/
 
 /*
@@ -221,7 +221,7 @@ process_read_fpregs(p, regs)
 			process_xmm_to_s87(&frame->sv_xmm, &s87);
 			memcpy(regs, &s87, sizeof(*regs));
  		} else
-			bcopy(frame, regs, sizeof(*frame));
+			bcopy(frame, regs, sizeof(*regs));
 	} else
 		bzero(regs, sizeof(*regs));
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2c/Attic/lm75reg.h,v 1.1 2004/05/23 18:12:37 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2c/Attic/lm75reg.h,v 1.1.2.1 2004/06/05 23:12:38 niklas Exp $	*/
 /*	$NetBSD: lm75reg.h,v 1.1 2003/09/30 00:35:31 thorpej Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.6 2004/02/19 10:51:30 niklas Exp $ */
+/*	$OpenBSD: src/sys/crypto/rijndael.c,v 1.6.4.7 2004/06/05 23:12:36 niklas Exp $ */
 
 /**
  * rijndael-alg-fst.c
@@ -31,7 +31,7 @@
 
 #include <crypto/rijndael.h>
 
-#define FULL_UNROLL
+#undef FULL_UNROLL
 
 /*
 Te0[x] = S [x].[02, 01, 01, 03];
@@ -723,7 +723,7 @@ static const u32 rcon[] = {
  *
  * @return	the number of rounds for the given cipher key size.
  */
-static int rijndaelKeySetupEnc(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits) {
+int rijndaelKeySetupEnc(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits) {
    	int i = 0;
 	u32 temp;
 
@@ -808,7 +808,7 @@ static int rijndaelKeySetupEnc(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int
  *
  * @return	the number of rounds for the given cipher key size.
  */
-static int
+int
 rijndaelKeySetupDec(u32 rk[/*4*(Nr + 1)*/], const u8 cipherKey[], int keyBits) {
 	int Nr, i, j;
 	u32 temp;

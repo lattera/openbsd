@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/Attic/ansi.h,v 1.4.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/Attic/ansi.h,v 1.4.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: ansi.h,v 1.4 2003/03/02 22:18:17 tshiozak Exp $	*/
 
 /*
@@ -48,20 +48,16 @@
  *	#undef	_BSD_SIZE_T_
  *	#endif
  */
-#ifdef __ELF__
-#define	_BSD_CLOCK_T_		unsigned int	/* clock() */
-#define	_BSD_PTRDIFF_T_		long int	/* ptr1 - ptr2 */
-#define	_BSD_SIZE_T_		unsigned long int /* sizeof() */
-#define	_BSD_SSIZE_T_		long int	/* byte count or error */
-#define	_BSD_TIME_T_		int		/* time() */
-#else
 #define	_BSD_CLOCK_T_		unsigned long	/* clock() */
 #define	_BSD_PTRDIFF_T_		int		/* ptr1 - ptr2 */
 #define	_BSD_SIZE_T_		unsigned int	/* sizeof() */
 #define	_BSD_SSIZE_T_		int		/* byte count or error */
-#define	_BSD_TIME_T_		long		/* time() */
-#endif
+#define	_BSD_TIME_T_		int		/* time() */
+#if defined(__GNUC__) && __GNUC__ >= 3
 #define	_BSD_VA_LIST_		__builtin_va_list	/* va_list */
+#else
+#define _BSD_VA_LIST_   char * 
+#endif
 #define	_BSD_CLOCKID_T_		int		/* clockid_t */
 #define	_BSD_TIMER_T_		int		/* timer_t */
 #define	_BSD_SUSECONDS_T_	int		/* suseconds_t */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.8 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.9 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: in6.h,v 1.83 2001/03/29 02:55:07 jinmei Exp $	*/
 
 /*
@@ -586,6 +586,51 @@ struct in6_pktinfo {
 	{ 0, 0 }, \
 	{ 0, 0 }, \
 	{ "maxfrags", CTLTYPE_INT }, \
+}
+
+#define IPV6CTL_VARS { \
+	NULL, \
+	&ip6_forwarding, \
+	&ip6_sendredirects, \
+	&ip6_defhlim, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	&ip6_maxfragpackets, \
+	NULL, \
+	NULL, \
+	&ip6_accept_rtadv, \
+	&ip6_keepfaith, \
+	&ip6_log_interval, \
+	&ip6_hdrnestlimit, \
+	&ip6_dad_count, \
+	&ip6_auto_flowlabel, \
+	&ip6_defmcasthlim, \
+	NULL, \
+	NULL, \
+	&ip6_use_deprecated, \
+	&ip6_rr_prune, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	&ip6_maxfrags, \
 }
 
 #endif /* !_XOPEN_SOURCE */

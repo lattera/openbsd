@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/be.c,v 1.3.4.6 2004/02/19 10:56:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/be.c,v 1.3.4.7 2004/06/05 23:12:57 niklas Exp $	*/
 /*	$NetBSD: be.c,v 1.26 2001/03/20 15:39:20 pk Exp $	*/
 
 /*-
@@ -97,7 +97,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/bus.h>

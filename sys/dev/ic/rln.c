@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/rln.c,v 1.7.2.4 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/rln.c,v 1.7.2.5 2004/06/05 23:12:43 niklas Exp $	*/
 /*
  * David Leonard <d@openbsd.org>, 1999. Public Domain.
  *
@@ -32,7 +32,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/bus.h>

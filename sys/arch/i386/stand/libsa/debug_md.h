@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug_md.h,v 1.4.10.1 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug_md.h,v 1.4.10.2 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -54,4 +54,3 @@
 #define DUMP_REGS	__asm("int $2")
 extern struct reg reg;
 #endif
-

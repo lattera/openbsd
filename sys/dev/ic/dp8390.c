@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.6 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.5.4.7 2004/06/05 23:12:41 niklas Exp $	*/
 /*	$NetBSD: dp8390.c,v 1.13 1998/07/05 06:49:11 jonathan Exp $	*/
 
 /*
@@ -45,7 +45,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/bus.h>

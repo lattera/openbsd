@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_audio.c,v 1.1.4.3 2003/05/13 19:35:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_audio.c,v 1.1.4.4 2004/06/05 23:12:54 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_audio.c,v 1.8 2000/10/31 13:09:56 roger Exp $ */
 /*
  * This is part of the Driver for Video Capture Cards (Frame grabbers)
@@ -9,7 +9,7 @@
  * bktr_audio : This deals with controlling the audio on TV cards,
  *                controlling the Audio Multiplexer (audio source selector).
  *                controlling any MSP34xx stereo audio decoders.
- *                controlling any DPL35xx dolby surroud sound audio decoders.    
+ *                controlling any DPL35xx dolby surround sound audio decoders.    
  *                initialising TDA98xx audio devices.
  *
  */

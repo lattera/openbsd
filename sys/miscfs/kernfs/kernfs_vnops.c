@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.10 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.11 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -589,7 +589,7 @@ kernfs_getattr(v)
 	char strbuf[KSTRING], *buf;
 
 
-	bzero((caddr_t) vap, sizeof(*vap));
+	bzero(vap, sizeof(*vap));
 	vattr_null(vap);
 	vap->va_uid = 0;
 	vap->va_gid = 0;
@@ -774,7 +774,7 @@ kernfs_readdir(v)
 
 	error = 0;
 	i = uio->uio_offset;
-	bzero((caddr_t)&d, UIO_MX);
+	bzero(&d, UIO_MX);
 	d.d_reclen = UIO_MX;
 
 	for (kt = &kern_targets[i];
@@ -796,7 +796,7 @@ kernfs_readdir(v)
 		bcopy(kt->kt_name, d.d_name, kt->kt_namlen + 1);
 		d.d_type = kt->kt_type;
 
-		if ((error = uiomove((caddr_t)&d, UIO_MX, uio)) != 0)
+		if ((error = uiomove(&d, UIO_MX, uio)) != 0)
 			break;
 	}
 

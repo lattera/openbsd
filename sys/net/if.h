@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.9 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.10 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: if.h,v 1.23 1996/05/07 02:40:27 thorpej Exp $	*/
 
 /*
@@ -141,6 +141,7 @@ struct	ifqueue {
 	int	ifq_len;
 	int	ifq_maxlen;
 	int	ifq_drops;
+	int	ifq_congestion;
 };
 
 /*
@@ -164,6 +165,11 @@ TAILQ_HEAD(ifnet_head, ifnet);		/* the actual queue head */
 #define	IFNAMSIZ	16
 #define	IF_NAMESIZE	IFNAMSIZ
 
+/*
+ * Length of interface description, including terminating '\0'.
+ */
+#define	IFDESCRSIZE	64
+
 struct ifnet {				/* and the entries */
 	void	*if_softc;		/* lower-level data for this if */
 	TAILQ_ENTRY(ifnet) if_list;	/* all struct ifnets are chained */
@@ -179,6 +185,7 @@ struct ifnet {				/* and the entries */
 	short	if_flags;		/* up/down, broadcast, etc. */
 	struct	if_data if_data;	/* stats and other data about if */
 	int	if_capabilities;	/* interface capabilities */
+	char	if_description[IFDESCRSIZE]; /* interface description */
 
 	/* procedure handles */
 					/* output routine (enqueue) */
@@ -256,6 +263,11 @@ struct ifnet {				/* and the entries */
 #define	IFCAP_VLAN_MTU		0x00000010	/* VLAN-compatible MTU */
 #define	IFCAP_VLAN_HWTAGGING	0x00000020	/* hardware VLAN tag support */
 #define	IFCAP_IPCOMP		0x00000040	/* can do IPcomp */
+#define	IFCAP_JUMBO_MTU		0x00000080	/* 9000 byte MTU supported */
+#define	IFCAP_CSUM_TCPv6	0x00000100	/* can do IPv6/TCP checksums */
+#define	IFCAP_CSUM_UDPv6	0x00000200	/* can do IPv6/UDP checksums */
+#define	IFCAP_CSUM_TCPv4_Rx	0x00000400	/* can do IPv4/TCP (Rx only) */
+#define	IFCAP_CSUM_UDPv4_Rx	0x00000800	/* can do IPv4/UDP (Rx only) */
 
 /*
  * Output queues (ifp->if_snd) and internetwork datagram level (pup level 1)
@@ -290,6 +302,30 @@ struct ifnet {				/* and the entries */
 		(ifq)->ifq_len--; \
 	} \
 }
+
+#define	IF_INPUT_ENQUEUE(ifq, m) {					\
+	if (IF_QFULL(ifq)) {						\
+		IF_DROP(ifq);						\
+		m_freem(m);						\
+		if (!ifq->ifq_congestion)				\
+			if_congestion(ifq);				\
+	} else {							\
+		if (m->m_next == NULL && (m->m_flags & M_PKTHDR)) {	\
+			if ((m->m_flags & M_CLUSTER) &&			\
+			    m->m_len <= (MHLEN &~ (sizeof(long) - 1))) {\
+				caddr_t data = m->m_data;		\
+				caddr_t ext_buf = m->m_ext.ext_buf;	\
+				m->m_data = m->m_pktdat;		\
+				MH_ALIGN(m, m->m_len);			\
+				bcopy(data, m->m_data, m->m_len);	\
+				pool_put(&mclpool, ext_buf);		\
+				m->m_flags &= ~(M_EXT|M_CLUSTER);	\
+			}						\
+		}							\
+		IF_ENQUEUE(ifq, m);					\
+	}								\
+}
+
 #define	IF_POLL(ifq, m)		((m) = (ifq)->ifq_head)
 #define	IF_PURGE(ifq)							\
 do {									\
@@ -613,6 +649,8 @@ void	if_clone_detach(struct if_clone *);
 
 int	if_clone_create(const char *);
 int	if_clone_destroy(const char *);
+
+void	if_congestion(struct ifqueue *);
 
 int	loioctl(struct ifnet *, u_long, caddr_t);
 void	loopattach(int);

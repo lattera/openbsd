@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5.2.5 2004/02/19 10:49:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5.2.6 2004/06/05 23:10:54 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -180,6 +180,7 @@ struct cdevsw cdevsw[] = {
         cdev_notdef(),                  /* 52 */ 
         cdev_notdef(),                  /* 53 */ 
 	cdev_disk_init(NRAID,raid),	/* 54: RAIDframe disk driver */
+	cdev_ptm_init(NPTY,ptm),	/* 55: pseudo-tty ptm device */
 };
 int nchrdev = sizeof cdevsw / sizeof cdevsw[0];
 

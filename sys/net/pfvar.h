@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.9 2004/02/19 10:57:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pfvar.h,v 1.28.2.10 2004/06/05 23:11:25 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -33,6 +33,7 @@
 #ifndef _NET_PFVAR_H_
 #define _NET_PFVAR_H_
 
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/tree.h>
@@ -69,7 +70,7 @@ enum	{ PFTM_TCP_FIRST_PACKET, PFTM_TCP_OPENING, PFTM_TCP_ESTABLISHED,
 	  PFTM_OTHER_FIRST_PACKET, PFTM_OTHER_SINGLE,
 	  PFTM_OTHER_MULTIPLE, PFTM_FRAG, PFTM_INTERVAL,
 	  PFTM_ADAPTIVE_START, PFTM_ADAPTIVE_END, PFTM_SRC_NODE,
-	  PFTM_MAX, PFTM_PURGE, PFTM_UNTIL_PACKET };
+	  PFTM_TS_DIFF, PFTM_MAX, PFTM_PURGE, PFTM_UNTIL_PACKET };
 enum	{ PF_NOPFROUTE, PF_FASTROUTE, PF_ROUTETO, PF_DUPTO, PF_REPLYTO };
 enum	{ PF_LIMIT_STATES, PF_LIMIT_SRC_NODES, PF_LIMIT_FRAGS, PF_LIMIT_MAX };
 #define PF_POOL_IDMASK		0x0f
@@ -444,6 +445,8 @@ union pf_rule_ptr {
 	u_int32_t		 nr;
 };
 
+#define	PF_ANCHOR_NAME_SIZE	 64
+
 struct pf_rule {
 	struct pf_rule_addr	 src;
 	struct pf_rule_addr	 dst;
@@ -463,8 +466,6 @@ struct pf_rule {
 	char			 ifname[IFNAMSIZ];
 	char			 qname[PF_QNAME_SIZE];
 	char			 pqname[PF_QNAME_SIZE];
-#define	PF_ANCHOR_NAME_SIZE	 16
-	char			 anchorname[PF_ANCHOR_NAME_SIZE];
 #define	PF_TAG_NAME_SIZE	 16
 	char			 tagname[PF_TAG_NAME_SIZE];
 	char			 match_tagname[PF_TAG_NAME_SIZE];
@@ -491,6 +492,7 @@ struct pf_rule {
 	u_int32_t		 pqid;
 	u_int32_t		 rt_listid;
 	u_int32_t		 nr;
+	u_int32_t		 prob;
 
 	u_int16_t		 return_icmp;
 	u_int16_t		 return_icmp6;
@@ -525,6 +527,8 @@ struct pf_rule {
 	u_int8_t		 rt;
 	u_int8_t		 return_ttl;
 	u_int8_t		 tos;
+	u_int8_t		 anchor_relative;
+	u_int8_t		 anchor_wildcard;
 };
 
 /* rule flags */
@@ -558,19 +562,29 @@ struct pf_src_node {
 	struct pfi_kif	*kif;
 	u_int32_t	 bytes;
 	u_int32_t	 packets;
-	u_int32_t        states;
+	u_int32_t	 states;
 	u_int32_t	 creation;
 	u_int32_t	 expire;
 	sa_family_t	 af;
 	u_int8_t	 ruletype;
 };
 
+#define PFSNODE_HIWAT		10000	/* default source node table size */
+
 struct pf_state_scrub {
+	struct timeval	pfss_last;	/* time received last packet	*/
+	u_int32_t	pfss_tsecr;	/* last echoed timestamp	*/
+	u_int32_t	pfss_tsval;	/* largest timestamp		*/
+	u_int32_t	pfss_tsval0;	/* original timestamp		*/
 	u_int16_t	pfss_flags;
-#define PFSS_TIMESTAMP	0x0001		/* modulate timestamp	*/
-	u_int8_t	pfss_ttl;	/* stashed TTL		*/
+#define PFSS_TIMESTAMP	0x0001		/* modulate timestamp		*/
+#define PFSS_PAWS	0x0010		/* stricter PAWS checks		*/
+#define PFSS_PAWS_IDLED	0x0020		/* was idle too long.  no PAWS	*/
+#define PFSS_DATA_TS	0x0040		/* timestamp on data packets	*/
+#define PFSS_DATA_NOTS	0x0080		/* no timestamp on data packets	*/
+	u_int8_t	pfss_ttl;	/* stashed TTL			*/
 	u_int8_t	pad;
-	u_int32_t	pfss_ts_mod;	/* timestamp modulation	*/
+	u_int32_t	pfss_ts_mod;	/* timestamp modulation		*/
 };
 
 struct pf_state_host {
@@ -590,6 +604,8 @@ struct pf_state_peer {
 	struct pf_state_scrub	*scrub;	/* state is scrubbed		*/
 };
 
+TAILQ_HEAD(pf_state_queue, pf_state);
+
 struct pf_state {
 	u_int64_t	 id;
 	union {
@@ -597,6 +613,7 @@ struct pf_state {
 			RB_ENTRY(pf_state)	 entry_lan_ext;
 			RB_ENTRY(pf_state)	 entry_ext_gwy;
 			RB_ENTRY(pf_state)	 entry_id;
+			TAILQ_ENTRY(pf_state)	 entry_updates;
 			struct pfi_kif		*kif;
 		} s;
 		char	 ifname[IFNAMSIZ];
@@ -615,9 +632,10 @@ struct pf_state {
 	struct pf_src_node	*nat_src_node;
 	u_int32_t	 creation;
 	u_int32_t	 expire;
+	u_int32_t	 pfsync_time;
 	u_int32_t	 packets[2];
 	u_int32_t	 bytes[2];
-	u_int32_t        creatorid;
+	u_int32_t	 creatorid;
 	sa_family_t	 af;
 	u_int8_t	 proto;
 	u_int8_t	 direction;
@@ -635,9 +653,6 @@ TAILQ_HEAD(pf_rulequeue, pf_rule);
 struct pf_anchor;
 
 struct pf_ruleset {
-	TAILQ_ENTRY(pf_ruleset)	 entries;
-#define PF_RULESET_NAME_SIZE	 16
-	char			 name[PF_RULESET_NAME_SIZE];
 	struct {
 		struct pf_rulequeue	 queues[2];
 		struct {
@@ -652,19 +667,22 @@ struct pf_ruleset {
 	int			 topen;
 };
 
-TAILQ_HEAD(pf_rulesetqueue, pf_ruleset);
-
+RB_HEAD(pf_anchor_global, pf_anchor);
+RB_HEAD(pf_anchor_node, pf_anchor);
 struct pf_anchor {
-	TAILQ_ENTRY(pf_anchor)	 entries;
+	RB_ENTRY(pf_anchor)	 entry_global;
+	RB_ENTRY(pf_anchor)	 entry_node;
+	struct pf_anchor	*parent;
+	struct pf_anchor_node	 children;
 	char			 name[PF_ANCHOR_NAME_SIZE];
-	struct pf_rulesetqueue	 rulesets;
-	int			 tables;
+	char			 path[MAXPATHLEN];
+	struct pf_ruleset	 ruleset;
+	int			 refcnt;	/* anchor rules */
 };
-
-TAILQ_HEAD(pf_anchorqueue, pf_anchor);
+RB_PROTOTYPE(pf_anchor_global, pf_anchor, entry_global, pf_anchor_compare);
+RB_PROTOTYPE(pf_anchor_node, pf_anchor, entry_node, pf_anchor_compare);
 
 #define PF_RESERVED_ANCHOR	"_pf"
-#define PF_INTERFACE_RULESET	"_if"
 
 #define PFR_TFLAG_PERSIST	0x00000001
 #define PFR_TFLAG_CONST		0x00000002
@@ -677,8 +695,7 @@ TAILQ_HEAD(pf_anchorqueue, pf_anchor);
 #define PFR_TFLAG_ALLMASK	0x0000003F
 
 struct pfr_table {
-	char			 pfrt_anchor[PF_ANCHOR_NAME_SIZE];
-	char			 pfrt_ruleset[PF_RULESET_NAME_SIZE];
+	char			 pfrt_anchor[MAXPATHLEN];
 	char			 pfrt_name[PF_TABLE_NAME_SIZE];
 	u_int32_t		 pfrt_flags;
 	u_int8_t		 pfrt_fback;
@@ -757,8 +774,8 @@ struct pfr_ktable {
 };
 #define pfrkt_t		pfrkt_ts.pfrts_t
 #define pfrkt_name	pfrkt_t.pfrt_name
-#define pfrkt_anchor    pfrkt_t.pfrt_anchor
-#define pfrkt_ruleset   pfrkt_t.pfrt_ruleset
+#define pfrkt_anchor	pfrkt_t.pfrt_anchor
+#define pfrkt_ruleset	pfrkt_t.pfrt_ruleset
 #define pfrkt_flags	pfrkt_t.pfrt_flags
 #define pfrkt_cnt	pfrkt_ts.pfrts_cnt
 #define pfrkt_refcnt	pfrkt_ts.pfrts_refcnt
@@ -778,8 +795,8 @@ RB_PROTOTYPE(pf_state_tree_ext_gwy, pf_state,
 
 struct pfi_if {
 	char				 pfif_name[IFNAMSIZ];
-        u_int64_t			 pfif_packets[2][2][2];
-        u_int64_t			 pfif_bytes[2][2][2];
+	u_int64_t			 pfif_packets[2][2][2];
+	u_int64_t			 pfif_bytes[2][2][2];
 	u_int64_t			 pfif_addcnt;
 	u_int64_t			 pfif_delcnt;
 	long				 pfif_tzero;
@@ -833,16 +850,19 @@ struct pf_pdesc {
 #endif /* INET6 */
 		void			*any;
 	} hdr;
-	struct pf_addr   baddr;         /* address before translation */
-	struct pf_addr   naddr;         /* address after translation */
+	struct pf_addr	 baddr;		/* address before translation */
+	struct pf_addr	 naddr;		/* address after translation */
 	struct pf_rule	*nat_rule;	/* nat/rdr rule applied to packet */
 	struct pf_addr	*src;
 	struct pf_addr	*dst;
+	struct ether_header
+			*eh;
 	u_int16_t	*ip_sum;
 	u_int32_t	 p_len;		/* total length of payload */
 	u_int16_t	 flags;		/* Let SCRUB trigger behavior in
 					 * state code. Easier than tags */
 #define PFDESC_TCP_NORM	0x0001		/* TCP shall be statefully scrubbed */
+#define PFDESC_IP_REAS	0x0002		/* IP frags would've been reassembled */
 	sa_family_t	 af;
 	u_int8_t	 proto;
 	u_int8_t	 tos;
@@ -859,7 +879,8 @@ struct pf_pdesc {
 #define PFRES_SHORT	3		/* Dropping short packet */
 #define PFRES_NORM	4		/* Dropping by normalizer */
 #define PFRES_MEMORY	5		/* Dropped due to lacking mem */
-#define PFRES_MAX	6		/* total+1 */
+#define PFRES_TS	6		/* Bad TCP Timestamp (RFC1323) */
+#define PFRES_MAX	7		/* total+1 */
 
 #define PFRES_NAMES { \
 	"match", \
@@ -868,6 +889,7 @@ struct pf_pdesc {
 	"short", \
 	"normalize", \
 	"memory", \
+	"bad-timestamp", \
 	NULL \
 }
 
@@ -1027,8 +1049,7 @@ struct pfioc_pooladdr {
 	u_int8_t		 r_action;
 	u_int8_t		 r_last;
 	u_int8_t		 af;
-	char			 anchor[PF_ANCHOR_NAME_SIZE];
-	char			 ruleset[PF_RULESET_NAME_SIZE];
+	char			 anchor[MAXPATHLEN];
 	struct pf_pooladdr	 addr;
 };
 
@@ -1037,8 +1058,8 @@ struct pfioc_rule {
 	u_int32_t	 ticket;
 	u_int32_t	 pool_ticket;
 	u_int32_t	 nr;
-	char		 anchor[PF_ANCHOR_NAME_SIZE];
-	char		 ruleset[PF_RULESET_NAME_SIZE];
+	char		 anchor[MAXPATHLEN];
+	char		 anchor_call[MAXPATHLEN];
 	struct pf_rule	 rule;
 };
 
@@ -1067,6 +1088,7 @@ struct pfioc_state_kill {
 	int			psk_proto;
 	struct pf_rule_addr	psk_src;
 	struct pf_rule_addr	psk_dst;
+	char			psk_ifname[IFNAMSIZ];
 };
 
 struct pfioc_states {
@@ -1118,15 +1140,10 @@ struct pfioc_qstats {
 	u_int8_t	 scheduler;
 };
 
-struct pfioc_anchor {
-	u_int32_t	 nr;
-	char		 name[PF_ANCHOR_NAME_SIZE];
-};
-
 struct pfioc_ruleset {
 	u_int32_t	 nr;
-	char		 anchor[PF_ANCHOR_NAME_SIZE];
-	char		 name[PF_RULESET_NAME_SIZE];
+	char		 path[MAXPATHLEN];
+	char		 name[PF_ANCHOR_NAME_SIZE];
 };
 
 #define PF_RULESET_ALTQ		(PF_RULESET_MAX)
@@ -1136,8 +1153,7 @@ struct pfioc_trans {
 	int		 esize; /* size of each element in bytes */
 	struct pfioc_trans_e {
 		int		rs_num;
-		char		anchor[PF_ANCHOR_NAME_SIZE];
-		char		ruleset[PF_RULESET_NAME_SIZE];
+		char		anchor[MAXPATHLEN];
 		u_int32_t	ticket;
 	}		*array;
 };
@@ -1179,12 +1195,12 @@ struct pfioc_table {
 #define PFI_FLAG_ALLMASK	0x0003
 
 struct pfioc_iface {
-	char			 pfiio_name[IFNAMSIZ];
-        void                    *pfiio_buffer;
-        int                      pfiio_esize;
-        int                      pfiio_size;
-	int			 pfiio_nzero;
-        int                      pfiio_flags;
+	char	 pfiio_name[IFNAMSIZ];
+	void	*pfiio_buffer;
+	int	 pfiio_esize;
+	int	 pfiio_size;
+	int	 pfiio_nzero;
+	int	 pfiio_flags;
 };
 
 
@@ -1200,7 +1216,7 @@ struct pfioc_iface {
 #define DIOCGETRULES	_IOWR('D',  6, struct pfioc_rule)
 #define DIOCGETRULE	_IOWR('D',  7, struct pfioc_rule)
 /* XXX cut 8 - 17 */
-#define DIOCCLRSTATES	_IO  ('D', 18)
+#define DIOCCLRSTATES	_IOWR('D', 18, struct pfioc_state_kill)
 #define DIOCGETSTATE	_IOWR('D', 19, struct pfioc_state)
 #define DIOCSETSTATUSIF _IOWR('D', 20, struct pfioc_if)
 #define DIOCGETSTATUS	_IOWR('D', 21, struct pf_status)
@@ -1231,8 +1247,7 @@ struct pfioc_iface {
 #define DIOCGETADDRS	_IOWR('D', 53, struct pfioc_pooladdr)
 #define DIOCGETADDR	_IOWR('D', 54, struct pfioc_pooladdr)
 #define DIOCCHANGEADDR	_IOWR('D', 55, struct pfioc_pooladdr)
-#define	DIOCGETANCHORS	_IOWR('D', 56, struct pfioc_anchor)
-#define	DIOCGETANCHOR	_IOWR('D', 57, struct pfioc_anchor)
+/* XXX cut 55 - 57 */
 #define	DIOCGETRULESETS	_IOWR('D', 58, struct pfioc_ruleset)
 #define	DIOCGETRULESET	_IOWR('D', 59, struct pfioc_ruleset)
 #define	DIOCRCLRTABLES	_IOWR('D', 60, struct pfioc_table)
@@ -1274,8 +1289,9 @@ RB_HEAD(pf_state_tree_id, pf_state);
 RB_PROTOTYPE(pf_state_tree_id, pf_state,
     entry_id, pf_state_compare_id);
 extern struct pf_state_tree_id tree_id;
+extern struct pf_state_queue state_updates;
 
-extern struct pf_anchorqueue		  pf_anchors;
+extern struct pf_anchor_global		  pf_anchors;
 extern struct pf_ruleset		  pf_main_ruleset;
 TAILQ_HEAD(pf_poolqueue, pf_pool);
 extern struct pf_poolqueue		  pf_pools[2];
@@ -1297,15 +1313,13 @@ extern int			 pf_tbladdr_setup(struct pf_ruleset *,
 extern void			 pf_tbladdr_remove(struct pf_addr_wrap *);
 extern void			 pf_tbladdr_copyout(struct pf_addr_wrap *);
 extern void			 pf_calc_skip_steps(struct pf_rulequeue *);
-extern void			 pf_rule_set_qid(struct pf_rulequeue *);
-extern u_int32_t		 pf_qname_to_qid(char *);
-extern void			 pf_update_anchor_rules(void);
 extern struct pool		 pf_src_tree_pl, pf_rule_pl;
 extern struct pool		 pf_state_pl, pf_altq_pl, pf_pooladdr_pl;
 extern struct pool		 pf_state_scrub_pl;
 extern void			 pf_purge_timeout(void *);
 extern void			 pf_purge_expired_src_nodes(void);
 extern void			 pf_purge_expired_states(void);
+extern void			 pf_purge_expired_state(struct pf_state *);
 extern int			 pf_insert_state(struct pfi_kif *,
 				    struct pf_state *);
 extern int			 pf_insert_src_node(struct pf_src_node **,
@@ -1315,13 +1329,15 @@ void				 pf_src_tree_remove_state(struct pf_state *);
 extern struct pf_state		*pf_find_state_byid(struct pf_state *);
 extern struct pf_state		*pf_find_state_all(struct pf_state *key,
 				    u_int8_t tree, int *more);
+extern void			 pf_print_state(struct pf_state *);
+extern void			 pf_print_flags(u_int8_t);
 extern struct pf_anchor		*pf_find_anchor(const char *);
-extern struct pf_ruleset	*pf_find_ruleset(char *, char *);
-extern struct pf_ruleset	*pf_find_or_create_ruleset(
-				    char[PF_ANCHOR_NAME_SIZE],
-				    char[PF_RULESET_NAME_SIZE]);
+extern struct pf_ruleset	*pf_find_ruleset(const char *);
+extern struct pf_ruleset	*pf_find_or_create_ruleset(const char *);
 extern void			 pf_remove_if_empty_ruleset(
 				    struct pf_ruleset *);
+extern u_int16_t		 pf_cksum_fixup(u_int16_t, u_int16_t, u_int16_t,
+				    u_int8_t);
 
 extern struct ifnet		*sync_ifp;
 extern struct pf_rule		 pf_default_rule;
@@ -1332,10 +1348,12 @@ void				 pf_rm_rule(struct pf_rulequeue *,
 
 #ifdef INET
 int	pf_test(int, struct ifnet *, struct mbuf **);
+int	pf_test_eh(int, struct ifnet *, struct mbuf **, struct ether_header *);
 #endif /* INET */
 
 #ifdef INET6
 int	pf_test6(int, struct ifnet *, struct mbuf **);
+int	pf_test6_eh(int, struct ifnet *, struct mbuf **, struct ether_header *);
 void	pf_poolmask(struct pf_addr *, struct pf_addr*,
 	    struct pf_addr *, struct pf_addr *, u_int8_t);
 void	pf_addr_inc(struct pf_addr *, sa_family_t);
@@ -1354,16 +1372,18 @@ int	pf_match_uid(u_int8_t, uid_t, uid_t, uid_t);
 int	pf_match_gid(u_int8_t, gid_t, gid_t, gid_t);
 
 void	pf_normalize_init(void);
-int	pf_normalize_ip(struct mbuf **, int, struct pfi_kif *, u_short *);
-int	pf_normalize_ip6(struct mbuf **, int, struct pfi_kif *, u_short *);
+int	pf_normalize_ip(struct mbuf **, int, struct pfi_kif *, u_short *,
+	    struct pf_pdesc *);
+int	pf_normalize_ip6(struct mbuf **, int, struct pfi_kif *, u_short *,
+	    struct pf_pdesc *);
 int	pf_normalize_tcp(int, struct pfi_kif *, struct mbuf *, int, int, void *,
 	    struct pf_pdesc *);
 void	pf_normalize_tcp_cleanup(struct pf_state *);
 int	pf_normalize_tcp_init(struct mbuf *, int, struct pf_pdesc *,
 	    struct tcphdr *, struct pf_state_peer *, struct pf_state_peer *);
 int	pf_normalize_tcp_stateful(struct mbuf *, int, struct pf_pdesc *,
-	    u_short *, struct tcphdr *, struct pf_state_peer *,
-	    struct pf_state_peer *, int *);
+	    u_short *, struct tcphdr *, struct pf_state *,
+	    struct pf_state_peer *, struct pf_state_peer *, int *);
 u_int32_t
 	pf_state_expires(const struct pf_state *);
 void	pf_purge_expired_fragments(void);
@@ -1409,6 +1429,7 @@ void		 pfi_attach_clone(struct if_clone *);
 void		 pfi_attach_ifnet(struct ifnet *);
 void		 pfi_detach_ifnet(struct ifnet *);
 struct pfi_kif	*pfi_lookup_create(const char *);
+struct pfi_kif	*pfi_lookup_if(const char *);
 int		 pfi_maybe_destroy(struct pfi_kif *);
 struct pfi_kif	*pfi_attach_rule(const char *);
 void		 pfi_detach_rule(struct pfi_kif *);
@@ -1429,6 +1450,9 @@ u_int16_t	pf_tagname2tag(char *);
 void		pf_tag2tagname(u_int16_t, char *);
 void		pf_tag_unref(u_int16_t);
 int		pf_tag_packet(struct mbuf *, struct pf_tag *, int);
+u_int32_t	pf_qname2qid(char *);
+void		pf_qid2qname(u_int32_t, char *);
+void		pf_qid_unref(u_int32_t);
 
 extern struct pf_status	pf_status;
 extern struct pool	pf_frent_pl, pf_frag_pl;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.9.2.7 2004/02/19 10:56:31 niklas Exp $	*/
+/* $OpenBSD: src/sys/dev/raidframe/Attic/rf_openbsdkintf.c,v 1.9.2.8 2004/06/05 23:12:56 niklas Exp $	*/
 /* $NetBSD: rf_netbsdkintf.c,v 1.109 2001/07/27 03:30:07 oster Exp $	*/
 
 /*-
@@ -3563,5 +3563,6 @@ rf_disk_unbusy(RF_RaidAccessDesc_t *desc)
 
 	bp = (struct buf *)desc->bp;
 	disk_unbusy(&raid_softc[desc->raidPtr->raidid].sc_dkdev,
-			    (bp->b_bcount - bp->b_resid));
+			    (bp->b_bcount - bp->b_resid),
+			    (bp->b_flags & B_READ));
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/if_pflog.h,v 1.5.2.4 2004/02/19 10:57:21 niklas Exp $ */
+/* $OpenBSD: src/sys/net/if_pflog.h,v 1.5.2.5 2004/06/05 23:11:23 niklas Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -31,10 +31,7 @@ struct pflog_softc {
 	struct ifnet	sc_if;  /* the interface */
 };
 
-/* XXX keep in sync with pfvar.h */
-#ifndef PF_RULESET_NAME_SIZE
-#define PF_RULESET_NAME_SIZE	 16
-#endif
+#define PFLOG_RULESET_NAME_SIZE	16
 
 struct pfloghdr {
 	u_int8_t	length;
@@ -42,7 +39,7 @@ struct pfloghdr {
 	u_int8_t	action;
 	u_int8_t	reason;
 	char		ifname[IFNAMSIZ];
-	char		ruleset[PF_RULESET_NAME_SIZE];
+	char		ruleset[PFLOG_RULESET_NAME_SIZE];
 	u_int32_t	rulenr;
 	u_int32_t	subrulenr;
 	u_int8_t	dir;
@@ -51,7 +48,7 @@ struct pfloghdr {
 
 #define PFLOG_HDRLEN		sizeof(struct pfloghdr)
 /* minus pad, also used as a signature */
-#define PFLOG_REAL_HDRLEN	offsetof(struct pfloghdr, pad);
+#define PFLOG_REAL_HDRLEN	offsetof(struct pfloghdr, pad)
 
 /* XXX remove later when old format logs are no longer needed */
 struct old_pfloghdr {

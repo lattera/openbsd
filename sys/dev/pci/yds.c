@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.10 2004/02/19 10:56:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.11 2004/06/05 23:12:54 niklas Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -253,6 +253,7 @@ const static struct {
 #define YDS_CAP_LEGACY_SELECTABLE	0x0004
 #define YDS_CAP_LEGACY_FLEXIBLE		0x0008
 #define YDS_CAP_HAS_P44			0x0010
+#define YDS_CAP_LEGACY_SMOD_DISABLE	0x1000
 } yds_chip_capability_list[] = {
 	{ PCI_PRODUCT_YAMAHA_YMF724,
 	  YDS_CAP_MCODE_1|YDS_CAP_LEGACY_SELECTABLE },
@@ -572,9 +573,10 @@ yds_configure_legacy (arg)
 
 	reg = pci_conf_read(sc->sc_pc, sc->sc_pcitag, YDS_PCI_LEGACY);
 	reg &= ~0x8133c03f;	/* these bits are out of interest */
-	reg |= YDS_PCI_EX_LEGACY_SBMOD_XXX | ((YDS_PCI_EX_LEGACY_IMOD) |
-		(YDS_PCI_LEGACY_FMEN |
-		 YDS_PCI_LEGACY_MEN /*| YDS_PCI_LEGACY_MIEN*/));
+	reg |= (YDS_PCI_EX_LEGACY_IMOD | YDS_PCI_LEGACY_FMEN |
+		YDS_PCI_LEGACY_MEN /*| YDS_PCI_LEGACY_MIEN*/);
+	if (sc->sc_flags & YDS_CAP_LEGACY_SMOD_DISABLE)
+		reg |= YDS_PCI_EX_LEGACY_SMOD_DISABLE;
 	if (FLEXIBLE) {
 		pci_conf_write(sc->sc_pc, sc->sc_pcitag, YDS_PCI_LEGACY, reg);
 		delay(100*1000);
@@ -664,17 +666,15 @@ yds_attach(parent, self, aux)
 	pci_chipset_tag_t pc = pa->pa_pc;
 	char const *intrstr;
 	pci_intr_handle_t ih;
+	bus_size_t size;
 	pcireg_t reg;
 	struct yds_codec_softc *codec;
-	char devinfo[256];
 	mixer_ctrl_t ctl;
 	int i, r;
 
-	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo, sizeof devinfo);
-
 	/* Map register to memory */
 	if (pci_mapreg_map(pa, YDS_PCI_MBA, PCI_MAPREG_TYPE_MEM, 0,
-	    &sc->memt, &sc->memh, NULL, NULL, 0)) {
+	    &sc->memt, &sc->memh, NULL, &size, 0)) {
 		printf("%s: can't map memory space\n", sc->sc_dev.dv_xname);
 		return;
 	}
@@ -682,6 +682,7 @@ yds_attach(parent, self, aux)
 	/* Map and establish the interrupt. */
 	if (pci_intr_map(pa, &ih)) {
 		printf("%s: couldn't map interrupt\n", sc->sc_dev.dv_xname);
+		bus_space_unmap(sc->memt, sc->memh, size);
 		return;
 	}
 	intrstr = pci_intr_string(pc, ih);
@@ -693,6 +694,7 @@ yds_attach(parent, self, aux)
 		if (intrstr != NULL)
 			printf(" at %s", intrstr);
 		printf("\n");
+		bus_space_unmap(sc->memt, sc->memh, size);
 		return;
 	}
 	printf(": %s\n", intrstr);
@@ -703,6 +705,8 @@ yds_attach(parent, self, aux)
 	sc->sc_id = pa->pa_id;
 	sc->sc_revision = PCI_REVISION(pa->pa_class);
 	sc->sc_flags = yds_get_dstype(sc->sc_id);
+	if (sc->sc_dev.dv_cfdata->cf_flags & YDS_CAP_LEGACY_SMOD_DISABLE)
+		sc->sc_flags |= YDS_CAP_LEGACY_SMOD_DISABLE;
 #ifdef AUDIO_DEBUG
 	if (ydsdebug)
 		printf("%s: chip has %b\n", sc->sc_dev.dv_xname,

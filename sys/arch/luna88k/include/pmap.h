@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/include/pmap.h,v 1.3 2004/06/02 13:49:41 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/luna88k/include/pmap.h,v 1.3.2.1 2004/06/05 23:09:47 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University

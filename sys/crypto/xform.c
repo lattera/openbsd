@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.7 2004/02/19 10:51:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/xform.c,v 1.1.2.8 2004/06/05 23:12:36 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -45,7 +45,7 @@
 #include <sys/kernel.h>
 #include <machine/cpu.h>
 
-#include <sys/md5k.h>
+#include <crypto/md5.h>
 #include <crypto/sha1.h>
 #include <crypto/sha2.h>
 #include <crypto/rmd160.h>

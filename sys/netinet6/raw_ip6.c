@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5.4.6 2004/02/19 10:57:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.5.4.7 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: raw_ip6.c,v 1.69 2001/03/04 15:55:44 itojun Exp $	*/
 
 /*
@@ -190,7 +190,7 @@ rip6_input(mp, offp, proto)
 			continue;
 		if (in6p->in6p_cksum != -1) {
 			rip6stat.rip6s_isum++;
-			if (in6_cksum(m, ip6->ip6_nxt, *offp,
+			if (in6_cksum(m, proto, *offp,
 			    m->m_pkthdr.len - *offp)) {
 				rip6stat.rip6s_badsum++;
 				continue;

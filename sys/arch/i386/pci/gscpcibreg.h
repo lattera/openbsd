@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/gscpcibreg.h,v 1.1 2004/06/03 18:22:21 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/gscpcibreg.h,v 1.1.2.1 2004/06/05 23:09:00 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

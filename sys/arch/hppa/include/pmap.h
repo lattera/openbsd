@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.5 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/pmap.h,v 1.12.2.6 2004/06/05 23:10:49 niklas Exp $	*/
 
 /*
- * Copyright (c) 2002 Michael Shalayeff
+ * Copyright (c) 2002-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -43,7 +38,7 @@ struct pmap {
 #define	pm_lock	pm_obj.vmobjlock
 	struct vm_page	*pm_ptphint;
 	struct vm_page	*pm_pdir_pg;	/* vm_page for pdir */
-	u_int32_t	*pm_pdir;	/* page dir (read-only after create) */
+	volatile u_int32_t *pm_pdir;	/* page dir (read-only after create) */
 	pa_space_t	pm_space;	/* space id (read-only after create) */
 	u_int		pm_pid;		/* prot id (read-only after create) */
 
@@ -114,6 +109,8 @@ extern struct pdc_hwtlb pdc_hwtlb;
 #define pmap_is_modified(pg)	pmap_testbit(pg, PTE_PROT(TLB_DIRTY))
 #define pmap_is_referenced(pg)	pmap_testbit(pg, PTE_PROT(TLB_REFTRAP))
 #define pmap_phys_address(ppn)	((ppn) << PAGE_SHIFT)
+
+#define pmap_proc_iflush(p,va,len)	/* nothing */
 
 void pmap_bootstrap(vaddr_t);
 boolean_t pmap_changebit(struct vm_page *, u_int, u_int);

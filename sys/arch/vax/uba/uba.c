@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.8.12.8 2004/02/19 10:50:02 niklas Exp $	   */
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba.c,v 1.8.12.9 2004/06/05 23:11:02 niklas Exp $	   */
 /*	$NetBSD: uba.c,v 1.43 2000/01/24 02:40:36 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.
@@ -712,7 +712,7 @@ ubarelse(uh, amr)
 		wakeup((caddr_t)&uh->uh_mrwant);
 	}
 	while ((uu = uh->uh_resq.sqh_first)) {
-		SIMPLEQ_REMOVE_HEAD(&uh->uh_resq, uu, uu_resq);
+		SIMPLEQ_REMOVE_HEAD(&uh->uh_resq, uu_resq);
 		if ((*uu->uu_ready)(uu) == 0)
 			break;
 	}

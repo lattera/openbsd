@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rnd.c,v 1.33.4.8 2004/02/19 10:56:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/rnd.c,v 1.33.4.9 2004/06/05 23:12:36 niklas Exp $	*/
 
 /*
  * rnd.c -- A strong random number generator
@@ -192,28 +192,29 @@
  *	echo "Saving random seed..."
  *	dd if=/dev/urandom of=/etc/random-seed count=1
  *
- * For example, on many Linux systems, the appropriate scripts are
- * usually /etc/rc.d/rc.local and /etc/rc.d/rc.0, respectively.
+ * For example, on OpenBSD systems, the appropriate scripts are
+ * usually /etc/rc.local and /etc/rc.shutdown, respectively.
  *
  * Effectively, these commands cause the contents of the entropy pool
  * to be saved at shutdown time and reloaded into the entropy pool at
  * start-up.  (The 'dd' in the addition to the bootup script is to
  * make sure that /etc/random-seed is different for every start-up,
- * even if the system crashes without executing rc.0.)  Even with
+ * even if the system crashes without executing rc.shutdown) Even with
  * complete knowledge of the start-up activities, predicting the state
  * of the entropy pool requires knowledge of the previous history of
  * the system.
  *
- * Configuring the /dev/random driver under Linux
+ * Configuring the random(4) driver under OpenBSD
  * ==============================================
  *
- * The /dev/random driver under Linux uses minor numbers 8 and 9 of
- * the /dev/mem major number (#1).  So if your system does not have
- * /dev/random and /dev/urandom created already, they can be created
- * by using the commands:
+ * The special files for the random(4) driver should have been created
+ * during the installation process.  However, if your system does not have
+ * /dev/random and /dev/[s|u|p|a]random created already, they can be created
+ * by using the MAKEDEV(8) script in /dev:
  *
- *	mknod /dev/random c 1 8
- *	mknod /dev/urandom c 1 9
+ *	/dev/MAKEDEV random
+ *
+ * Check MAKEDEV for information about major and minor numbers.
  *
  * Acknowledgements:
  * =================
@@ -243,10 +244,11 @@
 #include <sys/malloc.h>
 #include <sys/fcntl.h>
 #include <sys/vnode.h>
-#include <sys/md5k.h>
 #include <sys/sysctl.h>
 #include <sys/timeout.h>
 #include <sys/poll.h>
+
+#include <crypto/md5.h>
 
 #include <dev/rndvar.h>
 #include <dev/rndioctl.h>
@@ -560,6 +562,10 @@ arc4maybeinit(void)
 	extern int hz;
 
 	if (!arc4random_initialized) {
+#ifdef DIAGNOSTIC
+		if (!rnd_attached)
+			panic("arc4maybeinit: premature");
+#endif
 		arc4random_initialized++;
 		arc4_stir();
 		/* 10 minutes, per dm@'s suggestion */
@@ -576,15 +582,6 @@ arc4_reinit(v)
 	void *v;
 {
 	arc4random_initialized = 0;
-}
-
-static int arc4random_8(void);
-
-static int
-arc4random_8(void)
-{
-	arc4maybeinit();
-	return arc4_getbyte();
 }
 
 u_int32_t
@@ -1019,8 +1016,9 @@ randomread(dev, uio, ioflag)
 		{
 			u_int8_t *cp = (u_int8_t *) buf;
 			u_int8_t *end = cp + n;
+			arc4maybeinit();
 			while (cp < end)
-				*cp++ = arc4random_8();
+				*cp++ = arc4_getbyte();
 			break;
 		}
 		default:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.15 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.16 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -364,6 +364,8 @@ extern int pmap_pg_g;			/* do we support PG_G? */
 #define pmap_is_referenced(pg)		pmap_test_attrs(pg, PG_U)
 #define pmap_phys_address(ppn)		i386_ptob(ppn)
 #define pmap_valid_entry(E) 		((E) & PG_V) /* is PDE or PTE valid? */
+
+#define pmap_proc_iflush(p,va,len)	/* nothing */
 
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/if_bcereg.h,v 1.1 2004/02/13 23:24:30 andreas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_bcereg.h,v 1.1.4.1 2004/06/05 23:12:49 niklas Exp $ */
 /* $NetBSD: if_bcereg.h,v 1.3 2003/09/29 01:53:02 mrg Exp $	 */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/mem.c,v 1.3 2004/05/07 15:30:02 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/mem.c,v 1.3.2.1 2004/06/05 23:09:47 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.11.2.7 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_vfsops.c,v 1.11.2.8 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: procfs_vfsops.c,v 1.25 1996/02/09 22:40:53 christos Exp $	*/
 
 /*
@@ -102,10 +102,10 @@ procfs_mount(mp, path, data, ndp, p)
 	pmnt = (struct procfsmount *) malloc(sizeof(struct procfsmount),
 	    M_MISCFSMNT, M_WAITOK);
 
-	mp->mnt_data = (qaddr_t)pmnt;
+	mp->mnt_data = pmnt;
 	vfs_getnewfsid(mp);
 
-	(void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN, &size);
+	(void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
 	bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
 	bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
 	bcopy("procfs", mp->mnt_stat.f_mntfromname, sizeof("procfs"));

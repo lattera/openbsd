@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vrreg.h,v 1.2.6.4 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vrreg.h,v 1.2.6.5 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -495,7 +495,6 @@ struct vr_softc {
 	bus_space_read_1(sc->vr_btag, sc->vr_bhandle, reg)
 
 #define VR_TIMEOUT		1000
-#define ETHER_ALIGN		2
 
 /*
  * General constants that are fun to know.

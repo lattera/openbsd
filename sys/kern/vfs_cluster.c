@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_cluster.c,v 1.16.6.6 2003/06/07 11:03:41 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_cluster.c,v 1.16.6.7 2004/06/05 23:13:03 niklas Exp $	*/
 /*	$NetBSD: vfs_cluster.c,v 1.12 1996/04/22 01:39:05 christos Exp $	*/
 
 /*-
@@ -309,7 +309,7 @@ cluster_rbuild(vp, filesize, bp, lbn, blkno, size, run, flags)
 	b_save->bs_nchildren = 0;
 	b_save->bs_children = (struct buf **)(b_save + 1);
 	b_save->bs_saveaddr = bp->b_saveaddr;
-	bp->b_saveaddr = (caddr_t) b_save;
+	bp->b_saveaddr = b_save;
 
 	inc = btodb(size);
 	for (bn = blkno + inc, i = 1; i <= run; ++i, bn += inc) {
@@ -330,7 +330,7 @@ cluster_rbuild(vp, filesize, bp, lbn, blkno, size, run, flags)
 		 * in the callback routine.
 		 */
 		if (tbp->b_bufsize != 0) {
-			caddr_t bdata = (char *)tbp->b_data;
+			caddr_t bdata = tbp->b_data;
 
 			/*
 			 * No room in the buffer to add another page,
@@ -465,7 +465,7 @@ cluster_callback(bp)
 		brelse(bp);
 	else {
 		bp->b_flags &= ~B_WANTED;
-		wakeup((caddr_t)bp);
+		wakeup(bp);
 	}
 }
 
@@ -667,7 +667,7 @@ redo:
 	b_save->bs_nchildren = 0;
 	b_save->bs_children = (struct buf **)(b_save + 1);
 	b_save->bs_saveaddr = bp->b_saveaddr;
-	bp->b_saveaddr = (caddr_t) b_save;
+	bp->b_saveaddr = b_save;
 
 	bp->b_flags |= B_CALL;
 	bp->b_iodone = cluster_callback;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.7 2004/02/19 10:48:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sd.c,v 1.21.8.8 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: sd.c,v 1.34 1997/07/10 18:14:10 kleink Exp $	*/
 
 /*
@@ -984,7 +984,8 @@ sdintr(arg, stat)
 		return;
 	}
 
-	disk_unbusy(&sc->sc_dkdev, (bp->b_bcount - bp->b_resid));
+	disk_unbusy(&sc->sc_dkdev, (bp->b_bcount - bp->b_resid),
+	    (bp->b_flags & B_READ));
 
 	if (stat) {
 #ifdef DEBUG

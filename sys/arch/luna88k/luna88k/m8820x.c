@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/m8820x.c,v 1.2 2004/05/07 18:06:39 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/m8820x.c,v 1.2.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  *

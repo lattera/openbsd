@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/luna88k/luna88k/machdep.c,v 1.5 2004/06/02 13:49:43 miod Exp $	*/
+/* $OpenBSD: src/sys/arch/luna88k/luna88k/machdep.c,v 1.5.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur

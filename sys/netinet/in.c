@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.9 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.10 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: in.c,v 1.26 1996/02/13 23:41:39 christos Exp $	*/
 
 /*
@@ -417,7 +417,9 @@ in_control(so, cmd, data, ifp)
 		splx(s);
 		return (error);
 
-	case SIOCDIFADDR:
+	case SIOCDIFADDR: {
+		struct in_multi *inm;
+
 		/*
 		 * Even if the individual steps were safe, shouldn't
 		 * these kinds of changes happen atomically?  What 
@@ -428,10 +430,13 @@ in_control(so, cmd, data, ifp)
 		in_ifscrub(ifp, ia);
 		TAILQ_REMOVE(&ifp->if_addrlist, (struct ifaddr *)ia, ifa_list);
 		TAILQ_REMOVE(&in_ifaddr, ia, ia_list);
+		while ((inm = LIST_FIRST(&ia->ia_multiaddrs)) != NULL)
+			in_delmulti(inm);
 		IFAFREE((&ia->ia_ifa));
 		dohooks(ifp->if_addrhooks, 0);
 		splx(s);
 		break;
+		}
 
 #ifdef MROUTING
 	case SIOCGETVIFCNT:
@@ -521,7 +526,7 @@ in_lifaddr_ioctl(so, cmd, data, ifp)
 		if (iflr->flags & IFLR_PREFIX)
 			return EINVAL;
 
-		/* copy args to in_aliasreq, perform ioctl(SIOCAIFADDR_IN6). */
+		/* copy args to in_aliasreq, perform ioctl(SIOCAIFADDR). */
 		bzero(&ifra, sizeof(ifra));
 		bcopy(iflr->iflr_name, ifra.ifra_name,
 			sizeof(ifra.ifra_name));
@@ -577,7 +582,7 @@ in_lifaddr_ioctl(so, cmd, data, ifp)
 		}
 
 		for (ifa = ifp->if_addrlist.tqh_first; ifa; ifa = ifa->ifa_list.tqe_next) {
-			if (ifa->ifa_addr->sa_family != AF_INET6)
+			if (ifa->ifa_addr->sa_family != AF_INET)
 				continue;
 			if (!cmp)
 				break;
@@ -609,7 +614,7 @@ in_lifaddr_ioctl(so, cmd, data, ifp)
 		} else {
 			struct in_aliasreq ifra;
 
-			/* fill in_aliasreq and do ioctl(SIOCDIFADDR_IN6) */
+			/* fill in_aliasreq and do ioctl(SIOCDIFADDR) */
 			bzero(&ifra, sizeof(ifra));
 			bcopy(iflr->iflr_name, ifra.ifra_name,
 				sizeof(ifra.ifra_name));

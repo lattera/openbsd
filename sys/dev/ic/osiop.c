@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/osiop.c,v 1.3.4.3 2004/02/19 10:56:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/osiop.c,v 1.3.4.4 2004/06/05 23:12:43 niklas Exp $	*/
 /*	$NetBSD: osiop.c,v 1.9 2002/04/05 18:27:54 bouyer Exp $	*/
 
 /*
@@ -348,7 +348,6 @@ osiop_attach(sc)
 	sc->sc_link.openings = 4;
 	sc->sc_link.adapter_buswidth = OSIOP_NTGT;
 	sc->sc_link.adapter_target = sc->sc_id;
-	sc->sc_link.quirks = ADEV_NODOORLOCK;
 
 	/*
 	 * Now try to attach all the sub devices.
@@ -409,7 +408,7 @@ osiop_scsicmd(xs)
 		splx(s);
 		return (TRY_AGAIN_LATER);
 	}
- 
+
 	acb->flags = 0;
 	acb->status = ACB_S_READY;
 	acb->xs = xs;
@@ -457,7 +456,7 @@ osiop_scsicmd(xs)
 
 	if ((acb->xsflags & SCSI_POLL) || (sc->sc_flags & OSIOP_NODMA))
 		osiop_poll(sc, acb);
-	else	
+	else
 		/* start expire timer */
 		timeout_add(&xs->stimeout, (xs->timeout/1000) * hz);
 
@@ -604,7 +603,7 @@ osiop_scsidone(acb, status)
 	xs = acb->xs;
 	sc = acb->sc;
 	periph = xs->sc_link;
-	
+
 	/*
 	 * Record if this is the completion of an auto sense
 	 * scsi command, and then reset the flag so we don't loop
@@ -1156,7 +1155,6 @@ osiop_checkintr(sc, istat, dstat, sstat0, status)
 			    acb->status);
 #endif
 	}
-
 
 	if (dstat & OSIOP_DSTAT_SIR && intcode == A_ok) {
 		/* Normal completion status, or check condition */
@@ -1870,10 +1868,10 @@ osiop_update_xfer_mode(sc, target)
 			/* Transfer period = 50 ns */
 			printf("20");
 			break;
-		default: 
+		default:
 			/* Transfer period = ti->period*4 ns */
 			printf("%d", 1000/(ti->period*4));
-			break;	
+			break;
 		}
 		printf(" MHz %d REQ/ACK offset", ti->offset);
 	} else

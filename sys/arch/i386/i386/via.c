@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/via.c,v 1.1 2004/04/11 18:12:10 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/via.c,v 1.1.2.1 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-

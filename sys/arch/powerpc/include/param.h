@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.7 2003/03/27 23:42:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/param.h,v 1.8.2.8 2004/06/05 23:10:56 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.1 1996/09/30 16:34:28 ws Exp $	*/
 
 /*-
@@ -79,14 +79,7 @@
 #define	MCLSHIFT	11		/* convert bytes to m_buf clusters */
 #define	MCLBYTES	(1 << MCLSHIFT)	/* size of a m_buf cluster */
 #define	MCLOFSET	(MCLBYTES - 1)
-
-#ifndef NMBCLUSTERS
-#ifdef GATEWAY
-#define	NMBCLUSTERS	2048		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
-#endif
-#endif
+#define	NMBCLUSTERS	4096		/* map size, max cluster allocation */
 
 /*
  * pages ("clicks") to disk blocks

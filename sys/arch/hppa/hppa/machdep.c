@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.13 2004/02/19 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.21.2.14 2004/06/05 23:10:48 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999-2002 Michael Shalayeff
+ * Copyright (c) 1999-2003 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -223,64 +218,55 @@ const struct hppa_cpu_typed {
 	enum hppa_cpu_type type;
 	int  cpuid;
 	int  features;
-	int (*desidhash)(void);
-	const u_int *itlbh, *itlbnah, *dtlbh, *dtlbnah, *tlbdh;
-	int (*dbtlbins)(int i, pa_space_t sp, vaddr_t va, paddr_t pa,
-	    vsize_t sz, u_int prot);
-	int (*ibtlbins)(int i, pa_space_t sp, vaddr_t va, paddr_t pa,
-	    vsize_t sz, u_int prot);
-	int (*btlbprg)(int i);
-	int (*hptinit)(vaddr_t hpt, vsize_t hptsize);
+	int  patch;
+	int  (*desidhash)(void);
+	int  (*dbtlbins)(int i, pa_space_t sp, vaddr_t va, paddr_t pa,
+	     vsize_t sz, u_int prot);
+	int  (*ibtlbins)(int i, pa_space_t sp, vaddr_t va, paddr_t pa,
+	     vsize_t sz, u_int prot);
+	int  (*btlbprg)(int i);
+	int  (*hptinit)(vaddr_t hpt, vsize_t hptsize);
 } cpu_types[] = {
 #ifdef HP7000_CPU
-	{ "PCXS",  hpcx,  0, 0,
-	  desidhash_s, itlb_s, itlbna_s, dtlb_s, dtlbna_s, tlbd_s,
-	  ibtlb_g, NULL, pbtlb_g},
+	{ "PCXS",  hpcxs,  0, 0, 3, desidhash_s, ibtlb_g, NULL, pbtlb_g},
 #endif
 #ifdef HP7100_CPU
-	{ "PCXT",  hpcxs, 0, HPPA_FTRS_BTLBU,
-	  desidhash_t, itlb_t, itlbna_t, dtlb_t, dtlbna_t, tlbd_t,
-	  ibtlb_g, NULL, pbtlb_g},
+	{ "PCXT",  hpcxt, 0, HPPA_FTRS_BTLBU,
+	  2, desidhash_t, ibtlb_g, NULL, pbtlb_g},
 #endif
 #ifdef HP7200_CPU
 	{ "PCXT'", hpcxta,HPPA_CPU_PCXT2, HPPA_FTRS_BTLBU,
-	  desidhash_t, itlb_t, itlbna_l, dtlb_t, dtlbna_t, tlbd_t,
-	  ibtlb_g, NULL, pbtlb_g},
+	  2, desidhash_t, ibtlb_g, NULL, pbtlb_g},
 #endif
 #ifdef HP7100LC_CPU
 	{ "PCXL",  hpcxl, HPPA_CPU_PCXL, HPPA_FTRS_BTLBU|HPPA_FTRS_HVT,
-	  desidhash_l, itlb_l, itlbna_l, dtlb_l, dtlbna_l, tlbd_l,
-	  ibtlb_g, NULL, pbtlb_g, hpti_g},
+	  0, desidhash_l, ibtlb_g, NULL, pbtlb_g, hpti_g},
 #endif
 #ifdef HP7300LC_CPU
 	{ "PCXL2", hpcxl2,HPPA_CPU_PCXL2, HPPA_FTRS_BTLBU|HPPA_FTRS_HVT,
-	  desidhash_l, itlb_l, itlbna_l, dtlb_l, dtlbna_l, tlbd_l,
-	  ibtlb_g, NULL, pbtlb_g, hpti_g},
+	  0, desidhash_l, ibtlb_g, NULL, pbtlb_g, hpti_g},
 #endif
 #ifdef HP8000_CPU
-	{ "PCXU",  hpcxu, HPPA_CPU_PCXU, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU|HPPA_FTRS_HVT,
-	  desidhash_g, itlb_l, itlbna_l, dtlb_l, dtlbna_l, tlbd_l,
-	  ibtlb_g, NULL, pbtlb_g, hpti_g},
+	{ "PCXU",  hpcxu, HPPA_CPU_PCXU, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU,
+	  4, desidhash_g, ibtlb_g, NULL, pbtlb_g, hpti_g},
 #endif
 #ifdef HP8200_CPU
-	{ "PCXU+", hpcxu2,HPPA_CPU_PCXUP, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU|HPPA_FTRS_HVT,
-	  desidhash_g, itlb_l, itlbna_l, dtlb_l, dtlbna_l, tlbd_l,
-	  ibtlb_g, NULL, pbtlb_g, hpti_g},
+	{ "PCXU+", hpcxu2,HPPA_CPU_PCXUP, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU,
+	  4, desidhash_g, ibtlb_g, NULL, pbtlb_g, hpti_g},
 #endif
 #ifdef HP8500_CPU
-	{ "PCXW",  hpcxw, HPPA_CPU_PCXW, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU|HPPA_FTRS_HVT,
-	  desidhash_g, itlb_l, itlbna_l, dtlb_l, dtlbna_l, tlbd_l,
-	  ibtlb_g, NULL, pbtlb_g, hpti_g},
+	{ "PCXW",  hpcxw, HPPA_CPU_PCXW, HPPA_FTRS_W32B|HPPA_FTRS_BTLBU,
+	  4, desidhash_g, ibtlb_g, NULL, pbtlb_g, hpti_g},
 #endif
 	{ "", 0 }
 };
 
 int
-hppa_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+hppa_cpuspeed(int *mhz)
 {
-	int mhz = PAGE0->mem_10msec / 10000;
+	*mhz = PAGE0->mem_10msec / 10000;
 
-	return sysctl_rdint(oldp, oldlenp, newp, mhz);
+	return (0);
 }
 
 void
@@ -545,6 +531,12 @@ cpuid()
 		/* we know PCXL and PCXL2 do not exist w/o FPU */
 		fpu_enable = 0xc0;
 
+	/*
+	 * TODO: HPT on 7200 is not currently supported
+	 */
+	if (pmap_hptsize && p->type != hpcxl && p->type != hpcxl2)
+		pmap_hptsize = 0;
+
 	cpu_type = p->type;
 	cpu_typename = p->name;
 	cpu_ibtlb_ins = p->ibtlbins;
@@ -552,13 +544,14 @@ cpuid()
 	cpu_hpt_init = p->hptinit;
 	cpu_desidhash = p->desidhash;
 
-#define	LDILDO(t,f) ((t)[0] = (f)[0], (t)[1] = (f)[1])
-	LDILDO(trap_ep_T_TLB_DIRTY , p->tlbdh);
-	LDILDO(trap_ep_T_DTLBMISS  , p->dtlbh);
-	LDILDO(trap_ep_T_DTLBMISSNA, p->dtlbnah);
-	LDILDO(trap_ep_T_ITLBMISS  , p->itlbh);
-	LDILDO(trap_ep_T_ITLBMISSNA, p->itlbnah);
-#undef LDILDO
+	/* patch tlb handler branches */
+	if (p->patch) {
+		trap_ep_T_TLB_DIRTY [0] = trap_ep_T_TLB_DIRTY [p->patch];
+		trap_ep_T_DTLBMISS  [0] = trap_ep_T_DTLBMISS  [p->patch];
+		trap_ep_T_DTLBMISSNA[0] = trap_ep_T_DTLBMISSNA[p->patch];
+		trap_ep_T_ITLBMISS  [0] = trap_ep_T_ITLBMISS  [p->patch];
+		trap_ep_T_ITLBMISSNA[0] = trap_ep_T_ITLBMISSNA[p->patch];
+	}
 
 	{
 		const char *p, *q;
@@ -935,9 +928,11 @@ boot(howto)
 	int howto;
 {
 	/* If system is cold, just halt. */
-	if (cold)
-		howto |= RB_HALT;
-	else {
+	if (cold) {
+		/* (Unless the user explicitly asked for reboot.) */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
+	} else {
 
 		boothowto = howto | (boothowto & RB_HALT);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_auereg.h,v 1.4.2.4 2003/03/28 00:38:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_auereg.h,v 1.4.2.5 2004/06/05 23:12:57 niklas Exp $ */
 /*	$NetBSD: if_auereg.h,v 1.16 2001/10/10 02:14:17 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -279,7 +279,6 @@ struct aue_softc {
 };
 
 #define AUE_TIMEOUT		1000
-#define ETHER_ALIGN		2
 #define AUE_BUFSZ		1536
 #define AUE_MIN_FRAMELEN	60
 #define AUE_TX_TIMEOUT		10000 /* ms */

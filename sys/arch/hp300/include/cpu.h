@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.6 2003/06/07 11:11:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.9.10.7 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*
@@ -180,7 +180,7 @@ int	badbaddr(caddr_t);
 void	dumpconf(void);
 
 /* sys_machdep.c functions */
-int	cachectl(int, vaddr_t, int);
+int	cachectl(struct proc *, int, vaddr_t, int);
 
 /* vm_machdep.c functions */
 void	physaccess(caddr_t, caddr_t, int, int);

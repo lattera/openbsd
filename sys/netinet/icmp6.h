@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.2.2.9 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/icmp6.h,v 1.2.2.10 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$KAME: icmp6.h,v 1.84 2003/04/23 10:26:51 itojun Exp $	*/
 
 /*
@@ -619,6 +619,30 @@ struct icmp6stat {
 	{ "nd6_debug", CTLTYPE_INT }, \
 	{ 0, 0 }, \
 	{ 0, 0 }, \
+}
+
+#define ICMPV6CTL_VARS { \
+	NULL, \
+	NULL, \
+	&icmp6_rediraccept, \
+	&icmp6_redirtimeout, \
+	NULL, \
+	NULL, \
+	&nd6_prune, \
+	NULL, \
+	&nd6_delay, \
+	&nd6_umaxtries, \
+	&nd6_mmaxtries, \
+	&nd6_useloopback, \
+	NULL, \
+	&icmp6_nodeinfo, \
+	&icmp6errppslim, \
+	&nd6_maxnudhint, \
+	&icmp6_mtudisc_hiwat, \
+	&icmp6_mtudisc_lowat, \
+	&nd6_debug, \
+	NULL, \
+	NULL, \
 }
 
 #define RTF_PROBEMTU	RTF_PROTO1

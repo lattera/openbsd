@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/gateA20.c,v 1.5.10.3 2004/02/19 10:48:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/gateA20.c,v 1.5.10.4 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Ported to boot 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
@@ -40,6 +40,16 @@
 					   enable output buffer full interrupt
 					   enable data line
 					   enable clock line */
+
+
+/*
+ * "Probe"-style routine (no parameters) to turn A20 on
+ */
+void
+gateA20on(void)
+{
+	gateA20(1);
+}
 
 
 /*

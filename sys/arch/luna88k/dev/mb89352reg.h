@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/dev/mb89352reg.h,v 1.2 2004/04/29 14:35:20 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/dev/mb89352reg.h,v 1.2.2.1 2004/06/05 23:09:46 niklas Exp $	*/
 /*	$NetBSD: mb89352reg.h,v 1.3 2003/08/07 16:31:02 agc Exp $	*/
 /*	NecBSD: mb89352reg.h,v 1.3 1998/03/14 07:04:34 kmatsuda Exp 	*/
 

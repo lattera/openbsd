@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/include/conf.h,v 1.1 2004/05/07 15:08:25 aoyama Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/include/conf.h,v 1.1.2.1 2004/06/05 23:09:46 niklas Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  * All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.14 2004/04/21 09:40:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.15 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -45,7 +45,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/kernel.h>
-#include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/wait.h>
 #include <sys/file.h>
@@ -171,7 +170,9 @@ exit1(p, rv)
 		sp->s_leader = NULL;
 	}
 	fixjobc(p, p->p_pgrp, 0);
+#ifdef ACCOUNTING
 	(void)acct_process(p);
+#endif
 #ifdef KTRACE
 	/* 
 	 * release trace file

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/include/Attic/param.h,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/include/Attic/param.h,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.4 2002/02/12 06:58:19 thorpej Exp $	*/
 
 /*
@@ -37,13 +37,6 @@
 #define	_CATS_PARAM_H_
 
 /*
- * Machine dependent constants for ARM6+ processors
- */
-
-#define	_MACHINE	cats
-#define	MACHINE		"cats"
-
-/*
  * cats boot dmesg is bigger than 4k
  */
 #ifndef MSGBUFSIZE
@@ -51,5 +44,8 @@
 #endif
 
 #include <arm/param.h>
+
+#define	_MACHINE	cats
+#define	MACHINE		"cats"
 
 #endif	/* _CATS_PARAM_H_ */

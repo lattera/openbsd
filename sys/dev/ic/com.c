@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.7 2004/02/19 10:56:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.55.2.8 2004/06/05 23:12:41 niklas Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -1460,8 +1460,6 @@ comcnprobe(cp)
 	bus_space_tag_t iot = &arc_bus_io;
 #elif defined(hppa)
 	bus_space_tag_t iot = &hppa_bustag;
-#elif defined(__pegasos__)
-	bus_space_tag_t iot = MD_ISA_IOT;
 #else
 	bus_space_tag_t iot = 0;
 #endif
@@ -1496,7 +1494,11 @@ comcnprobe(cp)
 
 	/* initialize required fields */
 	cp->cn_dev = makedev(commajor, CONUNIT);
+#if defined(COMCONSOLE) || defined(PCCOMCONSOLE) || !defined(__amd64__)
 	cp->cn_pri = CN_REMOTE;
+#else
+	cp->cn_pri = CN_NORMAL;
+#endif
 }
 
 void

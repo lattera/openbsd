@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/Attic/float.h,v 1.1 2004/04/26 12:34:05 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/include/Attic/float.h,v 1.1.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1989 Regents of the University of California.

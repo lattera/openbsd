@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.10 2004/02/19 10:57:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.13.2.11 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: in6.c,v 1.198 2001/07/18 09:12:38 itojun Exp $	*/
 
 /*
@@ -2203,7 +2203,8 @@ in6_are_prefix_equal(p1, p2, len)
 
 	if (bcmp(&p1->s6_addr, &p2->s6_addr, bytelen))
 		return (0);
-	if (p1->s6_addr[bytelen] >> (8 - bitlen) !=
+	if (bitlen != 0 &&
+	    p1->s6_addr[bytelen] >> (8 - bitlen) !=
 	    p2->s6_addr[bytelen] >> (8 - bitlen))
 		return (0);
 

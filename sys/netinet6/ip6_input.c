@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.12 2004/02/19 10:57:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.13 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -901,10 +901,6 @@ ip6_savecontrol(in6p, mp, ip6, m)
 	struct mbuf *m;
 {
 # define in6p_flags	inp_flags
-	int privileged = 0;
-
-	if ((in6p->inp_socket->so_state & SS_PRIV) != 0)
-		privileged++;
 
 #ifdef SO_TIMESTAMP
 	if (in6p->in6p_socket->so_options & SO_TIMESTAMP) {
@@ -957,12 +953,13 @@ ip6_savecontrol(in6p, mp, ip6, m)
 	/* IN6P_NEXTHOP - for outgoing packet only */
 
 	/*
-	 * IPV6_HOPOPTS socket option. We require super-user privilege
-	 * for the option, but it might be too strict, since there might
-	 * be some hop-by-hop options which can be returned to normal user.
-	 * See RFC 2292 section 6.
+	 * IPV6_HOPOPTS socket option.  Recall that we required super-user
+	 * privilege for the option (see ip6_ctloutput), but it might be too
+	 * strict, since there might be some hop-by-hop options which can be
+	 * returned to normal user.
+	 * See also RFC 2292 section 6.
 	 */
-	if ((in6p->in6p_flags & IN6P_HOPOPTS) != 0 && privileged) {
+	if ((in6p->in6p_flags & IN6P_HOPOPTS) != 0) {
 		/*
 		 * Check if a hop-by-hop options header is contatined in the
 		 * received packet, and if so, store the options as ancillary
@@ -1054,14 +1051,6 @@ ip6_savecontrol(in6p, mp, ip6, m)
 			switch (nxt) {
 			case IPPROTO_DSTOPTS:
 				if (!in6p->in6p_flags & IN6P_DSTOPTS)
-					break;
-
-				/*
-				 * We also require super-user privilege for
-				 * the option.
-				 * See the comments on IN6_HOPOPTS.
-				 */
-				if (!privileged)
 					break;
 
 				*mp = sbcreatecontrol((caddr_t)ip6e, elen,
@@ -1342,6 +1331,8 @@ u_char	inet6ctlerrmap[PRC_NCMDS] = {
 #include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
+int *ipv6ctl_vars[IPV6CTL_MAXID] = IPV6CTL_VARS;
+
 int
 ip6_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	int *name;
@@ -1356,50 +1347,15 @@ ip6_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return ENOTDIR;
 
 	switch (name[0]) {
-
-	case IPV6CTL_FORWARDING:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				  &ip6_forwarding);
-	case IPV6CTL_SENDREDIRECTS:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_sendredirects);
-	case IPV6CTL_DEFHLIM:
-		return sysctl_int(oldp, oldlenp, newp, newlen, &ip6_defhlim);
-	case IPV6CTL_MAXFRAGPACKETS:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_maxfragpackets);
-	case IPV6CTL_ACCEPT_RTADV:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_accept_rtadv);
-	case IPV6CTL_KEEPFAITH:
-		return sysctl_int(oldp, oldlenp, newp, newlen, &ip6_keepfaith);
-	case IPV6CTL_LOG_INTERVAL:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_log_interval);
-	case IPV6CTL_HDRNESTLIMIT:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_hdrnestlimit);
-	case IPV6CTL_DAD_COUNT:
-		return sysctl_int(oldp, oldlenp, newp, newlen, &ip6_dad_count);
-	case IPV6CTL_AUTO_FLOWLABEL:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_auto_flowlabel);
-	case IPV6CTL_DEFMCASTHLIM:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_defmcasthlim);
 	case IPV6CTL_KAME_VERSION:
 		return sysctl_rdstring(oldp, oldlenp, newp, __KAME_VERSION);
-	case IPV6CTL_USE_DEPRECATED:
-		return sysctl_int(oldp, oldlenp, newp, newlen,
-				&ip6_use_deprecated);
-	case IPV6CTL_RR_PRUNE:
-		return sysctl_int(oldp, oldlenp, newp, newlen, &ip6_rr_prune);
 	case IPV6CTL_V6ONLY:
 		return sysctl_rdint(oldp, oldlenp, newp, ip6_v6only);
-	case IPV6CTL_MAXFRAGS:
-		return sysctl_int(oldp, oldlenp, newp, newlen, &ip6_maxfrags);
 	default:
-		return EOPNOTSUPP;
+		if (name[0] < IPV6CTL_MAXID)
+			return (sysctl_int_arr(ipv6ctl_vars, name, namelen,
+			    oldp, oldlenp, newp, newlen));
+		return (EOPNOTSUPP);
 	}
 	/* NOTREACHED */
 }

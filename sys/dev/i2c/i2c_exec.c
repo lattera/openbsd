@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2c/i2c_exec.c,v 1.1 2004/05/23 17:33:43 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2c/i2c_exec.c,v 1.1.2.1 2004/06/05 23:12:38 niklas Exp $	*/
 /*	$NetBSD: i2c_exec.c,v 1.3 2003/10/29 00:34:58 mycroft Exp $	*/
 
 /*

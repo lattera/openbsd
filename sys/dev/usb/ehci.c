@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ehci.c,v 1.5 2004/05/30 01:25:17 tedu Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ehci.c,v 1.5.2.1 2004/06/05 23:12:57 niklas Exp $ */
 /*	$NetBSD: ehci.c,v 1.54 2004/01/17 13:15:05 jdolecek Exp $	*/
 
 /*

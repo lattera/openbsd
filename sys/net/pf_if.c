@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_if.c,v 1.8.2.1 2004/02/19 10:57:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pf_if.c,v 1.8.2.2 2004/06/05 23:11:24 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -55,12 +55,12 @@
 #include <netinet/ip6.h>
 #endif /* INET6 */
 
-#define ACCEPT_FLAGS(oklist)                    \
-        do {                                    \
-                if ((flags & ~(oklist)) &       \
-                    PFI_FLAG_ALLMASK)           \
-                        return (EINVAL);        \
-        } while (0)
+#define ACCEPT_FLAGS(oklist)			\
+	do {					\
+		if ((flags & ~(oklist)) &	\
+		    PFI_FLAG_ALLMASK)		\
+			return (EINVAL);	\
+	} while (0)
 
 #define senderr(e)      do { rv = (e); goto _bad; } while (0)
 
@@ -75,10 +75,6 @@ long			  pfi_update = 1;
 struct pfr_addr		 *pfi_buffer;
 int			  pfi_buffer_cnt;
 int			  pfi_buffer_max;
-char 			  pfi_reserved_anchor[PF_ANCHOR_NAME_SIZE] =
-				PF_RESERVED_ANCHOR;
-char			  pfi_interface_ruleset[PF_RULESET_NAME_SIZE] =
-				PF_INTERFACE_RULESET;
 
 void		 pfi_dynaddr_update(void *);
 void		 pfi_kifaddr_update(void *);
@@ -91,7 +87,6 @@ struct pfi_kif	*pfi_if_create(const char *, struct pfi_kif *, int);
 void		 pfi_copy_group(char *, const char *, int);
 void		 pfi_dynamic_drivers(void);
 void		 pfi_newgroup(const char *, int);
-struct pfi_kif 	*pfi_lookup_if(const char *);
 int		 pfi_skip_if(const char *, struct pfi_kif *, int);
 int		 pfi_unmask(void *);
 void		 pfi_dohooks(struct pfi_kif *);
@@ -130,7 +125,7 @@ void
 pfi_attach_ifnet(struct ifnet *ifp)
 {
 	struct pfi_kif	*p, *q, key;
-	int 		 s;
+	int		 s;
 
 	pfi_initialize();
 	s = splsoftnet();
@@ -185,8 +180,8 @@ pfi_attach_ifnet(struct ifnet *ifp)
 		q = p->pfik_parent;
 	p->pfik_ifp = ifp;
 	p->pfik_flags |= PFI_IFLAG_ATTACHED;
-	p->pfik_ah_cookie = hook_establish(ifp->if_addrhooks,
-	    1, pfi_kifaddr_update, p);
+	p->pfik_ah_cookie =
+	    hook_establish(ifp->if_addrhooks, 1, pfi_kifaddr_update, p);
 	pfi_index2kif[ifp->if_index] = p;
 	pfi_dohooks(p);
 	splx(s);
@@ -313,11 +308,9 @@ pfi_dynaddr_setup(struct pf_addr_wrap *aw, sa_family_t af)
 	if (aw->iflags & PFI_AFLAG_NOALIAS)
 		strlcat(tblname, ":0", sizeof(tblname));
 	if (dyn->pfid_net != 128)
-		snprintf(tblname+strlen(tblname),
-		    sizeof(tblname)-strlen(tblname),
-		    "/%d", dyn->pfid_net);
-	ruleset = pf_find_or_create_ruleset(pfi_reserved_anchor,
-	    pfi_interface_ruleset);
+		snprintf(tblname + strlen(tblname),
+		    sizeof(tblname) - strlen(tblname), "/%d", dyn->pfid_net);
+	ruleset = pf_find_or_create_ruleset(PF_RESERVED_ANCHOR);
 	if (ruleset == NULL)
 		senderr(1);
 
@@ -328,8 +321,7 @@ pfi_dynaddr_setup(struct pf_addr_wrap *aw, sa_family_t af)
 	dyn->pfid_kt->pfrkt_flags |= PFR_TFLAG_ACTIVE;
 	dyn->pfid_iflags = aw->iflags;
 	dyn->pfid_af = af;
-	dyn->pfid_hook_cookie = hook_establish(
-	    dyn->pfid_kif->pfik_ah_head, 1,
+	dyn->pfid_hook_cookie = hook_establish(dyn->pfid_kif->pfik_ah_head, 1,
 	    pfi_dynaddr_update, dyn);
 	if (dyn->pfid_hook_cookie == NULL)
 		senderr(1);
@@ -361,7 +353,7 @@ pfi_dynaddr_update(void *p)
 	if (dyn == NULL || kif == NULL || kt == NULL)
 		panic("pfi_dynaddr_update");
 	if (kt->pfrkt_larg != pfi_update) {
-		/* this table need to be brought up-to-date */
+		/* this table needs to be brought up-to-date */
 		pfi_table_update(kt, kif, dyn->pfid_net, dyn->pfid_iflags);
 		kt->pfrkt_larg = pfi_update;
 	}
@@ -433,14 +425,14 @@ pfi_instance_add(struct ifnet *ifp, int net, int flags)
 		}
 		if (af == AF_INET)
 			got4 = 1;
-		else
+		else if (af == AF_INET6)
 			got6 = 1;
 		net2 = net;
 		if (net2 == 128 && (flags & PFI_AFLAG_NETWORK)) {
 			if (af == AF_INET) {
 				net2 = pfi_unmask(&((struct sockaddr_in *)
 				    ia->ifa_netmask)->sin_addr);
-			} else {
+			} else if (af == AF_INET6) {
 				net2 = pfi_unmask(&((struct sockaddr_in6 *)
 				    ia->ifa_netmask)->sin6_addr);
 			}
@@ -466,15 +458,15 @@ pfi_address_add(struct sockaddr *sa, int af, int net)
 		int		 new_max = pfi_buffer_max * 2;
 
 		if (new_max > PFI_BUFFER_MAX) {
-			printf("pfi_address_add: address buffer full "
-			    "(%d/%d)\n", pfi_buffer_cnt, PFI_BUFFER_MAX);
+			printf("pfi_address_add: address buffer full (%d/%d)\n",
+			    pfi_buffer_cnt, PFI_BUFFER_MAX);
 			return;
 		}
 		p = malloc(new_max * sizeof(*pfi_buffer), PFI_MTYPE,
 		    M_DONTWAIT);
 		if (p == NULL) {
 			printf("pfi_address_add: no memory to grow buffer "
-			    " (%d/%d)\n", pfi_buffer_cnt, PFI_BUFFER_MAX);
+			    "(%d/%d)\n", pfi_buffer_cnt, PFI_BUFFER_MAX);
 			return;
 		}
 		memcpy(pfi_buffer, p, pfi_buffer_cnt * sizeof(*pfi_buffer));
@@ -497,10 +489,10 @@ pfi_address_add(struct sockaddr *sa, int af, int net)
 			p->pfra_ip6addr.s6_addr16[1] = 0;
 	}
 	/* mask network address bits */
-        if (net < 128)
-                ((caddr_t)p)[p->pfra_net/8] &= ~(0xFF >> (p->pfra_net%8));
-        for (i = (p->pfra_net+7)/8; i < sizeof(p->pfra_u); i++)
-                ((caddr_t)p)[i] = 0;
+	if (net < 128)
+		((caddr_t)p)[p->pfra_net/8] &= ~(0xFF >> (p->pfra_net%8));
+	for (i = (p->pfra_net+7)/8; i < sizeof(p->pfra_u); i++)
+		((caddr_t)p)[i] = 0;
 }
 
 void
@@ -547,7 +539,7 @@ pfi_kifaddr_update(void *v)
 int
 pfi_if_compare(struct pfi_kif *p, struct pfi_kif *q)
 {
-	return strncmp(p->pfik_name, q->pfik_name, IFNAMSIZ);
+	return (strncmp(p->pfik_name, q->pfik_name, IFNAMSIZ));
 }
 
 struct pfi_kif *
@@ -648,8 +640,8 @@ pfi_dynamic_drivers(void)
 			    dev->dv_cfdata->cf_driver->cd_name))
 				enabled[i] = 1;
 	}
-        for (cf = cfdata; cf->cf_driver; cf++) {
-                if (cf->cf_driver->cd_class != DV_IFNET)
+	for (cf = cfdata; cf->cf_driver; cf++) {
+		if (cf->cf_driver->cd_class != DV_IFNET)
 			continue;
 		for (p = cf->cf_parents; p && *p >= 0; p++) {
 			if ((drv = cfdata[*p].cf_driver) == NULL)
@@ -769,13 +761,24 @@ pfi_lookup_if(const char *name)
 int
 pfi_skip_if(const char *filter, struct pfi_kif *p, int f)
 {
+	int	n;
+
 	if ((p->pfik_flags & PFI_IFLAG_GROUP) && !(f & PFI_FLAG_GROUP))
 		return (1);
 	if ((p->pfik_flags & PFI_IFLAG_INSTANCE) && !(f & PFI_FLAG_INSTANCE))
 		return (1);
 	if (filter == NULL || !*filter)
 		return (0);
-	return !strncmp(p->pfik_name, filter, strlen(filter));
+	if (!strcmp(p->pfik_name, filter))
+		return (0);	/* exact match */
+	n = strlen(filter);
+	if (n < 1 || n >= IFNAMSIZ)
+		return (1);	/* sanity check */
+	if (filter[n-1] >= '0' && filter[n-1] <= '9')
+		return (1);	/* only do exact match in that case */
+	if (strncmp(p->pfik_name, filter, n))
+		return (1);	/* prefix doesn't match */
+	return (p->pfik_name[n] < '0' || p->pfik_name[n] > '9');
 }
 
 /* from pf_print_state.c */
@@ -794,8 +797,8 @@ pfi_unmask(void *addr)
 		tmp = ntohl(m->addr32[j]);
 		for (i = 31; tmp & (1 << i); --i)
 			b++;
-        }
-        return (b);
+	}
+	return (b);
 }
 
 void
@@ -808,29 +811,34 @@ pfi_dohooks(struct pfi_kif *p)
 int
 pfi_match_addr(struct pfi_dynaddr *dyn, struct pf_addr *a, sa_family_t af)
 {
-	if (af == AF_INET) {
+	switch (af) {
+#ifdef INET
+	case AF_INET:
 		switch (dyn->pfid_acnt4) {
 		case 0:
 			return (0);
 		case 1:
-			if (PF_AZERO(&dyn->pfid_mask4, AF_INET))
-				return (1);
 			return (PF_MATCHA(0, &dyn->pfid_addr4,
 			    &dyn->pfid_mask4, a, AF_INET));
 		default:
-			return pfr_match_addr(dyn->pfid_kt, a, AF_INET);
+			return (pfr_match_addr(dyn->pfid_kt, a, AF_INET));
 		}
-	} else {
+		break;
+#endif /* INET */
+#ifdef INET6
+	case AF_INET6:
 		switch (dyn->pfid_acnt6) {
-		case (0):
+		case 0:
 			return (0);
 		case 1:
-			if (PF_AZERO(&dyn->pfid_mask6, AF_INET6));
-				return (1);
 			return (PF_MATCHA(0, &dyn->pfid_addr6,
 			    &dyn->pfid_mask6, a, AF_INET6));
 		default:
-			return pfr_match_addr(dyn->pfid_kt, a, AF_INET6);
+			return (pfr_match_addr(dyn->pfid_kt, a, AF_INET6));
 		}
+		break;
+#endif /* INET6 */
+	default:
+		return (0);
 	}
 }

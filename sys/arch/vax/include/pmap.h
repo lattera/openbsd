@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.8 2004/02/19 10:50:02 niklas Exp $     */
+/*      $OpenBSD: src/sys/arch/vax/include/pmap.h,v 1.8.10.9 2004/06/05 23:11:02 niklas Exp $     */
 /*	$NetBSD: pmap.h,v 1.37 1999/08/01 13:48:07 ragge Exp $	   */
 
 /* 
@@ -141,6 +141,8 @@ extern	struct pmap kernel_pmap_store;
 	__asm__("addl3 $0x80000000,%0,r0;movc5 $0,(r0),$0,$4096,(r0)"	\
 	    :: "r"(__pa): "r0","r1","r2","r3","r4","r5");		\
 } while (0)
+
+#define pmap_proc_iflush(p,va,len)	/* nothing */
 
 /* Prototypes */
 void	pmap_bootstrap(void);

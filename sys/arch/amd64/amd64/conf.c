@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/conf.c,v 1.3.2.1 2004/02/22 22:08:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/conf.c,v 1.3.2.2 2004/06/05 23:09:24 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Charles M. Hannum.  All rights reserved.
@@ -190,6 +190,7 @@ cdev_decl(pci);
 #endif
 
 #include "pf.h"
+#include "hotplug.h"
 
 struct cdevsw	cdevsw[] =
 {
@@ -273,7 +274,7 @@ struct cdevsw	cdevsw[] =
 	cdev_usbdev_init(NUHID,uhid),	/* 62: USB generic HID */
 	cdev_usbdev_init(NUGEN,ugen),	/* 63: USB generic driver */
 	cdev_ulpt_init(NULPT,ulpt), 	/* 64: USB printers */
-	cdev_usbdev_init(NURIO,urio),	/* 65: USB Diamond Rio 500 */
+	cdev_urio_init(NURIO,urio),	/* 65: USB Diamond Rio 500 */
 	cdev_tty_init(NUCOM,ucom),	/* 66: USB tty */
 	cdev_mouse_init(NWSKBD, wskbd),	/* 67: keyboards */
 	cdev_mouse_init(NWSMOUSE,	/* 68: mice */
@@ -293,6 +294,9 @@ struct cdevsw	cdevsw[] =
 	cdev_usbdev_init(NUSCANNER,uscanner),	/* 77: USB scanners */
 	cdev_systrace_init(NSYSTRACE,systrace),	/* 78: system call tracing */
  	cdev_oci_init(NBIO,bio),	/* 79: ioctl tunnel */
+	cdev_notdef(),			/* 80: gpr? XXX */
+	cdev_ptm_init(NPTY,ptm),	/* 81: pseudo-tty ptm device */
+	cdev_hotplug_init(NHOTPLUG,hotplug), /* 82: devices hot plugging */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -446,7 +450,7 @@ struct	consdev constab[] = {
 #if 1 || NWSDISPLAY > 0
 	cons_init(ws),
 #endif
-#if 0 && NCOM > 0
+#if NCOM + NPCCOM > 0
 	cons_init(com),
 #endif
 	{ 0 },

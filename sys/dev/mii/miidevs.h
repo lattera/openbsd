@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.10 2004/02/19 10:56:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.11 2004/06/05 23:12:48 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.39 2003/10/05 03:24:24 krw Exp 
+ *	OpenBSD: miidevs,v 1.41 2004/06/05 05:42:08 pvalchev Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -61,7 +61,9 @@
 #define	MII_OUI_LEVEL1	0x00207b	/* Level 1 */
 #define	MII_OUI_MYSON	0x00c0b4	/* Myson Technology */
 #define	MII_OUI_NATSEMI	0x080017	/* National Semiconductor */
+#define	MII_OUI_PLESSEY	0x046b40	/* Plessey Semiconductor */
 #define	MII_OUI_QUALSEMI	0x006051	/* Quality Semiconductor */
+#define	MII_OUI_REALTEK	0x000020	/* Realtek Semiconductor */
 #define	MII_OUI_SEEQ	0x00a07d	/* Seeq */
 #define	MII_OUI_SIS	0x00e006	/* Silicon Integrated Systems */
 #define	MII_OUI_TI	0x080028	/* Texas Instruments */
@@ -90,6 +92,9 @@
 
 /* Don't know what's going on here. */
 #define	MII_OUI_xxDAVICOM	0x006040	/* Davicom Semiconductor */
+
+/* This is the OUI of the gigE PHY in the RealTek 8169S/8110S chips */
+#define	MII_OUI_xxREALTEK	0x000732	/* Realtek Semiconductor */
 
 /* Contrived vendor for dcphy */
 #define	MII_OUI_xxDEC	0x040440	/* Digital Clone */
@@ -222,9 +227,19 @@
 #define	MII_MODEL_NATSEMI_DP83861	0x0006
 #define	MII_STR_NATSEMI_DP83861	"DP83861 10/100/1000 media interface"
 
+/* Plessey Semiconductor PHYs */
+#define	MII_MODEL_PLESSEY_NWK914	0x0000
+#define	MII_STR_PLESSEY_NWK914	"NWK914 10/100 media interface"
+
 /* Quality Semiconductor PHYs */
 #define	MII_MODEL_QUALSEMI_QS6612	0x0000
 #define	MII_STR_QUALSEMI_QS6612	"QS6612 10/100 media interface"
+
+/* Realtek Semiconductor PHYs */
+#define	MII_MODEL_REALTEK_RTL8201L	0x0020
+#define	MII_STR_REALTEK_RTL8201L	"RTL8201L 10/100 media interface"
+#define	MII_MODEL_xxREALTEK_RTL8169S	0x0011
+#define	MII_STR_xxREALTEK_RTL8169S	"RTL8169S/8110S media interface"
 
 /* Seeq PHYs */
 #define	MII_MODEL_xxSEEQ_80220	0x0003

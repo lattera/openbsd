@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.4.4.5 2003/06/07 11:14:45 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/param.h,v 1.4.4.6 2004/06/05 23:11:00 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.25 2001/05/30 12:28:51 mrg Exp $ */
 
 /*
@@ -182,14 +182,7 @@ extern int nbpg, pgofset, pgshift;
 #define	MCLSHIFT	11		/* log2(MCLBYTES) */
 #define	MCLBYTES	(1 << MCLSHIFT)	/* enough for whole Ethernet packet */
 #define	MCLOFSET	(MCLBYTES - 1)
-
-#ifndef NMBCLUSTERS
-#ifdef GATEWAY
-#define	NMBCLUSTERS	2048		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
-#endif
-#endif
+#define	NMBCLUSTERS	4096		/* map size, max cluster allocation */
 
 #define MSGBUFSIZE	NBPG
 

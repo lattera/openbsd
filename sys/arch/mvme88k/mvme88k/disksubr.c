@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.6 2004/02/19 10:49:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.7 2004/06/05 23:09:50 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -137,7 +137,7 @@ readdisklabel(dev, strat, lp, clp, spoofonly)
 	int error, i;
 
 	/* minimal requirements for archetypal disk label */
-	if (lp->d_secsize == 0)
+	if (lp->d_secsize < DEV_BSIZE)
 		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
 		lp->d_secperunit = 0x1fffffff;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/cardslot.c,v 1.1.8.3 2004/02/19 10:56:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/cardslot.c,v 1.1.8.4 2004/06/05 23:12:37 niklas Exp $ */
 /*	$NetBSD: cardslot.c,v 1.9 2000/03/22 09:35:06 haya Exp $	*/
 
 /*
@@ -314,7 +314,7 @@ cardslot_event_thread(arg)
       (void) tsleep(&sc->sc_events, PWAIT, "cardslotev", 0);
       continue;
     }
-    SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce, ce_q);
+    SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce_q);
     splx(s);
 
     if (IS_CARDSLOT_INSERT_REMOVE_EV(ce->ce_type)) {
@@ -333,9 +333,9 @@ cardslot_event_thread(arg)
 	  break;
 	}
 	if (ce2->ce_type == ce->ce_type) {
-	  SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce1, ce_q);
+	  SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce_q);
 	  free(ce1, M_TEMP);
-	  SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce2, ce_q);
+	  SIMPLEQ_REMOVE_HEAD(&sc->sc_events, ce_q);
 	  free(ce2, M_TEMP);
 	}
       }

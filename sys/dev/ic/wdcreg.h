@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.2.2.5 2004/02/19 10:56:21 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdcreg.h,v 1.2.2.6 2004/06/05 23:12:44 niklas Exp $     */
 /*	$NetBSD: wdcreg.h,v 1.22 1999/03/07 14:02:54 bouyer Exp $	*/
 
 /*-
@@ -113,6 +113,8 @@
 
 #define WDCC_READDMA_EXT	0x25 /* read 48-bit addressing with DMA */
 #define WDCC_WRITEDMA_EXT	0x35 /* write 48-bit addressing with DMA */
+
+#define WDCC_FLUSHCACHE_EXT	0xea /* 48-bit addressing flush cache */
 
 /* Subcommands for SET_FEATURES (features register ) */
 #define WDSF_8BIT_PIO_EN	0x01 /* Enable 8bit PIO (CFA featureset) */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mulaw.c,v 1.4.6.5 2004/02/19 10:56:13 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/mulaw.c,v 1.4.6.6 2004/06/05 23:12:36 niklas Exp $ */
 /*	$NetBSD: mulaw.c,v 1.15 2001/01/18 20:28:20 jdolecek Exp $	*/
 
 /*
@@ -40,7 +40,7 @@
 #include <dev/mulaw.h>
 
 /*
- * This table converts a (8 bit) mulaw value two a 16 bit value.
+ * This table converts a (8 bit) mu-law value two a 16 bit value.
  * The 16 bits are represented as an array of two bytes for easier access
  * to the individual bytes.
  */
@@ -452,6 +452,31 @@ slinear8_to_alaw(void *v, u_char *p, int cc)
 	while (--cc >= 0) {
 		*p = lintoalaw[*p ^ 0x80];
 		++p;
+	}
+}
+
+void
+slinear16_to_alaw_le(void *v, u_char *p, int cc)
+{
+	u_char *q = p;
+
+	while (--cc >= 0) {
+		*p = lintoalaw[q[1] ^ 0x80];
+		++p;
+		q += 2;
+	}
+}
+
+
+void
+slinear16_to_alaw_be(void *v, u_char *p, int cc)
+{
+	u_char *q = p;
+
+	while (--cc >= 0) {
+		*p = lintoalaw[q[0] ^ 0x80];
+		++p;
+		q += 2;
 	}
 }
 

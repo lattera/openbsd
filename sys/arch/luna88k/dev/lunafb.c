@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/luna88k/dev/lunafb.c,v 1.3 2004/05/10 10:30:23 aoyama Exp $ */
+/* $OpenBSD: src/sys/arch/luna88k/dev/lunafb.c,v 1.3.2.1 2004/06/05 23:09:46 niklas Exp $ */
 /* $NetBSD: lunafb.c,v 1.7.6.1 2002/08/07 01:48:34 lukem Exp $ */
 
 /*-

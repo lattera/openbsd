@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe_net.c,v 1.2 2004/04/07 18:00:55 tom Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe_net.c,v 1.2.2.1 2004/06/05 23:09:01 niklas Exp $	*/
 /*	$NetBSD: dev_net.c,v 1.4 2003/03/12 13:15:08 drochner Exp $	*/
 
 /*-

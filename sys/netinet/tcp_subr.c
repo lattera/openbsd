@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.11 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.12 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -100,7 +100,7 @@
 #endif /* INET6 */
 
 #ifdef TCP_SIGNATURE
-#include <sys/md5k.h>
+#include <crypto/md5.h>
 #endif /* TCP_SIGNATURE */
 
 /* patchable/settable parameters for tcp */
@@ -148,16 +148,17 @@ int	tcp_syn_cache_limit = TCP_SYN_HASH_SIZE*TCP_SYN_BUCKET_SIZE;
 int	tcp_syn_bucket_limit = 3*TCP_SYN_BUCKET_SIZE;
 struct	syn_cache_head tcp_syn_cache[TCP_SYN_HASH_SIZE];
 
+int tcp_reass_limit = NMBCLUSTERS / 2; /* hardlimit for tcpqe_pool */
+
 #ifdef INET6
 extern int ip6_defhlim;
 #endif /* INET6 */
 
 struct pool tcpcb_pool;
+struct pool tcpqe_pool;
 #ifdef TCP_SACK
 struct pool sackhl_pool;
 #endif
-
-int	tcp_freeq(struct tcpcb *);
 
 struct tcpstat tcpstat;		/* tcp statistics */
 tcp_seq  tcp_iss;
@@ -173,6 +174,9 @@ tcp_init()
 #endif /* TCP_COMPAT_42 */
 	pool_init(&tcpcb_pool, sizeof(struct tcpcb), 0, 0, 0, "tcpcbpl",
 	    NULL);
+	pool_init(&tcpqe_pool, sizeof(struct ipqent), 0, 0, 0, "tcpqepl",
+	    NULL);
+	pool_sethardlimit(&tcpqe_pool, tcp_reass_limit, NULL, 0);
 #ifdef TCP_SACK
 	pool_init(&sackhl_pool, sizeof(struct sackhole), 0, 0, 0, "sackhlpl",
 	    NULL);
@@ -569,119 +573,11 @@ tcp_close(struct tcpcb *tp)
 #ifdef TCP_SACK
 	struct sackhole *p, *q;
 #endif
-#ifdef RTV_RTT
-	struct rtentry *rt;
-#ifdef INET6
-	int bound_to_specific = 0;  /* I.e. non-default */
-
-	/*
-	 * This code checks the nature of the route for this connection.
-	 * Normally this is done by two simple checks in the next
-	 * INET/INET6 ifdef block, but because of two possible lower layers,
-	 * that check is done here.
-	 *
-	 * Perhaps should be doing this only for a RTF_HOST route.
-	 */
-	rt = inp->inp_route.ro_rt;  /* Same for route or route6. */
-	if (tp->pf == PF_INET6) {
-		if (rt)
-			bound_to_specific =
-			    !(IN6_IS_ADDR_UNSPECIFIED(&
-			    ((struct sockaddr_in6 *)rt_key(rt))->sin6_addr));
-	} else {
-		if (rt)
-			bound_to_specific =
-			    (((struct sockaddr_in *)rt_key(rt))->
-			    sin_addr.s_addr != INADDR_ANY);
-	}
-#endif /* INET6 */
-
-	/*
-	 * If we sent enough data to get some meaningful characteristics,
-	 * save them in the routing entry.  'Enough' is arbitrarily
-	 * defined as the sendpipesize (default 4K) * 16.  This would
-	 * give us 16 rtt samples assuming we only get one sample per
-	 * window (the usual case on a long haul net).  16 samples is
-	 * enough for the srtt filter to converge to within 5% of the correct
-	 * value; fewer samples and we could save a very bogus rtt.
-	 *
-	 * Don't update the default route's characteristics and don't
-	 * update anything that the user "locked".
-	 */
-#ifdef INET6
-	/*
-	 * Note that rt and bound_to_specific are set above.
-	 */
-	if (SEQ_LT(tp->iss + so->so_snd.sb_hiwat * 16, tp->snd_max) &&
-	    rt && bound_to_specific) {
-#else /* INET6 */
-	if (SEQ_LT(tp->iss + so->so_snd.sb_hiwat * 16, tp->snd_max) &&
-	    (rt = inp->inp_route.ro_rt) &&
-	    satosin(rt_key(rt))->sin_addr.s_addr != INADDR_ANY) {
-#endif /* INET6 */
-		u_long i = 0;
-
-		if ((rt->rt_rmx.rmx_locks & RTV_RTT) == 0) {
-			i = tp->t_srtt *
-			    (RTM_RTTUNIT / (PR_SLOWHZ * TCP_RTT_SCALE));
-			if (rt->rt_rmx.rmx_rtt && i)
-				/*
-				 * filter this update to half the old & half
-				 * the new values, converting scale.
-				 * See route.h and tcp_var.h for a
-				 * description of the scaling constants.
-				 */
-				rt->rt_rmx.rmx_rtt =
-				    (rt->rt_rmx.rmx_rtt + i) / 2;
-			else
-				rt->rt_rmx.rmx_rtt = i;
-		}
-		if ((rt->rt_rmx.rmx_locks & RTV_RTTVAR) == 0) {
-			i = tp->t_rttvar *
-			    (RTM_RTTUNIT / (PR_SLOWHZ * TCP_RTTVAR_SCALE));
-			if (rt->rt_rmx.rmx_rttvar && i)
-				rt->rt_rmx.rmx_rttvar =
-				    (rt->rt_rmx.rmx_rttvar + i) / 2;
-			else
-				rt->rt_rmx.rmx_rttvar = i;
-		}
-		/*
-		 * update the pipelimit (ssthresh) if it has been updated
-		 * already or if a pipesize was specified & the threshhold
-		 * got below half the pipesize.  I.e., wait for bad news
-		 * before we start updating, then update on both good
-		 * and bad news.
-		 */
-		if (((rt->rt_rmx.rmx_locks & RTV_SSTHRESH) == 0 &&
-		    (i = tp->snd_ssthresh) && rt->rt_rmx.rmx_ssthresh) ||
-		    i < (rt->rt_rmx.rmx_sendpipe / 2)) {
-			/*
-			 * convert the limit from user data bytes to
-			 * packets then to packet data bytes.
-			 */
-			i = (i + tp->t_maxseg / 2) / tp->t_maxseg;
-			if (i < 2)
-				i = 2;
-#ifdef INET6
-			if (tp->pf == PF_INET6)
-				i *= (u_long)(tp->t_maxseg + sizeof (struct tcphdr)
-				    + sizeof(struct ip6_hdr));
-			else
-#endif /* INET6 */
-				i *= (u_long)(tp->t_maxseg +
-				    sizeof (struct tcpiphdr));
-
-			if (rt->rt_rmx.rmx_ssthresh)
-				rt->rt_rmx.rmx_ssthresh =
-				    (rt->rt_rmx.rmx_ssthresh + i) / 2;
-			else
-				rt->rt_rmx.rmx_ssthresh = i;
-		}
-	}
-#endif /* RTV_RTT */
 
 	/* free the reassembly queue, if any */
+	tcp_reass_lock(tp);
 	tcp_freeq(tp);
+	tcp_reass_unlock(tp);
 
 	tcp_canceltimers(tp);
 	TCP_CLEAR_DELACK(tp);
@@ -715,7 +611,7 @@ tcp_freeq(struct tcpcb *tp)
 	while ((qe = LIST_FIRST(&tp->segq)) != NULL) {
 		LIST_REMOVE(qe, ipqe_q);
 		m_freem(qe->ipqe_m);
-		pool_put(&ipqent_pool, qe);
+		pool_put(&tcpqe_pool, qe);
 		rv = 1;
 	}
 	return (rv);
@@ -724,7 +620,20 @@ tcp_freeq(struct tcpcb *tp)
 void
 tcp_drain()
 {
+	struct inpcb *inp;
 
+	/* called at splimp() */
+	CIRCLEQ_FOREACH(inp, &tcbtable.inpt_queue, inp_queue) {
+		struct tcpcb *tp = (struct tcpcb *)inp->inp_ppcb;
+
+		if (tp != NULL) {
+			if (tcp_reass_lock_try(tp) == 0)
+				continue;
+			if (tcp_freeq(tp))
+				tcpstat.tcps_conndrained++;
+			tcp_reass_unlock(tp);
+		}
+	}
 }
 
 /*
@@ -999,8 +908,10 @@ tcp_mtudisc(inp, errno)
 {
 	struct tcpcb *tp = intotcpcb(inp);
 	struct rtentry *rt = in_pcbrtentry(inp);
+	int change = 0;
 
 	if (tp != 0) {
+		int orig_maxseg = tp->t_maxseg;
 		if (rt != 0) {
 			/*
 			 * If this was not a host route, remove and realloc.
@@ -1010,18 +921,18 @@ tcp_mtudisc(inp, errno)
 				if ((rt = in_pcbrtentry(inp)) == 0)
 					return;
 			}
-
-			if (rt->rt_rmx.rmx_mtu != 0) {
-				/* also takes care of congestion window */
-				tcp_mss(tp, -1);
-			}
+			if (orig_maxseg != tp->t_maxseg ||
+			    (rt->rt_rmx.rmx_locks & RTV_MTU))
+				change = 1;
 		}
+		tcp_mss(tp, -1);
 
 		/*
-		 * Resend unacknowledged packets.
+		 * Resend unacknowledged packets
 		 */
 		tp->snd_nxt = tp->snd_una;
-		tcp_output(tp);
+		if (change || errno > 0)
+			tcp_output(tp);
 	}
 }
 

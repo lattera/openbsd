@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/mainbus.c,v 1.1.2.3 2004/02/19 10:49:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/mainbus.c,v 1.1.2.4 2004/06/05 23:10:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -109,10 +109,17 @@ mbattach(struct device *parent, struct device *self, void *aux)
 	config_found(self, &nca, mbprint);
 
 	/*
+	 * Attach the BUG terminal services if necessary.
+	 */
+	nca.ca_name = "bugtty";
+	nca.ca_bus = &sc->sc_bus;
+	config_found(self, &nca, mbprint);
+
+	/*
 	 * Find and attach the PCI Northbridge. It will find and attach
 	 * everything.
 	 */
-	nca.ca_name = "mpcpcibr";
+	nca.ca_name = "raven";
 	nca.ca_bus = &sc->sc_bus;
 	config_found(self, &nca, mbprint);
 }

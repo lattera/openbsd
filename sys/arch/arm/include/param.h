@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/param.h,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/param.h,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.9 2002/03/24 03:37:23 thorpej Exp $	*/
 
 /*
@@ -33,9 +33,11 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	_ARM_ARM_PARAM_H_
-#define	_ARM_ARM_PARAM_H_
+#ifndef	_ARM_PARAM_H_
+#define	_ARM_PARAM_H_
 
+#define MACHINE_ARCH	"arm"
+#define _MACHINE_ARCH	arm
 
 /*
  * Machine dependent constants for ARM6+ processors
@@ -58,14 +60,6 @@
 
 #ifndef MSGBUFSIZE
 #define MSGBUFSIZE	PAGE_SIZE	/* default message buffer size */
-#endif
-
-#ifndef NMBCLUSTERS
-#ifdef GATEWAY
-#define	NMBCLUSTERS	2048		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
-#endif
 #endif
 
 /*
@@ -113,7 +107,7 @@
     
 #ifdef _KERNEL
 #ifndef _LOCORE
-void	delay __P((unsigned));
+void	delay (unsigned);
 #define DELAY(x)	delay(x)
 #endif
 #endif
@@ -134,31 +128,6 @@ void	delay __P((unsigned));
  *	If ELF, MACHINE and MACHINE_ARCH are forced to "arm/armeb".
  */
 
-#if defined(_KERNEL)
-#ifndef MACHINE_ARCH			/* XXX For now */
-#ifndef __ARMEB__
-#define	_MACHINE_ARCH	arm
-#define	MACHINE_ARCH	"arm"
-#else
-#define	_MACHINE_ARCH	armeb
-#define	MACHINE_ARCH	"armeb"
-#endif /* __ARMEB__ */
-#endif /* MACHINE_ARCH */
-#elif defined(__ELF__)
-#undef _MACHINE
-#undef MACHINE
-#undef _MACHINE_ARCH
-#undef MACHINE_ARCH
-#define	_MACHINE	arm
-#define	MACHINE		"arm"
-#ifndef __ARMEB__
-#define	_MACHINE_ARCH	arm
-#define	MACHINE_ARCH	"arm"
-#else
-#define	_MACHINE_ARCH	armeb
-#define	MACHINE_ARCH	"armeb"
-#endif /* __ARMEB__ */
-#endif /* __ELF__ */
 
 #define	MID_MACHINE	MID_ARM6
 
@@ -219,13 +188,10 @@ void	delay __P((unsigned));
  * of the hardware page size.
  */
 #define	MSIZE		256		/* size of an mbuf */
-
-#ifndef MCLSHIFT
 #define	MCLSHIFT	11		/* convert bytes to m_buf clusters */
 					/* 2K cluster can hold Ether frame */
-#endif	/* MCLSHIFT */
-
 #define	MCLBYTES	(1 << MCLSHIFT)	/* size of a m_buf cluster */
+#define	NMBCLUSTERS	4096		/* map size, max cluster allocation */
 
 #define ovbcopy bcopy
 
@@ -238,4 +204,4 @@ void	delay __P((unsigned));
 #endif
 #endif
 
-#endif	/* _ARM_ARM_PARAM_H_ */
+#endif	/* _ARM_PARAM_H_ */

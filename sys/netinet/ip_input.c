@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.11 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.12 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -140,6 +140,8 @@ extern int ipport_hifirstauto;
 extern int ipport_hilastauto;
 extern struct baddynamicports baddynamicports;
 
+int *ipctl_vars[IPCTL_MAXID] = IPCTL_VARS;
+
 extern	struct domain inetdomain;
 extern	struct protosw inetsw[];
 u_char	ip_protox[IPPROTO_MAX];
@@ -252,9 +254,9 @@ ip_init()
 	for (i = 0; defbaddynamicports_udp[i] != 0; i++)
 		DP_SET(baddynamicports.udp, defbaddynamicports_tcp[i]);
 
-	strncpy(ipsec_def_enc, IPSEC_DEFAULT_DEF_ENC, sizeof(ipsec_def_enc));
-	strncpy(ipsec_def_auth, IPSEC_DEFAULT_DEF_AUTH, sizeof(ipsec_def_auth));
-	strncpy(ipsec_def_comp, IPSEC_DEFAULT_DEF_COMP, sizeof(ipsec_def_comp));
+	strlcpy(ipsec_def_enc, IPSEC_DEFAULT_DEF_ENC, sizeof(ipsec_def_enc));
+	strlcpy(ipsec_def_auth, IPSEC_DEFAULT_DEF_AUTH, sizeof(ipsec_def_auth));
+	strlcpy(ipsec_def_comp, IPSEC_DEFAULT_DEF_COMP, sizeof(ipsec_def_comp));
 }
 
 struct	sockaddr_in ipaddr = { sizeof(ipaddr), AF_INET };
@@ -360,7 +362,7 @@ ipv4_input(m)
 		ipstat.ips_inhwcsum++;
 	}
 
-	/* Retrieve the packet lenght. */
+	/* Retrieve the packet length. */
 	len = ntohs(ip->ip_len);
 
 	/*
@@ -1605,13 +1607,6 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (ENOTDIR);
 
 	switch (name[0]) {
-	case IPCTL_FORWARDING:
-		return (sysctl_int(oldp, oldlenp, newp, newlen, &ipforwarding));
-	case IPCTL_SENDREDIRECTS:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-			&ipsendredirects));
-	case IPCTL_DEFTTL:
-		return (sysctl_int(oldp, oldlenp, newp, newlen, &ip_defttl));
 #ifdef notyet
 	case IPCTL_DEFMTU:
 		return (sysctl_int(oldp, oldlenp, newp, newlen, &ip_mtu));
@@ -1624,9 +1619,6 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 			return (EPERM);
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &ip_dosourceroute));
-	case IPCTL_DIRECTEDBCAST:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ip_directedbcast));
 	case IPCTL_MTUDISC:
 		error = sysctl_int(oldp, oldlenp, newp, newlen,
 		    &ip_mtudisc);
@@ -1646,53 +1638,6 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 			rt_timer_queue_change(ip_mtudisc_timeout_q,
 					      ip_mtudisc_timeout);
 		return (error);
-	case IPCTL_IPPORT_FIRSTAUTO:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ipport_firstauto));
-	case IPCTL_IPPORT_LASTAUTO:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ipport_lastauto));
-	case IPCTL_IPPORT_HIFIRSTAUTO:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ipport_hifirstauto));
-	case IPCTL_IPPORT_HILASTAUTO:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ipport_hilastauto));
-	case IPCTL_IPPORT_MAXQUEUE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &ip_maxqueue));
-	case IPCTL_ENCDEBUG:
-		return (sysctl_int(oldp, oldlenp, newp, newlen, &encdebug));
-	case IPCTL_IPSEC_EMBRYONIC_SA_TIMEOUT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_keep_invalid));
-	case IPCTL_IPSEC_REQUIRE_PFS:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_require_pfs));
-	case IPCTL_IPSEC_SOFT_ALLOCATIONS:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_soft_allocations));
-	case IPCTL_IPSEC_ALLOCATIONS:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_exp_allocations));
-	case IPCTL_IPSEC_SOFT_BYTES:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_soft_bytes));
-	case IPCTL_IPSEC_BYTES:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_exp_bytes));
-	case IPCTL_IPSEC_TIMEOUT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_exp_timeout));
-	case IPCTL_IPSEC_SOFT_TIMEOUT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_soft_timeout));
-	case IPCTL_IPSEC_SOFT_FIRSTUSE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_soft_first_use));
-	case IPCTL_IPSEC_FIRSTUSE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_exp_first_use));
 	case IPCTL_IPSEC_ENC_ALGORITHM:
 	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
 				       ipsec_def_enc, sizeof(ipsec_def_enc)));
@@ -1700,14 +1645,14 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
 				       ipsec_def_auth,
 				       sizeof(ipsec_def_auth)));
-	case IPCTL_IPSEC_EXPIRE_ACQUIRE:
-	        return (sysctl_int(oldp, oldlenp, newp, newlen,
-				   &ipsec_expire_acquire));
 	case IPCTL_IPSEC_IPCOMP_ALGORITHM:
 	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
 				       ipsec_def_comp,
 				       sizeof(ipsec_def_comp)));
 	default:
+		if (name[0] < IPCTL_MAXID)
+			return (sysctl_int_arr(ipctl_vars, name, namelen,
+			    oldp, oldlenp, newp, newlen));
 		return (EOPNOTSUPP);
 	}
 	/* NOTREACHED */

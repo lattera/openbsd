@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/include/param.h,v 1.3 2004/04/26 12:34:05 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/luna88k/include/param.h,v 1.3.2.1 2004/06/05 23:09:47 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.

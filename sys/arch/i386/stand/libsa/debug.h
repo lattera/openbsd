@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug.h,v 1.4.10.2 2003/06/07 11:11:38 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/debug.h,v 1.4.10.3 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -33,6 +33,6 @@
 extern char  *const reg_names[];
 extern const size_t nregs;
 
-int debug_init(void);
+void debug_init(void);
 void dump_regs(u_int, u_int);
 void dump_mem(char *, void *, size_t);

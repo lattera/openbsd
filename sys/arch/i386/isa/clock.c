@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.21.2.6 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/clock.c,v 1.21.2.7 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.39 1996/05/12 23:11:54 mycroft Exp $	*/
 
 /*-
@@ -144,8 +144,11 @@ void	rtcdrain(void *);
 u_int mc146818_read(void *, u_int);
 void mc146818_write(void *, u_int, u_int);
 
+#if defined(I586_CPU) || defined(I686_CPU)
+int pentium_mhz;
+#endif
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
-int pentium_mhz, clock_broken_latch;
+int clock_broken_latch;
 #endif
 
 #define	SECMIN	((unsigned)60)			/* seconds per minute */

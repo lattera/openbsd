@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.8 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.9 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -82,7 +82,7 @@ struct tcpcb {
 #define TF_SEND_CWR	0x00020000	/* send CWR in next seg */
 #define TF_DISABLE_ECN	0x00040000	/* disable ECN for this connection */
 #endif
-#define TF_DEAD		0x00080000	/* dead and to-be-released */
+#define TF_REASSLOCK	0x00080000	/* reassembling or draining */
 
 	struct	mbuf *t_template;	/* skeletal packet for transmit */
 	struct	inpcb *t_inpcb;		/* back pointer to internet pcb */
@@ -209,7 +209,6 @@ do {									\
 		timeout_del(&(tp)->t_delack_to);			\
 	}								\
 } while (/*CONSTCOND*/0)
-#endif /* _KERNEL */
 
 /*
  * Handy way of passing around TCP option info.
@@ -220,8 +219,6 @@ struct tcp_opt_info {
 	u_int32_t	ts_ecr;
 	u_int16_t	maxseg;
 };
-
-#ifdef _KERNEL
 
 /*
  * Data for the TCP compressed state engine.
@@ -284,6 +281,35 @@ struct syn_cache_head {
 	TAILQ_HEAD(, syn_cache) sch_bucket;	/* bucket entries */
 	u_short sch_length;			/* # entries in bucket */
 };
+
+static __inline int tcp_reass_lock_try(struct tcpcb *);
+static __inline void tcp_reass_unlock(struct tcpcb *);
+#define tcp_reass_lock(tp) tcp_reass_lock_try(tp)
+
+static __inline int
+tcp_reass_lock_try(struct tcpcb *tp)
+{
+	int s;
+
+	s = splimp();
+	if (tp->t_flags & TF_REASSLOCK) {
+		splx(s);
+		return (0);
+	}
+	tp->t_flags |= TF_REASSLOCK;
+	splx(s);
+	return (1);
+}
+
+static __inline void
+tcp_reass_unlock(struct tcpcb *tp)
+{
+	int s;
+
+	s = splimp();
+	tp->t_flags &= ~TF_REASSLOCK;
+	splx(s);
+}
 #endif /* _KERNEL */
 
 /*
@@ -371,6 +397,7 @@ struct	tcpstat {
 	u_int32_t tcps_rcvwinprobe;	/* rcvd window probe packets */
 	u_int32_t tcps_rcvdupack;	/* rcvd duplicate acks */
 	u_int32_t tcps_rcvacktoomuch;	/* rcvd acks for unsent data */
+	u_int32_t tcps_rcvacktooold;	/* rcvd acks for old data */
 	u_int32_t tcps_rcvackpack;	/* rcvd ack packets */
 	u_int64_t tcps_rcvackbyte;	/* bytes acked by rcvd acks */
 	u_int32_t tcps_rcvwinupd;	/* rcvd window update packets */
@@ -412,6 +439,8 @@ struct	tcpstat {
 	u_int64_t tcps_sc_dropped;	/* # of SYNs dropped (no route/mem) */
 	u_int64_t tcps_sc_collisions;	/* # of hash collisions */
 	u_int64_t tcps_sc_retransmitted;/* # of retransmissions */
+
+	u_int64_t tcps_conndrained;	/* # of connections drained */
 };
 
 /*
@@ -435,7 +464,9 @@ struct	tcpstat {
 #define	TCPCTL_SYN_CACHE_LIMIT 15 /* max size of comp. state engine */
 #define	TCPCTL_SYN_BUCKET_LIMIT	16 /* max size of hash bucket */
 #define	TCPCTL_RFC3390	       17 /* enable/disable RFC3390 increased cwnd */
-#define	TCPCTL_MAXID	       18
+#define	TCPCTL_REASS_LIMIT     18 /* max entries for tcp reass queues */
+#define	TCPCTL_DROP	       19 /* drop tcp connection */
+#define	TCPCTL_MAXID	       20
 
 #define	TCPCTL_NAMES { \
 	{ 0, 0 }, \
@@ -456,6 +487,31 @@ struct	tcpstat {
 	{ "syncachelimit", 	CTLTYPE_INT }, \
 	{ "synbucketlimit", 	CTLTYPE_INT }, \
 	{ "rfc3390", 	CTLTYPE_INT }, \
+	{ "reasslimit", 	CTLTYPE_INT }, \
+	{ "drop", 	CTLTYPE_STRUCT }, \
+}
+
+#define	TCPCTL_VARS { \
+	NULL, \
+	&tcp_do_rfc1323, \
+	&tcptv_keep_init, \
+	&tcp_keepidle, \
+	&tcp_keepintvl, \
+	NULL, \
+	NULL, \
+	&tcp_recvspace, \
+	&tcp_sendspace, \
+	NULL, \
+	NULL, \
+	&tcp_mssdflt, \
+	&tcp_rst_ppslim, \
+	&tcp_ack_on_push, \
+	NULL, \
+	&tcp_syn_cache_limit, \
+	&tcp_syn_bucket_limit, \
+	&tcp_do_rfc3390, \
+	NULL, \
+	NULL \
 }
 
 struct tcp_ident_mapping {
@@ -477,6 +533,9 @@ extern	struct pool sackhl_pool;
 extern	int tcp_do_ecn;		/* RFC3168 ECN enabled/disabled? */
 extern	int tcp_do_rfc3390;	/* RFC3390 Increasing TCP's Initial Window */
 
+extern	struct pool tcpqe_pool;
+extern	int tcp_reass_limit;	/* max entries for tcp reass queues */
+
 extern	int tcp_syn_cache_limit; /* max entries for compressed state engine */
 extern	int tcp_syn_bucket_limit;/* max entries per hash bucket */
 
@@ -488,6 +547,7 @@ int	 tcp_attach(struct socket *);
 void	 tcp_canceltimers(struct tcpcb *);
 struct tcpcb *
 	 tcp_close(struct tcpcb *);
+int	 tcp_freeq(struct tcpcb *);
 #if defined(INET6) && !defined(TCP6)
 void	 tcp6_ctlinput(int, struct sockaddr *, void *);
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_wi_usb.c,v 1.7.2.1 2004/02/19 10:56:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_wi_usb.c,v 1.7.2.2 2004/06/05 23:12:58 niklas Exp $ */
 
 /*
  * Copyright (c) 2003 Dale Rahn. All rights reserved.
@@ -224,6 +224,7 @@ const struct wi_usb_type {
 	{{ USB_VENDOR_INTEL, USB_PRODUCT_INTEL_I2011B }, 0 },
 	{{ USB_VENDOR_INTERSIL, USB_PRODUCT_INTERSIL_PRISM_2X }, 0 },
 	{{ USB_VENDOR_IODATA, USB_PRODUCT_IODATA_USBWNB11 }, 0 },
+	{{ USB_VENDOR_JVC, USB_PRODUCT_JVC_MP_XP7250_WL }, 0 },
 	{{ USB_VENDOR_LINKSYS, USB_PRODUCT_LINKSYS_WUSB12_11 }, 0 },
 	{{ USB_VENDOR_MELCO, USB_PRODUCT_MELCO_S11 }, 0 },
 	{{ USB_VENDOR_MICROSOFT, USB_PRODUCT_MICROSOFT_MN510 }, 0 },
@@ -361,6 +362,7 @@ USB_DETACH(wi_usb)
 	struct ifnet		*ifp = WI_GET_IFP(sc);
 	struct wi_softc		*wsc = &sc->sc_wi;
 	int s;
+	int err;
 
 	sc->wi_usb_dying = 1;
 	if (sc->wi_thread_info != NULL) {
@@ -368,7 +370,7 @@ USB_DETACH(wi_usb)
 
 		sc->wi_thread_info->status |= WI_DYING;
 		if (sc->wi_thread_info->idle)
-			wakeup (sc->wi_thread_info);
+			wakeup(sc->wi_thread_info);
 	}
 
 	if (!sc->wi_usb_attached) {
@@ -407,12 +409,45 @@ USB_DETACH(wi_usb)
 		sc->wi_usb_txmem[sc->wi_usb_nummem] = NULL;
 	}
 
-	if (sc->wi_usb_ep[WI_USB_ENDPT_INTR] != NULL);
-		usbd_abort_pipe(sc->wi_usb_ep[WI_USB_ENDPT_INTR]);
-	if (sc->wi_usb_ep[WI_USB_ENDPT_TX] != NULL);
+	if (sc->wi_usb_ep[WI_USB_ENDPT_INTR] != NULL) {
+		err = usbd_abort_pipe(sc->wi_usb_ep[WI_USB_ENDPT_INTR]);
+		if (err) {
+			printf("%s: abort intr pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		err = usbd_close_pipe(sc->wi_usb_ep[WI_USB_ENDPT_INTR]);
+		if (err) {
+			printf("%s: close intr pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		sc->wi_usb_ep[WI_USB_ENDPT_INTR] = NULL;
+	}
+	if (sc->wi_usb_ep[WI_USB_ENDPT_TX] != NULL) {
 		usbd_abort_pipe(sc->wi_usb_ep[WI_USB_ENDPT_TX]);
-	if (sc->wi_usb_ep[WI_USB_ENDPT_RX] != NULL);
+		if (err) {
+			printf("%s: abort tx pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		err = usbd_close_pipe(sc->wi_usb_ep[WI_USB_ENDPT_TX]);
+		if (err) {
+			printf("%s: close tx pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		sc->wi_usb_ep[WI_USB_ENDPT_TX] = NULL;
+	}
+	if (sc->wi_usb_ep[WI_USB_ENDPT_RX] != NULL) {
 		usbd_abort_pipe(sc->wi_usb_ep[WI_USB_ENDPT_RX]);
+		if (err) {
+			printf("%s: abort rx pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		err = usbd_close_pipe(sc->wi_usb_ep[WI_USB_ENDPT_RX]);
+		if (err) {
+			printf("%s: close rx pipe failed: %s\n",
+			    USBDEVNAME(sc->wi_usb_dev), usbd_errstr(err));
+		}
+		sc->wi_usb_ep[WI_USB_ENDPT_RX] = NULL;
+	}
 
 	splx(s);
 
@@ -626,6 +661,7 @@ wi_read_record_usb(struct wi_softc *wsc, struct wi_ltv_gen *ltv)
 	if (rnd_len > WI_USB_BUFSZ) {
 		printf("read_record buf size err %x %x\n", 
 		    rnd_len, WI_USB_BUFSZ);
+		wi_usb_tx_unlock(sc);
 		return EIO;
 	}
 
@@ -839,6 +875,7 @@ wi_write_record_usb(struct wi_softc *wsc, struct wi_ltv_gen *ltv)
 	if (rnd_len > WI_USB_BUFSZ) {
 		printf("write_record buf size err %x %x\n", 
 		    rnd_len, WI_USB_BUFSZ);
+		wi_usb_tx_unlock(sc);
 		return EIO;
 	}
 
@@ -1662,7 +1699,7 @@ wi_start_usb(struct ifnet *ifp)
 	} else {
 		sc->wi_thread_info->status |= WI_START;
 		if (sc->wi_thread_info->idle)
-			wakeup (sc->wi_thread_info);
+			wakeup(sc->wi_thread_info);
 	}
 
 	splx(s);
@@ -1705,7 +1742,7 @@ wi_inquire_usb(void *xsc)
 	sc->wi_thread_info->status |= WI_INQUIRE;
 
 	if (sc->wi_thread_info->idle)
-		wakeup (sc->wi_thread_info);
+		wakeup(sc->wi_thread_info);
 	splx(s);
 }
 
@@ -1732,7 +1769,7 @@ wi_watchdog_usb(struct ifnet *ifp)
 	sc->wi_thread_info->status |= WI_WATCHDOG;
 
 	if (sc->wi_thread_info->idle)
-		wakeup (sc->wi_thread_info);
+		wakeup(sc->wi_thread_info);
 	splx(s);
 }
 

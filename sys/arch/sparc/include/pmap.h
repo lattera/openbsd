@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.8 2004/02/19 10:49:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/pmap.h,v 1.15.2.9 2004/06/05 23:10:58 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.30 1997/08/04 20:00:47 pk Exp $ */
 
 /*
@@ -302,6 +302,8 @@ void		pmap_writetext(unsigned char *, int);
 
 #define		pmap_update(pm)		/* nothing */
 #define		pmap_copy(DP,SP,D,L,S)	/* nothing */
+
+#define		pmap_proc_iflush(p,va,len)	/* nothing */
 
 /* SUN4/SUN4C SPECIFIC DECLARATIONS */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.43.2.9 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.43.2.10 2004/06/05 23:13:01 niklas Exp $	*/
 
 /*
  * System call switch table.
@@ -44,6 +44,12 @@
 #define compat_25(func) __CONCAT(compat_25_,func)
 #else
 #define compat_25(func) sys_nosys
+#endif
+
+#ifdef COMPAT_35
+#define compat_35(func) __CONCAT(compat_35_,func)
+#else
+#define compat_35(func) sys_nosys
 #endif
 
 #define	s(type)	sizeof(type)
@@ -161,8 +167,13 @@ struct sysent sysent[] = {
 	    sys_getlogin },			/* 49 = getlogin */
 	{ 1, s(struct sys_setlogin_args),
 	    sys_setlogin },			/* 50 = setlogin */
+#ifdef ACCOUNTING
 	{ 1, s(struct sys_acct_args),
 	    sys_acct },				/* 51 = acct */
+#else
+	{ 0, 0,
+	    sys_nosys },			/* 51 = unimplemented acct */
+#endif
 	{ 0, 0,
 	    sys_sigpending },			/* 52 = sigpending */
 	{ 2, s(struct sys_osigaltstack_args),
@@ -402,21 +413,21 @@ struct sysent sysent[] = {
 	    sys_nosys },			/* 167 = unimplemented */
 	{ 0, 0,
 	    sys_nosys },			/* 168 = unimplemented */
-#if defined(SYSVSEM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSEM) && !defined(__LP64__)
 	{ 5, s(struct compat_10_sys_semsys_args),
 	    compat_10(sys_semsys) },		/* 169 = compat_10 osemsys */
 #else
 	{ 0, 0,
 	    sys_nosys },			/* 169 = unimplemented 1.0 semsys */
 #endif
-#if defined(SYSVMSG) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVMSG) && !defined(__LP64__)
 	{ 6, s(struct compat_10_sys_msgsys_args),
 	    compat_10(sys_msgsys) },		/* 170 = compat_10 omsgsys */
 #else
 	{ 0, 0,
 	    sys_nosys },			/* 170 = unimplemented 1.0 msgsys */
 #endif
-#if defined(SYSVSHM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSHM) && !defined(__LP64__)
 	{ 4, s(struct compat_10_sys_shmsys_args),
 	    compat_10(sys_shmsys) },		/* 171 = compat_10 oshmsys */
 #else
@@ -558,8 +569,8 @@ struct sysent sysent[] = {
 	    compat_23(sys___semctl) },		/* 220 = compat_23 __osemctl */
 	{ 3, s(struct sys_semget_args),
 	    sys_semget },			/* 221 = semget */
-	{ 3, s(struct sys_semop_args),
-	    sys_semop },			/* 222 = semop */
+	{ 3, s(struct compat_35_sys_semop_args),
+	    compat_35(sys_semop) },		/* 222 = compat_35 semop */
 	{ 0, 0,
 	    sys_nosys },			/* 223 = obsolete sys_semconfig */
 #else
@@ -598,8 +609,8 @@ struct sysent sysent[] = {
 	    compat_23(sys_shmctl) },		/* 229 = compat_23 oshmctl */
 	{ 1, s(struct sys_shmdt_args),
 	    sys_shmdt },			/* 230 = shmdt */
-	{ 3, s(struct sys_shmget_args),
-	    sys_shmget },			/* 231 = shmget */
+	{ 3, s(struct compat_35_sys_shmget_args),
+	    compat_35(sys_shmget) },		/* 231 = compat_35 shmget */
 #else
 	{ 0, 0,
 	    sys_nosys },			/* 228 = unimplemented shmat */
@@ -756,5 +767,19 @@ struct sysent sysent[] = {
 	    sys_closefrom },			/* 287 = closefrom */
 	{ 2, s(struct sys_sigaltstack_args),
 	    sys_sigaltstack },			/* 288 = sigaltstack */
+#ifdef SYSVSHM
+	{ 3, s(struct sys_shmget_args),
+	    sys_shmget },			/* 289 = shmget */
+#else
+	{ 0, 0,
+	    sys_nosys },			/* 289 = unimplemented shmget */
+#endif
+#ifdef SYSVSEM
+	{ 3, s(struct sys_semop_args),
+	    sys_semop },			/* 290 = semop */
+#else
+	{ 0, 0,
+	    sys_nosys },			/* 290 = unimplemented semop */
+#endif
 };
 

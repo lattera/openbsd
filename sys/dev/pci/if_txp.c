@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27.2.9 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27.2.10 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001
@@ -1883,10 +1883,9 @@ txp_set_filter(sc)
 {
 	struct arpcom *ac = &sc->sc_arpcom;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
-	u_int32_t crc, carry, hashbit, hash[2];
+	u_int32_t hashbit, hash[2];
 	u_int16_t filter;
-	u_int8_t octet;
-	int i, j, mcnt = 0;
+	int mcnt = 0;
 	struct ether_multi *enm;
 	struct ether_multistep step;
 
@@ -1924,21 +1923,8 @@ again:
 			}
 
 			mcnt++;
-			crc = 0xffffffff;
-
-			for (i = 0; i < ETHER_ADDR_LEN; i++) {
-				octet = enm->enm_addrlo[i];
-				for (j = 0; j < 8; j++) {
-					carry = ((crc & 0x80000000) ? 1 : 0) ^
-					    (octet & 1);
-					crc <<= 1;
-					octet >>= 1;
-					if (carry)
-						crc = (crc ^ TXP_POLYNOMIAL) |
-						    carry;
-				}
-			}
-			hashbit = (u_int16_t)(crc & (64 - 1));
+			hashbit = (u_int16_t)(ether_crc32_be(enm->enm_addrlo,
+			    ETHER_ADDR_LEN) & (64 - 1));
 			hash[hashbit / 32] |= (1 << hashbit % 32);
 			ETHER_NEXT_MULTI(step, enm);
 		}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.16 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.17 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -90,14 +90,17 @@ extern struct disklist_head disklist;
 extern fixpt_t ccpu;
 extern  long numvnodes;
 
+extern void nmbclust_update(void);
+
 int sysctl_diskinit(int, struct proc *);
 int sysctl_proc_args(int *, u_int, void *, size_t *, struct proc *);
 int sysctl_intrcnt(int *, u_int, void *, size_t *);
 int sysctl_sensors(int *, u_int, void *, size_t *, void *, size_t);
 int sysctl_emul(int *, u_int, void *, size_t *, void *, size_t);
 
-int (*cpu_cpuspeed)(void *, size_t *, void *, size_t);
-int (*cpu_setperf)(void *, size_t *, void *, size_t);
+int (*cpu_cpuspeed)(int *);
+int (*cpu_setperf)(int);
+int perflevel = 100;
 
 /*
  * Lock to avoid too many processes vslocking a large amount of memory
@@ -495,6 +498,11 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	case KERN_EMUL:
 		return (sysctl_emul(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
+	case KERN_MAXCLUSTERS:
+		error = sysctl_int(oldp, oldlenp, newp, newlen, &nmbclust);
+		if (!error)
+			nmbclust_update();
+		return (error);
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -516,6 +524,7 @@ hw_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 {
 	extern char machine[], cpu_model[];
 	int err;
+	int cpuspeed;
 
 	/* all sysctl names at this level except sensors are terminal */
 	if (name[0] != HW_SENSORS && namelen != 1)
@@ -560,11 +569,24 @@ hw_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	case HW_CPUSPEED:
 		if (!cpu_cpuspeed)
 			return (EOPNOTSUPP);
-		return (cpu_cpuspeed(oldp, oldlenp, newp, newlen));
+		err = cpu_cpuspeed(&cpuspeed);
+		if (err)
+			return err;
+		return (sysctl_rdint(oldp, oldlenp, newp, cpuspeed));
 	case HW_SETPERF:
 		if (!cpu_setperf)
 			return (EOPNOTSUPP);
-		return (cpu_setperf(oldp, oldlenp, newp, newlen));
+		err = sysctl_int(oldp, oldlenp, newp, newlen, &perflevel);
+		if (err)
+			return err;
+		if (perflevel > 100)
+			perflevel = 100;
+		if (perflevel < 0)
+			perflevel = 0;
+		if (newp)
+			return (cpu_setperf(perflevel));
+		else
+			return (0);
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -662,6 +684,26 @@ sysctl_rdint(oldp, oldlenp, newp, val)
 	if (oldp)
 		error = copyout((caddr_t)&val, oldp, sizeof(int));
 	return (error);
+}
+
+/*
+ * Array of integer values.
+ */
+int
+sysctl_int_arr(valpp, name, namelen, oldp, oldlenp, newp, newlen)
+	int **valpp;
+	int *name;
+	u_int namelen;
+	void *oldp;
+	size_t *oldlenp;
+	void *newp;
+	size_t newlen;
+{
+	if (namelen > 1)
+		return (ENOTDIR);
+	if (name[0] < 0 || valpp[name[0]] == NULL)
+		return (EOPNOTSUPP);
+	return (sysctl_int(oldp, oldlenp, newp, newlen, valpp[name[0]]));
 }
 
 /*
@@ -1522,10 +1564,14 @@ sysctl_diskinit(update, p)
 			    dk->dk_name ? dk->dk_name : "");
 			l += strlen(disknames + l);
 			sdk = diskstats + i;
+			strlcpy(sdk->ds_name, dk->dk_name,
+			    sizeof(sdk->ds_name));
 			sdk->ds_busy = dk->dk_busy;
-			sdk->ds_xfer = dk->dk_xfer;
+			sdk->ds_rxfer = dk->dk_rxfer;
+			sdk->ds_wxfer = dk->dk_wxfer;
 			sdk->ds_seek = dk->dk_seek;
-			sdk->ds_bytes = dk->dk_bytes;
+			sdk->ds_rbytes = dk->dk_rbytes;
+			sdk->ds_wbytes = dk->dk_wbytes;
 			sdk->ds_attachtime = dk->dk_attachtime;
 			sdk->ds_timestamp = dk->dk_timestamp;
 			sdk->ds_time = dk->dk_time;
@@ -1540,10 +1586,14 @@ sysctl_diskinit(update, p)
 		for (dk = TAILQ_FIRST(&disklist), i = 0; dk;
 		    dk = TAILQ_NEXT(dk, dk_link), i++) {
 			sdk = diskstats + i;
+			strlcpy(sdk->ds_name, dk->dk_name,
+			    sizeof(sdk->ds_name));
 			sdk->ds_busy = dk->dk_busy;
-			sdk->ds_xfer = dk->dk_xfer;
+			sdk->ds_rxfer = dk->dk_rxfer;
+			sdk->ds_wxfer = dk->dk_wxfer;
 			sdk->ds_seek = dk->dk_seek;
-			sdk->ds_bytes = dk->dk_bytes;
+			sdk->ds_rbytes = dk->dk_rbytes;
+			sdk->ds_wbytes = dk->dk_wbytes;
 			sdk->ds_attachtime = dk->dk_attachtime;
 			sdk->ds_timestamp = dk->dk_timestamp;
 			sdk->ds_time = dk->dk_time;
@@ -1764,14 +1814,16 @@ sysctl_emul(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	if (name[0] == KERN_EMUL_NUM) {
 		if (namelen != 1)
 			return (ENOTDIR);
-		return (sysctl_rdint(oldp, oldlenp, newp, nemuls));
+		return (sysctl_rdint(oldp, oldlenp, newp, nexecs));
 	}
 
 	if (namelen != 2)
 		return (ENOTDIR);
-	if (name[0] > nemuls || name[0] < 0)
+	if (name[0] > nexecs || name[0] < 0)
 		return (EINVAL);
-	e = emulsw[name[0] - 1];
+	e = execsw[name[0] - 1].es_emul;
+	if (e == NULL)
+		return (EINVAL);
 
 	switch (name[1]) {
 	case KERN_EMUL_NAME:

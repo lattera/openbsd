@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/softintr.c,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/softintr.c,v 1.2.2.2 2004/06/05 23:10:44 niklas Exp $	*/
 /*	$NetBSD: softintr.c,v 1.2 2003/07/15 00:24:39 lukem Exp $	*/
 
 /*
@@ -157,7 +157,6 @@ softintr_establish(int ipl, void (*func)(void *), void *arg)
 		sih->sih_siq = &soft_intrq[si];
 		sih->sih_pending = 0;
 	}
-printf("softintr_establish ipl 0x%x si %d\n", ipl, si);
 	return (sih);
 }
 

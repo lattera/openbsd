@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic79xx_openbsd.h,v 1.3 2004/05/23 05:29:31 marco Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic79xx_openbsd.h,v 1.3.2.1 2004/06/05 23:12:39 niklas Exp $	*/
 /*
  * FreeBSD platform specific driver option settings, data structures,
  * function declarations and includes.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.60.2.9 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.60.2.10 2004/06/05 23:11:25 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -673,10 +673,9 @@ extern ssize_t ipsec_hdrsz(struct tdb *);
 extern void ipsec_adjust_mtu(struct mbuf *, u_int32_t);
 extern int ipsp_print_tdb(struct tdb *, char *, size_t);
 extern struct ipsec_acquire *ipsec_get_acquire(u_int32_t);
-extern int ipsp_aux_match(struct ipsec_ref *, struct ipsec_ref *,
-    struct ipsec_ref *, struct ipsec_ref *, struct ipsec_ref *,
-    struct ipsec_ref *, struct ipsec_ref *, struct ipsec_ref *,
-    struct sockaddr_encap *, struct sockaddr_encap *,
+extern int ipsp_aux_match(struct tdb *,
+    struct ipsec_ref *, struct ipsec_ref *,
+    struct ipsec_ref *, struct ipsec_ref *,
     struct sockaddr_encap *, struct sockaddr_encap *);
 #endif /* _KERNEL */
 #endif /* _NETINET_IPSP_H_ */

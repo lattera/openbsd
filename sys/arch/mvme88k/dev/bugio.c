@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/bugio.c,v 1.4.4.4 2004/02/19 10:49:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/bugio.c,v 1.4.4.5 2004/06/05 23:09:48 niklas Exp $ */
 /*  Copyright (c) 1998 Steve Murphree, Jr. */
 
 #include <sys/param.h>
@@ -17,7 +17,7 @@ void bug_vector(void);
 void sysbug_vector(void);
 
 #define MVMEPROM_CALL(x)						\
-	__asm__ __volatile__ (__CONCAT("or r9,r0,",__STRING(x)));	\
+	__asm__ __volatile__ ("or r9,r0," __STRING(x));			\
 	__asm__ __volatile__ ("tb0 0,r0,496")
 
 void

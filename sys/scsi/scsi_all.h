@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.6.4.6 2004/02/19 11:01:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.6.4.7 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: scsi_all.h,v 1.10 1996/09/12 01:57:17 thorpej Exp $	*/
 
 /*
@@ -226,6 +226,8 @@ struct scsi_inquiry_data {
 #define SID_ISO		0xC0
 	u_int8_t response_format;
 	u_int8_t additional_length;
+#define SID_INQUIRY_HDR	5	/* Bytes up to & including additional_length */
+#define SID_SCSI2_ALEN	31	/* Additional bytes of basic SCSI2 info */
 	u_int8_t unused[2];
 	u_int8_t flags;
 #define	SID_SftRe	0x01

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.8 2004/02/19 11:01:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.9 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: scsiconf.h,v 1.35 1997/04/02 02:29:38 mycroft Exp $	*/
 
 /*
@@ -96,6 +96,21 @@ struct scsi_link;
 extern int scsi_autoconf;
 
 /*
+ * Specify which buses and targets must scan all LUNs, even when IDENTIFY does
+ * not seem to be working. Some devices (e.g. some external RAID devices) may
+ * seem to have non-functional IDENTIFY because they return identical INQUIRY
+ * data for all LUNs.
+ */
+#ifndef SCSIFORCELUN_BUSES
+#define SCSIFORCELUN_BUSES	0
+#endif
+#ifndef SCSIFORCELUN_TARGETS
+#define	SCSIFORCELUN_TARGETS	0
+#endif
+
+extern int scsiforcelun_buses, scsiforcelun_targets;
+
+/*
  * These entrypoints are called by the high-end drivers to get services from
  * whatever low-end drivers they are attached to.  Each adapter type has one
  * of these statically allocated.
@@ -116,15 +131,6 @@ struct scsi_adapter {
 #define TRY_AGAIN_LATER		1
 #define	COMPLETE		2
 #define	ESCAPE_NOT_SUPPORTED	3
-
-/*
- * Device Specific Sense Handlers return either an errno
- * or one of these three items.
- */
-
-#define SCSIRET_NOERROR   0	/* No Error */
-#define SCSIRET_RETRY    -1	/* Retry the command that got this sense */
-#define SCSIRET_CONTINUE -2	/* Continue with standard sense processing */
 
 /*
  * These entry points are called by the low-end drivers to get services from
@@ -176,7 +182,6 @@ struct scsi_link {
 #define	SDEV_NOWIDE		0x0004	/* does not grok WDTR */
 #define	SDEV_NOTAGS		0x0008	/* lies about having tagged queueing */
 #define	SDEV_NOMODESENSE	0x0040	/* removable media/optical drives */
-#define	SDEV_NOSTARTUNIT	0x0080	/* do not issue start unit requests in sd.c */
 #define	SDEV_NOSYNCCACHE	0x0100	/* no SYNCHRONIZE_CACHE */
 #define	ADEV_NOSENSE		0x0200	/* No request sense - ATAPI */
 #define	ADEV_LITTLETOC		0x0400	/* little-endian TOC - ATAPI */
@@ -185,7 +190,6 @@ struct scsi_link {
 #define	ADEV_NODOORLOCK		0x2000	/* can't lock door */
 #define SDEV_ONLYBIG		0x4000  /* always use READ_BIG and WRITE_BIG */
 	u_int8_t inquiry_flags;		/* copy of flags from probe INQUIRY */
-	u_int8_t inquiry_flags2;	/* copy of flags2 from probe INQUIRY */
 	struct	scsi_device *device;	/* device entry points etc. */
 	void	*device_softc;		/* needed for call to foo_start */
 	struct	scsi_adapter *adapter;	/* adapter entry points etc. */
@@ -338,7 +342,7 @@ int	scsi_do_safeioctl(struct scsi_link *, dev_t, u_long, caddr_t,
 void	sc_print_addr(struct scsi_link *);
 
 void	show_scsi_xs(struct scsi_xfer *);
-void	scsi_print_sense(struct scsi_xfer *, int);
+void	scsi_print_sense(struct scsi_xfer *);
 void	show_scsi_cmd(struct scsi_xfer *);
 void	show_mem(u_char *, int);
 int	scsi_probe_busses(int, int, int);

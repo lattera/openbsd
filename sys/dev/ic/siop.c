@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.8 2004/02/19 10:56:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop.c,v 1.7.4.9 2004/06/05 23:12:43 niklas Exp $ */
 /*	$NetBSD: siop.c,v 1.65 2002/11/08 22:04:41 bouyer Exp $	*/
 
 /*
@@ -769,6 +769,15 @@ scintr:
 					/* no table to flush here */
 					CALL_SCRIPT(Ent_msgin_ack);
 					return 1;
+				} else if (msg == MSG_EXTENDED &&
+				    extmsg == MSG_EXT_PPR) {
+					/* PPR negotiation rejected */
+					siop_target->target_c.offset = 0;
+					siop_target->target_c.period = 0;
+					siop_target->target_c.status = TARST_ASYNC;
+					siop_target->target_c.flags &= ~(TARF_DT | TARF_ISDT);
+					CALL_SCRIPT(Ent_msgin_ack);
+					return 1;
 				} else if (msg == MSG_SIMPLE_Q_TAG || 
 				    msg == MSG_HEAD_OF_Q_TAG ||
 				    msg == MSG_ORDERED_Q_TAG) {
@@ -875,7 +884,7 @@ scintr:
 					return(1);
 				default:
 					panic("invalid retval from "
-					    "siop_wdtr_neg()");
+					    "siop_sdtr_neg()");
 				}
 				return(1);
 			}
@@ -1394,55 +1403,58 @@ siop_scsicmd(xs)
 	TAILQ_INSERT_TAIL(&sc->ready_list, siop_cmd, next);
 
 	siop_start(sc);
-	if (xs->flags & SCSI_POLL) {
-		/* poll for command completion */
-		for(i = xs->timeout; i > 0; i--) {
-			siop_intr(sc);
-			if (xs->flags & ITSDONE) {
-				if ((xs->cmd->opcode == INQUIRY)
-				    && (xs->error == XS_NOERROR)) {
-					error = ((struct scsi_inquiry_data *)xs->data)->device & SID_QUAL;
-					if (error != SID_QUAL_BAD_LU) {
-						/* 
-						 * Allocate enough commands to hold at least max openings
-						 * worth of commands. Do this statically now 'cuz 
-						 * a) We can't rely on the upper layers to ask for more
-						 * b) Doing it dynamically in siop_startcmd may cause 
-						 *    calls to bus_dma* functions in interrupt context
-						 */
-						for (j = 0; j < SIOP_NTAG; j += SIOP_NCMDPB)
-							siop_morecbd(sc);
-						if (sc->sc_c.targets[target]->status == TARST_PROBING)
-							sc->sc_c.targets[target]->status = TARST_ASYNC;
-
-						/* Set TARF_DT here because if it is turned off during PPR, it must STAY off! */
-						if ((lun == 0) && 
-						    (((struct scsi_inquiry_data *)xs->data)->flags2 & SID_CLOCKING) &&
-						    (sc->sc_c.features & SF_BUS_ULTRA3))
- 							sc->sc_c.targets[target]->flags |= TARF_DT;
-						/* Can't do lun 0 here, because flags not set yet */
-						/* But have to do other lun's here because they never go through TARST_ASYNC */
-						if (lun > 0)
-							siop_add_dev(sc, target, lun);
-					}
-				}
-				break;
-			}
-			delay(1000);
-		}
+	if ((xs->flags & SCSI_POLL) == 0) {
 		splx(s);
-		if (i == 0) {
-			siop_timeout(siop_cmd);
-			while ((xs->flags & ITSDONE) == 0) {
-				s = splbio();
-				siop_intr(sc);
-				splx(s);
-			}
-		}
-		return (COMPLETE);
+		return (SUCCESSFULLY_QUEUED);
 	}
+
+	/* Poll for command completion. */
+	for(i = xs->timeout; i > 0; i--) {
+		siop_intr(sc);
+		if ((xs->flags & ITSDONE) == 0) {
+			delay(1000);
+			continue;
+		}
+		if (xs->cmd->opcode == INQUIRY && xs->error == XS_NOERROR) {
+			struct scsi_inquiry_data *inqbuf =
+			    (struct scsi_inquiry_data *)xs->data;
+		 	if ((inqbuf->device & SID_QUAL) == SID_QUAL_BAD_LU)
+				break;
+			/* 
+			 * Allocate cbd's to hold maximum openings worth of
+			 * commands. Do this now because doing it dynamically in
+			 * siop_startcmd may cause calls to bus_dma* functions
+			 * in interrupt context.
+			 */
+			for (j = 0; j < SIOP_NTAG; j += SIOP_NCMDPB)
+				siop_morecbd(sc);
+			if (sc->sc_c.targets[target]->status == TARST_PROBING)
+				sc->sc_c.targets[target]->status = TARST_ASYNC;
+
+			/*
+			 * Set TARF_DT here because if it is turned off during
+			 * PPR, it must STAY off!
+			 */
+			if ((lun == 0) && (sc->sc_c.features & SF_BUS_ULTRA3))
+				sc->sc_c.targets[target]->flags |= TARF_DT;
+			/*
+			 * Can't do lun 0 here, because flags are not set yet.
+			 * But have to do other lun's here because they never go
+			 * through TARST_ASYNC.
+			 */
+			if (lun > 0)
+				siop_add_dev(sc, target, lun);
+		}
+		break;
+	}
+	if (i == 0) {
+		siop_timeout(siop_cmd);
+		while ((xs->flags & ITSDONE) == 0)
+			siop_intr(sc);
+	}
+
 	splx(s);
-	return (SUCCESSFULLY_QUEUED);
+	return (COMPLETE);
 }
 
 void

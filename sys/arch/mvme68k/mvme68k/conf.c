@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.8 2004/02/19 10:49:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.9 2004/06/05 23:10:53 niklas Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -214,6 +214,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_lkm_dummy(),		/* 51 */
 #endif
+	cdev_ptm_init(NPTY,ptm),	/* 52: pseudo-tty ptm device */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pcib.c,v 1.1.2.1 2004/02/19 10:48:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pcib.c,v 1.1.2.2 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: pcib.c,v 1.4 2003/01/01 01:25:34 thorpej Exp $	*/
 
 /*-
@@ -54,8 +54,8 @@
 
 #include "isadma.h"
 
-int	pcibmatch __P((struct device *, void *, void *));
-void	pcibattach __P((struct device *, struct device *, void *));
+int	pcibmatch (struct device *, void *, void *);
+void	pcibattach (struct device *, struct device *, void *);
 
 struct cfattach pcib_ca = {
 	sizeof(struct device), pcibmatch, pcibattach
@@ -66,8 +66,8 @@ struct cfdriver pcib_cd = {
 };
 
 
-void	pcib_callback __P((struct device *));
-int	pcib_print __P((void *, const char *));
+void	pcib_callback (struct device *);
+int	pcib_print (void *, const char *);
 
 int
 pcibmatch(parent, match, aux)

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.12 2004/02/19 10:49:08 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/machdep.c,v 1.18.2.13 2004/06/05 23:09:50 niklas Exp $	*/
 /*
  * Copyright (c) 1998, 1999, 2000, 2001 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -248,8 +248,10 @@ extern struct pcb *curpcb;
 extern struct user *proc0paddr;
 
 /*
- *  XXX this is to fake out the console routines, while
- *  booting. New and improved! :-) smurph
+ * This is to fake out the console routines, while booting.
+ * We could use directly the bugtty console, but we want to be able to
+ * configure a kernel without bugtty since we do not necessarily need a
+ * full-blown console driver.
  */
 cons_decl(boot);
 #define bootcnpollc nullcnpollc
@@ -266,20 +268,15 @@ struct consdev bootcons = {
 };
 
 /*
- * Console initialization: called early on from main,
- * before vm init or startup.  Do enough configuration
- * to choose and initialize a console.
+ * Early console initialization: called early on from main, before vm init.
+ * We want to stick to the BUG routines for now, and we'll switch to the
+ * real console in cpu_startup().
  */
 void
 consinit()
 {
-	extern struct consdev *cn_tab;
 
-	/*
-	 * Initialize the console before we print anything out.
-	 */
-	cn_tab = NULL;
-	cninit();
+	cn_tab = &bootcons;
 
 #if defined(DDB)
 	db_machine_init();
@@ -373,22 +370,48 @@ getcpuspeed()
 		c = (unsigned char)brdid.speed[i];
 		if (c == ' ')
 			c = '0';
-		else if (c > '9' || c < '0')
-			goto fail;
+		else if (c > '9' || c < '0') {
+			speed = 0;
+			break;
+		}
 		speed = speed * 10 + (c - '0');
 	}
 	speed = speed / 100;
-	return (speed);
 
-fail:
+	switch (brdtyp) {
+#ifdef MVME187
+	case BRD_187:
+	case BRD_8120:
+		if (speed == 25 || speed == 33)
+			return speed;
+		speed = 25;
+		break;
+#endif
+#ifdef MVME188
+	case BRD_188:
+		if (speed == 20 || speed == 25)
+			return speed;
+		speed = 25;
+		break;
+#endif
+#ifdef MVME197
+	case BRD_197:
+		if (speed == 40 || speed == 50)
+			return speed;
+		speed = 50;
+		break;
+#endif
+	}
+
 	/*
-	 * If we end up here, the board information block is
-	 * damaged and we can't trust it.
-	 * Suppose we are running at 25MHz and hope for the best.
+	 * If we end up here, the board information block is damaged and
+	 * we can't trust it.
+	 * Suppose we are running at the most common speed for our board,
+	 * and hope for the best (this really only affects osiop).
 	 */
 	printf("WARNING: Board Configuration Data invalid, "
 	    "replace NVRAM and restore values\n");
-	return (25);
+	return speed;
 }
 
 void
@@ -919,13 +942,8 @@ sendsig(catcher, sig, mask, code, type, val)
 		 * Process has trashed its stack; give it an illegal
 		 * instruction to halt it in its tracks.
 		 */
-		SIGACTION(p, SIGILL) = SIG_DFL;
-		sig = sigmask(SIGILL);
-		p->p_sigignore &= ~sig;
-		p->p_sigcatch &= ~sig;
-		p->p_sigmask &= ~sig;
-		psignal(p, SIGILL);
-		return;
+		sigexit(p, SIGILL);
+		/* NOTREACHED */
 	}
 	/*
 	 * Build the argument list for the signal handler.
@@ -1025,7 +1043,9 @@ boot(howto)
 
 	/* If system is cold, just halt. */
 	if (cold) {
-		howto |= RB_HALT;
+		/* (Unless the user explicitly asked for reboot.) */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
 		goto haltsys;
 	}
 
@@ -1060,25 +1080,37 @@ haltsys:
 		doboot();
 	}
 
-	for (;;);  /* to keep compiler happy, and me from going crazy */
+	for (;;);
 	/*NOTREACHED*/
 }
 
 #ifdef MVME188
-void
+__dead void
 m188_reset()
 {
 	volatile int cnt;
 
-	*sys_syscon->ien0 = 0;
-	*sys_syscon->ien1 = 0;
-	*sys_syscon->ien2 = 0;
-	*sys_syscon->ien3 = 0;
-	*sys_syscon->glbres = 1;  /* system reset */
-	*sys_syscon->ucsr |= 0x2000; /* clear SYSFAIL* */
+	*(volatile u_int32_t *)IEN0_REG = 0;
+	*(volatile u_int32_t *)IEN1_REG = 0;
+	*(volatile u_int32_t *)IEN2_REG = 0;
+	*(volatile u_int32_t *)IEN3_REG = 0;
+
+	if ((*(volatile u_int8_t *)GLB1) & M188_SYSCONNEG) {
+		/* Force only a local reset */
+		*(volatile u_int8_t *)GLB1 |= M188_LRST;
+	} else {
+		/* Force a complete VMEbus reset */
+		*(volatile u_int32_t *)GLBRES_REG = 1;
+	}
+
+	*(volatile u_int32_t *)UCSR_REG |= 0x2000;	/* clear SYSFAIL */
 	for (cnt = 0; cnt < 5*1024*1024; cnt++)
 		;
-	*sys_syscon->ucsr |= 0x2000; /* clear SYSFAIL* */
+	*(volatile u_int32_t *)UCSR_REG |= 0x2000;	/* clear SYSFAIL */
+
+	printf("reset failed\n");
+	for (;;);
+	/* NOTREACHED */
 }
 #endif   /* MVME188 */
 
@@ -1365,23 +1397,24 @@ slave_main()
  * This should really only be used by VME devices.
  */
 int
-intr_findvec(start, end)
-	int start, end;
+intr_findvec(int start, int end, int skip)
 {
 	int vec;
 
 #ifdef DEBUG
-	/* Sanity check! */
 	if (start < 0 || end > 255 || start > end)
 		panic("intr_findvec(%d,%d): bad parameters", start, end);
 #endif
 
-	for (vec = start; vec < end; vec++){
+	for (vec = start; vec <= end; vec++) {
+		if (vec == skip)
+			continue;
 		if (intr_handlers[vec] == NULL)
 			return (vec);
 	}
 #ifdef DIAGNOSTIC
-	printf("intr_findvec(%d,%d): no vector available\n", start, end);
+	printf("intr_findvec(%d,%d,%d): no vector available\n",
+	    start, end, skip);
 #endif
 	return (-1);
 }
@@ -1407,7 +1440,8 @@ intr_establish(int vec, struct intrhand *ihand)
 	if ((intr = intr_handlers[vec]) != NULL) {
 		if (intr->ih_ipl != ihand->ih_ipl) {
 #if DIAGNOSTIC
-			panic("intr_establish: there are other handlers with vec (0x%x) at ipl %x, but you want it at %x",
+			panic("intr_establish: there are other handlers with "
+			    "vec (0x%x) at ipl %x, but you want it at %x",
 			      intr->ih_ipl, vec, ihand->ih_ipl);
 #endif /* DIAGNOSTIC */
 			return (INTR_EST_BADIPL);
@@ -1442,8 +1476,7 @@ intr_establish(int vec, struct intrhand *ihand)
  */
 
 /* Hard coded vector table for onboard devices. */
-
-unsigned obio_vec[32] = {
+const unsigned int obio_vec[32] = {
 	0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,
         0,SYSCV_SCC,0,0,SYSCV_SYSF,SYSCV_TIMER2,0,0,
@@ -1534,13 +1567,13 @@ m188_ext_int(u_int v, struct trapframe *eframe)
 		/* find the first bit set in the current mask */
 		intbit = ff1(cur_mask);
 		if (OBIO_INTERRUPT_MASK & (1 << intbit)) {
-			vec = obio_vec[intbit];
+			vec = SYSCON_VECT + obio_vec[intbit];
 			if (vec == 0) {
 				panic("unknown onboard interrupt: mask = 0x%b",
 				    1 << intbit, IST_STRING);
 			}
 		} else if (HW_FAILURE_MASK & (1 << intbit)) {
-			vec = obio_vec[intbit];
+			vec = SYSCON_VECT + obio_vec[intbit];
 			if (vec == 0) {
 				panic("unknown hardware failure: mask = 0x%b",
 				    1 << intbit, IST_STRING);
@@ -1887,38 +1920,6 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (EOPNOTSUPP);
 	}
 	/*NOTREACHED*/
-}
-
-/*
- * insert an element into a queue
- */
-
-void
-_insque(velement, vhead)
-	void *velement, *vhead;
-{
-	struct prochd *element, *head;
-	element = velement;
-	head = vhead;
-	element->ph_link = head->ph_link;
-	head->ph_link = (struct proc *)element;
-	element->ph_rlink = (struct proc *)head;
-	((struct prochd *)(element->ph_link))->ph_rlink=(struct proc *)element;
-}
-
-/*
- * remove an element from a queue
- */
-
-void
-_remque(velement)
-	void *velement;
-{
-	struct prochd *element;
-	element = velement;
-	((struct prochd *)(element->ph_link))->ph_rlink = element->ph_rlink;
-	((struct prochd *)(element->ph_rlink))->ph_link = element->ph_link;
-	element->ph_rlink = (struct proc *)0;
 }
 
 int
@@ -2306,15 +2307,14 @@ mvme_bootstrap()
 #ifdef DEBUG
 	printf("MVME%x boot: memory from 0x%x to 0x%x\n", brdtyp, avail_start, avail_end);
 #endif
-	pmap_bootstrap((vaddr_t)trunc_page((unsigned)&kernelstart) /* = loadpt */,
-		       &avail_start, &avail_end, &virtual_avail,
-		       &virtual_end);
+	pmap_bootstrap((vaddr_t)trunc_page((unsigned)&kernelstart));
+
 	/*
 	 * Tell the VM system about available physical memory.
 	 * mvme88k only has one segment.
 	 */
 	uvm_page_physload(atop(avail_start), atop(avail_end),
-			  atop(avail_start), atop(avail_end),VM_FREELIST_DEFAULT);
+	    atop(avail_start), atop(avail_end), VM_FREELIST_DEFAULT);
 
 	/* Initialize cached PTEs for u-area mapping. */
 	save_u_area(&proc0, (vaddr_t)proc0paddr);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/Attic/rtc.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/Attic/rtc.h,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: rtc.h,v 1.1 2001/02/23 21:23:50 reinoud Exp $	*/
 
 /*
@@ -77,8 +77,8 @@ typedef struct {
 #define RTC_ADDR_CENT     	0xc1
 
 #ifdef _KERNEL
-int cmos_read __P((int));
-int cmos_write __P((int, int));
+int cmos_read (int);
+int cmos_write (int, int);
 #endif /* _KERNEL */
 
 /* End of rtc.h */

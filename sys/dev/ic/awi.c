@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.5 2003/05/13 19:34:59 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.6 2004/06/05 23:12:41 niklas Exp $	*/
 /*	$NetBSD: awi.c,v 1.26 2000/07/21 04:48:55 onoe Exp $	*/
 
 /*-
@@ -141,7 +141,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

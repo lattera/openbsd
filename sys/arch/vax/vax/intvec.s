@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/intvec.s,v 1.11.8.4 2004/02/19 10:50:03 niklas Exp $   */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/intvec.s,v 1.11.8.5 2004/06/05 23:11:03 niklas Exp $   */
 /*	$NetBSD: intvec.s,v 1.39 1999/06/28 08:20:48 itojun Exp $   */
 
 /*
@@ -115,7 +115,7 @@ _rpb:
 	NOVEC;				# Unused, 7C
 	NOVEC;				# Unused, 80
 	NOVEC;				# Unused, 84
-	INTVEC(astintr,	KSTACK)		# Asynchronous Sustem Trap, AST
+	INTVEC(astintr,	KSTACK)		# Asynchronous System Trap, AST
 	NOVEC;				# Unused, 8C
 	NOVEC;				# Unused, 90
 	NOVEC;				# Unused, 94

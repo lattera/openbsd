@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/biosboot/biosboot.S,v 1.28.8.5 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/biosboot/biosboot.S,v 1.28.8.6 2004/06/05 23:09:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Tobias Weingartner
@@ -572,8 +572,8 @@ err_print2:
 err_stop:
 	call	Lmessage
 stay_stopped:
-	cli
-	hlt
+	sti				/* Ensure Ctl-Alt-Del will work */
+	hlt				/* (don't require power cycle) */
 	jmp	stay_stopped		/* Just to make sure :-) */
 
 exec_boot:

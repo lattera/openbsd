@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/radix_mpath.c,v 1.1 2004/04/25 02:48:03 itojun Exp $	*/
+/*	$OpenBSD: src/sys/net/radix_mpath.c,v 1.1.2.1 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$KAME: radix_mpath.c,v 1.13 2002/10/28 21:05:59 itojun Exp $	*/
 
 /*

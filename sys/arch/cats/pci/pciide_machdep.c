@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pciide_machdep.c,v 1.1.2.1 2004/02/19 10:48:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/pci/Attic/pciide_machdep.c,v 1.1.2.2 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: pciide_machdep.c,v 1.2 2002/09/27 15:35:56 provos Exp $	*/
 
 /*
@@ -59,7 +59,7 @@ pciide_machdep_compat_intr_establish(dev, pa, chan, func, arg)
 	struct device *dev;
 	struct pci_attach_args *pa;
 	int chan;
-	int (*func) __P((void *));
+	int (*func) (void *);
 	void *arg;
 {
 #if NISA > 0

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/mpt_openbsd.h,v 1.6 2004/03/20 03:54:16 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/mpt_openbsd.h,v 1.6.4.1 2004/06/05 23:12:43 niklas Exp $	*/
 /*	$NetBSD: mpt_netbsd.h,v 1.2 2003/04/16 23:02:14 thorpej Exp $	*/
 
 /*

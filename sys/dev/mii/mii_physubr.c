@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.3.2.5 2003/03/28 00:38:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii_physubr.c,v 1.3.2.6 2004/06/05 23:12:48 niklas Exp $	*/
 /*	$NetBSD: mii_physubr.c,v 1.20 2001/04/13 23:30:09 thorpej Exp $	*/
 
 /*-
@@ -56,6 +56,13 @@
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
+
+#include "carp.h"
+#if NCARP > 0
+#include <netinet/in.h>
+#include <netinet/in_var.h>
+#include <netinet/ip_carp.h>
+#endif
 
 /*
  * Media to register setting conversion table.  Order matters.
@@ -332,6 +339,10 @@ mii_phy_statusmsg(sc)
 		s = splnet();
 		rt_ifmsg(ifp);
 		splx(s);
+#if NCARP > 0
+		if (ifp->if_carp)
+			carp_carpdev_state(ifp->if_carp);
+#endif
 	}
 }
 

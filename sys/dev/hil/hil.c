@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/dev/hil/hil.c,v 1.9.2.4 2004/02/19 10:56:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hil.c,v 1.9.2.5 2004/06/05 23:12:38 niklas Exp $	*/
 /*
- * Copyright (c) 2003, Miodrag Vallat.
+ * Copyright (c) 2003, 2004, Miodrag Vallat.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,8 +64,6 @@
  *	@(#)hil.c	8.2 (Berkeley) 1/12/94
  */
 
-#undef	HILDEBUG
-
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/conf.h>
@@ -102,26 +100,37 @@ void	send_device_cmd(struct hil_softc *sc, u_int device, u_int cmd);
 void	polloff(struct hil_softc *);
 void	pollon(struct hil_softc *);
 
-static void hilwait(struct hil_softc *);
-static void hildatawait(struct hil_softc *);
+static int hilwait(struct hil_softc *);
+static int hildatawait(struct hil_softc *);
 
-static __inline void
+static __inline int
 hilwait(struct hil_softc *sc)
 {
-	DELAY(1);
-	while (bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_STAT) & HIL_BUSY) {
+	int cnt;
+
+	for (cnt = 50000; cnt != 0; cnt--) {
 		DELAY(1);
+		if ((bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_STAT) &
+		    HIL_BUSY) == 0)
+			break;
 	}
+
+	return (cnt);
 }
 
-static __inline void
+static __inline int
 hildatawait(struct hil_softc *sc)
 {
-	DELAY(1);
-	while (!(bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_STAT) &
-	    HIL_DATA_RDY)) {
+	int cnt;
+
+	for (cnt = 50000; cnt != 0; cnt--) {
 		DELAY(1);
+		if ((bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_STAT) &
+		    HIL_DATA_RDY) != 0)
+			break;
 	}
+
+	return (cnt);
 }
 
 /*
@@ -507,7 +516,14 @@ send_hil_cmd(struct hil_softc *sc, u_int cmd, u_int8_t *data, u_int dlen,
 	
 	s = splhil();
 
-	hilwait(sc);
+	if (hilwait(sc) == 0) {
+#ifdef HILDEBUG
+		printf("%s: no answer from the loop\n", sc->sc_dev.dv_xname);
+#endif
+		splx(s);
+		return;
+	}
+
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_CMD, cmd);
 	while (dlen--) {
 	  	hilwait(sc);
@@ -516,7 +532,13 @@ send_hil_cmd(struct hil_softc *sc, u_int cmd, u_int8_t *data, u_int dlen,
 	}
 	if (rdata) {
 		do {
-			hildatawait(sc);
+			if (hildatawait(sc) == 0) {
+#ifdef HILDEBUG
+				printf("%s: no answer from the loop\n",
+				    sc->sc_dev.dv_xname);
+#endif
+				break;
+			}
 			status = bus_space_read_1(sc->sc_bst, sc->sc_bsh,
 			    HILP_STAT);
 			*rdata = bus_space_read_1(sc->sc_bst, sc->sc_bsh,
@@ -546,10 +568,17 @@ send_device_cmd(struct hil_softc *sc, u_int device, u_int cmd)
 	sc->sc_cmdbp = sc->sc_cmdbuf;
 	sc->sc_cmddev = device;
 
+	if (hilwait(sc) == 0) {
+#ifdef HILDEBUG
+		printf("%s: no answer from device %d\n",
+		    sc->sc_dev.dv_xname, device);
+#endif
+		goto out;
+	}
+
 	/*
 	 * Transfer the command and device info to the chip
 	 */
-	hilwait(sc);
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_CMD, HIL_STARTCMD);
   	hilwait(sc);
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_DATA, 8 + device);
@@ -565,13 +594,19 @@ send_device_cmd(struct hil_softc *sc, u_int device, u_int cmd)
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_CMD, HIL_TRIGGER);
 	sc->sc_cmddone = 0;
 	do {
-		hildatawait(sc);
+		if (hildatawait(sc) == 0) {
+#ifdef HILDEBUG
+			printf("%s: no answer from device %d\n",
+			    sc->sc_dev.dv_xname, device);
+#endif
+			break;
+		}
 		status = bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_STAT);
 		c = bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_DATA);
 		DELAY(1);
 		hil_process_int(sc, status, c);
 	} while (sc->sc_cmddone == 0);
-
+out:
 	sc->sc_cmddev = 0;
 
 	pollon(sc);
@@ -607,10 +642,12 @@ polloff(struct hil_softc *sc)
 {
 	u_int8_t db;
 
+	if (hilwait(sc) == 0)
+		return;
+
 	/*
 	 * Turn off auto repeat
 	 */
-	hilwait(sc);
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_CMD, HIL_SETARR);
 	hilwait(sc);
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_DATA, 0);
@@ -647,10 +684,12 @@ pollon(struct hil_softc *sc)
 {
 	u_int8_t db;
 
+	if (hilwait(sc) == 0)
+		return;
+
 	/*
 	 * Turn on auto polling
 	 */
-	hilwait(sc);
 	bus_space_write_1(sc->sc_bst, sc->sc_bsh, HILP_CMD, HIL_READLPCTRL);
 	hildatawait(sc);
 	db = bus_space_read_1(sc->sc_bst, sc->sc_bsh, HILP_DATA);

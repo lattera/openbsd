@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sfreg.h,v 1.3.2.3 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sfreg.h,v 1.3.2.4 2004/06/05 23:12:51 niklas Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -346,7 +346,8 @@
 	(SF_IMR_RXDQ2_NOBUFS|SF_IMR_RXDQ1_DMADONE|SF_IMR_RXDQ2_DMADONE|	\
 	 SF_IMR_TX_TXDONE|SF_IMR_RXDQ1_NOBUFS|SF_IMR_RXDQ2_DMADONE|	\
 	 SF_IMR_NORMALINTR|SF_IMR_ABNORMALINTR|SF_IMR_TXCQ_NOBUFS|	\
-	 SF_IMR_RXCQ1_NOBUFS|SF_IMR_RXCQ2_NOBUFS|SF_IMR_STATSOFLOW)
+	 SF_IMR_RXCQ1_NOBUFS|SF_IMR_RXCQ2_NOBUFS|SF_IMR_STATSOFLOW|	\
+	 SF_IMR_TX_LOFIFO)
 
 /* TX descriptor queue control registers */
 #define SF_TXDQCTL_DESCTYPE	0x00000007
@@ -997,8 +998,6 @@ struct sf_type {
 };
 
 #define SF_INC(x, y)	(x) = (x + 1) % y
-
-#define ETHER_ALIGN 2
 
 /*
  * Note: alignment is important here: each list must be aligned to

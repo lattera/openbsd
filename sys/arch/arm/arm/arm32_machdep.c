@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/arm32_machdep.c,v 1.3.2.1 2004/02/22 22:08:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/arm32_machdep.c,v 1.3.2.2 2004/06/05 23:10:44 niklas Exp $	*/
 /*	$NetBSD: arm32_machdep.c,v 1.42 2003/12/30 12:33:15 pk Exp $	*/
 
 /*
@@ -113,12 +113,19 @@ struct user *proc0paddr;
 /* exported variable to be filled in by the bootloaders */
 char *booted_kernel;
 
+#ifdef APERTURE
+#ifdef INSECURE
+int allowaperture = 1;
+#else
+int allowaperture = 0;
+#endif
+#endif
 
 /* Prototypes */
 
-void data_abort_handler		__P((trapframe_t *frame));
-void prefetch_abort_handler	__P((trapframe_t *frame));
-extern void configure		__P((void));
+void data_abort_handler		(trapframe_t *frame);
+void prefetch_abort_handler	(trapframe_t *frame);
+extern void configure		(void);
 
 /*
  * arm32_vector_init:
@@ -264,8 +271,6 @@ cpu_startup()
 	 */
 #ifdef RAMDISK_HOOKS
 	boothowto = RB_SINGLE | RB_DFLTROOT;
-#else
-	boothowto = RB_AUTOBOOT;
 #endif /* RAMDISK_HOOKS */
 
 	/*
@@ -414,6 +419,17 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (EOPNOTSUPP);
 	}
 
+	case CPU_ALLOWAPERTURE:
+#ifdef APERTURE
+		if (securelevel > 0)
+			return (sysctl_rdint(oldp, oldlenp, newp,
+			    allowaperture));
+		else
+			return (sysctl_int(oldp, oldlenp, newp, newlen,
+			    &allowaperture));
+#else
+		return (sysctl_rdint(oldp, oldlenp, newp, 0));
+#endif
 	default:
 		return (EOPNOTSUPP);
 	}
@@ -534,26 +550,6 @@ parse_mi_bootargs(args)
 /*	if (get_bootconf_option(args, "nbuf", BOOTOPT_TYPE_INT, &integer))
 		bufpages = integer;*/
 
-#if NMD > 0 && defined(MEMORY_DISK_HOOKS) && !defined(MEMORY_DISK_ROOT_SIZE)
-	if (get_bootconf_option(args, "memorydisc", BOOTOPT_TYPE_INT, &integer)
-	    || get_bootconf_option(args, "memorydisk", BOOTOPT_TYPE_INT, &integer)) {
-		md_root_size = integer;
-		md_root_size *= 1024;
-		if (md_root_size < 32*1024)
-			md_root_size = 32*1024;
-		if (md_root_size > 2048*1024)
-			md_root_size = 2048*1024;
-	}
-#endif	/* NMD && MEMORY_DISK_HOOKS && !MEMORY_DISK_ROOT_SIZE */
-
-	if (get_bootconf_option(args, "quiet", BOOTOPT_TYPE_BOOLEAN, &integer)
-	    || get_bootconf_option(args, "-q", BOOTOPT_TYPE_BOOLEAN, &integer))
-		if (integer)
-			boothowto |= AB_QUIET;
-	if (get_bootconf_option(args, "verbose", BOOTOPT_TYPE_BOOLEAN, &integer)
-	    || get_bootconf_option(args, "-v", BOOTOPT_TYPE_BOOLEAN, &integer))
-		if (integer)
-			boothowto |= AB_VERBOSE;
 }
 #endif
 

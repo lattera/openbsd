@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.5 2004/02/19 10:57:21 niklas Exp $       */
+/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.6 2004/06/05 23:11:23 niklas Exp $       */
 
 /*
  *
@@ -354,11 +354,7 @@ atm_input(ifp, ah, m, rxhand)
 	}
 
 	s = splimp();
-	if (IF_QFULL(inq)) {
-		IF_DROP(inq);
-		m_freem(m);
-	} else
-		IF_ENQUEUE(inq, m);
+	IF_INPUT_ENQUEUE(inq, m);
 	splx(s);
 }
 

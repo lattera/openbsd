@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.4 2004/02/19 10:49:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.5 2004/06/05 23:09:49 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -52,7 +52,6 @@
 
 struct memcsoftc {
 	struct device	sc_dev;
-	void *		sc_vaddr;
 	struct memcreg *sc_memc;
 	struct intrhand	sc_ih;
 };
@@ -68,7 +67,9 @@ struct cfdriver memc_cd = {
 	NULL, "memc", DV_DULL
 };
 
-/*int memcintr(struct frame *frame);*/
+#if 0
+int memcintr(struct frame *frame);
+#endif
 
 int
 memcmatch(parent, vcf, args)
@@ -76,7 +77,7 @@ memcmatch(parent, vcf, args)
 	void *vcf, *args;
 {
 	struct confargs *ca = args;
-	struct memcreg *memc = (struct memcreg *)ca->ca_vaddr;
+	struct memcreg *memc = (struct memcreg *)ca->ca_paddr;
 
 	if (badvaddr((vaddr_t)memc, 4))
 		return (0);
@@ -93,11 +94,7 @@ memcattach(parent, self, args)
 	struct confargs *ca = args;
 	struct memcsoftc *sc = (struct memcsoftc *)self;
 
-	/*
-	 * since we know ourself to land in intiobase land,
-	 * we must adjust our address
-	 */
-	sc->sc_memc = (struct memcreg *)ca->ca_vaddr;
+	sc->sc_memc = (struct memcreg *)ca->ca_paddr;
 
 	printf(": %s rev %d",
 	    (sc->sc_memc->memc_chipid == MEMC_CHIPID) ? "MEMC040" : "MCECC",

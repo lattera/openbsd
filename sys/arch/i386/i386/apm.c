@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.10 2004/02/19 10:48:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.11 2004/06/05 23:08:59 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1998-2001 Michael Shalayeff. All rights reserved.
@@ -347,6 +347,8 @@ apm_resume(sc, regs)
 	struct apm_softc *sc;
 	struct apmregs *regs;
 {
+	extern int perflevel;
+
 	apm_resumes = APM_RESUME_HOLDOFF;
 
 	/* they say that some machines may require reinitializing the clock */
@@ -359,6 +361,10 @@ apm_resume(sc, regs)
 	
 	/* acknowledge any rtc interrupt we may have missed */
 	rtcdrain(NULL);
+
+	/* restore hw.setperf */
+	if (cpu_setperf != NULL)
+		cpu_setperf(perflevel);
 }
 
 int
@@ -740,7 +746,8 @@ apmprobe(parent, match, aux)
 	   since pc* console and vga* probes much later
 	   we cannot check for video memory being mapped
 	   for apm stuff w/ bus_space_map() */
-	if ((ap->apm_code32_base < IOM_BEGIN &&
+	if (ap->apm_code_len == 0 ||
+	    (ap->apm_code32_base < IOM_BEGIN &&
 	     ap->apm_code32_base + ap->apm_code_len > IOM_BEGIN) ||
 	    (ap->apm_code16_base < IOM_BEGIN &&
 	     ap->apm_code16_base + ap->apm_code16_len > IOM_BEGIN) ||

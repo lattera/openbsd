@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.10 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.11 2004/06/05 23:13:02 niklas Exp $	*/
 /*	$NetBSD: sysv_shm.c,v 1.50 1998/10/21 22:24:29 tron Exp $	*/
 
 /*
@@ -278,8 +278,10 @@ sys_shmat1(struct proc *p, void *v, register_t *retval, int findremoved)
 	error = uvm_map(&p->p_vmspace->vm_map, &attach_va, size,
 	    shm_handle->shm_object, 0, 0, UVM_MAPFLAG(prot, prot,
 	    UVM_INH_SHARE, UVM_ADV_RANDOM, 0));
-	if (error)
+	if (error) {
+		uao_detach(shm_handle->shm_object);
 		return (error);
+	}
 
 	shmmap_s->va = attach_va;
 	shmmap_s->shmid = SCARG(uap, shmid);
@@ -382,8 +384,9 @@ shmget_allocate_segment(struct proc *p,
 	} */ *uap,
 	int mode, register_t *retval)
 {
+	size_t size;
 	key_t key;
-	int segnum, size;
+	int segnum;
 	struct ucred *cred = p->p_ucred;
 	struct shmid_ds *shmseg;
 	struct shm_handle *shm_handle;
@@ -455,7 +458,7 @@ sys_shmget(struct proc *p, void *v, register_t *retval)
 {
 	struct sys_shmget_args /* {
 		syscallarg(key_t) key;
-		syscallarg(int) size;
+		syscallarg(size_t) size;
 		syscallarg(int) shmflg;
 	} */ *uap = v;
 	int segnum, mode, error;
@@ -613,12 +616,14 @@ sysctl_sysvshm(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 		    shminfo.shmmni * sizeof(struct shmid_ds *));
 		bzero(newsegs + shminfo.shmmni,
 		    (val - shminfo.shmmni) * sizeof(struct shmid_ds *));
+		free(shmsegs, M_SHM);
+		shmsegs = newsegs;
 		newseqs = malloc(val * sizeof(unsigned short), M_SHM, M_WAITOK);
 		bcopy(shmseqs, newseqs,
 		    shminfo.shmmni * sizeof(unsigned short));
 		bzero(newseqs + shminfo.shmmni,
 		    (val - shminfo.shmmni) * sizeof(unsigned short));
-		free(shmsegs, M_SHM);
+		free(shmseqs, M_SHM);
 		shmseqs = newseqs;
 		shminfo.shmmni = val;
 		return (0);

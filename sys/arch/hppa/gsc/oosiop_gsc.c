@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/oosiop_gsc.c,v 1.1 2004/03/12 00:04:57 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/oosiop_gsc.c,v 1.1.4.1 2004/06/05 23:10:48 niklas Exp $	*/
 /*	$NetBSD: oosiop_gsc.c,v 1.2 2003/07/15 02:29:25 lukem Exp $	*/
 
 /*

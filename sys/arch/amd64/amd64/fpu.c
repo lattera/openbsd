@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/fpu.c,v 1.1 2004/01/28 01:39:38 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/fpu.c,v 1.1.2.1 2004/06/05 23:09:24 niklas Exp $	*/
 /*	$NetBSD: fpu.c,v 1.1 2003/04/26 18:39:28 fvdl Exp $	*/
 
 /*-
@@ -89,6 +89,7 @@
 #define fwait()			__asm("fwait")
 #define	fxsave(addr)		__asm("fxsave %0" : "=m" (*addr))
 #define	fxrstor(addr)		__asm("fxrstor %0" : : "m" (*addr))
+#define	ldmxcsr(addr)		__asm("ldmxcsr %0" : "=m" (*addr))
 #define fldcw(addr)		__asm("fldcw %0" : : "m" (*addr))
 #define	clts()			__asm("clts")
 #define	stts()			lcr0(rcr0() | CR0_TS)
@@ -122,7 +123,6 @@ fputrap(struct trapframe *frame)
 	u_int16_t cw;
 	union sigval sv;
 
-printf("fputrap\n");
 #ifdef DIAGNOSTIC
 	/*
 	 * At this point, fpcurproc should be curproc.  If it wasn't,
@@ -159,7 +159,6 @@ printf("fputrap\n");
 void
 fpudna(struct cpu_info *ci)
 {
-	u_int16_t cw;
 	struct proc *p;
 	int s;
 
@@ -212,8 +211,8 @@ fpudna(struct cpu_info *ci)
 	splx(s);
 
 	if ((p->p_md.md_flags & MDP_USEDFPU) == 0) {
-		cw = p->p_addr->u_pcb.pcb_savefpu.fp_fxsave.fx_fcw;
-		fldcw(&cw);
+		fldcw(&p->p_addr->u_pcb.pcb_savefpu.fp_fxsave.fx_fcw);
+		ldmxcsr(&p->p_addr->u_pcb.pcb_savefpu.fp_fxsave.fx_mxcsr);
 		p->p_md.md_flags |= MDP_USEDFPU;
 	} else
 		fxrstor(&p->p_addr->u_pcb.pcb_savefpu);
@@ -258,7 +257,7 @@ fpusave_cpu(struct cpu_info *ci, int save)
 }
 
 /*
- * Save l's FPU state, which may be on this processor or another processor.
+ * Save p's FPU state, which may be on this processor or another processor.
  */
 void
 fpusave_proc(struct proc *p, int save)

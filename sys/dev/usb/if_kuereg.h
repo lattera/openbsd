@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_kuereg.h,v 1.3.2.3 2001/11/13 21:10:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_kuereg.h,v 1.3.2.4 2004/06/05 23:12:58 niklas Exp $ */
 /*	$NetBSD: if_kuereg.h,v 1.11 2001/01/21 02:35:31 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -115,7 +115,6 @@ struct kue_ether_desc {
 #define KUE_RXFILT_MULTICAST		0x0010
 
 #define KUE_TIMEOUT		1000
-#define ETHER_ALIGN		2
 #define KUE_BUFSZ		1536
 #define KUE_MIN_FRAMELEN	60
 

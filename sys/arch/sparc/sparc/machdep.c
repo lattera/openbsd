@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.14 2004/02/19 10:49:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.15 2004/06/05 23:10:58 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -52,7 +52,6 @@
 #include <sys/systm.h>
 #include <sys/conf.h>
 #include <sys/file.h>
-#include <sys/clist.h>
 #include <sys/timeout.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
@@ -354,10 +353,11 @@ setregs(p, pack, stack, retval)
 	struct fpstate *fs;
 	int psr;
 
-	/* Setup the process StackGhost cookie which will be XORed into
+	/*
+	 * Setup the process StackGhost cookie which will be XORed into
 	 * the return pointer as register windows are over/underflowed
 	 */
-	p->p_addr->u_pcb.pcb_wcookie = 0;	/* XXX later arc4random(); */
+	p->p_addr->u_pcb.pcb_wcookie = arc4random();
 
 	/* The cookie needs to guarantee invalid alignment after the XOR */
 	switch (p->p_addr->u_pcb.pcb_wcookie % 3) {
@@ -373,7 +373,6 @@ setregs(p, pack, stack, retval)
 			(p->p_addr->u_pcb.pcb_wcookie & ~0x3);
 		break;
 	}
-
 
 	/* Don't allow misaligned code by default */
 	p->p_md.md_flags &= ~MDP_FIXALIGN;
@@ -683,7 +682,9 @@ boot(howto)
 
 	/* If system is cold, just halt. */
 	if (cold) {
-		howto |= RB_HALT;
+		/* (Unless the user explicitly asked for reboot.) */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
 		goto haltsys;
 	}
 

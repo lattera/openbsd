@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/std/Attic/sbp2.c,v 1.4 2003/01/08 06:33:38 tdeval Exp $	*/
+/*	$OpenBSD: src/sys/dev/std/Attic/sbp2.c,v 1.4.4.1 2004/06/05 23:12:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Thierry Deval.  All rights reserved.
@@ -225,7 +225,7 @@ sbp2_elfind_last(struct sbp2_account *ac)
 {
 	struct sbp2_orb_element *elm;
 
-	TAILQ_FOREACH_REVERSE(elm, &sbp2_elm_head, elm_chain, sbp2_orb_tq) {
+	TAILQ_FOREACH_REVERSE(elm, &sbp2_elm_head, sbp2_orb_tq, elm_chain) {
 		if (elm->elm_ac == ac)
 			break;
 	}
@@ -271,6 +271,7 @@ sbp2_print_data(struct p1212_data *data)
 			DPRINTF(("SBP2 Management Agent: 0x%08x\n", key->val));
 		break;
 	default:
+		break;
 	}
 }
 
@@ -284,6 +285,7 @@ sbp2_print_dir(struct p1212_dir *dir)
 		DPRINTF(("Logical Unit "));
 		break;
 	default:
+		break;
 	}
 }
 
@@ -377,8 +379,8 @@ sbp2_clean(struct fwnode_softc *sc, struct p1212_dir *unitdir, int logout)
 		if ((ac = sbp2_acfind(sc, lun)) != NULL) {
 			DPRINTF(("%s: clean lun %d\n", __func__, lun));
 			i = 0;
-			TAILQ_FOREACH_REVERSE(elm, &sbp2_elm_head, elm_chain,
-			    sbp2_orb_tq) {
+			TAILQ_FOREACH_REVERSE(elm, &sbp2_elm_head, sbp2_orb_tq,
+			    elm_chain) {
 				DPRINTF(("%s%d", i++?" ":"", i));
 				if (elm != NULL && elm->elm_ac == ac) {
 					TAILQ_REMOVE(&sbp2_elm_head, elm,

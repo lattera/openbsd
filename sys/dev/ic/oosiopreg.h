@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/oosiopreg.h,v 1.1 2004/03/12 00:04:57 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/oosiopreg.h,v 1.1.4.1 2004/06/05 23:12:43 niklas Exp $	*/
 /*	$NetBSD: oosiopreg.h,v 1.3 2003/11/02 11:07:45 wiz Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/include/board.h,v 1.2 2004/04/29 14:35:22 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/include/board.h,v 1.2.2.1 2004/06/05 23:09:46 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University

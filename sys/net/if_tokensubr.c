@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.7 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_tokensubr.c,v 1.2.2.8 2004/06/05 23:11:24 niklas Exp $	*/
 /*	$NetBSD: if_tokensubr.c,v 1.7 1999/05/30 00:39:07 bad Exp $	*/
 
 /*
@@ -657,12 +657,7 @@ token_input(ifp, m)
 	}
 
 	s = splimp();
-	if (IF_QFULL(inq)) {
-		IF_DROP(inq);
-		m_freem(m);
-	}
-	else
-		IF_ENQUEUE(inq, m);
+	IF_INPUT_ENQUEUE(inq, m);
 	splx(s);
 }
 

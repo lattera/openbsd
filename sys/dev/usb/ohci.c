@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.8 2004/02/19 10:56:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ohci.c,v 1.7.2.9 2004/06/05 23:12:58 niklas Exp $ */
 /*	$NetBSD: ohci.c,v 1.139 2003/02/22 05:24:16 tsutsui Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohci.c,v 1.22 1999/11/17 22:33:40 n_hibma Exp $	*/
 
@@ -920,7 +920,7 @@ ohci_allocx(struct usbd_bus *bus)
 
 	xfer = SIMPLEQ_FIRST(&sc->sc_free_xfers);
 	if (xfer != NULL) {
-		SIMPLEQ_REMOVE_HEAD(&sc->sc_free_xfers, xfer, next);
+		SIMPLEQ_REMOVE_HEAD(&sc->sc_free_xfers, next);
 #ifdef DIAGNOSTIC
 		if (xfer->busy_free != XFER_FREE) {
 			printf("ohci_allocx: xfer=%p not free, 0x%08x\n", xfer,

@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/p9000.c,v 1.4 2003/11/07 10:16:45 jmc Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/p9000.c,v 1.4.2.1 2004/06/05 23:10:57 niklas Exp $	*/
+
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  *
@@ -280,11 +281,6 @@ p9000attach(struct device *parent, struct device *self, void *args)
 	/*
 	 * Plug-in accelerated console operations.
 	 */
-	sc->sc_sunfb.sf_ro.ri_ops.copycols = p9000_ras_copycols;
-	sc->sc_sunfb.sf_ro.ri_ops.copyrows = p9000_ras_copyrows;
-	sc->sc_sunfb.sf_ro.ri_ops.erasecols = p9000_ras_erasecols;
-	sc->sc_sunfb.sf_ro.ri_ops.eraserows = p9000_ras_eraserows;
-	sc->sc_sunfb.sf_ro.ri_do_cursor = p9000_ras_do_cursor;
 	p9000_ras_init(sc);
 
 	p9000_stdscreen.capabilities = sc->sc_sunfb.sf_ro.ri_caps;
@@ -378,7 +374,7 @@ p9000_ioctl(void *v, u_long cmd, caddr_t data, int flags, struct proc *p)
 		case WSDISPLAYIO_PARAM_BACKLIGHT:
 			dp->min = 0;
 			dp->max = 1;
-			dp->curval = tadpole_get_video();
+			dp->curval = tadpole_get_video() & TV_ON;
 			break;
 		default:
 			return (-1);
@@ -556,8 +552,17 @@ p9000_drain(struct p9000_softc *sc)
 void
 p9000_ras_init(struct p9000_softc *sc)
 {
+	sc->sc_sunfb.sf_ro.ri_ops.copycols = p9000_ras_copycols;
+	sc->sc_sunfb.sf_ro.ri_ops.copyrows = p9000_ras_copyrows;
+#if NTCTRL > 0
+	if (tadpole_get_video() & TV_ACCEL) {
+		sc->sc_sunfb.sf_ro.ri_ops.erasecols = p9000_ras_erasecols;
+		sc->sc_sunfb.sf_ro.ri_ops.eraserows = p9000_ras_eraserows;
+		sc->sc_sunfb.sf_ro.ri_do_cursor = p9000_ras_do_cursor;
+	}
+#endif
 	/*
-	 * Setup safe defaults for the parameter and drawing engine, in
+	 * Setup safe defaults for the parameter and drawing engines, in
 	 * order to minimize the operations to do for ri_ops.
 	 */
 
@@ -577,6 +582,10 @@ p9000_ras_init(struct p9000_softc *sc)
 
 	P9000_SELECT_PE(sc);
 	P9000_WRITE_CMD(sc, P9000_PE_WINOFFSET, 0);
+	P9000_WRITE_CMD(sc, P9000_PE_INDEX, 0);
+	P9000_WRITE_CMD(sc, P9000_PE_WINMIN, 0);
+	P9000_WRITE_CMD(sc, P9000_PE_WINMAX,
+	    P9000_COORDS(sc->sc_sunfb.sf_width - 1, sc->sc_sunfb.sf_height - 1));
 }
 
 void
@@ -731,7 +740,8 @@ p9000_ras_do_cursor(struct rasops_info *ri)
 
 	P9000_SELECT_DE_LOW(sc);
 	P9000_WRITE_CMD(sc, P9000_DE_RASTER,
-	    (~P9000_RASTER_DST) & P9000_RASTER_MASK);
+	    (P9000_RASTER_PATTERN ^ P9000_RASTER_DST) & P9000_RASTER_MASK);
+	P9000_WRITE_CMD(sc, P9000_DE_FG_COLOR, WSCOL_BLACK);
 
 	P9000_SELECT_COORD(sc, P9000_LC_RECT);
 	P9000_WRITE_CMD(sc, P9000_LC_RECT + P9000_COORD_XY,

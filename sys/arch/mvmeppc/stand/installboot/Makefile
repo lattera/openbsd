@@ -1,9 +1,9 @@
-#	$OpenBSD: src/sys/arch/mvmeppc/stand/installboot/Attic/Makefile,v 1.1 2001/06/26 21:58:03 smurph Exp $
+#	$OpenBSD: src/sys/arch/mvmeppc/stand/installboot/Attic/Makefile,v 1.1.2.1 2004/06/05 23:10:55 niklas Exp $
 
 .if ${MACHINE} == "mvmeppc"
 PROG=	installboot
 MAN=	installboot.8
-MANSUBDIR=/mvme88k
+MANSUBDIR=/mvmeppc
 
 BINDIR=/usr/mdec
 DPADD=${LIBUTIL}

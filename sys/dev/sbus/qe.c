@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.8 2004/02/19 10:56:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.9 2004/06/05 23:12:57 niklas Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -107,7 +107,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/bus.h>

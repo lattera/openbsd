@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/atomic.h,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/atomic.h,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 /*	$NetBSD: atomic.h,v 1.1 2003/04/26 18:39:37 fvdl Exp $	*/
 
 /*
@@ -74,10 +74,16 @@ x86_atomic_clearbits_u32(volatile u_int32_t *ptr, u_int32_t bits) {
 }
 
 
-
+/*
+ * XXX XXX XXX
+ * theoretically 64bit cannot be used as
+ * an "i" and thus if we ever try to give
+ * these anything from the high dword there
+ * is an asm error pending
+ */
 static __inline void
 x86_atomic_setbits_u64(volatile u_int64_t *ptr, u_int64_t bits) {
-    __asm __volatile("lock ; orq %1,%0" :  "=m" (*ptr) : "ir" (~bits));
+    __asm __volatile("lock ; orq %1,%0" :  "=m" (*ptr) : "ir" (bits));
 }
 
 static __inline void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.8.2.6 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vnops.c,v 1.8.2.7 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: portal_vnops.c,v 1.17 1996/02/13 13:12:57 mycroft Exp $	*/
 
 /*
@@ -363,7 +363,7 @@ portal_open(v)
 			splx(s);
 			goto bad;
 		}
-		(void) tsleep((caddr_t) &so->so_timeo, PSOCK, "portalcon", 5 * hz);
+		(void) tsleep(&so->so_timeo, PSOCK, "portalcon", 5 * hz);
 	}
 	splx(s);
 
@@ -386,7 +386,7 @@ portal_open(v)
 	pcred.pcr_gid = ap->a_cred->cr_gid;
 	pcred.pcr_ngroups = ap->a_cred->cr_ngroups;
 	bcopy(ap->a_cred->cr_groups, pcred.pcr_groups, NGROUPS * sizeof(gid_t));
-	aiov[0].iov_base = (caddr_t) &pcred;
+	aiov[0].iov_base = &pcred;
 	aiov[0].iov_len = sizeof(pcred);
 	aiov[1].iov_base = pt->pt_arg;
 	aiov[1].iov_len = pt->pt_size;
@@ -407,8 +407,10 @@ portal_open(v)
 	do {
 		struct mbuf *m = 0;
 		int flags = MSG_WAITALL;
+		fdpunlock(p->p_fd);
 		error = soreceive(so, (struct mbuf **) 0, &auio,
 					&m, &cm, &flags);
+		fdplock(p->p_fd, p);
 		if (error)
 			goto bad;
 
@@ -451,7 +453,7 @@ portal_open(v)
 	 * than a single mbuf in it.  What to do?
 	 */
 	cmsg = mtod(cm, struct cmsghdr *);
-	newfds = (cmsg->cmsg_len - sizeof(*cmsg)) / sizeof (int);
+	newfds = (cmsg->cmsg_len - CMSG_ALIGN(sizeof(*cmsg))) / sizeof (int);
 	if (newfds == 0) {
 		error = ECONNREFUSED;
 		goto bad;
@@ -462,7 +464,7 @@ portal_open(v)
 	 * integer file descriptors.  The fds were allocated by the action
 	 * of receiving the control message.
 	 */
-	ip = (int *) (cmsg + 1);
+	ip = (int *)CMSG_DATA(cmsg);
 	fd = *ip++;
 	if (newfds > 1) {
 		/*
@@ -622,7 +624,7 @@ portal_reclaim(v)
 	struct portalnode *pt = VTOPORTAL(ap->a_vp);
 
 	if (pt->pt_arg) {
-		free((caddr_t) pt->pt_arg, M_TEMP);
+		free(pt->pt_arg, M_TEMP);
 		pt->pt_arg = 0;
 	}
 	FREE(ap->a_vp->v_data, M_TEMP);

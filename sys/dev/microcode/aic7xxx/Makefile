@@ -1,4 +1,4 @@
-# $OpenBSD: src/sys/dev/microcode/aic7xxx/Makefile,v 1.1.2.5 2004/02/19 10:56:23 niklas Exp $
+# $OpenBSD: src/sys/dev/microcode/aic7xxx/Makefile,v 1.1.2.6 2004/06/05 23:12:46 niklas Exp $
 # $FreeBSD: src/sys/dev/aic7xxx/Makefile,v 1.6 1999/08/28 00:41:22 peter Exp $
 
 PROG=	aicasm
@@ -32,15 +32,28 @@ LFLAGS+= -d
 SEQFLAGS= -l seq.lst
 .endif
 
-microcode aic7xxx_reg.h aic7xxx_seq.h: aic7xxx.seq aic7xxx.reg
+microcode:	7xxx_headers 79xx_headers
+
+7xxx_headers:	aic7xxx.seq aic7xxx.reg
 	${OBJDIR}./aicasm -I/sys ${SEQFLAGS} -r tempreg.h -o tempseq.h ${.CURDIR}/aic7xxx.seq
 	grep OpenBSD: ${.CURDIR}/aic7xxx.seq | cat - tempseq.h > aic7xxx_seq.h
 	grep OpenBSD: ${.CURDIR}/aic7xxx.reg | cat - tempreg.h > aic7xxx_reg.h
 	mv aic7xxx_seq.h /sys/dev/microcode/aic7xxx/
-.ifdef DEBUG
-	mv seq.lst /sys/dev/microcode/aic7xxx/
-.endif
 	mv aic7xxx_reg.h /sys/dev/microcode/aic7xxx/
+.ifdef DEBUG
+	mv seq.lst /sys/dev/microcode/aic7xxx/seq7xxx.lst
+.endif
+	rm -f tempseq.h tempreg.h
+
+79xx_headers:	aic79xx.seq aic79xx.reg
+	${OBJDIR}./aicasm -I/sys ${SEQFLAGS} -r tempreg.h -o tempseq.h ${.CURDIR}/aic79xx.seq
+	grep OpenBSD: ${.CURDIR}/aic79xx.seq | cat - tempseq.h > aic79xx_seq.h
+	grep OpenBSD: ${.CURDIR}/aic79xx.reg | cat - tempreg.h > aic79xx_reg.h
+	mv aic79xx_seq.h /sys/dev/microcode/aic7xxx/
+	mv aic79xx_reg.h /sys/dev/microcode/aic7xxx/
+.ifdef DEBUG
+	mv seq.lst /sys/dev/microcode/aic7xxx/seq79xx.lst
+.endif
 	rm -f tempseq.h tempreg.h
 
 .include <bsd.prog.mk>

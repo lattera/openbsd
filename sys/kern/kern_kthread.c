@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.9 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.10 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -159,7 +159,7 @@ kthread_run_deferred_queue(void)
 	struct kthread_q *kq;
 
 	while ((kq = SIMPLEQ_FIRST(&kthread_q)) != NULL) {
-		SIMPLEQ_REMOVE_HEAD(&kthread_q, kq, kq_q);
+		SIMPLEQ_REMOVE_HEAD(&kthread_q, kq_q);
 		(*kq->kq_func)(kq->kq_arg);
 		free(kq, M_TEMP);
 	}

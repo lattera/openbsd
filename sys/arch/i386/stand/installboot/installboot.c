@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/installboot/installboot.c,v 1.34.4.5 2004/02/19 10:48:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/installboot/installboot.c,v 1.34.4.6 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*
@@ -170,7 +170,7 @@ main(int argc, char *argv[])
 
 	/* XXX - Paranoia: Make sure size is aligned! */
 	if (protosize & (DEV_BSIZE - 1))
-		err(1, "proto %s bad size=%ld", proto, protosize);
+		errx(1, "proto %s bad size=%ld", proto, protosize);
 
 	/* Write patched proto bootblock(s) into the superblock. */
 	if (protosize > SBSIZE - DEV_BSIZE)
@@ -419,9 +419,6 @@ getbootparams(char *boot, int devfd, struct disklabel *dl)
 	ndb = howmany(ip->di_size, fs->fs_bsize);
 	if (ndb <= 0)
 		errx(1, "No blocks to load");
-	if (verbose)
-		fprintf(stderr, "%s is %d blocks x %d bytes\n",
-		    boot, ndb, fs->fs_bsize);
 
 	/*
 	 * Now set the values that will need to go into biosboot
@@ -437,6 +434,16 @@ getbootparams(char *boot, int devfd, struct disklabel *dl)
 	sym_set_value(pbr_symbols, "_inodedbl",
 	    ((((char *)ap) - buf) + INODEOFF));
 	sym_set_value(pbr_symbols, "_nblocks", ndb);
+
+	if (verbose) {
+		fprintf(stderr, "%s is %d blocks x %d bytes\n",
+		    boot, ndb, fs->fs_bsize);
+		fprintf(stderr, "fs block shift %u; part offset %u; "
+		    "inode block %u, offset %u\n",
+		    fs->fs_fsbtodb, pl->p_offset,
+		    ino_to_fsba(fs, statbuf.st_ino),
+		    ((((char *)ap) - buf) + INODEOFF));
+	}
 
 	return 0;
 }
@@ -523,9 +530,5 @@ pbr_set_symbols(char *fname, char *proto, struct sym_data *sym_list)
 		}
 
 		free(nl);
-
-		if (verbose)
-			fprintf(stderr, "%s = %u\n",
-			    sym->sym_name, sym->sym_value);
 	}
 }

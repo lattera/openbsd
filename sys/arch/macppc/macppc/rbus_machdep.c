@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/rbus_machdep.c,v 1.3.8.1 2004/02/19 10:49:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/rbus_machdep.c,v 1.3.8.2 2004/06/05 23:10:52 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.c,v 1.2 1999/10/15 06:43:06 haya Exp $	*/
 
 /*
@@ -141,7 +141,8 @@ macppc_cardbus_init(pci_chipset_tag_t pc, pcitag_t tag)
 	}
 
 	if (PCI_VENDOR(x) == PCI_VENDOR_TI &&
-	    PCI_PRODUCT(x) == PCI_PRODUCT_TI_PCI1410) {
+	    (PCI_PRODUCT(x) == PCI_PRODUCT_TI_PCI1410 ||
+	    PCI_PRODUCT(x) == PCI_PRODUCT_TI_PCI1510)) {
 		/* dont mess with the bus numbers or latency timer */
 
 		/* Route INTA to MFUNC0 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.9.8.4 2003/05/13 19:41:10 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/mba/Attic/hp.c,v 1.9.8.5 2004/06/05 23:11:02 niklas Exp $ */
 /*	$NetBSD: hp.c,v 1.22 2000/02/12 16:09:33 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
@@ -416,7 +416,8 @@ hper2:
 		    sc->sc_dev.dv_xname, mbasr);
 
 	BUFQ_FIRST(&md->md_q)->b_resid = 0;
-	disk_unbusy(&sc->sc_disk, BUFQ_FIRST(&md->md_q)->b_bcount);
+	disk_unbusy(&sc->sc_disk, BUFQ_FIRST(&md->md_q)->b_bcount,
+	    (BUFQ_FIRST(&md->md_q)->b_flags & B_READ));
 	return XFER_FINISH;
 }
 

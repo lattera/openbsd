@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.10.6.10 2004/02/19 11:01:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vnops.c,v 1.10.6.11 2004/06/05 23:13:11 niklas Exp $	*/
 /*	$NetBSD: ext2fs_vnops.c,v 1.1 1997/06/11 09:34:09 bouyer Exp $	*/
 
 /*
@@ -537,7 +537,7 @@ ext2fs_link(v)
 		ip->i_e2fs_nlink--;
 		ip->i_flag |= IN_CHANGE;
 	}
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 out1:
 	if (dvp != vp)
 		VOP_UNLOCK(vp, 0, p);
@@ -1066,7 +1066,7 @@ bad:
 	} else
 		*ap->a_vpp = tvp;
 out:
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	vput(dvp);
 	return (error);
 }
@@ -1258,7 +1258,7 @@ ext2fs_makeinode(mode, dvp, vpp, cnp)
 
 	if ((error = ext2fs_inode_alloc(pdir, mode, cnp->cn_cred, &tvp)) 
 	    != 0) {
-		free(cnp->cn_pnbuf, M_NAMEI);
+		pool_put(&namei_pool, cnp->cn_pnbuf);
 		vput(dvp);
 		return (error);
 	}
@@ -1283,7 +1283,7 @@ ext2fs_makeinode(mode, dvp, vpp, cnp)
 	if (error != 0)
 		goto bad;
 	if ((cnp->cn_flags & SAVESTART) == 0)
-		FREE(cnp->cn_pnbuf, M_NAMEI);
+		pool_put(&namei_pool, cnp->cn_pnbuf);
 	vput(dvp);
 	*vpp = tvp;
 	return (0);
@@ -1293,7 +1293,7 @@ bad:
 	 * Write error occurred trying to update the inode
 	 * or the directory so must deallocate the inode.
 	 */
-	free(cnp->cn_pnbuf, M_NAMEI);
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 	vput(dvp);
 	ip->i_e2fs_nlink = 0;
 	ip->i_flag |= IN_CHANGE;
@@ -1434,7 +1434,7 @@ struct vnodeopv_entry_desc ext2fs_fifoop_entries[] = {
 	{ &vop_write_desc, ufsfifo_write },		/* write */
 	{ &vop_fsync_desc, ext2fs_fsync },		/* fsync */
 	{ &vop_inactive_desc, ext2fs_inactive },/* inactive */
-	{ &vop_reclaim_desc, ext2fs_reclaim },	/* reclaim */
+	{ &vop_reclaim_desc, ext2fsfifo_reclaim },	/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
 	{ &vop_print_desc, ufs_print },			/* print */
@@ -1444,4 +1444,11 @@ struct vnodeopv_entry_desc ext2fs_fifoop_entries[] = {
 };
 struct vnodeopv_desc ext2fs_fifoop_opv_desc =
 	{ &ext2fs_fifoop_p, ext2fs_fifoop_entries };
+
+int
+ext2fsfifo_reclaim(void *v)
+{
+	fifo_reclaim(v);
+	return (ext2fs_reclaim(v));
+}
 #endif /* FIFO */

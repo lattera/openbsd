@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_ed.c,v 1.41.6.6 2004/02/19 10:56:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_ed.c,v 1.41.6.7 2004/06/05 23:12:45 niklas Exp $	*/
 /*	$NetBSD: if_ed.c,v 1.105 1996/10/21 22:40:45 thorpej Exp $	*/
 
 /*
@@ -45,7 +45,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.4.4 2004/02/19 10:49:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/cpu.c,v 1.1.4.5 2004/06/05 23:10:52 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -103,9 +103,11 @@ static u_int32_t ppc_curfreq;
 
 
 int
-ppc_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+ppc_cpuspeed(int *freq)
 {
-	return (sysctl_rdint(oldp, oldlenp, newp, ppc_curfreq));
+	*freq = ppc_curfreq;
+
+	return (0);
 }
 
 

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.24.2.9 2004/02/19 10:56:14 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.24.2.10 2004/06/05 23:12:37 niklas Exp $     */
 
 /*
  * This code is derived from code with the copyright below.
@@ -362,8 +362,8 @@ wdc_atapi_send_cmd(sc_xfer)
 	s = splbio();
 
 	if (drvp->atapi_cap & ACAP_DSC) {
-		WDCDEBUG_PRINT(("about to send cmd %x ", sc_xfer->cmd->opcode),
-		    DEBUG_DSC);
+		WDCDEBUG_PRINT(("about to send cmd 0x%x ",
+		    sc_xfer->cmd->opcode), DEBUG_DSC);
 		switch (sc_xfer->cmd->opcode) {
 		case READ:
 		case WRITE:
@@ -635,6 +635,8 @@ wdc_atapi_the_machine(chp, xfer, ctxt)
 	int timeout_delay = hz / 10;
 
 	if (xfer->c_flags & C_POLL) {
+		wdc_disable_intr(chp);
+
 		if (ctxt != ctxt_process) {
 			if (ctxt == ctxt_interrupt)
 				xfer->endticks = 1;
@@ -752,7 +754,8 @@ wdc_atapi_real_start(chp, xfer, timeout, ret)
 	xfer->next = wdc_atapi_real_start_2;
 	ret->timeout = ATAPI_DELAY;
 
-	WDCDEBUG_PRINT(("wdc_atapi_start %s:%d:%d, scsi flags 0x%x, ATA flags 0x%x\n",
+	WDCDEBUG_PRINT(("wdc_atapi_start %s:%d:%d, scsi flags 0x%x, "
+	    "ATA flags 0x%x\n",
 	    chp->wdc->sc_dev.dv_xname, chp->channel, drvp->drive,
 	    sc_xfer->flags, xfer->c_flags), DEBUG_XFERS);
 
@@ -1007,6 +1010,7 @@ wdc_atapi_intr_data(chp, xfer, timeout, ret)
 	struct ata_drive_datas *drvp = &chp->ch_drive[xfer->drive];
 	int len, ire;
 	char *message;
+	int tohost;
 
 	len = (CHP_READ_REG(chp, wdr_cyl_hi) << 8) |
 	    CHP_READ_REG(chp, wdr_cyl_lo);
@@ -1031,15 +1035,18 @@ wdc_atapi_intr_data(chp, xfer, timeout, ret)
 		}
 	}
 
+	tohost = ((sc_xfer->flags & SCSI_DATA_IN) != 0 ||
+	    (xfer->c_flags & C_SENSE) != 0);
 
 	if (xfer->c_bcount >= len) {
 		WDCDEBUG_PRINT(("wdc_atapi_intr: c_bcount %d len %d "
-		    "st 0x%x err 0x%x "
+		    "st 0x%b err 0x%x "
 		    "ire 0x%x\n", xfer->c_bcount,
-		    len, chp->ch_status, chp->ch_error, ire), DEBUG_INTR);
+		    len, chp->ch_status, WDCS_BITS, chp->ch_error, ire),
+		    DEBUG_INTR);
 
 		/* Common case */
-		if (sc_xfer->flags & SCSI_DATA_OUT)
+		if (!tohost)
 			wdc_output_bytes(drvp, (u_int8_t *)xfer->databuf +
 			    xfer->c_skip, len);
 		else
@@ -1051,7 +1058,7 @@ wdc_atapi_intr_data(chp, xfer, timeout, ret)
 	} else {
 		/* Exceptional case - drive want to transfer more
 		   data than we have buffer for */
-		if (sc_xfer->flags & SCSI_DATA_OUT) {
+		if (!tohost) {
 			/* Wouldn't it be better to just abort here rather
 			   than to write random stuff to drive? */
 			printf("wdc_atapi_intr: warning: device requesting "
@@ -1254,7 +1261,8 @@ wdc_atapi_pio_intr(chp, xfer, timeout, ret)
 	ireason = CHP_READ_REG(chp, wdr_ireason);
 	WDC_LOG_REG(chp, wdr_ireason, ireason);
 
-	WDCDEBUG_PRINT(("Phase %d, (%x, %x) ", as->protocol_phase, chp->ch_status, ireason), DEBUG_INTR );
+	WDCDEBUG_PRINT(("Phase %d, (0x%b, 0x%x) ", as->protocol_phase,
+	    chp->ch_status, WDCS_BITS, ireason), DEBUG_INTR );
 
 	switch (as->protocol_phase) {
 	case as_data:
@@ -1293,9 +1301,9 @@ timeout:
 	WDC_LOG_REG(chp, wdr_ireason, ireason);
 
 	printf("%s:%d:%d: device timeout, c_bcount=%d, c_skip=%d, "
-	    "status=%02x, ireason=%02x\n",
+	    "status=0x%b, ireason=0x%x\n",
 	    chp->wdc->sc_dev.dv_xname, chp->channel, xfer->drive,
-	    xfer->c_bcount, xfer->c_skip, chp->ch_status, ireason);
+	    xfer->c_bcount, xfer->c_skip, chp->ch_status, WDCS_BITS, ireason);
 
 	sc_xfer->error = XS_TIMEOUT;
 	xfer->next = wdc_atapi_reset;
@@ -1552,7 +1560,9 @@ wdc_atapi_done(chp, xfer, timeout, ret)
 
 	sc_xfer->flags |= ITSDONE;
 
-	if (!(xfer->c_flags & C_POLL)) {
+	if (xfer->c_flags & C_POLL) {
+		wdc_enable_intr(chp);
+	} else {
 		WDCDEBUG_PRINT(("wdc_atapi_done: scsi_done\n"), DEBUG_XFERS);
 		scsi_done(sc_xfer);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.9 2004/02/19 10:56:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.10 2004/06/05 23:12:41 niklas Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*
@@ -73,7 +73,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <sys/ioctl.h>
@@ -151,6 +150,9 @@ static u_char fxp_cb_config_template[] = {
 	0x05	/* 21 mc_all */
 };
 
+void fxp_eeprom_shiftin(struct fxp_softc *, int, int);
+void fxp_eeprom_putword(struct fxp_softc *, int, u_int16_t);
+void fxp_write_eeprom(struct fxp_softc *, u_short *, int, int);
 int fxp_mediachange(struct ifnet *);
 void fxp_mediastatus(struct ifnet *, struct ifmediareq *);
 void fxp_scb_wait(struct fxp_softc *);
@@ -205,6 +207,86 @@ fxp_scb_wait(sc)
 	if (i == 0)
 		printf("%s: warning: SCB timed out\n", sc->sc_dev.dv_xname);
 }
+
+
+void 
+fxp_eeprom_shiftin(struct fxp_softc *sc, int data, int length)
+{
+	u_int16_t reg;
+	int x;
+
+	/*
+	 * Shift in data.
+	 */
+	for (x = 1 << (length - 1); x; x >>= 1) {
+		if (data & x)
+			reg = FXP_EEPROM_EECS | FXP_EEPROM_EEDI;
+		else
+			reg = FXP_EEPROM_EECS;
+		CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, reg);
+		DELAY(1);
+		CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, reg | FXP_EEPROM_EESK);
+		DELAY(1);
+		CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, reg);
+		DELAY(1);
+	}
+}
+
+
+void
+fxp_eeprom_putword(struct fxp_softc *sc, int offset, u_int16_t data)
+{
+	int i;
+
+	/*
+	 * Erase/write enable.
+	 */
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, FXP_EEPROM_EECS);
+	fxp_eeprom_shiftin(sc, 0x4, 3);
+	fxp_eeprom_shiftin(sc, 0x03 << (sc->eeprom_size - 2), sc->eeprom_size);
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, 0);
+	DELAY(1);
+	/*
+	 * Shift in write opcode, address, data.
+	 */
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, FXP_EEPROM_EECS);
+	fxp_eeprom_shiftin(sc, FXP_EEPROM_OPC_WRITE, 3);
+	fxp_eeprom_shiftin(sc, offset, sc->eeprom_size);
+	fxp_eeprom_shiftin(sc, data, 16);
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, 0);
+	DELAY(1);
+	/*
+	 * Wait for EEPROM to finish up.
+	 */
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, FXP_EEPROM_EECS);
+	DELAY(1);
+	for (i = 0; i < 1000; i++) {
+		if (CSR_READ_2(sc, FXP_CSR_EEPROMCONTROL) & FXP_EEPROM_EEDO)
+			break;
+		DELAY(50);
+	}
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, 0);
+	DELAY(1);
+	/*
+	 * Erase/write disable.
+	 */
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, FXP_EEPROM_EECS);
+	fxp_eeprom_shiftin(sc, 0x4, 3);
+	fxp_eeprom_shiftin(sc, 0, sc->eeprom_size);
+	CSR_WRITE_2(sc, FXP_CSR_EEPROMCONTROL, 0);
+	DELAY(1);
+}
+
+void
+fxp_write_eeprom(struct fxp_softc *sc, u_short *data, int offset, int words)
+{
+	int i;
+
+	for (i = 0; i < words; i++)
+		fxp_eeprom_putword(sc, offset + i, data[i]);
+}
+
+
 
 /*************************************************************
  * Operating system-specific autoconfiguration glue
@@ -320,18 +402,19 @@ fxp_attach_common(sc, enaddr, intrstr)
 	bzero(sc->sc_ctrl, sizeof(struct fxp_ctrl));
 
 	/*
-	 * Pre-allocate our receive buffers.
+	 * Pre-allocate some receive buffers.
 	 */
 	sc->sc_rxfree = 0;
-	for (i = 0; i < FXP_NRFABUFS; i++) {
+	for (i = 0; i < FXP_NRFABUFS_MIN; i++) {
 		if ((err = bus_dmamap_create(sc->sc_dmat, MCLBYTES, 1,
 		    MCLBYTES, 0, 0, &sc->sc_rxmaps[i])) != 0) {
-			printf("%s: unable to create tx dma map %d, error %d\n",
+			printf("%s: unable to create rx dma map %d, error %d\n",
 			    sc->sc_dev.dv_xname, i, err);
 			goto fail;
 		}
+		sc->rx_bufs++;
 	}
-	for (i = 0; i < FXP_NRFABUFS; i++)
+	for (i = 0; i < FXP_NRFABUFS_MIN; i++)
 		if (fxp_add_rfabuf(sc, NULL) != 0)
 			goto fail;
 
@@ -362,6 +445,30 @@ fxp_attach_common(sc, enaddr, intrstr)
 	ifp->if_start = fxp_start;
 	ifp->if_watchdog = fxp_watchdog;
 	IFQ_SET_READY(&ifp->if_snd);
+
+	
+	if (sc->sc_flags & FXPF_DISABLE_STANDBY) {
+		fxp_read_eeprom(sc, &data, 10, 1);
+		if (data & 0x02) {			/* STB enable */
+			u_int16_t cksum;
+			int i;
+			printf("Disabling dynamic standby mode in EEPROM\n");
+			data &= ~0x02;
+			fxp_write_eeprom(sc, &data, 10, 1);
+			printf("New EEPROM ID: 0x%x\n", data);
+			cksum = 0;
+			for (i = 0; i < (1 << sc->eeprom_size) - 1; i++) {
+				fxp_read_eeprom(sc, &data, i, 1);
+				cksum += data;
+			}
+			i = (1 << sc->eeprom_size) - 1;
+			cksum = 0xBABA - cksum;
+			fxp_read_eeprom(sc, &data, i, 1);
+			fxp_write_eeprom(sc, &cksum, i, 1);
+			printf("EEPROM checksum @ 0x%x: 0x%x -> 0x%x\n",
+			    i, data, cksum);
+		}
+	}
 
 #if NVLAN > 0
 	/*
@@ -544,6 +651,11 @@ fxp_autosize_eeprom(sc)
 	DELAY(4);
 	sc->eeprom_size = x;
 }
+
+
+
+
+
 /*
  * Read from the serial EEPROM. Basically, you manually shift in
  * the read opcode (one bit at a time) and then shift in the address,
@@ -737,8 +849,10 @@ fxp_intr(arg)
 	struct fxp_softc *sc = arg;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	u_int8_t statack;
-	int claimed = 0, rnr;
-
+	bus_dmamap_t rxmap;
+	int claimed = 0;
+	int rnr = 0;
+	
 	/*
 	 * If the interface isn't running, don't try to
 	 * service the interrupt.. just ack it and bail.
@@ -754,8 +868,7 @@ fxp_intr(arg)
 
 	while ((statack = CSR_READ_1(sc, FXP_CSR_SCB_STATACK)) != 0) {
 		claimed = 1;
-		rnr = 0;
-
+		rnr = (statack & FXP_SCB_STATACK_RNR) ? 1 : 0;
 		/*
 		 * First ACK all the interrupts in this pass.
 		 */
@@ -806,7 +919,6 @@ fxp_intr(arg)
 		 */
 		if (statack & (FXP_SCB_STATACK_FR | FXP_SCB_STATACK_RNR)) {
 			struct mbuf *m;
-			bus_dmamap_t rxmap;
 			u_int8_t *rfap;
 rcvloop:
 			m = sc->rfa_headm;
@@ -847,6 +959,14 @@ rcvloop:
 						m_freem(m);
 						goto rcvloop;
 					}
+					if (*(u_int16_t *)(rfap +
+					    offsetof(struct fxp_rfa,
+					    rfa_status)) &
+					    htole16(FXP_RFA_STATUS_CRC)) {
+						m_freem(m);
+						goto rcvloop;
+					}
+
 					m->m_pkthdr.rcvif = ifp;
 					m->m_pkthdr.len = m->m_len =
 					    total_len;
@@ -858,15 +978,16 @@ rcvloop:
 				}
 				goto rcvloop;
 			}
-			if (rnr) {
-				rxmap = *((bus_dmamap_t *)
-				    sc->rfa_headm->m_ext.ext_buf);
-				fxp_scb_wait(sc);
-				CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
+		}
+		if (rnr) {
+			rxmap = *((bus_dmamap_t *)
+			    sc->rfa_headm->m_ext.ext_buf);
+			fxp_scb_wait(sc);
+			CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,
 				    rxmap->dm_segs[0].ds_addr +
 				    RFA_ALIGNMENT_FUDGE);
-				fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
-			}
+			fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_START);
+			
 		}
 	}
 	return (claimed);
@@ -898,9 +1019,8 @@ fxp_stats_update(arg)
 	if (sp->rx_good) {
 		ifp->if_ipackets += letoh32(sp->rx_good);
 		sc->rx_idle_secs = 0;
-	} else {
+	} else
 		sc->rx_idle_secs++;
-	}
 	ifp->if_ierrors +=
 	    letoh32(sp->rx_crc_errors) +
 	    letoh32(sp->rx_alignment_errors) +
@@ -1025,10 +1145,11 @@ fxp_stop(sc, drain)
 			bus_dmamap_unload(sc->sc_dmat, rxmap);
 			FXP_RXMAP_PUT(sc, rxmap);
 			m = m_free(m);
+			sc->rx_bufs--;
 		}
 		sc->rfa_headm = NULL;
 		sc->rfa_tailm = NULL;
-		for (i = 0; i < FXP_NRFABUFS; i++) {
+		for (i = 0; i < FXP_NRFABUFS_MIN; i++) {
 			if (fxp_add_rfabuf(sc, NULL) != 0) {
 				/*
 				 * This "can't happen" - we're at splimp()
@@ -1037,6 +1158,7 @@ fxp_stop(sc, drain)
 				 */
 				panic("fxp_stop: no buffers!");
 			}
+			sc->rx_bufs++;
 		}
 	}
 }
@@ -1084,8 +1206,9 @@ fxp_init(xsc)
 	struct fxp_cb_config *cbp;
 	struct fxp_cb_ias *cb_ias;
 	struct fxp_cb_tx *txp;
+	struct mbuf *m;
 	bus_dmamap_t rxmap;
-	int i, prm, allm, s;
+	int i, prm, allm, s, bufs;
 
 	s = splimp();
 
@@ -1275,6 +1398,32 @@ fxp_init(xsc)
 	/*
 	 * Initialize receiver buffer area - RFA.
 	 */
+	if (ifp->if_flags & IFF_UP)
+		bufs = FXP_NRFABUFS_MAX;
+	else
+		bufs = FXP_NRFABUFS_MIN;
+	if (sc->rx_bufs > bufs) {
+		while (sc->rfa_headm != NULL && sc->rx_bufs-- > bufs) {
+			rxmap = *((bus_dmamap_t *)m->m_ext.ext_buf);
+			bus_dmamap_unload(sc->sc_dmat, rxmap);
+			FXP_RXMAP_PUT(sc, rxmap);
+			sc->rfa_headm = m_free(m);
+		}
+	} else if (sc->rx_bufs < bufs) {
+		int err, tmp_rx_bufs = sc->rx_bufs;
+		for (i = sc->rx_bufs; i < bufs; i++) {
+			if ((err = bus_dmamap_create(sc->sc_dmat, MCLBYTES, 1,
+			    MCLBYTES, 0, 0, &sc->sc_rxmaps[i])) != 0) {
+				printf("%s: unable to create rx dma map %d, "
+				  "error %d\n", sc->sc_dev.dv_xname, i, err);
+				break;
+			}
+			sc->rx_bufs++;
+		}
+		for (i = tmp_rx_bufs; i < sc->rx_bufs; i++)
+			if (fxp_add_rfabuf(sc, NULL) != 0)
+				break;
+	}
 	fxp_scb_wait(sc);
 	rxmap = *((bus_dmamap_t *)sc->rfa_headm->m_ext.ext_buf);
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL,

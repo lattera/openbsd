@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3.12.6 2004/02/19 10:50:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3.12.7 2004/06/05 23:11:03 niklas Exp $ */
 /*	$NetBSD: vsbus.c,v 1.29 2000/06/29 07:14:37 mrg Exp $ */
 /*
  * Copyright (c) 1996, 1999 Ludd, University of Lule}, Sweden.
@@ -409,7 +409,7 @@ vsbus_dma_intr(void)
 		return;
 	}
 	vsbus_active = 1;
-	SIMPLEQ_REMOVE_HEAD(&vsbus_dma, vd, vd_q);
+	SIMPLEQ_REMOVE_HEAD(&vsbus_dma, vd_q);
 	(*vd->vd_go)(vd->vd_arg);
 }
 

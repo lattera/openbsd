@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.4 2003/03/28 00:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.5 2004/06/05 23:11:25 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -84,6 +84,11 @@ struct ah
 #define AHCTL_NAMES { \
 	{ 0, 0 }, \
 	{ "enable", CTLTYPE_INT }, \
+}
+
+#define AHCTL_VARS { \
+	NULL, \
+	&ah_enable, \
 }
 
 #ifdef _KERNEL

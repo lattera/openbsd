@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.9 2004/02/19 10:50:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/conf.c,v 1.17.8.10 2004/06/05 23:11:03 niklas Exp $ */
 /*	$NetBSD: conf.c,v 1.44 1999/10/27 16:38:54 ragge Exp $	*/
 
 /*-
@@ -438,6 +438,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 74 */
 #endif
+	cdev_ptm_init(NPTY,ptm),	/* 75: pseudo-tty ptm device */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

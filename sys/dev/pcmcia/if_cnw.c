@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5.2.6 2004/02/19 10:56:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5.2.7 2004/06/05 23:12:55 niklas Exp $	*/
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -85,7 +85,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 

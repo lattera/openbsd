@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/pmap.h,v 1.1.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/pmap.h,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.76 2003/09/06 09:10:46 rearnsha Exp $	*/
 
 /*
@@ -245,6 +245,8 @@ extern int		pmap_debug_level; /* Only exists if PMAP_DEBUG */
 #define	pmap_copy(dp, sp, da, l, sa)	/* nothing */
 
 #define pmap_phys_address(ppn)		(arm_ptob((ppn)))
+
+#define pmap_proc_iflush(p, va, len)	/* nothing */
 
 /*
  * Functions that we need to export

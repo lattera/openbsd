@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_ae_nubus.c,v 1.7.14.1 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_ae_nubus.c,v 1.7.14.2 2004/06/05 23:10:51 niklas Exp $	*/
 /*	$NetBSD: if_ae_nubus.c,v 1.17 1997/05/01 18:17:16 briggs Exp $	*/
 
 /*
@@ -43,6 +43,8 @@
  *	Asante MacCon II/E
  *	Kinetics EtherPort SE/30
  */
+
+#define	AE_OLD_GET_ENADDR
 
 #include <sys/param.h>
 #include <sys/device.h>

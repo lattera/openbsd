@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4.4.7 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4.4.8 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Håkan Olsson (ho@crt.se)
@@ -44,7 +44,7 @@
 #include <crypto/cryptodev.h>
 #include <crypto/cryptosoft.h>
 #include <dev/rndvar.h>
-#include <sys/md5k.h>
+#include <crypto/md5.h>
 #include <crypto/sha1.h>
 #include <crypto/rmd160.h>
 
@@ -263,17 +263,19 @@ ises_attach(struct device *parent, struct device *self, void *aux)
 
  fail:
 	switch (state) { /* Always fallthrough here. */
-	case 4:
+	case 5:
 		bus_dmamem_unmap(sc->sc_dmat, (caddr_t)&sc->sc_dma_data,
 		    sizeof sc->sc_dma_data);
-	case 3:
+	case 4:
 		bus_dmamem_free(sc->sc_dmat, &seg, nsegs);
-	case 2:
+	case 3:
 		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmamap);
-	case 1:
+	case 2:
 		pci_intr_disestablish(pc, sc->sc_ih);
-	default: /* 0 */
+	case 1:
 		bus_space_unmap(sc->sc_memt, sc->sc_memh, memsize);
+	default: /* 0 */
+		break;
 	}
 	return;
 }
@@ -608,7 +610,7 @@ ises_process_oqueue(struct ises_softc *sc)
 		s = splnet();
 		if (!SIMPLEQ_EMPTY(&sc->sc_cmdq)) {
 			cq = SIMPLEQ_FIRST(&sc->sc_cmdq);
-			SIMPLEQ_REMOVE_HEAD(&sc->sc_cmdq, cq, cmd_next);
+			SIMPLEQ_REMOVE_HEAD(&sc->sc_cmdq, cmd_next);
 			cq->cmd_rlen = len;
 		} else {
 			cq = NULL;
@@ -882,7 +884,7 @@ ises_feed(struct ises_softc *sc)
 	DELAY(2000000);
 
 	s = splnet();
-	SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q, q_next);
+	SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q_next);
 	SIMPLEQ_INSERT_TAIL(&sc->sc_qchip, q, q_next);
 	--sc->sc_nqueue;
 	splx(s);

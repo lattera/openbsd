@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.79.2.9 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.79.2.10 2004/06/05 23:11:25 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -311,6 +311,7 @@ gettdbbysrcdst(u_int32_t spi, union sockaddr_union *src,
 {
 	u_int32_t hashval;
 	struct tdb *tdbp;
+	union sockaddr_union su_null;
 
 	if (tdbsrc == NULL)
 		return (struct tdb *) NULL;
@@ -318,13 +319,31 @@ gettdbbysrcdst(u_int32_t spi, union sockaddr_union *src,
 	hashval = tdb_hash(0, src, proto);
 
 	for (tdbp = tdbsrc[hashval]; tdbp != NULL; tdbp = tdbp->tdb_snext)
-		if ((spi == 0 || tdbp->tdb_spi == spi) &&
-		    !bcmp(&tdbp->tdb_dst, dst, SA_LEN(&dst->sa)) &&
-		    !bcmp(&tdbp->tdb_src, src, SA_LEN(&src->sa)) &&
-		    (tdbp->tdb_sproto == proto))
+		if (tdbp->tdb_sproto == proto &&
+		    (spi == 0 || tdbp->tdb_spi == spi) &&
+		    ((tdbp->tdb_flags & TDBF_INVALID) == 0) &&
+		    (tdbp->tdb_dst.sa.sa_family == AF_UNSPEC ||
+		    !bcmp(&tdbp->tdb_dst, dst, SA_LEN(&dst->sa))) &&
+		    !bcmp(&tdbp->tdb_src, src, SA_LEN(&src->sa)))
 			break;
 
-	return tdbp;
+	if (tdbp != NULL)
+		return (tdbp);
+
+	bzero(&su_null, sizeof(su_null));
+	su_null.sa.sa_len = sizeof(struct sockaddr);
+	hashval = tdb_hash(0, &su_null, proto);
+
+	for (tdbp = tdbsrc[hashval]; tdbp != NULL; tdbp = tdbp->tdb_snext)
+		if (tdbp->tdb_sproto == proto &&
+		    (spi == 0 || tdbp->tdb_spi == spi) &&
+		    ((tdbp->tdb_flags & TDBF_INVALID) == 0) &&
+		    (tdbp->tdb_dst.sa.sa_family == AF_UNSPEC ||
+		    !bcmp(&tdbp->tdb_dst, dst, SA_LEN(&dst->sa))) &&
+		    tdbp->tdb_src.sa.sa_family == AF_UNSPEC)
+			break;
+
+	return (tdbp);
 }
 #endif
 
@@ -335,31 +354,36 @@ gettdbbysrcdst(u_int32_t spi, union sockaddr_union *src,
  * already established TDBs.
  */
 int
-ipsp_aux_match(struct ipsec_ref *tsrcid, struct ipsec_ref *psrcid,
-    struct ipsec_ref *tdstid, struct ipsec_ref *pdstid,
-    struct ipsec_ref *tlcred, struct ipsec_ref *plcred,
-    struct ipsec_ref *trcred, struct ipsec_ref *prcred,
-    struct sockaddr_encap *tfilter, struct sockaddr_encap *pfilter,
-    struct sockaddr_encap *tfiltermask, struct sockaddr_encap *pfiltermask)
+ipsp_aux_match(struct tdb *tdb,
+    struct ipsec_ref *psrcid,
+    struct ipsec_ref *pdstid,
+    struct ipsec_ref *plcred,
+    struct ipsec_ref *prcred,
+    struct sockaddr_encap *pfilter,
+    struct sockaddr_encap *pfiltermask)
 {
 	if (psrcid != NULL)
-		if (tsrcid == NULL || !ipsp_ref_match(tsrcid, psrcid))
+		if (tdb->tdb_srcid == NULL ||
+		    !ipsp_ref_match(tdb->tdb_srcid, psrcid))
 			return 0;
 
 	if (pdstid != NULL)
-		if (tdstid == NULL || !ipsp_ref_match(tdstid, pdstid))
+		if (tdb->tdb_dstid == NULL ||
+		    !ipsp_ref_match(tdb->tdb_dstid, pdstid))
 			return 0;
 
 	if (plcred != NULL)
-		if (tlcred == NULL || !ipsp_ref_match(tlcred, plcred))
+		if (tdb->tdb_local_cred == NULL ||
+		   !ipsp_ref_match(tdb->tdb_local_cred, plcred))
 			return 0;
 
 	if (prcred != NULL)
-		if (trcred == NULL || !ipsp_ref_match(trcred, prcred))
+		if (tdb->tdb_remote_cred == NULL ||
+		    !ipsp_ref_match(tdb->tdb_remote_cred, prcred))
 			return 0;
 
 	/* Check for filter matches. */
-	if (tfilter->sen_type) {
+	if (tdb->tdb_filter.sen_type) {
 		/*
 		 * XXX We should really be doing a subnet-check (see
 		 * whether the TDB-associated filter is a subset
@@ -367,9 +391,10 @@ ipsp_aux_match(struct ipsec_ref *tsrcid, struct ipsec_ref *psrcid,
 		 * most problems (all this will do is make every
 		 * policy get its own SAs).
 		 */
-		if (bcmp(tfilter, pfilter, sizeof(struct sockaddr_encap)) ||
-		    bcmp(tfiltermask, pfiltermask,
-			sizeof(struct sockaddr_encap)))
+		if (bcmp(&tdb->tdb_filter, pfilter,
+		    sizeof(struct sockaddr_encap)) ||
+		    bcmp(&tdb->tdb_filtermask, pfiltermask,
+		    sizeof(struct sockaddr_encap)))
 			return 0;
 	}
 
@@ -399,10 +424,8 @@ gettdbbyaddr(union sockaddr_union *dst, u_int8_t sproto,
 		    ((tdbp->tdb_flags & TDBF_INVALID) == 0) &&
 		    (!bcmp(&tdbp->tdb_dst, dst, SA_LEN(&dst->sa)))) {
 			/* Do IDs and local credentials match ? */
-			if (!ipsp_aux_match(tdbp->tdb_srcid, srcid,
-			    tdbp->tdb_dstid, dstid, tdbp->tdb_local_cred,
-			    local_cred, NULL, NULL, &tdbp->tdb_filter, filter,
-			    &tdbp->tdb_filtermask, filtermask))
+			if (!ipsp_aux_match(tdbp, srcid, dstid,
+			    local_cred, NULL, filter, filtermask))
 				continue;
 			break;
 		}
@@ -433,10 +456,8 @@ gettdbbysrc(union sockaddr_union *src, u_int8_t sproto,
 		    ((tdbp->tdb_flags & TDBF_INVALID) == 0) &&
 		    (!bcmp(&tdbp->tdb_src, src, SA_LEN(&src->sa)))) {
 			/* Check whether IDs match */
-			if (!ipsp_aux_match(tdbp->tdb_srcid, dstid,
-			    tdbp->tdb_dstid, srcid, NULL, NULL, NULL, NULL,
-			    &tdbp->tdb_filter, filter, &tdbp->tdb_filtermask,
-			    filtermask))
+			if (!ipsp_aux_match(tdbp, dstid, srcid, NULL, NULL,
+			    filter, filtermask))
 				continue;
 			break;
 		}

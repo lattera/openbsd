@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/exec.h,v 1.1 2004/04/26 12:34:05 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/include/exec.h,v 1.1.2.1 2004/06/05 23:09:47 niklas Exp $ */
 #ifndef __MACHINE_EXEC_H__
 #define __MACHINE_EXEC_H__
 

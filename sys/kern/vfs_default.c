@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_default.c,v 1.3.8.7 2004/02/19 10:56:38 niklas Exp $  */
+/*	$OpenBSD: src/sys/kern/vfs_default.c,v 1.3.8.8 2004/06/05 23:13:03 niklas Exp $  */
 
 /*
  *    Portions of this code are:
@@ -44,6 +44,7 @@
 #include <sys/vnode.h>
 #include <sys/namei.h>
 #include <sys/malloc.h>
+#include <sys/pool.h>
 #include <sys/event.h>
 #include <miscfs/specfs/specdev.h>
 
@@ -140,7 +141,7 @@ vop_generic_abortop(v)
 	} */ *ap = v;
  
 	if ((ap->a_cnp->cn_flags & (HASBUF | SAVESTART)) == HASBUF)
-		FREE(ap->a_cnp->cn_pnbuf, M_NAMEI);
+		pool_put(&namei_pool, ap->a_cnp->cn_pnbuf);
 	return (0);
 }
 
@@ -148,7 +149,7 @@ vop_generic_abortop(v)
  * Stubs to use when there is no locking to be done on the underlying object.
  * A minimal shared lock is necessary to ensure that the underlying object
  * is not revoked while an operation is in progress. So, an active shared
- * count is maintained in an auxillary vnode lock structure.
+ * count is maintained in an auxiliary vnode lock structure.
  */
 int
 vop_generic_lock(v)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.2.3 2004/02/19 10:56:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wivar.h,v 1.3.2.4 2004/06/05 23:12:42 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -51,6 +51,7 @@ struct wi_softc	{
 	int			wi_tx_mgmt_id;
 	int			wi_flags;
 	int			wi_if_flags;
+	int			wi_cmd_count;
 	u_int16_t		wi_procframe;
 	u_int16_t		wi_ptype;
 	u_int16_t		wi_portnum;
@@ -78,6 +79,7 @@ struct wi_softc	{
 	struct ieee80211_nwid	wi_ibss_name;
 
 	int			wi_use_wep;
+	int			wi_enh_security;
 	int			wi_crypto_algorithm;
 	int			wi_tx_key;
 	struct wi_ltv_keys	wi_keys;
@@ -134,6 +136,7 @@ struct wi_softc	{
 #define WI_FLAGS_HAS_HOSTAP		0x0100
 #define WI_FLAGS_BUS_PCMCIA		0x0200
 #define WI_FLAGS_BUS_USB		0x0400
+#define WI_FLAGS_HAS_ENH_SECURITY	0x0800
 
 #define WI_PRT_FMT "%s"
 #define WI_PRT_ARG(sc)	(sc)->sc_dev.dv_xname

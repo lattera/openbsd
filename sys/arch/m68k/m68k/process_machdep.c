@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/process_machdep.c,v 1.3.14.2 2002/03/28 10:34:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/process_machdep.c,v 1.3.14.3 2004/06/05 23:10:51 niklas Exp $	*/
 /*	$NetBSD: process_machdep.c,v 1.17 1996/05/06 20:05:24 gwr Exp $	*/
 
 /*
@@ -63,7 +63,7 @@
 #include <machine/psl.h>
 #include <machine/reg.h>
 
-#define	process_frame(p)	(struct frame *)&((p)->p_md.md_regs)
+#define	process_frame(p)	(struct frame *)((p)->p_md.md_regs)
 #define	process_fpframe(p)	&((p)->p_addr->u_pcb.pcb_fpregs)
 
 int

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.12 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.13 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -240,14 +240,6 @@ route_output(struct mbuf *m, ...)
 		senderr(EACCES);
 	switch (rtm->rtm_type) {
 
-	case RTM_DELETE:
-		error = rtrequest1(rtm->rtm_type, &info, &saved_nrt);
-		if (error == 0) {
-			(rt = saved_nrt)->rt_refcnt++;
-			goto report;
-		}
-		break;
-
 	case RTM_ADD:
 		if (gate == 0)
 			senderr(EINVAL);
@@ -258,7 +250,14 @@ route_output(struct mbuf *m, ...)
 			saved_nrt->rt_refcnt--;
 			saved_nrt->rt_genmask = genmask;
 		}
-		/* FALLTHROUGH */
+		break;
+	case RTM_DELETE:
+		error = rtrequest1(rtm->rtm_type, &info, &saved_nrt);
+		if (error == 0) {
+			(rt = saved_nrt)->rt_refcnt++;
+			goto report;
+		}
+		break;
 	case RTM_GET:
 	case RTM_CHANGE:
 	case RTM_LOCK:
@@ -270,7 +269,37 @@ route_output(struct mbuf *m, ...)
 			senderr(ESRCH);
 		}
 		rt = (struct rtentry *)rn;
+#ifndef SMALL_KERNEL
+		/*
+		 * for RTM_CHANGE/LOCK, if we got multipath routes,
+		 * we require users to specify a matching RTAX_GATEWAY.
+		 *
+		 * for RTM_GET, gate is optional even with multipath.
+		 * if gate == NULL the first match is returned.
+		 * (no need to call rt_mpath_matchgate if gate == NULL)
+		 */
+		if (rn_mpath_capable(rnh) &&
+		    (rtm->rtm_type != RTM_GET || gate)) {
+			rt = rt_mpath_matchgate(rt, gate);
+			rn = (struct radix_node *)rt;
+			if (!rt)
+				senderr(ESRCH);
+		}
+#endif
 		rt->rt_refcnt++;
+
+		/*
+		 * RTM_CHANGE/LOCK need a perfect match, rn_lookup()
+		 * returns a perfect match in case a netmask is specified.
+		 * For host routes only a longest prefix match is returned
+		 * so it is necessary to compare the existence of the netmaks.
+		 * If both have a netmask rn_lookup() did a perfect match and
+		 * if non of them have a netmask both are host routes which is
+		 * also a perfect match.
+		 */
+		if (rtm->rtm_type != RTM_GET && !rt_mask(rt) != !netmask) {
+				senderr(ESRCH);
+		}
 
 		switch (rtm->rtm_type) {
 
@@ -308,7 +337,7 @@ route_output(struct mbuf *m, ...)
 			(void)rt_msg2(rtm->rtm_type, &info, (caddr_t)rtm,
 				(struct walkarg *)0);
 			rtm->rtm_flags = rt->rt_flags;
-			rtm->rtm_rmx = rt->rt_rmx;
+			rt_getmetrics(&rt->rt_rmx, &rtm->rtm_rmx);
 			rtm->rtm_addrs = info.rti_addrs;
 			break;
 
@@ -351,7 +380,6 @@ route_output(struct mbuf *m, ...)
 			/*
 			 * Fall into
 			 */
-		case RTM_ADD:
 		case RTM_LOCK:
 			rt->rt_rmx.rmx_locks &= ~(rtm->rtm_inits);
 			rt->rt_rmx.rmx_locks |=
@@ -412,17 +440,26 @@ flush:
 void
 rt_setmetrics(which, in, out)
 	u_long which;
-	struct rt_metrics *in, *out;
+	struct rt_metrics *in;
+	struct rt_kmetrics *out;
 {
 #define metric(f, e) if (which & (f)) out->e = in->e;
-	metric(RTV_RPIPE, rmx_recvpipe);
-	metric(RTV_SPIPE, rmx_sendpipe);
-	metric(RTV_SSTHRESH, rmx_ssthresh);
-	metric(RTV_RTT, rmx_rtt);
-	metric(RTV_RTTVAR, rmx_rttvar);
-	metric(RTV_HOPCOUNT, rmx_hopcount);
 	metric(RTV_MTU, rmx_mtu);
 	metric(RTV_EXPIRE, rmx_expire);
+#undef metric
+}
+
+void
+rt_getmetrics(in, out)
+        struct rt_kmetrics *in;
+        struct rt_metrics *out;
+{
+#define metric(e) out->e = in->e;
+	bzero(out, sizeof(*out));
+	metric(rmx_locks);
+	metric(rmx_mtu);
+	metric(rmx_expire);
+	metric(rmx_pksent);
 #undef metric
 }
 
@@ -760,7 +797,7 @@ sysctl_dumpentry(rn, v)
 
 		rtm->rtm_flags = rt->rt_flags;
 		rtm->rtm_use = rt->rt_use;
-		rtm->rtm_rmx = rt->rt_rmx;
+		rt_getmetrics(&rt->rt_rmx, &rtm->rtm_rmx);
 		rtm->rtm_index = rt->rt_ifp->if_index;
 		rtm->rtm_errno = rtm->rtm_pid = rtm->rtm_seq = 0;
 		rtm->rtm_addrs = info.rti_addrs;

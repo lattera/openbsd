@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aac.c,v 1.4.4.9 2004/02/19 10:56:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aac.c,v 1.4.4.10 2004/06/05 23:12:38 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith
@@ -1132,7 +1132,7 @@ aac_sync_command(sc, command, arg0, arg1, arg2, arg3, sp)
 
 	/* spin waiting for the command to complete */
 	for (i = 0; i < AAC_IMMEDIATE_TIMEOUT * 1000; i++) {
-		if (AAC_GET_ISTATUS(sc) & AAC_DB_SYNC_COMMAND);
+		if (AAC_GET_ISTATUS(sc) & AAC_DB_SYNC_COMMAND)
 			break;
 		DELAY(1000);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ep_pci.c,v 1.18.8.4 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_ep_pci.c,v 1.18.8.5 2004/06/05 23:12:50 niklas Exp $	*/
 /*	$NetBSD: if_ep_pci.c,v 1.13 1996/10/21 22:56:38 thorpej Exp $	*/
 
 /*
@@ -58,7 +58,6 @@
  
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

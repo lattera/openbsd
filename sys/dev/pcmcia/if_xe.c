@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.6 2004/02/19 10:56:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.7 2004/06/05 23:12:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Niklas Hallqvist, Brandon Creighton, Job de Haas
@@ -81,7 +81,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 /*

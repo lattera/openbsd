@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hppa/conf/RAMDISK,v 1.3.4.3 2004/02/19 10:48:39 niklas Exp $
+#	$OpenBSD: src/sys/arch/hppa/conf/RAMDISK,v 1.3.4.4 2004/06/05 23:10:47 niklas Exp $
 #
 # Diskless kernel config
 #
@@ -42,11 +42,11 @@ option		RAMDISK_HOOKS
 option		MINIROOTSIZE=5120
 config	bsd	root on rd0a swap on rd0b # and sd0b
 
-mainbus0 at root		# root "bus"
+mainbus0 at root		# root bus
 
-mem*	at mainbus0		# /dev/*mem and memory controller
+mem*	at mainbus0 flags 0x0000	# /dev/*mem and memory controller
 pdc0	at mainbus0		# PDC/IODC wrapper for boot console
-power0	at mainbus0		# power/fail manager (iv 2)
+power0	at mainbus0		# power/fail manager (iv 30)
 cpu*	at mainbus0 irq 31	# HP PA-RISC cpu
 #fpu*	at mainbus0		# HP PA-RISC fpu (iv N/A)
 #pmu*	at mainbus0 irq 29	# HP PA-RISC perfomance monitor unit
@@ -63,8 +63,8 @@ mongoose* at mainbus0 irq 17	# EISA Bus Adapter (i82350 or TI???)
 dino*	at phantomas? irq 26	# PCI bus bridge
 pci*	at dino?
 option	PCIVERBOSE
-#pckbc0	at dino? irq 23
-#com3	at dino? irq 21
+#pckbc0	at dino? irq 9
+com1	at dino? irq 11
 
 sti0	at mainbus0 irq 11	# [H]CRX-{8,24,48}[Z] graphics
 sti0	at phantomas0 irq 11	# builtin graphics on BC*
@@ -112,9 +112,11 @@ ie0	at gsc0 irq 8			# 82C596DX/CA ether
 #ie*	at isa? port 0x300 irq 10
 #ie*	at pci? dev ? function ?
 #tms*	at gsc? irq 10			# TMS380C26 Network Controller
-osiop*	at gsc? irq 9			# NCR 53C700/710 (Narrow SE)
+osiop*	at gsc? irq 9			# NCR 53C710 (Narrow SE)
 #osiop* at eisa? slot ?
 scsibus* at osiop?
+oosiop*	at gsc? irq 9			# NCR 53C700 (Narrow SE)
+scsibus* at oosiop?
 #harmony* at gsc? irq 13		# Audio Type 2 (CS4215/AD1849)
 #audio*	at harmony?
 gsckbc*	at gsc? irq 26
@@ -128,8 +130,8 @@ gsckbd*	at gsckbc?			# PS/2 keyboard
 #ahb*	at eisa? slot ?			# Adaptec 174[024] SCSI controllers
 #scsibus* at aha?
 #ahc*	at eisa? slot ?			# Adaptec 274x, aic7770 SCSI controllers
-ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
-scsibus* at ahc?
+#ahc*	at pci? dev ? function ?	# Adaptec 2940 SCSI controllers
+#scsibus* at ahc?
 #option	BHADEBUG
 #bha*	at eisa? slot ?
 #bha*	at pci? dev ? function ?
@@ -207,3 +209,4 @@ pseudo-device	loop	1	# network loopback
 pseudo-device	bpfilter 1	# packet filter
 pseudo-device	pty	16	# pseudo-terminals
 pseudo-device	ksyms	1	# kernel symbols device
+pseudo-device	ccd	4	# concatenated disk devices

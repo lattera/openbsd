@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.9 2004/02/19 10:50:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.10 2004/06/05 23:11:00 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -121,6 +121,7 @@ cdev_decl(xfs_dev);
 #include "inet.h"
 
 #include "systrace.h"
+#include "hotplug.h"
 
 struct bdevsw	bdevsw[] =
 {
@@ -291,6 +292,8 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 120 */
 	cdev_disk_init(NRAID,raid),	/* 121: RAIDframe disk driver */
 	cdev_tty_init(NPCONS,pcons),	/* 122: PROM console */
+	cdev_ptm_init(NPTY,ptm),	/* 123: pseudo-tty ptm device */
+	cdev_hotplug_init(NHOTPLUG,hotplug), /* 124: devices hot plugging */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/syscall.c,v 1.3.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/syscall.c,v 1.3.2.2 2004/06/05 23:10:44 niklas Exp $	*/
 /*	$NetBSD: syscall.c,v 1.24 2003/11/14 19:03:17 scw Exp $	*/
 
 /*-
@@ -90,9 +90,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
-#ifdef SYSTRACE
-#include <sys/systrace.h>
-#endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -117,12 +117,14 @@ swi_handler(trapframe_t *frame)
 	struct proc *p = curproc;
 	u_int32_t insn;
 	union sigval sv;
+	u_quad_t sticks;
 
 	/*
 	 * Enable interrupts if they were enabled before the exception.
 	 * Since all syscalls *should* come from user mode it will always
 	 * be safe to enable them, but check anyway. 
 	 */
+	sticks = p->p_sticks;
 #ifdef acorn26
 	if ((frame->tf_r15 & R15_IRQ_DISABLE) == 0)
 		int_on();
@@ -143,7 +145,7 @@ swi_handler(trapframe_t *frame)
 		/* Give the user an illegal instruction signal. */
 		sv.sival_ptr = (u_int32_t *)(u_int32_t)(frame->tf_pc-INSN_SIZE);
 		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
-		userret(p);
+		userret(p, frame->tf_pc, p->p_sticks);
 		return;
 	}
 
@@ -176,7 +178,7 @@ swi_handler(trapframe_t *frame)
 	if ((insn & 0x0f000000) != 0x0f000000) {
 		frame->tf_pc -= INSN_SIZE;
 		curcpu()->ci_arm700bugcount.ev_count++;
-		userret(l);
+		userret(l, frame->tf_pc, p->p_sticks);
 		return;
 	}
 #endif	/* CPU_ARM7 */
@@ -200,7 +202,7 @@ syscall_intern(struct proc *p)
 		return;
 	}
 #endif
-#ifdef SYSTRACE
+#if NSYSTRACE > 0
 	if (p->p_flag & P_SYSTRACE) {
 		p->p_md.md_syscall = syscall_fancy;
 		return;
@@ -236,7 +238,7 @@ syscall_plain(struct trapframe *frame, struct proc *p, u_int32_t insn)
 			break;
 		}
 
-		userret(p);
+		userret(p, frame->tf_pc, p->p_sticks);
 		return;
 	case 0x000000: /* Old unofficial NetBSD range. */
 	case SWI_OS_NETBSD: /* New official NetBSD range. */
@@ -246,7 +248,7 @@ syscall_plain(struct trapframe *frame, struct proc *p, u_int32_t insn)
 		/* Undefined so illegal instruction */
 		sv.sival_ptr = (u_int32_t *)(frame->tf_pc - INSN_SIZE);
 		trapsignal(p, SIGILL, 0, ILL_ILLOPN, sv);
-		userret(p);
+		userret(p, frame->tf_pc, p->p_sticks);
 		return;
 	}
 
@@ -289,7 +291,7 @@ syscall_plain(struct trapframe *frame, struct proc *p, u_int32_t insn)
 	scdebug_call(p, code, args);
 #endif
 	rval[0] = 0;
-	rval[1] = 0;
+	rval[1] = frame->tf_r1;
 	error = (*callp->sy_call)(p, args, rval);
 
 	switch (error) {
@@ -329,7 +331,7 @@ syscall_plain(struct trapframe *frame, struct proc *p, u_int32_t insn)
         scdebug_ret(p, code, error, rval); 
 #endif  
 
-	userret(p);
+	userret(p, frame->tf_pc, p->p_sticks);
 }
 
 void
@@ -359,7 +361,7 @@ syscall_fancy(struct trapframe *frame, struct proc *p, u_int32_t insn)
 			break;
 		}
 
-		userret(p);
+		userret(p, frame->tf_pc, p->p_sticks);
 		return;
 	case 0x000000: /* Old unofficial NetBSD range. */
 	case SWI_OS_NETBSD: /* New official NetBSD range. */
@@ -369,7 +371,7 @@ syscall_fancy(struct trapframe *frame, struct proc *p, u_int32_t insn)
 		/* Undefined so illegal instruction */
 		sv.sival_ptr = (u_int32_t *)(frame->tf_pc - INSN_SIZE);
 		trapsignal(p, SIGILL, 0, ILL_ILLOPN, sv);
-		userret(p);
+		userret(p, frame->tf_pc, p->p_sticks);
 		return;
 	}
 
@@ -462,7 +464,7 @@ syscall_fancy(struct trapframe *frame, struct proc *p, u_int32_t insn)
 #ifdef SYSCALL_DEBUG
 	scdebug_ret(p, code, orig_error, rval);
 #endif
-	userret(p);
+	userret(p, frame->tf_pc, p->p_sticks);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, code, orig_error, rval[0]);
@@ -483,7 +485,7 @@ child_return(arg)
 	frame->tf_r15 &= ~R15_FLAG_C;	/* carry bit */
 #endif
 
-	userret(p);
+	userret(p, frame->tf_pc, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET)) {
 		ktrsysret(p, SYS_fork, 0, 0);

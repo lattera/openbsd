@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.11 2004/02/19 11:01:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.12 2004/06/05 23:13:12 niklas Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /* 
@@ -1509,6 +1509,10 @@ uvm_unmap_remove(map, start, end, entry_list)
 		first_entry = entry;
 		entry = next;		/* next entry, please */
 	}
+	/* if ((map->flags & VM_MAP_DYING) == 0) { */
+		pmap_update(vm_map_pmap(map));
+	/* } */
+
 
 	uvm_tree_sanity(map, "unmap_remove leave");
 
@@ -2027,6 +2031,7 @@ uvm_map_extract(srcmap, start, len, dstmap, dstaddrp, flags)
 			/* end of 'while' loop */
 			fudge = 0;
 		}
+		pmap_update(srcmap->pmap);
 
 		/*
 		 * unlock dstmap.  we will dispose of deadentry in
@@ -2214,6 +2219,9 @@ uvm_map_protect(map, start, end, new_prot, set_max)
 
 		if (current->protection != old_prot) {
 			/* update pmap! */
+			if ((current->protection & MASK(entry)) == PROT_NONE &&
+			    VM_MAPENT_ISWIRED(entry))
+				current->wired_count--;
 			pmap_protect(map->pmap, current->start, current->end,
 			    current->protection & MASK(entry));
 		}
@@ -2250,6 +2258,7 @@ uvm_map_protect(map, start, end, new_prot, set_max)
 
 		current = current->next;
 	}
+	pmap_update(map->pmap);
 
  out:
 	vm_map_unlock(map);
@@ -3030,11 +3039,18 @@ uvm_map_clean(map, start, end, flags)
  flush_object:
 		/*
 		 * flush pages if we've got a valid backing object.
+		 *
+		 * Don't PGO_FREE if we don't have write permission
+	 	 * and don't flush if this is a copy-on-write object
+		 * since we can't know our permissions on it.
 		 */
 
 		offset = current->offset + (start - current->start);
 		size = MIN(end, current->end) - start;
-		if (uobj != NULL) {
+		if (uobj != NULL &&
+		    ((flags & PGO_FREE) == 0 ||
+		     ((entry->max_protection & VM_PROT_WRITE) != 0 &&
+		      (entry->etype & UVM_ET_COPYONWRITE) == 0))) {
 			simple_lock(&uobj->vmobjlock);
 			rv = uobj->pgops->pgo_flush(uobj, offset,
 			    offset + size, flags);
@@ -3556,6 +3572,8 @@ uvmspace_fork(vm1)
 					     old_entry->end,
 					     old_entry->protection &
 					     ~VM_PROT_WRITE);
+			        pmap_update(old_map->pmap);
+
 			      }
 			      old_entry->etype |= UVM_ET_NEEDSCOPY;
 			    }

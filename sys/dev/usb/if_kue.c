@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.9 2004/02/19 10:56:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.10 2004/06/05 23:12:57 niklas Exp $ */
 /*	$NetBSD: if_kue.c,v 1.50 2002/07/16 22:00:31 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -1148,8 +1148,17 @@ kue_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		break;
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
-		kue_setmulti(sc);
-		error = 0;
+		error = (command == SIOCADDMULTI) ?
+		    ether_addmulti(ifr, &sc->arpcom) :
+		    ether_delmulti(ifr, &sc->arpcom);
+		if (error == ENETRESET) {
+			/*
+			 * Multicast list has changed; set the hardware
+			 * filter accordingly.
+			 */
+			kue_setmulti(sc);
+			error = 0;
+		}
 		break;
 	default:
 		error = EINVAL;

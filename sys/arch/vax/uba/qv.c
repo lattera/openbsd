@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.2.12.4 2004/02/19 10:50:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.2.12.5 2004/06/05 23:11:02 niklas Exp $	*/
 /*	$NetBSD: qv.c,v 1.2 1996/09/02 06:44:28 mycroft Exp $	*/
 
 /*-
@@ -137,7 +137,6 @@
 #include "sys/map.h"
 #include "sys/buf.h"
 #include "sys/vm.h"
-#include "sys/clist.h"
 #include "sys/file.h"
 #include "sys/uio.h"
 #include "sys/kernel.h"

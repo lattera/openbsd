@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.8 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.9 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -66,18 +66,26 @@ procfs_domem(curp, p, pfs, uio)
 	struct uio *uio;
 {
 	int error;
+	vaddr_t addr;
+	vsize_t len;
 
-	if (uio->uio_resid == 0)
+	len = uio->uio_resid;
+	if (len == 0)
 		return (0);
 
 	if ((error = procfs_checkioperm(curp, p)) != 0)
 		return (error);
+
 	/* XXXCDC: how should locking work here? */
 	if ((p->p_flag & P_WEXIT) || (p->p_vmspace->vm_refcnt < 1)) 
 		return(EFAULT);
+	addr = uio->uio_offset;
 	p->p_vmspace->vm_refcnt++;  /* XXX */
 	error = uvm_io(&p->p_vmspace->vm_map, uio);
 	uvmspace_free(p->p_vmspace);
+
+	if (error == 0 && uio->uio_rw == UIO_WRITE)
+		pmap_proc_iflush(p, addr, len);
 
 	return error;
 }
@@ -121,4 +129,3 @@ procfs_checkioperm(p, t)
 
 	return (0);
 }
-

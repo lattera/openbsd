@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in.h,v 1.38.2.7 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.h,v 1.38.2.8 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: in.h,v 1.20 1996/02/13 23:41:47 christos Exp $	*/
 
 /*
@@ -503,6 +503,38 @@ struct ip_mreq {
 	{ "mtudisc", CTLTYPE_INT }, \
 	{ "mtudisctimeout", CTLTYPE_INT }, \
 	{ "ipsec-comp-alg", CTLTYPE_STRING }, \
+}
+#define	IPCTL_VARS { \
+	NULL, \
+	&ipforwarding, \
+	&ipsendredirects, \
+	&ip_defttl, \
+	NULL, \
+	NULL, \
+	&ip_directedbcast, \
+	&ipport_firstauto, \
+	&ipport_lastauto, \
+	&ipport_hifirstauto, \
+	&ipport_hilastauto, \
+	&ip_maxqueue, \
+	&encdebug, \
+	NULL, \
+	&ipsec_expire_acquire, \
+	&ipsec_keep_invalid, \
+	&ipsec_require_pfs, \
+	&ipsec_soft_allocations, \
+	&ipsec_exp_allocations, \
+	&ipsec_soft_bytes, \
+	&ipsec_exp_bytes, \
+	&ipsec_exp_timeout, \
+	&ipsec_soft_timeout, \
+	&ipsec_soft_first_use, \
+	&ipsec_exp_first_use, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
+	NULL, \
 }
 
 /* INET6 stuff */

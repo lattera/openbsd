@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.10 2004/02/19 10:49:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/vm_machdep.c,v 1.11.4.11 2004/06/05 23:09:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -292,8 +292,9 @@ vmapbuf(bp, len)
 		pmap_enter(vm_map_pmap(phys_map), kva, pa,
 			   VM_PROT_READ | VM_PROT_WRITE,
 			   VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
+		/* make sure snooping will be possible... */
 		pmap_cache_ctrl(pmap_kernel(), kva, kva + PAGE_SIZE,
-		    CACHE_WT | CACHE_GLOBAL);
+		    CACHE_GLOBAL);
 		addr += PAGE_SIZE;
 		kva += PAGE_SIZE;
 		len -= PAGE_SIZE;
@@ -344,9 +345,8 @@ iomap_mapin(paddr_t pa, psize_t len, boolean_t canwait)
 	if (len == 0)
 		return NULL;
 
-	ppa = pa;
-	off = (u_long)ppa & PGOFSET;
-
+	ppa = trunc_page(pa);
+	off = pa & PGOFSET;
 	len = round_page(off + len);
 
 	s = splhigh();
@@ -359,15 +359,8 @@ iomap_mapin(paddr_t pa, psize_t len, boolean_t canwait)
 
 	cmmu_flush_tlb(cpu_number(), 1, iova, len);	/* necessary? */
 
-	ppa = trunc_page(ppa);
-
-#ifndef NEW_MAPPING
 	tva = iova;
-#else
-	tva = ppa;
-#endif
-
-	while (len>0) {
+	while (len != 0) {
 		pmap_enter(vm_map_pmap(iomap_map), tva, ppa,
 			   VM_PROT_WRITE | VM_PROT_READ,
 			   VM_PROT_WRITE | VM_PROT_READ | PMAP_WIRED);
@@ -376,12 +369,8 @@ iomap_mapin(paddr_t pa, psize_t len, boolean_t canwait)
 		ppa += PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());
-#ifndef NEW_MAPPING
-	return (iova + off);
-#else
-	return (pa + off);
-#endif
 
+	return (iova + off);
 }
 
 /*
@@ -487,15 +476,4 @@ pagemove(from, to, size)
 		size -= PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());
-}
-
-u_int
-kvtop(va)
-	vaddr_t va;
-{
-	paddr_t pa;
-
-	pmap_extract(pmap_kernel(), va, &pa);
-	/* XXX check for failure */
-	return ((u_int)pa);
 }

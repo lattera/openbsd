@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/mvme88k/mvme88k/bus_dma.c,v 1.1 2004/05/07 18:10:28 miod Exp $	*/
+/*      $OpenBSD: src/sys/arch/mvme88k/mvme88k/bus_dma.c,v 1.1.2.1 2004/06/05 23:09:50 niklas Exp $	*/
 /*      $NetBSD: bus_dma.c,v 1.2 2001/06/10 02:31:25 briggs Exp $        */
 
 /*-

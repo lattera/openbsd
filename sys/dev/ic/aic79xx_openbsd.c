@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic79xx_openbsd.c,v 1.3 2004/05/25 12:22:49 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic79xx_openbsd.c,v 1.3.2.1 2004/06/05 23:12:39 niklas Exp $	*/
 /*
  * Bus independent OpenBSD shim for the aic79xx based Adaptec SCSI controllers
  *

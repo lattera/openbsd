@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/cdefs.h,v 1.1 2004/04/26 12:34:05 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/include/cdefs.h,v 1.1.2.1 2004/06/05 23:09:47 niklas Exp $ */
 /*	$NetBSD: cdefs.h,v 1.2 1995/03/23 20:10:48 jtc Exp $	*/
 
 /*

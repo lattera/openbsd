@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/cryptodev.c,v 1.20.2.8 2004/02/19 10:51:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/crypto/cryptodev.c,v 1.20.2.9 2004/06/05 23:12:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Theo de Raadt
@@ -38,10 +38,10 @@
 #include <sys/file.h>
 #include <sys/filedesc.h>
 #include <sys/errno.h>
-#include <sys/md5k.h>
 #include <dev/rndvar.h>
 #include <sys/conf.h>
 #include <sys/device.h>
+#include <crypto/md5.h>
 #include <crypto/sha1.h>
 #include <crypto/rmd160.h>
 #include <crypto/cast.h>
@@ -186,6 +186,7 @@ cryptof_ioctl(struct file *fp, u_long cmd, caddr_t data, struct proc *p)
 		switch (sop->mac) {
 		case 0:
 			break;
+#if 0
 		case CRYPTO_MD5_HMAC:
 			thash = &auth_hash_hmac_md5_96;
 			break;
@@ -201,6 +202,7 @@ cryptof_ioctl(struct file *fp, u_long cmd, caddr_t data, struct proc *p)
 		case CRYPTO_SHA1:
 			thash = &auth_hash_sha1;
 			break;
+#endif
 		default:
 			return (EINVAL);
 		}

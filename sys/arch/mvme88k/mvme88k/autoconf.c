@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.10 2004/02/19 10:49:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.11 2004/06/05 23:09:50 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -61,11 +61,11 @@ void	swapconf(void);
 char	buginchr(void);
 void	dumpconf(void);
 int	findblkmajor(struct device *);
-struct device	*getdisk(char *, int, int, dev_t *);
+struct device *getdisk(char *, int, int, dev_t *);
 
 int cold = 1;   /* 1 if still booting */
 
-void *bootaddr;
+paddr_t bootaddr;
 int bootpart;
 struct device *bootdv;	/* set by device drivers (if found) */
 
@@ -75,8 +75,6 @@ struct device *bootdv;	/* set by device drivers (if found) */
 void
 cpu_configure()
 {
-	struct consdev *temp;
-	extern struct consdev bootcons;
 
 	if (config_rootfound("mainbus", "mainbus") == 0)
 		panic("no mainbus found");
@@ -85,19 +83,19 @@ cpu_configure()
 	 * Turn external interrupts on.
 	 *
 	 * XXX We have a race here. If we enable interrupts after setroot(),
-	 * the kernel dies. If we enable interrupts here, console on cl does
-	 * not work (for boot -a). So we switch to the boot console for the
-	 * time being...
+	 * the kernel dies.
 	 */
-	temp = cn_tab;
-	cn_tab = &bootcons;
-
 	enable_interrupt();
 	spl0();
 	setroot();
 	swapconf();
 
-	cn_tab = temp;
+	/*
+	 * Finally switch to the real console driver,
+	 * and say goodbye to the BUG!
+	 */
+	cn_tab = NULL;
+	cninit();
 
 	cold = 0;
 }
@@ -122,11 +120,6 @@ swapconf()
 		}
 	dumpconf();
 }
-
-/*
- * the rest of this file was adapted from Theo de Raadt's code in the
- * sparc port to nuke the "options GENERIC" stuff.
- */
 
 struct nam2blk {
 	char *name;
@@ -241,6 +234,13 @@ setroot()
 
 	printf("boot device: %s\n",
 	    (bootdv) ? bootdv->dv_xname : "<unknown>");
+
+	/*
+	 * If 'swap generic' and we could not determine the boot device,
+	 * ask the user.
+	 */
+	if (mountroot == NULL && bootdv == NULL)
+		boothowto |= RB_ASKNAME;
 
 	if (boothowto & RB_ASKNAME) {
 		for (;;) {
@@ -392,32 +392,4 @@ gotswap:
 	 */
 	if (temp == dumpdev)
 		dumpdev = swdevt[0].sw_dev;
-}
-
-/*
- * find a device matching "name" and unit number
- */
-struct device *
-getdevunit(name, unit)
-	char *name;
-	int unit;
-{
-	struct device *dev = alldevs.tqh_first;
-	char num[10], fullname[16];
-	int lunit;
-
-	/* compute length of name and decimal expansion of unit number */
-	snprintf(num, sizeof num, "%d", unit);
-	lunit = strlen(num);
-	if (strlen(name) + lunit >= sizeof(fullname) - 1)
-		panic("config_attach: device name too long");
-
-	strlcpy(fullname, name, sizeof fullname);
-	strlcat(fullname, num, sizeof fullname);
-
-	while (strcmp(dev->dv_xname, fullname) != 0) {
-		if ((dev = dev->dv_list.tqe_next) == NULL)
-			return NULL;
-	}
-	return dev;
 }

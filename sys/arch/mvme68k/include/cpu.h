@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/cpu.h,v 1.7.2.3 2003/06/07 11:13:15 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/cpu.h,v 1.7.2.4 2004/06/05 23:10:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -234,6 +234,7 @@ int badvaddr(vaddr_t, int);
 void nmihand(void *);
 int intr_findvec(int, int);
 
+int cachectl(struct proc *, int, vaddr_t, int);
 void dma_cachectl(caddr_t, int);
 paddr_t kvtop(vaddr_t);
 void physaccess(vaddr_t, paddr_t, size_t, int);

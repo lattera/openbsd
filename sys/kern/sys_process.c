@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.9 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.10 2004/06/05 23:13:02 niklas Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -86,6 +86,9 @@ sys_ptrace(p, v, retval)
 	struct uio uio;
 	struct iovec iov;
 	struct ptrace_io_desc piod;
+#ifdef PT_WCOOKIE
+	register_t wcookie;
+#endif
 	int error, write;
 	int temp;
 	int s;
@@ -174,6 +177,9 @@ sys_ptrace(p, v, retval)
 #endif
 #ifdef PT_SETFPREGS
 	case  PT_SETFPREGS:
+#endif
+#ifdef PT_WCOOKIE
+	case  PT_WCOOKIE:
 #endif
 		/*
 		 * You can't do what you want to the process if:
@@ -424,6 +430,12 @@ sys_ptrace(p, v, retval)
 			uio.uio_procp = p;
 			return (procfs_dofpregs(p, t, NULL, &uio));
 		}
+#endif
+#ifdef PT_WCOOKIE
+	case  PT_WCOOKIE:
+		wcookie = process_get_wcookie (t);
+		return (copyout(&wcookie, SCARG(uap, addr),
+		    sizeof (register_t)));
 #endif
 	}
 

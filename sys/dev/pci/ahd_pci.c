@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ahd_pci.c,v 1.3 2004/05/25 12:22:49 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ahd_pci.c,v 1.3.2.1 2004/06/05 23:12:48 niklas Exp $	*/
 /*
  * Product specific probe and attach routines for:
  *	aic7901 and aic7902 SCSI controllers

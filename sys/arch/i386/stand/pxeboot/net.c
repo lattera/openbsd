@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/pxeboot/net.c,v 1.1 2004/03/19 13:48:19 tom Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/pxeboot/net.c,v 1.1.4.1 2004/06/05 23:09:01 niklas Exp $	*/
 /*	$NetBSD: net.c,v 1.14 1996/10/13 02:29:02 christos Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.12.4.2 2004/02/19 10:56:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.12.4.3 2004/06/05 23:12:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -189,11 +189,13 @@ noct_attach(parent, self, aux)
 	if (noct_ram_size(sc))
 		goto fail;
 
-	printf(": %s, %uMB\n", intrstr, sc->sc_ramsize);
+	printf(":");
 
 	noct_rng_init(sc);
 	noct_pkh_init(sc);
 	noct_ea_init(sc);
+
+	printf(", %uMB, %s\n", sc->sc_ramsize, intrstr);
 
 	return;
 
@@ -444,6 +446,7 @@ noct_pkh_init(sc)
 	 * XXX actually register.
 	 */
 	crypto_kregister(sc->sc_cid, CRK_MOD_EXP, 0, noct_kprocess);
+	printf(" PK");
 #endif
 
 	return;
@@ -638,6 +641,8 @@ noct_rng_init(sc)
 
 	noct_rng_disable(sc);
 	noct_rng_enable(sc);
+
+	printf(" RNG");
 
 	if (hz > 100)
 		sc->sc_rngtick = hz/100;
@@ -845,6 +850,7 @@ noct_ea_init(sc)
 
 	crypto_register(sc->sc_cid, algs, 
 	    noct_newsession, noct_freesession, noct_process);
+	printf(" MD5 SHA1 3DES");
 
 	kthread_create_deferred(noct_ea_create_thread, sc);
 
@@ -891,7 +897,7 @@ noct_ea_thread(vsc)
 		s = splnet();
 		while (!SIMPLEQ_EMPTY(&sc->sc_outq)) {
 			q = SIMPLEQ_FIRST(&sc->sc_outq);
-			SIMPLEQ_REMOVE_HEAD(&sc->sc_outq, q, q_next);
+			SIMPLEQ_REMOVE_HEAD(&sc->sc_outq, q_next);
 			splx(s);
 
 			crp = q->q_crp;
@@ -948,7 +954,7 @@ noct_ea_thread(vsc)
 		s = splnet();
 		while (!SIMPLEQ_EMPTY(&sc->sc_inq)) {
 			q = SIMPLEQ_FIRST(&sc->sc_inq);
-			SIMPLEQ_REMOVE_HEAD(&sc->sc_inq, q, q_next);
+			SIMPLEQ_REMOVE_HEAD(&sc->sc_inq, q_next);
 			splx(s);
 
 			noct_ea_start(sc, q);
@@ -1290,7 +1296,7 @@ noct_ea_intr(sc)
 		if (SIMPLEQ_EMPTY(&sc->sc_chipq))
 			panic("%s: empty chipq", sc->sc_dv.dv_xname);
 		q = SIMPLEQ_FIRST(&sc->sc_chipq);
-		SIMPLEQ_REMOVE_HEAD(&sc->sc_chipq, q, q_next);
+		SIMPLEQ_REMOVE_HEAD(&sc->sc_chipq, q_next);
 		SIMPLEQ_INSERT_TAIL(&sc->sc_outq, q, q_next);
 
 		bus_dmamap_sync(sc->sc_dmat, sc->sc_eamap,

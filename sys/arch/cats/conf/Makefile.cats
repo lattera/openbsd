@@ -1,5 +1,5 @@
-#	$OpenBSD: src/sys/arch/cats/conf/Attic/Makefile.cats,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $
-#	$OpenBSD: src/sys/arch/cats/conf/Attic/Makefile.cats,v 1.2.2.1 2004/02/19 10:48:02 niklas Exp $
+#	$OpenBSD: src/sys/arch/cats/conf/Attic/Makefile.cats,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $
+#	$OpenBSD: src/sys/arch/cats/conf/Attic/Makefile.cats,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $
 #	$NetBSD: Makefile.i386,v 1.67 1996/05/11 16:12:11 mycroft Exp $
 
 # Makefile for OpenBSD
@@ -44,7 +44,7 @@ CDIAGFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 CMACHFLAGS= -ffreestanding
 #CMACHFLAGS=	-march=armv4 -mtune=strongarm -ffreestanding
 .if ${IDENT:M-DNO_PROPOLICE}
-CMACHFLAGS+=	-msoft-float -fno-stack-protector
+CMACHFLAGS+=	-fno-stack-protector
 .endif
 CMACHFLAGS+=	-msoft-float -fno-builtin-printf -fno-builtin-log
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.8.2.5 2004/02/19 10:56:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/Attic/if_fea.c,v 1.8.2.6 2004/06/05 23:12:37 niklas Exp $	*/
 /*	$NetBSD: if_fea.c,v 1.9 1996/10/21 22:31:05 thorpej Exp $	*/
 
 /*-
@@ -52,7 +52,6 @@
 #include "bpfilter.h"
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #ifdef INET

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/pxeboot/devopen.c,v 1.2 2004/03/22 15:06:59 tom Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/pxeboot/devopen.c,v 1.2.4.1 2004/06/05 23:09:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 2004 Tom Cosgrove

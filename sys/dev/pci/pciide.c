@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.12 2004/02/19 10:56:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide.c,v 1.20.2.13 2004/06/05 23:12:53 niklas Exp $	*/
 /*	$NetBSD: pciide.c,v 1.127 2001/08/03 01:31:08 tsutsui Exp $	*/
 
 /*
@@ -380,7 +380,7 @@ const struct pciide_product_desc pciide_intel_products[] =  {
 	  piix_chip_map
 	},
 	{ PCI_PRODUCT_INTEL_82801ER_SATA, /* Intel 82801ER (ICH5R) SATA */
-	  0,
+	  IDE_PCI_CLASS_OVERRIDE,
 	  piix_chip_map
 	},
 #ifdef notyet
@@ -803,14 +803,10 @@ pciide_attach(parent, self, aux)
 	pcitag_t tag = pa->pa_tag;
 	struct pciide_softc *sc = (struct pciide_softc *)self;
 	pcireg_t csr;
-	char devinfo[256];
 
 	sc->sc_pp = pciide_lookup_product(pa->pa_id);
-	if (sc->sc_pp == NULL) {
+	if (sc->sc_pp == NULL)
 		sc->sc_pp = &default_product_desc;
-		pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo,
-		    sizeof devinfo);
-	}
 	sc->sc_rev = PCI_REVISION(pa->pa_class);
 
 	sc->sc_pc = pa->pa_pc;
@@ -916,13 +912,6 @@ pciide_mapregs_native(pa, cp, cmdsizep, ctlsizep, pci_intr)
 		sc->sc_pci_ih = pci_intr_establish(pa->pa_pc,
 		    intrhandle, IPL_BIO, pci_intr, sc,
 		    sc->sc_wdcdev.sc_dev.dv_xname);
-#ifdef __pegasos__
-		/* stupid broken board */
-		if (intrhandle == 0xe)
-			pci_intr_establish(pa->pa_pc,
-			    0xf, IPL_BIO, pci_intr, sc,
-			    sc->sc_wdcdev.sc_dev.dv_xname);
-#endif
 #else
 		sc->sc_pci_ih = pci_intr_establish(pa->pa_pc,
 		    intrhandle, IPL_BIO, pci_intr, sc);
@@ -2282,9 +2271,11 @@ amd756_chip_map(sc, pa)
 	sc->sc_wdcdev.PIO_cap = 4;
 	sc->sc_wdcdev.DMA_cap = 2;
 	switch (sc->sc_pp->ide_product) {
+	case PCI_PRODUCT_AMD_8111_IDE:
+		sc->sc_wdcdev.UDMA_cap = 6;
+		break;
 	case PCI_PRODUCT_AMD_766_IDE:
 	case PCI_PRODUCT_AMD_PBC768_IDE:
-	case PCI_PRODUCT_AMD_8111_IDE:
 		sc->sc_wdcdev.UDMA_cap = 5;
 		break;
 	default:
@@ -2624,6 +2615,7 @@ apollo_sata_chip_map(struct pciide_softc *sc, struct pci_attach_args *pa)
 			continue;
 		pciide_mapchan(pa, cp, interface, &cmdsize, &ctlsize,
 		     pciide_pci_intr);
+		sata_setup_channel(&cp->wdc_channel);
 	}
 }
 
@@ -3617,6 +3609,7 @@ static struct sis_hostbr_type {
 	{PCI_PRODUCT_SIS_733, 0x00, 5, "733", SIS_TYPE_100NEW},
 	{PCI_PRODUCT_SIS_735, 0x00, 5, "735", SIS_TYPE_100NEW},
 	{PCI_PRODUCT_SIS_740, 0x00, 5, "740", SIS_TYPE_SOUTH},
+	{PCI_PRODUCT_SIS_741, 0x00, 6, "741", SIS_TYPE_SOUTH},
 	{PCI_PRODUCT_SIS_745, 0x00, 5, "745", SIS_TYPE_100NEW},
 	{PCI_PRODUCT_SIS_746, 0x00, 6, "746", SIS_TYPE_SOUTH},
 	{PCI_PRODUCT_SIS_748, 0x00, 6, "748", SIS_TYPE_SOUTH},
@@ -4221,6 +4214,12 @@ ns_scx200_chip_map(struct pciide_softc *sc, struct pci_attach_args *pa)
 		sc->sc_dma_maxsegsz = IDEDMA_BYTE_COUNT_MAX - PAGE_SIZE;
 		sc->sc_dma_boundary = IDEDMA_BYTE_COUNT_MAX - PAGE_SIZE;
 	}
+
+	/*
+	 * This chip seems to be unable to do one-sector transfers
+	 * using DMA.
+	 */
+	sc->sc_wdcdev.quirks = WDC_QUIRK_NOSHORTDMA;
 
 	pciide_print_channels(sc->sc_wdcdev.nchannels, interface);
 
@@ -6308,8 +6307,6 @@ ite_chip_map(struct pciide_softc *sc, struct pci_attach_args *pa)
 	modectl &= ~IT_MODE_RAID1;
 	/* Disable CPU firmware mode */
 	modectl &= ~IT_MODE_CPU;
-	/* Select 66 MHz bus */
-	modectl &= ~(IT_MODE_50MHZ(0) | IT_MODE_50MHZ(1));
 
 	pci_conf_write(sc->sc_pc, sc->sc_tag, IT_MODE, modectl);
 
@@ -6318,15 +6315,8 @@ ite_chip_map(struct pciide_softc *sc, struct pci_attach_args *pa)
 
 		if (pciide_chansetup(sc, channel, interface) == 0)
 			continue;
-		pciide_map_compat_intr(pa, cp, channel, interface);
-		if (cp->hw_ok == 0)
-			continue;
 		pciide_mapchan(pa, cp, interface, &cmdsize, &ctlsize,
 		    pciide_pci_intr);
-		if (cp->hw_ok == 0) {
-			pciide_unmap_compat_intr(pa, cp, channel, interface);
-			continue;
-		}
 		sc->sc_wdcdev.set_modes(&cp->wdc_channel);
 	}
 
@@ -6376,7 +6366,8 @@ ite_setup_channel(struct channel_softc *chp)
 			drvp->drive_flags &= ~DRIVE_DMA;
 			modectl &= ~IT_MODE_DMA(channel, drive);
 
-			/* Check cable */
+#if 0
+			/* Check cable, works only in CPU firmware mode */
 			if (drvp->UDMA_mode > 2 &&
 			    (cfg & IT_CFG_CABLE(channel, drive)) == 0) {
 				WDCDEBUG_PRINT(("%s(%s:%d:%d): "
@@ -6386,6 +6377,7 @@ ite_setup_channel(struct channel_softc *chp)
 				    channel, drive), DEBUG_PROBE);
 				drvp->UDMA_mode = 2;
 			}
+#endif
 
 			if (drvp->UDMA_mode >= 5)
 				tim |= IT_TIM_UDMA5(drive);

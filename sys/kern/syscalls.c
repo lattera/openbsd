@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.43.2.9 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.43.2.10 2004/06/05 23:13:02 niklas Exp $	*/
 
 /*
  * System call names.
@@ -67,7 +67,11 @@ char *syscallnames[] = {
 	"sigprocmask",			/* 48 = sigprocmask */
 	"getlogin",			/* 49 = getlogin */
 	"setlogin",			/* 50 = setlogin */
+#ifdef ACCOUNTING
 	"acct",			/* 51 = acct */
+#else
+	"#51 (unimplemented acct)",		/* 51 = unimplemented acct */
+#endif
 	"sigpending",			/* 52 = sigpending */
 	"osigaltstack",			/* 53 = osigaltstack */
 	"ioctl",			/* 54 = ioctl */
@@ -189,17 +193,17 @@ char *syscallnames[] = {
 	"#166 (unimplemented)",		/* 166 = unimplemented */
 	"#167 (unimplemented)",		/* 167 = unimplemented */
 	"#168 (unimplemented)",		/* 168 = unimplemented */
-#if defined(SYSVSEM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSEM) && !defined(__LP64__)
 	"compat_10_osemsys",	/* 169 = compat_10 osemsys */
 #else
 	"#169 (unimplemented 1.0 semsys)",		/* 169 = unimplemented 1.0 semsys */
 #endif
-#if defined(SYSVMSG) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVMSG) && !defined(__LP64__)
 	"compat_10_omsgsys",	/* 170 = compat_10 omsgsys */
 #else
 	"#170 (unimplemented 1.0 msgsys)",		/* 170 = unimplemented 1.0 msgsys */
 #endif
-#if defined(SYSVSHM) && !defined(alpha) && !defined(__sparc64__)
+#if defined(SYSVSHM) && !defined(__LP64__)
 	"compat_10_oshmsys",	/* 171 = compat_10 oshmsys */
 #else
 	"#171 (unimplemented 1.0 shmsys)",		/* 171 = unimplemented 1.0 shmsys */
@@ -275,7 +279,7 @@ char *syscallnames[] = {
 #ifdef SYSVSEM
 	"compat_23___osemctl",	/* 220 = compat_23 __osemctl */
 	"semget",			/* 221 = semget */
-	"semop",			/* 222 = semop */
+	"compat_35_semop",	/* 222 = compat_35 semop */
 	"#223 (obsolete sys_semconfig)",		/* 223 = obsolete sys_semconfig */
 #else
 	"#220 (unimplemented semctl)",		/* 220 = unimplemented semctl */
@@ -298,7 +302,7 @@ char *syscallnames[] = {
 	"shmat",			/* 228 = shmat */
 	"compat_23_oshmctl",	/* 229 = compat_23 oshmctl */
 	"shmdt",			/* 230 = shmdt */
-	"shmget",			/* 231 = shmget */
+	"compat_35_shmget",	/* 231 = compat_35 shmget */
 #else
 	"#228 (unimplemented shmat)",		/* 228 = unimplemented shmat */
 	"#229 (unimplemented shmctl)",		/* 229 = unimplemented shmctl */
@@ -384,4 +388,14 @@ char *syscallnames[] = {
 	"mquery",			/* 286 = mquery */
 	"closefrom",			/* 287 = closefrom */
 	"sigaltstack",			/* 288 = sigaltstack */
+#ifdef SYSVSHM
+	"shmget",			/* 289 = shmget */
+#else
+	"#289 (unimplemented shmget)",		/* 289 = unimplemented shmget */
+#endif
+#ifdef SYSVSEM
+	"semop",			/* 290 = semop */
+#else
+	"#290 (unimplemented semop)",		/* 290 = unimplemented semop */
+#endif
 };

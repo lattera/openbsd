@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.8 2004/02/19 11:01:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.9 2004/06/05 23:13:08 niklas Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -175,7 +175,7 @@ sdattach(parent, self, aux)
 	struct scsibus_attach_args *sa = aux;
 	struct scsi_link *sc_link = sa->sa_sc_link;
 
-	SC_DEBUG(sc_link, SDEV_DB2, ("sdattach: "));
+	SC_DEBUG(sc_link, SDEV_DB2, ("sdattach:\n"));
 
 	/*
 	 * Store information needed to contact our base driver
@@ -218,12 +218,9 @@ sdattach(parent, self, aux)
 	 */
 	printf("\n");
 
-	if ((sd->sc_link->quirks & SDEV_NOSTARTUNIT) == 0) {
-		error = scsi_start(sd->sc_link, SSS_START,
-				   scsi_autoconf | SCSI_IGNORE_ILLEGAL_REQUEST |
-				   SCSI_IGNORE_MEDIA_CHANGE | SCSI_SILENT);
-	} else
-		error = 0;
+	error = scsi_test_unit_ready(sd->sc_link, TEST_READY_RETRIES_DEFAULT,
+	    scsi_autoconf | SCSI_IGNORE_ILLEGAL_REQUEST |
+	    SCSI_IGNORE_MEDIA_CHANGE | SCSI_SILENT);
 
 	/* Fill in name struct for spoofed label */
 	viscpy(sd->name.vendor, sa->sa_inqbuf->vendor, 8);
@@ -392,19 +389,14 @@ sdopen(dev, flag, fmt, p)
 		error = scsi_test_unit_ready(sc_link,
 		    TEST_READY_RETRIES_DEFAULT,
 		    SCSI_IGNORE_ILLEGAL_REQUEST |
-		    SCSI_IGNORE_MEDIA_CHANGE |
-		    SCSI_IGNORE_NOT_READY);
-		if (error)
-			goto bad3;
+		    SCSI_IGNORE_MEDIA_CHANGE);
 
 		/* Start the pack spinning if necessary. */
-		if ((sc_link->quirks & SDEV_NOSTARTUNIT) == 0) {
-			error = scsi_start(sc_link, SSS_START,
-			    SCSI_IGNORE_ILLEGAL_REQUEST |
-			    SCSI_IGNORE_MEDIA_CHANGE | SCSI_SILENT);
-			if (error)
-				goto bad3;
-		}
+		if (error == EIO)
+			error = scsi_start(sc_link, SSS_START, 0);
+
+		if (error)
+			goto bad3;
 
 		sc_link->flags |= SDEV_OPEN;
 
@@ -426,12 +418,12 @@ sdopen(dev, flag, fmt, p)
 				error = ENXIO;
 				goto bad2;
 			}
-			SC_DEBUG(sc_link, SDEV_DB3, ("Params loaded "));
+			SC_DEBUG(sc_link, SDEV_DB3, ("Params loaded\n"));
 
 			/* Load the partition info if not already loaded. */
 			sdgetdisklabel(dev, sd, sd->sc_dk.dk_label,
 			    sd->sc_dk.dk_cpulabel, 0);
-			SC_DEBUG(sc_link, SDEV_DB3, ("Disklabel loaded "));
+			SC_DEBUG(sc_link, SDEV_DB3, ("Disklabel loaded\n"));
 		}
 	}
 
@@ -548,9 +540,8 @@ sdstrategy(bp)
 		goto bad;
 	}
 
-	SC_DEBUG(sd->sc_link, SDEV_DB2, ("sdstrategy "));
-	SC_DEBUG(sd->sc_link, SDEV_DB1,
-	    ("%ld bytes @ blk %d\n", bp->b_bcount, bp->b_blkno));
+	SC_DEBUG(sd->sc_link, SDEV_DB2, ("sdstrategy: %ld bytes @ blk %d\n",
+	    bp->b_bcount, bp->b_blkno));
 	/*
 	 * The transfer must be a whole number of blocks.
 	 */
@@ -646,7 +637,7 @@ sdstart(v)
 	int blkno, nblks, cmdlen, error;
 	struct partition *p;
 
-	SC_DEBUG(sc_link, SDEV_DB2, ("sdstart "));
+	SC_DEBUG(sc_link, SDEV_DB2, ("sdstart\n"));
 
 	splassert(IPL_BIO);
 
@@ -751,7 +742,7 @@ sdstart(v)
 		    SDRETRIES, 60000, bp, SCSI_NOSLEEP |
 		    ((bp->b_flags & B_READ) ? SCSI_DATA_IN : SCSI_DATA_OUT));
 		if (error) {
-			disk_unbusy(&sd->sc_dk, 0);
+			disk_unbusy(&sd->sc_dk, 0, 0);
 			printf("%s: not queued, error %d\n",
 			    sd->sc_dev.dv_xname, error);
 		}
@@ -770,7 +761,8 @@ sddone(xs)
 	}
 
 	if (xs->bp != NULL)
-		disk_unbusy(&sd->sc_dk, (xs->bp->b_bcount - xs->bp->b_resid));
+		disk_unbusy(&sd->sc_dk, (xs->bp->b_bcount - xs->bp->b_resid),
+		    (xs->bp->b_flags & B_READ));
 }
 
 void
@@ -847,7 +839,7 @@ sdioctl(dev, cmd, addr, flag, p)
 	if (sd == NULL)
 		return ENXIO;
 
-	SC_DEBUG(sd->sc_link, SDEV_DB2, ("sdioctl 0x%lx ", cmd));
+	SC_DEBUG(sd->sc_link, SDEV_DB2, ("sdioctl 0x%lx\n", cmd));
 
 	/*
 	 * If the device is not valid.. abandon ship
@@ -1104,60 +1096,55 @@ int
 sd_interpret_sense(xs)
 	struct scsi_xfer *xs;
 {
-	struct scsi_link *sc_link = xs->sc_link;
 	struct scsi_sense_data *sense = &xs->sense;
+	struct scsi_link *sc_link = xs->sc_link;
 	struct sd_softc *sd = sc_link->device_softc;
-	int retval = SCSIRET_CONTINUE;
+	u_int8_t serr = sense->error_code & SSD_ERRCODE;
+	int retval;
 
 	/*
-	 * If the device is not open yet, let the generic code handle it.
+	 * Let the generic code handle everything except a few categories of
+	 * LUN not ready errors on open devices.
 	 */
-	if ((sc_link->flags & SDEV_MEDIA_LOADED) == 0) {
-		return (retval);
-	}
+	if (((sc_link->flags & SDEV_OPEN) == 0) ||
+	    (serr != 0x70 && serr != 0x71) ||
+	    ((sense->flags & SSD_KEY) != SKEY_NOT_READY) ||
+	    (sense->extra_len < 6) ||
+	    (sense->add_sense_code != 0x04))
+		return (EJUSTRETURN);
 
-	/*
-	 * If it isn't a extended or extended/deferred error, let
-	 * the generic code handle it.
-	 */
-	if ((sense->error_code & SSD_ERRCODE) != 0x70 &&
-	    (sense->error_code & SSD_ERRCODE) != 0x71) {	/* DEFFERRED */
-		return (retval);
-	}
-
-	if ((sense->flags & SSD_KEY) == SKEY_NOT_READY &&
-	    sense->add_sense_code == 0x4) {
-		if (sense->add_sense_code_qual == 0x01)	{
-			printf("%s: ..is spinning up...waiting\n",
+	switch (sense->add_sense_code_qual) {
+	case 0x01:
+		printf("%s: ..is spinning up...waiting\n", sd->sc_dev.dv_xname);
+		/*
+		 * I really need a sdrestart function I can call here.
+		 */
+		delay(1000000 * 5);	/* 5 seconds */
+		retval = ERESTART;
+		break;
+	case 0x02:
+		if (sd->sc_link->flags & SDEV_REMOVABLE) {
+			printf("%s: removable disk stopped - not restarting\n",
 			    sd->sc_dev.dv_xname);
-			/*
-			 * I really need a sdrestart function I can call here.
-			 */
-			delay(1000000 * 5);	/* 5 seconds */
-			retval = SCSIRET_RETRY;
-		} else if ((sense->add_sense_code_qual == 0x2) &&
-		    (sd->sc_link->quirks & SDEV_NOSTARTUNIT) == 0) {
-			if (sd->sc_link->flags & SDEV_REMOVABLE) {
-				printf(
-				"%s: removable disk stopped - not restarting\n",
-				    sd->sc_dev.dv_xname);
+			retval = EIO;
+		} else {
+			printf("%s: respinning up disk\n", sd->sc_dev.dv_xname);
+			retval = scsi_start(sd->sc_link, SSS_START,
+			    SCSI_URGENT | SCSI_NOSLEEP);
+			if (retval != 0) {
+				printf("%s: respin of disk failed - %d\n",
+				    sd->sc_dev.dv_xname, retval);
 				retval = EIO;
 			} else {
-				printf("%s: respinning up disk\n",
-				    sd->sc_dev.dv_xname);
-				retval = scsi_start(sd->sc_link, SSS_START,
-				    SCSI_URGENT | SCSI_NOSLEEP);
-				if (retval != 0) {
-					printf(
-					    "%s: respin of disk failed - %d\n",
-					    sd->sc_dev.dv_xname, retval);
-					retval = EIO;
-				} else {
-					retval = SCSIRET_RETRY;
-				}
+				retval = ERESTART;
 			}
 		}
+		break;
+	default:
+		retval = EJUSTRETURN;
+		break;
 	}
+
 	return (retval);
 }
 

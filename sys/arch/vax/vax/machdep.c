@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.13 2004/02/19 10:50:03 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.14 2004/06/05 23:11:03 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -496,7 +496,9 @@ boot(howto)
 {
 	/* If system is cold, just halt. */
 	if (cold) {
-		howto |= RB_HALT;
+		/* (Unless the user explicitly asked for reboot.) */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
 		goto haltsys;
 	}
 

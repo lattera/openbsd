@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/pmap.c,v 1.4 2004/06/02 13:49:43 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/pmap.c,v 1.4.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 /*
  * Copyright (c) 2001, 2002, 2003 Miodrag Vallat
  * Copyright (c) 1998-2001 Steve Murphree, Jr.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/autoconf.c,v 1.2 2004/05/04 15:27:15 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/autoconf.c,v 1.2.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_domain.c,v 1.9.2.6 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_domain.c,v 1.9.2.7 2004/06/05 23:13:02 niklas Exp $	*/
 /*	$NetBSD: uipc_domain.c,v 1.14 1996/02/09 19:00:44 christos Exp $	*/
 
 /*
@@ -44,6 +44,8 @@
 #include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 #include <sys/timeout.h>
+
+#include "bpfilter.h"
 
 struct	domain *domains;
 
@@ -143,12 +145,12 @@ pffindtype(family, type)
 	for (dp = domains; dp; dp = dp->dom_next)
 		if (dp->dom_family == family)
 			goto found;
-	return (0);
+	return (NULL);
 found:
 	for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
 		if (pr->pr_type && pr->pr_type == type)
 			return (pr);
-	return (0);
+	return (NULL);
 }
 
 struct protosw *
@@ -157,14 +159,14 @@ pffindproto(family, protocol, type)
 {
 	register struct domain *dp;
 	register struct protosw *pr;
-	struct protosw *maybe = 0;
+	struct protosw *maybe = NULL;
 
 	if (family == 0)
-		return (0);
+		return (NULL);
 	for (dp = domains; dp; dp = dp->dom_next)
 		if (dp->dom_family == family)
 			goto found;
-	return (0);
+	return (NULL);
 found:
 	for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++) {
 		if ((pr->pr_protocol == protocol) && (pr->pr_type == type))
@@ -207,6 +209,11 @@ net_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	for (dp = domains; dp; dp = dp->dom_next)
 		if (dp->dom_family == family)
 			goto found;
+#if NBPFILTER > 0
+	if (family == PF_BPF)
+		return (bpf_sysctl(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen));
+#endif
 	return (ENOPROTOOPT);
 found:
 	switch (family) {

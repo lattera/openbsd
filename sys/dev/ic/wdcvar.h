@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdcvar.h,v 1.7.2.7 2004/02/19 10:56:21 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdcvar.h,v 1.7.2.8 2004/06/05 23:12:44 niklas Exp $     */
 /*	$NetBSD: wdcvar.h,v 1.17 1999/04/11 20:50:29 bouyer Exp $	*/
 
 /*-
@@ -163,6 +163,8 @@ struct wdc_softc { /* Per controller state */
 	u_int8_t      UDMA_cap; /* highest UDMA mode supported */
 	int nchannels;	/* Number of channels on this controller */
 	struct channel_softc **channels;  /* channels-specific datas (array) */
+	u_int16_t quirks;		/* per-device oddities */
+#define WDC_QUIRK_NOSHORTDMA	0x0001	/* can't do short DMA transfers */
 
 #if 0
 	/*

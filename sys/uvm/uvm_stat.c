@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.3.4.8 2003/05/13 19:36:58 ho Exp $	 */
+/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.3.4.9 2004/06/05 23:13:13 niklas Exp $	 */
 /*	$NetBSD: uvm_stat.c,v 1.18 2001/03/09 01:02:13 chs Exp $	 */
 
 /*
@@ -254,7 +254,7 @@ uvmexp_print(int (*pr)(const char *, ...))
 	    uvmexp.swpages, uvmexp.swpginuse, uvmexp.swpgonly, uvmexp.paging);
 
 	(*pr)("  kernel pointers:\n");
-	(*pr)("    objs(kern/kmem/mb)=%p/%p/%p\n", uvm.kernel_object,
-	    uvmexp.kmem_object, uvmexp.mb_object);
+	(*pr)("    objs(kern/kmem)=%p/%p\n", uvm.kernel_object,
+	    uvmexp.kmem_object);
 }
 #endif

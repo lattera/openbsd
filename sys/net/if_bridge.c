@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.13 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.14 2004/06/05 23:11:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -1392,6 +1392,11 @@ bridge_input(struct ifnet *ifp, struct ether_header *eh, struct mbuf *m)
 				bridge_rtupdate(sc,
 				    (struct ether_addr *)&eh->ether_shost,
 				    ifp, 0, IFBAF_DYNAMIC);
+			if (bridge_filterrule(&srcifl->bif_brlin, eh, m) ==
+			    BRL_ACTION_BLOCK) {
+				m_freem(m);
+				return (NULL);
+			}
 			m->m_pkthdr.rcvif = ifl->ifp;
 			if (ifp->if_type == IFT_GIF) {
 				m->m_flags |= M_PROTO1;
@@ -2118,7 +2123,7 @@ bridge_flushrule(struct bridge_iflist *bif)
 
 	while (!SIMPLEQ_EMPTY(&bif->bif_brlin)) {
 		p = SIMPLEQ_FIRST(&bif->bif_brlin);
-		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlin, p, brl_next);
+		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlin, brl_next);
 #if NPF > 0
 		pf_tag_unref(p->brl_tag);
 #endif
@@ -2126,7 +2131,7 @@ bridge_flushrule(struct bridge_iflist *bif)
 	}
 	while (!SIMPLEQ_EMPTY(&bif->bif_brlout)) {
 		p = SIMPLEQ_FIRST(&bif->bif_brlout);
-		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlout, p, brl_next);
+		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlout, brl_next);
 #if NPF > 0
 		pf_tag_unref(p->brl_tag);
 #endif
@@ -2427,7 +2432,7 @@ bridge_filter(struct bridge_softc *sc, int dir, struct ifnet *ifp,
 #if NPF > 0
 		/* Finally, we get to filter the packet! */
 		m->m_pkthdr.rcvif = ifp;
-		if (pf_test(dir, ifp, &m) != PF_PASS)
+		if (pf_test_eh(dir, ifp, &m, eh) != PF_PASS)
 			goto dropit;
 		if (m == NULL)
 			goto dropit;
@@ -2473,7 +2478,7 @@ bridge_filter(struct bridge_softc *sc, int dir, struct ifnet *ifp,
 #endif /* IPSEC */
 
 #if NPF > 0
-		if (pf_test6(dir, ifp, &m) != PF_PASS)
+		if (pf_test6_eh(dir, ifp, &m, eh) != PF_PASS)
 			goto dropit;
 		if (m == NULL)
 			return (NULL);
@@ -2577,8 +2582,10 @@ bridge_fragment(struct bridge_softc *sc, struct ifnet *ifp,
 	}
 
 	error = ip_fragment(m, ifp, ifp->if_mtu);
-	if (error)
+	if (error) {
+		m = NULL;
 		goto dropit;
+	}
 
 	for (; m; m = m0) {
 		m0 = m->m_nextpkt;

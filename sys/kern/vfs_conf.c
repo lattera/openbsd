@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.14.2.6 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/Attic/vfs_conf.c,v 1.14.2.7 2004/06/05 23:13:03 niklas Exp $	*/
 /*	$NetBSD: vfs_conf.c,v 1.21.4.1 1995/11/01 00:06:26 jtc Exp $	*/
 
 /*
@@ -242,7 +242,7 @@ static struct vfsconf vfsconflist[] = {
  * Initially the size of the list, vfs_init will set maxvfsconf
  * to the highest defined type number.
  */
-int maxvfsconf = sizeof(vfsconflist) / sizeof (struct vfsconf);
+int maxvfsconf = sizeof(vfsconflist) / sizeof(struct vfsconf);
 struct vfsconf *vfsconf = vfsconflist;
 
 

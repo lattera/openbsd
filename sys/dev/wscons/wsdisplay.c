@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.9 2004/02/19 10:56:35 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.26.2.10 2004/06/05 23:12:59 niklas Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.37.4.1 2000/06/30 16:27:53 simonb Exp $ */
 
 /*
@@ -1151,11 +1151,18 @@ wsdisplay_internal_ioctl(sc, scr, cmd, data, flag, p)
 		return (0);
 
 	case WSDISPLAYIO_SBURNER:
-		error = EINVAL;
-		if (d->flags & (WSDISPLAY_BURN_VBLANK | WSDISPLAY_BURN_KBD |
-		    WSDISPLAY_BURN_MOUSE | WSDISPLAY_BURN_OUTPUT)) {
+		if (d->flags & ~(WSDISPLAY_BURN_VBLANK | WSDISPLAY_BURN_KBD |
+		    WSDISPLAY_BURN_MOUSE | WSDISPLAY_BURN_OUTPUT))
+			error = EINVAL;
+		else {
 			error = 0;
 			sc->sc_burnflags = d->flags;
+			/* disable timeout if necessary */
+			if ((sc->sc_burnflags & (WSDISPLAY_BURN_OUTPUT |
+			    WSDISPLAY_BURN_KBD | WSDISPLAY_BURN_MOUSE)) == 0) {
+				if (sc->sc_burnout)
+					timeout_del(&sc->sc_burner);
+			}
 		}
 		if (d->on) {
 			error = 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.7 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/conf.c,v 1.21.4.8 2004/06/05 23:10:51 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.41 1997/02/11 07:35:49 scottr Exp $	*/
 
 /*
@@ -166,6 +166,7 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),			/* 51 */
 #endif
+	cdev_ptm_init(NPTY,ptm),	/* 52: pseudo-tty ptm device */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

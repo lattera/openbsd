@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/pmap_table.c,v 1.2 2004/06/02 13:49:43 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/pmap_table.c,v 1.2.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 
 /* 
  * Mach Operating System

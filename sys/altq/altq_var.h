@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.5 2004/02/19 10:51:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_var.h,v 1.1.2.6 2004/06/05 23:12:26 niklas Exp $	*/
 /*	$KAME: altq_var.h,v 1.8 2001/02/09 09:44:41 kjc Exp $	*/
 
 /*
@@ -91,8 +91,6 @@ struct callout {
 typedef void (timeout_t)(void *);
 
 #define	m_pktlen(m)		((m)->m_pkthdr.len)
-
-extern int pfaltq_running;
 
 struct ifnet; struct mbuf;
 struct pf_altq; struct pf_qstats;

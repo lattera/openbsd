@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.9 2004/02/19 10:49:07 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.10 2004/06/05 23:09:50 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -68,7 +68,9 @@ extern	caddr_t		vmmap;
 #define	pmap_clear_modify(pg)		pmap_unsetbit(pg, PG_M)
 #define	pmap_clear_reference(pg)	pmap_unsetbit(pg, PG_U)
 
-void pmap_bootstrap(vaddr_t, paddr_t *, paddr_t *, vaddr_t *, vaddr_t *);
+#define pmap_proc_iflush(p,va,len)	do { /* nothing */ } while (0)
+
+void pmap_bootstrap(vaddr_t);
 void pmap_cache_ctrl(pmap_t, vaddr_t, vaddr_t, u_int);
 boolean_t pmap_unsetbit(struct vm_page *, int);
 

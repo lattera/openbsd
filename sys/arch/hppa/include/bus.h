@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.7 2004/02/19 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/bus.h,v 1.11.2.8 2004/06/05 23:10:49 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998,1999 Michael Shalayeff
+ * Copyright (c) 1998-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -329,6 +324,8 @@ typedef struct hppa_bus_dmamap	*bus_dmamap_t;
  *	are suitable for programming into DMA registers.
  */
 struct hppa_bus_dma_segment {
+	vaddr_t		_ds_va;		/* needed for syncing */
+
 	bus_addr_t	ds_addr;	/* DMA address */
 	bus_size_t	ds_len;		/* length of transfer */
 };
@@ -418,7 +415,6 @@ struct hppa_bus_dmamap {
 	bus_size_t	_dm_maxsegsz;	/* largest possible segment */
 	bus_size_t	_dm_boundary;	/* don't cross this */
 	int		_dm_flags;	/* misc. flags */
-	vaddr_t		_dm_va;		/* needed for syncing */
 
 	void		*_dm_cookie;	/* cookie for bus-specific functions */
 

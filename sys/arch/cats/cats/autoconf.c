@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/cats/cats/Attic/autoconf.c,v 1.3.2.1 2004/02/19 10:48:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/cats/cats/Attic/autoconf.c,v 1.3.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.2 2001/09/05 16:17:36 matt Exp $	*/
 
 /*
@@ -59,23 +59,20 @@
 struct device *booted_device;
 int booted_partition;
 
-void isa_intr_init (void);
+void isa_intr_init(void);
 
 struct device *bootdv = NULL;
 
 int findblkmajor(struct device *dv);
 char * findblkname(int maj);
 
-#if 0
-void rootconf(void);
-#endif
 void swapconf(void);
 void rootconf(void);
 void diskconf(void);
 
 static struct device * getdisk(char *str, int len, int defpart, dev_t *devp);
 struct  device *parsedisk(char *, int, int, dev_t *);
-dev_t	bootdev = 0;
+extern char *boot_file;
 
 #include "wd.h"
 #if NWD > 0  
@@ -294,10 +291,6 @@ cpu_configure(void)
 
 }
 
-void
-device_register(struct device *dev, void *aux)
-{
-}
 /*
  * Attempt to find the device from which we were booted.
  * If we can do so, and not instructed not to do so,
@@ -340,14 +333,12 @@ rootconf()
 		bootdv = getdisk(buf, len, part, &rootdev);
 	}
 
-#if 0
 	/* Lookup boot device from boot if not set by configuration */
 	if(bootdv == NULL) {
-		bootdv = parsedisk(bootdev, strlen(bootdev), 0, &temp);
+		bootdv = parsedisk(boot_file, strlen(boot_file), 0, &temp);
 	}
-#endif
 	if(bootdv == NULL) {
-		printf("boot device: lookup '%s' failed.\n", bootdev);
+		printf("boot device: lookup '%s' failed.\n", boot_file);
 		boothowto |= RB_ASKNAME; /* Don't Panic :-) */
 		/* boothowto |= RB_SINGLE; */
 	} else

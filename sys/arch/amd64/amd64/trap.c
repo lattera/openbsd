@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/trap.c,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/trap.c,v 1.1.2.1 2004/06/05 23:09:24 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.2 2003/05/04 23:51:56 fvdl Exp $	*/
 
 /*-
@@ -78,7 +78,7 @@
 /*
  * amd64 Trap and System call handling
  */
-#define	TRAP_SIGDEBUG
+#undef	TRAP_SIGDEBUG
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -428,6 +428,8 @@ faultcommon:
 			map = &vm->vm_map;
 		if (frame.tf_err & PGEX_W)
 			ftype = VM_PROT_WRITE;
+		else if (frame.tf_err & PGEX_I)
+			ftype = VM_PROT_EXECUTE;
 		else
 			ftype = VM_PROT_READ;
 
@@ -460,7 +462,8 @@ faultcommon:
 		/* Fault the original page in. */
 		onfault = pcb->pcb_onfault;
 		pcb->pcb_onfault = NULL;
-		error = uvm_fault(map, va, 0, ftype);
+		error = uvm_fault(map, va, frame.tf_err & PGEX_P?
+		    VM_FAULT_PROTECT : VM_FAULT_INVALID, ftype);
 		pcb->pcb_onfault = onfault;
 		if (error == 0) {
 			if (nss > (u_long)vm->vm_ssize)

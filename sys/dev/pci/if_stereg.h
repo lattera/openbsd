@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_stereg.h,v 1.3.2.2 2004/02/19 10:56:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_stereg.h,v 1.3.2.3 2004/06/05 23:12:51 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -458,7 +458,6 @@ struct ste_desc_onefrag {
 #define STE_TIMEOUT		1000
 #define STE_MIN_FRAMELEN	60
 #define STE_PACKET_SIZE		1536
-#define ETHER_ALIGN		2
 #define STE_RX_LIST_CNT		128
 #define STE_TX_LIST_CNT		256
 #define STE_INC(x, y)		(x) = (x + 1) % y

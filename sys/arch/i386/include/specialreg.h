@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/specialreg.h,v 1.8.2.5 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/specialreg.h,v 1.8.2.6 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: specialreg.h,v 1.7 1994/10/27 04:16:26 cgd Exp $	*/
 
 /*-
@@ -130,6 +130,8 @@
  */
 #define CPUID_3DNOW	0x40000000	/* has 3DNow! instructions (AMD) */
 
+#define CPUIDECX_PNI	0x00000001	/* Prescott New Instructions */
+#define CPUIDECX_MWAIT	0x00000008	/* Monitor/Mwait */
 #define CPUIDECX_EST	0x00000080	/* enhanced SpeedStep */
 #define CPUIDECX_TM2	0x00000100	/* thermal monitor 2 */
 #define CPUIDECX_CNXTID	0x00000400	/* Context ID */
@@ -145,6 +147,7 @@
 #define	P5MSR_CTR1		0x013	/* P5 only (trap on P6) */
 #define MSR_APICBASE		0x01b
 #define MSR_EBL_CR_POWERON	0x02a
+#define MSR_EBC_FREQUENCY_ID	0x02c	/* Pentium 4 only */
 #define	MSR_TEST_CTL		0x033
 #define MSR_BIOS_UPDT_TRIG	0x079
 #define	MSR_BBL_CR_D0		0x088	/* PII+ only */
@@ -229,6 +232,9 @@
 #define MSR_MC3_STATUS		0x411
 #define MSR_MC3_ADDR		0x412
 #define MSR_MC3_MISC		0x413
+
+/* AMD MSRs */
+#define MSR_K6_EPMR		0xc0000086
 
 /*
  * Constants related to MTRRs

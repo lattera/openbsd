@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/mpt_mpilib.h,v 1.1 2004/03/06 03:03:07 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/mpt_mpilib.h,v 1.1.4.1 2004/06/05 23:12:42 niklas Exp $	*/
 /*	$NetBSD: mpt_mpilib.h,v 1.2 2003/04/16 23:24:01 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.9 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.10 2004/06/05 23:10:58 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -101,14 +101,7 @@
 #define	MCLSHIFT	11		/* log2(MCLBYTES) */
 #define	MCLBYTES	(1 << MCLSHIFT)	/* enough for whole Ethernet packet */
 #define	MCLOFSET	(MCLBYTES - 1)
-
-#ifndef NMBCLUSTERS
-#ifdef GATEWAY
-#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	512		/* map size, max cluster allocation */
-#endif
-#endif
+#define	NMBCLUSTERS	2048		/* map size, max cluster allocation */
 
 #define MSGBUFSIZE	4096		/* cannot be changed without great pain */
 

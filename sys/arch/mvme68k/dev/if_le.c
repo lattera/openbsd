@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_le.c,v 1.14.2.5 2004/02/19 10:49:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_le.c,v 1.14.2.6 2004/06/05 23:10:53 niklas Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
@@ -351,11 +351,7 @@ leattach(parent, self, aux)
 			    sc->sc_dev.dv_xname);
 			return;
 		}
-		sc->sc_addr = kvtop((vaddr_t)sc->sc_mem);
-		if (sc->sc_addr == 0L) {
-			printf("\n%s: kvtop() failed!\n", sc->sc_dev.dv_xname);
-			return;
-		}
+		sc->sc_addr = (paddr_t)addr & 0x00ffffff;
 
 		lesc->sc_r1 = (void *)ca->ca_vaddr;
 		lesc->sc_ipl = ca->ca_ipl;

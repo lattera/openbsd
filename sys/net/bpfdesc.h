@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.5.4.5 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpfdesc.h,v 1.5.4.6 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: bpfdesc.h,v 1.11 1995/09/27 18:30:42 thorpej Exp $	*/
 
 /*
@@ -82,8 +82,10 @@ struct bpf_d {
 	pid_t		bd_pgid;	/* process or group id for signal */
 	uid_t		bd_siguid;	/* uid for process that set pgid */
 	uid_t		bd_sigeuid;	/* euid for process that set pgid */
-	u_char		bd_pad;		/* explicit alignment */
+	u_int		bd_ref;		/* reference count */
 	struct selinfo	bd_sel;		/* bsd select info */
+	int		bd_unit;	/* logical unit number */
+	LIST_ENTRY(bpf_d) bd_list;	/* descriptor list */
 };
 
 /*

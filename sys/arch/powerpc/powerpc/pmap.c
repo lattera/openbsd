@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.11 2004/02/19 10:49:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.12 2004/06/05 23:10:57 niklas Exp $ */
 
 /*
  * Copyright (c) 2001, 2002 Dale Rahn.
@@ -1941,6 +1941,26 @@ pmap_init()
 		attr += sz;
 	}
 	pmap_initialized = 1;
+}
+
+void
+pmap_proc_iflush(struct proc *p, vaddr_t addr, vsize_t len)
+{
+	paddr_t pa;
+	vsize_t clen;
+
+	while (len > 0) {
+		clen = round_page(addr) - addr;
+		if (clen > len)
+			clen = len;
+
+		if (pmap_extract(p->p_vmspace->vm_map.pmap, addr, &pa)) {
+			syncicache((void *)pa, clen);
+		}
+
+		len -= clen;
+		addr += clen;
+	}
 }
 
 /* 

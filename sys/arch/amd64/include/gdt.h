@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/gdt.h,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/gdt.h,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 /*	$NetBSD: gdt.h,v 1.1 2003/04/26 18:39:40 fvdl Exp $	*/
 
 /*-
@@ -58,5 +58,6 @@ void set_sys_gdt(struct sys_segment_descriptor *, void *, size_t, int, int,
 		 int);
 #endif
 
-#define MINGDTSIZ       2048
+/* MINGDTSIZ must be a multiple of PAGE_SIZE or gdt_grow breaks */
+#define MINGDTSIZ       PAGE_SIZE
 #define MAXGDTSIZ       65536

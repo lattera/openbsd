@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKC,v 1.17.2.8 2004/02/19 10:48:41 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKC,v 1.17.2.9 2004/06/05 23:08:59 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -49,6 +49,8 @@ pcibios0 at bios0 flags 0x0000
 
 isa0	at mainbus0
 isa0	at pcib?
+isa0	at ichpcib?
+isa0	at gscpcib?
 eisa0	at mainbus0
 pci*	at mainbus0
 
@@ -60,6 +62,8 @@ ppb*	at pci? dev ? function ?	# PCI-PCI bridges
 pci*	at ppb? bus ?
 pci*	at pchb? bus ?
 pcib*	at pci? dev ? function ?	# PCI-ISA bridge
+ichpcib* at pci? dev ? function ?	# Intel ICHx/ICHx-M LPC bridges
+gscpcib* at pci? dev ? function ?	# NS Geode SC1100 PCI-ISA bridge
 
 # ISA PCMCIA controllers
 pcic0	at isa? port 0x3e0 iomem 0xd0000 iosiz 0x4000
@@ -229,6 +233,7 @@ xe*	at pcmcia? function ?			# Xircom ethernet
 xl*	at pci? dev ? function ?		# 3C9xx ethernet
 xl*	at cardbus? dev ? function ?		# 3C575 ethernet
 rl*	at pci? dev ? function ?		# RealTek 81[23]9 ethernet
+rl*	at cardbus? dev ? function ?		# RealTek 81[23]9 ethernet
 #tx*	at pci? dev ? function ?		# SMC 83C170 EPIC ethernet
 #tl*	at pci? dev ? function ?		# Compaq Thunderlan ethernet
 #vr*	at pci? dev ? function ?		# VIA Rhine ethernet
@@ -245,6 +250,7 @@ em*	at pci? dev ? function ?		# Intel Pro/1000 ethernet
 #stge*	at pci? dev ? function ?		# Sundance TC9021 GigE
 #lge*	at pci? dev ? function ?		# Level1 LXT1001 GigE
 #hme*	at pci? dev ? function ?		# Sun Happy Meal
+#bce*	at pci? dev ? function ?		# Broadcom BCM4401
 
 # Wireless network cards
 wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS
@@ -265,7 +271,7 @@ nsphyter*	at mii? phy ?			# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 #sqphy*	at mii? phy ?				# Seeq 8x220 PHYs
 rlphy* at mii? phy ?				# RealTek 8139 internal PHYs
-#mtdphy*	at mii? phy ?			# Myson MTD972 PHYs
+mtdphy*	at mii? phy ?				# Myson MTD972 PHYs
 dcphy*	at mii? phy ?				# Digital Clone PHYs
 amphy*	at mii? phy ?				# AMD 79C873 PHYs
 tqphy*	at mii? phy ?				# TDK 78Q212x PHYs

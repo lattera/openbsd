@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/ses.c,v 1.1.2.4 2004/02/19 11:01:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/scsi/ses.c,v 1.1.2.5 2004/06/05 23:13:08 niklas Exp $ */
 /*	$NetBSD: ses.c,v 1.3 2000/01/21 21:19:57 mjacob Exp $ */
 /*
  * Copyright (C) 2000 National Aeronautics & Space Administration
@@ -262,7 +262,7 @@ ses_attach(parent, self, aux)
 	struct scsipibus_attach_args *sa = aux;
 	struct scsipi_link *sc_link = sa->sa_sc_link;
 
-	SC_DEBUG(sc_link, SDEV_DB2, ("ssattach: "));
+	SC_DEBUG(sc_link, SDEV_DB2, ("ssattach:\n"));
 	softc->sc_link = sa->sa_sc_link;
 	sc_link->device = &ses_switch;
 	sc_link->device_softc = softc;
@@ -452,7 +452,7 @@ sesioctl(dev, cmd, arg_addr, flag, p)
 	else
 		addr = NULL;
 
-	SC_DEBUG(ssc->sc_link, SDEV_DB2, ("sesioctl 0x%lx ", cmd));
+	SC_DEBUG(ssc->sc_link, SDEV_DB2, ("sesioctl 0x%lx\n", cmd));
 
 	/*
 	 * Now check to see whether we're initialized or not.

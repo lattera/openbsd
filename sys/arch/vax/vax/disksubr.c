@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.8 2004/02/19 10:50:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/disksubr.c,v 1.11.6.9 2004/06/05 23:11:03 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1999/06/30 18:48:06 ragge Exp $	*/
 
 /*
@@ -128,6 +128,8 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 	int i;
 
 	/* minimal requirements for archetypal disk label */
+	if (lp->d_secsize < DEV_BSIZE)
+		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
 		lp->d_secperunit = 0x1fffffff;
 	lp->d_npartitions = RAW_PART + 1;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.6 2004/02/19 11:01:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.7 2004/06/05 23:13:11 niklas Exp $	*/
 /*	$NetBSD: lfs_vfsops.c,v 1.11 1996/03/25 12:53:35 pk Exp $	*/
 
 /*
@@ -216,7 +216,6 @@ lfs_mountfs(devvp, mp, p)
 	struct mount *mp;
 	struct proc *p;
 {
-	extern struct vnode *rootvp;
 	register struct lfs *fs;
 	register struct ufsmount *ump;
 	struct vnode *vp;

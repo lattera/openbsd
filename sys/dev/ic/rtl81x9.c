@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.8 2004/02/19 10:56:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.9 2004/06/05 23:12:43 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -686,12 +686,12 @@ rl_rxeof(sc)
 		wrap = (sc->rl_cdata.rl_rx_buf + RL_RXBUFLEN) - rxbufpos;
 
 		if (total_len > wrap) {
-			m = m_devget(rxbufpos - RL_ETHER_ALIGN,
-			    wrap + RL_ETHER_ALIGN, 0, ifp, NULL);
+			m = m_devget(rxbufpos - ETHER_ALIGN,
+			    wrap + ETHER_ALIGN, 0, ifp, NULL);
 			if (m == NULL)
 				ifp->if_ierrors++;
 			else {
-				m_adj(m, RL_ETHER_ALIGN);
+				m_adj(m, ETHER_ALIGN);
 				m_copyback(m, wrap, total_len - wrap,
 					sc->rl_cdata.rl_rx_buf);
 				m = m_pullup(m, sizeof(struct ether_header));
@@ -700,12 +700,12 @@ rl_rxeof(sc)
 			}
 			cur_rx = (total_len - wrap + ETHER_CRC_LEN);
 		} else {
-			m = m_devget(rxbufpos - RL_ETHER_ALIGN,
-			    total_len + RL_ETHER_ALIGN, 0, ifp, NULL);
+			m = m_devget(rxbufpos - ETHER_ALIGN,
+			    total_len + ETHER_ALIGN, 0, ifp, NULL);
 			if (m == NULL)
 				ifp->if_ierrors++;
 			else
-				m_adj(m, RL_ETHER_ALIGN);
+				m_adj(m, ETHER_ALIGN);
 			cur_rx += total_len + 4 + ETHER_CRC_LEN;
 		}
 
@@ -923,7 +923,7 @@ void rl_start(ifp)
 		 * Transmit the frame.
 		 */
 		CSR_WRITE_4(sc, RL_CUR_TXADDR(sc),
-		    vtophys(mtod(RL_CUR_TXMBUF(sc), caddr_t)));
+		    vtophys(mtod(RL_CUR_TXMBUF(sc), vaddr_t)));
 		CSR_WRITE_4(sc, RL_CUR_TXSTAT(sc),
 		    RL_TXTHRESH(sc->rl_txthresh) |
 		    RL_CUR_TXMBUF(sc)->m_pkthdr.len);
@@ -968,7 +968,7 @@ void rl_init(xsc)
 	}
 
 	/* Init the RX buffer pointer register. */
-	CSR_WRITE_4(sc, RL_RXADDR, vtophys(sc->rl_cdata.rl_rx_buf));
+	CSR_WRITE_4(sc, RL_RXADDR, vtophys((vaddr_t)sc->rl_cdata.rl_rx_buf));
 
 	/* Init TX descriptors. */
 	rl_list_tx_init(sc);
@@ -1220,7 +1220,8 @@ rl_attach(sc)
 
 	if (rl_did == RT_DEVICEID_8139 || rl_did == ACCTON_DEVICEID_5030 ||
 	    rl_did == DELTA_DEVICEID_8139 || rl_did == ADDTRON_DEVICEID_8139 ||
-	    rl_did == DLINK_DEVICEID_8139 || rl_did == DLINK_DEVICEID_8139_2)
+	    rl_did == DLINK_DEVICEID_8139 || rl_did == DLINK_DEVICEID_8139_2 ||
+	    rl_did == ABOCOM_DEVICEID_8139)
 		sc->rl_type = RL_8139;
 	else if (rl_did == RT_DEVICEID_8129)
 		sc->rl_type = RL_8129;

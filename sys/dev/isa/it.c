@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2.2.2 2004/02/19 10:56:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2.2.3 2004/06/05 23:12:46 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Julien Bordet <zejames@greyhats.org>
@@ -313,7 +313,9 @@ it_generic_fanrpm(struct it_softc *sc, struct sensor *sensors)
 				break;
 		}
 
-		if (sdata == 0xff || sdata == 0) {
+		if (sdata == 0xff) {
+			sensors[i].flags |= SENSOR_FINVALID;
+		} else if (sdata == 0) {
 			sensors[i].value = 0;
 		} else {
 			sensors[i].value = 1350000 / (sdata << divisor);

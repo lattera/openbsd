@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/kern_ipc_35.c,v 1.1 2004/05/03 17:38:48 millert Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/kern_ipc_35.c,v 1.1.2.1 2004/06/05 23:12:34 niklas Exp $	*/
 
 /*
  * Copyright (c) 2004 Todd C. Miller <Todd.Miller@courtesan.com>

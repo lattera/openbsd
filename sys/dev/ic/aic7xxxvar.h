@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic7xxxvar.h,v 1.10.14.5 2004/02/19 10:56:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic7xxxvar.h,v 1.10.14.6 2004/06/05 23:12:40 niklas Exp $	*/
 /*
  * Core definitions and data structures shareable across OS platforms.
  *
@@ -848,8 +848,8 @@ struct seeprom_config {
  * BIOS Control Bits
  */
 	uint16_t bios_control;		/* word 16 */
-#define		CFSUPREM	0x0001	/* support all removeable drives */
-#define		CFSUPREMB	0x0002	/* support removeable boot drives */
+#define		CFSUPREM	0x0001	/* support all removable drives */
+#define		CFSUPREMB	0x0002	/* support removable boot drives */
 #define		CFBIOSEN	0x0004	/* BIOS enabled */
 #define		CFBIOS_BUSSCAN	0x0008	/* Have the BIOS Scan the Bus */
 #define		CFSM2DRV	0x0010	/* support more than two drives */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.11 2004/03/23 08:02:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.12 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*
@@ -643,9 +643,10 @@ pci_intr_header_fixup(pc, tag, ihp)
 	}
 
 	ihp->link = l;
-	if (irq == 14 || irq == 15)
+	if (irq == 14 || irq == 15) {
 		p = " WARNING: ignored";
-	else if (l->irq == I386_PCI_INTERRUPT_LINE_NO_CONNECTION) {
+		ihp->link = NULL;
+	} else if (l->irq == I386_PCI_INTERRUPT_LINE_NO_CONNECTION) {
 
 		/* Appropriate interrupt was not found. */
 		if (pciintr_icu_tag == NULL && ihp->line != 0 &&

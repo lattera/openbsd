@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_audio.h,v 1.1.4.1 2001/05/14 22:26:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_audio.h,v 1.1.4.2 2004/06/05 23:12:54 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_audio.h,v 1.2 1999/10/28 13:58:14 roger Exp $ */
 
 /*
@@ -10,7 +10,7 @@
  * bktr_audio : This deals with controlling the audio on TV cards,
  *                controlling the Audio Multiplexer (audio source selector).
  *                controlling any MSP34xx stereo audio decoders.
- *                controlling any DPL35xx dolby surroud sound audio decoders.
+ *                controlling any DPL35xx dolby surround sound audio decoders.
  *                initialising TDA98xx audio devices.
  *
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.11 2004/02/19 11:01:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.12 2004/06/05 23:13:12 niklas Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -172,6 +172,7 @@ uvm_chgkprot(addr, len, rw)
 			panic("chgkprot: invalid page");
 		pmap_enter(pmap_kernel(), sva, pa, prot, PMAP_WIRED);
 	}
+	pmap_update(pmap_kernel());
 }
 #endif
 

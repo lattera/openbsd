@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/SUN4M,v 1.34.2.7 2004/02/19 10:49:57 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/SUN4M,v 1.34.2.8 2004/06/05 23:10:57 niklas Exp $
 # 	$NetBSD: GENERIC,v 1.28.2.1 1996/07/02 23:55:22 jtc Exp $
 
 # Machine architecture; required by config(8)
@@ -105,6 +105,7 @@ esp*	at dma? flags 0xff0f				# depending on model
 
 #sun4c, sun4m
 isp*	at sbus?
+options ISP_COMPILE_1000_FW=1
 
 # sun4m Ethernet - an AMD 7990 LANCE behind
 # specialized DMA glue
@@ -163,7 +164,7 @@ wsdisplay* at zx?
 vigra*	at sbus?
 wsdisplay* at vigra?
 
-# Weitex P9000 found on Tadpole SPARCbook 3, with external ``Chameleon'' RAMDAC
+# Weitek P9000 found on Tadpole SPARCbook 3, with external ``Chameleon'' RAMDAC
 pninek0	at sbus?
 btcham0	at obio?
 wsdisplay* at pninek?
@@ -183,6 +184,10 @@ wsdisplay* at agten?
 # Southland Media Systems MGX/MGXPlus framebuffer.
 mgx* at sbus?
 wsdisplay* at mgx?
+
+# Vitec/Connectware/AP&D RasterFlex framebuffer series.
+rfx* at sbus?
+wsdisplay* at rfx?
 
 # Microcontroller found on Tadpole SPARCbook
 tctrl0	at obio0

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.11 2004/02/19 10:56:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.12 2004/06/05 23:13:03 niklas Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -1617,7 +1617,7 @@ vfs_free_netcred(rn, w)
 {
 	register struct radix_node_head *rnh = (struct radix_node_head *)w;
 
-	(*rnh->rnh_deladdr)(rn->rn_key, rn->rn_mask, rnh);
+	(*rnh->rnh_deladdr)(rn->rn_key, rn->rn_mask, rnh, NULL);
 	free(rn, M_NETADDR);
 	return (0);
 }
@@ -1790,6 +1790,12 @@ vfs_unmountall(void)
 void
 vfs_shutdown()
 {
+#ifdef ACCOUNTING
+	extern void acct_shutdown(void);
+
+	acct_shutdown();
+#endif
+
 	/* XXX Should suspend scheduling. */
 	(void) spl0();
 

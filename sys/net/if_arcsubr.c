@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.6 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.7 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: if_arcsubr.c,v 1.8 1996/05/07 02:40:29 thorpej Exp $	*/
 
 /*
@@ -509,11 +509,7 @@ arc_input(ifp, m)
 	}
 
 	s = splimp();
-	if (IF_QFULL(inq)) {
-		IF_DROP(inq);
-		m_freem(m);
-	} else
-		IF_ENQUEUE(inq, m);
+	IF_INPUT_ENQUEUE(inq, m);
 	splx(s);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_exec.c,v 1.13.2.6 2004/02/19 10:51:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_exec.c,v 1.13.2.7 2004/06/05 23:12:34 niklas Exp $	*/
 /*	$NetBSD: linux_exec.c,v 1.13 1996/04/05 00:01:10 christos Exp $	*/
 
 /*-
@@ -456,6 +456,14 @@ exec_linux_aout_prep_qmagic(p, epp)
 	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
 
 	return (exec_setup_stack(p, epp));
+}
+
+int
+exec_linux_elf32_makecmds(struct proc *p, struct exec_package *epp)
+{
+	if (!(emul_linux_elf.e_flags & EMUL_ENABLED))
+		return (ENOEXEC);
+	return exec_elf32_makecmds(p, epp);
 }
 
 int

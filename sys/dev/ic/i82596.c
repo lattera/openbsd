@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.6 2004/02/19 10:56:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.7 2004/06/05 23:12:42 niklas Exp $	*/
 /*	$NetBSD: i82586.c,v 1.18 1998/08/15 04:42:42 mycroft Exp $	*/
 
 /*-
@@ -159,7 +159,6 @@ Mode of operation:
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #ifdef INET

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.20 2004/06/05 17:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.21 2004/06/05 23:13:01 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -138,8 +138,9 @@ void	start_init(void *);
 void	start_cleaner(void *);
 void	start_update(void *);
 void	start_reaper(void *);
-void    start_crypto(void *);
+void	start_crypto(void *);
 void	init_exec(void);
+void	kqueue_init(void);
 
 extern char sigcode[], esigcode[];
 #ifdef SYSCALL_DEBUG
@@ -213,8 +214,7 @@ main(framep)
 
 	SIMPLE_LOCK_INIT(&kprintf_slock);
 
-	printf(copyright);
-	printf("\n");
+	printf("%s\n", copyright);
 
 	KERNEL_LOCK_INIT();
 
@@ -252,6 +252,11 @@ main(framep)
 	 * Initialize pipes.
 	 */
 	pipe_init();
+
+	/*
+	 * Initialize kqueues.
+	 */
+	kqueue_init();
 
 	/*
 	 * Create process 0 (the swapper).

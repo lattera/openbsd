@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_message.h,v 1.3.14.2 2001/05/14 22:44:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_message.h,v 1.3.14.3 2004/06/05 23:13:08 niklas Exp $	*/
 
 /* Messages (1 byte) */		     /* I/T (M)andatory or (O)ptional */
 #define MSG_CMDCOMPLETE		0x00 /* M/M */
@@ -19,6 +19,7 @@
 #define MSG_INIT_RECOVERY	0x0f /* O/O */
 #define MSG_REL_RECOVERY	0x10 /* O/O */
 #define MSG_TERM_IO_PROC	0x11 /* O/O */
+#define MSG_QAS_REQUEST		0x55 /* O/O */ /* SPI3 */
 
 /* Messages (2 byte) */
 #define MSG_SIMPLE_Q_TAG	0x20 /* O/O */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.8 2004/02/19 10:49:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.9 2004/06/05 23:10:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -386,6 +386,13 @@ setroot()
 
 	printf("boot device: %s\n",
 	    (bootdv) ? bootdv->dv_xname : "<unknown>");
+
+	/*
+	 * If 'swap generic' and we could not determine the boot device,
+	 * ask the user.
+	 */
+	if (mountroot == NULL && bootdv == NULL)
+		boothowto |= RB_ASKNAME;
 
 	if (boothowto & RB_ASKNAME) {
 		for (;;) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.8 2004/02/19 10:48:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/conf.c,v 1.22.8.9 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.39 1997/05/12 08:17:53 thorpej Exp $	*/
 
 /*-
@@ -185,6 +185,8 @@ struct cdevsw	cdevsw[] =
 	
 	cdev_notdef(),			/* 51 */
 #endif
+	cdev_ptm_init(NPTY,ptm),	/* 52: pseudo-tty ptm device */
+
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

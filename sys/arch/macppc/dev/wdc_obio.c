@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3.4.6 2004/02/19 10:49:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3.4.7 2004/06/05 23:10:52 niklas Exp $	*/
 /*	$NetBSD: wdc_obio.c,v 1.15 2001/07/25 20:26:33 bouyer Exp $	*/
 
 /*-
@@ -498,9 +498,6 @@ wdc_obio_ata6_adjust_timing(struct channel_softc *chp)
 	conf1 = bus_space_read_4(chp->cmd_iot, chp->cmd_ioh,
 	    KAUAI_ULTRA_CONFIG);
 
-#if 1
-	printf("ata6 conf old: 0x%x, %x", conf, conf1);
-#endif
 	conf = (conf & ~KAUAI_PIO_MASK) | kauai_pio_timing[piomode];
 
 	if (dmamode != -1)
@@ -514,9 +511,6 @@ wdc_obio_ata6_adjust_timing(struct channel_softc *chp)
 	bus_space_write_4(chp->cmd_iot, chp->cmd_ioh, CONFIG_REG, conf);
 	bus_space_write_4(chp->cmd_iot, chp->cmd_ioh, KAUAI_ULTRA_CONFIG,
 	    conf1);
-#if 1
-	printf("new : 0x%x, %x\n", conf, conf1);
-#endif
 }
 
 int

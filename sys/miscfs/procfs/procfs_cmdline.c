@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_cmdline.c,v 1.1.6.3 2001/11/13 23:04:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_cmdline.c,v 1.1.6.4 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: procfs_cmdline.c,v 1.3 1999/03/13 22:26:48 thorpej Exp $	*/
 
 /*
@@ -83,11 +83,10 @@ procfs_docmdline(curp, p, pfs, uio)
 	 */
 	if (P_ZOMBIE(p) || (p->p_flag & P_SYSTEM) != 0) {
                 len = snprintf(arg, PAGE_SIZE, "(%s)", p->p_comm);
-                xlen = len - uio->uio_offset;
-                if (xlen <= 0) 
+                if (uio->uio_offset >= (off_t)len)
                         error = 0;
                 else
-                        error = uiomove(arg, xlen, uio);
+                        error = uiomove(arg, len - uio->uio_offset, uio);
 		
                 free(arg, M_TEMP);
                 return (error);	

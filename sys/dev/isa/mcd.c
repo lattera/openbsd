@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/mcd.c,v 1.28.4.4 2003/05/13 19:35:03 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/Attic/mcd.c,v 1.28.4.5 2004/06/05 23:12:46 niklas Exp $ */
 /*	$NetBSD: mcd.c,v 1.60 1998/01/14 12:14:41 drochner Exp $	*/
 
 /*
@@ -1241,7 +1241,7 @@ mcdintr(arg)
 
 		/* Return buffer. */
 		bp->b_resid = 0;
-		disk_unbusy(&sc->sc_dk, bp->b_bcount);
+		disk_unbusy(&sc->sc_dk, bp->b_bcount, (bp->b_flags & B_READ));
 		biodone(bp);
 
 		mcdstart(sc);
@@ -1273,7 +1273,8 @@ changed:
 	/* Invalidate the buffer. */
 	bp->b_flags |= B_ERROR;
 	bp->b_resid = bp->b_bcount - mbx->skip;
-	disk_unbusy(&sc->sc_dk, (bp->b_bcount - bp->b_resid));
+	disk_unbusy(&sc->sc_dk, (bp->b_bcount - bp->b_resid),
+	    (bp->b_flags & B_READ));
 	biodone(bp);
 
 	mcdstart(sc);

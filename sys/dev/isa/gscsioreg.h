@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/gscsioreg.h,v 1.1 2004/05/23 17:41:09 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/gscsioreg.h,v 1.1.2.1 2004/06/05 23:12:45 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

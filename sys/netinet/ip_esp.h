@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.6 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.7 2004/06/05 23:11:25 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -79,6 +79,13 @@ struct espstat
 	{ "enable", CTLTYPE_INT }, \
 	{ "udpencap", CTLTYPE_INT }, \
 	{ "udpencap_port", CTLTYPE_INT }, \
+}
+
+#define ESPCTL_VARS { \
+	NULL, \
+	&esp_enable, \
+	&udpencap_enable, \
+	&udpencap_port, \
 }
 
 #ifdef _KERNEL

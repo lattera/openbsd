@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.3.4.5 2004/02/19 10:56:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.3.4.6 2004/06/05 23:12:49 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2001
@@ -141,7 +141,6 @@ void bge_ifmedia_sts(struct ifnet *, struct ifmediareq *);
 u_int8_t bge_eeprom_getbyte(struct bge_softc *, int, u_int8_t *);
 int bge_read_eeprom(struct bge_softc *, caddr_t, int, int);
 
-u_int32_t bge_crc(caddr_t);
 void bge_setmulti(struct bge_softc *);
 
 void bge_handle_events(struct bge_softc *);
@@ -216,6 +215,7 @@ const struct pci_matchid bge_devices[] = {
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5705M },
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5705M_ALT },
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5782 },
+	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5788 },
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5901 },
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM5901A2 },
 
@@ -288,7 +288,7 @@ bge_vpd_readbyte(sc, addr)
 			break;
 	}
 
-	if (i == BGE_TIMEOUT) {
+	if (i == BGE_TIMEOUT * 10) {
 		printf("%s: VPD read timed out\n", sc->bge_dev.dv_xname);
 		return(0);
 	}
@@ -396,7 +396,7 @@ bge_eeprom_getbyte(sc, addr, dest)
 			break;
 	}
 
-	if (i == BGE_TIMEOUT) {
+	if (i == BGE_TIMEOUT * 10) {
 		printf("%s: eeprom read timed out\n", sc->bge_dev.dv_xname);
 		return(0);
 	}
@@ -763,8 +763,6 @@ bge_newbuf_jumbo(sc, i, m)
 		buf = bge_jalloc(sc);
 		if (buf == NULL) {
 			m_freem(m_new);
-			printf("%s: jumbo allocation failed "
-			    "-- packet dropped!\n", sc->bge_dev.dv_xname);
 			return(ENOBUFS);
 		}
 
@@ -926,25 +924,6 @@ bge_init_tx_ring(sc)
 	return(0);
 }
 
-#define BGE_POLY	0xEDB88320
-
-u_int32_t
-bge_crc(addr)
-	caddr_t addr;
-{
-	u_int32_t idx, bit, data, crc;
-
-	/* Compute CRC for the address value. */
-	crc = 0xFFFFFFFF; /* initial value */
-
-	for (idx = 0; idx < 6; idx++) {
-		for (data = *addr++, bit = 0; bit < 8; bit++, data >>= 1)
-			crc = (crc >> 1) ^ (((crc ^ data) & 1) ? BGE_POLY : 0);
-	}
-
-	return(crc & 0x7F);
-}
-
 void
 bge_setmulti(sc)
 	struct bge_softc *sc;
@@ -957,20 +936,25 @@ bge_setmulti(sc)
 	u_int32_t		h;
 	int			i;
 
+	/* First, zot all the existing filters. */
+	for (i = 0; i < 4; i++)
+		CSR_WRITE_4(sc, BGE_MAR0 + (i * 4), 0);
+
+	/* Now program new ones. */
+allmulti:
 	if (ifp->if_flags & IFF_ALLMULTI || ifp->if_flags & IFF_PROMISC) {
 		for (i = 0; i < 4; i++)
 			CSR_WRITE_4(sc, BGE_MAR0 + (i * 4), 0xFFFFFFFF);
 		return;
 	}
 
-	/* First, zot all the existing filters. */
-	for (i = 0; i < 4; i++)
-		CSR_WRITE_4(sc, BGE_MAR0 + (i * 4), 0);
-
-	/* Now program new ones. */
 	ETHER_FIRST_MULTI(step, ac, enm);
 	while (enm != NULL) {
-		h = bge_crc(LLADDR((struct sockaddr_dl *)enm->enm_addrlo));
+		if (bcmp(enm->enm_addrlo, enm->enm_addrhi, ETHER_ADDR_LEN)) {
+			ifp->if_flags |= IFF_ALLMULTI;
+			goto allmulti;
+		}
+		h = ether_crc32_le(enm->enm_addrlo, ETHER_ADDR_LEN) & 0x7F;
 		hashes[(h & 0x60) >> 5] |= 1 << (h & 0x1F);
 		ETHER_NEXT_MULTI(step, enm);
 	}
@@ -1086,10 +1070,7 @@ bge_chipinit(sc)
 #else
 	CSR_WRITE_4(sc, BGE_MODE_CTL, BGE_MODECTL_WORDSWAP_NONFRAME|
 		    BGE_MODECTL_BYTESWAP_DATA|BGE_MODECTL_WORDSWAP_DATA|
-		    BGE_MODECTL_MAC_ATTN_INTR|BGE_MODECTL_HOST_SEND_BDS
-/*		    |BGE_MODECTL_TX_NO_PHDR_CSUM| */
-/*		    BGE_MODECTL_RX_NO_PHDR_CSUM */
-);
+		    BGE_MODECTL_MAC_ATTN_INTR|BGE_MODECTL_HOST_SEND_BDS);
 #endif
 
 	/*
@@ -1864,6 +1845,10 @@ bge_reset(sc)
 	pci_conf_write(pa->pa_pc, pa->pa_tag, BGE_PCI_CMD, command);
 	bge_writereg_ind(sc, BGE_MISC_CFG, (65 << 1));
 
+	/* Enable memory arbiter. */
+	if (sc->bge_asicrev != BGE_ASICREV_BCM5705)
+		CSR_WRITE_4(sc, BGE_MARB_MODE, BGE_MARBMODE_ENABLE);
+
 	/*
 	 * Prevent PXE restart: write a magic number to the
 	 * general communications memory at 0xB50.
@@ -1902,10 +1887,6 @@ bge_reset(sc)
 			break;
 		DELAY(10);
 	}
-
-	/* Enable memory arbiter. */
-	if (sc->bge_asicrev != BGE_ASICREV_BCM5705)
-		CSR_WRITE_4(sc, BGE_MARB_MODE, BGE_MARBMODE_ENABLE);
 
 	/* Fix up byte swapping */
 	CSR_WRITE_4(sc, BGE_MODE_CTL, BGE_MODECTL_BYTESWAP_NONFRAME|
@@ -2729,8 +2710,13 @@ bge_ioctl(ifp, command, data)
 		break;
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
-		if (ifp->if_flags & IFF_RUNNING) {
-			bge_setmulti(sc);
+		error = (command == SIOCADDMULTI)
+			? ether_addmulti(ifr, &sc->arpcom)
+			: ether_delmulti(ifr, &sc->arpcom);
+
+		if (error == ENETRESET) {
+			if (ifp->if_flags & IFF_RUNNING)
+				bge_setmulti(sc);
 			error = 0;
 		}
 		break;

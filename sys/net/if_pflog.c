@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4.2.4 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pflog.c,v 1.4.2.5 2004/06/05 23:11:23 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -197,11 +197,9 @@ pflog_packet(struct pfi_kif *kif, struct mbuf *m, sa_family_t af, u_int8_t dir,
 	} else {
 		hdr.rulenr = htonl(am->nr);
 		hdr.subrulenr = htonl(rm->nr);
-		if (ruleset != NULL)
-			memcpy(hdr.ruleset, ruleset->name,
+		if (ruleset != NULL && ruleset->anchor != NULL)
+			strlcpy(hdr.ruleset, ruleset->anchor->name,
 			    sizeof(hdr.ruleset));
-
-			
 	}
 	hdr.dir = dir;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.7 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.8 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -107,9 +107,20 @@ extern int tcp_rst_ppslim;
 /* from in_pcb.c */
 extern	struct baddynamicports baddynamicports;
 
+#ifndef TCP_SENDSPACE
+#define	TCP_SENDSPACE	1024*16
+#endif
+u_int	tcp_sendspace = TCP_SENDSPACE;
+#ifndef TCP_RECVSPACE
+#define	TCP_RECVSPACE	1024*16
+#endif
+u_int	tcp_recvspace = TCP_RECVSPACE;
+
+int *tcpctl_vars[TCPCTL_MAXID] = TCPCTL_VARS;
+
 struct	inpcbtable tcbtable;
 
-int tcp_ident(void *, size_t *, void *, size_t);
+int tcp_ident(void *, size_t *, void *, size_t, int);
 
 #ifdef INET6
 int
@@ -165,7 +176,7 @@ tcp_usrreq(so, req, m, nam, control)
 	/*
 	 * When a TCP is attached to a socket, then there will be
 	 * a (struct inpcb) pointed at by the socket, and this
-	 * structure will point at a subsidary (struct tcpcb).
+	 * structure will point at a subsidiary (struct tcpcb).
 	 */
 	if (inp == 0 && req != PRU_ATTACH) {
 		splx(s);
@@ -285,12 +296,6 @@ tcp_usrreq(so, req, m, nam, control)
 			if ((sin->sin_addr.s_addr == INADDR_ANY) ||
 			    IN_MULTICAST(sin->sin_addr.s_addr) ||
 			    in_broadcast(sin->sin_addr, NULL)) {
-				error = EINVAL;
-				break;
-			}
-
-			/* Trying to connect to some broadcast address */
-			if (in_broadcast(sin->sin_addr, NULL)) {
 				error = EINVAL;
 				break;
 			}
@@ -645,15 +650,6 @@ tcp_ctloutput(op, so, level, optname, mp)
 	return (error);
 }
 
-#ifndef TCP_SENDSPACE
-#define	TCP_SENDSPACE	1024*16
-#endif
-u_int	tcp_sendspace = TCP_SENDSPACE;
-#ifndef TCP_RECVSPACE
-#define	TCP_RECVSPACE	1024*16
-#endif
-u_int	tcp_recvspace = TCP_RECVSPACE;
-
 /*
  * Attach TCP protocol to socket, allocating
  * internet protocol control block, tcp control block,
@@ -775,30 +771,44 @@ tcp_usrclosed(tp)
 }
 
 /*
- * Look up a socket for ident..
+ * Look up a socket for ident or tcpdrop, ...
  */
 int
-tcp_ident(oldp, oldlenp, newp, newlen)
+tcp_ident(oldp, oldlenp, newp, newlen, dodrop)
 	void *oldp;
 	size_t *oldlenp;
 	void *newp;
 	size_t newlen;
+	int dodrop;
 {
 	int error = 0, s;
 	struct tcp_ident_mapping tir;
 	struct inpcb *inp;
+	struct tcpcb *tp = NULL;
 	struct sockaddr_in *fin, *lin;
 #ifdef INET6
 	struct sockaddr_in6 *fin6, *lin6;
 	struct in6_addr f6, l6;
 #endif
-
-	if (oldp == NULL || newp != NULL || newlen != 0)
-		return (EINVAL);
-	if  (*oldlenp < sizeof(tir))
-		return (ENOMEM);
-	if ((error = copyin(oldp, &tir, sizeof (tir))) != 0 )
-		return (error);
+	if (dodrop) {
+		if (oldp != NULL || *oldlenp != 0)
+			return (EINVAL);
+		if (newp == NULL)
+			return (EPERM);
+		if (newlen < sizeof(tir))
+			return (ENOMEM);
+		if ((error = copyin(newp, &tir, sizeof (tir))) != 0 )
+			return (error);
+	} else {
+		if (oldp == NULL)
+			return (EINVAL);
+		if (*oldlenp < sizeof(tir))
+			return (ENOMEM);
+		if (newp != NULL || newlen != 0)
+			return (EINVAL);
+		if ((error = copyin(oldp, &tir, sizeof (tir))) != 0 )
+			return (error);
+	}
 	switch (tir.faddr.ss_family) {
 #ifdef INET6
 	case AF_INET6:
@@ -832,6 +842,16 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 		inp = in_pcbhashlookup(&tcbtable,  fin->sin_addr,
 		    fin->sin_port, lin->sin_addr, lin->sin_port);
 		break;
+	}
+
+	if (dodrop) {
+		if (inp && (tp = intotcpcb(inp)) &&
+		    ((inp->inp_socket->so_options & SO_ACCEPTCONN) == 0))
+			tp = tcp_drop(tp, ECONNABORTED);
+		else
+			error = ESRCH;
+		splx(s);
+		return (error);
 	}
 
 	if (inp == NULL) {
@@ -876,35 +896,18 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	void *newp;
 	size_t newlen;
 {
+	int error, nval;
 
 	/* All sysctl names at this level are terminal. */
 	if (namelen != 1)
 		return (ENOTDIR);
 
 	switch (name[0]) {
-	case TCPCTL_RFC1323:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_do_rfc1323));
 #ifdef TCP_SACK
 	case TCPCTL_SACK:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &tcp_do_sack));
 #endif
-	case TCPCTL_MSSDFLT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_mssdflt));
-	case TCPCTL_KEEPINITTIME:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcptv_keep_init));
-
-	case TCPCTL_KEEPIDLE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_keepidle));
-
-	case TCPCTL_KEEPINTVL:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_keepintvl));
-
 	case TCPCTL_SLOWHZ:
 		return (sysctl_rdint(oldp, oldlenp, newp, PR_SLOWHZ));
 
@@ -912,34 +915,33 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (sysctl_struct(oldp, oldlenp, newp, newlen,
 		    baddynamicports.tcp, sizeof(baddynamicports.tcp)));
 
-	case TCPCTL_RECVSPACE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,&tcp_recvspace));
-
-	case TCPCTL_SENDSPACE:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,&tcp_sendspace));
 	case TCPCTL_IDENT:
-		return (tcp_ident(oldp, oldlenp, newp, newlen));
-	case TCPCTL_RSTPPSLIMIT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_rst_ppslim));
-	case TCPCTL_ACK_ON_PUSH:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_ack_on_push));
+		return (tcp_ident(oldp, oldlenp, newp, newlen, 0));
+
+	case TCPCTL_DROP:
+		return (tcp_ident(oldp, oldlenp, newp, newlen, 1));
+
 #ifdef TCP_ECN
 	case TCPCTL_ECN:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		   &tcp_do_ecn));
 #endif
-	case TCPCTL_SYN_CACHE_LIMIT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		   &tcp_syn_cache_limit));
-	case TCPCTL_SYN_BUCKET_LIMIT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		   &tcp_syn_bucket_limit));
-	case TCPCTL_RFC3390:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &tcp_do_rfc3390));
+	case TCPCTL_REASS_LIMIT:
+		nval = tcp_reass_limit;
+		error = sysctl_int(oldp, oldlenp, newp, newlen, &nval);
+		if (error)
+			return (error);
+		if (nval != tcp_reass_limit) {
+			error = pool_sethardlimit(&tcpqe_pool, nval, NULL, 0);
+			if (error)
+				return (error);
+			tcp_reass_limit = nval;
+		}
+		return (0);
 	default:
+		if (name[0] < TCPCTL_MAXID)
+			return (sysctl_int_arr(tcpctl_vars, name, namelen,
+			    oldp, oldlenp, newp, newlen));
 		return (ENOPROTOOPT);
 	}
 	/* NOTREACHED */

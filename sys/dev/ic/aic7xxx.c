@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.18.6.11 2004/02/19 10:56:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.18.6.12 2004/06/05 23:12:39 niklas Exp $	*/
 /*	$NetBSD: aic7xxx.c,v 1.108 2003/11/02 11:07:44 wiz Exp $	*/
 
 /*
@@ -4932,8 +4932,14 @@ ahc_pause_and_flushwork(struct ahc_softc *ahc)
 	intstat = 0;
 	paused = FALSE;
 	do {
-		if (paused)
+		if (paused) {
 			ahc_unpause(ahc);
+			/*
+			 * Give the sequencer some time to service
+			 * any active selections.
+			 */
+			ahc_delay(200);
+		}
 		ahc_intr(ahc);
 		ahc_pause(ahc);
 		paused = TRUE;
@@ -5188,10 +5194,15 @@ int
 ahc_match_scb(struct ahc_softc *ahc, struct scb *scb, int target,
 	      char channel, int lun, u_int tag, role_t role)
 {
-	int targ = SCB_GET_TARGET(ahc, scb);
-	char chan = SCB_GET_CHANNEL(ahc, scb);
-	int slun = SCB_GET_LUN(scb);
-	int match;
+	char chan;
+	int targ, slun, match;
+
+	if (scb == NULL)
+		return 0;
+
+	targ = SCB_GET_TARGET(ahc, scb);
+	chan = SCB_GET_CHANNEL(ahc, scb);
+	slun = SCB_GET_LUN(scb);
 
 	match = ((chan == channel) || (channel == ALL_CHANNELS));
 	if (match != 0)
@@ -5199,7 +5210,6 @@ ahc_match_scb(struct ahc_softc *ahc, struct scb *scb, int target,
 	if (match != 0)
 		match = ((lun == slun) || (lun == CAM_LUN_WILDCARD));
 	if (match != 0) {
-#if 0
 #if AHC_TARGET_MODE
 		int group;
 
@@ -5216,7 +5226,6 @@ ahc_match_scb(struct ahc_softc *ahc, struct scb *scb, int target,
 #else /* !AHC_TARGET_MODE */
 		match = ((tag == scb->hscb->tag) || (tag == SCB_LIST_NULL));
 #endif /* AHC_TARGET_MODE */
-#endif
 	}
 
 	return match;
@@ -5477,7 +5486,7 @@ ahc_search_qinfifo(struct ahc_softc *ahc, int target, char channel,
 				if (cstat != CAM_REQ_CMP)
 					ahc_freeze_scb(scb);
 				if ((scb->flags & SCB_ACTIVE) == 0)
-					printf("Inactive SCB in Waiting List\n");
+					printf("Inactive SCB in Wait List\n");
 				ahc_done(ahc, scb);
 				/* FALLTHROUGH */
 			}
@@ -5583,8 +5592,6 @@ ahc_search_untagged_queues(struct ahc_softc *ahc, struct scsi_xfer *xs,
 				cstat = ahc_get_transaction_status(scb);
 				if (cstat != CAM_REQ_CMP)
 					ahc_freeze_scb(scb);
-				if ((scb->flags & SCB_ACTIVE) == 0)
-					printf("Inactive SCB in untaggedQ\n");
 				ahc_done(ahc, scb);
 				break;
 			}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_ctl.c,v 1.7.12.4 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_ctl.c,v 1.7.12.5 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: procfs_ctl.c,v 1.14 1996/02/09 22:40:48 christos Exp $	*/
 
 /*
@@ -197,7 +197,7 @@ procfs_control(curp, p, op)
 
 		p->p_oppid = 0;
 		CLR(p->p_flag, P_WAITED); /* XXX ? */
-		wakeup((caddr_t) curp);	/* XXX for CTL_WAIT below ? */
+		wakeup(curp);	/* XXX for CTL_WAIT below ? */
 
 		break;
 
@@ -231,15 +231,13 @@ procfs_control(curp, p, op)
 					(p->p_stat != SSTOP) &&
 					ISSET(p->p_flag, P_TRACED) &&
 					(p->p_pptr == curp)) {
-				error = tsleep((caddr_t) p,
-						PWAIT|PCATCH, "procfsx", 0);
+				error = tsleep(p, PWAIT|PCATCH, "procfsx", 0);
 			}
 			if (error == 0 && !TRACE_WAIT_P(curp, p))
 				error = EBUSY;
 		} else {
 			while (error == 0 && p->p_stat != SSTOP) {
-				error = tsleep((caddr_t) p,
-						PWAIT|PCATCH, "procfs", 0);
+				error = tsleep(p, PWAIT|PCATCH, "procfs", 0);
 			}
 		}
 		return (error);

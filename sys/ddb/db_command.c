@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.11 2004/02/19 10:56:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_command.c,v 1.17.6.12 2004/06/05 23:12:36 niklas Exp $	*/
 /*	$NetBSD: db_command.c,v 1.20 1996/03/30 22:30:05 christos Exp $	*/
 
 /* 
@@ -229,7 +229,7 @@ db_command(last_cmdp, cmd_table)
 			db_flush_lex();
 			return;
 		    }
-		    db_strcpy(modif, db_tok_string);
+		    db_strlcpy(modif, db_tok_string, sizeof(modif));
 		}
 		else {
 		    db_unread_token(t);
@@ -639,7 +639,7 @@ db_boot_sync_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_AUTOBOOT | RB_TIMEBAD);
+	boot(RB_AUTOBOOT | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -649,7 +649,7 @@ db_boot_crash_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_NOSYNC | RB_DUMP | RB_TIMEBAD);
+	boot(RB_NOSYNC | RB_DUMP | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -659,7 +659,7 @@ db_boot_dump_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_DUMP | RB_TIMEBAD);
+	boot(RB_DUMP | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -669,7 +669,7 @@ db_boot_halt_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_NOSYNC | RB_HALT | RB_TIMEBAD);
+	boot(RB_NOSYNC | RB_HALT | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -679,7 +679,7 @@ db_boot_reboot_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_AUTOBOOT | RB_NOSYNC | RB_TIMEBAD);
+	boot(RB_AUTOBOOT | RB_NOSYNC | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -689,7 +689,7 @@ db_boot_poweroff_cmd(addr, haddr, count, modif)
 	db_expr_t count;
 	char *modif;
 {
-	boot(RB_NOSYNC | RB_HALT | RB_POWERDOWN | RB_TIMEBAD);
+	boot(RB_NOSYNC | RB_HALT | RB_POWERDOWN | RB_TIMEBAD | RB_USERREQ);
 }
 
 void
@@ -711,7 +711,7 @@ db_dmesg_cmd(addr, haddr, count, modif)
 	    i < msgbufp->msg_bufs; i++, p++) {
 		if (p > msgbufp->msg_bufc + msgbufp->msg_bufs)
 			p = msgbufp->msg_bufc;
-		if (*p != '\0');
+		if (*p != '\0')
 			db_putchar(*p);
 	}
 	db_putchar('\n');

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/machdep.c,v 1.5.2.1 2004/02/22 22:08:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/machdep.c,v 1.5.2.2 2004/06/05 23:09:24 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.3 2003/05/07 22:58:18 fvdl Exp $	*/
 
 /*-
@@ -107,6 +107,7 @@
 #endif
 
 #include <dev/cons.h>
+#include <stand/boot/bootarg.h>
 
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_page.h>
@@ -122,8 +123,10 @@
 #include <machine/specialreg.h>
 #include <machine/fpu.h>
 #include <machine/mtrr.h>
+#include <machine/biosvar.h>
 #include <machine/mpbiosvar.h>
 #include <machine/reg.h>
+#include <machine/kcore.h>
 
 #include <dev/isa/isareg.h>
 #include <machine/isa_machdep.h>
@@ -140,9 +143,7 @@
 
 /* the following is used externally (sysctl_hw) */
 char machine[] = "amd64";		/* cpu "architecture" */
-char machine_arch[] = "x86_64";		/* machine == machine_arch */
-
-int x86_64_ndisks = 0;
+char machine_arch[] = "amd64";		/* machine == machine_arch */
 
 #ifdef CPURESET_DELAY
 int	cpureset_delay = CPURESET_DELAY;
@@ -157,6 +158,7 @@ extern int	boothowto;
 int	cpu_class;
 
 char	*ssym = NULL;
+vaddr_t kern_end;
 
 #define	CPUID2MODEL(cpuid)	(((cpuid) >> 4) & 15)
 
@@ -169,6 +171,8 @@ paddr_t	idt_paddr;
 vaddr_t lo32_vaddr;
 paddr_t lo32_paddr;
 
+int kbd_reset;
+
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
 
@@ -179,7 +183,7 @@ int	nbuf = 0;
 #endif
 
 #ifndef BUFCACHEPERCENT
-#define BUFCACHEPERCENT 5
+#define BUFCACHEPERCENT 10
 #endif
 
 #ifdef BUFPAGES
@@ -197,11 +201,36 @@ pid_t sigpid = 0;
 
 extern	paddr_t avail_start, avail_end;
 
-void (*delay_func)(int) = i8254_delay;
-void (*microtime_func)(struct timeval *) = i8254_microtime;
-void (*initclock_func)(void) = i8254_initclocks;
-
 struct mtrr_funcs *mtrr_funcs;
+
+/*
+ * Format of boot information passed to us by 32-bit /boot
+ */
+typedef struct _boot_args32 {
+	int	ba_type;
+	int	ba_size;
+	int	ba_nextX;	/* a ptr in 32-bit world, but not here */
+	char	ba_arg[1];
+} bootarg32_t;
+
+#define BOOTARGC_MAX	NBPG	/* one page */
+
+/* locore copies the arguments from /boot to here for us */
+char bootinfo[BOOTARGC_MAX];
+int bootinfo_size = BOOTARGC_MAX;
+
+void getbootinfo(char *, int);
+
+/* Data passed to us by /boot, filled in by getbootinfo() */
+#if NAPM > 0 || defined(DEBUG)
+bios_apminfo_t	*apm;
+#endif
+#if NPCI > 0
+bios_pciinfo_t	*bios_pciinfo;
+#endif
+bios_diskinfo_t	*bios_diskinfo;
+bios_memmap_t	*bios_memmap;
+u_int32_t	bios_cksumlen;
 
 /*
  * Size of memory segments, before any memory is stolen.
@@ -216,7 +245,14 @@ int	cpu_dumpsize(void);
 u_long	cpu_dump_mempagecnt(void);
 void	dumpsys(void);
 void	init_x86_64(paddr_t);
-void	syscall_intern(struct proc *p);
+
+#ifdef APERTURE
+#ifdef INSECURE
+int allowaperture = 1;
+#else
+int allowaperture = 0;
+#endif
+#endif
 
 /*
  * Machine-dependent startup code
@@ -335,7 +371,7 @@ allocsys(vaddr_t v)
 
 	/*
 	 * Determine how many buffers to allocate.  We use 10% of the
-	 * first 2MB of memory, and 5% of the rest, with a minimum of 16
+	 * first 2MB of memory, and 10% of the rest, with a minimum of 16
 	 * buffers.  We allocate 1/2 as many swap buffer headers as file
 	 * i/o buffers.
 	 */
@@ -523,6 +559,72 @@ x86_64_init_pcb_tss_ldt(ci)
         ci->ci_idle_tss_sel = tss_alloc(pcb);
 }       
 
+bios_diskinfo_t *
+bios_getdiskinfo(dev)
+	dev_t dev;
+{
+	bios_diskinfo_t *pdi;
+
+	if (bios_diskinfo == NULL)
+		return NULL;
+
+	for (pdi = bios_diskinfo; pdi->bios_number != -1; pdi++) {
+		if ((dev & B_MAGICMASK) == B_DEVMAGIC) { /* search by bootdev */
+			if (pdi->bsd_dev == dev)
+				break;
+		} else {
+			if (pdi->bios_number == dev)
+				break;
+		}
+	}
+
+	if (pdi->bios_number == -1)
+		return NULL;
+	else
+		return pdi;
+}
+
+int
+bios_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
+	int *name;
+	u_int namelen;
+	void *oldp;
+	size_t *oldlenp;
+	void *newp;
+	size_t newlen;
+	struct proc *p;
+{
+	bios_diskinfo_t *pdi;
+	extern dev_t bootdev;
+	int biosdev;
+
+	/* all sysctl names at this level except diskinfo are terminal */
+	if (namelen != 1 && name[0] != BIOS_DISKINFO)
+		return (ENOTDIR);	       /* overloaded */
+
+	if (!(bootapiver & BAPIV_VECTOR))
+		return EOPNOTSUPP;
+
+	switch (name[0]) {
+	case BIOS_DEV:
+		if ((pdi = bios_getdiskinfo(bootdev)) == NULL)
+			return ENXIO;
+		biosdev = pdi->bios_number;
+		return sysctl_rdint(oldp, oldlenp, newp, biosdev);
+	case BIOS_DISKINFO:
+		if (namelen != 2)
+			return ENOTDIR;
+		if ((pdi = bios_getdiskinfo(name[1])) == NULL)
+			return ENXIO;
+		return sysctl_rdstruct(oldp, oldlenp, newp, pdi, sizeof(*pdi));
+	case BIOS_CKSUMLEN:
+		return sysctl_rdint(oldp, oldlenp, newp, bios_cksumlen);
+	default:
+		return EOPNOTSUPP;
+	}
+	/* NOTREACHED */
+}
+
 /*  
  * machine dependent system variables.
  */ 
@@ -537,32 +639,49 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	struct proc *p;
 {
 	dev_t consdev;
-
-	/* all sysctl names at this level are terminal */
-	if (namelen != 1)
-		return (ENOTDIR);		/* overloaded */
+	dev_t dev;
 
 	switch (name[0]) {
 	case CPU_CONSDEV:
+		if (namelen != 1)
+			return (ENOTDIR);		/* overloaded */
 		if (cn_tab != NULL)
 			consdev = cn_tab->cn_dev;
 		else
 			consdev = NODEV;
 		return (sysctl_rdstruct(oldp, oldlenp, newp, &consdev,
 		    sizeof consdev));
-
-#ifdef notyet
-	case CPU_BOOTED_KERNEL:
-	        bibp = lookup_bootinfo(BTINFO_BOOTPATH);
-	        if(!bibp)
-			return(ENOENT); /* ??? */
-		return (sysctl_rdstring(oldp, oldlenp, newp, bibp->bootpath));
-	case CPU_DISKINFO:
-		if (x86_64_alldisks == NULL)
-			return (ENOENT);
-		return (sysctl_rdstruct(oldp, oldlenp, newp, x86_64_alldisks,
-		    sizeof (struct disklist) +
-			(x86_64_ndisks - 1) * sizeof (struct nativedisk_info)));
+	case CPU_CHR2BLK:
+		if (namelen != 2)
+			return (ENOTDIR);		/* overloaded */
+		dev = chrtoblk((dev_t)name[1]);
+		return sysctl_rdstruct(oldp, oldlenp, newp, &dev, sizeof(dev));
+	case CPU_BIOS:
+		return bios_sysctl(name + 1, namelen - 1, oldp, oldlenp,
+		    newp, newlen, p);
+	case CPU_CPUVENDOR:
+		return (sysctl_rdstring(oldp, oldlenp, newp, cpu_vendor));
+	case CPU_CPUFEATURE:
+		return (sysctl_rdint(oldp, oldlenp, newp, cpu_feature));
+	case CPU_KBDRESET:
+		if (securelevel > 0)
+			return (sysctl_rdint(oldp, oldlenp, newp,
+			    kbd_reset));
+		else
+			return (sysctl_int(oldp, oldlenp, newp, newlen,
+			    &kbd_reset));
+	case CPU_ALLOWAPERTURE:
+		if (namelen != 1)
+			return (ENOTDIR);		/* overloaded */
+#ifdef APERTURE
+		if (securelevel > 0)
+			return (sysctl_rdint(oldp, oldlenp, newp,
+			    allowaperture));
+		else
+			return (sysctl_int(oldp, oldlenp, newp, newlen,
+			    &allowaperture));
+#else
+		return (sysctl_rdint(oldp, oldlenp, newp, 0));
 #endif
 	default:
 		return (EOPNOTSUPP);
@@ -598,12 +717,10 @@ sendsig(sig_t catcher, int sig, int mask, u_long code, int type,
 		    p->p_comm, p->p_pid, sig, catcher);
 #endif
 
-	if (p->p_md.md_flags & MDP_USEDFPU)
-		fpusave_proc(p, 1);
-
 	bcopy(tf, &ksc, sizeof(*tf));
 	ksc.sc_onstack = psp->ps_sigstk.ss_flags & SS_ONSTACK;
 	ksc.sc_mask = mask;
+	ksc.sc_fpstate = NULL;
 
 	/* Allocate space for the signal handler context. */
 	if ((psp->ps_flags & SAS_ALTSTACK) && !ksc.sc_onstack &&
@@ -611,10 +728,20 @@ sendsig(sig_t catcher, int sig, int mask, u_long code, int type,
 		sp = (register_t)psp->ps_sigstk.ss_sp + psp->ps_sigstk.ss_size;
 		psp->ps_sigstk.ss_flags |= SS_ONSTACK;
 	} else
-		sp = tf->tf_rsp;
+		sp = tf->tf_rsp - 128;
 
 	sp &= ~15ULL;	/* just in case */
 	sss = (sizeof(ksc) + 15) & ~15;
+
+	if (p->p_md.md_flags & MDP_USEDFPU) {
+		fpusave_proc(p, 1);
+		sp -= sizeof(struct fxsave64);
+		ksc.sc_fpstate = (struct fxsave64 *)sp;
+		if (copyout(&p->p_addr->u_pcb.pcb_savefpu.fp_fxsave,
+		    (void *)sp, sizeof(struct fxsave64)))
+			sigexit(p, SIGILL);
+	}
+
 	sip = 0;
 	if (psp->ps_siginfo & sigmask(sig)) {
 		sip = sp - ((sizeof(ksi) + 15) & ~15);
@@ -645,7 +772,7 @@ sendsig(sig_t catcher, int sig, int mask, u_long code, int type,
 	tf->tf_rip = (u_int64_t)p->p_sigcode;
 	tf->tf_cs = LSEL(LUCODE_SEL, SEL_UPL);
 	tf->tf_rflags &= ~(PSL_T|PSL_VM|PSL_AC);
-	tf->tf_rsp = sp - sss;
+	tf->tf_rsp = scp;
 	tf->tf_ss = LSEL(LUDATA_SEL, SEL_UPL);
 
 #ifdef DEBUG
@@ -680,8 +807,18 @@ sys_sigreturn(struct proc *p, void *v, register_t *retval)
 	if ((sigdebug & SDB_FOLLOW) && (!sigpid || p->p_pid == sigpid))
 		printf("sigreturn: pid %d, scp %p\n", p->p_pid, scp);
 #endif
+	if ((error = copyin((caddr_t)scp, &ksc, sizeof ksc)))
+		return (error);
 
-	if (copyin((caddr_t)scp, &ksc, sizeof ksc))
+	if (((ksc.sc_rflags ^ tf->tf_rflags) & PSL_USERSTATIC) != 0 ||
+	    !USERMODE(ksc.sc_cs, ksc.sc_eflags))
+		return (EINVAL);
+
+	if (p->p_md.md_flags & MDP_USEDFPU)
+		fpusave_proc(p, 0);
+
+	if (ksc.sc_fpstate && (error = copyin(ksc.sc_fpstate,
+	    &p->p_addr->u_pcb.pcb_savefpu.fp_fxsave, sizeof (struct fxsave64))))
 		return (error);
 
 	ksc.sc_trapno = tf->tf_trapno;
@@ -706,7 +843,12 @@ boot(int howto)
 {
 
 	if (cold) {
-		howto |= RB_HALT;
+		/*
+		 * If the system is cold, just halt, unless the user
+		 * explicitly asked for reboot.
+		 */
+		if ((howto & RB_USERREQ) == 0)
+			howto |= RB_HALT;
 		goto haltsys;
 	}
 
@@ -787,17 +929,37 @@ cpu_dump()
 	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	char buf[dbtob(1)];
 	kcore_seg_t *segp;
+	cpu_kcore_hdr_t *cpuhdrp;
+	phys_ram_seg_t *memsegp;
+	int i;
 
 	dump = bdevsw[major(dumpdev)].d_dump;
 
 	memset(buf, 0, sizeof buf);
 	segp = (kcore_seg_t *)buf;
+	cpuhdrp = (cpu_kcore_hdr_t *)&buf[ALIGN(sizeof(*segp))];
+	memsegp = (phys_ram_seg_t *)&buf[ALIGN(sizeof(*segp)) +
+	    ALIGN(sizeof(*cpuhdrp))];
 
 	/*
 	 * Generate a segment header.
 	 */
 	CORE_SETMAGIC(*segp, KCORE_MAGIC, MID_MACHINE, CORE_CPU);
 	segp->c_size = dbtob(1) - ALIGN(sizeof(*segp));
+
+	/*
+	 * Add the machine-dependent header info.
+	 */
+	cpuhdrp->ptdpaddr = PTDpaddr;
+	cpuhdrp->nmemsegs = mem_cluster_cnt;
+
+	/*
+	 * Fill in the memory segment descriptors.
+	 */
+	for (i = 0; i < mem_cluster_cnt; i++) {
+		memsegp[i].start = mem_clusters[i].start;
+		memsegp[i].size = mem_clusters[i].size & ~PAGE_MASK;
+	}
 
 	return (dump(dumpdev, dumplo, (caddr_t)buf, dbtob(1)));
 }
@@ -994,11 +1156,9 @@ setregs(struct proc *p, struct exec_package *pack, u_long stack,
 	pmap_ldt_cleanup(p);
 #endif
 
-	syscall_intern(p);
-
 	p->p_md.md_flags &= ~MDP_USEDFPU;
 	pcb->pcb_flags = 0;
-	pcb->pcb_savefpu.fp_fxsave.fx_fcw = __NetBSD_NPXCW__;
+	pcb->pcb_savefpu.fp_fxsave.fx_fcw = __OpenBSD_NPXCW__;
 	pcb->pcb_savefpu.fp_fxsave.fx_mxcsr = __INITIAL_MXCSR__;
 	pcb->pcb_savefpu.fp_fxsave.fx_mxcsr_mask = __INITIAL_MXCSR_MASK__;
 
@@ -1189,6 +1349,23 @@ init_x86_64(first_avail)
 #if 0
 	uvmexp.ncolors = 2;
 #endif
+ 
+	/*
+	 * Boot arguments are in a single page specified by /boot.
+	 *
+	 * We require the "new" vector form, as well as memory ranges
+	 * to be given in bytes rather than KB.
+	 *
+	 * locore copies the data into bootinfo[] for us.
+	 */
+	if ((bootapiver & (BAPIV_VECTOR | BAPIV_BMEMMAP)) ==
+	    (BAPIV_VECTOR | BAPIV_BMEMMAP)) {
+		if (bootinfo_size >= sizeof(bootinfo))
+			panic("boot args too big");
+
+		getbootinfo(bootinfo, bootinfo_size);
+	} else
+		panic("invalid /boot");
 
 	avail_start = PAGE_SIZE; /* BIOS leaves data in low memory */
 				 /* and VM system doesn't work with phys 0 */
@@ -1272,6 +1449,7 @@ init_x86_64(first_avail)
 
 	/* Make sure the end of the space used by the kernel is rounded. */
 	first_avail = round_page(first_avail);
+	kern_end = KERNBASE + first_avail;
 
 	/*
 	 * Now, load the memory clusters (which have already been
@@ -1643,12 +1821,6 @@ microtime(struct timeval *tv)
 }
 #endif
 
-void
-cpu_initclocks()
-{
-	(*initclock_func)();
-}
-
 #ifdef MULTIPROCESSOR
 void
 need_resched(struct cpu_info *ci)
@@ -1731,6 +1903,91 @@ splassert_check(int wantipl, const char *func)
 	}
 }
 #endif
+
+void
+getbootinfo(char *bootinfo, int bootinfo_size)
+{
+	bootarg32_t *q;
+
+#undef BOOTINFO_DEBUG
+#ifdef BOOTINFO_DEBUG
+	printf("bootargv:");
+#endif
+
+	for (q = (bootarg32_t *)bootinfo;
+	    (q->ba_type != BOOTARG_END) &&
+	    ((((char *)q) - bootinfo) < bootinfo_size);
+	    q = (bootarg32_t *)(((char *)q) + q->ba_size)) {
+
+		switch (q->ba_type) {
+		case BOOTARG_MEMMAP:
+			bios_memmap = (bios_memmap_t *)q->ba_arg;
+#ifdef BOOTINFO_DEBUG
+			printf(" memmap %p", bios_memmap);
+#endif
+			break;
+		case BOOTARG_DISKINFO:
+			bios_diskinfo = (bios_diskinfo_t *)q->ba_arg;
+#ifdef BOOTINFO_DEBUG
+			printf(" diskinfo %p", bios_diskinfo);
+#endif
+			break;
+#if 0
+#if NAPM > 0 || defined(DEBUG)
+		case BOOTARG_APMINFO:
+#ifdef BOOTINFO_DEBUG
+			printf(" apminfo %p", q->ba_arg);
+#endif
+			apm = (bios_apminfo_t *)q->ba_arg;
+			break;
+#endif
+#endif
+		case BOOTARG_CKSUMLEN:
+			bios_cksumlen = *(u_int32_t *)q->ba_arg;
+#ifdef BOOTINFO_DEBUG
+			printf(" cksumlen %d", bios_cksumlen);
+#endif
+			break;
+#if 0
+#if NPCI > 0
+		case BOOTARG_PCIINFO:
+			bios_pciinfo = (bios_pciinfo_t *)q->ba_arg;
+#ifdef BOOTINFO_DEBUG
+			printf(" pciinfo %p", bios_pciinfo);
+#endif
+			break;
+#endif
+#endif
+		case BOOTARG_CONSDEV:
+			if (q->ba_size >= sizeof(bios_consdev_t))
+			{
+				bios_consdev_t *cdp =
+				    (bios_consdev_t*)q->ba_arg;
+#include "com.h"
+#if NCOM > 0
+				extern int comdefaultrate; /* ic/com.c */
+				comdefaultrate = cdp->conspeed;
+#endif
+#ifdef BOOTINFO_DEBUG
+				printf(" console 0x%x:%d",
+				    cdp->consdev, cdp->conspeed);
+#endif
+				cnset(cdp->consdev);
+			}
+			break;
+
+		default:
+#ifdef BOOTINFO_DEBUG
+			printf(" unsupported arg (%d) %p", q->ba_type,
+			    q->ba_arg);
+#endif
+			break;
+		}
+	}
+#ifdef BOOTINFO_DEBUG
+	printf("\n");
+#endif
+}
 
 int
 check_context(const struct reg *regs, struct trapframe *tf)

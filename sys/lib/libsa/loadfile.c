@@ -1,5 +1,5 @@
 /* $NetBSD: loadfile.c,v 1.10 2000/12/03 02:53:04 tsutsui Exp $ */
-/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.2.5 2004/02/19 10:57:19 niklas Exp $ */
+/* $OpenBSD: src/sys/lib/libsa/loadfile.c,v 1.1.2.6 2004/06/05 23:13:05 niklas Exp $ */
 
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -285,11 +285,11 @@ elf_exec(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 	for (first = 1, i = 0; i < elf->e_phnum; i++) {
 
 		if (phdr[i].p_type != PT_LOAD ||
-		    (phdr[i].p_flags & (PF_W|PF_X)) == 0)
+		    (phdr[i].p_flags & (PF_W|PF_R|PF_X)) == 0)
 			continue;
 
 #define IS_TEXT(p)	(p.p_flags & PF_X)
-#define IS_DATA(p)	(p.p_flags & PF_W)
+#define IS_DATA(p)	((p.p_flags & PF_X) == 0)
 #define IS_BSS(p)	(p.p_filesz < p.p_memsz)
 		/*
 		 * XXX: Assume first address is lowest

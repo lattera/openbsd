@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gateA20.c,v 1.1 2004/02/03 12:09:47 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gateA20.c,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 
 /*
  * Ported to boot 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
@@ -36,10 +36,22 @@
 
 #include "libsa.h"
 
+int ps2model = 0;			/* Not set in amd64 */
+
 #define KB_A20		0xdf		/* enable A20,
 					   enable output buffer full interrupt
 					   enable data line
 					   enable clock line */
+
+
+/*
+ * "Probe"-style routine (no parameters) to turn A20 on
+ */
+void
+gateA20on(void)
+{
+	gateA20(1);
+}
 
 
 /*

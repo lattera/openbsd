@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2.2.7 2004/02/19 10:56:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_ray.c,v 1.2.2.8 2004/06/05 23:12:55 niklas Exp $	*/
 /*	$NetBSD: if_ray.c,v 1.21 2000/07/05 02:35:54 onoe Exp $	*/
 
 /*
@@ -91,7 +91,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

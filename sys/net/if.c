@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.c,v 1.27.2.9 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if.c,v 1.27.2.10 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -129,6 +129,8 @@ void	if_detached_watchdog(struct ifnet *);
 
 int	if_clone_list(struct if_clonereq *);
 struct if_clone	*if_clone_lookup(const char *, int *);
+
+void	if_congestion_clear(void *);
 
 LIST_HEAD(, if_clone) if_cloners = LIST_HEAD_INITIALIZER(if_cloners);
 int if_cloners_count;
@@ -404,6 +406,11 @@ if_attach(ifp)
 /*
  * Delete a route if it has a specific interface for output.
  * This function complies to the rn_walktree callback API.
+ *
+ * Note that deleting a RTF_CLONING route can trigger the
+ * deletion of more entries, so we need to cancel the walk
+ * and return EAGAIN.  The caller should restart the walk
+ * as long as EAGAIN is returned.
  */
 int
 if_detach_rtdelete(rn, vifp)
@@ -413,9 +420,13 @@ if_detach_rtdelete(rn, vifp)
 	struct ifnet *ifp = vifp;
 	struct rtentry *rt = (struct rtentry *)rn;
 
-	if (rt->rt_ifp == ifp)
-		rtrequest(RTM_DELETE, rt_key(rt), rt->rt_gateway, rt_mask(rt),
-		    0, NULL);
+	if (rt->rt_ifp == ifp) {
+		int cloning = (rt->rt_flags & RTF_CLONING);
+
+		if (rtrequest(RTM_DELETE, rt_key(rt), rt->rt_gateway,
+		    rt_mask(rt), 0, NULL) == 0 && cloning)
+			return (EAGAIN);
+	}
 
 	/*
 	 * XXX There should be no need to check for rt_ifa belonging to this
@@ -481,7 +492,9 @@ if_detach(ifp)
 	for (i = 1; i <= AF_MAX; i++) {
 		rnh = rt_tables[i];
 		if (rnh)
-			(*rnh->rnh_walktree)(rnh, if_detach_rtdelete, ifp);
+			while ((*rnh->rnh_walktree)(rnh,
+			    if_detach_rtdelete, ifp) == EAGAIN)
+				;
 	}
 
 #ifdef INET
@@ -683,6 +696,9 @@ if_clone_lookup(name, unitp)
 	if (cp == name || cp - name == IFNAMSIZ || !*cp)
 		return (NULL);	/* No name or unit number */
 
+	if (cp - name < IFNAMSIZ-1 && *cp == '0' && cp[1] != '\0')
+		return (NULL);	/* unit number 0 padded */
+
 	LIST_FOREACH(ifc, &if_cloners, ifc_list) {
 		if (strlen(ifc->ifc_name) == cp - name &&
 		    !strncmp(name, ifc->ifc_name, cp - name))
@@ -694,7 +710,8 @@ if_clone_lookup(name, unitp)
 
 	unit = 0;
 	while (cp - name < IFNAMSIZ && *cp) {
-		if (*cp < '0' || *cp > '9' || unit > INT_MAX / 10) {
+		if (*cp < '0' || *cp > '9' ||
+		    unit > (INT_MAX - (*cp - '0')) / 10) {
 			/* Bogus unit number. */
 			return (NULL);
 		}
@@ -764,6 +781,29 @@ if_clone_list(ifcr)
 	}
 
 	return (error);
+}
+
+/*
+ * set queue congestion marker and register timeout to clear it
+ */
+void
+if_congestion(struct ifqueue *ifq)
+{
+	static struct timeout	to;
+
+	ifq->ifq_congestion = 1;
+	bzero(&to, sizeof(to));
+	timeout_set(&to, if_congestion_clear, ifq);
+	timeout_add(&to, hz / 100);
+}
+
+/*
+ * clear the congestion flag
+ */
+void
+if_congestion_clear(void *ifq)
+{
+	((struct ifqueue *)ifq)->ifq_congestion = 0;
 }
 
 /*
@@ -967,6 +1007,10 @@ if_down(struct ifnet *ifp)
 		pfctlinput(PRC_IFDOWN, ifa->ifa_addr);
 	}
 	IFQ_PURGE(&ifp->if_snd);
+#if NCARP > 0
+	if (ifp->if_carp)
+		carp_carpdev_state(ifp->if_carp);
+#endif
 	rt_ifmsg(ifp);
 }
 
@@ -991,6 +1035,10 @@ if_up(struct ifnet *ifp)
 	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
 		pfctlinput(PRC_IFUP, ifa->ifa_addr);
 	}
+#endif
+#if NCARP > 0
+	if (ifp->if_carp)
+		carp_carpdev_state(ifp->if_carp);
 #endif
 	rt_ifmsg(ifp);
 #ifdef INET6
@@ -1069,7 +1117,9 @@ ifioctl(so, cmd, data, p)
 {
 	struct ifnet *ifp;
 	struct ifreq *ifr;
+	char ifdescrbuf[IFDESCRSIZE];
 	int error = 0;
+	size_t bytesdone;
 	short oif_flags;
 
 	switch (cmd) {
@@ -1086,8 +1136,8 @@ ifioctl(so, cmd, data, p)
 		if ((error = suser(p, 0)) != 0)
 			return (error);
 		return ((cmd == SIOCIFCREATE) ?
-			if_clone_create(ifr->ifr_name) :
-			if_clone_destroy(ifr->ifr_name));
+		    if_clone_create(ifr->ifr_name) :
+		    if_clone_destroy(ifr->ifr_name));
 	case SIOCIFGCLONERS:
 		return (if_clone_list((struct if_clonereq *)data));
 	}
@@ -1181,6 +1231,23 @@ ifioctl(so, cmd, data, p)
 		if (ifp->if_ioctl == 0)
 			return (EOPNOTSUPP);
 		error = (*ifp->if_ioctl)(ifp, cmd, data);
+		break;
+
+	case SIOCGIFDESCR:
+		strlcpy(ifdescrbuf, ifp->if_description, IFDESCRSIZE);
+		error = copyoutstr(ifdescrbuf, ifr->ifr_data, IFDESCRSIZE,
+		    &bytesdone);
+		break;
+
+	case SIOCSIFDESCR:
+		if ((error = suser(p, 0)) != 0)
+			return (error);
+		error = copyinstr(ifr->ifr_data, ifdescrbuf,
+		    IFDESCRSIZE, &bytesdone);
+		if (error == 0) {
+			(void)memset(ifp->if_description, 0, IFDESCRSIZE);
+			strlcpy(ifp->if_description, ifdescrbuf, IFDESCRSIZE);
+		}
 		break;
 
 	default:

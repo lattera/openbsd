@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.8 2004/02/19 10:56:34 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/usb_port.h,v 1.6.2.9 2004/06/05 23:12:58 niklas Exp $ */
 /*	$NetBSD: usb_port.h,v 1.62 2003/02/15 18:33:30 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb_port.h,v 1.21 1999/11/17 22:33:47 n_hibma Exp $	*/
 
@@ -79,6 +79,7 @@ MALLOC_DECLARE(M_USBHC);
 #define UMODEM_DEBUG 1
 #define UAUDIO_DEBUG 1
 #define AUE_DEBUG 1
+#define AXE_DEBUG 1
 #define CUE_DEBUG 1
 #define KUE_DEBUG 1
 #define URL_DEBUG 1
@@ -250,9 +251,9 @@ int __CONCAT(dname,_detach)(struct device *self, int flags)
 
 typedef struct proc *usb_proc_ptr;
 
-#define UCOMBUSCF_PORTNO		-1
+#define UCOMBUSCF_PORTNO		0
 #define UCOMBUSCF_PORTNO_DEFAULT	-1
-#define UHIDBUSCF_REPORTID		-1
+#define UHIDBUSCF_REPORTID		0
 #define UHIDBUSCF_REPORTID_DEFAULT	-1
 
 #define bswap32(x)		swap32(x)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.6 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.7 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: route.h,v 1.9 1996/02/13 22:00:49 christos Exp $	*/
 
 /*
@@ -58,6 +58,16 @@ struct route {
  * These numbers are used by reliable protocols for determining
  * retransmission behavior and are included in the routing structure.
  */
+struct rt_kmetrics {
+	u_long	rmx_locks;	/* Kernel must leave these values alone */
+	u_long	rmx_mtu;	/* MTU for this path */
+	u_long	rmx_expire;	/* lifetime for route, e.g. redirect */
+	u_long	rmx_pksent;	/* packets sent using this route */
+};
+
+/*
+ * Huge version for userland compatibility.
+ */
 struct rt_metrics {
 	u_long	rmx_locks;	/* Kernel must leave these values alone */
 	u_long	rmx_mtu;	/* MTU for this path */
@@ -89,6 +99,7 @@ struct rt_metrics {
  */
 #ifndef RNF_NORMAL
 #include <net/radix.h>
+#include <net/radix_mpath.h>
 #endif
 struct rtentry {
 	struct	radix_node rt_nodes[2];	/* tree glue, and other values */
@@ -97,12 +108,11 @@ struct rtentry {
 	struct	sockaddr *rt_gateway;	/* value */
 	u_int	rt_flags;		/* up/down?, host/net */
 	int	rt_refcnt;		/* # held references */
-	u_long	rt_use;			/* raw # packets forwarded */
 	struct	ifnet *rt_ifp;		/* the answer: interface to use */
 	struct	ifaddr *rt_ifa;		/* the answer: interface to use */
 	struct	sockaddr *rt_genmask;	/* for generation of cloned routes */
 	caddr_t	rt_llinfo;		/* pointer to link level info cache */
-	struct	rt_metrics rt_rmx;	/* metrics used by rx'ing protocols */
+	struct	rt_kmetrics rt_rmx;	/* metrics used by rx'ing protocols */
 	struct	rtentry *rt_gwroute;	/* implied entry for gatewayed routes */
 	struct	rtentry *rt_parent;	/* If cloned, parent of this route. */
 	LIST_HEAD(, rttimer) rt_timer;  /* queue of timeouts for misc funcs */
@@ -299,7 +309,8 @@ void	 rt_missmsg(int, struct rt_addrinfo *, int, int);
 void	 rt_newaddrmsg(int, struct ifaddr *, int, struct rtentry *);
 int	 rt_setgate(struct rtentry *, struct sockaddr *,
 			 struct sockaddr *);
-void	 rt_setmetrics(u_long, struct rt_metrics *, struct rt_metrics *);
+void	 rt_setmetrics(u_long, struct rt_metrics *, struct rt_kmetrics *);
+void	 rt_getmetrics(struct rt_kmetrics *, struct rt_metrics *);
 int      rt_timer_add(struct rtentry *,
              void(*)(struct rtentry *, struct rttimer *),
 	     struct rttimer_queue *);

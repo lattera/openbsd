@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/stdarg.h,v 1.2.2.1 2004/02/19 11:01:34 niklas Exp $ */
+/*	$OpenBSD: src/sys/sys/stdarg.h,v 1.2.2.2 2004/06/05 23:13:10 niklas Exp $ */
 /*
  * Copyright (c) 2003, 2004  Marc espie <espie@openbsd.org>
  *
@@ -36,6 +36,7 @@ typedef __builtin_va_list __gnuc_va_list;
 #define va_end		__builtin_va_end
 #define va_arg		__builtin_va_arg
 #define va_copy(d,s)	__builtin_va_copy((d),(s))
+#define __va_copy(d,s)	__builtin_va_copy((d),(s))
 
 
 typedef __gnuc_va_list va_list;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lmc.c,v 1.5.2.6 2004/02/19 10:56:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_lmc.c,v 1.5.2.7 2004/06/05 23:12:50 niklas Exp $ */
 /*	$NetBSD: if_lmc.c,v 1.1 1999/03/25 03:32:43 explorer Exp $	*/
 
 /*-
@@ -114,7 +114,6 @@
 #include "bpfilter.h"
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <uvm/uvm_extern.h>

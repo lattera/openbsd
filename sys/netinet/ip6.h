@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.8 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.9 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$KAME: ip6.h,v 1.45 2003/06/05 04:46:38 keiichi Exp $	*/
 
 /*
@@ -108,6 +108,7 @@ struct ip6_hdr {
 #define IP6TOS_ECT		0x02	/* ECN-capable transport */
 #endif
 
+#ifdef _KERNEL
 /*
  * for IPv6 pseudo header checksum
  * XXX nonstandard
@@ -119,6 +120,7 @@ struct ip6_hdr_pseudo {
 	u_int8_t	ip6ph_zero[3];
 	u_int8_t	ip6ph_nxt;
 } __packed;
+#endif
 
 /*
  * Extension Headers

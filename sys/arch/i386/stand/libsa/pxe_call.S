@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe_call.S,v 1.1 2004/03/19 13:48:18 tom Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe_call.S,v 1.1.4.1 2004/06/05 23:09:01 niklas Exp $ */
 /*	$NetBSD: pxe_call.S,v 1.2 2002/03/27 17:24:22 kanaoka Exp $	*/
 
 /*

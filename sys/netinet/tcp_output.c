@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_output.c,v 1.29.2.9 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_output.c,v 1.29.2.10 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$NetBSD: tcp_output.c,v 1.16 1997/06/03 16:17:09 kml Exp $	*/
 
 /*
@@ -104,7 +104,7 @@
 #endif /* INET6 */
 
 #ifdef TCP_SIGNATURE
-#include <sys/md5k.h>
+#include <crypto/md5.h>
 #endif /* TCP_SIGNATURE */
 
 #ifdef notyet
@@ -616,14 +616,14 @@ send:
 				*(bp++) = 0;
 		}
 
-		optlen += TCPOLEN_SIGNATURE;
 
 		/* Pad options list to the next 32 bit boundary and
 		 * terminate it.
 		 */
 		*bp++ = TCPOPT_NOP;
 		*bp++ = TCPOPT_EOL;
-		optlen += 2;
+
+		optlen += TCPOLEN_SIGLEN;
 	}
 #endif /* TCP_SIGNATURE */
 
@@ -705,7 +705,7 @@ send:
 		m->m_data -= hdrlen;
 #else
 		MGETHDR(m, M_DONTWAIT, MT_HEADER);
-		if (m != NULL) {
+		if (m != NULL && max_linkhdr + hdrlen > MHLEN) {
 			MCLGET(m, M_DONTWAIT);
 			if ((m->m_flags & M_EXT) == 0) {
 				m_freem(m);
@@ -718,7 +718,7 @@ send:
 		}
 		m->m_data += max_linkhdr;
 		m->m_len = hdrlen;
-		if (len <= MCLBYTES - hdrlen - max_linkhdr) {
+		if (len <= M_TRAILINGSPACE(m)) {
 			m_copydata(so->so_snd.sb_mb, off, (int) len,
 			    mtod(m, caddr_t) + hdrlen);
 			m->m_len += len;
@@ -750,7 +750,7 @@ send:
 			tcpstat.tcps_sndwinup++;
 
 		MGETHDR(m, M_DONTWAIT, MT_HEADER);
-		if (m != NULL) {
+		if (m != NULL && max_linkhdr + hdrlen > MHLEN) {
 			MCLGET(m, M_DONTWAIT);
 			if ((m->m_flags & M_EXT) == 0) {
 				m_freem(m);
@@ -765,6 +765,7 @@ send:
 		m->m_len = hdrlen;
 	}
 	m->m_pkthdr.rcvif = (struct ifnet *)0;
+	m->m_pkthdr.len = hdrlen + len;
 
 	if (!tp->t_template)
 		panic("tcp_output");
@@ -868,8 +869,8 @@ send:
 		win = 0;
 	if (win > (long)TCP_MAXWIN << tp->rcv_scale)
 		win = (long)TCP_MAXWIN << tp->rcv_scale;
-	if (win < (long)(tp->rcv_adv - tp->rcv_nxt))
-		win = (long)(tp->rcv_adv - tp->rcv_nxt);
+	if (win < (long)(int32_t)(tp->rcv_adv - tp->rcv_nxt))
+		win = (long)(int32_t)(tp->rcv_adv - tp->rcv_nxt);
 	if (flags & TH_RST)
 		win = 0;
 	th->th_win = htons((u_int16_t) (win>>tp->rcv_scale));
@@ -1009,7 +1010,6 @@ send:
 #endif /* INET */
 #ifdef INET6
 	case AF_INET6:
-		m->m_pkthdr.len = hdrlen + len;
 		th->th_sum = in6_cksum(m, IPPROTO_TCP, sizeof(struct ip6_hdr),
 			hdrlen - sizeof(struct ip6_hdr) + len);
 		break;
@@ -1101,7 +1101,6 @@ send:
 	 * to handle ttl and tos; we could keep them in
 	 * the template, but need a way to checksum without them.
 	 */
-	m->m_pkthdr.len = hdrlen + len;
 
 #ifdef TCP_ECN
 	/*
@@ -1190,7 +1189,7 @@ out:
 			 * initiate retransmission, so it is important to
 			 * not do so here.
 			 */
-			tcp_mtudisc(tp->t_inpcb, 0);
+			tcp_mtudisc(tp->t_inpcb, -1);
 			return (0);
 		}
 		if ((error == EHOSTUNREACH || error == ENETDOWN) &&

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.8 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.9 2004/06/05 23:11:23 niklas Exp $	*/
 /*	$NetBSD: if_ethersubr.c,v 1.19 1996/05/07 02:40:30 thorpej Exp $	*/
 
 /*
@@ -914,11 +914,7 @@ decapsulate:
 	}
 
 	s = splimp();
-	if (IF_QFULL(inq)) {
-		IF_DROP(inq);
-		m_freem(m);
-	} else
-		IF_ENQUEUE(inq, m);
+	IF_INPUT_ENQUEUE(inq, m);
 	splx(s);
 }
 
@@ -931,7 +927,7 @@ ether_sprintf(ap)
 	u_char *ap;
 {
 	int i;
-	static char etherbuf[18];
+	static char etherbuf[ETHER_ADDR_LEN * 3];
 	char *cp = etherbuf;
 
 	for (i = 0; i < ETHER_ADDR_LEN; i++) {

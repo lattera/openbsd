@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/todclock.c,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/todclock.c,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: todclock.c,v 1.4 2002/10/02 05:02:30 thorpej Exp $	*/
 
 /*
@@ -62,7 +62,7 @@
 #error "Can only had 1 todclock device"
 #endif
 
-static int yeartoday __P((int));
+static int yeartoday (int);
  
 /*
  * softc structure for the todclock device
@@ -71,8 +71,8 @@ static int yeartoday __P((int));
 struct todclock_softc {
 	struct device	sc_dev;			/* device node */
 	void	*sc_rtc_arg;			/* arg to read/write */
-	int	(*sc_rtc_write)	__P((void *, rtc_t *));	/* rtc write function */
-	int	(*sc_rtc_read)	__P((void *, rtc_t *));	/* rtc read function */
+	int	(*sc_rtc_write)	(void *, rtc_t *);	/* rtc write function */
+	int	(*sc_rtc_read)	(void *, rtc_t *);	/* rtc read function */
 };
 
 /* prototypes for functions */
@@ -329,11 +329,6 @@ inittodr(base)
 	/* If the base was 0 then keep quiet */
 
 	if (base) {
-		printf("inittodr: %02d:%02d:%02d.%02d%02d %02d/%02d/%02d%02d\n",
-		    rtc.rtc_hour, rtc.rtc_min, rtc.rtc_sec, rtc.rtc_centi,
-		    rtc.rtc_micro, rtc.rtc_day, rtc.rtc_mon, rtc.rtc_cen,
-		    rtc.rtc_year);
-
 		if (n > base + 60) {
 			days = (n - base) / SECPERDAY;
 			printf("Clock has gained %d day%c %ld hours %ld minutes %ld secs\n",

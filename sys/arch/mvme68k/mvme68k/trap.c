@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.10 2004/02/19 10:49:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.11 2004/06/05 23:10:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -555,7 +555,7 @@ copyfault:
 			    ((p && !p->p_addr->u_pcb.pcb_onfault) || KDFAULT(code)))
 				map = kernel_map;
 			else
-				map = &vm->vm_map;
+				map = vm ? &vm->vm_map : kernel_map;
 			if (WRFAULT(code)) {
 				vftype = VM_PROT_WRITE;
 				ftype = VM_PROT_READ | VM_PROT_WRITE;
@@ -593,7 +593,8 @@ copyfault:
 			 * the current limit and we need to reflect that as an access
 			 * error.
 			 */
-			if ((caddr_t)va >= vm->vm_maxsaddr && map != kernel_map) {
+			if ((vm != NULL && (caddr_t)va >= vm->vm_maxsaddr)
+			    && map != kernel_map) {
 				if (rv == 0) {
 					u_int nss;
 

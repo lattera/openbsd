@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.7 2004/02/19 10:48:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/mem.c,v 1.4.2.8 2004/06/05 23:10:47 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998-2002 Michael Shalayeff
+ * Copyright (c) 1998-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -16,13 +16,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF MIND,
- * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * IN NO EVENT SHALL THE AUTHOR OR HIS RELATIVES BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF MIND, USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*
  * Copyright (c) 1991,1992,1994, The University of Utah and
@@ -191,7 +192,26 @@ memattach(parent, self, aux)
 		/* XXX other values seem to blow it up */
 		if (sc->sc_vp->vi_status.hw_rev == 0) {
 			u_int32_t vic;
-			int s;
+			int s, settimeout;
+
+			switch (cpu_hvers) {
+			case HPPA_BOARD_HP715_33:
+			case HPPA_BOARD_HP715S_33:
+			case HPPA_BOARD_HP715T_33:
+			case HPPA_BOARD_HP715_50:
+			case HPPA_BOARD_HP715S_50:
+			case HPPA_BOARD_HP715T_50:
+			case HPPA_BOARD_HP715_75:
+			case HPPA_BOARD_HP725_50:
+			case HPPA_BOARD_HP725_75:
+				settimeout = 1;
+				break;
+			default:
+				settimeout = 0;
+				break;
+			}
+			if (sc->sc_dev.dv_cfdata->cf_flags & 1)
+				settimeout = !settimeout;
 
 			printf(" viper rev %x,", sc->sc_vp->vi_status.hw_rev);
 #ifdef DEBUG
@@ -202,8 +222,14 @@ memattach(parent, self, aux)
 			vic &= ~VI_CTRL_CORE_DEN;
 			vic &= ~VI_CTRL_SGC0_DEN;
 			vic &= ~VI_CTRL_SGC1_DEN;
+			vic |=  VI_CTRL_EISA_DEN;
 			vic |=  VI_CTRL_CORE_PRF;
+
+			if (settimeout && (vic & VI_CTRL_VSC_TOUT) == 0)
+				vic |= (850 << 19);	/* clks */
+
 			sc->sc_vp->vi_control = vic;
+
 			__asm __volatile("stwas %1, 0(%0)"
 			    :: "r" (&VI_CTRL), "r" (vic) : "memory");
 			splx(s);

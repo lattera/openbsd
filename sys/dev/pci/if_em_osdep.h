@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
 
 /*$FreeBSD: if_em_osdep.h,v 1.11 2003/05/02 21:17:08 pdeuskar Exp $*/
-/* $OpenBSD: src/sys/dev/pci/if_em_osdep.h,v 1.1.8.1 2004/02/19 10:56:27 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_em_osdep.h,v 1.1.8.2 2004/06/05 23:12:50 niklas Exp $ */
 
 #ifndef _EM_OPENBSD_OS_H_
 #define _EM_OPENBSD_OS_H_
@@ -108,6 +108,23 @@ struct em_osdep
 		(E1000_##reg	   + ((offset) << 2)) :			\
 		(E1000_82542_##reg + ((offset) << 2)),			\
 	value)
+
+#define em_io_read(hw, port)						\
+        bus_space_read_4(((struct em_osdep *)(hw)->back)->em_iobtag,	\
+                ((struct em_osdep *)(hw)->back)->em_iobhandle, (port))
+
+#define em_io_write(hw, port, value)					\
+        bus_space_write_4(((struct em_osdep *)(hw)->back)->em_iobtag,	\
+                        ((struct em_osdep *)(hw)->back)->em_iobhandle,	\
+			(port), (value))
+
+#ifdef DEBUG
+#define EM_KASSERT(exp,msg)        do { if (!(exp)) panic msg; } while (0)
+#else
+#define EM_KASSERT(exp,msg)
+#endif
+#define bus_dma_tag_destroy(tag)
+#define mtx_assert(a, b)        splassert(IPL_NET)
 
 #endif  /* _EM_OPENBSD_OS_H_ */
 

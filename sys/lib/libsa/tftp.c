@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/tftp.c,v 1.2 2004/04/02 04:39:51 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/tftp.c,v 1.2.2.1 2004/06/05 23:13:05 niklas Exp $	*/
 /*	$NetBSD: tftp.c,v 1.15 2003/08/18 15:45:29 dsl Exp $	 */
 
 /*

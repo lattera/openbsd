@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_ne_isa.c,v 1.4.4.2 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_ne_isa.c,v 1.4.4.3 2004/06/05 23:12:46 niklas Exp $	*/
 /*	$NetBSD: if_ne_isa.c,v 1.6 1998/07/05 06:49:13 jonathan Exp $	*/
 
 /*-
@@ -76,7 +76,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/intr.h>

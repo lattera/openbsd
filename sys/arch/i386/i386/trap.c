@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.16 2004/04/15 15:45:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.17 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -82,7 +82,7 @@ extern struct emul emul_ibcs2;
 extern struct emul emul_linux_aout, emul_linux_elf;
 #endif
 #ifdef COMPAT_FREEBSD
-extern struct emul emul_aout_freebsd, emul_elf_freebsd;
+extern struct emul emul_freebsd_aout, emul_freebsd_elf;
 #endif
 #ifdef COMPAT_BSDOS
 extern struct emul emul_bsdos;
@@ -699,8 +699,8 @@ syscall(frame)
 		 */
 		if (callp != sysent
 #ifdef COMPAT_FREEBSD
-		    && p->p_emul != &emul_aout_freebsd
-		    && p->p_emul != &emul_elf_freebsd
+		    && p->p_emul != &emul_freebsd_aout
+		    && p->p_emul != &emul_freebsd_elf
 #endif
 #ifdef COMPAT_AOUT
 		    && p->p_emul != &emul_aout

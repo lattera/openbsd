@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/md5.c,v 1.1 2004/05/07 14:42:26 millert Exp $	*/
+/*	$OpenBSD: src/sys/crypto/md5.c,v 1.1.2.1 2004/06/05 23:12:36 niklas Exp $	*/
 
 /*
  * This code implements the MD5 message-digest algorithm.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/bus.h,v 1.3 2004/05/07 18:10:28 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/bus.h,v 1.3.2.1 2004/06/05 23:09:49 niklas Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  *

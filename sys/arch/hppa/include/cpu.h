@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.8 2004/02/19 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/cpu.h,v 1.13.2.9 2004/06/05 23:10:49 niklas Exp $	*/
 
 /*
- * Copyright (c) 2000-2002 Michael Shalayeff
+ * Copyright (c) 2000-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -70,7 +65,7 @@
 #ifndef _LOCORE
 /* types */
 enum hppa_cpu_type {
-	hpcx, hpcxs, hpcxt, hpcxta, hpcxl, hpcxl2, hpcxu, hpcxu2, hpcxw
+	hpcxs, hpcxt, hpcxta, hpcxl, hpcxl2, hpcxu, hpcxu2, hpcxw
 };
 extern enum hppa_cpu_type cpu_type;
 extern const char *cpu_typename;
@@ -83,7 +78,8 @@ extern int cpu_hvers;
 #define	HPPA_FPUS	0xc0
 #define	HPPA_FPUVER(w)	(((w) & 0x003ff800) >> 11)
 #define	HPPA_FPU_OP(w)	((w) >> 26)
-#define	HPPA_FPU_UNMPL	0x9
+#define	HPPA_FPU_UNMPL	0x01	/* exception reg, the rest is << 1 */
+#define	HPPA_FPU_ILL	0x80	/* software-only */
 #define	HPPA_FPU_I	0x01
 #define	HPPA_FPU_U	0x02
 #define	HPPA_FPU_O	0x04

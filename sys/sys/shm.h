@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.5 2004/02/19 11:01:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.6 2004/06/05 23:13:10 niklas Exp $	*/
 /*	$NetBSD: shm.h,v 1.20 1996/04/09 20:55:35 cgd Exp $	*/
 
 /*
@@ -166,7 +166,7 @@ __BEGIN_DECLS
 void *shmat(int, const void *, int);
 int shmctl(int, int, struct shmid_ds *);
 int shmdt(const void *);
-int shmget(key_t, int, int);
+int shmget(key_t, size_t, int);
 __END_DECLS
 
 #endif /* !_KERNEL */

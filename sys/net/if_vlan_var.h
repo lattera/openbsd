@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4.4.4 2004/02/19 10:57:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_vlan_var.h,v 1.4.4.5 2004/06/05 23:11:24 niklas Exp $	*/
 
 /*
  * Copyright 1998 Massachusetts Institute of Technology
@@ -54,7 +54,7 @@ struct	ifvlan {
 		u_int16_t ifvm_tag; /* tag to apply on packets leaving if */
 	}	ifv_mib;
 	LIST_HEAD(__vlan_mchead, vlan_mc_entry)	vlan_mc_listhead;
-	LIST_ENTRY(ifvlan) ifv_list;	/* all vlan interfaces */
+	LIST_ENTRY(ifvlan) ifv_list;
 	int ifv_flags;
 };
 

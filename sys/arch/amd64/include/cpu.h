@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.1 2004/02/22 22:08:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.2 2004/06/05 23:09:25 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 2003/04/26 18:39:39 fvdl Exp $	*/
 
 /*-
@@ -92,6 +92,7 @@ struct cpu_info {
 	u_int32_t	ci_ipis;
 
 	u_int32_t	ci_feature_flags;
+	u_int32_t	ci_feature_eflags;
 	u_int32_t	ci_signature;
 	u_int64_t	ci_tsc_freq;
 
@@ -245,13 +246,11 @@ extern u_int32_t cpus_attached;
 /*
  * We need a machine-independent name for this.
  */
-extern void (*delay_func)(int);
+extern void delay(int);
 struct timeval;
-extern void (*microtime_func)(struct timeval *);
+extern void microtime(struct timeval *);
 
-#define DELAY(x)		(*delay_func)(x)
-#define delay(x)		(*delay_func)(x)
-#define microtime(tv)		(*microtime_func)(tv)
+#define DELAY(x)		delay(x)
 
 
 /*
@@ -276,6 +275,7 @@ void	cc_microset(struct cpu_info *);
 /* identcpu.c */
 
 void	identifycpu(struct cpu_info *);
+int	cpu_amd64speed(int *);
 void cpu_probe_features(struct cpu_info *);
 
 /* machdep.c */
@@ -311,6 +311,9 @@ void cpu_init_msrs(struct cpu_info *);
 /* trap.c */
 void	child_return(void *);
 
+/* dkcsum.c */
+void	dkcsumattach(void);
+
 /* consinit.c */
 void kgdb_port_init(void);
 
@@ -326,51 +329,33 @@ void x86_bus_space_mallocok(void);
  * CTL_MACHDEP definitions.
  */
 #define	CPU_CONSDEV		1	/* dev_t: console terminal device */
-#define	CPU_BIOSBASEMEM		2	/* int: bios-reported base mem (K) */
-#define	CPU_BIOSEXTMEM		3	/* int: bios-reported ext. mem (K) */
-#define	CPU_NKPDE		4	/* int: number of kernel PDEs */
-#define	CPU_BOOTED_KERNEL	5	/* string: booted kernel name */
-#define CPU_DISKINFO		6	/* disk geometry information */
-#define CPU_FPU_PRESENT		7	/* FPU is present */
-#define	CPU_MAXID		8	/* number of valid machdep ids */
+#define	CPU_BIOS		2	/* BIOS variables */
+#define	CPU_BLK2CHR		3	/* convert blk maj into chr one */
+#define	CPU_CHR2BLK		4	/* convert chr maj into blk one */
+#define CPU_ALLOWAPERTURE	5	/* allow mmap of /dev/xf86 */
+#define CPU_CPUVENDOR		6	/* cpuid vendor string */
+#define CPU_CPUID		7	/* cpuid */
+#define CPU_CPUFEATURE		8	/* cpuid features */
+#define CPU_APMWARN		9	/* APM battery warning percentage */
+#define CPU_KBDRESET		10	/* keyboard reset under pcvt */
+#define CPU_APMHALT		11	/* halt -p hack */
+#define CPU_USERLDT		12
+#define CPU_MAXID		13	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
 	{ "console_device", CTLTYPE_STRUCT }, \
-	{ "biosbasemem", CTLTYPE_INT }, \
-	{ "biosextmem", CTLTYPE_INT }, \
-	{ "nkpde", CTLTYPE_INT }, \
-	{ "booted_kernel", CTLTYPE_STRING }, \
-	{ "diskinfo", CTLTYPE_STRUCT }, \
-	{ "fpu_present", CTLTYPE_INT }, \
+	{ "bios", CTLTYPE_INT }, \
+	{ "blk2chr", CTLTYPE_STRUCT }, \
+	{ "chr2blk", CTLTYPE_STRUCT }, \
+	{ "allowaperture", CTLTYPE_INT }, \
+	{ "cpuvendor", CTLTYPE_STRING }, \
+	{ "cpuid", CTLTYPE_INT }, \
+	{ "cpufeature", CTLTYPE_INT }, \
+	{ "apmwarn", CTLTYPE_INT }, \
+	{ "kbdreset", CTLTYPE_INT }, \
+	{ "apmhalt", CTLTYPE_INT }, \
+	{ "userldt", CTLTYPE_INT }, \
 }
-
-
-/*
- * Structure for CPU_DISKINFO sysctl call.
- * XXX this should be somewhere else.
- */
-#define MAX_BIOSDISKS	16
-
-struct disklist {
-	int dl_nbiosdisks;			   /* number of bios disks */
-	struct biosdisk_info {
-		int bi_dev;			   /* BIOS device # (0x80 ..) */
-		int bi_cyl;			   /* cylinders on disk */
-		int bi_head;			   /* heads per track */
-		int bi_sec;			   /* sectors per track */
-		u_int64_t bi_lbasecs;		   /* total sec. (iff ext13) */
-#define BIFLAG_INVALID		0x01
-#define BIFLAG_EXTINT13		0x02
-		int bi_flags;
-	} dl_biosdisks[MAX_BIOSDISKS];
-
-	int dl_nnativedisks;			   /* number of native disks */
-	struct nativedisk_info {
-		char ni_devname[16];		   /* native device name */
-		int ni_nmatches; 		   /* # of matches w/ BIOS */
-		int ni_biosmatches[MAX_BIOSDISKS]; /* indices in dl_biosdisks */
-	} dl_nativedisks[1];			   /* actually longer */
-};
 
 #endif /* !_AMD64_CPU_H_ */

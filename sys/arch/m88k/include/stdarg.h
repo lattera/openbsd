@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/stdarg.h,v 1.1 2004/04/26 12:34:05 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/include/stdarg.h,v 1.1.2.1 2004/06/05 23:09:48 niklas Exp $	*/
 
 #ifndef _M88K_STDARGS_H_
 #define _M88K_STDARGS_H_

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/stp4020reg.h,v 1.2.8.1 2004/02/19 10:56:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/stp4020reg.h,v 1.2.8.2 2004/06/05 23:12:57 niklas Exp $	*/
 /*	$NetBSD: stp4020reg.h,v 1.1 1998/11/22 22:14:35 pk Exp $	*/
 
 /*-
@@ -42,7 +42,8 @@
 #define	_STP4020_REG_H
 
 /*
- * STP4020: SBus/PCMCIA bridge supporting two Type-3 PCMCIA cards.
+ * STP4020: SBus/PCMCIA bridge supporting one Type-3 PCMCIA card, or up to
+ * two Type-1 and Type-2 PCMCIA cards..
  * Programming information source:
  *	- http://www.sun.com/microelectronics/datasheets/stp4020/
  *	- SunOS 5.5 header file

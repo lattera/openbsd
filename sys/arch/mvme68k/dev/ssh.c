@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1.2.5 2004/02/19 10:49:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/ssh.c,v 1.1.2.6 2004/06/05 23:10:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1994 Michael L. Hitch
@@ -220,7 +220,6 @@ struct ssh_acb *acb;
 	for (;;) {
 		/* use cmd_wait values? */
 		i = 50000;
-		spl0();
 		while (((istat = rp->ssh_istat) &
 				  (SSH_ISTAT_SIP | SSH_ISTAT_DIP)) == 0) {
 			if (--i <= 0) {
@@ -316,18 +315,26 @@ struct ssh_softc *sc;
 
 void
 ssh_scsidone(acb, stat)
-struct ssh_acb *acb;
-int stat;
+	struct ssh_acb *acb;
+	int stat;
 {
-	struct scsi_xfer *xs = acb->xs;
-	struct scsi_link *slp = xs->sc_link;
-	struct ssh_softc *sc = slp->adapter_softc;
+	struct scsi_xfer *xs;
+	struct scsi_link *slp;
+	struct ssh_softc *sc;
 	int dosched = 0;
 
+	if (acb == NULL || (xs = acb->xs) == NULL) {
 #ifdef DIAGNOSTIC
-	if (acb == NULL || xs == NULL)
-		panic("ssh_scsidone");
+		printf("ssh_scsidone: NULL acb or scsi_xfer\n");
+#if defined(DEBUG) && defined(DDB)
+		Debugger();
 #endif
+#endif
+		return;
+	}
+	slp = xs->sc_link;
+	sc = slp->adapter_softc;
+
 	/*
 	 * is this right?
 	 */

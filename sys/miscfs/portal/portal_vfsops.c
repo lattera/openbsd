@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.7 2004/02/19 10:57:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/portal/Attic/portal_vfsops.c,v 1.8.2.8 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: portal_vfsops.c,v 1.14 1996/02/09 22:40:41 christos Exp $	*/
 
 /*
@@ -127,7 +127,7 @@ portal_mount(mp, path, data, ndp, p)
 	FRELE(fp);
 
 	mp->mnt_flag |= MNT_LOCAL;
-	mp->mnt_data = (qaddr_t)fmp;
+	mp->mnt_data = fmp;
 	vfs_getnewfsid(mp);
 
 	(void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
@@ -171,7 +171,7 @@ portal_unmount(mp, mntflags, p)
 	if (mntinvalbuf(mp, 1))
 		return (EBUSY);
 #endif
-	if (rvp->v_usecount > 1)
+	if (rvp->v_usecount > 1 && !(flags & FORCECLOSE))
 		return (EBUSY);
 	if ((error = vflush(mp, rvp, flags)) != 0)
 		return (error);

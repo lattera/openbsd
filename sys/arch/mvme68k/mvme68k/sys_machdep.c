@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.5 2003/06/07 11:13:16 ho Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/sys_machdep.c,v 1.7.2.6 2004/06/05 23:10:53 niklas Exp $ */
 
 /*
  * Copyright (c) 1982, 1986, 1993
@@ -57,8 +57,6 @@
 #define CC_EXTPURGE	0x80000000
 /* XXX end should be */
 
-int	cachectl(int, vaddr_t, int);
-
 /*
  * Note that what we do here for a 68040 is different than HP-UX.
  *
@@ -71,7 +69,8 @@ int	cachectl(int, vaddr_t, int);
  */
 /*ARGSUSED1*/
 int
-cachectl(req, addr, len)
+cachectl(p, req, addr, len)
+	struct proc *p;
 	int req;
 	vaddr_t addr;
 	int len;
@@ -119,7 +118,7 @@ cachectl(req, addr, len)
 			if (!doall &&
 			    (pa == 0 || ((int)addr & PGOFSET) == 0)) {
 				if (pmap_extract(
-				    curproc->p_vmspace->vm_map.pmap,
+				    p->p_vmspace->vm_map.pmap,
 				    addr, &pa) == FALSE)
 					doall = 1;
 			}

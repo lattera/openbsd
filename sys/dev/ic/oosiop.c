@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/oosiop.c,v 1.4 2004/03/14 19:23:33 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/oosiop.c,v 1.4.4.1 2004/06/05 23:12:43 niklas Exp $	*/
 /*	$NetBSD: oosiop.c,v 1.4 2003/10/29 17:45:55 tsutsui Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge.c,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge.c,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: footbridge.c,v 1.7 2002/05/16 01:01:33 thorpej Exp $	*/
 
 /*
@@ -65,12 +65,12 @@
 
 /* Declare prototypes */
 
-static int footbridge_match	__P((struct device *parent, void *cf,
-	                             void *aux));
-static void footbridge_attach	__P((struct device *parent, struct device *self,
-        	                     void *aux));
-static int footbridge_print	__P((void *aux, const char *pnp));
-static int footbridge_intr	__P((void *arg));
+static int footbridge_match	(struct device *parent, void *cf,
+	                             void *aux);
+static void footbridge_attach	(struct device *parent, struct device *self,
+        	                     void *aux);
+static int footbridge_print	(void *aux, const char *pnp);
+static int footbridge_intr	(void *arg);
 
 /* Driver and attach structures */
 struct cfattach footbridge_ca = {
@@ -223,14 +223,6 @@ footbridge_attach(parent, self, aux)
 	*/
 	fba.fba_pba.pba_bus = 0;
 	config_found(self, &fba.fba_pba, footbridge_print);
-
-	/* Attach a time-of-day clock device */
-	fba.fba_tca.ta_name = "todclock";
-	fba.fba_tca.ta_rtc_arg = NULL;
-	fba.fba_tca.ta_rtc_write = NULL;
-	fba.fba_tca.ta_rtc_read = NULL;
-	fba.fba_tca.ta_flags = TODCLOCK_FLAG_FAKE;
-	config_found(self, &fba.fba_tca, footbridge_print); 
 
 	/* Attach uart device */
 	fba.fba_fca.fca_name = "fcom";

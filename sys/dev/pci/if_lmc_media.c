@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.4 2003/03/28 00:38:22 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.4.2.5 2004/06/05 23:12:50 niklas Exp $ */
 /* $Id$ */
 
 /*-
@@ -74,7 +74,6 @@
 #include "bpfilter.h"
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <uvm/uvm_extern.h>

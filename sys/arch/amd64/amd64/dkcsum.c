@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/dkcsum.c,v 1.1 2004/02/25 00:16:04 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/dkcsum.c,v 1.1.4.1 2004/06/05 23:09:24 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.

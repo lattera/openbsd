@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/osiop_pcctwo.c,v 1.1 2004/05/07 18:12:58 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/osiop_pcctwo.c,v 1.1.2.1 2004/06/05 23:09:49 niklas Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/raven.c,v 1.1.2.3 2004/02/19 10:49:09 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/raven.c,v 1.1.2.4 2004/06/05 23:10:54 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
@@ -63,8 +63,12 @@ struct cfdriver raven_cd = {
 int
 raven_match(struct device *parent, void *match, void *aux)
 {
+	struct confargs *ca = aux;
 	void *va;
 	u_int32_t probe;
+
+	if (strcmp(ca->ca_name, raven_cd.cd_name) != 0)
+		return 0;
 
 	if ((va = mapiodev((paddr_t)RAVEN_BASE, RAVEN_SIZE)) == NULL)
 		return 0;

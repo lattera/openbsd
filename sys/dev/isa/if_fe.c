@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.4 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_fe.c,v 1.12.6.5 2004/06/05 23:12:45 niklas Exp $	*/
 
 /*
  * All Rights Reserved, Copyright (C) Fujitsu Limited 1995
@@ -72,7 +72,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hotplug.c,v 1.1 2004/05/30 08:11:26 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/hotplug.c,v 1.1.2.1 2004/06/05 23:12:36 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

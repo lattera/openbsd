@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.40.2.9 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.40.2.10 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: in_pcb.c,v 1.25 1996/02/13 23:41:53 christos Exp $	*/
 
 /*
@@ -693,12 +693,13 @@ in_losing(inp)
 			(void) rtrequest(RTM_DELETE, rt_key(rt),
 				rt->rt_gateway, rt_mask(rt), rt->rt_flags,
 				(struct rtentry **)0);
-		else
 		/*
 		 * A new route can be allocated
 		 * the next time output is attempted.
+		 * rtfree() needs to be called in anycase because the inp
+		 * is still holding a reference to rt.
 		 */
-			rtfree(rt);
+		rtfree(rt);
 	}
 }
 

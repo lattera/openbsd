@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/Attic/float.h,v 1.3.2.3 2004/02/19 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/Attic/float.h,v 1.3.2.4 2004/06/05 23:10:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1989 Regents of the University of California.
@@ -31,8 +31,8 @@
  *	@(#)float.h	7.1 (Berkeley) 5/8/90
  */
 
-#ifndef _MACHINE_FLOAT_H_
-#define _MACHINE_FLOAT_H_
+#ifndef _HPPA_FLOAT_H_
+#define _HPPA_FLOAT_H_
 
 #include <sys/cdefs.h>
 

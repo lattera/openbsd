@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_clock.c,v 1.2.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_clock.c,v 1.2.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: footbridge_clock.c,v 1.17 2003/03/23 14:12:25 chris Exp $	*/
 
 /*
@@ -57,9 +57,9 @@
 extern struct footbridge_softc *clock_sc;
 extern u_int dc21285_fclk;
 
-int clockhandler __P((void *));
-int statclockhandler __P((void *));
-static int load_timer __P((int, int));
+int clockhandler (void *);
+int statclockhandler (void *);
+static int load_timer (int, int);
 
 /*
  * Statistics clock variance, in usec.  Variance must be a
@@ -75,8 +75,8 @@ int statcountperusec;		/* number of ticks per usec at current stathz */
 int statprev;			/* last value of we set statclock to */
 
 #if 0
-static int clockmatch	__P((struct device *parent, struct cfdata *cf, void *aux));
-static void clockattach	__P((struct device *parent, struct device *self, void *aux));
+static int clockmatch	(struct device *parent, struct cfdata *cf, void *aux);
+static void clockattach	(struct device *parent, struct device *self, void *aux);
 
 CFATTACH_DECL(footbridge_clock, sizeof(struct clock_softc),
     clockmatch, clockattach, NULL, NULL);
@@ -281,16 +281,15 @@ void
 cpu_initclocks()
 {
 	/* stathz and profhz should be set to something, we have the timer */
-#if 0
+
 	if (stathz == 0)
-		stathz = hz;
+		stathz = 128;
 
 	if (profhz == 0)
-		profhz = stathz * 5;
-#endif
+		profhz = stathz * 8;
 
 	/* Report the clock frequencies */
-	printf("clock: hz=%d stathz = %d profhz = %d\n", hz, stathz, profhz);
+	printf("clock: hz %d stathz %d profhz %d\n", hz, stathz, profhz);
 
 	/* Setup timer 1 and claim interrupt */
 	clock_sc->sc_clock_count = load_timer(TIMER_1_BASE, hz);

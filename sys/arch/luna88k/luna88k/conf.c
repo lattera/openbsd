@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/conf.c,v 1.2 2004/05/07 15:08:25 aoyama Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/conf.c,v 1.2.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1991 The Regents of the University of California.

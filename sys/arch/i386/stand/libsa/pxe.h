@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe.h,v 1.1 2004/03/19 13:48:18 tom Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/pxe.h,v 1.1.4.1 2004/06/05 23:09:01 niklas Exp $ */
 /*	$NetBSD: pxe.h,v 1.1 2002/02/16 03:37:40 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/rbus_machdep.h,v 1.1.6.3 2003/03/27 23:26:55 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/include/rbus_machdep.h,v 1.1.6.4 2004/06/05 23:09:00 niklas Exp $ */
 /*	$NetBSD: rbus_machdep.h,v 1.2 1999/10/15 06:43:05 haya Exp $	*/
 
 /*
@@ -36,9 +36,6 @@
 #define _ARCH_I386_I386_RBUS_MACHDEP_H_
 
 struct pci_attach_args;		/* XXX */
-
-void _bus_space_unmap(bus_space_tag_t, bus_space_handle_t,
-			     bus_size_t, bus_addr_t *);
 
 #define md_space_map(bt, physaddr, size, flags, bshp) \
 	_bus_space_map((bt), (physaddr), (size), (flags), (bshp))

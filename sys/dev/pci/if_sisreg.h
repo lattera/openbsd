@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.5 2004/02/19 10:56:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.6 2004/06/05 23:12:51 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -348,11 +348,12 @@ struct sis_desc {
 #define SIS_TXSTAT_UNDERRUN	0x02000000
 #define SIS_TXSTAT_TX_ABORT	0x04000000
 
-#define SIS_RX_LIST_CNT		64
+#define SIS_RX_LIST_CNT_MIN	4
+#define SIS_RX_LIST_CNT_MAX	64
 #define SIS_TX_LIST_CNT		128
 
 struct sis_list_data {
-	struct sis_desc		sis_rx_list[SIS_RX_LIST_CNT];
+	struct sis_desc		sis_rx_list[SIS_RX_LIST_CNT_MAX];
 	struct sis_desc		sis_tx_list[SIS_TX_LIST_CNT];
 };
 
@@ -434,6 +435,7 @@ struct sis_softc {
 	bus_dmamap_t		sc_rx_sparemap;
 	bus_dmamap_t		sc_tx_sparemap;
 	int			sis_stopped;
+	int			sc_rxbufs;
 };
 
 /*
@@ -446,7 +448,6 @@ struct sis_softc {
 	bus_space_read_4(sc->sis_btag, sc->sis_bhandle, reg)
 
 #define SIS_TIMEOUT		1000
-#define ETHER_ALIGN		2
 #define SIS_RXLEN		1536
 #define SIS_MIN_FRAMELEN	60
 

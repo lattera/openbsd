@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.9 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.10 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -638,6 +638,7 @@ const struct pci_matchid vr_devices[] = {
 	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII },
 	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII_2 },
 	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT6105 },
+	{ PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT6105M },
 	{ PCI_VENDOR_DELTA, PCI_PRODUCT_DELTA_RHINEII },
 	{ PCI_VENDOR_ADDTRON, PCI_PRODUCT_ADDTRON_RHINEII },
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.8 2003/05/13 19:41:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/param.h,v 1.8.2.9 2004/06/05 23:10:49 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -83,9 +83,7 @@
 #define	MCLSHIFT	11
 #define	MCLBYTES	(1 << MCLSHIFT)	/* large enough for ether MTU */
 #define	MCLOFSET	(MCLBYTES - 1)
-#ifndef NMBCLUSTERS
-#define	NMBCLUSTERS	(2048)		/* cl map size: 1MB */
-#endif
+#define	NMBCLUSTERS	4096		/* map size, max cluster allocation */
 
 /*
  * Minimum and maximum sizes of the kernel malloc arena in PAGE_SIZE-sized

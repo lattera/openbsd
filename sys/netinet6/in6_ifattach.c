@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.9 2004/02/19 10:57:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.10 2004/06/05 23:11:26 niklas Exp $	*/
 /*	$KAME: in6_ifattach.c,v 1.124 2001/07/18 08:32:51 jinmei Exp $	*/
 
 /*
@@ -37,7 +37,8 @@
 #include <sys/sockio.h>
 #include <sys/kernel.h>
 #include <sys/syslog.h>
-#include <sys/md5k.h>
+
+#include <crypto/md5.h>
 
 #include <net/if.h>
 #include <net/if_dl.h>

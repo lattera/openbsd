@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/gscsio.c,v 1.2 2004/06/05 18:34:04 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/gscsio.c,v 1.2.2.1 2004/06/05 23:12:45 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *
@@ -220,8 +220,6 @@ gscsio_attach(struct device *parent, struct device *self, void *aux)
 	if (sc->sc_ld_en[GSCSIO_LDN_ACB1]) {
 		sc->sc_acb[0].sc = sc;
 		sc->sc_acb[0].ioh = sc->sc_ld_ioh0[GSCSIO_LDN_ACB1];
-		lockinit(&sc->sc_acb[0].buslock, PRIBIO | PCATCH,
-		    "iiclk", 0, 0);
 		gscsio_acb_init(&sc->sc_acb[0], &sc->sc_acb1_tag);
 	}
 
@@ -229,8 +227,6 @@ gscsio_attach(struct device *parent, struct device *self, void *aux)
 	if (sc->sc_ld_en[GSCSIO_LDN_ACB2]) {
 		sc->sc_acb[1].sc = sc;
 		sc->sc_acb[1].ioh = sc->sc_ld_ioh0[GSCSIO_LDN_ACB2];
-		lockinit(&sc->sc_acb[1].buslock, PRIBIO | PCATCH,
-		    "iiclk", 0, 0);
 		gscsio_acb_init(&sc->sc_acb[1], &sc->sc_acb2_tag);
 	}
 }

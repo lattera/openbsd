@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.11 2004/02/19 10:56:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.12 2004/06/05 23:13:02 niklas Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -62,6 +62,8 @@
 
 #include <uvm/uvm_extern.h>
 #include <dev/rndvar.h>
+
+#include "pty.h"
 
 static int ttnread(struct tty *);
 static void ttyblock(struct tty *);
@@ -1115,7 +1117,7 @@ filt_ttyread(struct knote *kn, long hint)
 	s = spltty();
 	kn->kn_data = ttnread(tp);
 	splx(s);
-	if (!ISSET(tp->t_state, CLOCAL) && !ISSET(tp->t_state, TS_CARR_ON)) {
+	if (!ISSET(tp->t_cflag, CLOCAL) && !ISSET(tp->t_state, TS_CARR_ON)) {
 		kn->kn_flags |= EV_EOF;
 		return (1);
 	}
@@ -2371,7 +2373,11 @@ sysctl_tty(name, namelen, oldp, oldlenp, newp, newlen)
 		free(ttystats, M_SYSCTL);
 		return (err);
 	default:
+#if NPTY > 0
+		return (sysctl_pty(name, namelen, oldp, oldlenp, newp, newlen));
+#else
 		return (EOPNOTSUPP);
+#endif
 	}
 	/* NOTREACHED */
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/bus.h,v 1.18.4.8 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/bus.h,v 1.18.4.9 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: bus.h,v 1.6 1996/11/10 03:19:25 thorpej Exp $	*/
 
 /*-
@@ -100,6 +100,9 @@ int	_bus_space_map(bus_space_tag_t t, bus_addr_t addr,
 	    bus_size_t size, int cacheable, bus_space_handle_t *bshp);
 void	bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
 	    bus_size_t size);
+/* like bus_space_unmap(), but without extent map deallocation */
+void	_bus_space_unmap(bus_space_tag_t, bus_space_handle_t,
+	    bus_size_t, bus_addr_t *);
 int	bus_space_subregion(bus_space_tag_t t, bus_space_handle_t bsh,
 	    bus_size_t offset, bus_size_t size, bus_space_handle_t *nbshp);
 

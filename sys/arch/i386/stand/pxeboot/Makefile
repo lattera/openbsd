@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/pxeboot/Makefile,v 1.1 2004/03/19 13:48:19 tom Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/pxeboot/Makefile,v 1.1.4.1 2004/06/05 23:09:01 niklas Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 

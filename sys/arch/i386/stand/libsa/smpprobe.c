@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.4 2004/02/19 10:48:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/smpprobe.c,v 1.3.8.5 2004/06/05 23:09:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -13,8 +13,8 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR 
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
@@ -63,14 +63,21 @@ mp_probefloat(u_int8_t *ptr, int len)
 	if (debug)
 		printf("Checking %p for %d\n", ptr, len);
 #endif
-	for (i = 0, mpp = (struct mp_float *)ptr; i < len;
-	    i += sizeof *mpp, mpp++) {
-		if (bcmp(mpp->signature, MPF_SIGNATURE,
-		    sizeof mpp->signature) == 0) {
+	for (i = 0; i < 1024; i++) {
+		mp_float_t *tmp = (mp_float_t*)(ptr + i);
+
+		if (tmp->signature == MP_FLOAT_SIG) {
+			printf("Found possible MP signature at: %p\n", ptr);
+
+			mpp = tmp;
+			break;
+		}
+		if ((tmp->signature == MP_FLOAT_SIG) &&
+		    mp_checksum((u_int8_t *)tmp, tmp->length*16)) {
 #ifdef DEBUG
 			if (debug)
-				printf("Found possible MP signature at: %p\n",
-				    mpp);
+				printf("Found valid MP signature at: %p\n",
+				    ptr);
 #endif
 			if (mp_checksum((u_int8_t *)mpp, mpp->length * 16)) {
 #ifdef DEBUG
@@ -83,7 +90,7 @@ mp_probefloat(u_int8_t *ptr, int len)
 		}
 	}
 
-	return (i < len ? mpp : NULL);
+	return mpp;
 }
 
 
@@ -109,20 +116,17 @@ smpprobe(void)
 
 	/* Valid MP signature found */
 	printf(" smp");
-	addbootarg(BOOTARG_SMPINFO, mp->length * sizeof *mp, mp);
 
 #if DEBUG
 	if (debug)
 		printf("Floating Structure:\n"
-		    "\tSignature: %c%c%c%c\n"
+		    "\tSignature: %x\n"
 		    "\tConfig at: %x\n"
 		    "\tLength: %d\n"
 		    "\tRev: 1.%d\n"
 		    "\tFeature: %x %x %x %x %x\n",
-		    mp->signature[0], mp->signature[1], mp->signature[2],
-		    mp->signature[3], mp->pointer, mp->length, mp->revision,
-		    mp->feature1, mp->feature2, mp->feature3, mp->feature4,
-		    mp->feature5);
+		    mp->signature, mp->conf_addr, mp->length, mp->spec_rev,
+		    mp->feature[0], mp->feature[1], mp->feature[2],
+		    mp->feature[3], mp->feature[4]);
 #endif
 }
-

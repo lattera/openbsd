@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/xy.c,v 1.13.4.6 2004/02/19 10:49:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/xy.c,v 1.13.4.7 2004/06/05 23:10:58 niklas Exp $	*/
 /*	$NetBSD: xy.c,v 1.26 1997/07/19 21:43:56 pk Exp $	*/
 
 /*
@@ -1644,7 +1644,8 @@ xyc_reset(xycsc, quiet, blastmode, error, xysc)
 			    iorq->xy->xyq.b_actf = iorq->buf->b_actf;
 			    disk_unbusy(&xycsc->reqs[lcv].xy->sc_dk,
 				(xycsc->reqs[lcv].buf->b_bcount -
-				xycsc->reqs[lcv].buf->b_resid));
+				xycsc->reqs[lcv].buf->b_resid),
+				(xycsc->reqs[lcv].buf->b_flags & B_READ));
 			    biodone(iorq->buf);
 			    iorq->mode = XY_SUB_FREE;
 			    break;
@@ -1821,7 +1822,8 @@ xyc_remove_iorq(xycsc)
 				    bp->b_bcount);
 			iorq->xy->xyq.b_actf = bp->b_actf;
 			disk_unbusy(&iorq->xy->sc_dk,
-			    (bp->b_bcount - bp->b_resid));
+			    (bp->b_bcount - bp->b_resid),
+			    (bp->b_flags & B_READ));
 			iorq->mode = XY_SUB_FREE;
 			biodone(bp);
 			break;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/gscpcib.c,v 1.2 2004/06/05 15:21:01 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/gscpcib.c,v 1.2.2.1 2004/06/05 23:09:00 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

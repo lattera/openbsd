@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ydsreg.h,v 1.1.4.3 2003/03/28 00:38:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ydsreg.h,v 1.1.4.4 2004/06/05 23:12:54 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*
@@ -77,9 +77,9 @@
 # define YDS_PCI_EX_LEGACY_JSIO_204	(0x0080 << 16)
 # define YDS_PCI_EX_LEGACY_JSIO_205	(0x00c0 << 16)
 # define YDS_PCI_EX_LEGACY_MAIM		(0x0100 << 16)
-# define YDS_PCI_EX_LEGACY_SBMOD_PCI	(0x0000 << 16)
-# define YDS_PCI_EX_LEGACY_SBMOD_XXX	(0x0800 << 16)
-# define YDS_PCI_EX_LEGACY_SBMOD_DDMA	(0x1000 << 16)
+# define YDS_PCI_EX_LEGACY_SMOD_PCI	(0x0000 << 16)
+# define YDS_PCI_EX_LEGACY_SMOD_DISABLE	(0x0800 << 16)
+# define YDS_PCI_EX_LEGACY_SMOD_DDMA	(0x1000 << 16)
 # define YDS_PCI_EX_LEGACY_SBVER_3	(0x0000 << 16)
 # define YDS_PCI_EX_LEGACY_SBVER_2	(0x2000 << 16)
 # define YDS_PCI_EX_LEGACY_SBVER_1	(0x4000 << 16)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/smc91cxx.c,v 1.7.2.6 2004/02/19 10:56:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/smc91cxx.c,v 1.7.2.7 2004/06/05 23:12:43 niklas Exp $	*/
 /*	$NetBSD: smc91cxx.c,v 1.11 1998/08/08 23:51:41 mycroft Exp $	*/
 
 /*-
@@ -123,7 +123,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <dev/ic/smc91cxxreg.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pucdata.c,v 1.2.2.8 2004/02/19 10:56:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pucdata.c,v 1.2.2.9 2004/06/05 23:12:54 niklas Exp $	*/
 /*	$NetBSD: pucdata.c,v 1.6 1999/07/03 05:55:23 cgd Exp $	*/
 
 /*
@@ -511,6 +511,20 @@ const struct puc_device_description puc_devices[] = {
 	},
 
 	/*
+	 * VScom PCI-400S, based on PLX 9050 Chip, 16k buffer
+	 */
+	{ /* "VScom PCI-400S", */
+	    { PCI_VENDOR_PLX, PCI_PRODUCT_PLX_1077, 0x10b5, 0x1077 },
+	    { 0xffff, 0xffff, 0xffff, 0xffff },
+	    {
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x08, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x10, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x18, COM_FREQ * 8 },
+	    },
+	},
+
+	/*
 	 * VScom PCI-800, as sold on http://www.swann.com.au/isp/titan.html.
 	 * Some PLX chip.  Note: This board has a software selectable(?)
 	 * clock multiplier which this driver doesn't support, so you'll
@@ -736,6 +750,20 @@ const struct puc_device_description puc_devices[] = {
 	},
 
 	/*
+	 * Exsys EX-41098
+	 */
+	{   /* "Exsys EX-41098", */
+	    {	PCI_VENDOR_OXFORD2, PCI_PRODUCT_OXFORD2_EXSYS_EX41098,	0, 0 },
+	    {	0xffff, 0xffff,						0, 0 },
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x08, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x10, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x18, COM_FREQ },
+	    },
+	},
+
+	/*
 	 * NEC PK-UG-X001 K56flex PCI Modem card.
 	 * NEC MARTH bridge chip and Rockwell RCVDL56ACF/SP using.
 	 */
@@ -865,6 +893,18 @@ const struct puc_device_description puc_devices[] = {
 	    {	0xffff,	0xffff,					0, 0	},
 	    {
 		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* SD-LAB PCI I/O Card 4S */
+	{   /* "Syba Tech Ltd. PCI-4S" */
+	    {   PCI_VENDOR_SYBA, PCI_PRODUCT_SYBA_4S,		0, 0	},
+	    {	0xffff,	0xffff,					0, 0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x3e8, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x2e8, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x3f8, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x2f8, COM_FREQ },
 	    },
 	},
 

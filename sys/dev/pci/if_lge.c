@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.6 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.7 2004/06/05 23:12:50 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -764,18 +764,12 @@ int lge_newbuf(sc, c, m)
 	if (m == NULL) {
 		MGETHDR(m_new, M_DONTWAIT, MT_DATA);
 		if (m_new == NULL) {
-			printf("%s: no memory for rx list "
-			       "-- packet dropped!\n", sc->sc_dv.dv_xname);
 			return(ENOBUFS);
 		}
 
 		/* Allocate the jumbo buffer */
 		buf = lge_jalloc(sc);
 		if (buf == NULL) {
-#ifdef LGE_VERBOSE
-			printf("%s: jumbo allocation failed "
-			       "-- packet dropped!\n", sc->sc_dv.dv_xname);
-#endif
 			m_freem(m_new);
 			return(ENOBUFS);
 		}
@@ -1002,9 +996,6 @@ void lge_rxeof(sc, cnt)
 			    ifp, NULL);
 			lge_newbuf(sc, &LGE_RXTAIL(sc), m);
 			if (m0 == NULL) {
-				printf("%s: no receive buffers "
-				       "available -- packet dropped!\n",
-				       sc->sc_dv.dv_xname);
 				ifp->if_ierrors++;
 				continue;
 			}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gidt.h,v 1.1 2004/03/21 21:37:41 tom Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gidt.h,v 1.1.4.1 2004/06/05 23:09:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 2004 Tom Cosgrove

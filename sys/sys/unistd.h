@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/unistd.h,v 1.8.6.3 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/unistd.h,v 1.8.6.4 2004/06/05 23:13:10 niklas Exp $	*/
 /*	$NetBSD: unistd.h,v 1.10 1994/06/29 06:46:06 cgd Exp $	*/
 
 /*
@@ -114,6 +114,8 @@
 #define	_SC_PAGE_SIZE		_SC_PAGESIZE	/* 1170 compatibility */
 #define	_SC_FSYNC		29
 #define	_SC_XOPEN_SHM		30
+#define	_SC_SEM_NSEMS_MAX	31
+#define	_SC_SEM_VALUE_MAX	32
 
 #ifdef notyet
 /* P1003.1c */

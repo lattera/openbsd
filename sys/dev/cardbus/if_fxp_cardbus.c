@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2.6.4 2003/03/28 00:38:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2.6.5 2004/06/05 23:12:37 niklas Exp $ */
 /*	$NetBSD: if_fxp_cardbus.c,v 1.12 2000/05/08 18:23:36 thorpej Exp $	*/
 
 /*
@@ -181,6 +181,8 @@ fxp_cardbus_attach(parent, self, aux)
 	sc->sc_disable = fxp_cardbus_disable;
 	sc->sc_enabled = 0;
 #endif
+
+	sc->not_82557 = 1;
 
 	Cardbus_function_enable(csc->ct);
 

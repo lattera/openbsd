@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/vm_machdep.c,v 1.3 2004/05/23 20:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/luna88k/luna88k/Attic/vm_machdep.c,v 1.3.2.1 2004/06/05 23:09:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.

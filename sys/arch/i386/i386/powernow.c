@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/powernow.c,v 1.2 2004/04/08 09:50:29 kevlo Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/powernow.c,v 1.2.2.1 2004/06/05 23:09:00 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Ted Unangst
  * All rights reserved.

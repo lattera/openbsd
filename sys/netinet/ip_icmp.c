@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.10 2004/02/19 10:57:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.11 2004/06/05 23:11:25 niklas Exp $	*/
 /*	$NetBSD: ip_icmp.c,v 1.19 1996/02/13 23:42:22 christos Exp $	*/
 
 /*
@@ -105,6 +105,8 @@ int	icmp_rediraccept = 1;
 int	icmp_redirtimeout = 10 * 60;
 static struct rttimer_queue *icmp_redirect_timeout_q = NULL;
 struct	icmpstat icmpstat;
+
+int *icmpctl_vars[ICMPCTL_MAXID] = ICMPCTL_VARS;
 
 void icmp_mtudisc_timeout(struct rtentry *, struct rttimer *);
 int icmp_ratelimit(const struct in_addr *, const int, const int);
@@ -639,13 +641,13 @@ icmp_reflect(struct mbuf *m)
 	icmpdst.sin_addr = t;
 	if ((ia == (struct in_ifaddr *)0) && (m->m_pkthdr.rcvif != NULL))
 		ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
-					      m->m_pkthdr.rcvif));
+		    m->m_pkthdr.rcvif));
 	/*
 	 * The following happens if the packet was not addressed to us,
 	 * and was received on an interface with no IP address.
 	 */
 	if (ia == (struct in_ifaddr *)0) {
-	        struct sockaddr_in *dst;
+		struct sockaddr_in *dst;
 		struct route ro;
 
 		bzero((caddr_t) &ro, sizeof(ro));
@@ -663,8 +665,8 @@ icmp_reflect(struct mbuf *m)
 
 		ia = ifatoia(ro.ro_rt->rt_ifa);
 		ro.ro_rt->rt_use++;
-                RTFREE(ro.ro_rt);
-        }
+		RTFREE(ro.ro_rt);
+	}
 
 	t = ia->ia_addr.sin_addr;
 	ip->ip_src = t;
@@ -801,23 +803,6 @@ icmp_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (ENOTDIR);
 
 	switch (name[0]) {
-	case ICMPCTL_TSTAMPREPL:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &icmptstamprepl));
-	case ICMPCTL_MASKREPL:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &icmpmaskrepl));
-	case ICMPCTL_BMCASTECHO:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &icmpbmcastecho));
-	case ICMPCTL_ERRPPSLIMIT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &icmperrppslim));
-		break;
-	case ICMPCTL_REDIRACCEPT:
-		return (sysctl_int(oldp, oldlenp, newp, newlen,
-		    &icmp_rediraccept));
-		break;
 	case ICMPCTL_REDIRTIMEOUT: {
 		int error;
 
@@ -840,6 +825,9 @@ icmp_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		break;
 	}
 	default:
+		if (name[0] < ICMPCTL_MAXID)
+			return (sysctl_int_arr(icmpctl_vars, name, namelen,
+			    oldp, oldlenp, newp, newlen));
 		return (ENOPROTOOPT);
 	}
 	/* NOTREACHED */
@@ -890,8 +878,10 @@ icmp_mtudisc(struct icmp *icp)
 
 	/* Table of common MTUs: */
 
-	static u_short mtu_table[] = {65535, 65280, 32000, 17914, 9180, 8166,
-				      4352, 2002, 1492, 1006, 508, 296, 68, 0};
+	static u_short mtu_table[] = {
+		65535, 65280, 32000, 17914, 9180, 8166,
+		4352, 2002, 1492, 1006, 508, 296, 68, 0
+	};
 
 	rt = icmp_mtudisc_clone(dst);
 	if (rt == 0)

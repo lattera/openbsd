@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/boot/conf.c,v 1.1 2004/02/03 12:09:47 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/boot/conf.c,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -42,8 +42,25 @@
 #include <biosdev.h>
 #include <dev/cons.h>
 
-const char version[] = "2.05";
+const char version[] = "2.06";
 int	debug = 1;
+
+
+void (*sa_cleanup)(void) = NULL;
+
+
+void (*i386_probe1[])(void) = {
+	gateA20on, cninit, memprobe
+};
+void (*i386_probe2[])(void) = {
+ 	diskprobe
+};
+
+struct i386_boot_probes probe_list[] = {
+	{ "probing", i386_probe1, NENTS(i386_probe1) },
+	{ "disk",    i386_probe2, NENTS(i386_probe2) }
+};
+int nibprobes = NENTS(probe_list);
 
 
 struct fs_ops file_system[] = {

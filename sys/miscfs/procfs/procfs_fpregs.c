@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_fpregs.c,v 1.4.12.2 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_fpregs.c,v 1.4.12.3 2004/06/05 23:13:06 niklas Exp $	*/
 /*	$NetBSD: procfs_fpregs.c,v 1.4 1995/08/13 09:06:05 mycroft Exp $	*/
 
 /*
@@ -63,7 +63,7 @@ procfs_dofpregs(curp, p, pfs, uio)
 		return (error);
 
 	kl = sizeof(r);
-	kv = (char *) &r;
+	kv = (char *)&r;
 
 	kv += uio->uio_offset;
 	kl -= uio->uio_offset;
@@ -72,7 +72,7 @@ procfs_dofpregs(curp, p, pfs, uio)
 
 	PHOLD(p);
 
-	if (kl < 0)
+	if (uio->uio_offset > (off_t)sizeof(r))
 		error = EINVAL;
 	else
 		error = process_read_fpregs(p, &r);

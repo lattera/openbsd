@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/isa/clock.c,v 1.1 2004/01/28 01:39:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/isa/clock.c,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 2003/04/26 18:39:50 fvdl Exp $	*/
 
 /*-
@@ -184,6 +184,8 @@ mc146818_write(sc, reg, datum)
 	DELAY(1);
 }
 
+static u_long rtclock_tval;
+
 /* minimal initialization, enough for delay() */
 void
 initrtclock()
@@ -204,6 +206,8 @@ initrtclock()
 	/* Correct rounding will buy us a better precision in timekeeping */
 	outb(IO_TIMER1+TIMER_CNTR0, tval % 256);
 	outb(IO_TIMER1+TIMER_CNTR0, tval / 256);
+
+	rtclock_tval = tval;
 }
 
 /*
@@ -226,6 +230,8 @@ void
 startrtclock()
 {
 	int s;
+	u_long tval;
+	u_long t, msb, lsb, quotient, remainder;
 
 	findcpuspeed();		/* use the clock (while it's free)
 				   to find the cpu speed */
@@ -234,6 +240,73 @@ startrtclock()
 	/* Check diagnostic status */
 	if ((s = mc146818_read(NULL, NVRAM_DIAG)) != 0)	/* XXX softc */
 		printf("RTC BIOS diagnostic error %b\n", s, NVRAM_DIAG_BITS);
+
+	/*
+	 * Compute timer_tick from hz.  We truncate this value (i.e.
+	 * round down) to minimize the possibility of a backward clock
+	 * step if hz is not a nice number.
+	 */
+	isa_timer_tick = 1000000 / (u_long) hz;
+
+	/*
+	 * We can't stand any number with an MSB larger than
+	 * TIMER_MSB_TABLE_SIZE will accomodate.
+	 */
+	tval = rtclock_tval;
+	if ((tval / 256) >= ISA_TIMER_MSB_TABLE_SIZE
+	    || TIMER_FREQ > (8*1024*1024)) {
+		panic("startrtclock: TIMER_FREQ/HZ unsupportable");
+	}
+	isa_timer_count = (u_short) tval;
+
+	/*
+	 * Now compute the translation tables from timer ticks to
+	 * microseconds.  We go to some length to ensure all values
+	 * are rounded-to-nearest (i.e. +-0.5 of the exact values)
+	 * as this will ensure the computation
+	 *
+	 * isa_timer_msb_table[msb] - isa_timer_lsb_table[lsb]
+	 *
+	 * will produce a result which is +-1 usec away from the
+	 * correctly rounded conversion (in fact, it'll be exact about
+	 * 75% of the time, 1 too large 12.5% of the time, and 1 too
+	 * small 12.5% of the time).
+	 */
+	for (s = 0; s < 256; s++) {
+		/* LSB table is easy, just divide and round */
+		t = ((u_long) s * 1000000 * 2) / TIMER_FREQ;
+		isa_timer_lsb_table[s] = (u_short) ((t / 2) + (t & 0x1));
+
+		/* MSB table is zero unless the MSB is <= isa_timer_count */
+		if (s < ISA_TIMER_MSB_TABLE_SIZE) {
+			msb = ((u_long) s) * 256;
+			if (msb > tval) {
+				isa_timer_msb_table[s] = 0;
+			} else {
+				/*
+				 * Harder computation here, since multiplying
+				 * the value by 1000000 can overflow a long.
+				 * To avoid 64-bit computations we divide
+				 * the high order byte and the low order
+				 * byte of the numerator separately, adding
+				 * the remainder of the first computation
+				 * into the second.  The constraint on
+				 * TIMER_FREQ above should prevent overflow
+				 * here.
+				 */
+				msb = tval - msb;
+				lsb = msb % 256;
+				msb = (msb / 256) * 1000000;
+				quotient = msb / TIMER_FREQ;
+				remainder = msb % TIMER_FREQ;
+				t = ((remainder * 256 * 2)
+				    + (lsb * 1000000 * 2)) / TIMER_FREQ;
+				isa_timer_msb_table[s] = (u_short)((t / 2)
+				    + (t & 0x1) + (quotient * 256));
+			}
+		}
+	}
+
 }
 
 int
@@ -310,9 +383,18 @@ gettick()
  * wave' mode counts at 2:1).
  */
 void
-i8254_delay(int n)
+delay(int n)
 {
 	int limit, tick, otick;
+	static const int delaytab[26] = {
+		 0,  2,  3,  4,  5,  6,  7,  9, 10, 11,
+		12, 13, 15, 16, 17, 18, 19, 21, 22, 23,
+		24, 25, 27, 28, 29, 30,
+	};
+
+	/* allow DELAY() to be used before startrtclock() */
+	if (!rtclock_tval)
+		initrtclock();
 
 	/*
 	 * Read the counter first, so that the rest of the setup overhead is
@@ -320,34 +402,35 @@ i8254_delay(int n)
 	 */
 	otick = gettick();
 
+	if (n <= 25)
+		n = delaytab[n];
+	else {
 #ifdef __GNUC__
-	/*
-	 * Calculate ((n * TIMER_FREQ) / 1e6) using explicit assembler code so
-	 * we can take advantage of the intermediate 64-bit quantity to prevent
-	 * loss of significance.
-	 */
-	n -= 5;
-	if (n < 0)
-		return;
-	__asm __volatile("mul %2\n\tdiv %3"
-			 : "=a" (n) 
-			 : "0" (n), "r" (TIMER_FREQ), "r" (1000000)
-			 : "%edx", "cc");
+		/*
+		 * Calculate ((n * TIMER_FREQ) / 1e6) using explicit assembler
+		 * code so we can take advantage of the intermediate 64-bit
+		 * quantity to prevent loss of significance.
+		 */
+		int m;
+		__asm __volatile("mul %3"
+				 : "=a" (n), "=d" (m)
+				 : "0" (n), "r" (TIMER_FREQ));
+		__asm __volatile("div %4"
+				 : "=a" (n), "=d" (m)
+				 : "0" (n), "1" (m), "r" (1000000));
 #else
-	/*
-	 * Calculate ((n * TIMER_FREQ) / 1e6) without using floating point and
-	 * without any avoidable overflows.
-	 */
-	n -= 20;
-	{
+		/*
+		 * Calculate ((n * TIMER_FREQ) / 1e6) without using floating
+		 * point and without any avoidable overflows.
+		 */
 		int sec = n / 1000000,
 		    usec = n % 1000000;
 		n = sec * TIMER_FREQ +
 		    usec * (TIMER_FREQ / 1000000) +
 		    usec * ((TIMER_FREQ % 1000000) / 1000) / 1000 +
 		    usec * (TIMER_FREQ % 1000) / 1000000;
-	}
 #endif
+	}
 
 	limit = TIMER_FREQ / hz;
 
@@ -435,7 +518,7 @@ rtcdrain(void *v)
 }
 
 void
-i8254_initclocks()
+cpu_initclocks()
 {
 	static struct timeout rtcdrain_timeout;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/exec_i386.c,v 1.1 2004/02/03 12:09:47 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/exec_i386.c,v 1.1.2.1 2004/06/05 23:09:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1998 Michael Shalayeff
@@ -52,6 +52,9 @@ run_loadfile(u_long *marks, int howto)
 	caddr_t av = (caddr_t)BOOTARG_OFF;
 	bios_consdev_t cd;
 	extern int com_speed; /* from bioscons.c */
+
+	if (sa_cleanup != NULL)
+		(*sa_cleanup)();
 
 	cd.consdev = cn_tab->cn_dev;
 	cd.conspeed = com_speed;

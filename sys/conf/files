@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.151.2.14 2004/02/19 10:51:29 niklas Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.151.2.15 2004/06/05 23:12:35 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -16,6 +16,8 @@ define	mii {[phy = -1]}
 define	midibus { }
 define	midisyn
 define	radiobus {}
+define	i2cbus {}
+define	gpiobus {}
 
 # audio device attributes
 define	mulaw
@@ -74,6 +76,10 @@ define	wskbddev {[console = -1], [mux = -1]}
 define	wsmousedev {[mux = -1]}
 define	wsrasteremulops
 
+# i2c device attributes
+define	i2cexec
+define	i2c_bitbang
+
 # SMC 93Cx6 Serial EEPROM devices
 define	smc93cx6
 file	dev/ic/smc93cx6.c		smc93cx6
@@ -112,6 +118,11 @@ device	ahc: scsi, smc93cx6
 file	dev/ic/aic7xxx.c		ahc
 file	dev/ic/aic7xxx_openbsd.c	ahc
 file	dev/ic/aic7xxx_seeprom.c	ahc
+
+# Adaptec U320 SCSI controllers
+device	ahd: scsi
+file	dev/ic/aic79xx.c		ahd
+file	dev/ic/aic79xx_openbsd.c	ahd
 
 # Adaptec AIC-6[23]60 SCSI controllers
 device	aic: scsi
@@ -158,6 +169,13 @@ device	isp: scsi
 file	dev/ic/isp.c			isp
 file	dev/ic/isp_openbsd.c		isp
 
+# LSILogic Fusion-MPT I/O Processor SCSI/FC Controllers
+#
+device  mpt: scsi
+file    dev/ic/mpt.c			mpt
+file    dev/ic/mpt_debug.c		mpt
+file    dev/ic/mpt_openbsd.c		mpt
+
 # UltraStor SCSI controllers
 device	uha: scsi
 file	dev/ic/uha.c		uha
@@ -175,9 +193,13 @@ file	dev/ic/siop_common.c		siop_common
 device	siop: scsi,siop_common
 file	dev/ic/siop.c			siop
 
-# Symbios/NCR 53c720/53c8xx SCSI controllers
+# Symbios/NCR 53c710 SCSI controllers
 device	osiop: scsi
-file	dev/ic/osiop.c			osiop & (osiop_gsc | osiop_eisa)
+file	dev/ic/osiop.c			osiop & (osiop_gsc | osiop_eisa | osiop_pcctwo)
+
+# Symbios/NCR 53c700 SCSI controllers
+device	oosiop: scsi
+file	dev/ic/oosiop.c			oosiop & (oosiop_gsc)
 
 # 3Com Etherlink-III Ethernet controller
 device	ep: ether, ifnet, ifmedia, mii
@@ -254,7 +276,7 @@ file	dev/ic/tropic.c		tr
 
 # 8250/16[45]50-based "com" ports
 device	com: tty
-file	dev/ic/com.c		com & (com_isa | com_isapnp | com_commulti | com_pcmcia | com_pica | com_algor | com_gsc | com_puc | com_ebus) needs-flag
+file	dev/ic/com.c		com & (com_isa | com_isapnp | com_commulti | com_pcmcia | com_pica | com_algor | com_gsc | com_puc | com_ebus | com_dino) needs-flag
 
 # PC-like keyboard controller
 device	pckbc { [slot = -1] }
@@ -390,6 +412,9 @@ file	net/if_pfsync.c		pfsync	needs-flag
 pseudo-device bio
 file	dev/bio.c	bio needs-flag
 
+pseudo-device hotplug
+file	dev/hotplug.c		hotplug	needs-flag
+
 # XXX machine-independent SCSI files should live somewhere here, maybe
 
 # kernel sources
@@ -520,7 +545,7 @@ file kern/exec_script.c
 file kern/exec_subr.c
 file kern/init_main.c
 file kern/init_sysent.c
-file kern/kern_acct.c
+file kern/kern_acct.c			accounting
 file kern/kern_clock.c
 file kern/kern_descrip.c
 file kern/kern_event.c
@@ -658,6 +683,7 @@ file net/if_bridge.c			bridge			needs-count
 file net/bridgestp.c			bridge
 file net/if_vlan.c			vlan			needs-count
 file net/radix.c
+file net/radix_mpath.c			!small_kernel
 file net/raw_cb.c
 file net/raw_usrreq.c
 file net/route.c
@@ -719,8 +745,9 @@ file netinet/ip_ah.c			inet & ipsec
 file netinet/ip_carp.c			carp			needs-count
 file netinet/ip_ipcomp.c		inet & ipsec
 file crypto/rijndael.c			(inet & ipsec) | crypto | uvm_swap_encrypt
+file crypto/md5.c
 file crypto/rmd160.c			(inet & ipsec) | crypto
-file crypto/sha1.c			(inet & ipsec) | crypto
+file crypto/sha1.c			(inet & ipsec) | crypto | carp
 file crypto/sha2.c			(inet & ipsec) | crypto
 file crypto/blf.c			(inet & ipsec) | crypto | vnd
 file crypto/cast.c			(inet & ipsec) | crypto
@@ -867,7 +894,7 @@ file uvm/uvm_glue.c
 file uvm/uvm_init.c
 file uvm/uvm_io.c
 file uvm/uvm_km.c
-file uvm/uvm_loan.c
+#file uvm/uvm_loan.c
 file uvm/uvm_map.c
 file uvm/uvm_meter.c
 file uvm/uvm_mmap.c
@@ -883,30 +910,16 @@ file uvm/uvm_user.c
 file uvm/uvm_vnode.c
 file dev/rd.c				ramdisk_hooks
 
-# ... NRL IPv6
-#file netinet6/in6.c			inet6
-#file netinet6/ipv6_icmp.c		inet6
-#file netinet6/in6_cksum.c		inet6
-file netinet6/in6_pcb.c			inet6
-#file netinet6/raw_ipv6.c		inet6
-#file netinet6/ipv6_input.c		inet6
-#file netinet6/ipv6_discovery.c		inet6
-#file netinet6/ipv6_addrconf.c		inet6
-#file netinet6/ipv6_rtrequest.c		inet6
-#file netinet6/ipv6_output.c		inet6
-#file netinet6/in6_proto.c		inet6
-#file netinet6/ipv6_trans.c		inet6
-
-# ... KAME IPv6
+# IPv6
 file net/if_faith.c			faith			needs-count
 file net/if_gif.c			gif			needs-count
 file netinet/ip_ecn.c			inet | inet6
 file netinet/in_gif.c			gif & inet
 file netinet6/in6_gif.c			gif & inet6
+file netinet6/in6_pcb.c			inet6
 file netinet6/in6.c			inet6
 file netinet6/in6_ifattach.c		inet6
 file netinet6/in6_cksum.c		inet6
-#file netinet6/in6_pcb.c		inet6
 file netinet6/in6_src.c			inet6
 file netinet6/in6_proto.c		inet6
 file netinet6/dest6.c			inet6
@@ -923,13 +936,6 @@ file netinet6/nd6.c			inet6
 file netinet6/nd6_nbr.c			inet6
 file netinet6/nd6_rtr.c			inet6
 file netinet6/raw_ip6.c			inet6
-#file netinet6/tcp6_debug.c		inet6 & tcp6
-#file netinet6/tcp6_input.c		inet6 & tcp6
-#file netinet6/tcp6_output.c		inet6 & tcp6
-#file netinet6/tcp6_subr.c		inet6 & tcp6
-#file netinet6/tcp6_timer.c		inet6 & tcp6
-#file netinet6/tcp6_usrreq.c		inet6 & tcp6
-#file netinet6/udp6_usrreq.c		inet6
 file netinet6/udp6_output.c		inet6
 
 # ... PF_KEY

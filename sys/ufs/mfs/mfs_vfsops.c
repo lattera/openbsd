@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/mfs/mfs_vfsops.c,v 1.12.2.8 2004/02/19 11:01:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/mfs/mfs_vfsops.c,v 1.12.2.9 2004/06/05 23:13:11 niklas Exp $	*/
 /*	$NetBSD: mfs_vfsops.c,v 1.10 1996/02/09 22:31:28 christos Exp $	*/
 
 /*
@@ -90,7 +90,6 @@ const struct vfsops mfs_vfsops = {
 int
 mfs_mountroot()
 {
-	extern struct vnode *rootvp;
 	register struct fs *fs;
 	struct mount *mp;
 	struct proc *p = curproc;	/* XXX */

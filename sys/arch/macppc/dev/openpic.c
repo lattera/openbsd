@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.6.4.7 2004/02/19 10:49:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.6.4.8 2004/06/05 23:10:52 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -394,7 +394,7 @@ intr_calculatemasks()
 		imen_o = ~irqs;
 	}
 }
-int o_virq_inited = 0;
+
 /*
  * Map 64 irqs into 32 (bits).
  */
@@ -402,14 +402,6 @@ static int
 mapirq(int irq)
 {
 	int v;
-	int i;
-
-	if (o_virq_inited == 0) {
-		o_virq_max = 0;
-		for (i = 0; i < ICU_LEN; i++)
-			o_virq[i] = 0;
-		o_virq_inited = 1;
-	}
 
 	/* irq in table already? */
 	if (o_virq[irq] != 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/linux/linux_exec.h,v 1.3.10.1 2002/03/28 11:28:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/compat/linux/linux_exec.h,v 1.3.10.2 2004/06/05 23:12:34 niklas Exp $	*/
 /*	$NetBSD: linux_exec.h,v 1.5 1995/10/07 06:27:01 mycroft Exp $	*/
 
 /*
@@ -67,7 +67,7 @@
 #define LINUX_N_BSSADDR(x,m) (LINUX_N_DATADDR(x,m) + (x).a_data)
 
 int exec_linux_aout_makecmds(struct proc *, struct exec_package *);
-int exec_linux_elf_makecmds(struct proc *, struct exec_package *);
+int exec_linux_elf32_makecmds(struct proc *, struct exec_package *);
 
 int linux_elf_probe(struct proc *, struct exec_package *, char *,
     u_long *, u_int8_t *);

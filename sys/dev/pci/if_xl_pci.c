@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7.6.6 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7.6.7 2004/06/05 23:12:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -148,7 +148,7 @@ xl_pci_attach(parent, self, aux)
 
 	sc->xl_flags = 0;
 
-	/* set flags required for 3Com MiniPCI adapters */
+	/* set required flags */
 	switch (PCI_PRODUCT(pa->pa_id)) {
 	case TC_DEVICEID_HURRICANE_555:
 		sc->xl_flags |= XL_FLAG_EEPROM_OFFSET_30 | XL_FLAG_8BITROM;
@@ -164,8 +164,11 @@ xl_pci_attach(parent, self, aux)
 		    XL_FLAG_EEPROM_OFFSET_30 | XL_FLAG_WEIRDRESET;
 		sc->xl_flags |= XL_FLAG_INVERT_LED_PWR|XL_FLAG_INVERT_MII_PWR;
 		break;
-	case  PCI_PRODUCT_3COM_3C9201:
+	case PCI_PRODUCT_3COM_3C9201:
 		sc->xl_flags |= XL_FLAG_PHYOK;
+		break;
+	case TC_DEVICEID_BOOMERANG_10_100BT:
+		sc->xl_flags |= XL_FLAG_NO_MMIO;
 		break;
 	default:
 		break;

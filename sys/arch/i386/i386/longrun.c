@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/longrun.c,v 1.1.2.2 2004/02/19 10:48:41 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/i386/i386/longrun.c,v 1.1.2.3 2004/06/05 23:08:59 niklas Exp $ */
 /*
  * Copyright (c) 2003 Ted Unangst
  * Copyright (c) 2001 Tamotsu Hattori
@@ -91,10 +91,11 @@ longrun_update(void *arg)
 }
 
 int
-longrun_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+longrun_cpuspeed(int *freq)
 {
 	longrun_update(NULL);	/* force update */
-	return (sysctl_rdint(oldp, oldlenp, newp, pentium_mhz));
+	*freq = pentium_mhz;
+	return (0);
 }
 
 /*
@@ -106,20 +107,10 @@ longrun_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
  * levels selectable.
  */
 int
-longrun_setperf(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+longrun_setperf(int high)
 {
-	int error;
 	uint32_t eflags, mode;
  	union msrinfo msrinfo;
-	static uint32_t high = 100;
-
-	if (newp == NULL)
-		return (EINVAL);
-	if ((error = sysctl_int(oldp, oldlenp, newp, newlen, &high)))
-		return (error);
-
-	if (high > 100)
-		high = 100;
 
 	if (high >= 50)
 		mode = 1;	/* power */

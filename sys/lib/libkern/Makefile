@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libkern/Attic/Makefile,v 1.13.4.2 2004/02/19 10:57:18 niklas Exp $
+#	$OpenBSD: src/sys/lib/libkern/Attic/Makefile,v 1.13.4.3 2004/06/05 23:13:03 niklas Exp $
 #	$NetBSD: Makefile,v 1.31 1996/08/10 04:01:31 mycroft Exp $
 
 LIB=	kern
@@ -25,7 +25,7 @@ SRCS+=	adddi3.c anddi3.c ashldi3.c ashrdi3.c cmpdi2.c divdi3.c iordi3.c \
 .endif
 
 # Other stuff
-SRCS+=	md5.c getsn.c srandom.c bcd.c
+SRCS+=	getsn.c srandom.c bcd.c strchr.c
 
 # Files to clean up
 CLEANFILES+= lib${LIB}.o lib${LIB}.po

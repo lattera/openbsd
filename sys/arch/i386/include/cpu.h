@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.23 2004/06/05 17:19:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.24 2004/06/05 23:09:00 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -365,22 +365,26 @@ void	i8254_initclocks(void);
 /* est.c */
 #if !defined(SMALL_KERNEL) && defined(I686_CPU)
 void	est_init(const char *);
-int     est_cpuspeed(void *, size_t *, void *, size_t);
-int     est_setperf(void *, size_t *, void *, size_t);
+int     est_cpuspeed(int *);
+int     est_setperf(int);
 #endif
 
 /* longrun.c */
 #if !defined(SMALL_KERNEL) && defined(I586_CPU)
 void	longrun_init(void);
-int	longrun_cpuspeed(void *, size_t *, void *, size_t);
-int	longrun_setperf(void *, size_t *, void *, size_t);
+int	longrun_cpuspeed(int *);
+int	longrun_setperf(int);
 #endif
 
 /* p4tcc.c */
 #if !defined(SMALL_KERNEL) && defined(I686_CPU)
 void	p4tcc_init(int, int);
-int     p4tcc_setperf(void *, size_t *, void *, size_t);
+int     p4tcc_setperf(int);
 #endif
+
+void	k6_powernow_init(void);
+int	k6_powernow_setperf(int);
+
 
 /* npx.c */
 void	npxdrop(struct proc *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syslimits.h,v 1.5.8.1 2003/06/07 11:09:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/syslimits.h,v 1.5.8.2 2004/06/05 23:13:10 niklas Exp $	*/
 /*	$NetBSD: syslimits.h,v 1.12 1995/10/05 05:26:19 thorpej Exp $	*/
 
 /*
@@ -43,6 +43,8 @@
 #define	OPEN_MAX		   64	/* max open files per process */
 #define	PATH_MAX		 1024	/* max bytes in pathname */
 #define	PIPE_BUF		  512	/* max bytes for atomic pipe writes */
+#define	SYMLINK_MAX	     PATH_MAX	/* max bytes in a symbolic link */
+#define	SYMLOOP_MAX		   32	/* max symlinks per path (for loops) */
 
 #define	BC_BASE_MAX	      INT_MAX	/* max ibase/obase values in bc(1) */
 #define	BC_DIM_MAX		65535	/* max array elements in bc(1) */

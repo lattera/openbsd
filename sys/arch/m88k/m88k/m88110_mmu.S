@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/m88k/m88k/m88110_mmu.S,v 1.1 2004/04/29 14:33:27 miod Exp $
+#	$OpenBSD: src/sys/arch/m88k/m88k/m88110_mmu.S,v 1.1.2.1 2004/06/05 23:09:48 niklas Exp $
 /*
  * Copyright (c) 2000 Steve Murphree, Jr.
  * All rights reserved.

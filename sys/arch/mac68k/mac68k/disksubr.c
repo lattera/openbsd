@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/disksubr.c,v 1.12.4.6 2003/06/07 11:13:14 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/disksubr.c,v 1.12.4.7 2004/06/05 23:10:51 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.22 1997/11/26 04:18:20 briggs Exp $	*/
 
 /*
@@ -365,7 +365,7 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 	int i, size;
 
 	/* minimal requirements for archetypal disk label */
-	if (lp->d_secsize == 0)
+	if (lp->d_secsize < DEV_BSIZE)
 		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
 		lp->d_secperunit = 0x1fffffff;

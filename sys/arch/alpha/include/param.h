@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/param.h,v 1.10.12.6 2003/06/07 11:11:33 ho Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/param.h,v 1.10.12.7 2004/06/05 23:10:43 niklas Exp $ */
 /* $NetBSD: param.h,v 1.30 2000/06/09 16:03:04 thorpej Exp $ */
 
 /*
@@ -103,19 +103,13 @@
  */
 #define	MSIZE		256		/* size of an mbuf */
 #ifndef MCLSHIFT
-# define	MCLSHIFT	11	/* convert bytes to m_buf clusters */
+#define	MCLSHIFT	11		/* convert bytes to m_buf clusters */
 					/* 2K cluster can hold Ether frame */
 #endif	/* MCLSHIFT */
 #define	MCLBYTES	(1 << MCLSHIFT)	/* size of a m_buf cluster */
 #define	MCLOFSET	(MCLBYTES - 1)
-#ifndef NMBCLUSTERS
+#define	NMBCLUSTERS	4096		/* map size, max cluster allocation */
 
-#ifdef GATEWAY
-#define	NMBCLUSTERS	1024		/* map size, max cluster allocation */
-#else
-#define	NMBCLUSTERS	512		/* map size, max cluster allocation */
-#endif
-#endif
 
 /*
  * Minimum and maximum sizes of the kernel malloc arena in PAGE_SIZE-sized

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.10 2004/02/19 10:56:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.11 2004/06/05 23:12:37 niklas Exp $ */
 /*	$NetBSD: wd.c,v 1.193 1999/02/28 17:15:27 explorer Exp $ */
 
 /*
@@ -134,7 +134,7 @@ struct wd_softc {
 	/* General disk infos */
 	struct device sc_dev;
 	struct disk sc_dk;
-	struct bufq *sc_q;
+	struct buf sc_q;
 	/* IDE disk soft states */
 	struct ata_bio sc_wdc_bio; /* current transfer */
 	struct buf *sc_bp; /* buf being transferred */
@@ -263,12 +263,6 @@ wdattach(struct device *parent, struct device *self, void *aux)
 	int i, blank;
 	char buf[41], c, *p, *q;
 	WDCDEBUG_PRINT(("wdattach\n"), DEBUG_FUNCS | DEBUG_PROBE);
-
-	wd->sc_q = BUFQ_ALLOC(0);
-#ifdef DIAGNOSTIC
-	if (wd->sc_q == NULL)
-		return;
-#endif
 
 	wd->openings = aa_link->aa_openings;
 	wd->drvp = aa_link->aa_drv_data;
@@ -403,12 +397,13 @@ int
 wddetach(struct device *self, int flags)
 {
 	struct wd_softc *sc = (struct wd_softc *)self;
-	struct buf *bp;
+	struct buf *dp, *bp;
 	int s, bmaj, cmaj, mn;
 
 	/* Remove unprocessed buffers from queue */
 	s = splbio();
-	while ((bp = BUFQ_GET(sc->sc_q)) != NULL) {
+	for (dp = &sc->sc_q; (bp = dp->b_actf) != NULL; ) {
+		dp->b_actf = bp->b_actf;
 		bp->b_error = ENXIO;
 		bp->b_flags |= B_ERROR;
 		biodone(bp);
@@ -433,7 +428,6 @@ wddetach(struct device *self, int flags)
 	/* Unhook the entropy source. */
 	rnd_detach_source(&sc->rnd_source);
 #endif
-	BUFQ_FREE(sc->sc_q);
 
 	return (0);
 }
@@ -494,7 +488,7 @@ wdstrategy(struct buf *bp)
 		goto done;
 	/* Queue transfer on drive, activate drive and controller if idle. */
 	s = splbio();
-	BUFQ_ADD(wd->sc_q, bp);
+	disksort(&wd->sc_q, bp);
 	wdstart(wd);
 	splx(s);
 	device_unref(&wd->sc_dev);
@@ -518,15 +512,17 @@ void
 wdstart(void *arg)
 {
 	struct wd_softc *wd = arg;
-	struct buf *bp = NULL;
+	struct buf *dp, *bp = NULL;
 
 	WDCDEBUG_PRINT(("wdstart %s\n", wd->sc_dev.dv_xname),
 	    DEBUG_XFERS);
 	while (wd->openings > 0) {
 
 		/* Is there a buf for us ? */
-		if ((bp = BUFQ_GET(wd->sc_q)) == NULL)
+		dp = &wd->sc_q;
+		if ((bp = dp->b_actf) == NULL)  /* yes, an assign */
 			return;
+		dp->b_actf = bp->b_actf;
 
 		/*
 		 * Make the command. First lock the device
@@ -648,7 +644,8 @@ noerror:	if ((wd->sc_wdc_bio.flags & ATA_CORR) || wd->retries > 0)
 			printf("%s: soft error (corrected)\n",
 			    wd->sc_dev.dv_xname);
 	}
-	disk_unbusy(&wd->sc_dk, (bp->b_bcount - bp->b_resid));
+	disk_unbusy(&wd->sc_dk, (bp->b_bcount - bp->b_resid),
+	    (bp->b_flags & B_READ));
 #if NRND > 0
 	rnd_add_uint32(&wd->rnd_source, bp->b_blkno);
 #endif

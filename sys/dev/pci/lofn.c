@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7.2.6 2004/02/19 10:56:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7.2.7 2004/06/05 23:12:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
@@ -167,7 +167,7 @@ lofn_attach(parent, self, aux)
 
 	crypto_kregister(sc->sc_cid, algs, lofn_kprocess);
 
-	printf(": %s\n", intrstr);
+	printf(": PK, %s\n", intrstr);
 
 	return;
 
@@ -546,12 +546,12 @@ lofn_feed(sc)
 		q = SIMPLEQ_FIRST(&sc->sc_queue);
 		if (q->q_start(sc, q) == 0) {
 			sc->sc_current = q;
-			SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q, q_next);
+			SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q_next);
 			sc->sc_ier |= LOFN_IER_DONE;
 			WRITE_REG(sc, LOFN_REL_IER, sc->sc_ier);
 			break;
 		} else {
-			SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q, q_next);
+			SIMPLEQ_REMOVE_HEAD(&sc->sc_queue, q_next);
 			free(q, M_DEVBUF);
 		}
 	}

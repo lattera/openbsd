@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/est.c,v 1.5.2.1 2004/02/19 10:48:41 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/est.c,v 1.5.2.2 2004/06/05 23:08:59 niklas Exp $ */
 /*
  * Copyright (c) 2003 Michael Eriksson.
  * All rights reserved.
@@ -191,6 +191,8 @@ static const struct est_cpu est_cpus[] = {
 
 static const struct fqlist *est_fqlist;
 
+extern int setperf_prio;
+
 void
 est_init(const char *cpu_device)
 {
@@ -200,6 +202,9 @@ est_init(const char *cpu_device)
 	char *tag;
 	const struct fqlist *fql;
 	extern char cpu_brandstr[];
+
+	if (setperf_prio > 3)
+		return;
 
 	if ((cpu_ecxfeature & CPUIDECX_EST) == 0)
 		return;
@@ -256,24 +261,18 @@ est_init(const char *cpu_device)
 
 	cpu_setperf = est_setperf;
 	cpu_cpuspeed = est_cpuspeed;
+	setperf_prio = 3;
 }
 
 int
-est_setperf(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+est_setperf(int level)
 {
-	static uint level = 100;
-	int low, high, i, fq, error;
+	int low, high, i, fq;
 	uint64_t msr;
 
 	if (est_fqlist == NULL)
 		return (EOPNOTSUPP);
 
-	error = sysctl_int(oldp, oldlenp, newp, newlen, &level);
-	if (error)
-		return (error);
-
-	if (level > 100)
-		level = 100;
 	low = est_fqlist->table[est_fqlist->n - 1].mhz;
 	high = est_fqlist->table[0].mhz;
 	fq = low + (high - low) * level / 100;
@@ -291,11 +290,8 @@ est_setperf(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
 
 
 int
-est_cpuspeed(void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+est_cpuspeed(int *freq)
 {
-	int freq;
-
-	freq = MSR2MHZ(rdmsr(MSR_PERF_STATUS));
-
-	return (sysctl_rdint(oldp, oldlenp, newp, freq));
+	*freq = MSR2MHZ(rdmsr(MSR_PERF_STATUS));
+	return (0);
 }

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.8 2003/03/27 23:26:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/vm_machdep.c,v 1.16.2.9 2004/06/05 23:10:48 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999-2003 Michael Shalayeff
+ * Copyright (c) 1999-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -205,13 +200,6 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	tf->tf_ipsw = PSL_C | PSL_Q | PSL_P | PSL_D | PSL_I /* | PSL_L */;
 
 	/*
-	 * Set up return value registers as libc:fork() expects
-	 */
-	tf->tf_ret0 = p1->p_pid;
-	tf->tf_ret1 = 1;	/* ischild */
-	tf->tf_t1 = 0;		/* errno */
-
-	/*
 	 * If specified, give the child a different stack.
 	 */
 	if (stack != NULL)
@@ -240,8 +228,10 @@ cpu_exit(p)
 	extern paddr_t fpu_curpcb;	/* from locore.S */
 	struct trapframe *tf = p->p_md.md_regs;
 
-	if (fpu_curpcb == tf->tf_cr30)
+	if (fpu_curpcb == tf->tf_cr30) {
+		fpu_exit();
 		fpu_curpcb = 0;
+	}
 
 	exit2(p);
 	cpu_switch(p);

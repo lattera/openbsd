@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.8 2004/02/19 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.9 2004/06/05 23:10:48 niklas Exp $	*/
 
 /*
- * Copyright (c) 1998-2003 Michael Shalayeff
+ * Copyright (c) 1998-2004 Michael Shalayeff
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,11 +12,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Michael Shalayeff.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -163,6 +158,7 @@ cpu_itmr			/* itmr value at the most recent clk int */
 	BSS(fpu_curpcb, 4)	/* pcb of the fpu owner */
 	.export fpu_enable, data
 	BSS(fpu_enable, 4)	/* bits to set in the ccr to enable fpu */
+	BSS(fpu_scratch, 16)	/* FPU scratch space, enough for a quad */
 	.export hppa_vtop, data
 	BSS(hppa_vtop, 4)	/* a vtop translation table addr (pa=va) */
 
@@ -885,11 +881,10 @@ $syscall_end
 #define	TLABEL(name)	$trap$name
 #define	TELABEL(num)	__CONCAT(trap_ep_,num)
 #define TRAP(name,num) \
-	.import TLABEL(name), code	! \
 	mtctl	r1, tr7			! \
-	ldil	L%TLABEL(name), r1	! \
 	.call				! \
-	be	R%TLABEL(name)(sr7, r1)	! \
+	.import TLABEL(name), code	! \
+	b	TLABEL(name)		! \
 	ldi	num, r1			! \
 	.align	32
 
@@ -911,62 +906,24 @@ $syscall_end
 	mtctl	r1, tr7			! \
 	.export	TELABEL(num), entry	! \
 	.label	TELABEL(num)		! \
-	ldil	0,r1			! \
-	ldo	0(r1), r1		! \
 	.call				! \
-	bv	0(r1)			! \
-	ldi	num, r1
-
-#define	LDILDO(name)			! \
-	.export	name, entry		! \
-	.label	name			! \
-	ldil	L%$name,%r1		! \
-	ldo	R%$name(%r1), %r1
-
-#ifdef HP7000_CPU
-LDILDO(itlb_x)
-LDILDO(itlbna_x)
-LDILDO(dtlb_x)
-LDILDO(dtlbna_x)
-LDILDO(tlbd_x)
-#endif
-
-#ifdef HP7100_CPU
-LDILDO(itlb_s)
-LDILDO(itlbna_s)
-LDILDO(dtlb_s)
-LDILDO(dtlbna_s)
-LDILDO(tlbd_s)
-#endif
-
-#ifdef HP7200_CPU
-LDILDO(itlb_t)
-LDILDO(itlbna_t)
-LDILDO(dtlb_t)
-LDILDO(dtlbna_t)
-LDILDO(tlbd_t)
-#endif
-
-#if defined(HP7100LC_CPU) || defined(HP7300LC_CPU)
-LDILDO(itlb_l)
-LDILDO(itlbna_l)
-LDILDO(dtlb_l)
-LDILDO(dtlbna_l)
-LDILDO(tlbd_l)
-#endif
+	b	__CONCAT($name,_l)	! \
+	ldi	num, r1			! \
+	b	__CONCAT($name,_t)+8	! \
+	b	__CONCAT($name,_s)+12	! \
+	nop /*b	__CONCAT($name,_u)+16 */
 
 #define	ITLBPRE \
-	mfctl	pcoq,r9		/* Offset */			! \
-	mfctl	pcsq,r8		/* Space  */			! \
-	depi	0,31,PGSHIFT,r9	/* align offset to page */
+	mfctl	pcoq,r9 ! \
+	mfctl	pcsq,r8
 #define	DTLBPRE \
-	mfctl	ior, r9		/* Offset */			! \
-	mfctl	isr, r8		/* Space  */			! \
-	depi	0,31,PGSHIFT,r9	/* align offset to page */
+	mfctl	ior, r9 ! \
+	mfctl	isr, r8	
 	/* CR28XXX according to a popular belief cr28 should be read here */
+
 #define	HPMCPRE	nop
 #define	INTRPRE	\
-	mfctl	eirr, r8 ! \
+	mfctl	eirr, r8	! \
 	mtctl	r8, eirr
 
 	.align NBPG
@@ -1047,6 +1004,9 @@ ENTRY(TLABEL(excpt),0)
 	copy	rp, r1
 	copy	arg0, r8
 	mfctl	cr30, r9
+#if (PCB_FPREGS+U_PCB) != 0
+	ldo	PCB_FPREGS+U_PCB(r9), r9
+#endif
 	.import	fpu_save, code
 	.call
 	bl	fpu_save, rp
@@ -1061,17 +1021,13 @@ ENTRY(TLABEL(excpt),0)
 	ldw	0(r9), r1
 	bb,>=,n	r1, HPPA_FPU_T_POS, excpt_notrap
 	ldw	8(r9), r1
-	extru	r1, 5, 6, r1
-	comib,<>,n HPPA_FPU_UNMPL, r1, excpt_notrap
+	bb,>=,n r1, 5, excpt_notrap	/* HPPA_FPU_UNMPL not set */
 
-	ldw	0(r9), r1
-	depi	0, HPPA_FPU_T_POS, 1, r1
-	stw	r1, 0(r9)
-	ldw	8(r9), r1
-	stw	r0, 8(r9)
+	ldw	0(r9), r16
+	depi	0, HPPA_FPU_T_POS, 1, r16
 	.import	$fpu_emulate, code
 	b	$fpu_emulate
-	fdc	r0(r9)
+	stw	r16, 0(r9)
 
 excpt_notrap
 	sync
@@ -1141,26 +1097,27 @@ $fpusw_set
 	mfctl	cr30, r9
 	ldw	R%fpu_curpcb(r16), r16
 
-	comb,=,n r16, r9, $fpusw_done
 	comb,=,n r16, r0, $fpusw_nosave
+	comb,=,n r16, r9, $fpusw_done
 
 	copy	arg0, r17
 	copy	rp, r1
-	copy	r16, arg0
+#if (PCB_FPREGS+U_PCB) != 0
+	ldo	PCB_FPREGS+U_PCB(r16), r16
+#endif
 	.import	fpu_save, code
 	.call
 	bl	fpu_save, rp
-	ldo	PCB_FPREGS+U_PCB(arg0), arg0
+	copy	r16, arg0
 	copy	r1, rp
 	copy	r17, arg0
 
 $fpusw_nosave
-
 	/* count switches */
 	ldil	L%fpu_csw, r1
 	ldw	R%fpu_csw(r1), r16
-	ldo	1(r16), r16
 	ldo	31*8+PCB_FPREGS+U_PCB(r9), r17
+	ldo	1(r16), r16
 	stw	r16, R%fpu_csw(r1)
 
 	fldds,ma -8(r17), fr31
@@ -1267,7 +1224,6 @@ EXIT(TLABEL(emu))
 	extru	r17, 24, 25, r17
 
 	.align	32
-$tlbd_x
 $tlbd_s
 $tlbd_t
 	TLB_STATS_PRE(tlbd)
@@ -1281,8 +1237,6 @@ $tlbd_t
 	rfir
 	nop
 
-$itlb_x
-$itlbna_x
 $itlb_s
 $itlbna_s
 $itlb_t
@@ -1300,14 +1254,8 @@ $itlbna_t
 	rfir
 	nop
 
-$dtlb_x
-$dtlbna_x
 $dtlb_s
 $dtlbna_s
-	/*
-	 * from the 7100lc ers, pg.6:
-	 * pa7100 provides cr28 for dtlb traps only
-	 */
 $dtlb_t
 $dtlbna_t
 	TLB_STATS_PRE(dtlb)
@@ -1743,7 +1691,6 @@ EXIT(TLABEL(all))
  * void desidhash_s(void)
  */
 LEAF_ENTRY(desidhash_s)
-ALTENTRY(desidhash_x)
 	sync
 	MFCPU_T(DR_CPUCFG,22)	/* t1 */
 	MFCPU_T(DR_CPUCFG,22)
@@ -1968,16 +1915,44 @@ ALTENTRY(hppa_pfr_end)
 	.word	0
 EXIT(hppa_pfr)
 
-	.export	TLABEL(intr), entry
+#if 0
+	.align	8
+intr_ticks
+	.word	0, 0
+
+#define	INTR_PROF_PRE \
+	mfctl	itmr, r9		! \
+	mtctl	r9, tr5
+#define	INTR_PROF_AFT \
+	mfctl	itmr, r8		! \
+	mfctl	tr5, r9			! \
+	ldil	L%intr_ticks, r1	! \
+	ldo	R%intr_ticks(r1), r1	! \
+	sub	r8, r9, r8		! \
+	ldw	0(r1), r16		! \
+	ldw	4(r1), r17		! \
+	add	r8, r16, r16		! \
+	addi	1, r17, r17		! \
+	stw	r16, 0(r1)		! \
+	stw	r17, 4(r1)
+#else
+#define	INTR_PROF_PRE	/* */
+#define	INTR_PROF_AFT	/* */
+#endif
+
 	.import	cpl, data
 	.import	ipending, data
 	.import	imask, data
 	.import	intr_table, data
+	.align	32
 ENTRY(TLABEL(intr),0)
-	/* r8 set to eirr in the INTRPRE */
+	/*
+	 * r8 is set to eirr in the INTRPRE
+	 */
+
+	INTR_PROF_PRE
 
 	bb,>=,n	r8, 0, $intr_noclock
-	nop
 
 	/* reload the itmr */
 	ldil	L%cpu_hzticks, r25	/* those both are aligned properly */
@@ -1989,48 +1964,52 @@ ENTRY(TLABEL(intr),0)
 	stw	r16, R%cpu_itmr(r25)
 
 $intr_noclock
+	ldil	L%intr_table + 32*32, r1
+	ldo	R%intr_table + 32*32(r1), r1
 	ldil	L%ipending, r17
+	b	$intr_cont
 	ldw	R%ipending(r17), r24
-	ldil	L%intr_table, r1
-	ldo	R%intr_table(r1), r1
+
 $intr_ffs
-	addi	32, r1, r1
-	bb,>=	r8, 31, $intr_ffs
-	shd	r0, r8, 1, r8
+	addi	-32, r1, r1
+	bb,>=	r8, 0, $intr_ffs
+	zdep	r8, 30, 31, r8
 
-	ldb	2-32(r1), r17
-	ldw	4-32(r1), r9
-	subi,<>	1, r17, r0
-	bv,n	r0(r9)
-	nop
+	ldw	0(r1), r17
+	bb,>=,n	r17, 23, $intr_nocall
 
-	mfctl	sar, r25
-	ldb	1-32(r1), r9
-	mtsar	r9
-	vdepi	1, 1, r24
-	mtsar	r25
+	ldw	2*4(r1), r16	/* func */
+	ldw	3*4(r1), r9	/* arg: ioreg */
+	mtctl	r1, tr7
+	bv	r0(r16)
+	ldw	4*4(r1), r1	/* next: sub-intr_table */
 
-	ldb	0-32(r1), r9
-	ldil	L%intrcnt, r25
-	ldo	R%intrcnt(r25), r25
-	sh2add	r9, r25, r25
-	ldw	0(r25), r17
-	addi	1, r17, r17
-	stw	r17, 0(r25)
+$intr_nocall
+	ldw	6*4(r1), r17	/* bit */
+	ldw	7*4(r1), r25	/* &intrcnt[pri] */
+	or	r17, r24, r24	/* ipending */
 
+	ldw	0(r25), r9
+	addi	1, r9, r9
+	stw	r9, 0(r25)
+
+	/* also return from nested handlers */
 $intr_cont
-	comb,<>	r0, r8, $intr_ffs
-	nop
+	comb,<>,n r0, r8, $intr_ffs
+	ldw	-32(r1), r0	/* preload cache */
 
-	ldil	L%ipending, r17
-	stw	r24, R%ipending(r17)
+	ldil	L%ipending, r25
+	stw	r24, R%ipending(r25)
 	ldil	L%cpl, r17
 	ldw	R%cpl(r17), r17
-	ldil	L%imask, r9
-	ldo	R%imask(r9), r9
-	ldwx,s	r17(r9), r16
+	ldil	L%imask, r16
+	ldo	R%imask(r16), r16
+	ldwx,s	r17(r16), r25
+
+	INTR_PROF_AFT
+
 	ldi	T_INTERRUPT, r1
-	andcm,=	r24, r16, r0
+	andcm,=	r24, r25, r0
 	b	TLABEL(all)
 	nop
 
@@ -2038,15 +2017,20 @@ $intr_cont
 	nop
 EXIT(TLABEL(intr))
 
-	.export	gsc_intr, entry
+/*
+ * called with:
+ *	r1	sub intr_table
+ *	r9	ioregs
+ *	r24	ipending (in/out)
+ *	tr7	saved r1 (restore on return)
+ * free:
+ *	r9, r16, r17, r25
+ */
+	.align	32
 LEAF_ENTRY(gsc_intr)
-
-	ldw	8-32(r1), r9	/* arg: ioreg */
-	mtctl	r1, tr7
 	ldw	0(r9), r16	/* irr */
 
-	ldw	12-32(r1), r1	/* next: sub-intr_table */
-
+	/* we know that first 5 bits are never used ... should skip */
 $gsc_intr_loop
 	comb,=,n r0, r16, $intr_cont
 	mfctl	tr7, r1
@@ -2055,37 +2039,26 @@ $gsc_ffs
 	bb,>=	r16, 31, $gsc_ffs
 	shd	r0, r16, 1, r16
 
-	copy	r1, r9
+	ldo	-32(r1), r9
 $gsc_share
-	mfctl	sar, r25
-	ldb	1-32(r1), r17
-	mtsar	r17
-	vdepi	1, 1, r24
-	mtsar	r25
+	ldw	6*4(r9), r17	/* bit */
+	ldw	7*4(r9), r25	/* &intrcnt[pri] */
+	or	r17, r24, r24	/* ipending */
 
-	ldb	0-32(r1), r17
-	ldil	L%intrcnt, r25
-	ldo	R%intrcnt(r25), r25
-	sh2add	r17, r25, r25
 	ldw	0(r25), r17
+	ldw	5*4(r9), r9	/* share */
 	addi	1, r17, r17
+	comb,<>	r0, r9, $gsc_share
 	stw	r17, 0(r25)
 
-	ldw	16-32(r1), r17
-	comb,<>,n r0, r17, $gsc_share
-	ldo	32(r17), r1
-
-	b	$gsc_intr_loop
-	copy	r9, r1
+	b,n	$gsc_intr_loop
 EXIT(gsc_intr)
 
-	.export	dino_intr, entry
+	/* see above for calling conventions */
+	.align	32
 LEAF_ENTRY(dino_intr)
-	ldw	8-32(r1), r9	/* arg: ioreg */
-	mtctl	r1, tr7
-	ldw	12(r9), r16	/* irr0 */
+	ldw	3*4(r9), r16	/* irr0 */
 
-	ldw	12-32(r1), r1	/* next: sub-intr_table */
 $dino_intr_loop
 	comb,=,n r0, r16, $intr_cont
 	mfctl	tr7, r1
@@ -2094,28 +2067,19 @@ $dino_ffs
 	bb,>=	r16, 31, $dino_ffs
 	shd	r0, r16, 1, r16
 
-	copy	r1, r9
+	ldo	-32(r1), r9
 $dino_share
-	mfctl	sar, r25
-	ldb	1-32(r1), r17
-	mtsar	r17
-	vdepi	1, 1, r24
-	mtsar	r25
+	ldw	6*4(r9), r17	/* bit */
+	ldw	7*4(r9), r25	/* &intrcnt[pri] */
+	or	r17, r24, r24	/* ipending */
 
-	ldb	0-32(r1), r17
-	ldil	L%intrcnt, r25
-	ldo	R%intrcnt(r25), r25
-	sh2add	r17, r25, r25
 	ldw	0(r25), r17
+	ldw	5*4(r9), r9	/* share */
 	addi	1, r17, r17
+	comb,<>	r0, r9, $dino_share
 	stw	r17, 0(r25)
 
-	ldw	16-32(r1), r17
-	comb,<>,n r0, r17, $dino_share
-	ldo	32(r17), r1
-
-	b	$dino_intr_loop
-	copy	r9, r1
+	b,n	$dino_intr_loop
 EXIT(dino_intr)
 
 	.export	TLABEL(ibrk), entry
@@ -2193,6 +2157,14 @@ $ibrk_exit
 	nop
 EXIT(TLABEL(ibrk))
 
+LEAF_ENTRY(fpu_exit)
+	ldil	L%fpu_scratch, %r25
+	ldo	R%fpu_scratch(%r25), %r25
+	fstds	%fr0, 0(%r25)
+	bv	%r0(%rp)
+	sync
+EXIT(fpu_exit)
+
 LEAF_ENTRY(fpu_save)
 	fstds,ma %fr0 , 8(arg0)
 	fstds,ma %fr1 , 8(arg0)
@@ -2226,21 +2198,16 @@ LEAF_ENTRY(fpu_save)
 	fstds,ma %fr29, 8(arg0)
 	fstds,ma %fr30, 8(arg0)
 	fstds    %fr31, 0(arg0)
-	fdc	r0(arg0)
-	ldo	-56(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	-32(arg0), arg0
-	fdc	r0(arg0)
+	ldo	-24(arg0), arg0
+	ldi	-32, r25	/* gotta be free for all callers */
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
+	fdc,m	r25(arg0)
 	bv	r0(rp)
 	sync
 EXIT(fpu_save)
@@ -2310,22 +2277,22 @@ ENTRY($fpu_emulate,320)
 	bv,n	0(t1)
 	nop
 
-	mfctl	cr30, arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
-	ldo	32(arg0), arg0
-	fdc	r0(arg0)
+	mfctl	cr30, r25
+	ldi	32, r1
+
+	ldw	8(r25), r17	/* fpu exception reg 0 */
+	zdep	ret0, 5, 6, r17	/* intentionally zero the insn */
+	stw	r17, 8(r25)
+
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc,m	r1(r25)
+	fdc	r0(r25)
+	sync
 
 	ldil	L%fpemu_stack, r31
 	ldw	R%fpemu_stack(r31), r31
@@ -2366,9 +2333,18 @@ ENTRY($fpu_emulate,320)
 	ldw	TF_R30(r31), r30
 	ldw	TF_R31(r31), r31
 
-	comb,<>	r0, r1, TLABEL(all)
+	bb,>=,n	r1, 24, $fpu_emulate_done
+
+	b	TLABEL(all)
+	ldi	T_EMULATION, r1
+
+$fpu_emulate_done
+	comb,=,n r0, r1, $fpu_emulate_done2
+
+	b	TLABEL(all)
 	ldi	T_EXCEPTION, r1
 
+$fpu_emulate_done2
 	rfir
 	nop
 EXIT($fpu_emulate)
@@ -2933,6 +2909,11 @@ EXIT(switch_trampoline)
  * Signal "trampoline" code. Invoked from RTE setup by sendsig().
  */
 ENTRY(sigcode,0)
+	bb,>=,n	arg3, 30, sigcode_call
+	dep	r0, 31, 2, arg3
+	ldw	4(arg3), r19
+	ldw	0(arg3), arg3
+sigcode_call
 	.call
 	ble	0(sr0, arg3)
 	copy	r31, rp

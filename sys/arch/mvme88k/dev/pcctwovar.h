@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/pcctwovar.h,v 1.1 2004/04/24 19:51:48 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/pcctwovar.h,v 1.1.2.1 2004/06/05 23:09:49 niklas Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  *

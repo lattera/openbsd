@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_irqhandler.c,v 1.1.2.1 2004/02/19 10:48:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/footbridge/Attic/footbridge_irqhandler.c,v 1.1.2.2 2004/06/05 23:10:45 niklas Exp $	*/
 /*	$NetBSD: footbridge_irqhandler.c,v 1.9 2003/06/16 20:00:57 thorpej Exp $	*/
 
 /*
@@ -76,7 +76,7 @@ __volatile int footbridge_ipending;
 
 void footbridge_intr_dispatch(struct clockframe *frame);
 
-const struct evcnt *footbridge_pci_intr_evcnt __P((void *, pci_intr_handle_t));
+const struct evcnt *footbridge_pci_intr_evcnt (void *, pci_intr_handle_t);
 
 void footbridge_do_pending(void);
 

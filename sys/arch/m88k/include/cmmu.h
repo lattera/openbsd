@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/cmmu.h,v 1.2 2004/05/07 18:06:39 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/include/cmmu.h,v 1.2.2.1 2004/06/05 23:09:47 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/conf.h,v 1.1.8.1 2003/05/13 19:41:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/conf.h,v 1.1.8.2 2004/06/05 23:09:49 niklas Exp $	*/
 /*
  * Copyright (c) 2002, Miodrag Vallat.
  * All rights reserved.
@@ -36,7 +36,12 @@ cdev_decl(mm);
 cdev_decl(vmel);
 cdev_decl(vmes);
 
+#define	nvramread  nvramrw
+#define	nvramwrite nvramrw
 cdev_decl(nvram);
+
+#define	sramread  sramrw
+#define	sramwrite sramrw
 cdev_decl(sram);
 
 cdev_decl(bugtty);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/gpio/gpio.c,v 1.1 2004/06/03 18:08:00 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/gpio/gpio.c,v 1.1.2.1 2004/06/05 23:12:38 niklas Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

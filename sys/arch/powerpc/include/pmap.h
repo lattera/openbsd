@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.8 2004/02/19 10:49:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pmap.h,v 1.3.14.9 2004/06/05 23:10:56 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 1996/09/30 16:34:29 ws Exp $	*/
 
 /*-
@@ -132,6 +132,8 @@ void switchexit(struct proc *);
 
 int pte_spill_v(struct pmap *pm, u_int32_t va, u_int32_t dsisr, int exec_fault);
 #define pmap_copy(dst_pmap, src_pmap, dst_addr, len, src_addr) ;
+
+void pmap_proc_iflush(struct proc *proc, vaddr_t va, vsize_t len);
 
 #endif	/* _KERNEL */
 #endif	/* _LOCORE */

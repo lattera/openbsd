@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/disksubr.c,v 1.12.6.3 2003/06/07 11:11:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/disksubr.c,v 1.12.6.4 2004/06/05 23:10:46 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.9 1997/04/01 03:12:13 scottr Exp $	*/
 
 /*
@@ -73,7 +73,7 @@ readdisklabel(dev, strat, lp, osdep, spoofonly)
 	char *msg = NULL;
 
 	/* minimal requirements for archetypal disk label */
-	if (lp->d_secsize == 0)
+	if (lp->d_secsize < DEV_BSIZE)
 		lp->d_secsize = DEV_BSIZE;
 	if (lp->d_secperunit == 0)
 		lp->d_secperunit = 0x1fffffff;

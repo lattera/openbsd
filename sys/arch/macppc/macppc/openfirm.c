@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/openfirm.c,v 1.1.4.3 2004/02/19 10:49:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/openfirm.c,v 1.1.4.4 2004/06/05 23:10:52 niklas Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -271,8 +271,8 @@ OF_getnodebyname(int start, const char *name)
 	int node = 0;
 	int next;
 
-	if (node == 0)
-		node = OF_peer(0);
+	if (start == 0)
+		start = OF_peer(0);
 
 	for (node = start; node; node = next) {
 		len = OF_getprop(node, "name", nname, sizeof(nname));

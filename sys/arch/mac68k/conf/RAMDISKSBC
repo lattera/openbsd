@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/RAMDISKSBC,v 1.1.8.2 2003/05/16 00:29:39 niklas Exp $
+#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/RAMDISKSBC,v 1.1.8.3 2004/06/05 23:10:51 niklas Exp $
 #
 # RAMDISKSBC - bsd.rd configuration file (SBC version)
 
@@ -27,7 +27,7 @@ pseudo-device	bpfilter 1	# packet filter
 option		DDB
 
 # Mac-specific options
-option		HZ=60		# Macs like 60hz
+option		HZ=60		# Macs like 60Hz
 option		M68040
 option		M68030
 option		M68020		# Must have 68851 PMMU

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.9 2004/02/19 10:48:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.10 2004/06/05 23:08:59 niklas Exp $	*/
 /*	$NetBSD: gdt.c,v 1.28 2002/12/14 09:38:50 junyoung Exp $	*/
 
 /*-
@@ -94,13 +94,16 @@ void gdt_put_slot(int);
 static __inline void
 gdt_lock()
 {
-	lockmgr(&gdt_lock_store, LK_EXCLUSIVE, &gdt_simplelock, curproc);
+	if (curproc != NULL)
+		lockmgr(&gdt_lock_store, LK_EXCLUSIVE, &gdt_simplelock,
+		    curproc);
 }
 
 static __inline void
 gdt_unlock()
 {
-	lockmgr(&gdt_lock_store, LK_RELEASE, &gdt_simplelock, curproc);
+	if (curproc != NULL)
+		lockmgr(&gdt_lock_store, LK_RELEASE, &gdt_simplelock, curproc);
 }
 
 /* XXX needs spinlocking if we ever mean to go finegrained. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/gsc/gsckbc.c,v 1.3.4.2 2004/02/19 10:48:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/gsc/gsckbc.c,v 1.3.4.3 2004/06/05 23:10:48 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -427,9 +427,8 @@ gsckbc_intr_establish(struct pckbc_softc *sc, pckbc_slot_t slot)
 {
 	struct gsckbc_softc *gsc = (void *)sc;
 
-	gsc->sc_ih = gsc_intr_establish(
-	    (struct gsc_softc *)sc->sc_dv.dv_parent,
-	    IPL_TTY, gsc->sc_irq, gsckbcintr, sc, sc->sc_dv.dv_xname);
+	gsc->sc_ih = gsc_intr_establish((struct gsc_softc *)sc->sc_dv.dv_parent,
+	    gsc->sc_irq, IPL_TTY, gsckbcintr, sc, sc->sc_dv.dv_xname);
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mtd8xx.c,v 1.3.2.1 2004/02/19 10:56:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mtd8xx.c,v 1.3.2.2 2004/06/05 23:12:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Oleg Safiullin <form@pdp11.org.ru>
@@ -950,15 +950,15 @@ mtd_rxeof(struct mtd_softc *sc)
 		    0, sc->mtd_cdata.mtd_rx_chain[i].sd_map->dm_mapsize,
 		    BUS_DMASYNC_POSTREAD);
 
-		m0 = m_devget(mtod(m, char *) - 2, total_len + 2, 0, ifp,
-		    NULL);
+		m0 = m_devget(mtod(m, char *) - ETHER_ALIGN, total_len + ETHER_ALIGN,
+		    0, ifp, NULL);
 		mtd_newbuf(sc, i, m);
 		i = (i + 1) % MTD_RX_LIST_CNT;
 		if (m0 == NULL) {
 			ifp->if_ierrors++;
 			continue;
 		}
-		m_adj(m0, 2);
+		m_adj(m0, ETHER_ALIGN);
 		m = m0;
 
 		ifp->if_ipackets++;

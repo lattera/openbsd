@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_ef_isapnp.c,v 1.5.2.4 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_ef_isapnp.c,v 1.5.2.5 2004/06/05 23:12:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -57,7 +57,6 @@
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
-#include <net/bpfdesc.h>
 #endif
 
 #include <machine/cpu.h>

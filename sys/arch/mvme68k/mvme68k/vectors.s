@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.5 2004/02/19 10:49:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.6 2004/06/05 23:10:53 niklas Exp $ */
 
 | Copyright (c) 1995 Theo de Raadt
 |
@@ -72,8 +72,8 @@
 GLOBAL(vectab)
 	.long	0x12345678	/* 0: jmp 0x7400:w (unused reset SSP) */
 	VECTOR_UNUSED		/* 1: NOT USED (reset PC) */
-	VECTOR(buserr)		/* 2: bus error */
-	VECTOR(addrerr)		/* 3: address error */
+	VECTOR(busaddrerr2030)	/* 2: bus error */
+	VECTOR(busaddrerr2030)	/* 3: address error */
 	VECTOR(illinst)		/* 4: illegal instruction */
 	VECTOR(zerodiv)		/* 5: zero divide */
 	VECTOR(chkinst)		/* 6: CHK instruction */

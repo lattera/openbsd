@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aac_tables.h,v 1.1.4.1 2001/05/14 22:23:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aac_tables.h,v 1.1.4.2 2004/06/05 23:12:39 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith
@@ -86,6 +86,7 @@ static struct aac_code_lookup aac_cpu_variant[] = {
 	{ "PowerPC 603e",		CPUPPC_603e },
 	{ "Unknown StrongARM",		CPUARM_xxx },
 	{ "Unknown PowerPC",		CPUPPC_xxx },
+	{ "Intel GC80302 IOP",		CPUI960_302},
 	{ NULL, 			0 },
 	{ "Unknown processor",		0 }
 };
