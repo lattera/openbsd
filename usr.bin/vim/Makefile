@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/vim/Attic/Makefile,v 1.2 1996/09/07 23:29:16 downsj Exp $
+#	$OpenBSD: src/usr.bin/vim/Attic/Makefile,v 1.3 1996/09/07 23:41:00 downsj Exp $
 
 .PATH:	${.CURDIR}/doc
 
@@ -48,4 +48,3 @@ afterinstall:
 		${DESTDIR}/usr/share/vim; done
 
 .include <bsd.prog.mk>
-.include "../Makefile.inc"
