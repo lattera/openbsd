@@ -32,16 +32,16 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/lib/libc/compat-43/Attic/setruid.c,v 1.9 2002/10/30 20:15:29 millert Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libcompat/4.3/Attic/setrgid.c,v 1.1 2003/05/08 23:30:02 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
 #include <unistd.h>
 
-__warn_references(setruid, "warning: this program uses setruid(), which is deprecated.");
+__warn_references(setrgid, "warning: this program uses setrgid(), which is deprecated.");
 
 int
-setruid(uid_t ruid)
+setrgid(gid_t rgid)
 {
-	return (setresuid(ruid, (uid_t)-1, ruid));
+	return (setregid(rgid, (gid_t)-1));
 }
