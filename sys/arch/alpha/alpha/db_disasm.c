@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/db_disasm.c,v 1.11 1997/07/23 23:26:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/db_disasm.c,v 1.12 1997/11/06 23:48:53 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserverd.
@@ -31,7 +31,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/systm.h>
 
 #include <vm/vm.h>
