@@ -1,5 +1,6 @@
-/*	$OpenBSD: src/lib/libc_r/sys/Attic/slow_atomic_lock.c,v 1.1 1998/11/20 11:15:38 d Exp $	*/
+/*	$OpenBSD: src/lib/libc_r/sys/Attic/slow_atomic_lock.c,v 1.2 1998/11/21 14:02:10 d Exp $	*/
 
+#include <pthread.h>
 #include "pthread_private.h"
 #include "spinlock.h"
 #include <signal.h>
