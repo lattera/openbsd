@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/msg.c,v 1.2.2.2 2002/06/26 18:22:35 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/msg.c,v 1.2.2.3 2002/10/11 14:53:06 miod Exp $");
 
 #include "buffer.h"
 #include "getput.h"
@@ -63,7 +63,7 @@ msg_recv(int fd, Buffer *m)
 	}
 	msg_len = GET_32BIT(buf);
 	if (msg_len > 256 * 1024)
-		fatal("msg_recv: read: bad msg_len %d", msg_len);
+		fatal("msg_recv: read: bad msg_len %u", msg_len);
 	buffer_clear(m);
 	buffer_append_space(m, msg_len);
 	res = atomicio(read, fd, buffer_ptr(m), msg_len);

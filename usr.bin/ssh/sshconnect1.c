@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.41.2.3 2002/06/22 07:23:18 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.41.2.4 2002/10/11 14:53:07 miod Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/md5.h>
@@ -251,7 +251,7 @@ try_rsa_authentication(int idx)
 	 * load the private key.  Try first with empty passphrase; if it
 	 * fails, ask for a passphrase.
 	 */
-	if (public->flags && KEY_FLAG_EXT)
+	if (public->flags & KEY_FLAG_EXT)
 		private = public;
 	else
 		private = key_load_private_type(KEY_RSA1, authfile, "", NULL);

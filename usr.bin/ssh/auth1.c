@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.25.2.3 2002/06/22 07:23:16 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.25.2.4 2002/10/11 14:53:06 miod Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -116,31 +116,51 @@ do_authloop(Authctxt *authctxt)
 
 				if (kdata[0] == 4) { /* KRB_PROT_VERSION */
 #ifdef KRB4
-					KTEXT_ST tkt;
-
+					KTEXT_ST tkt, reply;
 					tkt.length = dlen;
 					if (tkt.length < MAX_KTXT_LEN)
 						memcpy(tkt.dat, kdata, tkt.length);
 
-					if (auth_krb4(authctxt, &tkt, &client_user)) {
+					if (PRIVSEP(auth_krb4(authctxt, &tkt,
+					    &client_user, &reply))) {
 						authenticated = 1;
 						snprintf(info, sizeof(info),
 						    " tktuser %.100s",
 						    client_user);
+
+						packet_start(
+						    SSH_SMSG_AUTH_KERBEROS_RESPONSE);
+						packet_put_string((char *)
+						    reply.dat, reply.length);
+						packet_send();
+						packet_write_wait();
+
 						xfree(client_user);
 					}
 #endif /* KRB4 */
 				} else {
 #ifdef KRB5
-					krb5_data tkt;
+ 					krb5_data tkt, reply;
 					tkt.length = dlen;
 					tkt.data = kdata;
 
-					if (auth_krb5(authctxt, &tkt, &client_user)) {
+					if (PRIVSEP(auth_krb5(authctxt, &tkt,
+					    &client_user, &reply))) {
 						authenticated = 1;
 						snprintf(info, sizeof(info),
 						    " tktuser %.100s",
 						    client_user);
+ 
+ 						/* Send response to client */
+ 						packet_start(
+						    SSH_SMSG_AUTH_KERBEROS_RESPONSE);
+ 						packet_put_string((char *)
+						    reply.data, reply.length);
+ 						packet_send();
+ 						packet_write_wait();
+
+ 						if (reply.length)
+ 							xfree(reply.data);
 						xfree(client_user);
 					}
 #endif /* KRB5 */
@@ -295,7 +315,8 @@ do_authloop(Authctxt *authctxt)
 			    authctxt->user);
 
 		/* Special handling for root */
-		if (authenticated && authctxt->pw->pw_uid == 0 &&
+		if (!use_privsep &&
+		    authenticated && authctxt->pw->pw_uid == 0 &&
 		    !auth_root_allowed(get_authname(type)))
 			authenticated = 0;
 

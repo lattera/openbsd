@@ -33,7 +33,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.108.2.6 2002/06/26 18:22:35 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.108.2.7 2002/10/11 14:53:07 miod Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -441,6 +441,8 @@ do_exec_no_pty(Session *s, const char *command)
 
 	/* Fork the child. */
 	if ((pid = fork()) == 0) {
+		fatal_remove_all_cleanups();
+
 		/* Child.  Reinitialize the log since the pid has changed. */
 		log_init(__progname, options.log_level, options.log_facility, log_stderr);
 
@@ -547,6 +549,7 @@ do_exec_pty(Session *s, const char *command)
 
 	/* Fork the child. */
 	if ((pid = fork()) == 0) {
+		fatal_remove_all_cleanups();
 
 		/* Child.  Reinitialize the log because the pid has changed. */
 		log_init(__progname, options.log_level, options.log_facility, log_stderr);
@@ -644,8 +647,8 @@ do_login(Session *s, const char *command)
 	 * the address be 0.0.0.0.
 	 */
 	memset(&from, 0, sizeof(from));
+	fromlen = sizeof(from);
 	if (packet_connection_is_on_socket()) {
-		fromlen = sizeof(from);
 		if (getpeername(packet_get_connection_in(),
 		    (struct sockaddr *) & from, &fromlen) < 0) {
 			debug("getpeername: %.100s", strerror(errno));
@@ -658,7 +661,7 @@ do_login(Session *s, const char *command)
 		record_login(pid, s->tty, pw->pw_name, pw->pw_uid,
 		    get_remote_name_or_ip(utmp_len,
 		    options.verify_reverse_mapping),
-		    (struct sockaddr *)&from);
+		    (struct sockaddr *)&from, fromlen);
 
 	if (check_quietlogin(s, command))
 		return;
@@ -832,8 +835,10 @@ do_setup_env(Session *s, const char *shell)
 		child_set_env(&env, &envsize, "LOGNAME", pw->pw_name);
 		child_set_env(&env, &envsize, "HOME", pw->pw_dir);
 #ifdef HAVE_LOGIN_CAP
-		(void) setusercontext(lc, pw, pw->pw_uid, LOGIN_SETPATH);
-		child_set_env(&env, &envsize, "PATH", getenv("PATH"));
+		if (setusercontext(lc, pw, pw->pw_uid, LOGIN_SETPATH) < 0)
+			child_set_env(&env, &envsize, "PATH", _PATH_STDPATH);
+		else
+			child_set_env(&env, &envsize, "PATH", getenv("PATH"));
 #else
 		child_set_env(&env, &envsize, "PATH", _PATH_STDPATH);
 #endif
@@ -852,13 +857,13 @@ do_setup_env(Session *s, const char *shell)
 	if (!options.use_login) {
 		while (custom_environment) {
 			struct envstring *ce = custom_environment;
-			char *s = ce->s;
+			char *str = ce->s;
 
-			for (i = 0; s[i] != '=' && s[i]; i++)
+			for (i = 0; str[i] != '=' && str[i]; i++)
 				;
-			if (s[i] == '=') {
-				s[i] = 0;
-				child_set_env(&env, &envsize, s, s + i + 1);
+			if (str[i] == '=') {
+				str[i] = 0;
+				child_set_env(&env, &envsize, str, str + i + 1);
 			}
 			custom_environment = ce->next;
 			xfree(ce->s);
@@ -866,9 +871,15 @@ do_setup_env(Session *s, const char *shell)
 		}
 	}
 
+	/* SSH_CLIENT deprecated */
 	snprintf(buf, sizeof buf, "%.50s %d %d",
 	    get_remote_ipaddr(), get_remote_port(), get_local_port());
 	child_set_env(&env, &envsize, "SSH_CLIENT", buf);
+
+	snprintf(buf, sizeof buf, "%.50s %d %.50s %d",
+	    get_remote_ipaddr(), get_remote_port(),
+	    get_local_ipaddr(packet_get_connection_in()), get_local_port());
+	child_set_env(&env, &envsize, "SSH_CONNECTION", buf);
 
 	if (s->ttyfd != -1)
 		child_set_env(&env, &envsize, "SSH_TTY", s->tty);
@@ -894,7 +905,7 @@ do_setup_env(Session *s, const char *shell)
 		    auth_sock_name);
 
 	/* read $HOME/.ssh/environment. */
-	if (!options.use_login) {
+	if (options.permit_user_env && !options.use_login) {
 		snprintf(buf, sizeof buf, "%.200s/.ssh/environment",
 		    pw->pw_dir);
 		read_environment_file(&env, &envsize, buf);
@@ -991,6 +1002,8 @@ do_nologin(struct passwd *pw)
 #endif
 	if (f) {
 		/* /etc/nologin exists.  Print its contents and exit. */
+		log("User %.100s not allowed because %s exists",
+		    pw->pw_name, _PATH_NOLOGIN);
 		while (fgets(buf, sizeof(buf), f))
 			fputs(buf, stderr);
 		fclose(f);
@@ -1596,6 +1609,27 @@ session_pty_cleanup(void *session)
 	PRIVSEP(session_pty_cleanup2(session));
 }
 
+static char *
+sig2name(int sig)
+{
+#define SSH_SIG(x) if (sig == SIG ## x) return #x
+	SSH_SIG(ABRT);
+	SSH_SIG(ALRM);
+	SSH_SIG(FPE);
+	SSH_SIG(HUP);
+	SSH_SIG(ILL);
+	SSH_SIG(INT);
+	SSH_SIG(KILL);
+	SSH_SIG(PIPE);
+	SSH_SIG(QUIT);
+	SSH_SIG(SEGV);
+	SSH_SIG(TERM);
+	SSH_SIG(USR1);
+	SSH_SIG(USR2);
+#undef	SSH_SIG
+	return "SIG@openssh.com";
+}
+
 static void
 session_exit_message(Session *s, int status)
 {
@@ -1613,7 +1647,7 @@ session_exit_message(Session *s, int status)
 		packet_send();
 	} else if (WIFSIGNALED(status)) {
 		channel_request_start(s->chanid, "exit-signal", 0);
-		packet_put_int(WTERMSIG(status));
+		packet_put_cstring(sig2name(WTERMSIG(status)));
 		packet_put_char(WCOREDUMP(status));
 		packet_put_cstring("");
 		packet_put_cstring("");

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.5.2.1 2002/05/17 00:03:23 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor_wrap.h,v 1.5.2.2 2002/10/11 14:53:06 miod Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -44,7 +44,7 @@ DH *mm_choose_dh(int, int, int);
 int mm_key_sign(Key *, u_char **, u_int *, u_char *, u_int);
 void mm_inform_authserv(char *, char *);
 struct passwd *mm_getpwnamallow(const char *);
-char* mm_auth2_read_banner(void);
+char *mm_auth2_read_banner(void);
 int mm_auth_password(struct Authctxt *, char *);
 int mm_key_allowed(enum mm_keytype, char *, char *, Key *);
 int mm_user_key_allowed(struct passwd *, Key *);
@@ -78,6 +78,16 @@ int mm_bsdauth_respond(void *, u_int, char **);
 /* skey */
 int mm_skey_query(void *, char **, char **, u_int *, char ***, u_int **);
 int mm_skey_respond(void *, u_int, char **);
+
+/* auth_krb */
+#ifdef KRB4
+int mm_auth_krb4(struct Authctxt *, void *, char **, void *);
+#endif
+#ifdef KRB5
+/* auth and reply are really krb5_data objects, but we don't want to
+ * include all of the krb5 headers here */
+int mm_auth_krb5(void *authctxt, void *auth, char **client, void *reply);
+#endif
 
 /* zlib allocation hooks */
 

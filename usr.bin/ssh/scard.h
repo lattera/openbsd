@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.6.2 2002/05/17 00:03:24 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.6.3 2002/10/11 14:53:07 miod Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -33,8 +33,8 @@
 #define SCARD_ERROR_NOCARD	-2
 #define SCARD_ERROR_APPLET	-3
 
-Key	**sc_get_keys(const char*, const char*);
+Key	**sc_get_keys(const char *, const char *);
 void	 sc_close(void);
-int	 sc_put_key(Key *, const char*);
+int	 sc_put_key(Key *, const char *);
 
 #endif

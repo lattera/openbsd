@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.83.2.5 2002/06/26 18:22:36 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.83.2.6 2002/10/11 14:53:07 miod Exp $");
 
 #include "ssh.h"
 #include "ssh2.h"
@@ -95,10 +95,10 @@ ssh_kex2(char *host, struct sockaddr *hostaddr)
 	    compat_cipher_proposal(myproposal[PROPOSAL_ENC_ALGS_STOC]);
 	if (options.compression) {
 		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
-		myproposal[PROPOSAL_COMP_ALGS_STOC] = "zlib";
+		myproposal[PROPOSAL_COMP_ALGS_STOC] = "zlib,none";
 	} else {
 		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
-		myproposal[PROPOSAL_COMP_ALGS_STOC] = "none";
+		myproposal[PROPOSAL_COMP_ALGS_STOC] = "none,zlib";
 	}
 	if (options.macs != NULL) {
 		myproposal[PROPOSAL_MAC_ALGS_CTOS] =
@@ -422,7 +422,7 @@ input_userauth_pk_ok(int type, u_int32_t seq, void *ctxt)
 	clear_auth_state(authctxt);
 	dispatch_set(SSH2_MSG_USERAUTH_PK_OK, NULL);
 
-	/* try another method if we did not send a packet*/
+	/* try another method if we did not send a packet */
 	if (sent == 0)
 		userauth(authctxt, NULL);
 

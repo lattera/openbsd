@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.3 2001/06/26 17:27:25 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.3.2.1 2002/10/11 14:53:07 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -16,7 +16,7 @@
 
 void
 record_login(pid_t, const char *, const char *, uid_t,
-    const char *, struct sockaddr *);
+    const char *, struct sockaddr *, socklen_t);
 void	 record_logout(pid_t, const char *);
 u_long	 get_last_login_time(uid_t, const char *, char *, u_int);
 

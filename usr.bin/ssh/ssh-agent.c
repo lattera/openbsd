@@ -35,7 +35,7 @@
 
 #include "includes.h"
 #include <sys/queue.h>
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.72.2.4 2002/06/26 18:22:36 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.72.2.5 2002/10/11 14:53:07 miod Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -101,6 +101,17 @@ int locked = 0;
 char *lock_passwd = NULL;
 
 extern char *__progname;
+
+static void
+close_socket(SocketEntry *e)
+{
+	close(e->fd);
+	e->fd = -1;
+	e->type = AUTH_UNUSED;
+	buffer_free(&e->input);
+	buffer_free(&e->output);
+	buffer_free(&e->request);
+}
 
 static void
 idtab_init(void)
@@ -613,13 +624,7 @@ process_message(SocketEntry *e)
 	cp = buffer_ptr(&e->input);
 	msg_len = GET_32BIT(cp);
 	if (msg_len > 256 * 1024) {
-		shutdown(e->fd, SHUT_RDWR);
-		close(e->fd);
-		e->fd = -1;
-		e->type = AUTH_UNUSED;
-		buffer_free(&e->input);
-		buffer_free(&e->output);
-		buffer_free(&e->request);
+		close_socket(e);
 		return;
 	}
 	if (buffer_len(&e->input) < msg_len + 4)
@@ -801,6 +806,8 @@ after_select(fd_set *readset, fd_set *writeset)
 	char buf[1024];
 	int len, sock;
 	u_int i;
+	uid_t euid;
+	gid_t egid;
 
 	for (i = 0; i < sockets_alloc; i++)
 		switch (sockets[i].type) {
@@ -814,6 +821,19 @@ after_select(fd_set *readset, fd_set *writeset)
 				if (sock < 0) {
 					error("accept from AUTH_SOCKET: %s",
 					    strerror(errno));
+					break;
+				}
+				if (getpeereid(sock, &euid, &egid) < 0) {
+					error("getpeereid %d failed: %s",
+					    sock, strerror(errno));
+					close(sock);
+					break;
+				}
+				if ((euid != 0) && (getuid() != euid)) {
+					error("uid mismatch: "
+					    "peer euid %u != uid %u",
+					    (u_int) euid, (u_int) getuid());
+					close(sock);
 					break;
 				}
 				new_socket(AUTH_CONNECTION, sock);
@@ -832,13 +852,7 @@ after_select(fd_set *readset, fd_set *writeset)
 					break;
 				} while (1);
 				if (len <= 0) {
-					shutdown(sockets[i].fd, SHUT_RDWR);
-					close(sockets[i].fd);
-					sockets[i].fd = -1;
-					sockets[i].type = AUTH_UNUSED;
-					buffer_free(&sockets[i].input);
-					buffer_free(&sockets[i].output);
-					buffer_free(&sockets[i].request);
+					close_socket(&sockets[i]);
 					break;
 				}
 				buffer_consume(&sockets[i].output, len);
@@ -852,13 +866,7 @@ after_select(fd_set *readset, fd_set *writeset)
 					break;
 				} while (1);
 				if (len <= 0) {
-					shutdown(sockets[i].fd, SHUT_RDWR);
-					close(sockets[i].fd);
-					sockets[i].fd = -1;
-					sockets[i].type = AUTH_UNUSED;
-					buffer_free(&sockets[i].input);
-					buffer_free(&sockets[i].output);
-					buffer_free(&sockets[i].request);
+					close_socket(&sockets[i]);
 					break;
 				}
 				buffer_append(&sockets[i].input, buf, len);
@@ -930,8 +938,13 @@ main(int ac, char **av)
 	struct sockaddr_un sunaddr;
 	struct rlimit rlim;
 	extern int optind;
+	extern char *optarg;
 	pid_t pid;
 	char pidstrbuf[1 + 3 * sizeof pid];
+
+	/* drop */
+	setegid(getgid());
+	setgid(getgid());
 
 	SSLeay_add_all_algorithms();
 
@@ -1029,7 +1042,7 @@ main(int ac, char **av)
 		perror("bind");
 		cleanup_exit(1);
 	}
-	if (listen(sock, 5) < 0) {
+	if (listen(sock, 128) < 0) {
 		perror("listen");
 		cleanup_exit(1);
 	}

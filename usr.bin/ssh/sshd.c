@@ -42,7 +42,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206.2.5 2002/06/26 18:22:36 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.206.2.6 2002/10/11 14:53:07 miod Exp $");
 
 #include <openssl/dh.h>
 #include <openssl/bn.h>
@@ -290,11 +290,8 @@ grace_alarm_handler(int sig)
 {
 	/* XXX no idea how fix this signal handler */
 
-	/* Close the connection. */
-	packet_close();
-
 	/* Log error and exit. */
-	fatal("Timeout before authentication for %s.", get_remote_ipaddr());
+	fatal("Timeout before authentication for %s", get_remote_ipaddr());
 }
 
 /*
@@ -307,7 +304,7 @@ grace_alarm_handler(int sig)
 static void
 generate_ephemeral_server_key(void)
 {
-	u_int32_t rand = 0;
+	u_int32_t rnd = 0;
 	int i;
 
 	verbose("Generating %s%d bit RSA key.",
@@ -320,9 +317,9 @@ generate_ephemeral_server_key(void)
 
 	for (i = 0; i < SSH_SESSION_KEY_LENGTH; i++) {
 		if (i % 4 == 0)
-			rand = arc4random();
-		sensitive_data.ssh1_cookie[i] = rand & 0xff;
-		rand >>= 8;
+			rnd = arc4random();
+		sensitive_data.ssh1_cookie[i] = rnd & 0xff;
+		rnd >>= 8;
 	}
 	arc4random_stir();
 }
@@ -413,6 +410,12 @@ sshd_exchange_identification(int sock_in, int sock_out)
 	    remote_major, remote_minor, remote_version);
 
 	compat_datafellows(remote_version);
+
+	if (datafellows & SSH_BUG_PROBE) {
+		log("probed from %s with %s.  Don't panic.",
+		    get_remote_ipaddr(), client_version_string);
+		fatal_cleanup();
+	}
 
 	if (datafellows & SSH_BUG_SCANNER) {
 		log("scanned from %s with %s.  Don't panic.",
@@ -516,8 +519,8 @@ demote_sensitive_data(void)
 static void
 privsep_preauth_child(void)
 {
-	u_int32_t rand[256];
-	gid_t gidset[2];
+	u_int32_t rnd[256];
+	gid_t gidset[1];
 	struct passwd *pw;
 	int i;
 
@@ -525,8 +528,8 @@ privsep_preauth_child(void)
 	privsep_challenge_enable();
 
 	for (i = 0; i < 256; i++)
-		rand[i] = arc4random();
-	RAND_seed(rand, sizeof(rand));
+		rnd[i] = arc4random();
+	RAND_seed(rnd, sizeof(rnd));
 
 	/* Demote the private keys to public keys. */
 	demote_sensitive_data();
@@ -537,7 +540,7 @@ privsep_preauth_child(void)
 	memset(pw->pw_passwd, 0, strlen(pw->pw_passwd));
 	endpwent();
 
-	/* Change our root directory*/
+	/* Change our root directory */
 	if (chroot(_PATH_PRIVSEP_CHROOT_DIR) == -1)
 		fatal("chroot(\"%s\"): %s", _PATH_PRIVSEP_CHROOT_DIR,
 		    strerror(errno));
@@ -560,7 +563,7 @@ privsep_preauth_child(void)
 #endif
 }
 
-static Authctxt*
+static Authctxt *
 privsep_preauth(void)
 {
 	Authctxt *authctxt = NULL;
@@ -576,6 +579,8 @@ privsep_preauth(void)
 	if (pid == -1) {
 		fatal("fork of unprivileged child failed");
 	} else if (pid != 0) {
+		fatal_remove_cleanup((void (*) (void *)) packet_close, NULL);
+
 		debug2("Network child is on pid %ld", (long)pid);
 
 		close(pmonitor->m_recvfd);
@@ -589,6 +594,10 @@ privsep_preauth(void)
 		while (waitpid(pid, &status, 0) < 0)
 			if (errno != EINTR)
 				break;
+
+		/* Reinstall, since the child has finished */
+		fatal_add_cleanup((void (*) (void *)) packet_close, NULL);
+
 		return (authctxt);
 	} else {
 		/* child */
@@ -636,6 +645,8 @@ privsep_postauth(Authctxt *authctxt)
 	if (pmonitor->m_pid == -1)
 		fatal("fork of unprivileged child failed");
 	else if (pmonitor->m_pid != 0) {
+		fatal_remove_cleanup((void (*) (void *)) packet_close, NULL);
+
 		debug2("User child is on pid %ld", (long)pmonitor->m_pid);
 		close(pmonitor->m_recvfd);
 		monitor_child_postauth(pmonitor);
@@ -788,7 +799,6 @@ main(int ac, char **av)
 	const char *remote_ip;
 	int remote_port;
 	FILE *f;
-	struct linger linger;
 	struct addrinfo *ai;
 	char ntop[NI_MAXHOST], strport[NI_MAXSERV];
 	int listen_sock, maxfd;
@@ -886,6 +896,10 @@ main(int ac, char **av)
 			break;
 		case 'u':
 			utmp_len = atoi(optarg);
+			if (utmp_len > MAXHOSTNAMELEN) {
+				fprintf(stderr, "Invalid utmp length.\n");
+				exit(1);
+			}
 			break;
 		case 'o':
 			if (process_server_config_line(&options, optarg,
@@ -927,7 +941,8 @@ main(int ac, char **av)
 	debug("sshd version %.100s", SSH_VERSION);
 
 	/* load private host keys */
-	sensitive_data.host_keys = xmalloc(options.num_host_key_files*sizeof(Key*));
+	sensitive_data.host_keys = xmalloc(options.num_host_key_files *
+	    sizeof(Key *));
 	for (i = 0; i < options.num_host_key_files; i++)
 		sensitive_data.host_keys[i] = NULL;
 	sensitive_data.server_key = NULL;
@@ -1096,17 +1111,12 @@ main(int ac, char **av)
 				continue;
 			}
 			/*
-			 * Set socket options.  We try to make the port
-			 * reusable and have it close as fast as possible
-			 * without waiting in unnecessary wait states on
-			 * close.
+			 * Set socket options.
+			 * Allow local port reuse in TIME_WAIT.
 			 */
-			setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR,
-			    &on, sizeof(on));
-			linger.l_onoff = 1;
-			linger.l_linger = 5;
-			setsockopt(listen_sock, SOL_SOCKET, SO_LINGER,
-			    &linger, sizeof(linger));
+			if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR,
+			    &on, sizeof(on)) == -1)
+				error("setsockopt SO_REUSEADDR: %s", strerror(errno));
 
 			debug("Bind to port %s on %s.", strport, ntop);
 
@@ -1350,16 +1360,6 @@ main(int ac, char **av)
 	signal(SIGQUIT, SIG_DFL);
 	signal(SIGCHLD, SIG_DFL);
 
-	/*
-	 * Set socket options for the connection.  We want the socket to
-	 * close as fast as possible without waiting for anything.  If the
-	 * connection is not a socket, these will do nothing.
-	 */
-	/* setsockopt(sock_in, SOL_SOCKET, SO_REUSEADDR, (void *)&on, sizeof(on)); */
-	linger.l_onoff = 1;
-	linger.l_linger = 5;
-	setsockopt(sock_in, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
-
 	/* Set keepalives if requested. */
 	if (options.keepalives &&
 	    setsockopt(sock_in, SOL_SOCKET, SO_KEEPALIVE, &on,
@@ -1542,7 +1542,7 @@ do_ssh1_kex(void)
 	u_char session_key[SSH_SESSION_KEY_LENGTH];
 	u_char cookie[8];
 	u_int cipher_type, auth_mask, protocol_flags;
-	u_int32_t rand = 0;
+	u_int32_t rnd = 0;
 
 	/*
 	 * Generate check bytes that the client must send back in the user
@@ -1555,9 +1555,9 @@ do_ssh1_kex(void)
 	 */
 	for (i = 0; i < 8; i++) {
 		if (i % 4 == 0)
-			rand = arc4random();
-		cookie[i] = rand & 0xff;
-		rand >>= 8;
+			rnd = arc4random();
+		cookie[i] = rnd & 0xff;
+		rnd >>= 8;
 	}
 
 	/*

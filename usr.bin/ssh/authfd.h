@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.21.2.3 2002/06/22 07:23:17 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.21.2.4 2002/10/11 14:53:06 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -66,6 +66,7 @@ typedef struct {
 	int	howmany;
 }	AuthenticationConnection;
 
+int	ssh_agent_present(void);
 int	ssh_get_authentication_socket(void);
 void	ssh_close_authentication_socket(int);
 

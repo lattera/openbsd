@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.8.2.1 2002/03/07 17:37:47 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.8.2.2 2002/10/11 14:53:07 miod Exp $");
 
 #include <glob.h>
 
@@ -53,12 +53,14 @@ fudge_opendir(const char *path)
 
 	r = xmalloc(sizeof(*r));
 
-	if (do_readdir(cur.conn, (char*)path, &r->dir))
+	if (do_readdir(cur.conn, (char *)path, &r->dir)) {
+		xfree(r);
 		return(NULL);
+	}
 
 	r->offset = 0;
 
-	return((void*)r);
+	return((void *)r);
 }
 
 static struct dirent *
@@ -83,31 +85,12 @@ fudge_closedir(struct SFTP_OPENDIR *od)
 	xfree(od);
 }
 
-static void
-attrib_to_stat(Attrib *a, struct stat *st)
-{
-	memset(st, 0, sizeof(*st));
-
-	if (a->flags & SSH2_FILEXFER_ATTR_SIZE)
-		st->st_size = a->size;
-	if (a->flags & SSH2_FILEXFER_ATTR_UIDGID) {
-		st->st_uid = a->uid;
-		st->st_gid = a->gid;
-	}
-	if (a->flags & SSH2_FILEXFER_ATTR_PERMISSIONS)
-		st->st_mode = a->perm;
-	if (a->flags & SSH2_FILEXFER_ATTR_ACMODTIME) {
-		st->st_atime = a->atime;
-		st->st_mtime = a->mtime;
-	}
-}
-
 static int
 fudge_lstat(const char *path, struct stat *st)
 {
 	Attrib *a;
 
-	if (!(a = do_lstat(cur.conn, (char*)path, 0)))
+	if (!(a = do_lstat(cur.conn, (char *)path, 0)))
 		return(-1);
 
 	attrib_to_stat(a, st);
@@ -120,7 +103,7 @@ fudge_stat(const char *path, struct stat *st)
 {
 	Attrib *a;
 
-	if (!(a = do_stat(cur.conn, (char*)path, 0)))
+	if (!(a = do_stat(cur.conn, (char *)path, 0)))
 		return(-1);
 
 	attrib_to_stat(a, st);

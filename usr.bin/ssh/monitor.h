@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.4.2.2 2002/06/22 07:23:17 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/monitor.h,v 1.4.2.3 2002/10/11 14:53:06 miod Exp $	*/
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -49,6 +49,8 @@ enum monitor_reqtype {
 	MONITOR_REQ_RSAKEYALLOWED, MONITOR_ANS_RSAKEYALLOWED,
 	MONITOR_REQ_RSACHALLENGE, MONITOR_ANS_RSACHALLENGE,
 	MONITOR_REQ_RSARESPONSE, MONITOR_ANS_RSARESPONSE,
+	MONITOR_REQ_KRB4, MONITOR_ANS_KRB4,
+	MONITOR_REQ_KRB5, MONITOR_ANS_KRB5,
 	MONITOR_REQ_TERM
 };
 

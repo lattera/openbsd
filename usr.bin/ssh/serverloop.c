@@ -35,13 +35,14 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.82.2.5 2002/06/26 18:22:35 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.82.2.6 2002/10/11 14:53:07 miod Exp $");
 
 #include "xmalloc.h"
 #include "packet.h"
 #include "buffer.h"
 #include "log.h"
 #include "servconf.h"
+#include "canohost.h"
 #include "sshpty.h"
 #include "channels.h"
 #include "compat.h"
@@ -347,14 +348,17 @@ process_input(fd_set * readset)
 	if (FD_ISSET(connection_in, readset)) {
 		len = read(connection_in, buf, sizeof(buf));
 		if (len == 0) {
-			verbose("Connection closed by remote host.");
+			verbose("Connection closed by %.100s",
+			    get_remote_ipaddr());
 			connection_closed = 1;
 			if (compat20)
 				return;
 			fatal_cleanup();
 		} else if (len < 0) {
 			if (errno != EINTR && errno != EAGAIN) {
-				verbose("Read error from remote host: %.100s", strerror(errno));
+				verbose("Read error from remote host "
+				    "%.100s: %.100s",
+				    get_remote_ipaddr(), strerror(errno));
 				fatal_cleanup();
 			}
 		} else {

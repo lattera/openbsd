@@ -10,9 +10,8 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.20.2.2 2002/05/17 00:03:23 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.20.2.3 2002/10/11 14:53:06 miod Exp $");
 
-#include "packet.h"
 #include "xmalloc.h"
 #include "match.h"
 #include "log.h"
@@ -20,7 +19,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.20.2.2 2002/05/17 00:03:23 m
 #include "channels.h"
 #include "auth-options.h"
 #include "servconf.h"
-#include "bufaux.h"
 #include "misc.h"
 #include "monitor_wrap.h"
 #include "auth.h"
@@ -135,7 +133,8 @@ auth_parse_options(struct passwd *pw, char *opts, char *file, u_long linenum)
 			goto next_option;
 		}
 		cp = "environment=\"";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
+		if (options.permit_user_env &&
+		    strncasecmp(opts, cp, strlen(cp)) == 0) {
 			char *s;
 			struct envstring *new_envstring;
 
