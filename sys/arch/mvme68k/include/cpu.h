@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/cpu.h,v 1.7.2.4 2004/06/05 23:10:53 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/cpu.h,v 1.7.2.5 2004/06/06 05:23:39 tedu Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -127,7 +127,7 @@ struct clockframe {
  * or after the current trap/syscall if in system mode.
  */
 extern int want_resched;
-#define	need_resched()	{ want_resched = 1; aston(); }
+#define	need_resched(ci)	{ want_resched = 1; aston(); }
 
 /*
  * Give a profiling tick to the current process when the user profiling

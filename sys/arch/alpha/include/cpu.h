@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.7 2004/02/19 09:59:34 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/include/cpu.h,v 1.7.12.8 2004/06/06 05:23:38 tedu Exp $ */
 /* $NetBSD: cpu.h,v 1.45 2000/08/21 02:03:12 thorpej Exp $ */
 
 /*-
@@ -268,13 +268,10 @@ struct clockframe {
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
- *
- * XXXSMP
- * need_resched() needs to take a cpu_info *.
  */
-#define	need_resched()							\
+#define	need_resched(ci)						\
 do {									\
-	curcpu()->ci_want_resched = 1;					\
+	ci->ci_want_resched = 1;					\
 	aston(curcpu());						\
 } while (/*CONSTCOND*/0)
 

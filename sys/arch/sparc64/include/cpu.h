@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.7 2004/02/19 10:50:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.8 2004/06/06 05:23:39 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 2001/06/14 22:56:58 thorpej Exp $ */
 
 /*
@@ -203,7 +203,7 @@ extern	int want_ast;
  * or after the current trap/syscall if in system mode.
  */
 extern	int want_resched;	/* resched() was called */
-#define	need_resched()		(want_resched = 1, want_ast = 1)
+#define	need_resched(ci)	(want_resched = 1, want_ast = 1)
 
 /*
  * Give a profiling tick to the current process when the user profiling

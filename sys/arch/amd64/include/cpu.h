@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.2 2004/06/05 23:09:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/cpu.h,v 1.3.2.3 2004/06/06 05:23:38 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.1 2003/04/26 18:39:39 fvdl Exp $	*/
 
 /*-
@@ -191,7 +191,6 @@ extern struct cpu_info cpu_info_primary;
  * or after the current trap/syscall if in system mode.
  */
 
-#ifdef MULTIPROCESSOR
 #define need_resched(ci)						\
 do {									\
 	struct cpu_info *__ci = (ci);					\
@@ -199,17 +198,8 @@ do {									\
 	if (__ci->ci_curproc != NULL)					\
 		aston(__ci->ci_curproc);				\
 } while (/*CONSTCOND*/0)
-#else
-#define need_resched()							\
-do {									\
-	struct cpu_info *__ci = curcpu();				\
-	__ci->ci_want_resched = 1;					\
-	if (__ci->ci_curproc != NULL)					\
-		aston(__ci->ci_curproc);				\
-} while (/*CONSTCOND*/0)
-#endif
 
-#endif
+#endif	/* MULTIPROCESSOR */
 
 #define aston(p)	((p)->p_md.md_astpending = 1)
 

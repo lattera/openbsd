@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.7 2004/06/05 23:10:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.8 2004/06/06 05:23:39 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.45 1997/02/10 22:13:40 scottr Exp $	*/
 
 /*
@@ -106,7 +106,7 @@ struct clockframe {
  * or after the current trap/syscall if in system mode.
  */
 extern int want_resched;	/* resched() was called */
-#define	need_resched()	{ want_resched++; aston(); }
+#define	need_resched(ci)	{ want_resched++; aston(); }
 
 /*
  * Give a profiling tick to the current process from the softclock
