@@ -1,0 +1,809 @@
+Installing OpenBSD is a relatively complex process, but if you have
+this document in hand it shouldn't be too much trouble.
+
+There are several ways to install OpenBSD onto a disk. The easiest way
+in terms of preliminary setup is to use the OpenBSD miniroot that can
+be booted off your local disk's swap partition.   The normal way is to
+use the OpenBSD installation floppies.
+
+If your Sparc is hooked up in a network and you can find a server to
+arrange for a diskless setup, which is a convenient way to install on a
+machine whose disk does not currently hold a usable operating system.
+This is difficult to get set up correctly the first time, but easy to
+use afterwards.  (see `Installing using a diskless setup' below).
+
+It is also possible to install OpenBSD "manually" from a running SunOS
+system, using SunOS tools and gnu tar and gunzip (see `Installing from
+SunOS' below).
+
+
+Installing using the OpenBSD floppies.
+
+The OpenBSD/sparc floppies come in two varieties, a newer single floppy
+version that is not well tested and the older multi-floppy set.  Both
+accomplish the same thing, but the install/upgrade scripts and procedures
+are quite different between the old and new version.
+
+The other difference bewtween the the two forms are in their bootblocks,
+and filesystems.  The "floppy21.fs" image is the compressed ramdisk form,
+the "kc21.fs" paired with either "inst21.fs" or "upgr21.fs" comprise a
+bootable kernel floppy and associated install/upgrade filesystem floppy.
+
+To put the floppy image(s) on a floppy, you use a dd command like:
+  
+	# dd if=kc21.fs of=/dev/rfd0a bs=36b
+
+After transferring the floppy image(s) to disk, bring the system down by:
+ 
+        # halt
+ 
+Then boot the floppy by typing the appropriate command at the PROM:
+ 
+        ok boot fd()bsd         # for version 1 OpenBOOT ROMs
+        ok boot floppy bsd      # for version 2 OpenBOOT ROMs
+
+This will cause the kernel contained in the floppy to be booted.
+After the kernel loads, it will eject the bootable floppy and prompt
+for a filesystem floppy - for the two floppy installation insert
+the appropriate filesystem flopppy, for the ramdisk installion,
+just hit return, the filesystem image is internal to the kernel.
+
+After the initial device probe messages you'll asked to start the
+install or upgrade procedure. Proceed to the section `Running the
+installation scripts' below.
+
+
+Installing using the OpenBSD miniroot.
+
+The miniroot is a self-contained OpenBSD filesystem holding all utilities
+necessary to install OpenBSD on a local disk. It is distributed as a plain
+file designed to be transferred to a raw disk partition from which it can
+be booted using the appropriate PROM command. Usually, the miniroot will
+be loaded into the swap partition of a disk. If needed, you can use another
+unused partition, but remember that the partition will then not available
+during the installation process and avoid using an "a" or "c" parition
+since installing the miniroot at the beginning of a disk will overwrite
+the existing disklabels/parition information for the whole disk.
+
+Loading the miniroot onto your raw partition is simple. On OpenBSD as well
+as SunOS you use a command like:
+
+	# dd if=miniroot21.fs of=/dev/rsd0b bs=20b
+
+(here `/dev/rsd0b' is assumed to be your swap partition). There's a
+potential problem here if /dev/rsd0b is actually in use as a swap
+partition by your currently running system. If you don't have another
+disk or partition to spare, you can usually get away with running this
+command in "single user" mode to avoid active swap parition activity.
+
+After transferring the miniroot to disk, bring the system down by:
+
+	# halt
+
+Then boot the miniroot by typing the appropriate command at the PROM:
+
+	> b sd(,,1)bsd 		# for sun4 monitors
+	ok boot sd(,,1)bsd 	# for version 1 OpenBOOT ROMs
+	ok boot disk:b bsd 	# for version 2 OpenBOOT ROMs
+
+If you've loaded the miniroot onto some other disk than `sd0' adapt
+the boot specifier accordingly, e.g.:
+
+        > b sd(0,20,1)bsd       # example - scsi target 4 on sun4 monitors*
+	ok boot sd(0,4,1)bsd	# example - scsi target 4 on V1 OpenBOOT ROM
+	ok boot disk1:b bsd     # example - scsi target 1 on v2 OpenBOOT ROM
+
+(*) for sun4 this is scsi-target*8+scsi-lun (usually 0) expressed in hex...
+
+This will cause the kernel contained in the miniroot to be booted.
+After the initial probe messages you'll asked to start the install
+or upgrade procedure. Proceed to the section `Running the installation
+scripts' below.
+
+
+Installing using a diskless setup.
+
+First, you must setup a diskless client configuration on a server. If
+you are using a OpenBSD system as the boot-server, have a look at the
+diskless(8) manual page for guidelines on how to proceed with this.
+If the server runs another operating system, you'll have to consult
+documentation that came with it (on SunOS systems, add_client(8) and
+the Sun System/Networks administrators guide constitute a good start).
+
+The set up is similar to SunOS diskless setup, but not identical, because
+the Sun setup assumes that the bootblocks load a kernel image, which then
+uses NFS to access the exported root partition, while the OpenBSD bootblocks
+use internal NFS routines to load the kernel image directly from the
+exported root partition.
+
+Please understand that no one gets this right the first try, since
+there is a lot of setup and all the host deamons must be running and
+configured correctly.  If you have problems, extract the diskless(8)
+manpage, find someone who's been through it before and use the host
+syslog and tcpdump(8) to get visibility of what's happening (or not).
+
+Your Sparcstation expects to be able to download a second stage bootstrap
+program via TFTP after having acquired its IP address through RevARP when
+instructed to boot "over the net". It will look for a filename composed of
+the machine's IP address followed by the machine's architecture, separated
+by a period. For example, a sun4c machine which has been assigned IP
+address 130.115.144.11, will make an TFTP request for `8273900B.SUN4C'.
+Normally, this file is a symbolic link to an appropriate second-stage
+boot program, which should be located in a place where the TFTP daemon
+can find it (remember, many TFTP daemons run in a chroot'ed environment).
+
+You can find the boot program in `/usr/mdec/boot' in the OpenBSD/sparc
+distribution. Unfortunately, it is necessary to install this file
+differently for sun4 and sun4c clients: the sun4 version needs to have its
+`a.out' header stripped off (otherwise the machine will crash), while the
+sun4c version must retain it (otherwise the PROM will complain).
+
+Here's an example to illustrate this whole mess:
+
+    server# cd /<client-root-dir>/usr/mdec
+    if client is a sun4:
+	server# set SKIP=1
+	server# set KARCH=SUN4
+    else
+	server# set SKIP=0
+	server# set KARCH=SUN4C
+    server# dd if=boot of=/tftpboot/boot.sparc.OpenBSD.$KARCH skip=$SKIP bs=32
+    server# cd /tftpboot
+    server# ln -s boot.sparc.OpenBSD.$KARCH 8273900B.$KARCH
+
+
+After the boot program has been loaded into memory and given control by
+the PROM, it starts locating the machine's remote root directory through
+the BOOTPARAM protocol. First a BOOTPARAM WHOAMI request is broadcast
+on the local net. The answer to this request (if it comes in) contains
+the client's name. This name is used in next step, a BOOTPARAM GETFILE
+request -- sent to the server that responded to the WHOAMI request --
+requesting the name and address of the machine that will serve the client's
+root directory, as well as the path of the client's root on that server.
+
+Finally, this information (if it comes in) is used to issue a REMOTE MOUNT
+request to the client's root filesystem server, asking for an NFS file
+handle corresponding to the root filesystem. If successful, the boot
+rogram starts reading from the remote root filesystem in search of the
+kernel which is then read into memory.
+
+As noted above in the section `Preparing your System for OpenBSD Installation',
+you have several options when choosing a location to store the installation
+filesets. However, the easiest way is to put the *.tar.gz files you want
+to install into the root directory for your client on the server.
+
+Next, unpack `base.tar.gz' and `etc.tar.gz' on the server in the root 
+directory for your machine. If you elect to use a separately NFS-mounted
+filesystem for `/usr' with your diskless setup, make sure the "./usr" base
+files in base.tar.gz end up in the correct location. One way to do this is
+to temporarily use a loopback mount on the server, re-routing <root>/usr to
+your server's exported OpenBSD "/usr" directory. Also put the kernel and the
+install/upgrade scripts into the root directory.
+
+A few configuration files need to be edited:
+
+	<root>/etc/hosts
+		Add the IP addresses of both server and client.
+
+	<root>/etc/myname
+		This files contains the client's hostname; use the same
+		name as in <root>/etc/hosts.
+
+	<root>/etc/fstab
+		Enter the entries for the remotely mounted filesystems.
+		For example:
+			server:/export/root/client       /     nfs  rw 0 0
+			server:/export/exec/sun4.OpenBSD /usr  nfs  rw 0 0
+
+Now you must populate the the `/dev' directory for your client. If you server
+runs SunOS 4.x, you can simply change your working directory to `<root>/dev'
+and run the MAKEDEV script: `sh MAKEDEV all'.
+
+On SunOS 5.x systems, MAKEDEV can also be used, but there'll be error
+messages about unknown user and groups. These errors are inconsequential
+for the purpose of installing OpenBSD. However, you may want to correct them
+if you plan to the diskless setup regularly. In that case, you may re-run
+MAKEDEV on your OpenBSD machine once it has booted.
+
+Boot your workstation from the server by entering the appropriate `boot'
+command at the monitor prompt. Depending on the PROM version in your machine,
+this command takes one of the following forms:
+
+	> b le()bsd -s			# for sun4 monitors
+	ok boot le()bsd -s		# for version 1 OpenBOOT ROMs
+	ok boot net bsd -s		# for version 2 OpenBOOT ROMs
+
+This will boot the OpenBSD kernel in single-user mode.
+
+[[
+NOTE: the latter two examples assume you operate the OpenBOOT ROM in
+"new command mode". If your machine comes up and gives you a `>' prompt
+instead of `ok', type:
+
+    >n					# enter native OpenBOOT mode
+    ok setenv sunmon-compat? false	# make it permanent
+    ok
+]]
+
+If you use a diskless setup with a separately NFS-mounted /usr filesystem,
+mount /usr by hand now:
+
+OpenBSD# mount /usr
+
+At this point, it's worth checking the disk label and partition sizes on
+the disk you want to install OpenBSD onto. OpenBSD understands SunOS-style
+disklabels, so if your disk was previously used by SunOS there will be
+a usable label on it. Use `disklabel -e <disk>' (where <disk> is the
+device name assigned by the OpenBSD kernel, e.g. `sd0') to view and
+modify the partition sizes. See the section `Preparing your System for
+OpenBSD Installation' above for suggestions about disk partition sizes.
+Make sure all your partitions start and end on cylinder boundaries.
+
+NOTE: if you are installing on a SCSI disk that does *not* have a SunOS
+or OpenBSD label on it, you may still be able to use disklabel(8) but you'll
+have to create all partitions from scratch. If your disk is listed in
+`/etc/disktab', you may use the entry (which in most cases only defines
+a `c' partition to describe the whole disk) to put an initial label on
+the disk.  DO NOT USE `disklabel -r ...' TO INITIALIZE YOUR DISK LABEL;
+THIS WILL LEAD TO UNPREDICTABLE RESULTS. This deficiency will be fixed
+in a next release.
+
+Here follows an example of what you'll see while in the disklabel editor.
+Do not touch any of the parameters except for the `label: ' entry and
+the actual partition size information at the bottom (the lines starting
+with `a:', `b:', ...).
+
+The size and offset fields are given in sector units. Be sure to make
+these numbers multiples of the of the number of sectors per cylinder:
+the kernel might be picky about these things, but aside from this you'll
+have the least chance of wasting disk space.
+Partitions on which you intend to have a mountable filesystem, should
+be given fstype `4.2BSD'. Remember, the `c' partition should describe
+the whole disk.
+The `(Cyl. x - y)' info that appears after the hash (`#') character is
+treated as a comment and need not be filled in when altering partitions.
+
+Special note: the line containing `16 partitions:' is best left alone,
+even if you define less then eight partitions. If this line displays
+a different number and the program complains about it (after you leave
+the editor), then try setting it to `16 partitions:'.
+
+
+<BEGIN SAMPLE DISKLABEL SCREEN>
+OpenBSD# disklabel sd2
+ # /dev/rsd2c:
+type: SCSI 
+disk: SCSI disk
+label: Hold Your Breath
+flags:
+bytes/sector: 512
+sectors/track: 64
+tracks/cylinder: 7  
+sectors/cylinder: 448
+cylinders: 1429
+rpm: 3600
+interleave: 1
+trackskew: 0
+cylinderskew: 0
+headswitch: 0           # milliseconds
+track-to-track seek: 0  # milliseconds
+drivedata: 0
+
+16 partitions:
+#        size   offset    fstype   [fsize bsize   cpg]
+  a:    50176        0    4.2BSD        0     0     0   # (Cyl.    0 - 111)
+  b:    64512    50176      swap                        # (Cyl.  112 - 255)
+  c:   640192        0   unknown                        # (Cyl.    0 - 1428)
+  d:   525504   114688    4.2BSD        0     0     0   # (Cyl.  256 - 1428)
+<END SAMPLE DISKLABEL SCREEN>
+
+
+Installing using the new Single Floppy procedure.
+
+The following is a walk-through of the steps you will take while
+getting OpenBSD installed on your hard disk.  If any question has a
+default answer, it will be displayed in brackets ("[]") after the
+question.  If you wish to stop the installation, you may hit Control-C
+at any time, but if you do, you may have to begin the installation
+process again from scratch.  Using Control-Z to suspend the process
+may be a better option. 
+
+	Boot your machine using the floppy21.fs floppy.  When
+	presented with the PROM monitor prompt, type(*):
+		"boot floppy bsd" or "boot fd()bsd"
+        and then hit return.  You should see about the primary and
+	secondary boot and then the kernel should start to load.
+
+	(*) See the PROM monitor information for your system.
+
+	It will take a while to load the kernel from the floppy,
+	most likely more than a minute.  If some action doesn't
+	eventually happen, or the spinning cursor has stopped and
+	nothing further has happened, either your boot floppy is
+	bad or you are having hardware problems.
+
+	You will then be presented with the OpenBSD kernel boot
+	messages.  You will want to read them to determine your
+	disk's name and geometry.  Its name will be something like
+	"sd0" or "wd0" and the geometry will be printed on a line that
+	begins with its name.  As mentioned above, you will need your
+	disk's geometry when creating OpenBSD partitions.  You will
+	also need to know the device name to tell the install tools
+	what disk to install on.
+
+	While booting, you will probably see several warnings.  You
+	may be warned that the kernel can't figure out what device
+	it booted from and that no swap space is present.  Do not be
+	alarmed, these are completely normal.  The first warning
+	occurs because while OpenBSD/sparc can boot from the floppy
+	drive, the kernel itself lacks a floppy driver for some
+        architctures.
+
+	When the loading process is complete, the boot floppy will be
+	ejected and you will be prompted to insert a filesystem floppy,
+	just hit return since the filesystem is contained in the kernel
+	image just loaded.  Next there will be a prompt asking you for
+	a shell name, just hit return to start executing the installion
+	setup script.
+
+	You will next be asked for your terminal type.  If you are
+	installing from a keyboard/monitor console, the default of
+	"sun" if correct.  If you are installing from a serial console
+	you should choose the terminal type from amongst those listed.
+	(If your terminal type is xterm, just use vt100).  Next you
+	will be prompted for a choice of which text editor to use at
+	several places in the install script.  You will probably want
+	to use "vi" if your terminal supports this.
+
+	After entering the terminal type you will be greeted by a
+	welcome message and asked if you really want to continue.
+	Assuming you answered yes, the install program will then tell
+	you which disks of that type it can install on, and ask you
+	which it should use.  The name of the disk is typically "sd0".
+	Reply with the name of your disk.
+
+	Next you will have to edit or create a disklabel for the disk
+	OpenBSD is being installed on.  The installation script will
+	invoke the text editor allowing you to do this.  Note that
+	partition 'c' inside this disk label should ALWAYS reflect the
+	entire disk, including any non-OpenBSD portions.  The root file
+	system should be in partition 'a', and swap is usually in partition
+	'b'.  It is recommended that you create separate partitions for
+	root and /usr, you may also want to specify /var and /home
+	partitions.
+
+	The swap partition (usually 'b') should have a type of "swap", all
+	other native OpenBSD partitions should have a type of "4.2BSD".
+	Block and fragment sizes are usually 8192 and 1024 bytes, but can
+	also be 16384 and 2048 bytes.
+
+	The install program will now label your disk and ask which file
+	systems should be created on which partitions.  It will auto-
+	matically select the 'a' partition to be the root file system.
+	Next it will ask for which disk and partition you want a file
+	system created on.  This will be the same as the disk name (eg.
+	"sd0") with the letter identifying the partition (eg. "d")
+	appended (eg. "sd0d").  Then it will ask where this partition is
+	to be mounted, eg. /usr.  This process will be repeated until
+	you just hit return.
+
+	At this point you will be asked to confirm that the file system
+	information you have entered is correct, and given an opportunity
+	to change the file system table.  Next it will create the new file
+	systems as specified, OVERWRITING ANY EXISTING DATA.  This is the
+	point of no return.
+
+	After all your file systems have been created, the install program
+	will give you an opportunity to configure the network.  The network
+	configuration you enter (if any) can then be used to do the install
+	from another system using NFS, HTTP or FTP, and will also be the
+	configuration used by the system after the installation is complete.
+
+	If you select to configure the network, the install program will
+	ask you for a name of your system and the DNS domain name to use.
+	Note that the host name should be without the domain part, and that
+	the domain name should NOT include the host name part.
+
+	Next the system will give you a list of network interfaces you can
+	configure.  For each network interface you select to configure, it
+	will ask for the IP address to use, the symbolic host name to use,
+	the netmask to use and any interface-specific flags to set.  The
+	interface-specific flags are usually used to determine which media
+	the network card is to use.  This is driver dependent, but for the
+	sparc le(4) driver, the flags usually carry meaning:
+
+		-link0 -link1	Use existing setting (only setup by netboot)
+		link0 -link1	Use UTP (twisted pair) port
+		-link0 link1 	Use AUI port
+
+	After all network interfaces have been configured the install pro-
+	gram will ask for a default route and IP address of the primary
+	name server to use.  You will also be presented with an opportunity
+	to edit the host table.
+
+	At this point you will be allowed to edit the file system table
+	that will be used for the remainder of the installation and that
+	will be used by the finished system, following which the new file
+	systems will be mounted to complete the installation.
+
+	After these preparatory steps has been completed, you will be
+	able to extract the distribution sets onto your system.  There
+	are several install methods supported; FTP, HTTP, tape, CD-ROM, NFS
+	or a local disk partition.  To install from a tape, the distrib-
+	ution sets must have been written to tape prior to running the
+	installation program, either as tar images or as gzipped tar
+	images.  Note that installation sets on multiple floppies is not
+	currently supported.
+
+	To install via FTP:
+		To begin an FTP install you will need the following
+		pieces of information.  Don't be daunted by this list;
+		the defaults are sufficient for most people.
+		    1) Proxy server URL if you are using a URL-based
+		       ftp proxy (squid, CERN ftp, Apache 1.2 or higher).
+		       You need to define a proxy if you are behind a
+		       firewall that blocks outgoing ftp (assuming you
+		       have a proxy available to use).
+		    2) Do you need to use passive mode ftp?  Most modern
+		       ftp servers are capable of dealing with passive
+		       ftp connections.  You only need to enable this
+		       option if you are behind a firewall that allows
+		       outgoing ftp but blocks incoming tcp ports > 1023.
+		       If in doubt say yes to this option.
+		       Note that you will not be asked about passive
+		       ftp if you are using a proxy.
+		    3) The IP address (or hostname if you enabled
+		       DNS earlier in the install) of an ftp server
+		       carrying the OpenBSD 2.1 distribution.
+		       If you don't know, just hit return when
+		       asked if you want to see a list of such hosts.
+		    4) The ftp directory holding the distribution sets.
+		       The default value of pub/OpenBSD/2.1/sparc
+		       is almost always correct.
+		    5) The login and password for the ftp account.
+		       The default will be correct unless you are
+		       doing non-anonymous ftp.
+
+		For instructions on how to complete the installation via
+		ftp, see the section named "Common URL installations" below.
+
+	To install via HTTP:
+		To begin an HTTP install you will need the following
+		pieces of information:
+		    1) Proxy server URL if you are using a URL-based
+		       http proxy (squid, CERN ftp, Apache 1.2 or higher).
+		       You need to define a proxy if you are behind a
+		       firewall that blocks outgoing http connections
+		       (assuming you have a proxy available to use).
+		    3) The IP address (or hostname if you enabled
+		       DNS earlier in the install) of an http server
+		       carrying the OpenBSD 2.1 distribution.
+		       If you don't know, just hit return when
+		       asked if you want to see a list of such hosts.
+		    4) The directory holding the distribution sets.
+		       There is no standard location for this;
+		       You should use the directory specified
+		       along with the server in the list of official
+		       http mirror sites that you received in step 3.
+
+		For instructions on how to complete the installation via
+		http, see the section named "Common URL installations" below.
+
+	To install from tape:
+		In order to install from tape, the distribution sets to be
+		installed must have been written to tape previously, either
+		in tar format or gzip-compressed tar format.
+
+		You will also have to identify the tape device where the
+		distribution sets are to be extracted from.  This will
+		typically be "nrst0" (no-rewind, raw interface).
+
+		Next you will have to provide the file number of the set
+		that is to be extracted.  Note that the file number starts
+		at 1, which is the first file written to the tape.
+
+		The install program will not automatically detect whether
+		an image has been compressed, so it will ask for that
+		information before starting the extraction.
+
+        To boot from CD-ROM:
+		The OpenBSD 2.1 distribution CD-ROM is capable of booting
+		sun4c architecture machines.  The CD-ROM boot method has 
+		been tested on SS2 machines, but may work on the other
+		sun4c machines.  The bootable CD-ROM is know *not* to
+		work on sun4, and sun4m systems at this time.
+		To boot from CD-ROM use a command similar to:
+
+			ok b sd(0,6,0) # OpenBOOT v1  
+			ok boot cdrom  # OpenBOOT v2
+               
+		If CD-ROM booting does not work with your machine, you
+		may proceed to use one of the several other boot methods
+		to install of upgrade your system. 
+
+	To install from CD-ROM:
+		When installing from a CD-ROM, you will be asked which
+		device holds the distribution sets.  This will typically
+		be "cd0".  Next you will be asked which partition 
+                on the CD-ROM the distribution is to be loaded from.  
+                This is normally partition "a".
+
+		Next you will have to identify the file system type that
+		has been used to create the distribution on the CD-ROM,
+		this can be either FFS or ISO CD9660.  The OpenBSD CD
+		distribution uses the CD9660 format.
+
+		You will also have to provide the relative path to the
+		directory on the CD which holds the distribution, for the
+		sparc this is "2.1/sparc".
+
+		For instructions on how to complete the installation from
+		the CD-ROM distribution, see the section named "Common
+		file system installations" below.
+		
+	To install from a NFS mounted directory:
+		When installing from a NFS-mounted directory, you must
+		have completed network configuration above, and also
+		set up the exported file system on the NFS server in
+		advance.
+
+		First you must identify the IP address of the NFS server
+		to load the distribution from, and the file system the
+		server expects you to mount.
+
+		The install program will also ask whether or not TCP
+		should be used for transport (the default is UDP).  Note
+		that TCP only works with newer NFS servers.
+
+		You will also have to provide the relative path to the
+		directory on the file system where the distribution sets
+		are located.  Note that this path should not be prefixed
+		with a '/'.
+
+		For instructions on how to complete the installation from
+		the CD-ROM distribution, see the section named "Common
+		file system installations" below.
+
+	To install from a local disk partition:
+		When installing from a local disk partition, you will
+		first have to identify which disk holds the distribution
+		sets.  This is normally "sdN" or "wdN" where N is a
+		number 0 through 9.  Next you will have to identify the
+		partition within that disk that holds the distribution,
+		this is a single letter between 'a' and 'p'.
+
+		You will also have to identify the type of file system
+		residing in the partition identified.  Currently, you can
+		only install from partitions that use the fast file system
+		(ffs).
+
+		You will also have to provide the relative path to the
+		directory on the file system where the distribution sets
+		are located.  Note that this path should not be prefixed
+		with a '/'.
+
+		For instructions on how to complete the installation from
+		the a local disk partition, see the next section.
+		
+	Common file system installations:
+		The following instructions are common to installations
+		from local disk partitions, NFS mounted directories and
+		CD-ROMs.
+
+		A list of available distribution sets will be listed.  If
+		any sets has already been extracted, those will be marked
+		with an X.  Enter the name of one distribution set at a
+		time, until all desired distribution sets has been
+		installed on your system.
+
+	Common URL installations:
+		Once you have entered the required information, the
+		install program will fetch a file list and present
+		a list of all the distribution sets that were found
+		in the specified directory.  (If no valid sets were found,
+		you will be notified and given the option of unpacking
+		any gzipped tar files found or getting a file list if
+		none were found.)  If any sets have already been extracted,
+		those sets will be marked with an X.
+
+		At this point you may individually select distribution
+		sets to install or enter "all" to install all of
+		the sets (which is what most users will want to do).
+		You may also enter "list" to get a file list or
+		"done" when you are done selecting distribution sets.
+		(It is also possible to enter an arbitrary filename
+		and have it treated as a file set).
+
+		Once you have selected the file sets you want to install
+		and entered "done" you will be prompted to verify that
+		you really do want to download and install the files.
+		Assuming you acquiesce, the files will begin to download
+		and unpack.  If not, you will be given the option of
+		installing sets via one of the other install methods.
+
+
+	When all the selected distribution sets has been extracted, you
+	will be allowed to select which time zone your system will be
+	using, all the device nodes needed by the installed system will
+	be created for you and the file systems will be unmounted.  For
+	this to work properly, it is expected that you have installed
+	at least the "base21" and "etc21" distribution sets.
+
+
+
+Installing using the old Multi-Floppy procedure.
+
+<floppy boot instructions go here >
+
+If you are upgrading a OpenBSD installation, start the upgrade script:
+
+OpenBSD# sh upgrade.sh
+
+else, start the installation script:
+
+OpenBSD# sh install.sh
+
+
+These scripts will do most of the work of transferring the system from the
+tar files onto your disk. You will frequently be asked for confirmation
+before the script proceeds with each phase of the installation process.
+Occasionally, you'll have to provide a piece of information such as the
+name of the disk you want to install on or IP addresses and domain names
+you want to assign. If your system has more than one disk, you may want
+to look at the output of the dmesg(8) command to see how your disks
+have been identified by the kernel.
+
+The installation script goes through the following phases:
+
+	- determination of the disk to install OpenBSD on
+	- checking of the partition information on the disk
+	- creating and mounting the OpenBSD filesystems
+	- setup of IP configuration
+	- extraction of the distribution tar files
+	- installation of boot programs
+
+
+Now try a reboot.  (If needed, swap your scsi id's first).  Initially
+I'd suggest you "boot sd()bsd -bs", then try multiuser after that.
+if you boot single-user the OpenBSD incantation to make the root
+filesystem writable is
+
+    OpenBSD# mount -u /dev/sd0a /
+
+The Sun monitor normally tries to load a file called "vmunix".   
+On OpenBOOT ROM systems you can change it to load OpenBSD instead using
+the following commands:
+
+On version 1 OpenBOOT ROMs:
+    >n
+    ok setenv boot-from sd(0,0,0)bsd
+    ok
+
+On version 2 OpenBOOT ROMs:
+    ok setenv boot-file bsd
+    ok setenv boot-device /sbus/esp/sd@0,0
+
+On sun4 systems, you may not need to specify the boot file, as 
+the OpenBSD boot blocks will look for "bsd" on the boot device by default.
+
+Congratulations, you have successfully installed OpenBSD 2.1.  When you
+reboot into OpenBSD, you should log in as "root" at the login prompt.
+There is no initial password, but if you're using the machine in a
+networked environment, you should create yourself an account and
+protect it and the "root" account with good passwords.
+
+Some of the files in the OpenBSD 2.1 distribution might need to be
+tailored for your site.  In particular, the /etc/sendmail.cf file will
+almost definitely need to be adjusted, and other files in /etc will
+probably need to be modified.  If you will be running your OpenBSD 
+system from a serial console, you may need to edit /etc/ttys and
+change the terminal type, and getty method from "sun" and "suncons"
+to "vt100" and "std.9600" or something similar.  Also when running
+from a serial console, you may wish to adjust the eeprom settings
+for input-device, output-device, screen-#columns, and screen-#rows
+as appropriate.  
+
+If you plan on using the extra serial ports on 4/300 systems, 
+you'll need to make sure you have device nodes for them e.g.:
+  mknod /dev/ttyc c 12 4
+  mknod /dev/ttyd c 12 5
+To use these ports for terminals etc, you will want to add them to
+/etc/ttys.
+
+In order to use 'tip' on OpenBSD/sparc, you'll need to edit /etc/ttys
+and add "local" to the end of the tty configuration line, and run 
+'ttyflags -a' to put your changes into effect.
+
+On installing X11 for OpenBSD/sparc, you may wish to add a line similar to
+'ldconfig /usr/X11R6/lib' to the end of your /etc/rc.local file.  This will
+add the X libraries to your dynamic linking search path at boot time.
+
+If you are unfamiliar with UN*X-like system administration, 
+it's recommended that you buy a book that discusses it.
+
+
+
+Installing from SunOS.
+
+You need a SunOS machine to install OpenBSD.  You also need at
+least the following pieces:
+
+    the *.tar.gz files you want to install (as a minimum, base.tar.gz)
+    gunzip (GNU gzip) SunOS binary
+    gtar (GNU tar) SunOS binary
+    a "/boot" file from a SunOS machine that matches your machine type
+	(e.g. sun or sun4c)
+    a kernel, most likely "/bsd"
+
+All these pieces, except "/boot" and the GNU utilities are supplied in
+the OpenBSD/sparc distribution.
+
+You need to format and partition the disk using SunOS (since
+OpenBSD/sparc uses SunOS disk labels.)  Give yourself adequate
+partition sizes.  Here is an example layout:
+
+    partition    size   offset	  will be..
+    sd2a        28140        0	  /
+    sd2b        16170    28140	  swap
+    sd2c       204540        0	  `whole disk'
+    sd2g       160230    44310	  /usr
+
+BTW, These are not recommended sizes.  They simply match the first
+(tiny) disk that OpenBSD/sparc ran on.
+
+Use SunOS to newfs the partitions which will have filesystems on them.
+(OpenBSD's filesystem format is identical to SunOS).
+
+    sunos# newfs /dev/rsd2a
+    [... lots of output]
+    sunos# newfs /dev/rsd2g
+    [... lots of output]
+
+NOTE: If you are able to, there is a performance benefit from
+newfs'ing using OpenBSD.  If you newfs using the OpenBSD newfs command,
+be sure to use the -O flag for your / partition, so that newfs will
+use the 4.3BSD filesystem format, rather than the new 4.4BSD filesystem
+format.  If you forget, you will not be able to boot -- the SunOS boot
+blocks do not understand the extended 4.4BSD filesystem format.
+
+Mount those partitions in a tree formation, under /mnt; ie:
+
+    sunos# df
+    Filesystem            kbytes    used   avail capacity  Mounted on
+    [...]
+    /dev/sd2a              11501       0   11501     0%    /mnt
+    /dev/sd2g             179529       0  179529     0%    /mnt/usr
+
+Place a standard SunOS "boot" program in /mnt (your new root
+partition), and use the SunOS command "installboot" to make it work.
+The installboot man page says to do something like this:
+
+    sunos# cp /usr/mdec/sdboot /mnt/boot
+    sunos# sync; sync
+    sunos# /usr/mdec/installboot -vlt /mnt/boot /usr/mdec/bootsd /dev/rsd2a
+
+You can now extract the provided "*.tar.gz files onto your disk.
+
+    sunos# ls -FC
+    base21.tar.gz      etc21.tar.gz       man21.tar.gz       secr21.tar.gz
+    comp21.tar.gz      games21.tar.gz     misc21.tar.gz      text21.tar.gz
+    bsd                bsd.scsi3
+    sunos# gunzip < base21.tar.gz | (cd /mnt; gtar xvpf -)
+    [...] for each set
+
+And finally copy an OpenBSD kernel (either bsd or bsd.scsi3) onto your disk.
+
+    sunos# cp bsd.scsi3 /mnt/bsd
+
+The GNU gunzip and gtar programs are not distributed as part of SunOS,
+but may be present in your local/bin.  If not, you will need to obtain
+them from a GNU archive and install before proceeding.  The OpenBSD
+tar files are in the "new format" that includes directory information,
+and the standard SunOS tar will not extract from them successfully.
+
+After the files have been extracted, setup /mnt/etc/fstab to match
+your actual disk layout.  (Minus the "/mnt" component of each path, of
+course :-)
+
+Now proceed to reboot the machine as described above in "Installing
+using a diskless setup".
