@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/conf.c,v 1.1 2004/01/28 01:39:38 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/conf.c,v 1.2 2004/02/03 12:09:47 mickey Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Charles M. Hannum.  All rights reserved.
@@ -439,7 +439,6 @@ dev_rawpart(dv)
  */
 #include <dev/cons.h>
 
-cons_decl(pc);
 cons_decl(com);
 cons_decl(ws);
 
@@ -452,4 +451,3 @@ struct	consdev constab[] = {
 #endif
 	{ 0 },
 };
-
