@@ -39,7 +39,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rlogind.c	8.1 (Berkeley) 6/4/93"; */
-static char *rcsid = "$Id: rlogind.c,v 1.8 1996/08/02 10:13:35 deraadt Exp $";
+static char *rcsid = "$Id: rlogind.c,v 1.9 1996/08/27 10:26:59 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -689,7 +689,7 @@ do_krb_login(dest)
 			authopts, 0,
 			ticket, "rcmd",
 			instance, dest, (struct sockaddr_in *) 0,
-			kdata, "", (bit_64 *) 0, version);
+			kdata, "", (struct des_ks_struct *) 0, version);
 
 	if (rc != KSUCCESS)
 		return (rc);
