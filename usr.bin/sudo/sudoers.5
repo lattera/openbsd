@@ -1,7 +1,10 @@
 .rn '' }`
-''' $RCSfile: sudoers.man,v $$Revision: 1.15 $$Date: 1999/11/16 05:23:41 $
+''' $RCSfile: sudoers.5,v $$Revision: 1.1.1.1 $$Date: 1999/11/18 16:29:01 $
 '''
-''' $Log: sudoers.man,v $
+''' $Log: sudoers.5,v $
+''' Revision 1.1.1.1  1999/11/18 16:29:01  millert
+''' sudo 1.6, now with a BSD license
+'''
 ''' Revision 1.15  1999/11/16 05:23:41  millert
 ''' Add warning about using ALL in a command context.
 '''
@@ -564,7 +567,7 @@ more digits, in which case it is treated as a uid).  Both the
 comment character and any text after it, up to the end of the line,
 are ignored.
 .PP
-The reserved word \fB\s-1ALL\s0\fR is a a built in \fIalias\fR that always causes
+The reserved word \fB\s-1ALL\s0\fR is a built in \fIalias\fR that always causes
 a match to succeed.  It can be used wherever one might otherwise
 use a \f(CWCmnd_Alias\fR, \f(CWUser_Alias\fR, \f(CWRunas_Alias\fR, or \f(CWHost_Alias\fR.
 You should not try to define your own \fIalias\fR called \fB\s-1ALL\s0\fR as the
