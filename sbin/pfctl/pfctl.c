@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/pfm/Attic/pfm.c,v 1.1 2001/06/24 20:18:12 kjell Exp $ */
+/*	$OpenBSD: src/sbin/pfctl/pfctl.c,v 1.1 2001/06/24 21:04:15 kjell Exp $ */
 
 /*
  * Copyright (c) 2001, Daniel Hartmeier
@@ -39,7 +39,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 
-#include "pfm_parser.h"
+#include "pfctl_parser.h"
 
 static void	 printerror(char *);
 static void	 usage(char *);

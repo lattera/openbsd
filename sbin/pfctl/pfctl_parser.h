@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/pfm/Attic/pfm_parser.h,v 1.1 2001/06/24 20:18:12 kjell Exp $ */
+/*	$OpenBSD: src/sbin/pfctl/pfctl_parser.h,v 1.1 2001/06/24 21:04:16 kjell Exp $ */
 
 /*
  * Copyright (c) 2001, Daniel Hartmeier
