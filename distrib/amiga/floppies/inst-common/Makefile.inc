@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/amiga/floppies/inst-common/Attic/Makefile.inc,v 1.4 1996/04/25 02:35:54 mickey Exp $
+#	$OpenBSD: src/distrib/amiga/floppies/inst-common/Attic/Makefile.inc,v 1.5 1996/10/10 06:38:50 niklas Exp $
 
 # TOP is assumed to be defined by Makefile including this one.
 
