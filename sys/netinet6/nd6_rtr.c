@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_rtr.c,v 1.4.2.7 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_rtr.c,v 1.4.2.8 2003/05/16 00:29:44 niklas Exp $	*/
 /*	$KAME: nd6_rtr.c,v 1.97 2001/02/07 11:09:13 itojun Exp $	*/
 
 /*
@@ -131,16 +131,11 @@ nd6_rs_input(m, off, icmp6len)
 	if (IN6_IS_ADDR_UNSPECIFIED(&saddr6))
 		goto freeit;
 
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, icmp6len,);
-	nd_rs = (struct nd_router_solicit *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(nd_rs, struct nd_router_solicit *, m, off, icmp6len);
 	if (nd_rs == NULL) {
 		icmp6stat.icp6s_tooshort++;
 		return;
 	}
-#endif
 
 	icmp6len -= sizeof(*nd_rs);
 	nd6_option_init(nd_rs + 1, icmp6len, &ndopts);
@@ -226,16 +221,11 @@ nd6_ra_input(m, off, icmp6len)
 		goto bad;
 	}
 
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, icmp6len,);
-	nd_ra = (struct nd_router_advert *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(nd_ra, struct nd_router_advert *, m, off, icmp6len);
 	if (nd_ra == NULL) {
 		icmp6stat.icp6s_tooshort++;
 		return;
 	}
-#endif
 
 	icmp6len -= sizeof(*nd_ra);
 	nd6_option_init(nd_ra + 1, icmp6len, &ndopts);
@@ -440,9 +430,11 @@ nd6_rtmsg(cmd, rt)
 	info.rti_info[RTAX_DST] = rt_key(rt);
 	info.rti_info[RTAX_GATEWAY] = rt->rt_gateway;
 	info.rti_info[RTAX_NETMASK] = rt_mask(rt);
-	info.rti_info[RTAX_IFP] =
-	    (struct sockaddr *)TAILQ_FIRST(&rt->rt_ifp->if_addrlist);
-	info.rti_info[RTAX_IFA] = rt->rt_ifa->ifa_addr;
+	if (rt->rt_ifp) {
+		info.rti_info[RTAX_IFP] =
+		    TAILQ_FIRST(&rt->rt_ifp->if_addrlist)->ifa_addr;
+		info.rti_info[RTAX_IFA] = rt->rt_ifa->ifa_addr;
+	}
 
 	rt_missmsg(cmd, &info, rt->rt_flags, 0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.4.4 2003/03/27 23:42:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/locore.s,v 1.9.4.5 2003/05/16 00:29:40 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.137 2001/08/13 06:10:10 jdolecek Exp $	*/
 
 /*
@@ -11992,7 +11992,6 @@ _C_LABEL(intrcnt):
 	.space	16 * 4
 _C_LABEL(eintrcnt):
 
-	.comm	_C_LABEL(curproc), PTRSZ
 	.comm	_C_LABEL(nwindows), 4
 
 #ifdef DEBUG

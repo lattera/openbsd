@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_xxx.c,v 1.4.16.1 2001/11/13 23:04:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_xxx.c,v 1.4.16.2 2003/05/16 00:29:43 niklas Exp $	*/
 /*	$NetBSD: kern_xxx.c,v 1.32 1996/04/22 01:38:41 christos Exp $	*/
 
 /*
@@ -63,6 +63,16 @@ sys_reboot(p, v, retval)
 	boot(SCARG(uap, opt));
 	return (0);
 }
+
+#if !defined(NO_PROPOLICE)
+void __stack_smash_handler(char [], int __attribute__((unused)));
+
+void
+__stack_smash_handler(char func[], int damaged)
+{
+	panic("smashed stack in %s", func);
+}
+#endif
 
 #ifdef SYSCALL_DEBUG
 #define	SCDEBUG_CALLS		0x0001	/* show calls */

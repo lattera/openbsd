@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/auxioreg.h,v 1.1.12.1 2002/03/28 10:57:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/auxioreg.h,v 1.1.12.2 2003/05/16 00:29:40 niklas Exp $	*/
 /*	$NetBSD: auxreg.h,v 1.7 1997/05/17 17:52:52 pk Exp $ */
 
 /*
@@ -123,8 +123,8 @@
 )
 
 #ifndef _LOCORE
-volatile u_char *auxio_reg;	/* Copy of AUXIO_REG */
-u_char auxio_regval;
+extern volatile u_char *auxio_reg;	/* Copy of AUXIO_REG */
+extern u_char auxio_regval;
 unsigned int auxregbisc(int, int);
 #endif
 

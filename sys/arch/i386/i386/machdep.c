@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.17 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.18 2003/05/16 00:29:39 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -282,6 +282,8 @@ int	bus_mem_add_mapping(bus_addr_t, bus_size_t,
 int	_bus_dmamap_load_buffer(bus_dma_tag_t, bus_dmamap_t, void *,
     bus_size_t, struct proc *, int, paddr_t *, int *, int);
 
+int	longrun_sysctl(void *, size_t *, void *, size_t);
+
 #ifdef KGDB
 #ifndef KGDB_DEVNAME
 #ifdef __i386__
@@ -323,6 +325,7 @@ void	cyrix6x86_cpu_setup(const char *, int, int);
 void	natsem6x86_cpu_setup(const char *, int, int);
 void	intel586_cpu_setup(const char *, int, int);
 void	intel686_cpu_setup(const char *, int, int);
+void	tm86_cpu_setup(const char *, int, int);
 char *	intel686_cpu_name(int);
 char *	cyrix3_cpu_name(int, int);
 void	viac3_rnd(void *);
@@ -940,9 +943,9 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				0, 0, 0, 0, 0, 0, 0, 0,
 				"TMS5x00"		/* Default */
 			},
-			NULL
+			tm86_cpu_setup
 		},
-		/* Family 6, not yet available from Rise */
+		/* Family 6, not yet available from Transmeta */
 		{
 			CPUCLASS_686,
 			{
@@ -1272,6 +1275,18 @@ intel686_cpu_setup(cpu_device, model, step)
 	}
 #undef rdmsr
 #undef wrmsr
+}
+
+void
+tm86_cpu_setup(cpu_device, model, step)
+	const char *cpu_device;
+	int model, step;
+{
+#ifndef SMALL_KERNEL
+	extern int longrun_enabled;
+
+	longrun_enabled = 1;
+#endif
 }
 
 char *
@@ -1934,7 +1949,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = p->p_sigcode;
-	tf->tf_cs = pmap->pm_nxpages > 0?
+	tf->tf_cs = pmap->pm_hiexec > I386_MAX_EXE_ADDR ? 
 	    GSEL(GUCODE1_SEL, SEL_UPL) : GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;
@@ -2335,7 +2350,7 @@ setregs(p, pack, stack, retval)
 	tf->tf_ebp = 0;
 	tf->tf_ebx = (int)PS_STRINGS;
 	tf->tf_eip = pack->ep_entry;
-	tf->tf_cs = pmap->pm_nxpages > 0?
+	tf->tf_cs = pmap->pm_hiexec > I386_MAX_EXE_ADDR ? 
 	    LSEL(LUCODE1_SEL, SEL_UPL) : LSEL(LUCODE_SEL, SEL_UPL);
 	tf->tf_eflags = PSL_USERSET;
 	tf->tf_esp = stack;
@@ -2991,8 +3006,12 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &user_ldt_enable));
 #endif
+#ifndef SMALL_KERNEL
+	case CPU_LONGRUN:
+		return (longrun_sysctl(oldp, oldlenp, newp, newlen));
+#endif
 	default:
-		return EOPNOTSUPP;
+		return (EOPNOTSUPP);
 	}
 	/* NOTREACHED */
 }

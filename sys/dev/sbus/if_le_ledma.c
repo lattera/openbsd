@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5.4.3 2003/03/28 00:38:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/if_le_ledma.c,v 1.5.4.4 2003/05/16 00:29:42 niklas Exp $	*/
 /*	$NetBSD: if_le_ledma.c,v 1.14 2001/05/30 11:46:35 mrg Exp $	*/
 
 /*-
@@ -297,26 +297,24 @@ lenocarrier(sc)
 	 * Check if the user has requested a certain cable type, and
 	 * if so, honor that request.
 	 */
-	printf("%s: lost carrier on ", sc->sc_dev.dv_xname);
 
 	if (L64854_GCSR(lesc->sc_dma) & E_TP_AUI) {
-		printf("UTP port");
 		switch (IFM_SUBTYPE(sc->sc_ifmedia.ifm_media)) {
 		case IFM_10_5:
 		case IFM_AUTO:
-			printf(", switching to AUI port");
+			printf("%s: lost carrier on UTP port"
+			    ", switching to AUI port\n", sc->sc_dev.dv_xname);
 			lesetaui(sc);
 		}
 	} else {
-		printf("AUI port");
 		switch (IFM_SUBTYPE(sc->sc_ifmedia.ifm_media)) {
 		case IFM_10_T:
 		case IFM_AUTO:
-			printf(", switching to UTP port");
+			printf("%s: lost carrier on AUI port"
+			    ", switching to UTP port\n", sc->sc_dev.dv_xname);
 			lesetutp(sc);
 		}
 	}
-	printf("\n");
 }
 
 int

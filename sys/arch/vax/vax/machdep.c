@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.10 2003/05/13 19:41:10 ho Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.11 2003/05/16 00:29:41 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -139,7 +139,6 @@ int bufpages = 0;
 #endif
 int bufcachepercent = BUFCACHEPERCENT;
 
-extern int *chrtoblktbl;
 extern int virtual_avail, virtual_end;
 /*
  * We do these external declarations here, maybe they should be done

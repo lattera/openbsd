@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.15 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.16 2003/05/16 00:29:43 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -80,6 +80,8 @@
 #include <sys/syscall.h>
 #include <sys/syscallargs.h>
 
+#include <dev/rndvar.h>
+
 #include <ufs/ufs/quota.h>
 
 #include <machine/cpu.h>
@@ -125,6 +127,10 @@ int	boothowto;
 struct	timeval boottime;
 struct	timeval runtime;
 int	ncpus =  1;
+
+#if !defined(NO_PROPOLICE)
+long	__guard[8];
+#endif
 
 /* XXX return int so gcc -Werror won't complain */
 int	main(void *);
@@ -177,6 +183,9 @@ main(framep)
 	quad_t lim;
 	int s, i;
 	register_t rval[2];
+#if !defined(NO_PROPOLICE)
+	int *guard = (int *)&__guard[0];
+#endif
 	extern struct pdevinit pdevinit[];
 	extern struct simplelock kprintf_slock;
 	extern void scheduler_start(void);
@@ -372,6 +381,11 @@ main(framep)
 #ifdef GPROF
 	/* Initialize kernel profiling. */
 	kmstartup();
+#endif
+
+#if !defined(NO_PROPOLICE)
+	for (i = 0; i < sizeof(__guard) / 4; i++)
+		guard[i] = arc4random();
 #endif
 
 	/* Start the scheduler */

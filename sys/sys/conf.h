@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.8 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/conf.h,v 1.34.2.9 2003/05/16 00:29:45 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.33 1996/05/03 20:03:32 christos Exp $	*/
 
 /*-
@@ -499,7 +499,11 @@ struct swdevt {
 
 #ifdef _KERNEL
 extern struct swdevt swdevt[];
+extern int chrtoblktbl[];
+extern int nchrtoblktbl;
 
+struct bdevsw *bdevsw_lookup(dev_t);
+struct cdevsw *cdevsw_lookup(dev_t);
 int	chrtoblk(dev_t);
 int	blktochr(dev_t);
 int	iskmemdev(dev_t);

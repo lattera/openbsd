@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.8 2003/05/13 19:35:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.9 2003/05/16 00:29:42 niklas Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -91,6 +91,8 @@ int	ydsdebug = 0;
 #else
 # define YDS_INPUT_SLOT 1	/* ADC slot */
 #endif
+
+static	int ac97_id2;
 
 int	yds_match(struct device *, void *, void *);
 void	yds_attach(struct device *, struct device *, void *);

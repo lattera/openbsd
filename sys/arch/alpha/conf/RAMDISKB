@@ -1,9 +1,10 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/RAMDISKB,v 1.6.2.5 2003/03/27 23:18:06 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/RAMDISKB,v 1.6.2.6 2003/05/16 00:29:38 niklas Exp $
 #	$NetBSD: RAMDISK,v 1.9 1996/12/03 17:25:33 cgd Exp $
 
 machine	alpha			# architecture, used by config; REQUIRED
 
 option		SMALL_KERNEL
+option		NO_PROPOLICE
 
 # CPU Support; at least one is REQUIRED
 #option		DEC_3000_500	# Flamingo etc:	3000/[4-9]00*

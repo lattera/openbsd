@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.6 2003/03/27 23:19:19 niklas Exp $
+#	$OpenBSD: src/sys/arch/hp300/conf/Makefile.hp300,v 1.19.10.7 2003/05/16 00:29:38 niklas Exp $
 #	$NetBSD: Makefile.hp300,v 1.54 1997/04/01 23:16:41 scottr Exp $
 
 # Makefile for OpenBSD
@@ -40,7 +40,10 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dmc68020 -Dhp300
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
-CMACHFLAGS=	-msoft-float -fno-stack-protector
+CMACHFLAGS=	-msoft-float
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
 COPTS?=		-O2
 CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE

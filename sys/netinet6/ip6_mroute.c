@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.3.2.6 2003/05/13 19:36:18 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.3.2.7 2003/05/16 00:29:44 niklas Exp $	*/
 /*	$KAME: ip6_mroute.c,v 1.45 2001/03/25 08:38:51 itojun Exp $	*/
 
 /*
@@ -1458,9 +1458,9 @@ ip6_mdq(m, ifp, rt)
 
 static void
 phyint_send(ip6, mifp, m)
-    struct ip6_hdr *ip6;
-    struct mif6 *mifp;
-    struct mbuf *m;
+	struct ip6_hdr *ip6;
+	struct mif6 *mifp;
+	struct mbuf *m;
 {
 	struct mbuf *mb_copy;
 	struct ifnet *ifp = mifp->m6_ifp;
@@ -1681,20 +1681,23 @@ pim6_input(mp, offp, proto)
 	 * Make sure that the IP6 and PIM headers in contiguous memory, and
 	 * possibly the PIM REGISTER header
 	 */
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, minlen, IPPROTO_DONE);
-	/* adjust pointer */
-	ip6 = mtod(m, struct ip6_hdr *);
-
-	/* adjust mbuf to point to the PIM header */
-	pim = (struct pim *)((caddr_t)ip6 + off);
-#else
 	IP6_EXTHDR_GET(pim, struct pim *, m, off, minlen);
 	if (pim == NULL) {
 		pim6stat.pim6s_rcv_tooshort++;
 		return IPPROTO_DONE;
 	}
+
+	/* PIM version check */
+	if (pim->pim_ver != PIM_VERSION) {
+		++pim6stat.pim6s_rcv_badversion;
+#ifdef MRT6DEBUG
+		log(LOG_ERR,
+		    "pim6_input: incorrect version %d, expecting %d\n",
+		    pim->pim_ver, PIM_VERSION);
 #endif
+		m_freem(m);
+		return (IPPROTO_DONE);
+	}
 
 #define PIM6_CHECKSUM
 #ifdef PIM6_CHECKSUM
@@ -1722,18 +1725,6 @@ pim6_input(mp, offp, proto)
 		}
 	}
 #endif /* PIM_CHECKSUM */
-
-	/* PIM version check */
-	if (pim->pim_ver != PIM_VERSION) {
-		++pim6stat.pim6s_rcv_badversion;
-#ifdef MRT6DEBUG
-		log(LOG_ERR,
-		    "pim6_input: incorrect version %d, expecting %d\n",
-		    pim->pim_ver, PIM_VERSION);
-#endif
-		m_freem(m);
-		return (IPPROTO_DONE);
-	}
 
 	if (pim->pim_type == PIM_REGISTER) {
 		/*

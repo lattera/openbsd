@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_node.c,v 1.10.4.2 2002/03/28 15:02:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_node.c,v 1.10.4.3 2003/05/16 00:29:43 niklas Exp $	*/
 /*	$NetBSD: cd9660_node.c,v 1.17 1997/05/05 07:13:57 mycroft Exp $	*/
 
 /*-
@@ -72,7 +72,7 @@ u_long idvhash;
 #define	DNOHASH(device, inum)	(((device) + ((inum)>>12)) & idvhash)
 #endif
 
-int prtactive;	/* 1 => print out reclaim of active vnodes */
+extern int prtactive;	/* 1 => print out reclaim of active vnodes */
 
 static u_int cd9660_chars2ui(u_char *, int);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/power.h,v 1.1.16.2 2002/03/28 10:57:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/dev/power.h,v 1.1.16.3 2003/05/16 00:29:40 niklas Exp $ */
 /*	$NetBSD: power.h,v 1.2 1996/05/16 15:56:57 abrown Exp $ */
 
 /*
@@ -54,7 +54,7 @@
 #define	POWER_BITS	"\20\1POWEROFF"
 
 #ifndef _LOCORE
-volatile u_char *power_reg;
+extern volatile u_char *power_reg;
 #endif
 
 void powerdown(void);		/* power off function */

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.8 2003/03/28 00:38:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.9 2003/05/16 00:29:41 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.33 2003/02/19 10:12:55 miod Exp 
+ *	OpenBSD: miidevs,v 1.36 2003/05/14 05:16:58 nate Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -153,8 +153,14 @@
 /* Marvell Semiconductor PHYs */
 #define	MII_MODEL_MARVELL_E1000	0x0000
 #define	MII_STR_MARVELL_E1000	"Marvell 88E1000* Gigabit PHY"
+#define	MII_MODEL_MARVELL_E1011	0x0002
+#define	MII_STR_MARVELL_E1011	"Marvell 88E1011 Gigabit PHY"
 #define	MII_MODEL_MARVELL_E1000_3	0x0003
 #define	MII_STR_MARVELL_E1000_3	"Marvell 88E1000 Gigabit PHY"
+#define	MII_MODEL_MARVELL_E1000_4	0x0004
+#define	MII_STR_MARVELL_E1000_4	"Marvell 88E1000S Gigabit PHY"
+#define	MII_MODEL_MARVELL_E1000_5	0x0005
+#define	MII_STR_MARVELL_E1000_5	"Marvell 88E1000 Gigabit PHY"
 #define	MII_MODEL_MARVELL_E1000_6	0x0006
 #define	MII_STR_MARVELL_E1000_6	"Marvell 88E1000 Gigabit PHY"
 #define	MII_MODEL_xxMARVELL_E1000_3	0x0003

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/fbvar.h,v 1.3.12.3 2003/03/27 23:49:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/fbvar.h,v 1.3.12.4 2003/05/16 00:29:40 niklas Exp $	*/
 /*	$NetBSD: fbvar.h,v 1.9 1997/07/07 23:31:30 pk Exp $ */
 
 /*
@@ -50,9 +50,7 @@
  */
 
 #define	FB_PFOUR	0x00010000	/* indicates fb is a pfour fb */
-#define FB_FORCELOW	0x00000001	/* run 24 bit fb in 8 bit mode */
-					/* or cg12 in 1 bit mode */
-#define FB_USERMASK	(0xffff)	/* flags that the user can set */
+#define FB_USERMASK	(0)		/* flags that the user can set */
 
 /*
  * Common frame buffer variables.

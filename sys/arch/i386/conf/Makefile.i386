@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/Makefile.i386,v 1.24.4.6 2003/05/13 19:42:07 ho Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/Makefile.i386,v 1.24.4.7 2003/05/16 00:29:38 niklas Exp $
 #	$NetBSD: Makefile.i386,v 1.67 1996/05/11 16:12:11 mycroft Exp $
 
 # Makefile for OpenBSD
@@ -44,7 +44,9 @@ CMACHFLAGS=	-march=i486
 .else
 CMACHFLAGS=
 .endif
+.if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
+.endif
 
 COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}

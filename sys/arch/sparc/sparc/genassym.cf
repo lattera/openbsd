@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/sparc/genassym.cf,v 1.4.2.6 2003/03/27 23:49:26 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/sparc/genassym.cf,v 1.4.2.7 2003/05/16 00:29:40 niklas Exp $
 #	$NetBSD: genassym.cf,v 1.2 1997/06/28 19:59:04 pk Exp $
 
 #
@@ -67,11 +67,6 @@ include <machine/oldmon.h>
 include <machine/bsd_openprom.h>
 
 include <sparc/sparc/cpuvar.h>
-
-ifdef notyet
-include <sparc/dev/zsreg.h>
-include <sparc/dev/zsvar.h>
-endif
 
 include <dev/ic/am7930reg.h>
 include <sparc/dev/amd7930var.h>

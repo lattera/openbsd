@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.7 2003/03/28 00:38:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.8 2003/05/16 00:29:41 niklas Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -76,7 +76,7 @@
  */
 struct hifn_dma {
 	/*
-	 *  Descriptor rings.  We add +1 to the size to accomidate the
+	 *  Descriptor rings.  We add +1 to the size to accommodate the
 	 *  jump descriptor.
 	 */
 	struct hifn_desc	cmdr[HIFN_D_CMD_RSIZE+1];
@@ -198,7 +198,7 @@ struct hifn_softc {
  *
  *	HIFN_CRYPT_3DES or HIFN_CRYPT_DES
  *
- *  To use authentication is used, a single MAC algorithm must be included:
+ *  To use authentication, a single MAC algorithm must be included:
  *
  *	HIFN_MAC_MD5 or HIFN_MAC_SHA1
  *

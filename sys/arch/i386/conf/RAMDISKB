@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKB,v 1.12.2.6 2003/03/27 23:26:55 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKB,v 1.12.2.7 2003/05/16 00:29:39 niklas Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -12,6 +12,7 @@ option		I686_CPU
 option		GPL_MATH_EMULATE	# floating point emulation
 
 option		SMALL_KERNEL
+option		NO_PROPOLICE
 
 #option		DUMMY_NOPS	# speed hack; recommended
 
@@ -245,6 +246,13 @@ dc*	at pci? dev ? function ?		# 21143, "tulip" clone ethernet
 #ti*	at pci? dev ? function ?		# Alteon Tigon 1Gb ethernet
 #skc*	at pci? dev ? function ?		# SysKonnect GEnesis 984x
 #sk*	at skc?					#  each port of above
+em*	at pci? dev ? function ?		# Intel Pro/1000 ethernet
+#txp*	at pci? dev ? function ?		# 3com 3CR990
+#nge*	at pci? dev ? function ?		# NS DP83820/DP83821 GigE
+#bge*	at pci? dev ? function ?		# Broadcom BCM570x (aka Tigon3)
+#stge*	at pci? dev ? function ?		# Sundance TC9021 GigE
+#lge*	at pci? dev ? function ?		# Level1 LXT1001 GigE
+#hme*	at pci? dev ? function ?		# Sun Happy Meal
 
 # Wireless network cards
 wi*	at pci? dev ? function ?		# WaveLAN IEEE 802.11DS

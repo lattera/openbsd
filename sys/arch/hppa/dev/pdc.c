@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/dev/pdc.c,v 1.11.2.5 2002/03/28 10:07:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/dev/pdc.c,v 1.11.2.6 2003/05/16 00:29:38 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998-2002 Michael Shalayeff
@@ -196,7 +196,7 @@ pdcopen(dev, flag, mode, p)
 	struct pdc_softc *sc;
 	struct tty *tp;
 	int s;
-	int error = 0, setuptimeout;
+	int error = 0, setuptimeout = 0;
 
 	if (unit >= pdc_cd.cd_ndevs || (sc = pdc_cd.cd_devs[unit]) == NULL)
 		return ENXIO;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.13 2003/05/15 23:36:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.14 2003/05/16 00:29:45 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -259,6 +259,12 @@ struct	proc {
 #define P_SYSTRACE	0x400000	/* Process system call tracing active*/
 #define P_BIGLOCK	0x800000	/* Process needs kernel "big lock" to run */
 
+#define	P_BITS \
+    ("\20\01ADVLOCK\02CTTY\03INMEM\04NOCLDSTOP\05PPWAIT\06PROFIL\07SELECT" \
+     "\010SINTR\011SUGID\012SYSTEM\013TIMEOUT\014TRACED\015WAITED\016WEXIT" \
+     "\017EXEC\020PWEUPC\021FSTRACE\022SSTEP\023SUGIDEXEC\024NOCLDWAIT" \
+     "\025NOZOMBIE\026INEXEC\027SYSTRACE")
+
 /* Macro to compute the exit signal to be delivered. */
 #define P_EXITSIG(p) \
     (((p)->p_flag & (P_TRACED | P_FSTRACE)) ? SIGCHLD : (p)->p_exitsig)
@@ -371,6 +377,8 @@ struct simplelock;
 
 struct proc *pfind(pid_t);	/* Find process by id. */
 struct pgrp *pgfind(pid_t);	/* Find process group by id. */
+void	proc_printit(struct proc *p, const char *modif,
+    int (*pr)(const char *, ...));
 
 int	chgproccnt(uid_t uid, int diff);
 int	enterpgrp(struct proc *p, pid_t pgid, int mksess);

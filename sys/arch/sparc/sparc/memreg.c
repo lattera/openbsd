@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/memreg.c,v 1.8.2.2 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/memreg.c,v 1.8.2.3 2003/05/16 00:29:40 niklas Exp $	*/
 /*	$NetBSD: memreg.c,v 1.21 1997/07/29 09:42:08 fair Exp $ */
 
 /*
@@ -123,6 +123,8 @@ memregattach(parent, self, aux)
  * Should kill the process that got its bits clobbered,
  * and take the page out of the page pool, but for now...
  */
+
+volatile u_int	*par_err_reg;	/* virtual address; NULL if not yet mapped */
 
 void
 memerr4_4c(issync, ser, sva, aer, ava, tf)

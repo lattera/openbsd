@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.4 2003/05/13 19:42:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/freebsd_machdep.c,v 1.10.6.5 2003/05/16 00:29:39 niklas Exp $	*/
 /*	$NetBSD: freebsd_machdep.c,v 1.10 1996/05/03 19:42:05 christos Exp $	*/
 
 /*-
@@ -161,7 +161,7 @@ freebsd_sendsig(catcher, sig, mask, code, type, val)
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = p->p_sigcode;
-	tf->tf_cs = pmap->pm_nxpages > 0?
+	tf->tf_cs = pmap->pm_hiexec > I386_MAX_EXE_ADDR ? 
 	    GSEL(GUCODE1_SEL, SEL_UPL) : GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.6 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_clock.c,v 1.21.4.7 2003/05/16 00:29:43 niklas Exp $	*/
 /*	$NetBSD: kern_clock.c,v 1.34 1996/06/09 04:51:03 briggs Exp $	*/
 
 /*-
@@ -110,7 +110,8 @@ static int tickfixcnt;			/* accumulated fractional error */
 
 long cp_time[CPUSTATES];
 
-volatile struct	timeval time;
+volatile struct	timeval time
+	__attribute__((__aligned__(__alignof__(quad_t))));
 volatile struct	timeval mono_time;
 
 #ifdef __HAVE_GENERIC_SOFT_INTERRUPTS

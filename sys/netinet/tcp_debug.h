@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_debug.h,v 1.4.6.1 2001/07/04 10:55:05 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_debug.h,v 1.4.6.2 2003/05/16 00:29:44 niklas Exp $	*/
 /*	$NetBSD: tcp_debug.h,v 1.5 1994/06/29 06:38:38 cgd Exp $	*/
 
 /*
@@ -64,6 +64,6 @@ char	*tanames[] =
 #endif /* TANAMES */
 
 #define	TCP_NDEBUG 100
-struct	tcp_debug tcp_debug[TCP_NDEBUG];
-int	tcp_debx;
+extern struct	tcp_debug tcp_debug[];
+extern int	tcp_debx;
 #endif /* _NETINET_TCP_DEBUG_H_ */

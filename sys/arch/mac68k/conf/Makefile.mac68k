@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/Makefile.mac68k,v 1.20.8.3 2003/03/27 23:28:43 niklas Exp $
+#	$OpenBSD: src/sys/arch/mac68k/conf/Attic/Makefile.mac68k,v 1.20.8.4 2003/05/16 00:29:39 niklas Exp $
 #	$NetBSD: Makefile.mac68k,v 1.53 1997/04/15 06:11:38 scottr Exp $
 
 # Makefile for OpenBSD
@@ -40,7 +40,10 @@ CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL \
 		-Dmc68020 -Dmac68k
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-uninitialized -Wno-format -Wno-main
-CMACHFLAGS=	-msoft-float -fno-stack-protector
+CMACHFLAGS=	-msoft-float
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
 COPTS?= 	-O2
 CFLAGS=		${DEBUG} ${COPTS} ${CWARNFLAGS} ${CMACHFLAGS} ${PIPE}
 AFLAGS=		-x assembler-with-cpp -traditional-cpp -D_LOCORE

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.4 2003/05/13 19:41:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/ofdev.c,v 1.2.4.5 2003/05/16 00:29:41 niklas Exp $	*/
 /*	$NetBSD: ofdev.c,v 1.1 2000/08/20 14:58:41 mrg Exp $	*/
 
 /*
@@ -465,7 +465,9 @@ devopen(of, name, file)
 			     LABELSECTOR, DEV_BSIZE, buf, &read) != 0
 		    || read != DEV_BSIZE
 		    || (errmsg = getdisklabel(buf, &label))) {
+#ifdef NOTDEF_DEBUG
 			if (errmsg) printf("devopen: getdisklabel says %s\n", errmsg);
+#endif
 			/* Else try MBR partitions */
 			errmsg = search_label(&ofdev, 0, buf, &label, 0);
 			if (errmsg) { 

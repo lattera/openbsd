@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.11 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.12 2003/05/16 00:29:39 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -326,12 +326,14 @@ trap(frame)
 			goto out;
 		}
 #endif
-		if (ftype == VM_PROT_READ) {
-			ftype |= VM_PROT_EXECUTE;
-			/* XXX force %cr2 register have fault address */
-			__asm __volatile("movl %0,%%cr2" :: "r" (frame.tf_eip));
-		}
-		goto page_fault;
+		/* If pmap_exec_fixup does something, let's retry the trap. */
+		if (pmap_exec_fixup(&p->p_vmspace->vm_map, &frame,
+		    &p->p_addr->u_pcb))
+			goto out;
+
+		sv.sival_int = frame.tf_eip;
+		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
+		goto out;
 
 	case T_TSSFLT|T_USER:
 		sv.sival_int = frame.tf_eip;
@@ -457,7 +459,6 @@ trap(frame)
 		KERNEL_LOCK(LK_CANRECURSE|LK_EXCLUSIVE);
 		goto faultcommon;
 
-	page_fault:
 	case T_PAGEFLT|T_USER: {	/* page fault */
 		vaddr_t va, fa;
 		struct vmspace *vm;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.18.4.3 2003/03/27 23:49:24 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/Makefile.sparc,v 1.18.4.4 2003/05/16 00:29:40 niklas Exp $
 # 	$NetBSD: Makefile.sparc,v 1.32.4.1 1996/06/12 20:26:32 pk Exp $
 
 # Makefile for OpenBSD
@@ -45,7 +45,9 @@ CMACHFLAGS=	-mcpu=supersparc
 .else
 CMACHFLAGS=
 .endif
+.if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
+.endif
 
 CFLAGS=		${DEBUG} -O2 ${CDIAGFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 # add `-mno-fpu' to work around gcc (last noticed in v2.7.2) bug

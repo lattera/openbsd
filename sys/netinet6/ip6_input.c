@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.9 2003/03/28 00:41:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.8.2.10 2003/05/16 00:29:44 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -130,9 +130,7 @@ struct ip6stat ip6stat;
 static void ip6_init2(void *);
 
 static int ip6_hopopts_input(u_int32_t *, u_int32_t *, struct mbuf **, int *);
-#ifdef PULLDOWN_TEST
 static struct mbuf *ip6_pullexthdr(struct mbuf *, size_t, int);
-#endif
 
 /*
  * IP6 initialization: fill in IP6 protocol switch table.
@@ -228,11 +226,6 @@ ip6_input(m)
 
 	in6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_receive);
 	ip6stat.ip6s_total++;
-
-#ifndef PULLDOWN_TEST
-	/* XXX is the line really necessary? */
-	IP6_EXTHDR_CHECK(m, 0, sizeof(struct ip6_hdr), /*nothing*/);
-#endif
 
 	if (m->m_len < sizeof(struct ip6_hdr)) {
 		struct ifnet *inifp;
@@ -553,17 +546,12 @@ ip6_input(m)
 				    (caddr_t)&ip6->ip6_plen - (caddr_t)ip6);
 			return;
 		}
-#ifndef PULLDOWN_TEST
-		/* ip6_hopopts_input() ensures that mbuf is contiguous */
-		hbh = (struct ip6_hbh *)(ip6 + 1);
-#else
 		IP6_EXTHDR_GET(hbh, struct ip6_hbh *, m, sizeof(struct ip6_hdr),
 			sizeof(struct ip6_hbh));
 		if (hbh == NULL) {
 			ip6stat.ip6s_tooshort++;
 			return;
 		}
-#endif
 		nxt = hbh->ip6h_nxt;
 
 		/*
@@ -685,14 +673,6 @@ ip6_hopopts_input(plenp, rtalertp, mp, offp)
 	u_int8_t *opt;
 
 	/* validation of the length of the header */
-#ifndef PULLDOWN_TEST
-	IP6_EXTHDR_CHECK(m, off, sizeof(*hbh), -1);
-	hbh = (struct ip6_hbh *)(mtod(m, caddr_t) + off);
-	hbhlen = (hbh->ip6h_len + 1) << 3;
-
-	IP6_EXTHDR_CHECK(m, off, hbhlen, -1);
-	hbh = (struct ip6_hbh *)(mtod(m, caddr_t) + off);
-#else
 	IP6_EXTHDR_GET(hbh, struct ip6_hbh *, m,
 		sizeof(struct ip6_hdr), sizeof(struct ip6_hbh));
 	if (hbh == NULL) {
@@ -706,7 +686,6 @@ ip6_hopopts_input(plenp, rtalertp, mp, offp)
 		ip6stat.ip6s_tooshort++;
 		return -1;
 	}
-#endif
 	off += hbhlen;
 	hbhlen -= sizeof(struct ip6_hbh);
 	opt = (u_int8_t *)hbh + sizeof(struct ip6_hbh);
@@ -931,15 +910,14 @@ ip6_savecontrol(in6p, mp, ip6, m)
 
 		microtime(&tv);
 		*mp = sbcreatecontrol((caddr_t) &tv, sizeof(tv),
-			SCM_TIMESTAMP, SOL_SOCKET);
+		    SCM_TIMESTAMP, SOL_SOCKET);
 		if (*mp)
 			mp = &(*mp)->m_next;
 	}
 #endif
 	if (in6p->in6p_flags & IN6P_RECVDSTADDR) {
 		*mp = sbcreatecontrol((caddr_t) &ip6->ip6_dst,
-			sizeof(struct in6_addr), IPV6_RECVDSTADDR,
-			IPPROTO_IPV6);
+		    sizeof(struct in6_addr), IPV6_RECVDSTADDR, IPPROTO_IPV6);
 		if (*mp)
 			mp = &(*mp)->m_next;
 	}
@@ -963,15 +941,14 @@ ip6_savecontrol(in6p, mp, ip6, m)
 					? m->m_pkthdr.rcvif->if_index
 					: 0;
 		*mp = sbcreatecontrol((caddr_t) &pi6,
-			sizeof(struct in6_pktinfo), IPV6_PKTINFO,
-			IPPROTO_IPV6);
+		    sizeof(struct in6_pktinfo), IPV6_PKTINFO, IPPROTO_IPV6);
 		if (*mp)
 			mp = &(*mp)->m_next;
 	}
 	if (in6p->in6p_flags & IN6P_HOPLIMIT) {
 		int hlim = ip6->ip6_hlim & 0xff;
-		*mp = sbcreatecontrol((caddr_t) &hlim,
-			sizeof(int), IPV6_HOPLIMIT, IPPROTO_IPV6);
+		*mp = sbcreatecontrol((caddr_t) &hlim, sizeof(int),
+		    IPV6_HOPLIMIT, IPPROTO_IPV6);
 		if (*mp)
 			mp = &(*mp)->m_next;
 	}
@@ -995,14 +972,8 @@ ip6_savecontrol(in6p, mp, ip6, m)
 		if (ip6->ip6_nxt == IPPROTO_HOPOPTS) {
 			struct ip6_hbh *hbh;
 			int hbhlen;
-#ifdef PULLDOWN_TEST
 			struct mbuf *ext;
-#endif
 
-#ifndef PULLDOWN_TEST
-			hbh = (struct ip6_hbh *)(ip6 + 1);
-			hbhlen = (hbh->ip6h_len + 1) << 3;
-#else
 			ext = ip6_pullexthdr(m, sizeof(struct ip6_hdr),
 			    ip6->ip6_nxt);
 			if (ext == NULL) {
@@ -1016,7 +987,6 @@ ip6_savecontrol(in6p, mp, ip6, m)
 				ip6stat.ip6s_tooshort++;
 				return;
 			}
-#endif
 
 			/*
 			 * XXX: We copy whole the header even if a jumbo
@@ -1025,12 +995,10 @@ ip6_savecontrol(in6p, mp, ip6, m)
 			 * But it's too painful operation...
 			 */
 			*mp = sbcreatecontrol((caddr_t)hbh, hbhlen,
-					      IPV6_HOPOPTS, IPPROTO_IPV6);
+			    IPV6_HOPOPTS, IPPROTO_IPV6);
 			if (*mp)
 				mp = &(*mp)->m_next;
-#ifdef PULLDOWN_TEST
 			m_freem(ext);
-#endif
 		}
 	}
 
@@ -1049,9 +1017,7 @@ ip6_savecontrol(in6p, mp, ip6, m)
 		while (1) {	/* is explicit loop prevention necessary? */
 			struct ip6_ext *ip6e = NULL;
 			int elen;
-#ifdef PULLDOWN_TEST
 			struct mbuf *ext = NULL;
-#endif
 
 			/*
 			 * if it is not an extension header, don't try to
@@ -1067,17 +1033,6 @@ ip6_savecontrol(in6p, mp, ip6, m)
 				goto loopend;
 			}
 
-#ifndef PULLDOWN_TEST
-			if (off + sizeof(*ip6e) > m->m_len)
-				goto loopend;
-			ip6e = (struct ip6_ext *)(mtod(m, caddr_t) + off);
-			if (nxt == IPPROTO_AH)
-				elen = (ip6e->ip6e_len + 2) << 2;
-			else
-				elen = (ip6e->ip6e_len + 1) << 3;
-			if (off + elen > m->m_len)
-				goto loopend;
-#else
 			ext = ip6_pullexthdr(m, off, nxt);
 			if (ext == NULL) {
 				ip6stat.ip6s_tooshort++;
@@ -1093,7 +1048,6 @@ ip6_savecontrol(in6p, mp, ip6, m)
 				ip6stat.ip6s_tooshort++;
 				return;
 			}
-#endif
 
 			switch (nxt) {
 			case IPPROTO_DSTOPTS:
@@ -1109,8 +1063,7 @@ ip6_savecontrol(in6p, mp, ip6, m)
 					break;
 
 				*mp = sbcreatecontrol((caddr_t)ip6e, elen,
-						      IPV6_DSTOPTS,
-						      IPPROTO_IPV6);
+				    IPV6_DSTOPTS, IPPROTO_IPV6);
 				if (*mp)
 					mp = &(*mp)->m_next;
 				break;
@@ -1120,8 +1073,7 @@ ip6_savecontrol(in6p, mp, ip6, m)
 					break;
 
 				*mp = sbcreatecontrol((caddr_t)ip6e, elen,
-						      IPV6_RTHDR,
-						      IPPROTO_IPV6);
+				    IPV6_RTHDR, IPPROTO_IPV6);
 				if (*mp)
 					mp = &(*mp)->m_next;
 				break;
@@ -1137,9 +1089,7 @@ ip6_savecontrol(in6p, mp, ip6, m)
 				 * the code just in case (nxt overwritten or
 				 * other cases).
 				 */
-#ifdef PULLDOWN_TEST
 				m_freem(ext);
-#endif
 				goto loopend;
 
 			}
@@ -1148,25 +1098,15 @@ ip6_savecontrol(in6p, mp, ip6, m)
 			off += elen;
 			nxt = ip6e->ip6e_nxt;
 			ip6e = NULL;
-#ifdef PULLDOWN_TEST
 			m_freem(ext);
 			ext = NULL;
-#endif
 		}
 	  loopend:
 	  	;
 	}
-	if ((in6p->in6p_flags & IN6P_HOPOPTS) && privileged) {
-		/* to be done */
-	}
-	if ((in6p->in6p_flags & IN6P_DSTOPTS) && privileged) {
-		/* to be done */
-	}
-	/* IN6P_RTHDR - to be done */
 # undef in6p_flags
 }
 
-#ifdef PULLDOWN_TEST
 /*
  * pull single extension header from mbuf chain.  returns single mbuf that
  * contains the result, or NULL on error.
@@ -1220,7 +1160,6 @@ ip6_pullexthdr(m, off, nxt)
 	n->m_len = elen;
 	return n;
 }
-#endif
 
 /*
  * Get pointer to the previous header followed by the header

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/eephyreg.h,v 1.1.4.2 2003/03/28 00:38:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/eephyreg.h,v 1.1.4.3 2003/05/16 00:29:41 niklas Exp $	*/
 /*
  * Principal Author: Parag Patel
  * Copyright (c) 2001
@@ -105,9 +105,6 @@
 
 #define E1000_ID1			0x02	/* ID register 1 */
 #define E1000_ID2			0x03	/* ID register 2 */
-#define E1000_ID_88E1000		0x01410C50
-#define E1000_ID_88E1000S		0x01410C40
-#define E1000_ID_MASK			0xFFFFFFF0
 
 #define E1000_AR			0x04	/* autonegotiation advertise reg */
 #define E1000_AR_SELECTOR_FIELD		0x0001
