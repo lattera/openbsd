@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/cache.c,v 1.9.4.3 2000/03/24 09:08:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/cache.c,v 1.9.4.4 2002/03/28 10:57:10 niklas Exp $	*/
 /*	$NetBSD: cache.c,v 1.34 1997/09/26 22:17:23 pk Exp $	*/
 
 /*
@@ -62,8 +62,9 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
+#include <uvm/uvm_extern.h>
+
 #include <machine/ctlreg.h>
-#include <machine/pte.h>
 
 #include <sparc/sparc/asm.h>
 #include <sparc/sparc/cache.h>

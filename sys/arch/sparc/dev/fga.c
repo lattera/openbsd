@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3.4.3 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fga.c,v 1.3.4.4 2002/03/28 10:57:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -61,13 +61,13 @@
 #include <sparc/dev/fgavar.h>
 #include <machine/fgaio.h>
 
-int	fgamatch	__P((struct device *, void *, void *));
-void	fgaattach	__P((struct device *, struct device *, void *));
-int	fvmematch	__P((struct device *, void *, void *));
-void	fvmeattach	__P((struct device *, struct device *, void *));
-int	fgaprint	__P((void *, const char *));
-int	fvmeprint	__P((void *, const char *));
-int	fvmescan	__P((struct device *parent, void *, void *));
+int	fgamatch(struct device *, void *, void *);
+void	fgaattach(struct device *, struct device *, void *);
+int	fvmematch(struct device *, void *, void *);
+void	fvmeattach(struct device *, struct device *, void *);
+int	fgaprint(void *, const char *);
+int	fvmeprint(void *, const char *);
+int	fvmescan(struct device *parent, void *, void *);
 
 struct fga_softc {
 	struct		device sc_dev;		/* base device */
@@ -89,24 +89,24 @@ struct fga_softc {
 	u_int8_t	sc_established;		/* which hw intrs installed */
 };
 
-int	fgaopen		__P((dev_t, int, int, struct proc *));
-int	fgaclose	__P((dev_t, int, int, struct proc *));
-int	fgaioctl	__P((dev_t, u_long, caddr_t, int, struct proc *));
+int	fgaopen(dev_t, int, int, struct proc *);
+int	fgaclose(dev_t, int, int, struct proc *);
+int	fgaioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
-int	fga_vmerangemap	__P((struct fga_softc *, u_int32_t, u_int32_t,
-    int, int, u_int32_t, struct confargs *));
-int	fga_intr_establish __P((struct fga_softc *, int, int,
-    struct intrhand *));
-int	fga_hwintr_establish __P((struct fga_softc *, u_int8_t));
+int	fga_vmerangemap(struct fga_softc *, u_int32_t, u_int32_t,
+    int, int, u_int32_t, struct confargs *);
+int	fga_intr_establish(struct fga_softc *, int, int,
+    struct intrhand *);
+int	fga_hwintr_establish(struct fga_softc *, u_int8_t);
 
-int	fga_hwintr1 __P((void *));
-int	fga_hwintr2 __P((void *));
-int	fga_hwintr3 __P((void *));
-int	fga_hwintr4 __P((void *));
-int	fga_hwintr5 __P((void *));
-int	fga_hwintr6 __P((void *));
-int	fga_hwintr7 __P((void *));
-int	fga_intrvec __P((struct fga_softc *, int));
+int	fga_hwintr1(void *);
+int	fga_hwintr2(void *);
+int	fga_hwintr3(void *);
+int	fga_hwintr4(void *);
+int	fga_hwintr5(void *);
+int	fga_hwintr6(void *);
+int	fga_hwintr7(void *);
+int	fga_intrvec(struct fga_softc *, int);
 
 struct cfattach fga_ca = {
 	sizeof (struct fga_softc), fgamatch, fgaattach
@@ -289,7 +289,7 @@ fga_vmerangemap(sc, vmebase, vmelen, vmecap, sbusslot, sbusoffset, oca)
 	    (void *)(sc->sc_range[srange].poffset | sbusoffset);
 	oca->ca_ra.ra_reg[0].rr_iospace = sbusslot;
 	oca->ca_ra.ra_reg[1].rr_iospace = vmecap;
-	oca->ca_ra.ra_reg[1].rr_paddr = (void*)vmebase;
+	oca->ca_ra.ra_reg[1].rr_paddr = (void *)vmebase;
 	oca->ca_ra.ra_reg[1].rr_len = vmelen;
 
 	/* 1. Setup slot select register for this range. */

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.19.2.4 2002/03/06 02:04:46 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.19.2.5 2002/03/28 10:57:11 niklas Exp $
 #	$NetBSD: files.sparc64,v 1.50 2001/08/10 20:53:50 eeh Exp $
 
 # maxpartitions must be first item in files.${ARCH}
@@ -115,6 +115,9 @@ file	arch/sparc64/dev/pckbc_ebus.c		pckbc_ebus
 device comkbd: tty, wskbddev, sunkbd
 attach comkbd at ebus
 file	arch/sparc64/dev/comkbd_ebus.c		comkbd
+
+attach lpt at ebus with lpt_ebus
+file	arch/sparc64/dev/lpt_ebus.c		lpt_ebus
 
 device zs {channel = -1}
 attach zs at mainbus, sbus

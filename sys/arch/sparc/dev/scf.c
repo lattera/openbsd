@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/scf.c,v 1.2.4.1 2001/05/14 21:37:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/scf.c,v 1.2.4.2 2002/03/28 10:57:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -57,12 +57,12 @@
 #include <machine/scfio.h>
 #include <sparc/dev/scfreg.h>
 
-int	scfmatch	__P((struct device *, void *, void *));
-void	scfattach	__P((struct device *, struct device *, void *));
+int	scfmatch(struct device *, void *, void *);
+void	scfattach(struct device *, struct device *, void *);
 
-int	scfopen	__P((dev_t, int, int, struct proc *));
-int	scfclose	__P((dev_t, int, int, struct proc *));
-int	scfioctl	__P((dev_t, u_long, caddr_t, int, struct proc *));
+int	scfopen(dev_t, int, int, struct proc *);
+int	scfclose(dev_t, int, int, struct proc *);
+int	scfioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 struct scf_softc {
 	struct	device sc_dv;			/* base device */

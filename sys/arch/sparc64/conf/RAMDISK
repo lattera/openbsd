@@ -1,4 +1,4 @@
-# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.2 2002/03/06 02:04:46 niklas Exp $
+# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.3 2002/03/28 10:57:11 niklas Exp $
 
 # Machine architecture; required by config(8)
 machine		sparc64
@@ -96,6 +96,7 @@ cd*	at scsibus? target ? lun ?	# SCSI CD-ROMs
 # Media Independent Interface (mii) drivers)
 nsphy*	at mii? phy ?				# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
+dcphy*	at mii? phy ?				# Digital clone PHYs
 ukphy*	at mii? phy ?				# Unknown PHYs
 
 pseudo-device	rd	2	# ramdisk

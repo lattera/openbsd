@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/auxio.c,v 1.2.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/auxio.c,v 1.2.4.3 2002/03/28 10:57:11 niklas Exp $	*/
 /*	$NetBSD: auxio.c,v 1.1 2000/04/15 03:08:13 mrg Exp $	*/
 
 /*
@@ -54,11 +54,11 @@
 /*
  * ebus code.
  */
-int	auxio_ebus_match __P((struct device *, void *, void *));
-void	auxio_ebus_attach __P((struct device *, struct device *, void *));
-int	auxio_sbus_match __P((struct device *, void *, void *));
-void	auxio_sbus_attach __P((struct device *, struct device *, void *));
-void	auxio_attach_common __P((struct auxio_softc *));
+int	auxio_ebus_match(struct device *, void *, void *);
+void	auxio_ebus_attach(struct device *, struct device *, void *);
+int	auxio_sbus_match(struct device *, void *, void *);
+void	auxio_sbus_attach(struct device *, struct device *, void *);
+void	auxio_attach_common(struct auxio_softc *);
 
 struct cfattach auxio_ebus_ca = {
 	sizeof(struct auxio_softc), auxio_ebus_match, auxio_ebus_attach

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/consinit.c,v 1.4.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/consinit.c,v 1.4.4.3 2002/03/28 10:57:11 niklas Exp $	*/
 /*	$NetBSD: consinit.c,v 1.9 2000/10/20 05:32:35 mrg Exp $	*/
 
 /*-
@@ -60,12 +60,12 @@
 
 #include <dev/usb/ukbdvar.h>
 
-static void prom_cnprobe __P((struct consdev *));
-static void prom_cninit __P((struct consdev *));
-int  prom_cngetc __P((dev_t));
-static void prom_cnputc __P((dev_t, int));
-static void prom_cnpollc __P((dev_t, int));
-static void prom_cnputc __P((dev_t, int));
+static void prom_cnprobe(struct consdev *);
+static void prom_cninit(struct consdev *);
+int  prom_cngetc(dev_t);
+static void prom_cnputc(dev_t, int);
+static void prom_cnpollc(dev_t, int);
+static void prom_cnputc(dev_t, int);
 
 int stdin = NULL, stdout = NULL;
 

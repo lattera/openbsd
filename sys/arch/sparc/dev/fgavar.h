@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/fgavar.h,v 1.1 1999/07/23 19:11:25 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/fgavar.h,v 1.1.4.1 2002/03/28 10:57:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -35,4 +35,4 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-int fvmeintrestablish __P((struct device *, int, int, struct intrhand *));
+int fvmeintrestablish(struct device *, int, int, struct intrhand *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.5.4.3 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/iommu.c,v 1.5.4.4 2002/03/28 10:57:11 niklas Exp $	*/
 /*	$NetBSD: iommu.c,v 1.47 2002/02/08 20:03:45 eeh Exp $	*/
 
 /*
@@ -82,7 +82,8 @@ int iommu_dvmamap_sync_seg(bus_dma_tag_t, struct iommu_state *,
 			0, (v));				\
 	} while (0)
 
-static	int iommu_strbuf_flush_done __P((struct iommu_state *));
+static	int iommu_strbuf_flush_done(struct iommu_state *);
+int64_t iommu_tsb_entry(struct iommu_state *, vaddr_t);
 static	int iommu_tv_comp(struct timeval *, struct timeval *);
 
 /*
@@ -291,6 +292,27 @@ iommu_extract(is, dva)
 	if ((tte&IOTTE_V) == 0)
 		return ((paddr_t)-1L);
 	return (tte&IOTTE_PAMASK);
+}
+
+/*
+ * Fetch a tsb entry with some sanity checking.
+ */
+int64_t
+iommu_tsb_entry(is, dva)
+	struct iommu_state *is;
+	vaddr_t dva;
+{
+	int64_t tte;
+
+	if (dva < is->is_dvmabase && dva >= is->is_dvmaend)
+		panic("invalid dva: %llx", (long long)dva);
+
+	tte = is->is_tsb[IOTSBSLOT(dva,is->is_tsbsize)];
+
+	if ((tte & IOTTE_V) == 0)
+		panic("iommu_tsb_entry: invalid entry %llx\n", (long long)dva);
+
+	return (tte);
 }
 
 /*
@@ -542,7 +564,8 @@ iommu_dvmamap_load(t, is, map, buf, buflen, p, flags)
 			"seg %d start %lx size %lx\n", seg,
 			(long)map->dm_segs[seg].ds_addr, 
 			map->dm_segs[seg].ds_len));
-		map->dm_segs[seg].ds_len = sgstart & (boundary - 1);
+		map->dm_segs[seg].ds_len =
+		    boundary - (sgstart & (boundary - 1));
 		if (++seg > map->_dm_segcnt) {
 			/* Too many segments.  Fail the operation. */
 			DPRINTF(IDB_INFO, ("iommu_dvmamap_load: "
@@ -979,6 +1002,10 @@ iommu_dvmamap_sync(t, is, map, offset, len, ops)
 		iommu_strbuf_flush_done(is);
 }
 
+/*
+ * Flush an individual dma segment, returns non-zero if the streaming buffers
+ * need flushing afterwards.
+ */
 int
 iommu_dvmamap_sync_seg(t, is, seg, offset, len, ops)
 	bus_dma_tag_t t;
@@ -1014,11 +1041,13 @@ iommu_dvmamap_sync_seg(t, is, seg, offset, len, ops)
 				DPRINTF(IDB_BUSDMA,
 				    ("iommu_dvmamap_sync_seg: flushing va %p, %lu "
 				     "bytes left\n", (void *)(u_long)va, (u_long)len));
-				iommu_strbuf_flush(is, va);
-				if (len <= NBPG) {
+				if (iommu_tsb_entry(is, va) & IOTTE_STREAM) {
+					iommu_strbuf_flush(is, va);
 					needsflush = 1;
+				}
+				if (len <= NBPG)
 					len = 0;
-				} else
+				else
 					len -= NBPG;
 				va += NBPG;
 			}
@@ -1033,11 +1062,13 @@ iommu_dvmamap_sync_seg(t, is, seg, offset, len, ops)
 				DPRINTF(IDB_BUSDMA,
 				    ("iommu_dvmamap_sync_seg: flushing va %p, %lu "
 				     "bytes left\n", (void *)(u_long)va, (u_long)len));
-				iommu_strbuf_flush(is, va);
-				if (len <= NBPG) {
+				if (iommu_tsb_entry(is, va) & IOTTE_STREAM) {
+					iommu_strbuf_flush(is, va);
 					needsflush = 1;
+				}
+				if (len <= NBPG)
 					len = 0;
-				} else
+				else
 					len -= NBPG;
 				va += NBPG;
 			}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/power.h,v 1.1.16.1 2000/03/24 09:08:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/dev/power.h,v 1.1.16.2 2002/03/28 10:57:10 niklas Exp $ */
 /*	$NetBSD: power.h,v 1.2 1996/05/16 15:56:57 abrown Exp $ */
 
 /*
@@ -57,4 +57,4 @@
 volatile u_char *power_reg;
 #endif
 
-void powerdown __P((void));		/* power off function */
+void powerdown(void);		/* power off function */

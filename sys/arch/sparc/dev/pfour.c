@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/pfour.c,v 1.6.12.1 2001/11/13 21:04:17 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/pfour.c,v 1.6.12.2 2002/03/28 10:57:10 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -56,8 +56,8 @@ struct pfour_softc {
 	int	nothing;
 };
 
-static int	pfourmatch __P((struct device *, void *, void *));
-static void	pfourattach __P((struct device *, struct device *, void *));
+static int	pfourmatch(struct device *, void *, void *);
+static void	pfourattach(struct device *, struct device *, void *);
 struct cfdriver pfourcd = { NULL, "pfour", pfourmatch, pfourattach,
 	DV_DULL, sizeof(struct pfour_softc)
 };

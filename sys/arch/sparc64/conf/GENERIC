@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27.2.4 2002/03/06 02:04:46 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.27.2.5 2002/03/28 10:57:11 niklas Exp $
 # 	$NetBSD: GENERIC32,v 1.18 2001/07/20 00:07:12 eeh Exp $
 
 machine		sparc64
@@ -92,6 +92,9 @@ wsmouse* at pmsi?				#   generic mouse
 audioce*	at ebus?
 audio*		at audioce?
 
+# parallel ports
+lpt*	at ebus?
+
 uperf*	at sbus? slot ? offset ?
 
 zs*	at sbus? slot ? offset ?
@@ -170,6 +173,7 @@ uk*		at scsibus? target ? lun ?	# unknown SCSI devices
 # Media Independent Interface (mii) drivers)
 nsphy*	at mii? phy ?				# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
+dcphy*	at mii? phy ?				# Digital clone PHYs
 ukphy*	at mii? phy ?				# Unknown PHYs
 
 cgsix*		at sbus? slot ? offset ?
@@ -180,6 +184,11 @@ wsdisplay*	at cgthree?
 
 audiocs*	at sbus? slot ? offset ?
 audio*		at audiocs?
+
+asio*		at sbus? slot ? offset ?	# Aurora 210SJ
+com*		at asio?
+apio*		at sbus? slot ? offset ?	# Aurora 210SJ
+lpt*		at apio?
 
 # mouse & keyboard multiplexor pseudo-devices
 #pseudo-device	wsmux 	2

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.2 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgthree.c,v 1.9.4.3 2002/03/28 10:57:10 niklas Exp $	*/
 /*	$NetBSD: cgthree.c,v 1.33 1997/05/24 20:16:11 pk Exp $ */
 
 /*
@@ -110,9 +110,9 @@ static struct fbdriver cgthreefbdriver = {
 extern int fbnode;
 extern struct tty *fbconstty;
 
-static void cgthreeloadcmap __P((struct cgthree_softc *, int, int));
-static void cgthree_set_video __P((struct cgthree_softc *, int));
-static int cgthree_get_video __P((struct cgthree_softc *));
+static void cgthreeloadcmap(struct cgthree_softc *, int, int);
+static void cgthree_set_video(struct cgthree_softc *, int);
+static int cgthree_get_video(struct cgthree_softc *);
 
 /* Video control parameters */
 struct cg3_videoctrl {

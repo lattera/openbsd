@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/db_interface.c,v 1.8.2.1 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/db_interface.c,v 1.8.2.2 2002/03/28 10:57:10 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.18 1997/09/01 00:16:31 pk Exp $ */
 
 /*
@@ -159,8 +159,8 @@ int	db_active = 0;
 
 extern char *trap_type[];
 
-void kdb_kbd_trap __P((struct trapframe *));
-void db_prom_cmd __P((db_expr_t, int, db_expr_t, char *));
+void kdb_kbd_trap(struct trapframe *);
+void db_prom_cmd(db_expr_t, int, db_expr_t, char *);
 
 /*
  * Received keyboard interrupt sequence.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/led.h,v 1.3.6.1 2001/05/14 21:37:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/led.h,v 1.3.6.2 2002/03/28 10:57:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -44,4 +44,4 @@ struct led_softc {
 };
 extern struct led_softc *led_sc;
 
-void	led_cycle	__P((void *));
+void	led_cycle(void *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.3 2002/03/28 10:57:11 niklas Exp $	*/
 /*	$NetBSD: com_ebus.c,v 1.6 2001/07/24 19:27:10 eeh Exp $	*/
 
 /*
@@ -52,8 +52,8 @@
 
 cdev_decl(com); /* XXX this belongs elsewhere */
 
-int	com_ebus_match __P((struct device *, void *, void *));
-void	com_ebus_attach __P((struct device *, struct device *, void *));
+int	com_ebus_match(struct device *, void *, void *);
+void	com_ebus_attach(struct device *, struct device *, void *);
 
 struct cfattach com_ebus_ca = {
 	sizeof(struct com_softc), com_ebus_match, com_ebus_attach

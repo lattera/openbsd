@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwo.c,v 1.13.4.3 2001/11/13 21:04:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cgtwo.c,v 1.13.4.4 2002/03/28 10:57:10 niklas Exp $	*/
 /*	$NetBSD: cgtwo.c,v 1.22 1997/05/24 20:16:12 pk Exp $ */
 
 /*
@@ -90,11 +90,11 @@ struct cgtwo_softc {
 };
 
 /* autoconfiguration driver */
-static void	cgtwoattach __P((struct device *, struct device *, void *));
-static int	cgtwomatch __P((struct device *, void *, void *));
-static void	cgtwounblank __P((struct device *));
-int		cgtwogetcmap __P((struct cgtwo_softc *, struct fbcmap *));
-int		cgtwoputcmap __P((struct cgtwo_softc *, struct fbcmap *));
+static void	cgtwoattach(struct device *, struct device *, void *);
+static int	cgtwomatch(struct device *, void *, void *);
+static void	cgtwounblank(struct device *);
+int		cgtwogetcmap(struct cgtwo_softc *, struct fbcmap *);
+int		cgtwoputcmap(struct cgtwo_softc *, struct fbcmap *);
 
 struct cfattach cgtwo_ca = {
 	sizeof(struct cgtwo_softc), cgtwomatch, cgtwoattach
@@ -305,7 +305,7 @@ cgtwoioctl(dev, cmd, data, flags, p)
 		break;
 
 	case FBIOSVIDEO:
-		sc->sc_reg->video_enab = (*(int*)data) & 1;
+		sc->sc_reg->video_enab = (*(int *)data) & 1;
 		break;
 
 	default:

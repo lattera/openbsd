@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/intreg.h,v 1.3.12.1 2000/02/21 22:29:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/intreg.h,v 1.3.12.2 2002/03/28 10:57:10 niklas Exp $	*/
 /*	$NetBSD: intreg.h,v 1.6 1997/07/22 20:19:10 pk Exp $ */
 
 /*
@@ -73,8 +73,8 @@
 #define	IE_ALLIE	0x01	/* enable interrupts */
 
 #ifndef _LOCORE
-void	ienab_bis __P((int bis));	/* set given bits */
-void	ienab_bic __P((int bic));	/* clear given bits */
+void	ienab_bis(int bis);	/* set given bits */
+void	ienab_bic(int bic);	/* clear given bits */
 #endif
 
 #if defined(SUN4M)

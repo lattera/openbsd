@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/beeper.c,v 1.1.4.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/beeper.c,v 1.1.4.3 2002/03/28 10:57:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -66,8 +66,8 @@ struct beeper_softc {
 
 #define	BEEP_REG	0
 
-int	beeper_match __P((struct device *, void *, void *));
-void	beeper_attach __P((struct device *, struct device *, void *));
+int	beeper_match(struct device *, void *, void *);
+void	beeper_attach(struct device *, struct device *, void *);
 
 struct cfattach beeper_ca = {
 	sizeof(struct beeper_softc), beeper_match, beeper_attach

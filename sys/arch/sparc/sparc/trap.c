@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.6 2001/12/05 00:39:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.7 2002/03/28 10:57:11 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.58 1997/09/12 08:55:01 pk Exp $ */
 
 /*
@@ -192,12 +192,12 @@ const char *trap_type[] = {
 
 #define	N_TRAP_TYPES	(sizeof trap_type / sizeof *trap_type)
 
-static __inline void userret __P((struct proc *, int,  u_quad_t));
-void trap __P((unsigned, int, int, struct trapframe *));
-static __inline void share_fpu __P((struct proc *, struct trapframe *));
-void mem_access_fault __P((unsigned, int, u_int, int, int, struct trapframe *));
-void mem_access_fault4m __P((unsigned, u_int, u_int, struct trapframe *));
-void syscall __P((register_t, struct trapframe *, register_t));
+static __inline void userret(struct proc *, int,  u_quad_t);
+void trap(unsigned, int, int, struct trapframe *);
+static __inline void share_fpu(struct proc *, struct trapframe *);
+void mem_access_fault(unsigned, int, u_int, int, int, struct trapframe *);
+void mem_access_fault4m(unsigned, u_int, u_int, struct trapframe *);
+void syscall(register_t, struct trapframe *, register_t);
 
 int ignore_bogus_traps = 0;
 
