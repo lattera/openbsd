@@ -42,7 +42,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)edquota.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: edquota.c,v 1.17 1997/08/20 05:32:17 millert Exp $";
+static char *rcsid = "$Id: edquota.c,v 1.18 1998/03/22 21:22:59 millert Exp $";
 #endif /* not lint */
 
 /*
@@ -75,7 +75,7 @@ struct quotause {
 	struct	quotause *next;
 	long	flags;
 	struct	dqblk dqblk;
-	char	fsname[MAXPATHLEN + 1];
+	char	fsname[MAXPATHLEN];
 	char	qfname[1];	/* actually longer */
 } *getprivs __P((u_int, int));
 #define	FOUND	0x01
