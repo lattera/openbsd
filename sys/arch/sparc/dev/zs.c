@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/zs.c,v 1.26 2000/07/14 20:27:37 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/zs.c,v 1.26.2.1 2000/11/10 20:18:41 jason Exp $	*/
 /*	$NetBSD: zs.c,v 1.49 1997/08/31 21:26:37 pk Exp $ */
 
 /*
@@ -957,7 +957,7 @@ zshard(intrarg)
 #endif
 		ienab_bis(IE_ZSSOFT);
 	}
-	return (intflags & ZSHARD_WAS_SERVICED) ? 1 : 0 /* -1 XXX */;
+	return (intflags & ZSHARD_WAS_SERVICED) ? 1 : -1 /* XXX */;
 }
 
 static int
