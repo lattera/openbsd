@@ -1,4 +1,4 @@
-/* $Id: sc.h,v 1.2 2001/08/01 21:53:25 rees Exp $ */
+/* $Id: sc.h,v 1.3 2001/08/15 19:41:05 rees Exp $ */
 
 /*
  * Smartcard commander.
@@ -54,6 +54,7 @@ int isearch(int ac, char *av[]);
 int class(int ac, char *av[]);
 int dread(int ac, char *av[]);
 int dwrite(int ac, char *av[]);
+int challenge(int ac, char *av[]);
 int ls(int ac, char *av[]);
 int acl(int ac, char *av[]);
 int jcreate(int ac, char *av[]);
