@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.4 2001/10/27 09:57:31 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.5 2001/10/30 19:21:17 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -110,7 +110,7 @@ XINTR(softnet):
 	sti
 	xorl	%edi,%edi
 	xchgl	_C_LABEL(netisr),%edi
-
+#include <net/netisr_dispatch.h>
 	jmp	_C_LABEL(Xdoreti)
 
 XINTR(softtty):	

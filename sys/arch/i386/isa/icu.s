@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.5 2001/10/28 08:16:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.6 2001/10/30 19:21:17 niklas Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -156,49 +156,7 @@ IDTVEC(softnet)
 	movl	%eax,CPL
 	xorl	%edi,%edi
 	xchgl	_netisr,%edi
-/*-
- * XXX SMP XXX 
- * #ifdef INET
- * #include "ether.h"
- * #if NETHER > 0
- *	DONET(NETISR_ARP, _arpintr)
- * #endif
- *	DONET(NETISR_IP, _ipintr)
- * #endif
- * #ifdef INET6
- *	DONET(NETISR_IPV6, _ip6intr)
- * #endif 
- * #ifdef NETATALK
- *	DONET(NETISR_ATALK, _atintr)
- * #endif
- * #ifdef IMP
- *	DONET(NETISR_IMP, _impintr)
- * #endif
- * #ifdef IPX
- *	DONET(NETISR_IPX, _ipxintr)
- * #endif
- * #ifdef NS
- *	DONET(NETISR_NS, _nsintr)
- * #endif
- * #ifdef ISO
- *	DONET(NETISR_ISO, _clnlintr)
- * #endif
- * #ifdef CCITT
- *	DONET(NETISR_CCITT, _ccittintr)
- * #endif
- * #ifdef NATM
- *	DONET(NETISR_NATM, _natmintr)
- * #endif
- * #include "ppp.h"
- * #if NPPP > 0
- *	DONET(NETISR_PPP, _pppintr)
- * #endif
- * #include "bridge.h"
- * #if NBRIDGE > 0
- *	DONET(NETISR_BRIDGE, _bridgeintr)
- * #endif
- *	movl	%ebx,CPL
- */
+
 #include <net/netisr_dispatch.h>
  	movl	%ebx,CPL
 	jmp	%esi
