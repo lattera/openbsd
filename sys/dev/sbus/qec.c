@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qec.c,v 1.2.4.3 2003/03/28 00:38:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qec.c,v 1.2.4.4 2003/05/13 19:35:11 ho Exp $	*/
 /*	$NetBSD: qec.c,v 1.12 2000/12/04 20:12:55 fvdl Exp $ */
 
 /*-
@@ -53,19 +53,19 @@
 #include <dev/sbus/qecreg.h>
 #include <dev/sbus/qecvar.h>
 
-static int	qecprint(void *, const char *);
-static int	qecmatch(struct device *, void *, void *);
-static void	qecattach(struct device *, struct device *, void *);
-void		qec_init(struct qec_softc *);
+int	qecprint(void *, const char *);
+int	qecmatch(struct device *, void *, void *);
+void	qecattach(struct device *, struct device *, void *);
+void	qec_init(struct qec_softc *);
 
-static int qec_bus_map(
+int	qec_bus_map(
 		bus_space_tag_t,
 		bus_space_tag_t,
 		bus_addr_t,		/*offset*/
 		bus_size_t,		/*size*/
 		int,			/*flags*/
 		bus_space_handle_t *);
-static void *qec_intr_establish(
+void *	qec_intr_establish(
 		bus_space_tag_t,
 		bus_space_tag_t,
 		int,			/*bus interrupt priority*/

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.49.2.8 2003/03/28 00:38:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.49.2.9 2003/05/13 19:35:09 ho Exp $	*/
 
 /*
  * Copyright (c) 2000 Jason L. Wright (jason@thought.net)
@@ -95,10 +95,10 @@ int	ubsec_newsession(u_int32_t *, struct cryptoini *);
 int	ubsec_freesession(u_int64_t);
 int	ubsec_process(struct cryptop *);
 void	ubsec_callback(struct ubsec_softc *, struct ubsec_q *);
-int	ubsec_feed(struct ubsec_softc *);
+void	ubsec_feed(struct ubsec_softc *);
 void	ubsec_mcopy(struct mbuf *, struct mbuf *, int, int);
 void	ubsec_callback2(struct ubsec_softc *, struct ubsec_q2 *);
-int	ubsec_feed2(struct ubsec_softc *);
+void	ubsec_feed2(struct ubsec_softc *);
 void	ubsec_rng(void *);
 int	ubsec_dma_malloc(struct ubsec_softc *, bus_size_t,
     struct ubsec_dma_alloc *, int);
@@ -142,6 +142,7 @@ const struct pci_matchid ubsec_devices[] = {
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5821 },
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_5822 },
 	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_SCA1K },
+	{ PCI_VENDOR_SUN, PCI_PRODUCT_SUN_5821 },
 };
 
 int
@@ -196,7 +197,8 @@ ubsec_attach(parent, self, aux)
 	if ((PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
 	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5821) ||
 	    (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_SUN &&
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_SCA1K)) {
+	     (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_SCA1K ||
+	      PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_SUN_5821))) {
 		sc->sc_statmask |= BS_STAT_MCR1_ALLEMPTY |
 		    BS_STAT_MCR2_ALLEMPTY;
 		sc->sc_flags |= UBS_FLAGS_KEY | UBS_FLAGS_RNG |
@@ -389,15 +391,12 @@ ubsec_intr(arg)
 			 * at the top.
 			 */
 			for (i = 0; i < npkts; i++) {
-				if(q->q_stacked_mcr[i]) {
+				if(q->q_stacked_mcr[i])
 					ubsec_callback(sc, q->q_stacked_mcr[i]);
-					ubsecstats.hst_opackets++;
-				} else {
+				else
 					break;
-				}
 			}
 			ubsec_callback(sc, q);
-			ubsecstats.hst_opackets++;
 		}
 
 		/*
@@ -464,7 +463,7 @@ ubsec_intr(arg)
  * ubsec_feed() - aggregate and post requests to chip
  *		  It is assumed that the caller set splnet()
  */
-int
+void
 ubsec_feed(sc)
 	struct ubsec_softc *sc;
 {
@@ -487,7 +486,7 @@ ubsec_feed(sc)
 			ubsec_totalreset(sc);
 			ubsecstats.hst_dmaerr++;
 		}
-		return (0);
+		return;
 	}
 
 #ifdef UBSEC_DEBUG
@@ -534,7 +533,7 @@ ubsec_feed(sc)
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
 	WRITE_REG(sc, BS_MCR1, q->q_dma->d_alloc.dma_paddr +
 	    offsetof(struct ubsec_dmachunk, d_mcr));
-	return (0);
+	return;
 
 feed1:
 	while (!SIMPLEQ_EMPTY(&sc->sc_queue)) {
@@ -567,7 +566,6 @@ feed1:
 		--sc->sc_nqueue;
 		SIMPLEQ_INSERT_TAIL(&sc->sc_qchip, q, q_next);
 	}
-	return (0);
 }
 
 /*
@@ -1254,6 +1252,9 @@ ubsec_callback(sc, q)
 	struct cryptodesc *crd;
 	struct ubsec_dma *dmap = q->q_dma;
 
+	ubsecstats.hst_opackets++;
+	ubsecstats.hst_obytes += dmap->d_alloc.dma_size;
+
 	bus_dmamap_sync(sc->sc_dmat, dmap->d_alloc.dma_map, 0,
 	    dmap->d_alloc.dma_map->dm_mapsize,
 	    BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
@@ -1272,7 +1273,6 @@ ubsec_callback(sc, q)
 		m_freem(q->q_src_m);
 		crp->crp_buf = (caddr_t)q->q_dst_m;
 	}
-	ubsecstats.hst_obytes += ((struct mbuf *)crp->crp_buf)->m_len;
 
 	/* copy out IV for future use */
 	if (q->q_flags & UBSEC_QFLAGS_COPYOUTIV) {
@@ -1352,7 +1352,7 @@ ubsec_mcopy(srcm, dstm, hoffset, toffset)
 /*
  * feed the key generator, must be called at splnet() or higher.
  */
-int
+void
 ubsec_feed2(sc)
 	struct ubsec_softc *sc;
 {
@@ -1375,7 +1375,6 @@ ubsec_feed2(sc)
 		--sc->sc_nqueue2;
 		SIMPLEQ_INSERT_TAIL(&sc->sc_qchip2, q, q_next);
 	}
-	return (0);
 }
 
 /*

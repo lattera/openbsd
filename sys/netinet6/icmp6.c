@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.8 2003/03/28 00:41:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.9 2003/05/13 19:36:18 ho Exp $	*/
 /*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
@@ -2706,8 +2706,13 @@ icmp6_redirect_output(m0, rt)
 	/* connect m0 to m */
 	m->m_next = m0;
 	m->m_pkthdr.len = m->m_len + m0->m_len;
+	m0 = NULL;
     }
 noredhdropt:;
+	if (m0) {
+		m_freem(m0);
+		m0 = NULL;
+	}
 
 	if (IN6_IS_ADDR_LINKLOCAL(&sip6->ip6_src))
 		sip6->ip6_src.s6_addr16[1] = 0;

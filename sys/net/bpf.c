@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.7 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.8 2003/05/13 19:36:14 ho Exp $	*/
 /*	$NetBSD: bpf.c,v 1.33 1997/02/21 23:59:35 thorpej Exp $	*/
 
 /*
@@ -1163,13 +1163,6 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 		bpf_wakeup(d);
 		curlen = 0;
 	}
-	else if (d->bd_immediate) {
-		/*
-		 * Immediate mode is set.  A packet arrived so any
-		 * reads should be woken up.
-		 */
-		bpf_wakeup(d);
-	}
 
 	/*
 	 * Append the bpf header.
@@ -1185,6 +1178,14 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 	 */
 	(*cpfn)(pkt, (u_char *)hp + hdrlen, (hp->bh_caplen = totlen - hdrlen));
 	d->bd_slen = curlen + totlen;
+
+	if (d->bd_immediate) {
+		/*
+		 * Immediate mode is set.  A packet arrived so any
+		 * reads should be woken up.
+		 */
+		bpf_wakeup(d);
+	}
 
 	if (d->bd_rdStart && (d->bd_rtout + d->bd_rdStart < ticks)) {
 		/*

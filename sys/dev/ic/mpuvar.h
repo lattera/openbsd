@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mpuvar.h,v 1.1.4.2 2003/03/28 00:38:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mpuvar.h,v 1.1.4.3 2003/05/13 19:35:02 ho Exp $	*/
 /*	$NetBSD: mpu401var.h,v 1.3 1998/11/25 22:17:06 augustss Exp $	*/
 
 /*
@@ -46,7 +46,7 @@ struct mpu_softc {
 	void	*arg;			/* arg for intr() */
 };
 
-struct midi_hw_if mpu_midi_hw_if;
+extern struct midi_hw_if mpu_midi_hw_if;
 
 int	mpu_intr(void *);
 int	mpu_find(void *);

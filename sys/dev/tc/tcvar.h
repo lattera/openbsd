@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/tc/tcvar.h,v 1.6.14.3 2003/03/28 00:38:30 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/tc/tcvar.h,v 1.6.14.4 2003/05/13 19:35:11 ho Exp $ */
 /* $NetBSD: tcvar.h,v 1.17 2000/06/04 19:15:15 cgd Exp $ */
 
 /*
@@ -140,7 +140,7 @@ struct tc_builtin {
  * Interrupt establishment functions.
  */
 int	tc_checkslot(tc_addr_t, char *);
-void	tc_devinfo(const char *, char *);
+void	tc_devinfo(const char *, char *, size_t);
 void	tcattach(struct device *, struct device *, void *);
 const struct evcnt *tc_intr_evcnt(struct device *, void *);
 void	tc_intr_establish(struct device *, void *, int, int (*)(void *),

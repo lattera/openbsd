@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.5 2003/03/28 00:08:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.6 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -979,7 +979,8 @@ sdgetdisklabel(dev, sd, lp, clp, spoofonly)
 	struct cpu_disklabel *clp;
 	int spoofonly;
 {
-	char *errstring;
+	size_t len;
+	char *errstring, packname[sizeof(lp->d_packname) + 1];
 
 	bzero(lp, sizeof(struct disklabel));
 	bzero(clp, sizeof(struct cpu_disklabel));
@@ -997,18 +998,29 @@ sdgetdisklabel(dev, sd, lp, clp, spoofonly)
 	lp->d_type = DTYPE_SCSI;
 	if (sd->type == T_OPTICAL)
 		strncpy(lp->d_typename, "SCSI optical",
-		    sizeof(lp->d_typename) - 1);
+		    sizeof(lp->d_typename));
 	else
 		strncpy(lp->d_typename, "SCSI disk",
-		    sizeof(lp->d_typename) - 1);
+		    sizeof(lp->d_typename));
 
-	if (strlen(sd->name.vendor) + strlen(sd->name.product) + 1 <
-	    sizeof(lp->d_packname))
-		sprintf(lp->d_packname, "%s %s", sd->name.vendor,
-		    sd->name.product);
-	else
-		strncpy(lp->d_packname, sd->name.product,
-		    sizeof(lp->d_packname) - 1);
+	/*
+	 * Try to fit '<vendor> <product>' into d_packname. If that doesn't fit
+	 * then leave out '<vendor> ' and use only as much of '<product>' as
+	 * does fit.
+	 */
+	len = snprintf(packname, sizeof(packname), "%s %s",
+	    sd->name.vendor, sd->name.product);
+	if (len > sizeof(lp->d_packname)) {
+		strlcpy(packname, sd->name.product, sizeof(packname));
+		len = strlen(packname);
+	}
+	/*
+	 * It is safe to use len as the count of characters to copy because
+	 * packname is sizeof(lp->d_packname)+1, the string in packname is
+	 * always null terminated and len does not count the terminating null.
+	 * d_packname is not a null terminated string.
+	 */
+	bcopy(packname, lp->d_packname, len);
 
 	lp->d_secperunit = sd->params.disksize;
 	lp->d_rpm = 3600;

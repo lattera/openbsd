@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.10 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.11 2003/05/13 19:36:15 ho Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -206,7 +206,7 @@ bridgeattach(n)
 		LIST_INIT(&sc->sc_iflist);
 		LIST_INIT(&sc->sc_spanlist);
 		ifp = &sc->sc_if;
-		sprintf(ifp->if_xname, "bridge%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "bridge%d", i);
 		ifp->if_softc = sc;
 		ifp->if_mtu = ETHERMTU;
 		ifp->if_ioctl = bridge_ioctl;
@@ -2121,7 +2121,7 @@ bridge_ipsec(dir, af, hlen, m)
 	struct tdb *tdb;
 	u_int32_t spi;
 	u_int16_t cpi;
-	int error, off;
+	int error, off, s;
 	u_int8_t proto = 0;
 #ifdef INET
 	struct ip *ip;
@@ -2207,6 +2207,8 @@ bridge_ipsec(dir, af, hlen, m)
 		if (proto == 0)
 			goto skiplookup;
 
+		s = spltdb();
+
 		tdb = gettdb(spi, &dst, proto);
 		if (tdb != NULL && (tdb->tdb_flags & TDBF_INVALID) == 0 &&
 		    tdb->tdb_xform != NULL) {
@@ -2246,10 +2248,12 @@ bridge_ipsec(dir, af, hlen, m)
 			}
 
 			(*(tdb->tdb_xform->xf_input))(m, tdb, hlen, off);
+			splx(s);
 			return (1);
 		} else {
  skiplookup:
 			/* XXX do an input policy lookup */
+			splx(s);
 			return (0);
 		}
 	} else { /* Outgoing from the bridge. */

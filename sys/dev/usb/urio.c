@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/urio.c,v 1.5.4.3 2003/03/28 00:38:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/urio.c,v 1.5.4.4 2003/05/13 19:35:12 ho Exp $	*/
 /*	$NetBSD: urio.c,v 1.15 2002/10/23 09:14:02 jdolecek Exp $	*/
 
 /*
@@ -170,7 +170,7 @@ USB_ATTACH(urio)
 
 	DPRINTFN(10,("urio_attach: sc=%p\n", sc));
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->sc_dev), devinfo);
 

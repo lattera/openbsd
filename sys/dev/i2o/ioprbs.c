@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2o/Attic/ioprbs.c,v 1.1.2.2 2003/03/28 00:38:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2o/Attic/ioprbs.c,v 1.1.2.3 2003/05/13 19:34:57 ho Exp $	*/
 
 /*
  * Copyright (c) 2001 Niklas Hallqvist
@@ -785,9 +785,10 @@ ioprbs_internal_cache_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "I2O");
-		sprintf(inq.product, "Container #%02d", target);
-		strcpy(inq.revision, "   ");
+		strlcpy(inq.vendor, "I2O", sizeof inq.vendor);
+		snprintf(inq.product, sizeof inq.product, "Container #%02d",
+		    target);
+		strlcpy(inq.revision, "   ", sizeof inq.revision);
 		ioprbs_copy_internal_data(xs, (u_int8_t *)&inq, sizeof inq);
 		break;
 

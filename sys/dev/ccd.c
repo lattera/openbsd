@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.6 2003/03/28 00:38:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.7 2003/05/13 19:34:56 ho Exp $	*/
 /*	$NetBSD: ccd.c,v 1.33 1996/05/05 04:21:14 thorpej Exp $	*/
 
 /*-
@@ -289,7 +289,11 @@ ccdinit(ccd, cpaths, p)
 	cs->sc_size = 0;
 	cs->sc_ileave = ccd->ccd_interleave;
 	cs->sc_nccdisks = ccd->ccd_ndev;
-	sprintf(cs->sc_xname, "ccd%d", ccd->ccd_unit);	/* XXX */
+	if (snprintf(cs->sc_xname, sizeof(cs->sc_xname), "ccd%d",
+	    ccd->ccd_unit) >= sizeof(cs->sc_xname)) {
+		printf("ccdinit: device name too long.\n");
+		return(ENXIO);
+	}
 
 	/* Allocate space for the component info. */
 	cs->sc_cinfo = malloc(cs->sc_nccdisks * sizeof(struct ccdcinfo),
@@ -1456,17 +1460,20 @@ ccdsize(dev)
 	dev_t dev;
 {
 	struct ccd_softc *cs;
-	int part, size;
+	int part, size, unit;
+
+	unit = ccdunit(dev);
+	if (unit >= numccd)
+		return (-1);
+
+	cs = &ccd_softc[unit];
+	if ((cs->sc_flags & CCDF_INITED) == 0)
+		return (-1);
 
 	if (ccdopen(dev, 0, S_IFBLK, curproc))
 		return (-1);
 
-	cs = &ccd_softc[ccdunit(dev)];
 	part = DISKPART(dev);
-
-	if ((cs->sc_flags & CCDF_INITED) == 0)
-		return (-1);
-
 	if (cs->sc_dkdev.dk_label->d_partitions[part].p_fstype != FS_SWAP)
 		size = -1;
 	else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.8 2003/03/28 00:38:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.9 2003/05/13 19:34:57 ho Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -314,6 +314,7 @@ const struct ac97_codecid {
 	{ 0x48, 0xff, 0, 0,	"AD1881A" },
 	{ 0x60, 0xff, 0, 0,	"AD1885" },
 	{ 0x61, 0xff, 0, 0,	"AD1886" },
+	{ 0x70, 0xff, 0, 0,	"AD1981" },
 	{ 0x72, 0xff, 0, 0,	"AD1981A" },
 }, ac97_ak[] = {
 	{ 0x00,	0xfe, 1, 0,	"AK4540" },
@@ -323,6 +324,7 @@ const struct ac97_codecid {
 	{ 0x07,	0xff, 0, 0,	"AK4545" },
 }, ac97_av[] = {
 	{ 0x10, 0xff, 0, 0,	"ALC200" },
+	{ 0x20, 0xff, 0, 0,	"ALC650" },
 }, ac97_rl[] = {
 	{ 0x00, 0xf0, 0xf, 0,	"RL5306" },
 	{ 0x10, 0xf0, 0xf, 0,	"RL5382" },
@@ -356,7 +358,9 @@ const struct ac97_codecid {
 	{ 0x08,	0xff, 0, 0,	"STAC9708/11" },
 	{ 0x09,	0xff, 0, 0,	"STAC9721/23" },
 	{ 0x44,	0xff, 0, 0,	"STAC9744/45" },
+	{ 0x52,	0xff, 0, 0,	"STAC9752/53" },
 	{ 0x56,	0xff, 0, 0,	"STAC9756/57" },
+	{ 0x66,	0xff, 0, 0,	"STAC9766/67" },
 	{ 0x84,	0xff, 0, 0,	"STAC9784/85" },
 }, ac97_tt[] = {
 	{ 0x02,	0xff, 0, 0,	"TR28022" },
@@ -774,7 +778,7 @@ ac97_query_devinfo(codec_if, dip)
 			name = si->class;
 
 		if (name)
-			strcpy(dip->label.name, name);
+			strlcpy(dip->label.name, name, sizeof dip->label.name);
 
 		bcopy(si->info, &dip->un, si->info_size);
 

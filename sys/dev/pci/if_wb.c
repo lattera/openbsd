@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.8 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.9 2003/05/13 19:35:06 ho Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -71,7 +71,7 @@
  * For transmission, the driver creates a linked list of 'super descriptors'
  * which each contain several individual descriptors linked toghether.
  * Each 'super descriptor' contains WB_MAXFRAGS descriptors, which we
- * abuse as fragment pointers. This allows us to use a buffer managment
+ * abuse as fragment pointers. This allows us to use a buffer management
  * scheme very similar to that used in the ThunderLAN and Etherlink XL
  * drivers.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/tc/tc.c,v 1.9.14.2 2003/03/28 00:38:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/tc/tc.c,v 1.9.14.3 2003/05/13 19:35:11 ho Exp $	*/
 /*	$NetBSD: tc.c,v 1.29 2001/11/13 06:26:10 lukem Exp $	*/
 
 /*
@@ -52,7 +52,7 @@ struct cfdriver tc_cd = {
 int	tcprint(void *, const char *);
 int	tcsubmatch(struct device *, void *, void *);
 int	tc_checkslot(tc_addr_t, char *);
-void	tc_devinfo(const char *, char *);
+void	tc_devinfo(const char *, char *, size_t);
 
 int
 tcmatch(parent, vcf, aux)
@@ -189,7 +189,7 @@ tcprint(aux, pnp)
 	char devinfo[256];
 
 	if (pnp) {
-		tc_devinfo(ta->ta_modname, devinfo);
+		tc_devinfo(ta->ta_modname, devinfo, sizeof devinfo);
 		printf("%s at %s", devinfo, pnp);
 	}
 	printf(" slot %d offset 0x%lx", ta->ta_slot,
@@ -304,9 +304,7 @@ struct tc_knowndev {
 #endif /* TCVERBOSE */
 
 void
-tc_devinfo(id, cp)
-	const char *id;
-	char *cp;
+tc_devinfo(const char *id, char *cp, size_t cp_len)
 {
 	const char *driver;
 #ifdef TCVERBOSE
@@ -332,8 +330,8 @@ tc_devinfo(id, cp)
 		tdp++;
 	}
 	if (driver != NULL)
-		cp += sprintf(cp, "%s (%s)", driver, description);
+		snprintf(cp, cp_len, "%s (%s)", driver, description);
 	else
 #endif
-		cp += sprintf(cp, "%s", id);
+		snprintf(cp, cp_len, "%s", id);
 }

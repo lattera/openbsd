@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.5 2003/03/28 00:41:28 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.6 2003/05/13 19:36:15 ho Exp $ */
 /*
  * Copyright 1998 Massachusetts Institute of Technology
  *
@@ -113,7 +113,7 @@ vlanattach(int count)
 		LIST_INIT(&ifv_softc[i].vlan_mc_listhead);
 		ifp = &ifv_softc[i].ifv_if;
 		ifp->if_softc = &ifv_softc[i];
-		sprintf(ifp->if_xname, "vlan%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "vlan%d", i);
 		/* NB: flags are not set here */
 		/* NB: mtu is not set here */
 
@@ -351,6 +351,8 @@ vlan_input(eh, m)
 		 * that yet.
 		 */
 		struct mbuf m0;
+
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = sizeof(struct ether_header);
 		m0.m_data = (char *)eh;

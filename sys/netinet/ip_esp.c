@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_esp.c,v 1.32.2.4 2003/03/28 00:06:54 niklas Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_esp.c,v 1.32.2.5 2003/05/13 19:36:17 ho Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -471,7 +471,16 @@ esp_input_cb(void *op)
 	skip = tc->tc_skip;
 	protoff = tc->tc_protoff;
 	mtag = (struct m_tag *) tc->tc_ptr;
+
 	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		espstat.esps_crypto++;
+		DPRINTF(("esp_input_cb(): bogus returned buffer from crypto\n"));
+		return (EINVAL);
+	}
 
 	s = spltdb();
 
@@ -488,29 +497,17 @@ esp_input_cb(void *op)
 
 	/* Check for crypto errors */
 	if (crp->crp_etype) {
-		FREE(tc, M_XDATA);
-
-		/* Reset the session ID */
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
-
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
-
+		FREE(tc, M_XDATA);
 		espstat.esps_noxform++;
 		DPRINTF(("esp_input_cb(): crypto error %d\n", crp->crp_etype));
 		error = crp->crp_etype;
-		goto baddone;
-	}
-
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		FREE(tc, M_XDATA);
-		espstat.esps_crypto++;
-		DPRINTF(("esp_input_cb(): bogus returned buffer from crypto\n"));
-		error = EINVAL;
 		goto baddone;
 	}
 
@@ -540,7 +537,6 @@ esp_input_cb(void *op)
 		/* Remove trailing authenticator */
 		m_adj(m, -(esph->authsize));
 	}
-
 	FREE(tc, M_XDATA);
 
 	/* Replay window checking, if appropriate */
@@ -715,6 +711,7 @@ esp_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		if (esph)
 			hdr.flags |= M_AUTH;
 
+		m1.m_flags = 0;
 		m1.m_next = m;
 		m1.m_len = ENC_HDRLEN;
 		m1.m_data = (char *) &hdr;
@@ -979,7 +976,18 @@ esp_output_cb(void *op)
 	int error, s;
 
 	tc = (struct tdb_crypto *) crp->crp_opaque;
+
 	m = (struct mbuf *) crp->crp_buf;
+	if (m == NULL) {
+		/* Shouldn't happen... */
+		FREE(tc, M_XDATA);
+		crypto_freereq(crp);
+		espstat.esps_crypto++;
+		DPRINTF(("esp_output_cb(): bogus returned buffer from "
+		    "crypto\n"));
+		return (EINVAL);
+	}
+
 
 	s = spltdb();
 
@@ -994,32 +1002,21 @@ esp_output_cb(void *op)
 
 	/* Check for crypto errors. */
 	if (crp->crp_etype) {
-		/* Reset session ID. */
-		if (tdb->tdb_cryptoid != 0)
-			tdb->tdb_cryptoid = crp->crp_sid;
-
 		if (crp->crp_etype == EAGAIN) {
+			/* Reset the session ID */
+			if (tdb->tdb_cryptoid != 0)
+				tdb->tdb_cryptoid = crp->crp_sid;
 			splx(s);
 			return crypto_dispatch(crp);
 		}
-
 		FREE(tc, M_XDATA);
 		espstat.esps_noxform++;
 		DPRINTF(("esp_output_cb(): crypto error %d\n",
 		    crp->crp_etype));
 		error = crp->crp_etype;
 		goto baddone;
-	} else
-		FREE(tc, M_XDATA);
-
-	/* Shouldn't happen... */
-	if (m == NULL) {
-		espstat.esps_crypto++;
-		DPRINTF(("esp_output_cb(): bogus returned buffer from "
-		    "crypto\n"));
-		error = EINVAL;
-		goto baddone;
 	}
+	FREE(tc, M_XDATA);
 
 	/* Release crypto descriptors. */
 	crypto_freereq(crp);

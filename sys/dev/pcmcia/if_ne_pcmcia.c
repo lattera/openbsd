@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.7 2003/03/28 00:38:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.8 2003/05/13 19:35:09 ho Exp $	*/
 /*	$NetBSD: if_ne_pcmcia.c,v 1.17 1998/08/15 19:00:04 thorpej Exp $	*/
 
 /*
@@ -164,6 +164,10 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_CNET_NE2000,
       0, -1, { 0x00, 0x80, 0xad } },
+
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_CNET_CNF301,
+      PCMCIA_CIS_CNET_CNF301,
+      0, -1, { 0x00, 0x10, 0x60 } },
 
     { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
       PCMCIA_CIS_BILLIONTON_LNT10TN,

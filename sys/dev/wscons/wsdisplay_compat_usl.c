@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay_compat_usl.c,v 1.5.4.3 2002/03/28 15:09:10 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay_compat_usl.c,v 1.5.4.4 2003/05/13 19:35:13 ho Exp $ */
 /* $NetBSD: wsdisplay_compat_usl.c,v 1.12 2000/03/23 07:01:47 thorpej Exp $ */
 
 /*
@@ -350,7 +350,7 @@ wsdisplay_usl_ioctl1(sc, cmd, data, flag, p)
 #ifdef WSDISPLAY_COMPAT_PCVT
 	    case VGAPCVTID:
 #define id ((struct pcvtid *)data)
-		strcpy(id->name, "pcvt");
+		strlcpy(id->name, "pcvt", sizeof id->name);
 		id->rmajor = 3;
 		id->rminor = 32;
 #undef id

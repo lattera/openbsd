@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.7 2003/03/28 00:38:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.10.2.8 2003/05/13 19:34:56 ho Exp $ */
 /*	$NetBSD: wd.c,v 1.193 1999/02/28 17:15:27 explorer Exp $ */
 
 /*
@@ -646,7 +646,8 @@ wddone(v)
 		if (wd->sc_wdc_bio.r_error != 0 &&
 		    (wd->sc_wdc_bio.r_error & ~(WDCE_MC | WDCE_MCR)) == 0)
 			goto noerror;
-		ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf);
+		ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf,
+		    sizeof buf);
 retry:
 		/* Just reset and retry. Can we do more ? */
 		wdc_reset_channel(wd->drvp);
@@ -864,13 +865,13 @@ wdgetdefaultlabel(wd, lp)
 	lp->d_secpercyl = lp->d_ntracks * lp->d_nsectors;
 	if (wd->drvp->ata_vers == -1) {
 		lp->d_type = DTYPE_ST506;
-		strncpy(lp->d_typename, "ST506/MFM/RLL", 16);
+		strncpy(lp->d_typename, "ST506/MFM/RLL", sizeof lp->d_typename);
 	} else {
 		lp->d_type = DTYPE_ESDI;
-		strncpy(lp->d_typename, "ESDI/IDE disk", 16);
+		strncpy(lp->d_typename, "ESDI/IDE disk", sizeof lp->d_typename);
 	}
 	/* XXX - user viscopy() like sd.c */
-	strncpy(lp->d_packname, wd->sc_params.atap_model, 16);
+	strncpy(lp->d_packname, wd->sc_params.atap_model, sizeof lp->d_packname);
 	lp->d_secperunit = wd->sc_capacity;
 	lp->d_rpm = 3600;
 	lp->d_interleave = 1;
@@ -1223,7 +1224,8 @@ again:
 			break;
 		case ERROR:
 			errbuf[0] = '\0';
-			ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf);
+			ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf,
+			    sizeof errbuf);
 			printf("wddump: %s", errbuf);
 			err = EIO;
 			break;

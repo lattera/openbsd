@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pfsync.c,v 1.4 2002/12/23 18:53:59 mickey Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pfsync.c,v 1.4.4.1 2003/05/13 19:36:15 ho Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -91,7 +91,7 @@ pfsyncattach(int npfsync)
 	pfsyncif.sc_ptr = NULL;
 	pfsyncif.sc_count = 8;
 	ifp = &pfsyncif.sc_if;
-	strcpy(ifp->if_xname, "pfsync0");
+	strlcpy(ifp->if_xname, "pfsync0", sizeof ifp->if_xname);
 	ifp->if_softc = &pfsyncif;
 	ifp->if_ioctl = pfsyncioctl;
 	ifp->if_output = pfsyncoutput;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/domain.h,v 1.2.16.2 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/domain.h,v 1.2.16.3 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: domain.h,v 1.10 1996/02/09 18:25:07 christos Exp $	*/
 
 /*
@@ -66,6 +66,6 @@ struct	domain {
 };
 
 #ifdef _KERNEL
-struct	domain *domains;
+extern struct	domain *domains;
 void domaininit(void);
 #endif

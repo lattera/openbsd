@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ppp.c,v 1.15.2.6 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ppp.c,v 1.15.2.7 2003/05/13 19:36:15 ho Exp $	*/
 /*	$NetBSD: if_ppp.c,v 1.39 1997/05/17 21:11:59 christos Exp $	*/
 
 /*
@@ -229,7 +229,7 @@ pppattach()
 
     for (sc = ppp_softc; i < NPPP; sc++) {
 	sc->sc_unit = i;	/* XXX */
-	sprintf(sc->sc_if.if_xname, "ppp%d", i++);
+	snprintf(sc->sc_if.if_xname, sizeof sc->sc_if.if_xname, "ppp%d", i++);
 	sc->sc_if.if_softc = sc;
 	sc->sc_if.if_mtu = PPP_MTU;
 	sc->sc_if.if_flags = IFF_POINTOPOINT | IFF_MULTICAST;

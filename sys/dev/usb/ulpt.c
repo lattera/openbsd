@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ulpt.c,v 1.7.2.5 2003/03/28 00:38:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ulpt.c,v 1.7.2.6 2003/05/13 19:35:12 ho Exp $ */
 /*	$NetBSD: ulpt.c,v 1.55 2002/10/23 09:14:01 jdolecek Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ulpt.c,v 1.24 1999/11/17 22:33:44 n_hibma Exp $	*/
 
@@ -213,7 +213,7 @@ USB_ATTACH(ulpt)
 	int i, altno;
 
 	DPRINTFN(10,("ulpt_attach: sc=%p\n", sc));
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s, iclass %d/%d\n", USBDEVNAME(sc->sc_dev),
 	       devinfo, ifcd->bInterfaceClass, ifcd->bInterfaceSubClass);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.5 2003/03/28 00:38:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qe.c,v 1.3.4.6 2003/05/13 19:35:11 ho Exp $	*/
 /*	$NetBSD: qe.c,v 1.16 2001/03/30 17:30:18 christos Exp $	*/
 
 /*-
@@ -164,9 +164,9 @@ int	qe_rint(struct qe_softc *);
 int	qe_tint(struct qe_softc *);
 void	qe_mcreset(struct qe_softc *);
 
-static int	qe_put(struct qe_softc *, int, struct mbuf *);
-static void	qe_read(struct qe_softc *, int, int);
-static struct mbuf	*qe_get(struct qe_softc *, int, int);
+int	qe_put(struct qe_softc *, int, struct mbuf *);
+void	qe_read(struct qe_softc *, int, int);
+struct mbuf	*qe_get(struct qe_softc *, int, int);
 
 /* ifmedia callbacks */
 void	qe_ifmedia_sts(struct ifnet *, struct ifmediareq *);
@@ -338,7 +338,7 @@ qeattach(parent, self, aux)
  * We copy the data into mbufs.  When full cluster sized units are present,
  * we copy into clusters.
  */
-static __inline__ struct mbuf *
+struct mbuf *
 qe_get(sc, idx, totlen)
 	struct qe_softc *sc;
 	int idx, totlen;

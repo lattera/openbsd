@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.609 2003/03/19 21:27:36 millert Exp 
+ *		OpenBSD: pcidevs,v 1.620 2003/05/12 08:57:21 tdeval Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -941,6 +941,18 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_UNINORTH6,
 	    "UniNorth Host-PCI Bridge",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_INTREPID_ATA,
+	    "Intrepid ATA",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_INTREPID,
+	    "Intrepid",
+	},
+	{
+	    PCI_VENDOR_APPLE, PCI_PRODUCT_APPLE_INTREPID_OHCI,
+	    "Intrepid USB",
 	},
 	{
 	    PCI_VENDOR_ARC, PCI_PRODUCT_ARC_USB,
@@ -1947,6 +1959,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "DM9102",
 	},
 	{
+	    PCI_VENDOR_DAVICOM, PCI_PRODUCT_DAVICOM_DM9009,
+	    "DM9009",
+	},
+	{
 	    PCI_VENDOR_DEC, PCI_PRODUCT_DEC_21050,
 	    "21050 PCI-PCI",
 	},
@@ -2867,6 +2883,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "82801DB USB",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801DBM_IDE,
+	    "82801DBM IDE",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801DB_IDE,
 	    "82801DB IDE",
 	},
@@ -2975,6 +2995,18 @@ static const struct pci_known_product pci_known_products[] = {
 	    "82830MP CPU to I/O Bridge 2",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82855PE,
+	    "82855PE Host-Hub Bridge",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82855PE_AGP,
+	    "82855PE AGP",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801DBM,
+	    "82801DBM LPC",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_RCU32,
 	    "RCU32 I2O RAID",
 	},
@@ -3065,6 +3097,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ACA,
 	    "82440MX AC97 Audio",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ACM,
+	    "82440MX AC97 Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ISA,
@@ -4471,6 +4507,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "CSB5 SouthBridge",
 	},
 	{
+	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_CSB6_PCI,
+	    "CSB6 Host-PCI",
+	},
+	{
 	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_OSB4_IDE,
 	    "OSB4 IDE",
 	},
@@ -4485,6 +4525,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_USB,
 	    "OSB4/CSB5 USB",
+	},
+	{
+	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_CSB6_USB,
+	    "CSB6 USB",
 	},
 	{
 	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_CSB5BRIDGE,
@@ -4605,6 +4649,38 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20376,
 	    "PDC20376",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20377,
+	    "PDC20377",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20378,
+	    "PDC20378",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20379,
+	    "PDC20379",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20617,
+	    "PDC20617",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20618,
+	    "PDC20618",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20619,
+	    "PDC20619",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20620,
+	    "PDC20620",
+	},
+	{
+	    PCI_VENDOR_PROMISE, PCI_PRODUCT_PROMISE_PDC20621,
+	    "PDC20621",
 	},
 	{
 	    PCI_VENDOR_QLOGIC, PCI_PRODUCT_QLOGIC_ISP1020,
@@ -4959,8 +5035,8 @@ static const struct pci_known_product pci_known_products[] = {
 	    "85C596",
 	},
 	{
-	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_SiS530,
-	    "SiS530 Host-PCI",
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_530,
+	    "530 Host-PCI",
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_540,
@@ -5139,7 +5215,7 @@ static const struct pci_known_product pci_known_products[] = {
 	    "6300",
 	},
 	{
-	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_530,
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_530_VGA,
 	    "530 VGA",
 	},
 	{
@@ -5277,6 +5353,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_SUN, PCI_PRODUCT_SUN_SIMBA,
 	    "Simba PCI-PCI",
+	},
+	{
+	    PCI_VENDOR_SUN, PCI_PRODUCT_SUN_5821,
+	    "Crypto 5821",
 	},
 	{
 	    PCI_VENDOR_SUN, PCI_PRODUCT_SUN_SCA1K,
@@ -5501,6 +5581,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI1421,
 	    "PCI1421 PCI-CardBus",
+	},
+	{
+	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI1520,
+	    "PCI1520 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI2040,

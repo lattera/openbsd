@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.8 2003/03/28 00:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.9 2003/05/13 19:36:58 ho Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -114,6 +114,170 @@ sys_sstk(p, v, retval)
 #endif
 
 	return (ENOSYS);
+}
+
+/*
+ * sys_mquery: provide mapping hints to applications that do fixed mappings
+ *
+ * flags: 0 or MAP_FIXED (MAP_FIXED - means that we insist on this addr and
+ *	don't care about PMAP_PREFER or such)
+ * addr: hint where we'd like to place the mapping.
+ * size: size of the mapping
+ * fd: fd of the file we want to map
+ * off: offset within the file
+ */
+
+int
+sys_mquery(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+	struct sys_mquery_args /* {
+		syscallarg(caddr_t) addr;
+		syscallarg(size_t) len;
+		syscallarg(int) prot;
+		syscallarg(int) flags;
+		syscallarg(int) fd;
+		syscallarg(long) pad;
+		syscallarg(off_t) pos;
+	} */ *uap = v;
+	struct file *fp;
+	struct uvm_object *uobj;
+	voff_t uoff;
+	int error;
+	vaddr_t vaddr;
+	int flags = 0;
+	vsize_t size;
+	vm_prot_t prot;
+	int fd;
+
+	vaddr = (vaddr_t) SCARG(uap, addr);
+	prot = SCARG(uap, prot) & VM_PROT_ALL;
+	size = (vsize_t) SCARG(uap, len);
+	fd = SCARG(uap, fd);
+
+	if (SCARG(uap, flags) & MAP_FIXED)
+		flags |= UVM_FLAG_FIXED;
+
+	if (fd >= 0) {
+		if ((error = getvnode(p->p_fd, fd, &fp)) != 0)
+			return (error);
+		uobj = &((struct vnode *)fp->f_data)->v_uvm.u_obj;
+		uoff = SCARG(uap, pos);
+	} else {
+		fp = NULL;
+		uobj = NULL;
+		uoff = 0;
+	}
+
+	if (vaddr == 0)
+		vaddr = uvm_map_hint(p, prot);
+
+	/* prevent a user requested address from falling in heap space */
+	if ((vaddr + size > (vaddr_t)p->p_vmspace->vm_daddr) &&
+	    (vaddr < (vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ)) {
+		if (flags & UVM_FLAG_FIXED) {
+			error = EINVAL;
+			goto done;
+		}
+		vaddr = round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ);
+	}
+again:
+
+	if (uvm_map_findspace(&p->p_vmspace->vm_map, vaddr, size,
+	    &vaddr, uobj, uoff, 0, flags) == NULL) {
+		if (flags & UVM_FLAG_FIXED)
+			error = EINVAL;
+		else
+			error = ENOMEM;
+	} else {
+		/* prevent a returned address from falling in heap space */
+		if ((vaddr + size > (vaddr_t)p->p_vmspace->vm_daddr)
+		    && (vaddr < (vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ)) {
+			vaddr = round_page((vaddr_t)p->p_vmspace->vm_daddr +
+			    MAXDSIZ);
+			goto again;
+		}
+		error = 0;
+		*retval = (register_t)(vaddr);
+	}
+done:
+	if (fp != NULL)
+		FRELE(fp);
+	return (error);
+}
+
+/* ARGSUSED */
+int
+sys_omquery(struct proc *p, void *v, register_t *retval)
+{
+	struct sys_omquery_args /* {
+		syscallarg(int) flags;
+		syscallarg(void **) addr;
+		syscallarg(size_t) size;
+		syscallarg(int) fd;
+		syscallarg(off_t) off;
+	} */ *uap = v;
+	struct file *fp;
+	struct uvm_object *uobj;
+	voff_t uoff;
+	int error;
+	vaddr_t vaddr;
+	int flags = 0;
+	vm_prot_t prot = SCARG(uap, flags) & VM_PROT_ALL;
+
+	if (SCARG(uap, flags) & MAP_FIXED)
+		flags |= UVM_FLAG_FIXED;
+
+	if ((error = copyin(SCARG(uap, addr), &vaddr, sizeof(void *))) != 0)
+		return (error);
+
+	if (SCARG(uap, fd) >= 0) {
+		if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
+			return (error);
+		uobj = &((struct vnode *)fp->f_data)->v_uvm.u_obj;
+		uoff = SCARG(uap, off);
+	} else {
+		fp = NULL;
+		uobj = NULL;
+		uoff = 0;
+	}
+
+	if (vaddr == 0)
+		vaddr = uvm_map_hint(p, prot);
+
+	/* prevent a user requested address from falling in heap space */
+	if ((vaddr + SCARG(uap, size) > (vaddr_t)p->p_vmspace->vm_daddr) &&
+	    (vaddr < (vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ)) {
+		if (flags & UVM_FLAG_FIXED) {
+			error = EINVAL;
+			goto done;
+		}
+		vaddr = round_page((vaddr_t)p->p_vmspace->vm_daddr + MAXDSIZ);
+	}
+
+	if (uvm_map_findspace(&p->p_vmspace->vm_map, vaddr, SCARG(uap, size),
+	    &vaddr, uobj, uoff, 0, flags) == NULL) {
+		if (flags & UVM_FLAG_FIXED)
+			error = EINVAL;
+		else
+			error = ENOMEM;
+	} else {
+		/*
+		 * XXX?
+		 * is it possible for uvm_map_findspace() to return
+		 * an address in vm_addr - vm_addr+MAXDSIZ ?
+		 * if all of the memory below 1G (i386) is used, 
+		 * this could occur. In this case, could this loop
+		 * changing the hint to above daddr in that case?
+		 */
+		error = copyout(&vaddr, SCARG(uap, addr), sizeof(void *));
+	}
+done:
+	if (fp != NULL)
+		FRELE(fp);
+	return (error);
 }
 
 /*
@@ -350,10 +514,8 @@ sys_mmap(p, v, retval)
 		 * we will refine our guess later (e.g. to account for VAC, etc)
 		 */
 
-		if (addr < round_page((vaddr_t)p->p_vmspace->vm_daddr +
-		    MAXDSIZ))
-			addr = round_page((vaddr_t)p->p_vmspace->vm_daddr +
-			    MAXDSIZ);
+		if (addr < uvm_map_hint(p, prot))
+			addr = uvm_map_hint(p, prot);
 	}
 
 	/*
@@ -560,7 +722,7 @@ sys_msync(p, v, retval)
 	size = (vsize_t) round_page(size);
 
 	/* disallow wrap-around. */
-	if (addr + size < addr)
+	if (addr + (ssize_t)size < addr)
 		return (EINVAL);
 
 	/*
@@ -651,7 +813,7 @@ sys_munmap(p, v, retval)
 	size += pageoff;
 	size = (vsize_t) round_page(size);
 
-	if ((int)size < 0)
+	if ((ssize_t)size < 0)
 		return (EINVAL);
 	if (size == 0)
 		return (0);
@@ -729,7 +891,7 @@ sys_mprotect(p, v, retval)
 	addr -= pageoff;
 	size += pageoff;
 	size = (vsize_t) round_page(size);
-	if ((int)size < 0)
+	if ((ssize_t)size < 0)
 		return (EINVAL);
 
 	/*
@@ -777,7 +939,7 @@ sys_minherit(p, v, retval)
 	size += pageoff;
 	size = (vsize_t) round_page(size);
 
-	if ((int)size < 0)
+	if ((ssize_t)size < 0)
 		return (EINVAL);
 	
 	switch (uvm_map_inherit(&p->p_vmspace->vm_map, addr, addr+size,
@@ -918,7 +1080,7 @@ sys_mlock(p, v, retval)
 	size = (vsize_t) round_page(size);
 	
 	/* disallow wrap-around. */
-	if (addr + (int)size < addr)
+	if (addr + (ssize_t)size < addr)
 		return (EINVAL);
 
 	if (atop(size) + uvmexp.wired > uvmexp.wiredmax)
@@ -972,7 +1134,7 @@ sys_munlock(p, v, retval)
 	size = (vsize_t) round_page(size);
 
 	/* disallow wrap-around. */
-	if (addr + (int)size < addr)
+	if (addr + (ssize_t)size < addr)
 		return (EINVAL);
 
 #ifndef pmap_wired_count

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.2.3 2003/03/28 00:38:31 niklas Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdi.c,v 1.3.2.4 2003/05/13 19:35:12 ho Exp $ 	*/
 /*	$NetBSD: uftdi.c,v 1.13 2002/09/23 05:51:23 simonb Exp $	*/
 
 /*
@@ -173,7 +173,7 @@ USB_ATTACH(uftdi)
 		goto bad;
 	}
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", devname, devinfo);
 

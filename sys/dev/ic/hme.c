@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/hme.c,v 1.12.4.4 2003/03/28 00:38:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/hme.c,v 1.12.4.5 2003/05/13 19:35:00 ho Exp $	*/
 /*	$NetBSD: hme.c,v 1.21 2001/07/07 15:59:37 thorpej Exp $	*/
 
 /*-
@@ -146,7 +146,7 @@ hme_config(sc)
 	 *	sc_erx		(Receiver Unit registers)
 	 *	sc_etx		(Transmitter Unit registers)
 	 *	sc_mac		(MAC registers)
-	 *	sc_mif		(Managment Interface registers)
+	 *	sc_mif		(Management Interface registers)
 	 *
 	 * the maximum bus burst size:
 	 *	sc_burst
@@ -233,7 +233,7 @@ hme_config(sc)
 	printf(": address %s\n", ether_sprintf(sc->sc_enaddr));
 
 	/* Initialize ifnet structure. */
-	strcpy(ifp->if_xname, sc->sc_dev.dv_xname);
+	strlcpy(ifp->if_xname, sc->sc_dev.dv_xname, sizeof ifp->if_xname);
 	ifp->if_softc = sc;
 	ifp->if_start = hme_start;
 	ifp->if_ioctl = hme_ioctl;

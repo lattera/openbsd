@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncrstat.c,v 1.3.14.1 2002/03/28 15:35:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncrstat.c,v 1.3.14.2 2003/05/13 19:35:06 ho Exp $	*/
 /*	$NetBSD: ncrstat.c,v 1.7 1996/03/17 00:55:36 thorpej Exp $	*/
 
 /**************************************************************************
@@ -939,7 +939,7 @@ static const char * sn (u_long a)
 
 	if (!*s) return s;
 
-	sprintf (buffer, "%s:%d%c", s, m/4, 0);
+	snprintf (buffer, sizeof buffer, "%s:%d%c", s, m/4, 0);
 	return (buffer);
 }
 

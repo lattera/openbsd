@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm.h,v 1.3.4.7 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm.h,v 1.3.4.8 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: uvm.h,v 1.24 2000/11/27 08:40:02 chs Exp $	*/
 
 /*
@@ -151,7 +151,6 @@ extern struct uvm uvm;
 
 UVMHIST_DECL(maphist);
 UVMHIST_DECL(pdhist);
-UVMHIST_DECL(ubchist);
 
 /*
  * UVM_UNLOCK_AND_WAIT: atomic unlock+wait... wrapper around the

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.5 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.6 2003/05/13 19:36:15 ho Exp $	*/
 /*	$KAME: if_gif.c,v 1.43 2001/02/20 08:51:07 itojun Exp $	*/
 
 /*
@@ -83,7 +83,8 @@ gifattach(n)
 	    M_DEVBUF, M_WAIT);
 	bzero(sc, ngif * sizeof(struct gif_softc));
 	for (i = 0; i < ngif; sc++, i++) {
-		sprintf(sc->gif_if.if_xname, "gif%d", i);
+		snprintf(sc->gif_if.if_xname, sizeof sc->gif_if.if_xname,
+		    "gif%d", i);
 		sc->gif_if.if_mtu    = GIF_MTU;
 		sc->gif_if.if_flags  = IFF_POINTOPOINT | IFF_MULTICAST;
 		sc->gif_if.if_ioctl  = gif_ioctl;
@@ -199,6 +200,7 @@ gif_output(ifp, m, dst, rt)
 		struct mbuf m0;
 		u_int32_t af = dst->sa_family;
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;

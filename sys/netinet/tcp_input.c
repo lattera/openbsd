@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.7 2003/03/28 00:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.8 2003/05/13 19:36:17 ho Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -1474,7 +1474,7 @@ trimthenstep6:
 				tiflags &= ~TH_URG;
 			todrop--;
 		}
-		if (todrop >= tlen ||
+		if (todrop > tlen ||
 		    (todrop == tlen && (tiflags & TH_FIN) == 0)) {
 			/*
 			 * Any valid FIN must be to the left of the

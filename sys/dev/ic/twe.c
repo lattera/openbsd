@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.7 2003/03/28 00:38:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/twe.c,v 1.10.2.8 2003/05/13 19:35:02 ho Exp $	*/
 
 /*
  * Copyright (c) 2000-2002 Michael Shalayeff.  All rights reserved.
@@ -417,8 +417,9 @@ twe_thread_create(void *v)
 	if (kthread_create(twe_thread, sc, &sc->sc_thread,
 	    "%s", sc->sc_dev.dv_xname)) {
 		/* TODO disable twe */
-		printf("%s: failed to create kernel thread, disabled",
+		printf("%s: failed to create kernel thread, disabled\n",
 		    sc->sc_dev.dv_xname);
+		return;
 	}
 
 	TWE_DPRINTF(TWE_D_CMD, ("stat=%b ",
@@ -849,9 +850,10 @@ twe_scsi_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "3WARE  ");
-		sprintf(inq.product, "Host drive  #%02d", target);
-		strcpy(inq.revision, "   ");
+		strlcpy(inq.vendor, "3WARE  ", sizeof inq.vendor);
+		snprintf(inq.product, sizeof inq.product, "Host drive  #%02d",
+		    target);
+		strlcpy(inq.revision, "   ", sizeof inq.revision);
 		twe_copy_internal_data(xs, &inq, sizeof inq);
 		break;
 

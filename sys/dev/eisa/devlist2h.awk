@@ -1,5 +1,5 @@
 #! /usr/bin/awk -f
-#	$OpenBSD: src/sys/dev/eisa/devlist2h.awk,v 1.2.16.1 2001/05/14 22:23:15 niklas Exp $
+#	$OpenBSD: src/sys/dev/eisa/devlist2h.awk,v 1.2.16.2 2003/05/13 19:34:57 ho Exp $
 #	$NetBSD: devlist2h.awk,v 1.2 1996/04/09 20:07:16 cgd Exp $
 #
 # Copyright (c) 1995, 1996 Christopher G. Demetriou
@@ -185,6 +185,6 @@ END {
 		printf("\",\n") > dfile
 		printf("\t},\n") > dfile
 	}
-	printf("\t{ 0, NULL, NULL, }\n") > dfile
+	printf("\t{ 0, \"\", NULL, }\n") > dfile
 	printf("};\n") > dfile
 }

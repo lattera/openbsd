@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/mcd.c,v 1.28.4.3 2003/03/28 00:38:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/Attic/mcd.c,v 1.28.4.4 2003/05/13 19:35:03 ho Exp $ */
 /*	$NetBSD: mcd.c,v 1.60 1998/01/14 12:14:41 drochner Exp $	*/
 
 /*
@@ -738,9 +738,9 @@ mcdgetdisklabel(dev, sc, lp, clp, spoofonly)
 		/* as long as it's not 0 - readdisklabel divides by it */
 	}
 
-	strncpy(lp->d_typename, "Mitsumi CD-ROM", 16);
+	strncpy(lp->d_typename, "Mitsumi CD-ROM", sizeof lp->d_typename);
 	lp->d_type = DTYPE_SCSI;	/* XXX */
-	strncpy(lp->d_packname, "fictitious", 16);
+	strncpy(lp->d_packname, "fictitious", sizeof lp->d_packname);
 	lp->d_secperunit = sc->disksize;
 	lp->d_rpm = 300;
 	lp->d_interleave = 1;

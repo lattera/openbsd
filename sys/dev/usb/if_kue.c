@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.7 2003/03/28 00:38:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_kue.c,v 1.10.2.8 2003/05/13 19:35:11 ho Exp $ */
 /*	$NetBSD: if_kue.c,v 1.50 2002/07/16 22:00:31 augustss Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -434,7 +434,7 @@ USB_ATTACH(kue)
 
 	DPRINTFN(5,(" : kue_attach: sc=%p, dev=%p", sc, dev));
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", USBDEVNAME(sc->kue_dev), devinfo);
 

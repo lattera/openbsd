@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.2.3 2003/03/28 00:38:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uvisor.c,v 1.3.2.4 2003/05/13 19:35:13 ho Exp $	*/
 /*	$NetBSD: uvisor.c,v 1.17 2002/08/13 11:38:15 augustss Exp $	*/
 
 /*
@@ -215,7 +215,7 @@ USB_ATTACH(uvisor)
 		goto bad;
 	}
 
-	usbd_devinfo(dev, 0, devinfo);
+	usbd_devinfo(dev, 0, devinfo, sizeof devinfo);
 	USB_ATTACH_SETUP;
 	printf("%s: %s\n", devname, devinfo);
 

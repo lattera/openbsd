@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_mroute.c,v 1.19.2.5 2003/03/28 00:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_mroute.c,v 1.19.2.6 2003/05/13 19:36:17 ho Exp $	*/
 /*	$NetBSD: ip_mroute.c,v 1.27 1996/05/07 02:40:50 thorpej Exp $	*/
 
 /*
@@ -605,7 +605,8 @@ add_vif(m)
 		/* Create a fake encapsulation interface. */
 		ifp = (struct ifnet *)malloc(sizeof(*ifp), M_MRTABLE, M_WAITOK);
 		bzero(ifp, sizeof(*ifp));
-		sprintf(ifp->if_xname, "mdecap%d", vifcp->vifc_vifi);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname,
+		    "mdecap%d", vifcp->vifc_vifi);
 
 		/* Prepare cached route entry. */
 		bzero(&vifp->v_route, sizeof(vifp->v_route));

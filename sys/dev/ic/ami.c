@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ami.c,v 1.8.2.7 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ami.c,v 1.8.2.8 2003/05/13 19:34:59 ho Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff
@@ -432,10 +432,10 @@ ami_attach(sc)
 	    'A' <= sc->sc_biosver[2] && sc->sc_biosver[2] <= 'Z' &&
 	    sc->sc_biosver[1] < ' ' && sc->sc_biosver[0] < ' ') {
 
-		sprintf(sc->sc_fwver, "%c.%02d.%02d", sc->sc_fwver[2],
-		    sc->sc_fwver[1], sc->sc_fwver[0]);
-		sprintf(sc->sc_biosver, "%c.%02d.%02d", sc->sc_biosver[2],
-		    sc->sc_biosver[1], sc->sc_biosver[0]);
+		snprintf(sc->sc_fwver, sizeof sc->sc_fwver, "%c.%02d.%02d",
+		    sc->sc_fwver[2], sc->sc_fwver[1], sc->sc_fwver[0]);
+		snprintf(sc->sc_biosver, sizeof sc->sc_biosver, "%c.%02d.%02d",
+		    sc->sc_biosver[2], sc->sc_biosver[1], sc->sc_biosver[0]);
 	}
 
 	printf(": FW %s, BIOS v%s, %dMB RAM\n"
@@ -1120,9 +1120,10 @@ ami_scsi_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "AMI    ");
-		sprintf(inq.product, "Host drive  #%02d", target);
-		strcpy(inq.revision, "   ");
+		strlcpy(inq.vendor, "AMI    ", sizeof inq.vendor);
+		snprintf(inq.product, sizeof inq.product, "Host drive  #%02d",
+		    target);
+		strlcpy(inq.revision, "   ", sizeof inq.revision);
 		ami_copy_internal_data(xs, &inq, sizeof inq);
 		break;
 

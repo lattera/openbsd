@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_we.c,v 1.7.6.2 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_we.c,v 1.7.6.3 2003/05/13 19:35:03 ho Exp $	*/
 /*	$NetBSD: if_we.c,v 1.11 1998/07/05 06:49:14 jonathan Exp $	*/
 
 /*-
@@ -686,9 +686,6 @@ we_write_mbuf(sc, m, buf)
 				    *(u_int16_t *)savebyte);
 				buf += 2;
 				leftover = 0;
-#ifdef i386
-#define ALIGNED_POINTER(p,t)	1
-#endif
 #ifdef alpha
 #define ALIGNED_POINTER(p,t)	((((u_long)(p)) & (sizeof(t)-1)) == 0)
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11.2.5 2003/03/28 00:38:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.11.2.6 2003/05/13 19:34:56 ho Exp $	*/
 /*	$NetBSD: ramdisk.c,v 1.8 1996/04/12 08:30:09 leo Exp $	*/
 
 /*
@@ -149,12 +149,16 @@ rdattach(n)
 
 	/* Attach as if by autoconfig. */
 	for (i = 0; i < n; i++) {
-
 		sc = malloc(sizeof(*sc), M_DEVBUF, M_WAITOK);
 		bzero((caddr_t)sc, sizeof(*sc));
+		if (snprintf(sc->sc_dev.dv_xname, sizeof(sc->sc_dev.dv_xname),
+		    "rd%d", i) >= sizeof(sc->sc_dev.dv_xname)) {
+			printf("rdattach: device name too long\n");
+			free(sc, M_DEVBUF);
+			return;
+		}
 		ramdisk_devs[i] = sc;
 		sc->sc_dev.dv_unit = i;
-		sprintf(sc->sc_dev.dv_xname, "rd%d", i);
 		rd_attach(NULL, &sc->sc_dev, NULL);
 	}
 }
@@ -496,9 +500,9 @@ rdgetdisklabel(dev, sc)
 		/* as long as it's not 0 - readdisklabel divides by it (?) */
 	}
 
-	strncpy(lp.d_typename, "RAM disk", 16);
+	strncpy(lp.d_typename, "RAM disk", sizeof(lp.d_typename));
 	lp.d_type = DTYPE_SCSI;
-	strncpy(lp.d_packname, "fictitious", 16);
+	strncpy(lp.d_packname, "fictitious", sizeof(lp.d_packname));
 	lp.d_secperunit = lp.d_nsectors;
 	lp.d_rpm = 3600;
 	lp.d_interleave = 1;

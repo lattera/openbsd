@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.6 2003/03/28 00:06:54 niklas Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.7 2003/05/13 19:36:17 ho Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
@@ -246,6 +246,7 @@ etherip_input(struct mbuf *m, ...)
 		struct mbuf m0;
 		u_int32_t af = sdst.sa.sa_family;
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;

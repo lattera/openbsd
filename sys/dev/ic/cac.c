@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5.4.7 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5.4.8 2003/05/13 19:35:00 ho Exp $	*/
 /*	$NetBSD: cac.c,v 1.15 2000/11/08 19:20:35 ad Exp $	*/
 
 /*
@@ -620,7 +620,7 @@ cac_scsi_cmd(xs)
 		inq.version = 2;
 		inq.response_format = 2;
 		inq.additional_length = 32;
-		strcpy(inq.vendor, "Compaq  ");
+		strlcpy(inq.vendor, "Compaq  ", sizeof inq.vendor);
 		switch (CAC_GET1(dinfo->mirror)) {
 		case 0: p = "RAID0";	break;
 		case 1: p = "RAID4";	break;
@@ -628,8 +628,9 @@ cac_scsi_cmd(xs)
 		case 3: p = "RAID5";	break;
 		default:p = "<UNK>";	break;
 		}
-		sprintf(inq.product, "%s volume  #%02d", p, target);
-		strcpy(inq.revision, "   ");
+		snprintf(inq.product, sizeof inq.product, "%s volume  #%02d",
+		    p, target);
+		strlcpy(inq.revision, "   ", sizeof inq.revision);
 		cac_copy_internal_data(xs, &inq, sizeof inq);
 		break;
 

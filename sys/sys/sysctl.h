@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.8 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.9 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -376,7 +376,8 @@ struct kinfo_proc {
 #define	HW_DISKNAMES	 8		/* strings: disk drive names */
 #define	HW_DISKSTATS	 9		/* struct: diskstats[] */
 #define	HW_DISKCOUNT	10		/* int: number of disks */
-#define	HW_MAXID	11		/* number of valid hw ids */
+#define	HW_SENSORS	11		/* node: hardware monitors */
+#define	HW_MAXID	12		/* number of valid hw ids */
 
 #define	CTL_HW_NAMES { \
 	{ 0, 0 }, \
@@ -390,6 +391,7 @@ struct kinfo_proc {
 	{ "disknames", CTLTYPE_STRING }, \
 	{ "diskstats", CTLTYPE_STRUCT }, \
 	{ "diskcount", CTLTYPE_INT }, \
+	{ "sensors", CTLTYPE_NODE}, \
 }
 
 /*

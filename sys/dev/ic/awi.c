@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.4 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi.c,v 1.1.2.5 2003/05/13 19:34:59 ho Exp $	*/
 /*	$NetBSD: awi.c,v 1.26 2000/07/21 04:48:55 onoe Exp $	*/
 
 /*-
@@ -261,7 +261,7 @@ ether_sprintf(enaddr)
 {
 	static char strbuf[18];
 
-	sprintf(strbuf, "%6D", enaddr, ":");
+	snprintf(strbuf, sizeof strbuf, "%6D", enaddr, ":");
 	return strbuf;
 }
 #endif

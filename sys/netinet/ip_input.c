@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.8 2003/03/28 00:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.9 2003/05/13 19:36:17 ho Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -193,7 +193,8 @@ inet_ntoa(ina)
 	static char buf[4*sizeof "123"];
 	unsigned char *ucp = (unsigned char *)&ina;
 
-	sprintf(buf, "%d.%d.%d.%d", ucp[0] & 0xff, ucp[1] & 0xff,
+	snprintf(buf, sizeof buf, "%d.%d.%d.%d",
+	    ucp[0] & 0xff, ucp[1] & 0xff,
 	    ucp[2] & 0xff, ucp[3] & 0xff);
 	return (buf);
 }
@@ -1040,7 +1041,8 @@ ip_dooptions(m)
 			if (!ip_dosourceroute) {
 				char buf[4*sizeof "123"];
 
-				strcpy(buf, inet_ntoa(ip->ip_dst));
+				strlcpy(buf, inet_ntoa(ip->ip_dst),
+				    sizeof buf);
 				log(LOG_WARNING,
 				    "attempted source route from %s to %s\n",
 				    inet_ntoa(ip->ip_src), buf);

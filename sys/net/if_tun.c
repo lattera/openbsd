@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.7 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.8 2003/05/13 19:36:15 ho Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -151,7 +151,7 @@ tunattach(n)
 		tunctl[i].tun_flags = TUN_INITED;
 
 		ifp = &tunctl[i].tun_if;
-		sprintf(ifp->if_xname, "tun%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "tun%d", i);
 		ifp->if_softc = &tunctl[i];
 		ifp->if_mtu = TUNMTU;
 		ifp->if_ioctl = tun_ioctl;
@@ -299,6 +299,23 @@ tuninit(tp)
 				tp->tun_flags &= ~TUN_BRDADDR;
 		}
 #endif
+#ifdef INET6
+		if (ifa->ifa_addr->sa_family == AF_INET6) {
+			struct sockaddr_in6 *sin;
+
+			sin = (struct sockaddr_in6 *)ifa->ifa_addr;
+			if (!IN6_IS_ADDR_UNSPECIFIED(&sin->sin6_addr))
+				tp->tun_flags |= TUN_IASET;
+
+			if (ifp->if_flags & IFF_POINTOPOINT) {
+				sin = (struct sockaddr_in6 *)ifa->ifa_dstaddr;
+				if (sin &&
+				    !IN6_IS_ADDR_UNSPECIFIED(&sin->sin6_addr))
+					tp->tun_flags |= TUN_DSTADDR;
+			} else
+				tp->tun_flags &= ~TUN_DSTADDR;
+		}
+#endif /* INET6 */
 	}
 
 	return 0;

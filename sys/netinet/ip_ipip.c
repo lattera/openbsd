@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2.2.5 2003/03/28 00:06:54 niklas Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ipip.c,v 1.2.2.6 2003/05/13 19:36:17 ho Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -369,6 +369,7 @@ ipip_input(struct mbuf *m, int iphlen, struct ifnet *gifp)
 		else
 			af = AF_INET6;
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;

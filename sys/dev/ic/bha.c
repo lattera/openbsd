@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.4.2 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/bha.c,v 1.1.4.3 2003/05/13 19:34:59 ho Exp $	*/
 /*	$NetBSD: bha.c,v 1.27 1998/11/19 21:53:00 thorpej Exp $	*/
 
 #undef BHADEBUG
@@ -1319,7 +1319,7 @@ bha_inquire_setup_information(sc)
 			p--;
 		*p = '\0';
 	} else
-		strcpy(sc->sc_model, "542B");
+		strlcpy(sc->sc_model, "542B", sizeof sc->sc_model);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.6 2003/03/28 00:08:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.7 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: cd.c,v 1.100 1997/04/02 02:29:30 mycroft Exp $	*/
 
 /*
@@ -1214,14 +1214,14 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	}
 
 	if (cd->sc_link->flags & SDEV_ATAPI) {
-		strncpy(lp->d_typename, "ATAPI CD-ROM", sizeof(lp->d_typename) - 1);
+		strncpy(lp->d_typename, "ATAPI CD-ROM", sizeof(lp->d_typename));
 		lp->d_type = DTYPE_ATAPI;
 	} else {
-		strncpy(lp->d_typename, "SCSI CD-ROM", sizeof(lp->d_typename) - 1);
+		strncpy(lp->d_typename, "SCSI CD-ROM", sizeof(lp->d_typename));
 		lp->d_type = DTYPE_SCSI;
 	}
 
-	strncpy(lp->d_packname, "fictitious", sizeof(lp->d_packname) - 1);
+	strncpy(lp->d_packname, "fictitious", sizeof(lp->d_packname));
 	lp->d_secperunit = cd->params.disksize;
 	lp->d_rpm = 300;
 	lp->d_interleave = 1;

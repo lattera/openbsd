@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12.2.3 2003/03/28 00:38:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12.2.4 2003/05/13 19:35:09 ho Exp $	*/
 /*	$NetBSD: pcireg.h,v 1.26 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*
@@ -157,6 +157,7 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_MASS_STORAGE_IPI		0x03
 #define	PCI_SUBCLASS_MASS_STORAGE_RAID		0x04
 #define	PCI_SUBCLASS_MASS_STORAGE_ATA		0x05
+#define	PCI_SUBCLASS_MASS_STORAGE_SATA		0x06
 #define	PCI_SUBCLASS_MASS_STORAGE_MISC		0x80
 
 /* 0x02 network subclasses */
@@ -205,6 +206,8 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_COMMUNICATIONS_PARALLEL	0x01
 #define	PCI_SUBCLASS_COMMUNICATIONS_MPSERIAL	0x02
 #define	PCI_SUBCLASS_COMMUNICATIONS_MODEM	0x03
+#define	PCI_SUBCLASS_COMMUNICATIONS_GPIB	0x04
+#define	PCI_SUBCLASS_COMMUNICATIONS_SMARTCARD	0x05
 #define	PCI_SUBCLASS_COMMUNICATIONS_MISC	0x80
 
 /* 0x08 system subclasses */
@@ -252,6 +255,10 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_SUBCLASS_WIRELESS_IRDA		0x00
 #define	PCI_SUBCLASS_WIRELESS_CONSUMERIR	0x01
 #define	PCI_SUBCLASS_WIRELESS_RF		0x10
+#define	PCI_SUBCLASS_WIRELESS_BLUETOOTH		0x11
+#define	PCI_SUBCLASS_WIRELESS_BROADBAND		0x12
+#define	PCI_SUBCLASS_WIRELESS_802_11A		0x20
+#define	PCI_SUBCLASS_WIRELESS_802_11B		0x21
 #define	PCI_SUBCLASS_WIRELESS_MISC		0x80
 
 /* 0x0e I2O (Intelligent I/O) subclasses */
@@ -272,6 +279,8 @@ typedef u_int8_t pci_revision_t;
 /* 0x11 data acquisition and signal processing subclasses */
 #define	PCI_SUBCLASS_DASP_DPIO			0x00
 #define	PCI_SUBCLASS_DASP_TIMEFREQ		0x01
+#define	PCI_SUBCLASS_DASP_SYNC			0x10
+#define	PCI_SUBCLASS_DASP_MGMT			0x20
 #define	PCI_SUBCLASS_DASP_MISC			0x80
 
 /*
@@ -427,7 +436,8 @@ typedef u_int8_t pci_revision_t;
 /*
  * capabilities link list (PCI rev. 2.2)
  */
-#define PCI_CAPLISTPTR_REG		0x34
+#define PCI_CAPLISTPTR_REG		0x34	/* header type 0 */
+#define PCI_CARDBUS_CAPLISTPTR_REG	0x14	/* header type 2 */
 #define PCI_CAPLIST_PTR(cpr) ((cpr) & 0xff)
 #define PCI_CAPLIST_NEXT(cr) (((cr) >> 8) & 0xff)
 #define PCI_CAPLIST_CAP(cr) ((cr) & 0xff)
@@ -437,7 +447,7 @@ typedef u_int8_t pci_revision_t;
 #define PCI_CAP_AGP		0x02
 #define PCI_CAP_VPD		0x03
 #define PCI_CAP_SLOTID		0x04
-#define PCI_CAP_MBI		0x05
+#define PCI_CAP_MSI		0x05
 #define PCI_CAP_CPCI_HOTSWAP	0x06
 #define PCI_CAP_PCIX		0x07
 #define PCI_CAP_LDT		0x08
@@ -445,6 +455,10 @@ typedef u_int8_t pci_revision_t;
 #define PCI_CAP_DEBUGPORT	0x0a
 #define PCI_CAP_CPCI_RSRCCTL	0x0b
 #define PCI_CAP_HOTPLUG		0x0c
+#define PCI_CAP_AGP8		0x0e
+#define PCI_CAP_SECURE		0x0f
+#define PCI_CAP_PCIEXPRESS     	0x10
+#define PCI_CAP_MSIX		0x11
 
 /*
  * Power Management Control Status Register; access via capability pointer.

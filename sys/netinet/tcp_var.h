@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.5 2003/03/28 00:06:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.26.2.6 2003/05/13 19:36:18 ho Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -371,7 +371,7 @@ struct tcp_ident_mapping {
 #ifdef _KERNEL
 extern	struct inpcbtable tcbtable;	/* head of queue of active tcpcb's */
 extern	struct tcpstat tcpstat;	/* tcp statistics */
-u_int32_t tcp_now;		/* for RFC 1323 timestamps */
+extern	u_int32_t tcp_now;		/* for RFC 1323 timestamps */
 extern	int tcp_do_rfc1323;	/* enabled/disabled? */
 extern	int tcp_mssdflt;	/* default maximum segment size */
 extern	int tcp_ack_on_push;	/* ACK immediately on PUSH */

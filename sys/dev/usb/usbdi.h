@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/usbdi.h,v 1.6.2.4 2003/03/28 00:38:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/usbdi.h,v 1.6.2.5 2003/05/13 19:35:13 ho Exp $ */
 /*	$NetBSD: usbdi.h,v 1.53 2001/08/15 00:04:59 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usbdi.h,v 1.18 1999/11/17 22:33:49 n_hibma Exp $	*/
 
@@ -168,7 +168,7 @@ const char *usbd_errstr(usbd_status err);
 void usbd_add_dev_event(int, usbd_device_handle);
 void usbd_add_drv_event(int, usbd_device_handle, device_ptr_t);
 
-void usbd_devinfo(usbd_device_handle, int, char *);
+void usbd_devinfo(usbd_device_handle, int, char *, size_t);
 const struct usbd_quirks *usbd_get_quirks(usbd_device_handle);
 usb_endpoint_descriptor_t *usbd_get_endpoint_descriptor
 			(usbd_interface_handle iface, u_int8_t address);

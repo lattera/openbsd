@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/atavar.h,v 1.4.4.5 2003/03/28 00:38:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ata/atavar.h,v 1.4.4.6 2003/05/13 19:34:56 ho Exp $	*/
 /*	$NetBSD: atavar.h,v 1.13 1999/03/10 13:11:43 bouyer Exp $	*/
 
 /*
@@ -181,4 +181,4 @@ int ata_set_mode(struct ata_drive_datas*, u_int8_t, u_int8_t);
 #define CMD_AGAIN 2
 
 void ata_dmaerr(struct ata_drive_datas *);
-void ata_perror(struct ata_drive_datas *, int, char *);
+void ata_perror(struct ata_drive_datas *, int, char *, size_t);

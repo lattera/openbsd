@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.5 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.6 2003/05/13 19:36:57 ho Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -219,10 +219,11 @@ struct msdosfs_args {
 /*
  * Msdosfs mount options:
  */
-#define	MSDOSFSMNT_SHORTNAME	1	/* Force old DOS short names only */
-#define	MSDOSFSMNT_LONGNAME	2	/* Force Win'95 long names */
-#define	MSDOSFSMNT_NOWIN95	4	/* Completely ignore Win95 entries */
-#define	MSDOSFSMNT_GEMDOSFS	8	/* This is a gemdos-flavour */
+#define	MSDOSFSMNT_SHORTNAME	0x01	/* Force old DOS short names only */
+#define	MSDOSFSMNT_LONGNAME	0x02	/* Force Win'95 long names */
+#define	MSDOSFSMNT_NOWIN95	0x04	/* Completely ignore Win95 entries */
+#define	MSDOSFSMNT_GEMDOSFS	0x08	/* This is a gemdos-flavour */
+#define MSDOSFSMNT_ALLOWDIRX	0x10	/* dir is mode +x if r */
 
 /*
  * Arguments to mount amigados filesystems.
@@ -569,7 +570,7 @@ int	speedup_syncer(void);
 int	vfs_syncwait(int);	/* sync and wait for complete */
 void	vfs_shutdown(void);	/* unmount and sync file systems */
 long	makefstype(char *);
-int	dounmount(struct mount *, int, struct proc *);
+int	dounmount(struct mount *, int, struct proc *, struct vnode *);
 void	vfsinit(void);
 #ifdef DEBUG
 void	vfs_bufstats(void);

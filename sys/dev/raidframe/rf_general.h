@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_general.h,v 1.3.2.2 2003/03/28 00:38:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_general.h,v 1.3.2.3 2003/05/13 19:35:10 ho Exp $	*/
 /*	$NetBSD: rf_general.h,v 1.5 2000/03/03 02:04:48 oster Exp $	*/
 
 /*
@@ -40,7 +40,7 @@
 /* Error reporting and handling. */
 
 #ifdef	_KERNEL
-#include <sys/systm.h>		/* printf, sprintf, and friends. */
+#include <sys/systm.h>		/* printf, snprintf, and friends. */
 #endif
 
 #define	RF_ERRORMSG(s)		printf((s))
@@ -48,10 +48,11 @@
 #define	RF_ERRORMSG2(s,a,b)	printf((s), (a), (b))
 #define	RF_ERRORMSG3(s,a,b,c)	printf((s), (a), (b), (c))
 
-extern char rf_panicbuf[];
+extern char rf_panicbuf[2048];
 #define	RF_PANIC()							\
 do {									\
-	sprintf(rf_panicbuf, "RAIDframe error at line %d file %s",	\
+	snprintf(rf_panicbuf, sizeof rf_panicbuf,			\
+	    "RAIDframe error at line %d file %s",			\
 	    __LINE__, __FILE__);					\
 	panic(rf_panicbuf);						\
 } while (0)
@@ -64,7 +65,8 @@ do {									\
 #define	RF_ASSERT(_x_)							\
 do {									\
 	if (!(_x_)) {							\
-		sprintf(rf_panicbuf, "RAIDframe error at line %d"	\
+		snprintf(rf_panicbuf, sizeof rf_panicbuf,		\
+		    "RAIDframe error at line %d"			\
 		    " file %s (failed asserting %s)\n", __LINE__,	\
 		     __FILE__, #_x_);					\
 		panic(rf_panicbuf);					\

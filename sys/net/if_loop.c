@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.6 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_loop.c,v 1.13.2.7 2003/05/13 19:36:15 ho Exp $	*/
 /*	$NetBSD: if_loop.c,v 1.15 1996/05/07 02:40:33 thorpej Exp $	*/
 
 /*
@@ -191,7 +191,7 @@ loopattach(n)
 		bzero(ifp, sizeof(struct ifnet));
 		if (i == 0)
 			lo0ifp = ifp;
-		sprintf(ifp->if_xname, "lo%d", i);
+		snprintf(ifp->if_xname, sizeof ifp->if_xname, "lo%d", i);
 		ifp->if_softc = NULL;
 		ifp->if_mtu = LOMTU;
 		ifp->if_flags = IFF_LOOPBACK | IFF_MULTICAST;
@@ -241,6 +241,7 @@ looutput(ifp, m, dst, rt)
 		struct mbuf m0;
 		u_int32_t af = htonl(dst->sa_family);
 
+		m0.m_flags = 0;
 		m0.m_next = m;
 		m0.m_len = sizeof(af);
 		m0.m_data = (char *)&af;

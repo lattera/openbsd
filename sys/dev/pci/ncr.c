@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.8 2003/04/19 19:17:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.9 2003/05/13 19:35:06 ho Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -1466,7 +1466,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.8 2003/04/19 19:17:49 niklas Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.9 2003/05/13 19:35:06 ho Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11
@@ -1570,7 +1570,7 @@ static struct scsi_device ncr_dev =
 static char *ncr_name (ncb_p np)
 {
 	static char name[10];
-	sprintf(name, "ncr%d", np->unit);
+	snprintf(name, sizeof name, "ncr%d", np->unit);
 	return (name);
 }
 #endif
