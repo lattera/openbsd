@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.44.2.1 2004/05/27 18:23:31 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.44.2.2 2004/11/06 02:37:03 brad Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.
@@ -719,7 +719,9 @@ carp_send_ad(void *v)
 	struct carp_softc *sc = v;
 	struct carp_header *ch_ptr;
 	struct mbuf *m;
-	int len, advbase, advskew;
+	int len, advbase, advskew, s;
+
+	s = splsoftnet();
 
 	/* bow out if we've lost our UPness or RUNNINGuiness */
 	if ((sc->sc_ac.ac_if.if_flags &
@@ -755,9 +757,7 @@ carp_send_ad(void *v)
 			sc->sc_ac.ac_if.if_oerrors++;
 			carpstats.carps_onomem++;
 			/* XXX maybe less ? */
-			if (advbase != 255 || advskew != 255)
-				timeout_add(&sc->sc_ad_tmo, tvtohz(&tv));
-			return;
+			goto retry_later;
 		}
 		len = sizeof(*ip) + sizeof(ch);
 		m->m_pkthdr.len = len;
@@ -781,7 +781,7 @@ carp_send_ad(void *v)
 		ch_ptr = (void *)ip + sizeof(*ip);
 		bcopy(&ch, ch_ptr, sizeof(ch));
 		if (carp_prepare_ad(m, sc, ch_ptr))
-			return;
+			goto retry_later;
 
 		m->m_data += sizeof(*ip);
 		ch_ptr->carp_cksum = carp_cksum(m, len - sizeof(*ip));
@@ -805,9 +805,7 @@ carp_send_ad(void *v)
 			sc->sc_ac.ac_if.if_oerrors++;
 			carpstats.carps_onomem++;
 			/* XXX maybe less ? */
-			if (advbase != 255 || advskew != 255)
-				timeout_add(&sc->sc_ad_tmo, tvtohz(&tv));
-			return;
+			goto retry_later;
 		}
 		len = sizeof(*ip6) + sizeof(ch);
 		m->m_pkthdr.len = len;
@@ -831,7 +829,7 @@ carp_send_ad(void *v)
 		ch_ptr = (void *)ip6 + sizeof(*ip6);
 		bcopy(&ch, ch_ptr, sizeof(ch));
 		if (carp_prepare_ad(m, sc, ch_ptr))
-			return;
+			goto retry_later;
 
 		m->m_data += sizeof(*ip6);
 		ch_ptr->carp_cksum = carp_cksum(m, len - sizeof(*ip6));
@@ -847,6 +845,8 @@ carp_send_ad(void *v)
 	}
 #endif /* INET6 */
 
+retry_later:
+	splx(s);
 	if (advbase != 255 || advskew != 255)
 		timeout_add(&sc->sc_ad_tmo, tvtohz(&tv));
 }
