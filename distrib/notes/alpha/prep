@@ -1,0 +1,111 @@
+dnl	$OpenBSD: src/distrib/notes/alpha/prep,v 1.13 2002/04/07 22:13:01 miod Exp $
+OpenBSD/MACHINE requires the SRM console.  Some alphas come with
+the AlphaBIOS (also known as the ARC firmware on older machines) instead;
+this is what Windows NT uses. It is fairly simple to replace the AlphaBIOS
+with the SRM firmware.
+
+Switching your MACHINE to SRM console:
+    Recent machines (such as the Miata and later models) have enough flash
+    rom space to carry both the AlphaBIOS and the SRM console.
+    To switch to SRM from AlphaBIOS, do the following:
+    - enter the AlphaBIOS setup upon startup
+      (F2 key, or ^B from serial console)
+    - choose "CMOS Setup" from the menu
+    - select "Advanced CMOS Setup" (F6 key, or ^F from serial console)
+    - change the "Console Selection" setting to "OpenVMS console (SRM)"
+    - confirm your changes with F10 (or ^U) twice, then enter.
+    - power-cycle your system for the changes to take effect.
+
+    If you didn't find a "Console Selection" entry (for example on 164SX or
+    164LX), your system can not hold both the AlphaBIOS and SRM console in
+    flash, and you will have to upgrade your firmware.
+
+    You can get replacement firmware either from a firmware update CD or via
+    ftp from
+	ftp://ftp.digital.com/pub/DEC/Alpha/firmware/
+    Please refer to
+	http://ftp.digital.com/pub/DEC/Alpha/firmware/readme.html
+    for more information.
+
+AXPpci33 Motherboard specific notes:
+    The 1994 version of the OEM guide has an incorrect pinout
+    for the serial ports.  The newer version from
+    ftp://gatekeeper.dec.com/pub/DEC/axppci/design_guide.ps.Z
+    has a corrected pinout (as well as more information than
+    the 1994 edition).  Note that there are two flavors
+    of PC serial connectors.  If you have the wrong kind,
+    you won't get any output from the serial console.
+
+Using the SRM console:
+    This is not intended to be an exhaustive guide on using the
+    SRM firmware console.  It should, however, give you enough
+    information to boot OpenBSD/MACHINE.
+
+    To see a list of devices connected to your alpha, you can
+    use the "show device" command.  For booting the devices you
+    are interested in are "dva0" (the floppy drive) and
+    "dka*" (the disk drives).
+
+    You can set ROM variables by saying "set VARIABLE VALUE".
+    Some variables you will want to set:
+	auto_action	Determines what happens when you turn power on,
+			halt, or crash your machine.  Valid values
+			{:-include-:} "halt", "boot", and "restart".
+			Most users will want to set this to "boot".
+	bootdef_dev	Default boot device (or list of devices).
+	boot_file	Name of the kernel to boot.  If this variable is
+			empty, "bsd" will be loaded.
+	boot_osflags	Flags to pass to the kernel.
+			IMPORTANT! For multiuser boot, this needs to be
+			set to "a".
+    To see a list of all variables on your machine use the "show"
+    command with no arguments.
+    
+    You can bypass the boot_file and boot_osflags values from the command
+    prompt, with the -fi (to override boot_file) and -fl (to override
+    boot_osflags) options. For example,
+	boot -fi bsd -fl ac dka0
+    will boot the "bsd" kernel with the "ac" flags on dka0.
+
+
+dnl Change back when TC support is back
+dnl On systems with no framebuffer supported, including all
+dnl TurboChannel-based machines, OpenBSD/MACHINE must be used with a
+dnl serial console.  Setting an Alpha system to use a serial console
+dnl is system-specific.  The procedure for most common hardware is:
+dnl
+dnl	DEC 3000/[4-9]00's:
+dnl		Flip the appropriate switch on the back of the machine.
+dnl
+dnl	DEC 3000/300 family machines:
+dnl		Boot the machine with the keyboard/mouse connector
+dnl		unplugged.
+dnl
+dnl	Other machines running the SRM console on local display:
+dnl		Get to the SRM console prompt.  Enter "set console serial",
+dnl		then enter "init" or cycle power.
+dnl
+On systems with no framebuffer supported, OpenBSD/MACHINE must be used
+with a serial console.  Setting an Alpha system to use a serial console
+is system-specific.  From the SRM console on local display, enter
+	set console serial
+at the SRM prompt, then enter
+	init
+or cycle power.
+
+See your owner's manual for more details on how to set your machine
+to use a serial console.
+
+dnl Uncomment when TC support is back
+dnl Note that some MACHINE computers currently *require* a serial console
+dnl and can't be used from a regular keyboard/display console, even though
+dnl the motherboard has appropriate connectors.
+dnl Currently, only the TurboChannel MACHINE computers (DEC 3000) require use
+dnl of a serial console.
+dnl
+If booting using the regular console aborts with ``not configured to use
+display && keyboard console'', then you need to use a serial console.
+dnl If your machine was not listed in the list above, please report this on
+dnl <alpha@openbsd.org>.
+If this is the case, please report this on <alpha@openbsd.org>.
+
