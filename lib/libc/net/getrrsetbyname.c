@@ -1,4 +1,4 @@
-/* $Id: getrrsetbyname.c,v 1.27 2001/08/03 17:15:09 jakob Exp $ */
+/* $OpenBSD: src/lib/libc/net/Attic/getrrsetbyname.c,v 1.2 2001/08/06 15:00:48 jakob Exp $ */
 
 /*
  * Copyright (c) 2001 Jakob Schlyter. All rights reserved.
