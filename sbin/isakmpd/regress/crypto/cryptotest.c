@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/regress/crypto/Attic/cryptotest.c,v 1.10 2003/09/24 10:13:43 markus Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/crypto/Attic/cryptotest.c,v 1.11 2003/09/24 11:12:31 markus Exp $	*/
 /*	$EOM: cryptotest.c,v 1.5 1998/10/07 16:40:49 niklas Exp $	*/
 
 /*
@@ -124,6 +124,8 @@ main (void)
   test_crypto (BLOWFISH_CBC);
 
   test_crypto (CAST_CBC);
+
+  test_crypto (AES_CBC);
 
   special_test_blf ();
 
