@@ -1,7 +1,7 @@
-#	$OpenBSD: src/share/man/man4/man4.hppa/Makefile,v 1.15 2004/01/15 13:26:42 mickey Exp $
+#	$OpenBSD: src/share/man/man4/man4.hppa/Makefile,v 1.16 2004/01/15 14:15:00 mickey Exp $
 
 MAN=	asp.4 cpu.4tbl dino.4 gsc.4 gsckbc.4 gsckbd.4 harmony.4 ie.4 
-MAN+=	intro.4 io.4tbl lasi.4 phantomas.4 power.4 wax.4
+MAN+=	intro.4 io.4 lasi.4 phantomas.4 power.4 wax.4
 # mongoose.4 tir.4 xbar.4 mcx.4
 MANSUBDIR=hppa
 
