@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/restore/restore.c,v 1.10 2003/06/02 20:06:16 millert Exp $	*/
+/*	$OpenBSD: src/sbin/restore/restore.c,v 1.11 2003/07/28 06:13:26 tedu Exp $	*/
 /*	$NetBSD: restore.c,v 1.9 1997/06/18 07:10:16 lukem Exp $	*/
 
 /*
@@ -34,7 +34,7 @@
 #if 0
 static char sccsid[] = "@(#)restore.c	8.3 (Berkeley) 9/13/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/restore/restore.c,v 1.10 2003/06/02 20:06:16 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/sbin/restore/restore.c,v 1.11 2003/07/28 06:13:26 tedu Exp $";
 #endif
 #endif /* not lint */
 
