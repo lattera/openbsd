@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sb.c,v 1.20.14.1 2002/06/11 03:42:22 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sb.c,v 1.20.14.2 2003/05/19 22:08:46 tedu Exp $	*/
 /*	$NetBSD: sb.c,v 1.57 1998/01/12 09:43:46 thorpej Exp $	*/
 
 /*
@@ -298,17 +298,17 @@ sb_getdev(addr, retp)
 	char *config;
 
 	if (sc->sc_model == SB_JAZZ)
-		strncpy(retp->name, "MV Jazz16", sizeof(retp->name));
+		strlcpy(retp->name, "MV Jazz16", sizeof retp->name);
 	else
-		strncpy(retp->name, "SoundBlaster", sizeof(retp->name));
-	sprintf(retp->version, "%d.%02d", 
-		SBVER_MAJOR(sc->sc_version),
-		SBVER_MINOR(sc->sc_version));
+		strlcpy(retp->name, "SoundBlaster", sizeof retp->name);
+	snprintf(retp->version, sizeof retp->version, "%d.%02d", 
+		 SBVER_MAJOR(sc->sc_version),
+		 SBVER_MINOR(sc->sc_version));
 	if (0 <= sc->sc_model && sc->sc_model < sizeof names / sizeof names[0])
 		config = names[sc->sc_model];
 	else
 		config = "??";
-	strncpy(retp->config, config, sizeof(retp->config));
+	strlcpy(retp->config, config, sizeof retp->config);
 		
 	return 0;
 }

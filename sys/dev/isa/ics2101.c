@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/ics2101.c,v 1.4.18.1 2002/06/11 03:42:21 art Exp $ */
+/* $OpenBSD: src/sys/dev/isa/ics2101.c,v 1.4.18.2 2003/05/19 22:07:48 tedu Exp $ */
 /* $NetBSD: ics2101.c,v 1.6 1997/10/09 07:57:23 jtc Exp $ */
 
 /*-
@@ -47,7 +47,6 @@
 #include <sys/buf.h>
 
 #include <machine/cpu.h>
-#include <machine/pio.h>
 
 #include <sys/audioio.h>
 #include <dev/audio_if.h>

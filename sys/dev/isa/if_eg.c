@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_eg.c,v 1.21.4.1 2002/06/11 03:42:21 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_eg.c,v 1.21.4.2 2003/05/19 22:07:48 tedu Exp $	*/
 /*	$NetBSD: if_eg.c,v 1.26 1996/05/12 23:52:27 mycroft Exp $	*/
 
 /*
@@ -71,7 +71,6 @@
 
 #include <machine/cpu.h>
 #include <machine/intr.h>
-#include <machine/pio.h>
 
 #include <dev/isa/isavar.h>
 #include <dev/isa/if_egreg.h>
@@ -581,6 +580,8 @@ loop:
 		bcopy(mtod(m, caddr_t), buffer, m->m_len);
 		buffer += m->m_len;
 	}
+	if (len > m0->m_pkthdr.len)
+		bzero(buffer, len - m0->m_pkthdr.len);
 
 	/* set direction bit: host -> adapter */
 	bus_space_write_1(bst, bsh, EG_CONTROL,

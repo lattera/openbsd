@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sb_isa.c,v 1.5.2.1 2002/06/11 03:42:22 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sb_isa.c,v 1.5.2.2 2003/05/19 22:08:46 tedu Exp $	*/
 /*	$NetBSD: sb_isa.c,v 1.15 1997/11/30 15:32:25 drochner Exp $	*/
 
 /*
@@ -97,7 +97,7 @@ sb_isa_match(parent, match, aux)
 #else
 	sc->sc_dev.dv_cfdata = match;
 #endif
-	strcpy(sc->sc_dev.dv_xname, "sb");
+	strlcpy(sc->sc_dev.dv_xname, "sb", sizeof sc->sc_dev.dv_xname);
 	return sbfind(parent, sc, aux);
 }
 

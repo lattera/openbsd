@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/opl_sb.c,v 1.1.16.1 2002/06/11 03:42:22 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/opl_sb.c,v 1.1.16.2 2003/05/19 22:08:46 tedu Exp $	*/
 /*	$NetBSD: opl_sb.c,v 1.4 1998/12/08 14:26:57 augustss Exp $	*/
 
 /*
@@ -107,7 +107,7 @@ opl_sb_attach(parent, self, aux)
 	sc->offs = 0;
 	sc->spkrctl = sbdsp_speaker_ctl;
 	sc->spkrarg = ssc;
-	strcpy(sc->syn.name, "SB ");
+	strlcpy(sc->syn.name, "SB ", sizeof sc->syn.name);
 
 	opl_attach(sc);
 }

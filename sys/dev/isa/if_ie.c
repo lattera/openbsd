@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/if_ie.c,v 1.23.2.1 2002/06/11 03:42:21 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/if_ie.c,v 1.23.2.2 2003/05/19 22:07:48 tedu Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.51 1996/05/12 23:52:48 mycroft Exp $	*/
 
 /*-
@@ -142,7 +142,6 @@ iomem, and to make 16-pointers, we subtract sc_maddr and and with 0xffff.
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
-#include <machine/pio.h>		/* XXX convert this driver! */
 #include <machine/bus.h>
 #include <machine/intr.h>
 
@@ -1510,9 +1509,15 @@ iestart(ifp)
 			bcopy(mtod(m, caddr_t), buffer, m->m_len);
 			buffer += m->m_len;
 		}
-		len = max(m0->m_pkthdr.len, ETHER_MIN_LEN);
 
 		m_freem(m0);
+
+		if (len < ETHER_MIN_LEN - ETHER_CRC_LEN) {
+			bzero(buffer, ETHER_MIN_LEN - ETHER_CRC_LEN - len);
+			len = ETHER_MIN_LEN - ETHER_CRC_LEN;
+			buffer += ETHER_MIN_LEN - ETHER_CRC_LEN;
+		}
+
 		sc->xmit_buffs[sc->xchead]->ie_xmit_flags = len;
 
 		/* Start the first packet transmitting. */
