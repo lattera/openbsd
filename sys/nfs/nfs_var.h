@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.10.2.5 2002/03/28 15:02:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.10.2.6 2003/03/28 00:08:46 niklas Exp $	*/
 /*	$NetBSD: nfs_var.h,v 1.3 1996/02/18 11:53:54 fvdl Exp $	*/
 
 /*
@@ -75,7 +75,6 @@ int nfs_boot_init(struct nfs_diskless *, struct proc *);
 
 /* nfs_node.c */
 void nfs_nhinit(void);
-u_long nfs_hash(nfsfh_t *, int);
 int nfs_nget(struct mount *, nfsfh_t *, int, struct nfsnode **);
 int nfs_inactive(void *);
 int nfs_reclaim(void *);
@@ -207,15 +206,14 @@ int nfs_reply(struct nfsreq *);
 int nfs_request(struct vnode *, struct mbuf *, int, struct proc *,
 		     struct ucred *, struct mbuf **, struct mbuf **,
 		     caddr_t *);
-int nfs_rephead(int, struct nfsrv_descript *, struct nfssvc_sock *,
-		     int, int, u_quad_t *, struct mbuf **, struct mbuf **,			     caddr_t *);
+int nfs_rephead(int, struct nfsrv_descript *, struct nfssvc_sock *, int,
+		u_quad_t *, struct mbuf **, struct mbuf **, caddr_t *);
 void nfs_timer(void *);
 int nfs_sigintr(struct nfsmount *, struct nfsreq *, struct proc *);
 int nfs_sndlock(int *, struct nfsreq *);
 void nfs_sndunlock(int *);
 int nfs_rcvlock(struct nfsreq *);
 void nfs_rcvunlock(int *);
-void nfs_realign(struct mbuf *, int);
 int nfs_getreq(struct nfsrv_descript *, struct nfsd *, int);
 int nfs_msg(struct proc *, char *, char *);
 void nfsrv_rcv(struct socket *, caddr_t, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.4.2.7 2002/03/28 14:54:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.4.2.8 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_pdaemon.c,v 1.23 2000/08/20 10:24:14 bjh21 Exp $	*/
 
 /* 
@@ -334,7 +334,9 @@ uvm_aiodone_daemon(void *arg)
 				uvmexp.paging -= bp->b_bufsize >> PAGE_SHIFT;
 			}
 			nbp = TAILQ_NEXT(bp, b_freelist);
+			s = splbio();	/* b_iodone must by called at splbio */
 			(*bp->b_iodone)(bp);
+			splx(s);
 			bp = nbp;
 		}
 		if (free <= uvmexp.reserve_kernel) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netns/Attic/ns_error.h,v 1.2.14.1 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netns/Attic/ns_error.h,v 1.2.14.2 2003/03/28 00:06:55 niklas Exp $	*/
 /*	$NetBSD: ns_error.h,v 1.6 1995/03/26 20:36:20 jtc Exp $	*/
 
 /*
@@ -74,8 +74,8 @@ struct  ns_epidp {
 struct	ns_errstat {
 /* statistics related to ns_err packets generated */
 	int	ns_es_error;		/* # of calls to ns_error */
-	int	ns_es_oldshort;		/* no error 'cuz old ip too short */
-	int	ns_es_oldns_err;	/* no error 'cuz old was ns_err */
+	int	ns_es_oldshort;		/* no error because old ip too short */
+	int	ns_es_oldns_err;	/* no error because old was ns_err */
 	int	ns_es_outhist[NS_ERR_MAX];
 /* statistics related to input messages processed */
 	int	ns_es_badcode;		/* ns_err_code out of range */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.30.2.6 2002/03/28 15:02:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.30.2.7 2003/03/28 00:08:46 niklas Exp $	*/
 /*	$NetBSD: nfs_vfsops.c,v 1.46.4.1 1996/05/25 22:40:35 fvdl Exp $	*/
 
 /*
@@ -300,16 +300,11 @@ nfs_mountroot()
 	/* Get root attributes (for the time). */
 	error = VOP_GETATTR(rootvp, &attr, procp->p_ucred, procp);
 	if (error) panic("nfs_mountroot: getattr for root");
-	n = attr.va_mtime.tv_sec;
+	n = attr.va_atime.tv_sec;
 #ifdef	DEBUG
 	printf("root time: 0x%lx\n", n);
 #endif
 	inittodr(n);
-
-	/* 
-	 * XXX splnet, so networks will receive...
-	 */
-	splnet();
 
 #ifdef notyet
 	/* Set up swap credentials. */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.7 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.4.4.8 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -158,14 +158,12 @@ sys_mincore(p, v, retval)
 
 	npgs = len >> PAGE_SHIFT;
 
-	if (uvm_useracc(vec, npgs, B_WRITE) == FALSE)
-		return (EFAULT);
-
 	/*
 	 * Lock down vec, so our returned status isn't outdated by
 	 * storing the status byte for a page.
 	 */
-	uvm_vslock(p, vec, npgs, VM_PROT_WRITE);
+	if ((error = uvm_vslock(p, vec, npgs, VM_PROT_WRITE)) != 0)
+		return (error);
 
 	vm_map_lock_read(map);
 
@@ -198,9 +196,10 @@ sys_mincore(p, v, retval)
 			KASSERT(!UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj));
 			if (entry->object.uvm_obj->pgops->pgo_releasepg
 			    == NULL) {
+				pgi = 1;
 				for (/* nothing */; start < lim;
 				     start += PAGE_SIZE, vec++)
-					subyte(vec, 1);
+					copyout(&pgi, vec, sizeof(char));
 				continue;
 			}
 		}
@@ -242,7 +241,7 @@ sys_mincore(p, v, retval)
 				}
 			}
 
-			(void) subyte(vec, pgi);
+			copyout(&pgi, vec, sizeof(char));
 		}
 
 		if (uobj != NULL)
@@ -363,12 +362,14 @@ sys_mmap(p, v, retval)
 	if ((flags & MAP_ANON) == 0) {
 
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
-			return(EBADF);
+			return (EBADF);
 
 		FREF(fp);
 
-		if (fp->f_type != DTYPE_VNODE)
-			return (ENODEV);		/* only mmap vnodes! */
+		if (fp->f_type != DTYPE_VNODE) {
+			error = ENODEV;		/* only mmap vnodes! */
+			goto out;
+		}
 		vp = (struct vnode *)fp->f_data;	/* convert to vnode */
 
 		if (vp->v_type != VREG && vp->v_type != VCHR &&
@@ -443,11 +444,13 @@ sys_mmap(p, v, retval)
 			if (fp->f_flag & FWRITE) {
 				if ((error =
 				    VOP_GETATTR(vp, &va, p->p_ucred, p)))
-					return (error);
+					goto out;
 				if ((va.va_flags & (IMMUTABLE|APPEND)) == 0)
 					maxprot |= VM_PROT_WRITE;
-				else if (prot & PROT_WRITE)
-					return (EPERM);
+				else if (prot & PROT_WRITE) {
+					error = EPERM;
+					goto out;
+				}
 			} else if (prot & PROT_WRITE) {
 				error = EACCES;
 				goto out;
@@ -467,8 +470,10 @@ sys_mmap(p, v, retval)
 		/*
 		 * XXX What do we do about (MAP_SHARED|MAP_PRIVATE) == 0?
 		 */
-		if (fd != -1)
-			return (EINVAL);
+		if (fd != -1) {
+			error = EINVAL;
+			goto out;
+		}
 
  is_anon:		/* label for SunOS style /dev/zero */
 		handle = NULL;
@@ -679,7 +684,7 @@ sys_munmap(p, v, retval)
 	/*
 	 * doit!
 	 */
-	(void) uvm_unmap_remove(map, addr, addr + size, &dead_entries);
+	uvm_unmap_remove(map, addr, addr + size, &dead_entries);
 
 	vm_map_unlock(map);	/* and unlock */
 
@@ -1092,7 +1097,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 		if (*addr & PAGE_MASK)
 			return(EINVAL);
 		uvmflag |= UVM_FLAG_FIXED;
-		(void) uvm_unmap(map, *addr, *addr + size);	/* zap! */
+		uvm_unmap(map, *addr, *addr + size);	/* zap! */
 	}
 
 	/*
@@ -1215,7 +1220,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 				retval = KERN_RESOURCE_SHORTAGE;
 				vm_map_unlock(map);
 				/* unmap the region! */
-				(void) uvm_unmap(map, *addr, *addr + size);
+				uvm_unmap(map, *addr, *addr + size);
 				goto bad;
 			}
 			/*
@@ -1226,7 +1231,7 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 			    FALSE, UVM_LK_ENTER);
 			if (retval != KERN_SUCCESS) {
 				/* unmap the region! */
-				(void) uvm_unmap(map, *addr, *addr + size);
+				uvm_unmap(map, *addr, *addr + size);
 				goto bad;
 			}
 			return (0);

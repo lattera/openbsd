@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.13.2.8 2002/03/28 14:54:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.13.2.9 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.40 2000/11/17 11:39:39 mrg Exp $	*/
 
 /*
@@ -1152,7 +1152,7 @@ swap_off(p, sdp)
 	uvmexp.swpages -= sdp->swd_npages;
 
 	if (swaplist_find(sdp->swd_vp, 1) == NULL)
-		panic("swap_off: swapdev not in list\n");
+		panic("swap_off: swapdev not in list");
 	swaplist_trim();
 
 	/*
@@ -1227,7 +1227,9 @@ swstrategy(bp)
 	if (sdp == NULL) {
 		bp->b_error = EINVAL;
 		bp->b_flags |= B_ERROR;
+		s = splbio();
 		biodone(bp);
+		splx(s);
 		UVMHIST_LOG(pdhist, "  failed to get swap device", 0, 0, 0, 0);
 		return;
 	}
@@ -1504,7 +1506,7 @@ sw_reg_iodone(bp)
 	struct vndxfer *vnx = vbp->vb_xfer;
 	struct buf *pbp = vnx->vx_bp;		/* parent buffer */
 	struct swapdev	*sdp = vnx->vx_sdp;
-	int		s, resid;
+	int resid;
 	UVMHIST_FUNC("sw_reg_iodone"); UVMHIST_CALLED(pdhist);
 
 	UVMHIST_LOG(pdhist, "  vbp=%p vp=%p blkno=%x addr=%p",
@@ -1512,11 +1514,8 @@ sw_reg_iodone(bp)
 	UVMHIST_LOG(pdhist, "  cnt=%lx resid=%lx",
 	    vbp->vb_buf.b_bcount, vbp->vb_buf.b_resid, 0, 0);
 
-	/*
-	 * protect vbp at splbio and update.
-	 */
+	splassert(IPL_BIO);
 
-	s = splbio();
 	resid = vbp->vb_buf.b_bcount - vbp->vb_buf.b_resid;
 	pbp->b_resid -= resid;
 	vnx->vx_pending--;
@@ -1568,7 +1567,6 @@ sw_reg_iodone(bp)
 	 */
 	sdp->swd_tab.b_active--;
 	sw_reg_start(sdp);
-	splx(s);
 }
 
 
@@ -1722,7 +1720,7 @@ uvm_swap_free(startslot, nslots)
 #ifdef UVM_SWAP_ENCRYPT
 	{
 		int i;
-		if (swap_encrypt_initalized) {
+		if (swap_encrypt_initialized) {
 			/* Dereference keys */
 			for (i = 0; i < nslots; i++)
 				if (uvm_swap_needdecrypt(sdp, startslot + i))
@@ -1856,7 +1854,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 			encrypt = 1;
 	}
 
-	if (swap_encrypt_initalized  || encrypt) { 
+	if (swap_encrypt_initialized  || encrypt) { 
 		/*
 		 * we need to know the swap device that we are swapping to/from
 		 * to see if the pages need to be marked for decryption or
@@ -1987,7 +1985,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 		bp->b_dirtyend = npages << PAGE_SHIFT;
 #ifdef UVM_SWAP_ENCRYPT
 		/* mark the pages in the drum for decryption */
-		if (swap_encrypt_initalized)
+		if (swap_encrypt_initialized)
 			uvm_swap_markdecrypt(sdp, startslot, npages, encrypt);
 #endif
 		s = splbio();
@@ -2025,7 +2023,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/* 
 	 * decrypt swap
 	 */
-	if (swap_encrypt_initalized &&
+	if (swap_encrypt_initialized &&
 	    (bp->b_flags & B_READ) && !(bp->b_flags & B_ERROR)) {
 		int i;
 		caddr_t data = bp->b_data;

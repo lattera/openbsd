@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_bio.c,v 1.5.16.2 2001/10/31 03:32:13 nate Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_bio.c,v 1.5.16.3 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: lfs_bio.c,v 1.5 1996/02/09 22:28:49 christos Exp $	*/
 
 /*
@@ -129,7 +129,7 @@ lfs_bwrite(v)
 		if (bdirties.tqh_first == bp) {
 			if (timeout_triggered(&wakeup_timeout))
 				timeout_del(&wakeup_timeout);
-			if (!timeout_intialized(&wakeup_timeout))
+			if (!timeout_initialized(&wakeup_timeout))
 				timeout_set(&wakeup_timeout, wakeup, &bdirties);
 			timeout_add(&wakeup_timeout, 30 * hz);
 		}
@@ -164,7 +164,7 @@ lfs_flush()
 	     mp = mp->mnt_list.cqe_next) {
 		/* The lock check below is to avoid races with unmount. */
 		if (!strncmp(&mp->mnt_stat.f_fstypename[0], MOUNT_LFS, MFSNAMELEN) &&
-		    (mp->mnt_flag & (MNT_MLOCK|MNT_RDONLY|MNT_UNMOUNT)) == 0 &&
+		    (mp->mnt_flag & (MNT_RDONLY)) == 0 &&
 		    !((((struct ufsmount *)mp->mnt_data))->ufsmount_u.lfs)->lfs_dirops ) {
 			/*
 			 * We set the queue to 0 here because we are about to

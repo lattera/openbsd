@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.5.4.8 2002/03/28 14:54:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.5.4.9 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_extern.h,v 1.57 2001/03/09 01:02:12 chs Exp $	*/
 
 /*
@@ -589,7 +589,7 @@ int			uvm_coredump(struct proc *, struct vnode *,
 int			uvm_grow(struct proc *, vaddr_t);
 
 /* uvm_user.c */
-int			uvm_deallocate(vm_map_t, vaddr_t, vsize_t);
+void			uvm_deallocate(vm_map_t, vaddr_t, vsize_t);
 
 /* uvm_vnode.c */
 void			uvm_vnp_setsize(struct vnode *, voff_t);

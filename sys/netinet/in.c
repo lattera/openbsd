@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.6 2002/03/28 14:56:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in.c,v 1.15.2.7 2003/03/28 00:06:54 niklas Exp $	*/
 /*	$NetBSD: in.c,v 1.26 1996/02/13 23:41:39 christos Exp $	*/
 
 /*
  * Copyright (C) 2001 WIDE Project.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -97,7 +97,14 @@ static int in_scrubprefix(struct in_ifaddr *);
 #ifndef SUBNETSARELOCAL
 #define	SUBNETSARELOCAL	0
 #endif
+
+#ifndef HOSTZEROBROADCAST
+#define HOSTZEROBROADCAST 1
+#endif
+
 int subnetsarelocal = SUBNETSARELOCAL;
+int hostzeroisbroadcast = HOSTZEROBROADCAST;
+
 /*
  * Return 1 if an internet address is for a ``local'' host
  * (one to which we have a connection).  If subnetsarelocal
@@ -219,12 +226,13 @@ in_control(so, cmd, data, ifp)
 	struct sockaddr_in oldaddr;
 	int error, hostIsNew, maskIsNew;
 	int newifaddr;
+	int s;
 
 	switch (cmd) {
 	case SIOCALIFADDR:
 	case SIOCDLIFADDR:
 		if ((so->so_state & SS_PRIV) == 0)
-			return(EPERM);
+			return (EPERM);
 		/*fall through*/
 	case SIOCGLIFADDR:
 		if (!ifp)
@@ -266,6 +274,7 @@ in_control(so, cmd, data, ifp)
 			ia = (struct in_ifaddr *)
 				malloc(sizeof *ia, M_IFADDR, M_WAITOK);
 			bzero((caddr_t)ia, sizeof *ia);
+			s = splsoftnet();
 			TAILQ_INSERT_TAIL(&in_ifaddr, ia, ia_list);
 			TAILQ_INSERT_TAIL(&ifp->if_addrlist, (struct ifaddr *)ia,
 			    ifa_list);
@@ -281,6 +290,7 @@ in_control(so, cmd, data, ifp)
 			LIST_INIT(&ia->ia_multiaddrs);
 			if ((ifp->if_flags & IFF_LOOPBACK) == 0)
 				in_interfaces++;
+			splx(s);
 
 			newifaddr = 1;
 		} else
@@ -337,11 +347,13 @@ in_control(so, cmd, data, ifp)
 	case SIOCSIFDSTADDR:
 		if ((ifp->if_flags & IFF_POINTOPOINT) == 0)
 			return (EINVAL);
+		s = splsoftnet();
 		oldaddr = ia->ia_dstaddr;
 		ia->ia_dstaddr = *satosin(&ifr->ifr_dstaddr);
 		if (ifp->if_ioctl && (error = (*ifp->if_ioctl)
 					(ifp, SIOCSIFDSTADDR, (caddr_t)ia))) {
 			ia->ia_dstaddr = oldaddr;
+			splx(s);
 			return (error);
 		}
 		if (ia->ia_flags & IFA_ROUTE) {
@@ -350,6 +362,7 @@ in_control(so, cmd, data, ifp)
 			ia->ia_ifa.ifa_dstaddr = sintosa(&ia->ia_dstaddr);
 			rtinit(&(ia->ia_ifa), (int)RTM_ADD, RTF_HOST|RTF_UP);
 		}
+		splx(s);
 		break;
 
 	case SIOCSIFBRDADDR:
@@ -359,7 +372,11 @@ in_control(so, cmd, data, ifp)
 		break;
 
 	case SIOCSIFADDR:
+		s = splsoftnet();
 		error = in_ifinit(ifp, ia, satosin(&ifr->ifr_addr), 1);
+		if (!error)
+			dohooks(ifp->if_addrhooks, 0);
+		splx(s);
 		return error;
 
 	case SIOCSIFNETMASK:
@@ -371,6 +388,7 @@ in_control(so, cmd, data, ifp)
 		maskIsNew = 0;
 		hostIsNew = 1;
 		error = 0;
+		s = splsoftnet();
 		if (ia->ia_addr.sin_family == AF_INET) {
 			if (ifra->ifra_addr.sin_len == 0) {
 				ifra->ifra_addr = ia->ia_addr;
@@ -398,13 +416,25 @@ in_control(so, cmd, data, ifp)
 		if ((ifp->if_flags & IFF_BROADCAST) &&
 		    (ifra->ifra_broadaddr.sin_family == AF_INET))
 			ia->ia_broadaddr = ifra->ifra_broadaddr;
+		if (!error)
+			dohooks(ifp->if_addrhooks, 0);
+		splx(s);
 		return (error);
 
 	case SIOCDIFADDR:
+		/*
+		 * Even if the individual steps were safe, shouldn't
+		 * these kinds of changes happen atomically?  What 
+		 * should happen to a packet that was routed after
+		 * the scrub but before the other steps? 
+		 */
+		s = splsoftnet();
 		in_ifscrub(ifp, ia);
 		TAILQ_REMOVE(&ifp->if_addrlist, (struct ifaddr *)ia, ifa_list);
 		TAILQ_REMOVE(&in_ifaddr, ia, ia_list);
 		IFAFREE((&ia->ia_ifa));
+		dohooks(ifp->if_addrhooks, 0);
+		splx(s);
 		break;
 
 #ifdef MROUTING
@@ -646,6 +676,15 @@ in_ifinit(ifp, ia, sin, scrub)
 		return (error);
 	}
 	splx(s);
+
+	/*
+	 * How should a packet be routed during
+	 * an address change--and is it safe?
+	 * Is the "ifp" even in a consistent state?
+	 * Be safe for now.
+	 */
+	splassert(IPL_SOFTNET);
+
 	if (scrub) {
 		ia->ia_ifa.ifa_addr = sintosa(&oldaddr);
 		in_ifscrub(ifp, ia);
@@ -831,16 +870,11 @@ in_broadcast(in, ifp)
 	if (in.s_addr == INADDR_BROADCAST ||
 	    in.s_addr == INADDR_ANY)
 		return 1;
-	if (ifp && ((ifp->if_flags & IFF_BROADCAST) == 0))
-		return 0;
 
-	if (ifp == NULL)
-	{
+	if (ifp == NULL) {
 	  	if_first = ifnet.tqh_first;
 		if_target = 0;
-	}
-	else
-	{
+	} else {
 		if_first = ifp;
 		if_target = ifp->if_list.tqe_next;
 	}
@@ -851,34 +885,23 @@ in_broadcast(in, ifp)
 	 * with a broadcast address.
 	 * If ifp is NULL, check against all the interfaces.
 	 */
-        for (ifn = if_first; ifn != if_target; ifn = ifn->if_list.tqe_next)
-	  for (ifa = ifn->if_addrlist.tqh_first; ifa;
-	       ifa = ifa->ifa_list.tqe_next)
-	      if (!ifp)
-	      {
-		  if (ifa->ifa_addr->sa_family == AF_INET &&
-		      ((ia->ia_subnetmask != 0xffffffff &&
-		      (((ifn->if_flags & IFF_BROADCAST) &&
-			in.s_addr == ia->ia_broadaddr.sin_addr.s_addr) ||
-			 in.s_addr == ia->ia_subnet)) ||
-		       /*
-			* Check for old-style (host 0) broadcast.
-			*/
-		       (in.s_addr == ia->ia_netbroadcast.s_addr ||
-			in.s_addr == ia->ia_net)))
-		              return 1;
-	      }
-	      else
-		  if (ifa->ifa_addr->sa_family == AF_INET &&
-		      (((ifn->if_flags & IFF_BROADCAST) &&
-		      in.s_addr == ia->ia_broadaddr.sin_addr.s_addr) ||
-		       in.s_addr == ia->ia_netbroadcast.s_addr ||
-		       /*
-			* Check for old-style (host 0) broadcast.
-			*/
-		       in.s_addr == ia->ia_subnet ||
-		       in.s_addr == ia->ia_net))
-		              return 1;
+        for (ifn = if_first; ifn != if_target; ifn = ifn->if_list.tqe_next) {
+		if ((ifn->if_flags & IFF_BROADCAST) == 0)
+			continue;
+		for (ifa = ifn->if_addrlist.tqh_first; ifa;
+		    ifa = ifa->ifa_list.tqe_next)
+			if (ifa->ifa_addr->sa_family == AF_INET &&
+			    in.s_addr != ia->ia_addr.sin_addr.s_addr &&
+			    (in.s_addr == ia->ia_broadaddr.sin_addr.s_addr ||
+			     in.s_addr == ia->ia_netbroadcast.s_addr ||
+			     (hostzeroisbroadcast &&
+			      /*
+			       * Check for old-style (host 0) broadcast.
+			       */
+			      (in.s_addr == ia->ia_subnet ||
+			       in.s_addr == ia->ia_net))))
+				return 1;
+	}
 	return (0);
 #undef ia
 }

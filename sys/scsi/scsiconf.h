@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.5 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.6 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: scsiconf.h,v 1.35 1997/04/02 02:29:38 mycroft Exp $	*/
 
 /*
@@ -97,8 +97,8 @@ extern int scsi_autoconf;
 
 /*
  * These entrypoints are called by the high-end drivers to get services from
- * whatever low-end drivers they are attached to each adapter type has one of
- * these statically allocated.
+ * whatever low-end drivers they are attached to.  Each adapter type has one
+ * of these statically allocated.
  */
 struct scsi_adapter {
 	int		(*scsi_cmd)(struct scsi_xfer *);
@@ -166,7 +166,7 @@ struct scsi_link {
 #define	SDEV_MEDIA_LOADED 	0x0002	/* device figures are still valid */
 #define	SDEV_WAITING	 	0x0004	/* a process is waiting for this */
 #define	SDEV_OPEN	 	0x0008	/* at least 1 open session */
-#define	SDEV_DBX		0x00f0	/* debuging flags (scsi_debug.h) */
+#define	SDEV_DBX		0x00f0	/* debugging flags (scsi_debug.h) */
 #define	SDEV_EJECTING		0x0100	/* eject on device close */
 #define	SDEV_ATAPI		0x0200	/* device is ATAPI */
 #define	SDEV_2NDBUS		0x0400	/* device is a 'second' bus device */
@@ -211,11 +211,11 @@ struct scsi_inquiry_pattern {
 
 /*
  * One of these is allocated and filled in for each scsi bus.
- * it holds pointers to allow the scsi bus to get to the driver
- * That is running each LUN on the bus
- * it also has a template entry which is the prototype struct
- * supplied by the adapter driver, this is used to initialise
- * the others, before they have the rest of the fields filled in
+ * It holds pointers to allow the scsi bus to get to the driver
+ * that is running each LUN on the bus.
+ * It also has a template entry which is the prototype struct
+ * supplied by the adapter driver.  This is used to initialise
+ * the others, before they have the rest of the fields filled in.
  */
 struct scsibus_softc {
 	struct device sc_dev;
@@ -235,7 +235,7 @@ struct scsibus_attach_args {
 };
 
 /*
- * Each scsi transaction is fully described by one of these structures
+ * Each scsi transaction is fully described by one of these structures.
  * It includes information about the source of the command and also the
  * device and adapter for which the command is destined.
  * (via the scsi_link structure)
@@ -289,7 +289,7 @@ struct scsi_xfer {
 #define	SCSI_PRIVATE	0xf0000	/* private to each HBA flags */
 
 /*
- * Escape op codes.  This provides an extensible setup for operations
+ * Escape op-codes.  This provides an extensible setup for operations
  * that are not scsi commands.  They are intended for modal operations.
  */
 
@@ -309,16 +309,22 @@ struct scsi_xfer {
 #define XS_SHORTSENSE   6	/* Check the ATAPI sense for the error */
 #define XS_RESET	8	/* bus was reset; possible retry command  */
 
+/*
+ * Possible retries numbers for scsi_test_unit_ready()
+ */
+#define TEST_READY_RETRIES_DEFAULT	5
+#define TEST_READY_RETRIES_CD		10
+
 caddr_t scsi_inqmatch(struct scsi_inquiry_data *, caddr_t, int,
 	    int, int *);
 
 void	scsi_init(void);
 struct scsi_xfer *
 	scsi_get_xs(struct scsi_link *, int);
-void	scsi_free_xs(struct scsi_xfer *, int);
+void	scsi_free_xs(struct scsi_xfer *);
 int	scsi_execute_xs(struct scsi_xfer *);
 u_long	scsi_size(struct scsi_link *, int);
-int	scsi_test_unit_ready(struct scsi_link *, int);
+int	scsi_test_unit_ready(struct scsi_link *, int, int);
 int	scsi_change_def(struct scsi_link *, int);
 int	scsi_inquire(struct scsi_link *, struct scsi_inquiry_data *, int);
 int	scsi_prevent(struct scsi_link *, int, int);

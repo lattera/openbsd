@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_boot.c,v 1.11.6.3 2002/03/28 15:02:48 niklas Exp $ */
+/*	$OpenBSD: src/sys/nfs/nfs_boot.c,v 1.11.6.4 2003/03/28 00:08:46 niklas Exp $ */
 /*	$NetBSD: nfs_boot.c,v 1.26 1996/05/07 02:51:25 thorpej Exp $	*/
 
 /*
@@ -67,10 +67,11 @@ nfs_boot_init(nd, procp)
 }
 
 int
-nfs_boot_getfh(bpsin, key, ndmntp)
+nfs_boot_getfh(bpsin, key, ndmntp, retries)
 	struct sockaddr_in *bpsin;
 	char *key;
 	struct nfs_dlmount *ndmntp;
+	int retries;
 {
 	/* can not get here */
 	return (EOPNOTSUPP);

@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.1 2002/02/22 20:37:46 drahn Exp $ */
+/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_extattr.c,v 1.1.2.1 2003/03/28 00:08:47 niklas Exp $ */
 /*-
  * Copyright (c) 1999, 2000, 2001, 2002 Robert N. M. Watson
- * Copyright (c) 2002 Networks Associates Technologies, Inc.
+ * Copyright (c) 2002 Networks Associates Technology, Inc.
  * All rights reserved.
  *
  * This software was developed by Robert Watson for the TrustedBSD Project.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: ufs_extattr.c,v 1.44 2002/02/10 04:57:08 rwatson Exp $
+ * $FreeBSD: ufs_extattr.c,v 1.49 2002/04/01 21:31:12 jhb Exp $
  */
 /*
  * Developed by the TrustedBSD Project.
@@ -56,6 +56,7 @@
 #include <sys/dirent.h>
 #include <sys/extattr.h>
 #include <sys/sysctl.h>
+#include <sys/device.h>
 
 #include <ufs/ufs/dir.h>
 #include <ufs/ufs/extattr.h>
@@ -297,16 +298,15 @@ ufs_extattr_lookup(struct vnode *start_dvp, int lockparent, char *dirname,
 	FREE(cnp.cn_pnbuf, M_NAMEI);
 
 	if (error) {
-#if 0
-	/* -XXX does OpenBSD ufs_lookup always unlock on error? */
 		/*
 		 * Error condition, may have to release the lock on the parent
 		 * if ufs_lookup() didn't.
 		 */
-		if (!(cnp.cn_flags & PDIRUNLOCK) &&
-		    (lockparent == UE_GETDIR_LOCKPARENT_DONT))
+		if(lockparent == UE_GETDIR_LOCKPARENT_DONT)
 			VOP_UNLOCK(start_dvp, 0, p);
 
+#if 0
+	/* -XXX does OpenBSD ufs_lookup always unlock on error? */
 		/*
 		 * Check that ufs_lookup() didn't release the lock when we
 		 * didn't want it to.
@@ -463,12 +463,6 @@ ufs_extattr_iterate_directory(struct ufsmount *ump, struct vnode *dvp,
 			} else if (attr_vp == dvp) {
 				vrele(attr_vp);
 			} else if (attr_vp->v_type != VREG) {
-/*
- * Eventually, this will be uncommented, but in the mean time, the ".."
- * entry causes unnecessary console warnings.
-				printf("ufs_extattr_iterate_directory: "
-				    "%s not VREG\n", dp->d_name);
-*/
 				vput(attr_vp);
 			} else {
 				error = ufs_extattr_enable_with_open(ump,
@@ -478,14 +472,17 @@ ufs_extattr_iterate_directory(struct ufsmount *ump, struct vnode *dvp,
 					printf("ufs_extattr_iterate_directory: "
 					    "enable %s %d\n", dp->d_name,
 					    error);
-				} else {
+				}
 /*
  * While it's nice to have some visual output here, skip for the time-being.
  * Probably should be enabled by -v at boot.
-					printf("Autostarted %s\n", dp->d_name);
- */
-printf("Autostarted %s\n", dp->d_name); /* XXX - debug*/
+ * NOT yet - XXX
+
+				else if (autoconf_verbose) {
+					printf("UFS autostarted EA %s\n",
+					    dp->d_name);
 				}
+*/
 			}
 			dp = (struct dirent *) ((char *)dp + dp->d_reclen);
 			if (dp >= edp)
@@ -721,7 +718,7 @@ ufs_extattr_disable(struct ufsmount *ump, int attrnamespace,
 
 	uele = ufs_extattr_find_attr(ump, attrnamespace, attrname);
 	if (!uele)
-		return (ENOENT);
+		return (ENOATTR);
 
 	LIST_REMOVE(uele, uele_entries);
 
@@ -847,6 +844,7 @@ ufs_extattr_credcheck(struct vnode *vp, struct ufs_extattr_list_entry *uele,
 	 */
 	switch (uele->uele_attrnamespace) {
 	case EXTATTR_NAMESPACE_SYSTEM:
+		/* Potentially should be: return (EPERM); */
 		return (suser(cred, &p->p_acflag));
 	case EXTATTR_NAMESPACE_USER:
 		return (VOP_ACCESS(vp, access, cred, p));
@@ -914,8 +912,7 @@ ufs_extattr_get(struct vnode *vp, int attrnamespace, const char *name,
 
 	attribute = ufs_extattr_find_attr(ump, attrnamespace, name);
 	if (!attribute)
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		return (ENOENT);
+		return (ENOATTR);
 
 	if ((error = ufs_extattr_credcheck(vp, attribute, cred, p, IREAD)))
 		return (error);
@@ -970,8 +967,7 @@ ufs_extattr_get(struct vnode *vp, int attrnamespace, const char *name,
 
 	/* Defined? */
 	if ((ueh.ueh_flags & UFS_EXTATTR_ATTR_FLAG_INUSE) == 0) {
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		error = ENOENT;
+		error = ENOATTR;
 		goto vopunlock_exit;
 	}
 
@@ -985,8 +981,7 @@ ufs_extattr_get(struct vnode *vp, int attrnamespace, const char *name,
 		 */
 		printf("ufs_extattr_get: inode number inconsistency (%d, %d)\n",
 		    ueh.ueh_i_gen, ip->i_ffs_gen);
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		error = ENOENT;
+		error = ENOATTR;
 		goto vopunlock_exit;
 	}
 
@@ -1093,8 +1088,7 @@ ufs_extattr_set(struct vnode *vp, int attrnamespace, const char *name,
 
 	attribute = ufs_extattr_find_attr(ump, attrnamespace, name);
 	if (!attribute)
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		return (ENOENT);
+		return (ENOATTR);
 
 	if ((error = ufs_extattr_credcheck(vp, attribute, cred, p, IWRITE)))
 		return (error);
@@ -1205,8 +1199,7 @@ ufs_extattr_rm(struct vnode *vp, int attrnamespace, const char *name,
 
 	attribute = ufs_extattr_find_attr(ump, attrnamespace, name);
 	if (!attribute)
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		return (ENOENT);
+		return (ENOATTR);
 
 	if ((error = ufs_extattr_credcheck(vp, attribute, cred, p, IWRITE)))
 		return (error);
@@ -1251,8 +1244,7 @@ ufs_extattr_rm(struct vnode *vp, int attrnamespace, const char *name,
 
 	/* Defined? */
 	if ((ueh.ueh_flags & UFS_EXTATTR_ATTR_FLAG_INUSE) == 0) {
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		error = ENOENT;
+		error = ENOATTR;
 		goto vopunlock_exit;
 	}
 
@@ -1266,8 +1258,7 @@ ufs_extattr_rm(struct vnode *vp, int attrnamespace, const char *name,
 		 */
 		printf("ufs_extattr_rm: inode number inconsistency (%d, %d)\n",
 		    ueh.ueh_i_gen, ip->i_ffs_gen);
-		/* XXX: ENOENT here will eventually be ENOATTR. */
-		error = ENOENT;
+		error = ENOATTR;
 		goto vopunlock_exit;
 	}
 

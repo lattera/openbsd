@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_base.c,v 1.25.4.6 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_base.c,v 1.25.4.7 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: scsi_base.c,v 1.43 1997/04/02 02:29:36 mycroft Exp $	*/
 
 /*
@@ -111,7 +111,7 @@ scsi_get_xs(sc_link, flags)
 	}
 	SC_DEBUG(sc_link, SDEV_DB3, ("calling pool_get\n"));
 	xs = pool_get(&scsi_xfer_pool,
-	    ((flags & SCSI_NOSLEEP) != 0 ? M_NOWAIT : M_WAITOK));
+	    ((flags & SCSI_NOSLEEP) != 0 ? PR_NOWAIT : PR_WAITOK));
 	if (xs != NULL) {
 		sc_link->openings--;
 		xs->flags = flags;
@@ -132,11 +132,12 @@ scsi_get_xs(sc_link, flags)
  * If another process is waiting for an xs, do a wakeup, let it proceed
  */
 void 
-scsi_free_xs(xs, flags)
+scsi_free_xs(xs)
 	struct scsi_xfer *xs;
-	int flags;
 {
 	struct scsi_link *sc_link = xs->sc_link;
+
+	splassert(IPL_BIO);
 
 	SC_DEBUG(sc_link, SDEV_DB3, ("scsi_free_xs\n"));
 
@@ -245,8 +246,9 @@ scsi_size(sc_link, flags)
  * Get scsi driver to send a "are you ready?" command
  */
 int 
-scsi_test_unit_ready(sc_link, flags)
+scsi_test_unit_ready(sc_link, retries, flags)
 	struct scsi_link *sc_link;
+	int retries;
 	int flags;
 {
 	struct scsi_test_unit_ready scsi_cmd;
@@ -255,7 +257,7 @@ scsi_test_unit_ready(sc_link, flags)
 	scsi_cmd.opcode = TEST_UNIT_READY;
 
 	return scsi_scsi_cmd(sc_link, (struct scsi_generic *) &scsi_cmd,
-	    sizeof(scsi_cmd), 0, 0, 5, 10000, NULL, flags);
+	    sizeof(scsi_cmd), 0, 0, retries, 10000, NULL, flags);
 }
 
 /*
@@ -277,7 +279,7 @@ scsi_change_def(sc_link, flags)
 }
 
 /*
- * Do a scsi operation asking a device what it is
+ * Do a scsi operation asking a device what it is.
  * Use the scsi_cmd routine in the switch table.
  */
 int 
@@ -307,6 +309,9 @@ scsi_prevent(sc_link, type, flags)
 	int type, flags;
 {
 	struct scsi_prevent scsi_cmd;
+
+	if (sc_link->quirks & ADEV_NODOORLOCK)
+		return 0;
 
 	bzero(&scsi_cmd, sizeof(scsi_cmd));
 	scsi_cmd.opcode = PREVENT_ALLOW;
@@ -348,6 +353,8 @@ scsi_done(xs)
 	struct buf *bp;
 	int error;
 
+	splassert(IPL_BIO);
+
 	SC_DEBUG(sc_link, SDEV_DB2, ("scsi_done\n"));
 #ifdef	SCSIDEBUG
 	if ((sc_link->flags & SDEV_DB1) != 0)
@@ -364,7 +371,7 @@ scsi_done(xs)
 		scsi_user_done(xs); /* to take a copy of the sense etc. */
 		SC_DEBUG(sc_link, SDEV_DB3, ("returned from user done()\n "));
 
-		scsi_free_xs(xs, SCSI_NOSLEEP); /* restarts queue too */
+		scsi_free_xs(xs); /* restarts queue too */
 		SC_DEBUG(sc_link, SDEV_DB3, ("returning to adapter\n"));
 		return;
 	}
@@ -417,7 +424,7 @@ retry:
 		 */
 		(*sc_link->device->done)(xs);
 	}
-	scsi_free_xs(xs, SCSI_NOSLEEP);
+	scsi_free_xs(xs);
 	if (bp)
 		biodone(bp);
 }
@@ -506,6 +513,7 @@ scsi_scsi_cmd(sc_link, scsi_cmd, cmdlen, data_addr, datalen,
 {
 	struct scsi_xfer *xs;
 	int error;
+	int s;
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("scsi_cmd\n"));
 
@@ -521,11 +529,13 @@ scsi_scsi_cmd(sc_link, scsi_cmd, cmdlen, data_addr, datalen,
 	if ((error = scsi_execute_xs(xs)) == EJUSTRETURN)
 		return 0;
 
+	s = splbio();
 	/*
 	 * we have finished with the xfer stuct, free it and
 	 * check if anyone else needs to be started up.
 	 */
-	scsi_free_xs(xs, flags);
+	scsi_free_xs(xs);
+	splx(s);
 	return error;
 }
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_ipcomp.h,v 1.3.4.1 2001/10/31 03:29:03 nate Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_ipcomp.h,v 1.3.4.2 2003/03/28 00:06:54 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Jacques Bernard-Gundol (jj@wabbitt.org)
@@ -50,6 +50,7 @@ struct ipcompstat {
 					 * IP_MAXPACKET */
 	u_int32_t	ipcomps_pdrops;	/* Packet blocked due to policy */
 	u_int32_t	ipcomps_crypto;	/* "Crypto" processing failure */
+	u_int32_t	ipcomps_minlen;	/* packets too short for compress */
 };
 
 /* IPCOMP header */
@@ -76,6 +77,6 @@ struct ipcomp {
 
 #ifdef _KERNEL
 extern int ipcomp_enable;
-struct ipcompstat ipcompstat;
+extern struct ipcompstat ipcompstat;
 #endif				/* _KERNEL */
 #endif	/* _NETINET_IP_IPCOMP_H_ */

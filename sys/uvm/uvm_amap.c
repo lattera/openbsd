@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.7 2002/03/28 14:54:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.8 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_amap.c,v 1.27 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -954,7 +954,17 @@ amap_pp_adjref(amap, curslot, slotlen, adjval)
 		}
 		prevlcv = lcv;
 	}
-	pp_getreflen(ppref, prevlcv, &prevref, &prevlen);
+	if (lcv != 0)
+		pp_getreflen(ppref, prevlcv, &prevref, &prevlen);
+	else {
+		/* Ensure that the "prevref == ref" test below always
+		 * fails, since we're starting from the beginning of
+		 * the ppref array; that is, there is no previous
+		 * chunk.  
+		 */
+		prevref = -1;
+		prevlen = 0;
+	}
 
 	/*
 	 * now adjust reference counts in range.  merge the first

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_ip.c,v 1.7.2.3 2001/10/31 03:29:04 nate Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_ip.c,v 1.7.2.4 2003/03/28 00:06:55 niklas Exp $	*/
 
 /*-
  *
@@ -300,7 +300,7 @@ ipxipoutput(ifp, m, dst, rt)
 	/*
 	 * Output final datagram.
 	 */
-	error =  (ip_output(m, (struct mbuf *)0, ro, SO_BROADCAST, NULL));
+	error = ip_output(m, NULL, ro, SO_BROADCAST, NULL, NULL, NULL);
 	if (error) {
 		ifn->ifen_ifnet.if_oerrors++;
 		ifn->ifen_ifnet.if_ierrors = error;

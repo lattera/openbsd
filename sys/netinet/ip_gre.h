@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.1.2.2 2002/03/28 14:56:45 niklas Exp $ */
+/*      $OpenBSD: src/sys/netinet/ip_gre.h,v 1.1.2.3 2003/03/28 00:06:54 niklas Exp $ */
 /*	$NetBSD: ip_gre.h,v 1.3 1998/10/07 23:33:02 thorpej Exp $ */
 
 /*
@@ -23,7 +23,7 @@
  * 4. Neither the name of The NetBSD Foundation nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
- *    
+ *
  * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -40,16 +40,24 @@
 #ifndef _NETINET_IP_GRE_H_
 #define _NETINET_IP_GRE_H_
 
+/* Protocol number for Cisco's WCCP
+ * The Internet Draft is:
+ *   draft-forster-wrec-wccp-v1-00.txt
+ */
+#define GREPROTO_WCCP	0x883e
+
 /*
  * Names for GRE sysctl objects
  */
 #define GRECTL_ALLOW    1		/* accept incoming GRE packets */
-#define GRECTL_MAXID    2
- 
+#define GRECTL_WCCP     2		/* accept WCCPv1-style GRE packets */
+#define GRECTL_MAXID    3
+
 #define GRECTL_NAMES { \
         { 0, 0 }, \
         { "allow", CTLTYPE_INT }, \
-} 
+        { "wccp", CTLTYPE_INT }, \
+}
 
 /*
  * Names for MobileIP sysctl objects

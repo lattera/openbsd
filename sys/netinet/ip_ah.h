@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.3 2001/07/04 10:54:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ah.h,v 1.24.2.4 2003/03/28 00:06:54 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
- * Angelos D. Keromytis (kermit@csd.uch.gr) and 
+ * Angelos D. Keromytis (kermit@csd.uch.gr) and
  * Niels Provos (provos@physnet.uni-hamburg.de).
  *
  * The original version of this code was written by John Ioannidis
@@ -22,7 +22,7 @@
  * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all copies of any software which is or includes a copy or
- * modification of this software. 
+ * modification of this software.
  * You may use this code under the GNU public license if you so wish. Please
  * contribute changes back to the authors under this freer than GPL license
  * so that we may further the use of strong encryption without limitations to
@@ -88,6 +88,6 @@ struct ah
 
 #ifdef _KERNEL
 extern int ah_enable;
-struct ahstat ahstat;
+extern struct ahstat ahstat;
 #endif /* _KERNEL */
 #endif /* _NETINET_IP_AH_H_ */

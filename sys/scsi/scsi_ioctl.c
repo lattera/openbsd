@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.4 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_ioctl.c,v 1.10.4.5 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: scsi_ioctl.c,v 1.23 1996/10/12 23:23:17 christos Exp $	*/
 
 /*
@@ -125,6 +125,8 @@ scsi_user_done(xs)
 	struct scsi_ioctl *si;
 	scsireq_t *screq;
 	struct scsi_link *sc_link;
+
+	splassert(IPL_BIO);
 
 	bp = xs->bp;
 	if (!bp) {	/* ALL user requests must have a buf */
@@ -267,7 +269,9 @@ scsistrategy(bp)
 bad:
 	bp->b_flags |= B_ERROR;
 	bp->b_error = error;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 }
 
 /*

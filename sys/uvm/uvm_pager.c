@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.4.4.7 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.4.4.8 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_pager.c,v 1.36 2000/11/27 18:26:41 chs Exp $	*/
 
 /*
@@ -226,7 +226,7 @@ uvm_pagermapout(kva, npages)
 	}
 
 	vm_map_lock(pager_map);
-	(void) uvm_unmap_remove(pager_map, kva, kva + size, &entries);
+	uvm_unmap_remove(pager_map, kva, kva + size, &entries);
 	simple_lock(&pager_map_wanted_lock);
 	if (pager_map_wanted) {
 		pager_map_wanted = FALSE;
@@ -745,6 +745,8 @@ uvm_aio_biodone1(bp)
 {
 	struct buf *mbp = bp->b_private;
 
+	splassert(IPL_BIO);
+
 	KASSERT(mbp != bp);
 	if (bp->b_flags & B_ERROR) {
 		mbp->b_flags |= B_ERROR;
@@ -769,6 +771,8 @@ void
 uvm_aio_biodone(bp)
 	struct buf *bp;
 {
+	splassert(IPL_BIO);
+
 	/* reset b_iodone for when this is a single-buf i/o. */
 	bp->b_iodone = uvm_aio_aiodone;
 
@@ -790,10 +794,12 @@ uvm_aio_aiodone(bp)
 	int npages = bp->b_bufsize >> PAGE_SHIFT;
 	struct vm_page *pg, *pgs[npages];
 	struct uvm_object *uobj;
-	int s, i, error;
+	int i, error;
 	boolean_t write, swap;
 	UVMHIST_FUNC("uvm_aio_aiodone"); UVMHIST_CALLED(ubchist);
 	UVMHIST_LOG(ubchist, "bp %p", bp, 0,0,0);
+
+	splassert(IPL_BIO);
 
 	error = (bp->b_flags & B_ERROR) ? (bp->b_error ? bp->b_error : EIO) : 0;
 	write = (bp->b_flags & B_READ) == 0;
@@ -877,12 +883,10 @@ uvm_aio_aiodone(bp)
 #ifdef UVM_SWAP_ENCRYPT
 freed:
 #endif
-	s = splbio();
 	if (write && (bp->b_flags & B_AGE) != 0 && bp->b_vp != NULL) {
 		vwakeup(bp->b_vp);
 	}
 	pool_put(&bufpool, bp);
-	splx(s);
 }
 
 /*

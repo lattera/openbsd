@@ -1,15 +1,15 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.5 2002/03/28 14:56:45 niklas Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.6 2003/03/28 00:06:54 niklas Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
  * This code was written by Angelos D. Keromytis for OpenBSD in October 1999.
  *
  * Copyright (C) 1999-2001 Angelos D. Keromytis.
- *	
+ *
  * Permission to use, copy, and modify this software with or without fee
  * is hereby granted, provided that this entire notice is included in
  * all copies of any software which is or includes a copy or
- * modification of this software. 
+ * modification of this software.
  * You may use this code under the GNU public license if you so wish. Please
  * contribute changes back to the authors under this freer than GPL license
  * so that we may further the use of strong encryption without limitations to
@@ -23,7 +23,7 @@
  */
 
 /*
- * Ethernet-inside-IP processing
+ * Ethernet-inside-IP processing (RFC3378).
  */
 
 #include "bridge.h"
@@ -36,6 +36,7 @@
 
 #include <net/if.h>
 #include <net/route.h>
+#include <net/bpf.h>
 
 #ifdef INET
 #include <netinet/in.h>
@@ -51,6 +52,7 @@
 #include <net/if_gif.h>
 
 #include "gif.h"
+#include "bpfilter.h"
 
 #ifdef ENCDEBUG
 #define DPRINTF(x)	if (encdebug) printf x
@@ -69,7 +71,7 @@ struct etheripstat etheripstat;
 /*
  * etherip_input gets called when we receive an encapsulated packet,
  * either because we got it at a real interface, or because AH or ESP
- * were being used in tunnel mode (in which case the rcvif element will 
+ * were being used in tunnel mode (in which case the rcvif element will
  * contain the address of the encX interface associated with the tunnel.
  */
 
@@ -155,7 +157,6 @@ etherip_input(struct mbuf *m, ...)
 		    sizeof(struct etherip_header))) == NULL) {
 			DPRINTF(("etherip_input(): m_pullup() failed\n"));
 			etheripstat.etherip_adrops++;
-			m_freem(m);
 			return;
 		}
 	}
@@ -207,7 +208,7 @@ etherip_input(struct mbuf *m, ...)
 	m_copydata(m, 0, sizeof(eh), (void *) &eh);
 
 	/* Reset the flags based on the inner packet */
-	m->m_flags &= ~(M_BCAST|M_MCAST|M_AUTH|M_CONF);
+	m->m_flags &= ~(M_BCAST|M_MCAST|M_AUTH|M_CONF|M_AUTH_AH);
 	if (eh.ether_dhost[0] & 1) {
 		if (bcmp((caddr_t) etherbroadcastaddr,
 		    (caddr_t)eh.ether_dhost, sizeof(etherbroadcastaddr)) == 0)
@@ -240,6 +241,18 @@ etherip_input(struct mbuf *m, ...)
 		m_freem(m);
 		return;
 	}
+#if NBPFILTER > 0
+	if (gif_softc[i].gif_if.if_bpf) {
+		struct mbuf m0;
+		u_int32_t af = sdst.sa.sa_family;
+
+		m0.m_next = m;
+		m0.m_len = 4;
+		m0.m_data = (char *)&af;
+
+		bpf_mtap(gif_softc[i].gif_if.if_bpf, &m0);
+	}
+#endif
 
 #if NBRIDGE > 0
 	/*
@@ -369,7 +382,7 @@ etherip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		ipo->ip_sum = 0;
 		ipo->ip_id = htons(ip_randomid());
 
-		/* 
+		/*
 		 * We should be keeping tunnel soft-state and send back
 		 * ICMPs as needed.
 		 */
@@ -383,6 +396,7 @@ etherip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		ip6 = mtod(m, struct ip6_hdr *);
 
 		ip6->ip6_flow = 0;
+		ip6->ip6_nxt = IPPROTO_ETHERIP;
 		ip6->ip6_vfc &= ~IPV6_VERSION_MASK;
 		ip6->ip6_vfc |= IPV6_VERSION;
 		ip6->ip6_plen = htons(m->m_pkthdr.len);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_disk.h,v 1.8.4.2 2001/07/04 11:00:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_disk.h,v 1.8.4.3 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: scsi_disk.h,v 1.10 1996/07/05 16:19:05 christos Exp $	*/
 
 /*
@@ -149,7 +149,6 @@ struct scsi_reassign_blocks {
  * XXX Is this also used by ATAPI?
  */
 #define	REZERO_UNIT		0x01
-#define SCSI_REZERO_UNIT	0x01
 struct scsi_rezero_unit {
 	u_int8_t opcode;
 	u_int8_t byte2;
@@ -213,24 +212,15 @@ struct scsi_synchronize_cache {
 
 
 /*
- * Opcodes
+ * Disk specific opcodes
  */
 #define	REASSIGN_BLOCKS		0x07
 #define	READ_COMMAND		0x08
-#define SCSI_READ_COMMAND	0x08
 #define WRITE_COMMAND		0x0a
-#define SCSI_WRITE_COMMAND	0x0a
-#define MODE_SELECT		0x15
-#define SCSI_MODE_SELECT	0x15
-#define MODE_SENSE		0x1a
-#define START_STOP		0x1b
-#define PREVENT_ALLOW		0x1e
 #define	READ_CAPACITY		0x25
 #define	READ_BIG		0x28
 #define WRITE_BIG		0x2a
 #define	SYNCHRONIZE_CACHE	0x35
-#define SCSI_MODE_SELECT_BIG	0x55
-#define SCSI_MODE_SENSE_BIG	0x5a
 
 
 struct scsi_read_cap_data {
@@ -325,6 +315,20 @@ union scsi_disk_pages {
 		u_int8_t reserved3;
 		u_int8_t reserved4;
 	} flex_geometry;
+	struct page_reduced_geometry {
+		u_int8_t pg_code;	/* page code (should be 6) */
+		u_int8_t pg_length;	/* page length (should be 0x0B) */
+		u_int8_t wcd;		/* bit 0 = write cache disable */
+		u_int8_t bytes_s[2];	/* bytes per sector */
+		u_int8_t sectors[5];	/* total number of sectors */
+		u_int8_t pow_perf;	/* power/performance level */
+		u_int8_t flags;		/* various */
+#define	LOCK_DISABLED	0x1
+#define	FORMAT_DISABLED	0x2
+#define	WRITE_DISABLED	0x4
+#define	READ_DISABLED	0x8
+		u_int8_t reserved;
+	} reduced_geometry;
 };
 
 #endif /* _SCSI_SCSI_DISK_H */

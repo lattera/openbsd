@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.3 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/if_x25subr.c,v 1.4.2.4 2003/03/28 00:06:55 niklas Exp $	*/
 /*	$NetBSD: if_x25subr.c,v 1.13 1996/05/09 22:29:25 scottr Exp $	*/
 
 /*
@@ -771,7 +771,13 @@ pk_rtattach(so, m0)
 	((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 #define transfer_sockbuf(s, f, l) \
 	while ((m = (s)->sb_mb) != NULL) \
-		{(s)->sb_mb = m->m_act; m->m_act = 0; sbfree((s), m); f;}
+		{ \
+			(s)->sb_mb = m->m_nextpkt; \
+			SB_EMPTY_FIXUP((s)); \
+			m->m_nextpkt = 0; \
+			sbfree((s), m); \
+			f; \
+		}
 
 	if (rt)
 		rt->rt_refcnt--;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.3 2002/03/28 14:54:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_vfsops.c,v 1.12.2.4 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: lfs_vfsops.c,v 1.11 1996/03/25 12:53:35 pk Exp $	*/
 
 /*
@@ -114,7 +114,7 @@ lfs_mount(mp, path, data, ndp, p)
 		return (error);
 
 	/* Until LFS can do NFS right.		XXX */
-	if (args.export.ex_flags & MNT_EXPORTED)
+	if (args.export_info.ex_flags & MNT_EXPORTED)
 		return (EINVAL);
 
 	/*
@@ -144,7 +144,8 @@ lfs_mount(mp, path, data, ndp, p)
 			/*
 			 * Process export requests.
 			 */
-			return (vfs_export(mp, &ump->um_export, &args.export));
+			return (vfs_export(mp, &ump->um_export, 
+			    &args.export_info));
 		}
 	}
 	/*

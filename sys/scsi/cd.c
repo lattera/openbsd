@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.5 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/cd.c,v 1.51.2.6 2003/03/28 00:08:47 niklas Exp $	*/
 /*	$NetBSD: cd.c,v 1.100 1997/04/02 02:29:30 mycroft Exp $	*/
 
 /*
@@ -353,10 +353,13 @@ cdopen(dev, flag, fmt, p)
 			goto bad3;
 		}
 	} else {
-		/* Check that it is still responding and ok. */
-		error = scsi_test_unit_ready(sc_link,
-		    SCSI_IGNORE_ILLEGAL_REQUEST |
-		    SCSI_IGNORE_MEDIA_CHANGE | SCSI_IGNORE_NOT_READY);
+		/*
+		 * Check that it is still responding and ok.
+		 * Drive can be in progress of loading media so use
+		 * increased retries number and don't ignore NOT_READY.
+		 */
+		error = scsi_test_unit_ready(sc_link, TEST_READY_RETRIES_CD,
+		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE);
 		if (error) {
 			if (part != RAW_PART || fmt != S_IFCHR)
 				goto bad3;
@@ -504,7 +507,7 @@ cdstrategy(bp)
 	struct buf *bp;
 {
 	struct cd_softc *cd;
-	int opri;
+	int s;
 
 	if ((cd = cdlookup(CDUNIT(bp->b_dev))) == NULL) {
 		bp->b_error = ENXIO;
@@ -545,7 +548,7 @@ cdstrategy(bp)
 	    (cd->flags & (CDF_WLABEL|CDF_LABELLING)) != 0) <= 0)
 		goto done;
 
-	opri = splbio();
+	s = splbio();
 
 	/*
 	 * Place it in the queue of disk activities for this disk
@@ -559,7 +562,7 @@ cdstrategy(bp)
 	cdstart(cd);
 	
 	device_unref(&cd->sc_dev);
-	splx(opri);
+	splx(s);
 	return;
 
 bad:
@@ -569,7 +572,9 @@ done:
 	 * Correctly set the buf to indicate a completed xfer
 	 */
 	bp->b_resid = bp->b_bcount;
+	s = splbio();
 	biodone(bp);
+	splx(s);
 	if (cd != NULL)
 		device_unref(&cd->sc_dev);
 }
@@ -603,6 +608,8 @@ cdstart(v)
 	struct scsi_generic *cmdp;
 	int blkno, nblks, cmdlen;
 	struct partition *p;
+
+	splassert(IPL_BIO);
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("cdstart "));
 	/*
@@ -1235,7 +1242,7 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	lp->d_npartitions = RAW_PART + 1;
 
 	/*
-	 * Read the TOC and loop throught the individual tracks and lay them
+	 * Read the TOC and loop through the individual tracks and lay them
 	 * out in our disklabel.  If there is a data track, call the generic
 	 * disklabel read routine.  XXX should we move all data tracks up front
 	 * before any other tracks?
@@ -1302,7 +1309,7 @@ cdgetdisklabel(dev, cd, lp, clp, spoofonly)
 	if (i < MAXPARTITIONS)
 		bzero(&lp->d_partitions[i], sizeof(lp->d_partitions[i]));
 
-	lp->d_npartitions = max(RAW_PART, i - 1) + 1;
+	lp->d_npartitions = max((RAW_PART + 1), i);
 
 done:
 	if (toc)
@@ -1399,6 +1406,7 @@ cd_play_tracks(cd, strack, sindex, etrack, eindex)
 	int strack, sindex, etrack, eindex;
 {
 	struct cd_toc toc;
+	u_char endf, ends, endm;
 	int error;
 
 	if (!etrack)
@@ -1417,12 +1425,26 @@ cd_play_tracks(cd, strack, sindex, etrack, eindex)
 	if (strack < 0)
 		return (EINVAL);
 
+	/*
+	 * The track ends one frame before the next begins.  The last track
+	 * is taken care of by the leadoff track.
+	 */
+	endm = toc.entries[etrack].addr.msf.minute;
+	ends = toc.entries[etrack].addr.msf.second;
+	endf = toc.entries[etrack].addr.msf.frame;
+	if (endf-- == 0) {
+		endf = CD_FRAMES - 1;
+		if (ends-- == 0) {
+			ends = CD_SECS - 1;
+			if (endm-- == 0)
+				return (EINVAL);
+		}
+	}
+
 	return (cd_play_msf(cd, toc.entries[strack].addr.msf.minute,
 	    toc.entries[strack].addr.msf.second,
 	    toc.entries[strack].addr.msf.frame,
-	    toc.entries[etrack].addr.msf.minute,
-	    toc.entries[etrack].addr.msf.second,
-	    toc.entries[etrack].addr.msf.frame));
+	    endm, ends, endf));
 }
 
 /*

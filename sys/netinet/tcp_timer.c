@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.4 2002/03/28 14:56:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.5 2003/03/28 00:06:55 niklas Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -204,7 +204,7 @@ tcp_timer_rexmt(void *arg)
 	if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
 		tp->t_rxtshift = TCP_MAXRXTSHIFT;
 		tcpstat.tcps_timeoutdrop++;
-		tp = tcp_drop(tp, tp->t_softerror ?
+		(void)tcp_drop(tp, tp->t_softerror ?
 		    tp->t_softerror : ETIMEDOUT);
 		goto out;
 	}
@@ -217,7 +217,7 @@ tcp_timer_rexmt(void *arg)
 	    tp->t_rttmin, TCPTV_REXMTMAX);
 	TCP_TIMER_ARM(tp, TCPT_REXMT, tp->t_rxtcur);
 
-	/* 
+	/*
 	 * If we are losing and we are trying path MTU discovery,
 	 * try turning it off.  This will avoid black holes in
 	 * the network which suppress or fail to send "packet
@@ -299,6 +299,15 @@ tcp_timer_rexmt(void *arg)
 	 * If timing a segment in this window, stop the timer.
 	 */
 	tp->t_rtttime = 0;
+#ifdef TCP_ECN
+	/*
+	 * if ECN is enabled, there might be a broken firewall which
+	 * blocks ecn packets.  fall back to non-ecn.
+	 */
+	if ((tp->t_state == TCPS_SYN_SENT || tp->t_state == TCPS_SYN_RECEIVED)
+	    && tcp_do_ecn && !(tp->t_flags & TF_DISABLE_ECN))
+		tp->t_flags |= TF_DISABLE_ECN;
+#endif
 	/*
 	 * Close the congestion window down to one segment
 	 * (we'll open it by one segment for each ack we get).
@@ -312,7 +321,7 @@ tcp_timer_rexmt(void *arg)
 	 * size increase exponentially with time.  If the
 	 * window is larger than the path can handle, this
 	 * exponential growth results in dropped packet(s)
-	 * almost immediately.  To get more time between 
+	 * almost immediately.  To get more time between
 	 * drops but still "push" the network to take advantage
 	 * of improving conditions, we switch from exponential
 	 * to linear window opening at some threshhold size.
@@ -330,6 +339,13 @@ tcp_timer_rexmt(void *arg)
 		tp->snd_cwnd = tp->t_maxseg;
 		tp->snd_ssthresh = win * tp->t_maxseg;
 		tp->t_dupacks = 0;
+#ifdef TCP_ECN
+		tp->snd_last = tp->snd_max;
+		tp->t_flags |= TF_SEND_CWR;
+#endif
+#if 1 /* TCP_ECN */
+		tcpstat.tcps_cwr_timeout++;
+#endif
 	}
 	(void) tcp_output(tp);
 

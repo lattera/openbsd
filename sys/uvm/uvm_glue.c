@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.9 2002/03/28 14:54:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.10 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -377,12 +377,13 @@ uvm_swapin(p)
 	struct proc *p;
 {
 	vaddr_t addr;
-	int s;
+	int rv, s;
 
 	addr = (vaddr_t)p->p_addr;
 	/* make P_INMEM true */
-	uvm_fault_wire(kernel_map, addr, addr + USPACE,
-	    VM_PROT_READ | VM_PROT_WRITE);
+	if ((rv = uvm_fault_wire(kernel_map, addr, addr + USPACE,
+	    VM_PROT_READ | VM_PROT_WRITE)) != KERN_SUCCESS)
+		panic("uvm_swapin: uvm_fault_wire failed: %d", rv);
 
 	/*
 	 * Some architectures need to be notified when the user area has
@@ -450,7 +451,7 @@ loop:
 	 * we have found swapped out process which we would like to bring
 	 * back in.
 	 *
-	 * XXX: this part is really bogus cuz we could deadlock on memory
+	 * XXX: this part is really bogus because we could deadlock on memory
 	 * despite our feeble check
 	 */
 	if (uvmexp.free > atop(USPACE)) {

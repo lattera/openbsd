@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_map_i.h,v 1.3.4.7 2002/03/06 02:17:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_map_i.h,v 1.3.4.8 2003/03/28 00:08:48 niklas Exp $	*/
 /*	$NetBSD: uvm_map_i.h,v 1.18 2000/11/27 08:40:04 chs Exp $	*/
 
 /* 
@@ -160,12 +160,11 @@ uvm_map_setup(map, min, max, flags)
  * => map must be unlocked (we will lock it)
  */
 
-MAP_INLINE int
+MAP_INLINE void
 uvm_unmap(map, start, end)
 	vm_map_t map;
 	vaddr_t start,end;
 {
-	int result;
 	vm_map_entry_t dead_entries;
 	UVMHIST_FUNC("uvm_unmap"); UVMHIST_CALLED(maphist);
 
@@ -176,14 +175,13 @@ uvm_unmap(map, start, end)
 	 * detach from the dead entries...
 	 */
 	vm_map_lock(map);
-	result = uvm_unmap_remove(map, start, end, &dead_entries);
+	uvm_unmap_remove(map, start, end, &dead_entries);
 	vm_map_unlock(map);
 
 	if (dead_entries != NULL)
 		uvm_unmap_detach(dead_entries, 0);
 
 	UVMHIST_LOG(maphist, "<- done", 0,0,0,0);
-	return(result);
 }
 
 

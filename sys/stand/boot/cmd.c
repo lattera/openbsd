@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/cmd.c,v 1.46.2.1 2002/03/28 14:52:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/cmd.c,v 1.46.2.2 2003/03/28 00:08:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -249,8 +249,10 @@ readline(buf, n, to)
 	while (1) {
 		switch ((ch = getchar())) {
 		case CTRL('u'):
-			while (p-- > buf)
+			while (p > buf) {
 				putchar('\177');
+				p--;
+			}
 			continue;
 		case '\n':
 		case '\r':
