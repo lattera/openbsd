@@ -42,7 +42,7 @@
 
 #ifndef lint
 static char copyright[] =
-"$Id: packet.c,v 1.1.1.3 1997/06/08 04:54:18 mellon Exp $ Copyright (c) 1996 The Internet Software Consortium.  All rights reserved.\n";
+"$Id: packet.c,v 1.1 1998/08/18 03:43:26 deraadt Exp $ Copyright (c) 1996 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
 #include "dhcpd.h"
@@ -250,7 +250,6 @@ ssize_t decode_udp_ip_header (interface, buf, bufix, from, data, len)
   struct ip *ip;
   struct udphdr *udp;
   u_int32_t ip_len = (buf [bufix] & 0xf) << 2;
-  u_int32_t sum, usum;
 
   ip = (struct ip *)(buf + bufix);
   udp = (struct udphdr *)(buf + bufix + ip_len);

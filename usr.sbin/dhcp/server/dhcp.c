@@ -42,7 +42,7 @@
 
 #ifndef lint
 static char copyright[] =
-"$Id: dhcp.c,v 1.1 1998/08/18 03:43:34 deraadt Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
+"$Id: dhcp.c,v 1.2 2000/07/21 00:33:54 beck Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
 #include "dhcpd.h"
@@ -1183,7 +1183,6 @@ struct lease *find_lease (packet, share, ours)
 	struct iaddr cip;
 	struct host_decl *hp, *host = (struct host_decl *)0;
 	struct lease *fixed_lease;
-	int i;
 
 	/* Try to find a host or lease that's been assigned to the
 	   specified unique client identifier. */
