@@ -13,6 +13,11 @@
  * have seen more than thou knowest, Gray Fool."  --Denethor
  */
 
+/*
+ * This file contains various utilities for producing debugging output
+ * (mainly related to displaying the stack)
+ */
+
 #include "EXTERN.h"
 #define PERL_IN_DEB_C
 #include "perl.h"
@@ -206,7 +211,7 @@ Perl_deb_stack_all(pTHX)
 		PerlIO_printf(Perl_debug_log, "\n");
 	    else {
 
-		/* Find the current context's stack range by searching
+		/* Find the the current context's stack range by searching
 		 * forward for any higher contexts using this stack; failing
 		 * that, it will be equal to the size of the stack for old
 		 * stacks, or PL_stack_sp for the current stack

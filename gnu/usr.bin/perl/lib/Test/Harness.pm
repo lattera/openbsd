@@ -1,5 +1,5 @@
 # -*- Mode: cperl; cperl-indent-level: 4 -*-
-# $Id: Harness.pm,v 1.8 2004/04/07 21:33:06 millert Exp $
+# $Id: Harness.pm,v 1.85 2004/04/29 03:13:43 andy Exp $
 
 package Test::Harness;
 
@@ -29,9 +29,9 @@ Test::Harness - Run Perl standard test scripts with statistics
 
 =head1 VERSION
 
-Version 2.42
+Version 2.42;
 
-    $Header: /cvs/src/gnu/usr.bin/perl/lib/Test/Harness.pm,v 1.8 2004/04/07 21:33:06 millert Exp $
+    $Header: /home/cvs/test-harness/lib/Test/Harness.pm,v 1.85 2004/04/29 03:13:43 andy Exp $
 
 =cut
 

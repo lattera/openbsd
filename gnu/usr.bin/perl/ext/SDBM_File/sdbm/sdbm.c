@@ -36,9 +36,7 @@
  */
 #ifndef WIN32
 #ifndef sun
-#ifndef errno
 extern int errno;
-#endif
 #endif
 #endif
 
