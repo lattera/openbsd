@@ -1,3 +1,4 @@
+/*       $OpenBSD: src/sys/netinet/Attic/ip_fil_compat.h,v 1.8 1998/02/17 01:39:03 dgregor Exp $       */
 /*
  * Copyright (C) 1993-1997 by Darren Reed.
  *
@@ -6,7 +7,7 @@
  * to the original author and the contributors.
  *
  * @(#)ip_compat.h	1.8 1/14/96
- * $Id: ip_compat.h,v 2.0.2.31.2.8 1997/12/02 13:42:52 darrenr Exp $
+ * $Id: ip_fil_compat.h,v 1.7 1998/01/26 04:10:40 dgregor Exp $
  */
 
 #ifndef	__IP_COMPAT_H__

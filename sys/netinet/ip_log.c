@@ -1,3 +1,4 @@
+/*       $OpenBSD: src/sys/netinet/Attic/ip_log.c,v 1.2 1998/02/17 01:39:04 dgregor Exp $       */
 /*
  * Copyright (C) 1997 by Darren Reed.
  *
@@ -5,7 +6,7 @@
  * provided that this notice is preserved and due credit is given
  * to the original author and the contributors.
  *
- * $Id: ip_log.c,v 2.0.2.13.2.3 1997/11/20 12:41:40 darrenr Exp $
+ * $Id: ip_log.c,v 1.1 1998/01/26 04:10:43 dgregor Exp $
  */
 #ifdef	IPFILTER_LOG
 # ifndef SOLARIS

@@ -1,3 +1,4 @@
+/*       $OpenBSD: src/sys/netinet/Attic/ip_nat.c,v 1.14 1998/02/17 01:39:05 dgregor Exp $       */
 /*
  * Copyright (C) 1995-1997 by Darren Reed.
  *
@@ -9,7 +10,7 @@
  */
 #if !defined(lint)
 static const char sccsid[] = "@(#)ip_nat.c	1.11 6/5/96 (C) 1995 Darren Reed";
-static const char rcsid[] = "@(#)$Id: ip_nat.c,v 2.0.2.44.2.7 1997/12/02 13:54:27 darrenr Exp $";
+static const char rcsid[] = "@(#)$Id: ip_nat.c,v 1.13 1998/01/26 04:10:43 dgregor Exp $";
 #endif
 
 #if defined(__FreeBSD__) && defined(KERNEL) && !defined(_KERNEL)
