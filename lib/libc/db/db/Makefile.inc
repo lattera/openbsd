@@ -1,5 +1,5 @@
-#	$OpenBSD: src/lib/libc/db/db/Makefile.inc,v 1.2 1996/08/19 08:20:23 tholo Exp $
+#	$OpenBSD: src/lib/libc/db/db/Makefile.inc,v 1.3 1998/11/20 11:18:34 d Exp $
 
-.PATH: ${.CURDIR}/db/db
+.PATH: ${LIBCSRCDIR}/db/db
 
 SRCS+=	db.c

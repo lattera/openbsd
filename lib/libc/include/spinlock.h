@@ -1,9 +1,6 @@
-/*-
- * Copyright (c) 1991 The Regents of the University of California.
+/*
+ * Copyright (c) 1998 John Birrell <jb@cimlogic.com.au>.
  * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * William Jolitz.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -15,13 +12,12 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ *	This product includes software developed by John Birrell.
+ * 4. Neither the name of the author nor the names of any co-contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY JOHN BIRRELL AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
@@ -32,24 +28,46 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ * $Id: spinlock.h,v 1.3 1998/06/09 08:28:49 jb Exp $
+ * $OpenBSD: src/lib/libc/include/Attic/spinlock.h,v 1.1 1998/11/20 11:18:41 d Exp $
+ *
+ * Lock definitions used in both libc and libpthread.
+ *
  */
 
-#include "SYS.h"
+#ifndef _SPINLOCK_H_
+#define _SPINLOCK_H_
+#include <sys/cdefs.h>
+#include <sys/types.h>
 
-#if defined(SYSLIBC_SCCS)
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/i386/sys/Attic/setlogin.S,v 1.2 1996/08/19 08:13:39 tholo Exp $"
-#endif /* SYSLIB_SCCS */
+/*
+ * Lock structure with room for debugging information.
+ */
+typedef struct {
+	volatile register_t	access_lock;
+	volatile long	lock_owner;
+	volatile const char * fname;
+	volatile int	lineno;
+} spinlock_t;
 
-	.globl	___logname_valid	/* in getlogin() */
-SYSCALL(setlogin)
-	xorl	%eax,%eax
-#ifdef PIC
-	PIC_PROLOGUE
-	movl	PIC_GOT(___logname_valid),%edx
-	PIC_EPILOGUE
-	movl	%eax,(%edx)
+#define	_SPINLOCK_INITIALIZER	{ 0, 0, 0, 0 }
+
+#define _SPINUNLOCK(_lck)	(_lck)->access_lock = 0
+#ifdef	_LOCK_DEBUG
+#define	_SPINLOCK(_lck)		_spinlock_debug(_lck, __FILE__, __LINE__)
 #else
-	movl	%eax,___logname_valid
+#define	_SPINLOCK(_lck)		_spinlock(_lck)
 #endif
-	ret				/* setlogin(name) */
+
+/*
+ * Thread function prototype definitions:
+ */
+__BEGIN_DECLS
+register_t	_atomic_lock __P((volatile register_t *));
+register_t	_thread_slow_atomic_lock __P((volatile register_t *));
+void	_spinlock __P((spinlock_t *));
+void	_spinlock_debug __P((spinlock_t *, const char *, int));
+__END_DECLS
+
+#endif /* _SPINLOCK_H_ */
