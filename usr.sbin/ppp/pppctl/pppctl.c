@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: pppctl.c,v 1.12 2003/04/14 03:14:17 deraadt Exp $
+ *	$Id: pppctl.c,v 1.13 2003/08/19 23:57:09 deraadt Exp $
  */
 
 #include <sys/types.h>
@@ -166,7 +166,7 @@ check_fd(int sig)
     int len;
 
     pfd[0].fd = data;
-    pfd[1].events = POLLIN;
+    pfd[0].events = POLLIN;
     if (poll(pfd, 1, 0) > 0) {
       len = read(data, buf, sizeof buf);
       if (len > 0)
