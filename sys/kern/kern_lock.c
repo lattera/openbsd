@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.11 2004/06/06 23:11:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.12 2004/06/08 21:32:06 grange Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -701,6 +701,7 @@ lockmgr(lkp, flags, interlkp, p)
  * Intended for use in mi_switch() shortly before context switching.
  */
 
+#ifdef notyet
 int
 #if defined(LOCKDEBUG)
 _spinlock_release_all(__volatile struct lock *lkp, const char *file, int line)
@@ -747,6 +748,7 @@ spinlock_release_all(__volatile struct lock *lkp)
 
 	return (count);
 }
+#endif
 
 /*
  * For a recursive spinlock held one or more times by the current CPU,
@@ -754,6 +756,7 @@ spinlock_release_all(__volatile struct lock *lkp)
  * Intended for use in mi_switch() right after resuming execution.
  */
 
+#ifdef notyet
 void
 #if defined(LOCKDEBUG)
 _spinlock_acquire_count(__volatile struct lock *lkp, int count,
@@ -802,6 +805,7 @@ spinlock_acquire_count(__volatile struct lock *lkp, int count)
 
 	INTERLOCK_RELEASE(lkp, lkp->lk_flags, s);	
 }
+#endif
 
 /*
  * Print out information about state of a lock. Used by VOP_PRINT
