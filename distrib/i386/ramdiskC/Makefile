@@ -1,6 +1,6 @@
-#	$OpenBSD: src/distrib/i386/floppies/ramdiskC/Attic/Makefile,v 1.3 2002/03/30 20:35:31 millert Exp $
+#	$OpenBSD: src/distrib/i386/ramdiskC/Makefile,v 1.1 2002/04/22 02:40:03 deraadt Exp $
 
-.PATH: ${.CURDIR}/../ramdisk
+.PATH: ${.CURDIR}/../ramdiskA
 RAMDISK=RAMDISKC
 XNAME=floppyC
 NOBSDRD=1

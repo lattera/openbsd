@@ -1,5 +1,0 @@
-#       $OpenBSD: src/distrib/i386/floppies/common/Attic/list_floppy,v 1.1 1999/08/06 20:49:08 deraadt Exp $
-
-COPY	${DESTDIR}/usr/mdec/boot	boot
-SPECIAL	strip boot
-COPY	${OBJDIR}/bsd.gz		bsd

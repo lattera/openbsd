@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/i386/floppies/common/Attic/install.md,v 1.17 2002/04/12 02:15:28 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/common/install.md,v 1.1 2002/04/22 02:40:02 deraadt Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
