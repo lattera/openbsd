@@ -29,8 +29,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: uthread_gc.c,v 1.1 1998/11/09 03:13:19 d Exp $
- *	$OpenBSD: src/lib/libc_r/uthread/Attic/uthread_gc.c,v 1.2 1998/12/21 07:39:34 d Exp $
+ *	$FreeBSD: uthread_gc.c,v 1.2 1998/09/30 19:17:51 dt Exp $
+ *	$OpenBSD: src/lib/libc_r/uthread/Attic/uthread_gc.c,v 1.3 1998/12/23 22:49:46 d Exp $
  *
  * Garbage collector thread. Frees memory allocated for dead threads.
  *
