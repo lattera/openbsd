@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/tn3270/sys_curses/Attic/termout.c,v 1.5 1996/06/26 05:41:32 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)termout.c	4.3 (Berkeley) 4/26/91";*/
-static char rcsid[] = "$Id: termout.c,v 1.3 1995/12/14 13:57:47 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/tn3270/sys_curses/Attic/termout.c,v 1.5 1996/06/26 05:41:32 deraadt Exp $";
 #endif /* not lint */
 
 #if defined(unix)

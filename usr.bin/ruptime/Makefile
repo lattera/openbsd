@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.3 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.2 1993/07/30 23:51:20 mycroft Exp $
+#	$OpenBSD: src/usr.bin/ruptime/Makefile,v 1.2 1996/06/26 05:38:53 deraadt Exp $
 
 PROG=	ruptime
 

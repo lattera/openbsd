@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/rdist/isexec.c,v 1.3 1996/06/26 05:38:13 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
@@ -32,7 +34,7 @@
  */
 #ifndef lint
 static char RCSid[] = 
-"$Id: isexec.c,v 6.21 1994/04/01 23:44:10 mcooper Exp $";
+"$OpenBSD: src/usr.bin/rdist/isexec.c,v 1.3 1996/06/26 05:38:13 deraadt Exp $";
 
 static char sccsid[] = "@(#)client.c";
 

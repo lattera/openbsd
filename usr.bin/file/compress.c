@@ -1,10 +1,10 @@
+/*	$OpenBSD: src/usr.bin/file/compress.c,v 1.2 1996/06/26 05:32:55 deraadt Exp $	*/
 /*
  * compress routines:
  *	zmagic() - returns 0 if not recognized, uncompresses and prints
  *		   information if recognized
  *	uncompress(method, old, n, newch) - uncompress old into new, 
  *					    using method, return sizeof new
- * $Id: compress.c,v 1.4 1995/05/21 00:13:28 christos Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>

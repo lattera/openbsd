@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/rup/rup.c,v 1.2 1996/06/26 05:38:52 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1993, John Brezak
  * All rights reserved.
@@ -32,7 +34,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rup.c,v 1.10 1994/02/05 14:58:14 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/rup/rup.c,v 1.2 1996/06/26 05:38:52 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>

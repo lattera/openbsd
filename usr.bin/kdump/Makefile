@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/6/93
-#	$Id: Makefile,v 1.4 1994/12/06 14:54:50 deraadt Exp $
+#	$OpenBSD: src/usr.bin/kdump/Makefile,v 1.2 1996/06/26 05:34:42 deraadt Exp $
 
 LDSTATIC=-static
 PROG=	kdump

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/paste/paste.c,v 1.2 1996/06/26 05:37:50 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1989 The Regents of the University of California.
  * All rights reserved.
@@ -42,7 +44,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)paste.c	5.7 (Berkeley) 10/30/90";*/
-static char rcsid[] = "$Id: paste.c,v 1.2 1993/08/01 18:10:14 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/paste/paste.c,v 1.2 1996/06/26 05:37:50 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/unvis/unvis.c,v 1.2 1996/06/26 05:42:18 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -41,7 +43,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)unvis.c	8.1 (Berkeley) 6/6/93";
 #endif
-static char rcsid[] = "$Id: unvis.c,v 1.4 1994/12/20 15:54:03 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/unvis/unvis.c,v 1.2 1996/06/26 05:42:18 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>

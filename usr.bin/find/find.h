@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/find/find.h,v 1.2 1996/06/26 05:33:09 deraadt Exp $*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,7 +35,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)find.h	8.1 (Berkeley) 6/6/93
- *	$Id: find.h,v 1.5 1993/12/30 21:15:22 jtc Exp $
  */
 
 /* node type */

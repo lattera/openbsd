@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sed/process.c,v 1.2 1996/06/26 05:39:08 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1992 Diomidis Spinellis.
  * Copyright (c) 1992, 1993
@@ -37,7 +39,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)process.c	8.1 (Berkeley) 6/6/93"; */
-static char *rcsid = "$Id: process.c,v 1.17 1995/07/11 04:09:50 cgd Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/sed/process.c,v 1.2 1996/06/26 05:39:08 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/rdist/Attic/setargs.c,v 1.3 1996/06/26 05:38:18 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 static char RCSid[] = 
-"$Id: setargs.c,v 6.4 1994/02/10 01:04:50 mcooper Exp mcooper $";
+"$OpenBSD: src/usr.bin/rdist/Attic/setargs.c,v 1.3 1996/06/26 05:38:18 deraadt Exp $";
 
 static char sccsid[] = "@(#)setargs.c";
 

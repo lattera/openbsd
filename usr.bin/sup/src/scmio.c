@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/scmio.c,v 1.2 1996/06/26 05:39:47 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -109,6 +111,9 @@
  **********************************************************************
  * HISTORY
  * $Log: scmio.c,v $
+ * Revision 1.1  1995/12/16 11:46:52  deraadt
+ * add sup to the tree
+ *
  * Revision 1.2  1993/05/24 17:57:26  brezak
  * Remove netcrypt.c. Remove unneeded files. Cleanup make.
  *

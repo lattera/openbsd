@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/skey/skey.c,v 1.2 1996/06/26 05:39:20 deraadt Exp $*/
 /*
  * S/KEY v1.1b (skey.c)
  *
@@ -18,7 +19,6 @@
  *	OMEN US HORN OMIT BACK AHOY
  *	>
  *
- * $Id: skey.c,v 1.3 1995/06/05 19:55:40 pk Exp $
  */
 
 #include <sys/cdefs.h>

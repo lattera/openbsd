@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/finger/net.c,v 1.2 1996/06/26 05:33:18 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1989 The Regents of the University of California.
  * All rights reserved.
@@ -36,7 +38,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)net.c	5.5 (Berkeley) 6/1/90";*/
-static char rcsid[] = "$Id: net.c,v 1.6 1995/05/21 15:06:52 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/finger/net.c,v 1.2 1996/06/26 05:33:18 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

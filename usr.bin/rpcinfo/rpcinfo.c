@@ -1,7 +1,9 @@
+/*	$OpenBSD: src/usr.bin/rpcinfo/rpcinfo.c,v 1.2 1996/06/26 05:38:45 deraadt Exp $	*/
+
 #ifndef lint
 /*static char sccsid[] = "from: @(#)rpcinfo.c 1.22 87/08/12 SMI";*/
 /*static char sccsid[] = "from: @(#)rpcinfo.c	2.2 88/08/11 4.0 RPCSRC";*/
-static char rcsid[] = "$Id: rpcinfo.c,v 1.4 1995/05/21 14:46:39 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/rpcinfo/rpcinfo.c,v 1.2 1996/06/26 05:38:45 deraadt Exp $";
 #endif
 
 /*

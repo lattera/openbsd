@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supmsg.c,v 1.2 1996/06/26 05:39:55 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -31,6 +33,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supmsg.c,v $
+ * Revision 1.1  1995/12/16 11:47:00  deraadt
+ * add sup to the tree
+ *
  * Revision 1.2  1993/08/04 17:46:23  brezak
  * Changes from nate for gzip'ed sup
  *

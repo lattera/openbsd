@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.5 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.2 1995/12/16 22:20:37 tholo Exp $
+#	$OpenBSD: src/usr.bin/su/Makefile,v 1.4 1996/06/26 05:39:33 deraadt Exp $
 
 PROG=	su
 BINOWN=	root

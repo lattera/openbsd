@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/file/print.c,v 1.2 1996/06/26 05:33:00 deraadt Exp $	*/
 /*
  * print.c - debugging printout routines
  *
@@ -39,8 +40,7 @@
 #include "file.h"
 
 #ifndef lint
-static char *moduleid =
-	"@(#)$Id: print.c,v 1.8 1995/04/30 19:39:40 christos Exp $";
+static char *moduleid = "$OpenBSD: src/usr.bin/file/print.c,v 1.2 1996/06/26 05:33:00 deraadt Exp $";
 #endif  /* lint */
 
 #define SZOF(a)	(sizeof(a) / sizeof(a[0]))

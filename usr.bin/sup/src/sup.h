@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/sup.h,v 1.2 1996/06/26 05:39:50 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -39,6 +41,9 @@
  *	across the network to save BandWidth
  *
  * $Log: sup.h,v $
+ * Revision 1.1  1995/12/16 11:46:55  deraadt
+ * add sup to the tree
+ *
  * Revision 1.3  1995/06/03 21:21:54  christos
  * Changes to write ascii timestamps in the when files.
  * Looked into making it 64 bit clean, but it is hopeless.

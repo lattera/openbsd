@@ -1,4 +1,6 @@
 #!/bin/csh
+#	$OpenBSD: src/usr.bin/which/Attic/which.csh,v 1.2 1996/06/26 05:42:58 deraadt Exp $
+
 #
 # DO NOT USE "csh -f"
 #

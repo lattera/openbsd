@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/strip/Attic/strip.c,v 1.2 1996/06/26 05:39:32 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1988 Regents of the University of California.
  * All rights reserved.
@@ -39,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)strip.c	5.8 (Berkeley) 11/6/91";*/
-static char rcsid[] = "$Id: strip.c,v 1.13 1994/03/28 02:17:50 cgd Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/strip/Attic/strip.c,v 1.2 1996/06/26 05:39:32 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/tn3270/tools/mkdctype/Attic/ectype.h,v 1.2 1996/06/26 05:41:39 deraadt Exp $*/
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -31,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)ectype.h	4.2 (Berkeley) 4/26/91
- *	$Id: ectype.h,v 1.2 1993/08/01 18:05:04 mycroft Exp $
  */
 
 #define	INCLUDED_ECTYPE

@@ -1,6 +1,5 @@
+#	$OpenBSD: src/usr.bin/login/Makefile,v 1.4 1996/06/26 05:35:59 deraadt Exp $
 #	$NetBSD: Makefile,v 1.10 1994/12/23 06:52:56 jtc Exp $
-#	from: @(#)Makefile	8.1 (Berkeley) 7/19/93
-#	$Id$
 
 PROG=	login
 SRCS=	login.c

@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/tn3270/sys_curses/Attic/telextrn.h,v 1.2 1996/06/26 05:41:31 deraadt Exp $*/
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -31,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)telextrn.h	4.2 (Berkeley) 4/26/91
- *	$Id: telextrn.h,v 1.3 1993/08/10 00:08:52 mycroft Exp $
  */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/talk/init_disp.c,v 1.3 1996/06/26 05:40:22 deraadt Exp $	*/
 /*	$NetBSD: init_disp.c,v 1.6 1994/12/09 02:14:17 jtc Exp $	*/
 
 /*
@@ -37,7 +38,7 @@
 #if 0
 static char sccsid[] = "@(#)init_disp.c	8.2 (Berkeley) 2/16/94";
 #endif
-static char rcsid[] = "$NetBSD: init_disp.c,v 1.6 1994/12/09 02:14:17 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/talk/init_disp.c,v 1.3 1996/06/26 05:40:22 deraadt Exp $";
 #endif /* not lint */
 
 /*

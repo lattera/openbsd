@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/gprof/gprof.c,v 1.2 1996/06/26 05:33:51 deraadt Exp $	*/
 /*	$NetBSD: gprof.c,v 1.8 1995/04/19 07:15:59 cgd Exp $	*/
 
 /*
@@ -43,7 +44,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)gprof.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$NetBSD: gprof.c,v 1.8 1995/04/19 07:15:59 cgd Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/gprof/gprof.c,v 1.2 1996/06/26 05:33:51 deraadt Exp $";
 #endif
 #endif /* not lint */
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sed/misc.c,v 1.2 1996/06/26 05:39:07 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1992 Diomidis Spinellis.
  * Copyright (c) 1992, 1993
@@ -37,7 +39,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 6/6/93"; */
-static char *rcsid = "$Id: misc.c,v 1.4 1994/02/03 23:44:54 cgd Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/sed/misc.c,v 1.2 1996/06/26 05:39:07 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

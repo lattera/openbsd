@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 1994/12/22 12:30:55 cgd Exp $
+# $OpenBSD: src/usr.bin/skey/Makefile,v 1.2 1996/06/26 05:39:19 deraadt Exp $
 
 PROG= skey
 CFLAGS+= -I${.CURDIR}/../../lib/libskey

@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/modstat/modstat.c,v 1.3 1996/06/26 05:37:15 deraadt Exp $*/
 /*
  * Copyright (c) 1993 Terrence R. Lambert.
  * All rights reserved.
@@ -29,7 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: modstat.c,v 1.1.1.1 1995/10/18 08:45:48 deraadt Exp $
  */
 
 #include <stdio.h>

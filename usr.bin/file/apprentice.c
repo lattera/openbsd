@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/file/apprentice.c,v 1.3 1996/06/26 05:32:54 deraadt Exp $	*/
 /*
  * apprentice - make one pass through /etc/magic, learning its secrets.
  *
@@ -33,8 +34,7 @@
 #include "file.h"
 
 #ifndef	lint
-static char *moduleid = 
-	"@(#)$Id: apprentice.c,v 1.10 1995/10/27 23:33:17 christos Exp $";
+static char *moduleid = "$OpenBSD: src/usr.bin/file/apprentice.c,v 1.3 1996/06/26 05:32:54 deraadt Exp $";
 #endif	/* lint */
 
 #define	EATAB {while (isascii((unsigned char) *l) && \

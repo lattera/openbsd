@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/machine/Attic/machine.c,v 1.2 1996/06/26 05:36:23 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1986 Regents of the University of California.
  * All rights reserved.
@@ -39,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)machine.c	5.5 (Berkeley) 6/1/90";*/
-static char rcsid[] = "$Id: machine.c,v 1.2 1993/08/01 18:13:21 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/machine/Attic/machine.c,v 1.2 1996/06/26 05:36:23 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>

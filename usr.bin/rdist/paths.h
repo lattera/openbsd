@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/rdist/Attic/paths.h,v 1.2 1996/06/26 05:38:16 deraadt Exp $*/
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
@@ -32,7 +33,6 @@
  */
 
 /*
- * $Id: paths.h,v 6.5 1994/03/31 00:55:11 mcooper Exp $
  * @(#)paths.h
  */
 

@@ -1,4 +1,4 @@
-$Id: MAINT,v 1.2 1995/03/25 22:35:30 christos Exp $
+$OpenBSD: src/usr.bin/file/MAINT,v 1.2 1996/06/26 05:32:52 deraadt Exp $
 
 Maintenance notes:
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/hexdump/odsyntax.c,v 1.2 1996/06/26 05:34:21 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)odsyntax.c	5.4 (Berkeley) 3/8/91";*/
-static char rcsid[] = "$Id: odsyntax.c,v 1.4 1993/08/01 18:14:46 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/hexdump/odsyntax.c,v 1.2 1996/06/26 05:34:21 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

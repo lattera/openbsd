@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/sed/defs.h,v 1.2 1996/06/26 05:39:05 deraadt Exp $*/
 /*-
  * Copyright (c) 1992 Diomidis Spinellis.
  * Copyright (c) 1992, 1993
@@ -35,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)defs.h	8.1 (Berkeley) 6/6/93
- *	$Id: defs.h,v 1.6 1995/03/09 11:19:28 mycroft Exp $
  */
 
 /*

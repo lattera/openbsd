@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/rdist/os-openbsd.h,v 1.3 1996/06/26 05:38:15 deraadt Exp $*/
 /*
  * Copyright (c) 1993 Michael A. Cooper
  * Copyright (c) 1993 Regents of the University of California.
@@ -33,7 +34,6 @@
  */
 
 /*
- * $Id: os-freebsd2.h,v 1.2 1996/02/15 18:53:48 mcooper Exp $
  */
 
 /*

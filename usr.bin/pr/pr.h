@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/pr/pr.h,v 1.2 1996/06/26 05:37:55 deraadt Exp $*/
 /*-
  * Copyright (c) 1991 Keith Muller.
  * Copyright (c) 1993
@@ -35,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *      from: @(#)pr.h	8.1 (Berkeley) 6/6/93
- *	$Id: pr.h,v 1.1 1994/01/06 15:57:29 cgd Exp $
  */
 
 /*

@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/rdistd/Attic/filesys.h,v 1.3 1996/06/26 05:38:22 deraadt Exp $*/
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
@@ -32,7 +33,6 @@
  */
 
 /*
- * $Id: filesys.h,v 6.19 1995/12/12 00:46:46 mcooper Exp $
  * @(#)filesys.h
  */
 

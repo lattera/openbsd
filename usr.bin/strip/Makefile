@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.4 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.10 1995/06/10 20:56:34 mycroft Exp $
+#	$OpenBSD: src/usr.bin/strip/Attic/Makefile,v 1.2 1996/06/26 05:39:31 deraadt Exp $
 
 PROG=	strip
 

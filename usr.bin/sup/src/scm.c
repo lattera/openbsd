@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/scm.c,v 1.2 1996/06/26 05:39:47 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -69,6 +71,9 @@
  *	since Tahoe version of <netinet/in.h> does not define them.
  *
  * $Log: scm.c,v $
+ * Revision 1.1  1995/12/16 11:46:51  deraadt
+ * add sup to the tree
+ *
  * Revision 1.2  1995/06/03 21:21:51  christos
  * Changes to write ascii timestamps in the when files.
  * Looked into making it 64 bit clean, but it is hopeless.

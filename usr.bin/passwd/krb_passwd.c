@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/passwd/Attic/krb_passwd.c,v 1.4 1996/06/26 05:37:46 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)krb_passwd.c	5.4 (Berkeley) 3/1/91";*/
-static char rcsid[] = "$Id: krb_passwd.c,v 1.2 1995/12/16 22:20:29 tholo Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/passwd/Attic/krb_passwd.c,v 1.4 1996/06/26 05:37:46 deraadt Exp $";
 #endif /* not lint */
 
 #ifdef KERBEROS

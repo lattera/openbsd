@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/rdist/version.h,v 1.3 1996/06/26 05:38:19 deraadt Exp $*/
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
@@ -32,7 +33,6 @@
  */
 
 /*
- * $Id: version.h,v 6.28 1996/02/15 20:35:46 mcooper Exp $
  */
 
 /*

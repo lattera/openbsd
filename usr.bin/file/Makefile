@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:45:08 deraadt Exp $
+#	$OpenBSD: src/usr.bin/file/Makefile,v 1.3 1996/06/26 05:32:52 deraadt Exp $
 
 MAGIC=		/etc/magic
 MAGICOWN=	bin

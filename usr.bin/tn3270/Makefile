@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.5 1995/11/22 05:38:58 cgd Exp $
+#	$OpenBSD: src/usr.bin/tn3270/Attic/Makefile,v 1.3 1996/06/26 05:40:58 deraadt Exp $
 
 .if make(clean) || make(cleandir) || make(depend) || make(obj) || make(lint)
 SUBDIR += tools

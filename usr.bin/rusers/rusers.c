@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.3 1996/06/26 05:38:56 deraadt Exp $	*/
+
 /*-
  *  Copyright (c) 1993 John Brezak
  *  All rights reserved.
@@ -27,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rusers.c,v 1.1.1.1 1995/10/18 08:46:04 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/rusers/rusers.c,v 1.3 1996/06/26 05:38:56 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>

@@ -1,4 +1,5 @@
 #!/bin/sh -
+#	$OpenBSD: src/usr.bin/id/Attic/groups.sh,v 1.2 1996/06/26 05:34:23 deraadt Exp $
 #
 # Copyright (c) 1991, 1993
 #	The Regents of the University of California.  All rights reserved.
@@ -32,7 +33,6 @@
 # SUCH DAMAGE.
 #
 #	from: @(#)groups.sh	8.1 (Berkeley) 6/6/93
-#	$Id: groups.sh,v 1.2 1994/05/05 23:24:40 cgd Exp $
 #
 
 id -Gn $*

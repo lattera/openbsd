@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.5 1994/12/22 12:29:59 cgd Exp $
+#	$OpenBSD: src/usr.bin/ipcrm/Makefile,v 1.2 1996/06/26 05:34:34 deraadt Exp $
 
 PROG=	ipcrm
 

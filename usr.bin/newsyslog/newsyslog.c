@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.3 1996/06/26 05:37:29 deraadt Exp $	*/
+
 /*
  * This file contains changes from the Open Software Foundation.
  */
@@ -29,7 +31,7 @@ provided "as is" without express or implied warranty.
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: newsyslog.c,v 1.1.1.1 1995/10/18 08:45:51 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/newsyslog/newsyslog.c,v 1.3 1996/06/26 05:37:29 deraadt Exp $";
 #endif /* not lint */
 
 #ifndef CONF

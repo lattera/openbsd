@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/tn3270/ctlr/Attic/outbound.c,v 1.2 1996/06/26 05:41:22 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)outbound.c	4.3 (Berkeley) 4/26/91";*/
-static char rcsid[] = "$Id: outbound.c,v 1.2 1993/08/01 18:05:46 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/tn3270/ctlr/Attic/outbound.c,v 1.2 1996/06/26 05:41:22 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>

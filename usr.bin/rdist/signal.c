@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/rdist/Attic/signal.c,v 1.3 1996/06/26 05:38:18 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1993 Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 static char RCSid[] = 
-"$Id: signal.c,v 6.1 1993/07/15 22:47:30 mcooper Exp mcooper $";
+"$OpenBSD: src/usr.bin/rdist/Attic/signal.c,v 1.3 1996/06/26 05:38:18 deraadt Exp $";
 
 static char sccsid[] = "@(#)signal.c";
 

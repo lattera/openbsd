@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.5 (Berkeley) 3/7/91
-#	$Id: Makefile,v 1.3 1994/12/22 12:29:54 cgd Exp $
+#	$OpenBSD: src/usr.bin/hexdump/Makefile,v 1.2 1996/06/26 05:34:16 deraadt Exp $
 
 PROG=	hexdump
 SRCS=	conv.c display.c hexdump.c hexsyntax.c odsyntax.c parse.c

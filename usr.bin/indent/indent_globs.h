@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/indent/indent_globs.h,v 1.2 1996/06/26 05:34:30 deraadt Exp $*/
 /*
  * Copyright (c) 1985 Sun Microsystems, Inc.
  * Copyright (c) 1980 The Regents of the University of California.
@@ -33,7 +34,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)indent_globs.h	5.11 (Berkeley) 2/26/91
- *	$Id: indent_globs.h,v 1.2 1993/08/01 18:14:34 mycroft Exp $
  */
 
 #define BACKSLASH '\\'

@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/tn3270/general/Attic/general.h,v 1.4 1996/06/26 05:41:25 deraadt Exp $*/
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -31,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)general.h	4.2 (Berkeley) 4/26/91
- *	$Id: general.h,v 1.2 1996/01/02 11:21:36 deraadt Exp $
  */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/make/lst.lib/lstFindFrom.c,v 1.2 1996/06/26 05:36:48 deraadt Exp $	*/
 /*	$NetBSD: lstFindFrom.c,v 1.5 1995/06/14 15:21:09 christos Exp $	*/
 
 /*
@@ -38,7 +39,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)lstFindFrom.c	5.3 (Berkeley) 6/1/90"; */
-static char *rcsid = "$Id: lstFindFrom.c,v 1.5 1995/06/14 15:21:09 christos Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/make/lst.lib/lstFindFrom.c,v 1.2 1996/06/26 05:36:48 deraadt Exp $";
 #endif /* not lint */
 
 /*-

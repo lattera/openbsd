@@ -1,4 +1,6 @@
 #!/bin/sh
+#	$OpenBSD: src/usr.bin/cpp/cpp.sh,v 1.2 1996/06/26 05:32:24 deraadt Exp $
+
 #
 # Copyright (c) 1990 The Regents of the University of California.
 # All rights reserved.

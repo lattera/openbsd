@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/libc.h,v 1.2 1996/06/26 05:39:41 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1991 Carnegie Mellon University
  * All Rights Reserved.
@@ -26,6 +28,9 @@
  **********************************************************************
  * HISTORY
  * $Log: libc.h,v $
+ * Revision 1.1  1995/12/16 11:46:46  deraadt
+ * add sup to the tree
+ *
  * Revision 1.1.1.1  1993/05/21 14:52:17  cgd
  * initial import of CMU's SUP to NetBSD
  *

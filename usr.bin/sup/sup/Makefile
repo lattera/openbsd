@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1 1995/12/16 11:47:05 deraadt Exp $
+#	$OpenBSD: src/usr.bin/sup/sup/Attic/Makefile,v 1.3 1996/06/26 05:40:01 deraadt Exp $
 
 PROG=	sup
 MAN=	sup.1

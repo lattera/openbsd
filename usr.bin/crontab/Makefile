@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.14 1995/06/10 20:55:16 mycroft Exp $
+#	$OpenBSD: src/usr.bin/crontab/Makefile,v 1.2 1996/06/26 05:32:25 deraadt Exp $
 
 PROG=	crontab
 SRCS=	crontab.c misc.c entry.c env.c

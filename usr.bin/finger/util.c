@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/finger/util.c,v 1.2 1996/06/26 05:33:19 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1989 The Regents of the University of California.
  * All rights reserved.
@@ -36,7 +38,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)util.c	5.14 (Berkeley) 1/17/91";*/
-static char rcsid[] = "$Id: util.c,v 1.6 1995/09/27 01:10:48 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/finger/util.c,v 1.2 1996/06/26 05:33:19 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>

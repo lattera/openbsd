@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/ranlib/Attic/pathnames.h,v 1.2 1996/06/26 05:38:04 deraadt Exp $*/
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -31,7 +32,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pathnames.h	5.2 (Berkeley) 4/16/91
- *	$Id: pathnames.h,v 1.3 1994/01/03 19:14:20 jtc Exp $
  */
 
 #define _NAME_RANTMP	"ranlib.XXXXXX"

@@ -1,5 +1,7 @@
+/*	$OpenBSD: src/usr.bin/getopt/getopt.c,v 1.2 1996/06/26 05:33:45 deraadt Exp $	*/
+
 #ifndef lint
-static char rcsid[] = "$Id: getopt.c,v 1.2 1993/08/02 17:54:29 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/getopt/getopt.c,v 1.2 1996/06/26 05:33:45 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdio.h>

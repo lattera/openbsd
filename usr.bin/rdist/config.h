@@ -1,3 +1,4 @@
+/* * $OpenBSD: src/usr.bin/rdist/config.h,v 1.4 1996/06/26 05:38:10 deraadt Exp $*/
 /*
  * Copyright (c) 1993 Michael A. Cooper
  * Copyright (c) 1993 Regents of the University of California.
@@ -33,7 +34,6 @@
  */
 
 /*
- * $Id: config.h,v 1.2 1996/03/05 03:16:01 dm Exp $
  * @(#)config.h
  */
 

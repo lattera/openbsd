@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.4 1994/12/22 12:30:45 cgd Exp $
+#	$OpenBSD: src/usr.bin/rup/Makefile,v 1.2 1996/06/26 05:38:50 deraadt Exp $
 
 PROG=	rup
 

@@ -1,4 +1,5 @@
 #!/bin/sh -
+#	$OpenBSD: src/usr.bin/sed/TEST/sed.test,v 1.2 1996/06/26 05:39:11 deraadt Exp $
 #
 # Copyright (c) 1992 Diomidis Spinellis.
 # Copyright (c) 1992, 1993
@@ -33,7 +34,6 @@
 # SUCH DAMAGE.
 #
 #	from: @(#)sed.test	8.1 (Berkeley) 6/6/93
-#	$Id: sed.test,v 1.2 1994/02/03 23:45:04 cgd Exp $
 #
 
 # sed Regression Tests

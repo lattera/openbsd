@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/6/93
-#	$Id: Makefile,v 1.4 1994/12/22 12:29:56 cgd Exp $
+#	$OpenBSD: src/usr.bin/id/Makefile,v 1.2 1996/06/26 05:34:22 deraadt Exp $
 
 PROG=	id
 MAN=	id.1 groups.1 whoami.1

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.2 1996/06/26 05:37:48 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1988 The Regents of the University of California.
  * All rights reserved.
@@ -32,7 +34,7 @@
  */
 #ifndef lint
 /*static char sccsid[] = "from: @(#)yp_passwd.c	1.0 2/2/93";*/
-static char rcsid[] = "$Id: yp_passwd.c,v 1.8 1995/02/08 19:54:12 phil Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/passwd/yp_passwd.c,v 1.2 1996/06/26 05:37:48 deraadt Exp $";
 #endif /* not lint */
 
 #ifdef	YP

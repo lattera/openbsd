@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: skeyaudit.sh,v 1.1 1994/06/24 08:06:38 deraadt Exp $
+# $OpenBSD: src/usr.bin/skey/Attic/skeyaudit.sh,v 1.2 1996/06/26 05:39:21 deraadt Exp $
 # This script will look thru the skeykeys file for
 # people with sequence numbers less then LOWLIMIT=12
 # and send them an e-mail reminder to use skeyinit soon

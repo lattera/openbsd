@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/wc/wc.c,v 1.2 1996/06/26 05:42:50 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1980, 1987 Regents of the University of California.
  * All rights reserved.
@@ -39,7 +41,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)wc.c	5.7 (Berkeley) 3/2/91";*/
-static char rcsid[] = "$Id: wc.c,v 1.9 1994/01/03 03:11:06 andrew Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/wc/wc.c,v 1.2 1996/06/26 05:42:50 deraadt Exp $";
 #endif /* not lint */
 
 /* wc line, word and char count */

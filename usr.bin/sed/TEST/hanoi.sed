@@ -1,7 +1,7 @@
+#	$OpenBSD: src/usr.bin/sed/TEST/hanoi.sed,v 1.2 1996/06/26 05:39:09 deraadt Exp $
 # Towers of Hanoi in sed.
 #
 #	from: @(#)hanoi.sed	8.1 (Berkeley) 6/6/93
-#	$Id: hanoi.sed,v 1.2 1994/02/03 23:45:01 cgd Exp $
 #
 #
 # Ex:

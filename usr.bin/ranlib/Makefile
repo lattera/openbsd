@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.4 (Berkeley) 3/12/91
-#	$Id: Makefile,v 1.5 1994/12/22 12:30:34 cgd Exp $
+#	$OpenBSD: src/usr.bin/ranlib/Attic/Makefile,v 1.2 1996/06/26 05:38:03 deraadt Exp $
 
 PROG=	ranlib
 SRCS=	archive.c build.c misc.c ranlib.c touch.c

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/scan.c,v 1.3 1996/06/26 05:39:46 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -28,6 +30,9 @@
  **********************************************************************
  * HISTORY
  * $Log: scan.c,v $
+ * Revision 1.2  1996/04/17 17:24:13  dm
+ * Shouldn't visually encode execute commands, only file names.
+ *
  * Revision 1.1  1995/12/16 11:46:50  deraadt
  * add sup to the tree
  *

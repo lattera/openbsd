@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/pr/egetopt.c,v 1.2 1996/06/26 05:37:52 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1991 Keith Muller.
  * Copyright (c) 1993
@@ -37,7 +39,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)egetopt.c	8.1 (Berkeley) 6/6/93"; */
-static char *rcsid = "$Id: egetopt.c,v 1.1 1994/01/06 15:57:18 cgd Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/pr/egetopt.c,v 1.2 1996/06/26 05:37:52 deraadt Exp $";
 #endif /* not lint */
 
 #include <ctype.h>

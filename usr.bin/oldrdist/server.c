@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/oldrdist/server.c,v 1.3 1996/06/26 05:37:41 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)server.c	8.1 (Berkeley) 6/9/93"; */
-static char *rcsid = "$Id: server.c,v 1.1 1996/02/03 12:12:03 dm Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/oldrdist/server.c,v 1.3 1996/06/26 05:37:41 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/wait.h>

@@ -1,4 +1,4 @@
-#	$Id: Makefile.inc,v 1.5 1995/04/24 07:40:22 cgd Exp $
+#	$OpenBSD: src/usr.bin/tn3270/Attic/Makefile.inc,v 1.2 1996/06/26 05:40:59 deraadt Exp $
 
 CFLAGS += -DTERMCAP -DSRCRT -DKLUDGELINEMODE -DUSE_TERMIO -DTN3270 -Dunix
 KBD = unix.kbd

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmain.c,v 1.2 1996/06/26 05:39:51 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992 Carnegie Mellon University
  * All Rights Reserved.
@@ -174,6 +176,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supcmain.c,v $
+ * Revision 1.1  1995/12/16 11:46:56  deraadt
+ * add sup to the tree
+ *
  * Revision 1.4  1995/09/16 19:01:25  glass
  * if the function returns nothing, declare it void
  *

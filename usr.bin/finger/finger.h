@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/usr.bin/finger/finger.h,v 1.2 1996/06/26 05:33:16 deraadt Exp $*/
 /*
  * Copyright (c) 1989 The Regents of the University of California.
  * All rights reserved.
@@ -34,7 +35,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)finger.h	5.5 (Berkeley) 6/1/90
- *	$Id: finger.h,v 1.3 1993/10/07 19:58:30 brezak Exp $
  */
 
 #include <pwd.h>

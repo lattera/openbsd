@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/find/main.c,v 1.2 1996/06/26 05:33:11 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$Id: main.c,v 1.5 1994/01/24 23:08:15 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/find/main.c,v 1.2 1996/06/26 05:33:11 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/types.h>
