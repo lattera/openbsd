@@ -4,9 +4,7 @@ require Exporter;
 
 =head1 NAME
 
-getopt - Process single-character switches with switch clustering
-
-getopts - Process single-character switches with switch clustering
+getopt, getopts - Process single-character switches with switch clustering
 
 =head1 SYNOPSIS
 
@@ -73,7 +71,7 @@ and version_mess() with the switches string as an argument.
 
 @ISA = qw(Exporter);
 @EXPORT = qw(getopt getopts);
-$VERSION = '1.04';
+$VERSION = '1.05';
 # uncomment the next line to disable 1.03-backward compatibility paranoia
 # $STANDARD_HELP_VERSION = 1;
 
