@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sbin/fsck_msdos/check.c,v 1.3 1996/06/23 14:30:41 deraadt Exp $	*/
 /*	$NetBSD: check.c,v 1.1.4.1 1996/05/31 18:41:33 jtc Exp $	*/
 
 /*
@@ -34,7 +35,7 @@
 
 
 #ifndef lint
-static char rcsid[] = "$NetBSD: check.c,v 1.1.4.1 1996/05/31 18:41:33 jtc Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/fsck_msdos/check.c,v 1.3 1996/06/23 14:30:41 deraadt Exp $";
 #endif /* not lint */
 
 #include <stdlib.h>

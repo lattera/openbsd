@@ -1,5 +1,4 @@
-#	@(#)Makefile	8.1 (Berkeley) 7/19/93
-#	$Id$
+#	$OpenBSD: src/sbin/init/Makefile,v 1.3 1996/06/23 14:30:48 deraadt Exp $
 
 PROG=	init
 MAN=	init.8
