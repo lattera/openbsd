@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/bin/date/Attic/netdate.c,v 1.8 1997/06/18 19:21:39 kstailey Exp $	*/
+/*	$OpenBSD: src/bin/date/Attic/netdate.c,v 1.9 1997/06/30 07:08:44 deraadt Exp $	*/
 /*	$NetBSD: netdate.c,v 1.10 1995/09/07 06:21:06 jtc Exp $	*/
 
 /*-
@@ -38,7 +38,7 @@
 #if 0
 static char sccsid[] = "@(#)netdate.c	8.2 (Berkeley) 4/28/95";
 #else
-static char rcsid[] = "$OpenBSD: src/bin/date/Attic/netdate.c,v 1.8 1997/06/18 19:21:39 kstailey Exp $";
+static char rcsid[] = "$OpenBSD: src/bin/date/Attic/netdate.c,v 1.9 1997/06/30 07:08:44 deraadt Exp $";
 #endif
 #endif /* not lint */
 
@@ -56,6 +56,7 @@ static char rcsid[] = "$OpenBSD: src/bin/date/Attic/netdate.c,v 1.8 1997/06/18 1
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <rpc/rpc.h>		/* bindresvport() proto */
 
 #include "extern.h"
