@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.7 2003/05/19 21:46:33 tedu Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.8 2003/05/29 19:06:45 tedu Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -5659,7 +5659,6 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 			}
 		} else {
 
-<<<<<<< pmap.c
 			/*
 			 * flush each page individually;
 			 * some never need flushing
@@ -5683,10 +5682,6 @@ pmap_kremove4m(vaddr_t va, vsize_t len)
 		}
 		sp->sg_npte = nleft;
 	}
-=======
-	ctx = getcontext4m();
-	pmap_enk4m(pmap_kernel(), va, prot, PMAP_WIRED, pv, pteproto);
->>>>>>> 1.134
 	setcontext4m(ctx);
 }
 
