@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/mail.local/locking.c,v 1.6 2002/07/03 23:39:03 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/mail.local/locking.c,v 1.7 2003/07/10 00:04:28 david Exp $	*/
 
 /*
  * Copyright (c) 1996-1998 Theo de Raadt <deraadt@theos.com>
@@ -29,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/libexec/mail.local/locking.c,v 1.6 2002/07/03 23:39:03 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/mail.local/locking.c,v 1.7 2003/07/10 00:04:28 david Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -41,6 +41,7 @@ static char rcsid[] = "$OpenBSD: src/libexec/mail.local/locking.c,v 1.6 2002/07/
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include "pathnames.h"

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.18 2003/07/06 21:57:27 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.19 2003/07/10 00:04:28 david Exp $	*/
 
 /*-
  *  Copyright (c) 1993 John Brezak
@@ -29,7 +29,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.18 2003/07/06 21:57:27 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.19 2003/07/10 00:04:28 david Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -40,6 +40,7 @@ static char rcsid[] = "$OpenBSD: src/libexec/rpc.rusersd/rusers_proc.c,v 1.18 20
 #include <paths.h>
 #include <utmp.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <string.h>

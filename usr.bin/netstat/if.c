@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/netstat/if.c,v 1.35 2003/06/03 02:56:13 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/netstat/if.c,v 1.36 2003/07/10 00:06:51 david Exp $	*/
 /*	$NetBSD: if.c,v 1.16.4.2 1996/06/07 21:46:46 thorpej Exp $	*/
 
 /*
@@ -34,7 +34,7 @@
 #if 0
 static char sccsid[] = "from: @(#)if.c	8.2 (Berkeley) 2/21/94";
 #else
-static char *rcsid = "$OpenBSD: src/usr.bin/netstat/if.c,v 1.35 2003/06/03 02:56:13 millert Exp $";
+static char *rcsid = "$OpenBSD: src/usr.bin/netstat/if.c,v 1.36 2003/07/10 00:06:51 david Exp $";
 #endif
 #endif /* not lint */
 
@@ -59,6 +59,7 @@ static char *rcsid = "$OpenBSD: src/usr.bin/netstat/if.c,v 1.35 2003/06/03 02:56
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
