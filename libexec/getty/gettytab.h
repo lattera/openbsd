@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)gettytab.h	8.2 (Berkeley) 3/30/94
- *	$Id: gettytab.h,v 1.7 1994/08/17 20:10:34 pk Exp $
+ *	$Id: gettytab.h,v 1.1.1.1 1995/10/18 08:43:17 deraadt Exp $
  */
 
 /*
@@ -85,6 +85,7 @@ struct gettyflags {
 #define FL	gettystrs[21].value
 #define WE	gettystrs[22].value
 #define LN	gettystrs[23].value
+#define PP	gettystrs[25].value
 
 /*
  * Numeric definitions.
