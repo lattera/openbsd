@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.15 2004/03/23 08:02:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.16 2004/06/07 19:19:18 art Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -394,6 +394,7 @@ intr_calculatemasks()
 		if (irqs >= 0x100) /* any IRQs >= 8 in use */
 			irqs |= 1 << IRQ_SLAVE;
 		imen = ~irqs;
+		SET_ICUS();
 	}
 
 	/* For speed of splx, provide the inverse of the interrupt masks. */
