@@ -17,13 +17,13 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: lcp.c,v 1.4 1998/10/29 02:21:45 brian Exp $
+ * $Id: lcp.c,v 1.67 1999/01/28 01:56:32 brian Exp $
  *
  * TODO:
  *	o Limit data field length by MRU
  */
 
-#include <sys/types.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
@@ -64,6 +64,9 @@
 #include "chap.h"
 #include "cbcp.h"
 #include "datalink.h"
+#ifndef NORADIUS
+#include "radius.h"
+#endif
 #include "bundle.h"
 
 /* for received LQRs */

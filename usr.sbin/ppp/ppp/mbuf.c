@@ -114,13 +114,8 @@ mbuf_Read(struct mbuf * bp, u_char * ptr, int len)
     bp->cnt -= nb;
     len -= nb;
     bp->offset += nb;
-    if (bp->cnt == 0) {
-#ifdef notdef
-      bp = bp->next;
-#else
+    if (bp->cnt == 0)
       bp = mbuf_FreeSeg(bp);
-#endif
-    }
   }
   return (bp);
 }

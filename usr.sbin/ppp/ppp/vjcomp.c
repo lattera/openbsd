@@ -17,18 +17,17 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: vjcomp.c,v 1.23 1998/08/26 18:07:57 brian Exp $
+ * $Id: vjcomp.c,v 1.24 1999/01/28 01:56:34 brian Exp $
  *
  *  TODO:
  */
-#include <sys/types.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #include <sys/un.h>
 
 #include <stdio.h>
-#include <string.h>
 
 #include "mbuf.h"
 #include "log.h"
@@ -48,6 +47,9 @@
 #include "filter.h"
 #include "descriptor.h"
 #include "mp.h"
+#ifndef NORADIUS
+#include "radius.h"
+#endif
 #include "bundle.h"
 #include "vjcomp.h"
 

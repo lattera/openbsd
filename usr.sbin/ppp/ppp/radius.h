@@ -1,5 +1,5 @@
-/*-
- * Copyright (c) 1998 Brian Somers <brian@Awfulhak.org>
+/*
+ * Copyright 1999 Internet Business Solutions Ltd., Switzerland
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,30 +23,36 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: descriptor.h,v 1.4 1998/06/24 19:33:31 brian Exp $
+ *	$Id: radius.h,v 1.1 1999/01/28 01:56:34 brian Exp $
  */
 
-#define PHYSICAL_DESCRIPTOR (1)
-#define SERVER_DESCRIPTOR (2)
-#define PROMPT_DESCRIPTOR (3)
-#define CHAT_DESCRIPTOR (4)
-#define DATALINK_DESCRIPTOR (5)
-#define BUNDLE_DESCRIPTOR (6)
-#define MPSERVER_DESCRIPTOR (7)
-#define RADIUS_DESCRIPTOR (8)
+struct radius {
+  struct descriptor desc;	/* We're a sort of (selectable) descriptor */
+  struct {
+    int fd;			/* We're selecting on this */
+    struct rad_handle *rad;	/* Using this to talk to our lib */
+    struct pppTimer timer;	/* for this long */
+    struct authinfo *auth;	/* Tell this about success/failure */
+  } cx;
+  unsigned valid : 1;           /* Is this structure valid ? */
+  unsigned vj : 1;              /* FRAMED Compression */
+  struct in_addr ip;            /* FRAMED IP */
+  struct in_addr mask;          /* FRAMED Netmask */
+  unsigned long mtu;            /* FRAMED MTU */
+  struct sticky_route *routes;  /* FRAMED Routes */
+  struct {
+    char file[MAXPATHLEN];	/* Radius config file */
+  } cfg;
+};
+
+#define descriptor2radius(d) \
+  ((d)->type == RADIUS_DESCRIPTOR ? (struct radius *)(d) : NULL)
 
 struct bundle;
 
-struct descriptor {
-  int type;
+extern void radius_Init(struct radius *);
+extern void radius_Destroy(struct radius *);
 
-  int (*UpdateSet)(struct descriptor *, fd_set *, fd_set *, fd_set *, int *);
-  int (*IsSet)(struct descriptor *, const fd_set *);
-  void (*Read)(struct descriptor *, struct bundle *, const fd_set *);
-  int (*Write)(struct descriptor *, struct bundle *, const fd_set *);
-};
-
-#define descriptor_UpdateSet(d, r, w, e, n) ((*(d)->UpdateSet)(d, r, w, e, n))
-#define descriptor_IsSet(d, s) ((*(d)->IsSet)(d, s))
-#define descriptor_Read(d, b, f) ((*(d)->Read)(d, b, f))
-#define descriptor_Write(d, b, f) ((*(d)->Write)(d, b, f))
+extern void radius_Show(struct radius *, struct prompt *);
+extern void radius_Authenticate(struct radius *, struct authinfo *,
+                                const char *, const char *, const char *);
