@@ -42,7 +42,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)edquota.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: edquota.c,v 1.11 1996/08/29 03:33:48 deraadt Exp $";
+static char *rcsid = "$Id: edquota.c,v 1.12 1996/09/01 01:41:44 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -67,7 +67,7 @@ static char *rcsid = "$Id: edquota.c,v 1.11 1996/08/29 03:33:48 deraadt Exp $";
 char *qfname = QUOTAFILENAME;
 char *qfextension[] = INITQFNAMES;
 char *quotagroup = QUOTAGROUP;
-char tmpfil[] = _PATH_TMP;
+char tmpfil[] = _PATH_TMPFILE;
 
 struct quotause {
 	struct	quotause *next;
