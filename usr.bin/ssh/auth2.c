@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.20.2.5 2001/09/27 00:15:41 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.20.2.6 2001/11/15 00:14:59 miod Exp $");
 
 #include <openssl/evp.h>
 
@@ -118,7 +118,7 @@ do_authentication2()
 
 	x_authctxt = authctxt;		/*XXX*/
 
-	/* challenge-reponse is implemented via keyboard interactive */
+	/* challenge-response is implemented via keyboard interactive */
 	if (options.challenge_response_authentication)
 		options.kbd_interactive_authentication = 1;
 

@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/nchan.c,v 1.19.2.5 2001/09/27 00:15:42 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/nchan.c,v 1.19.2.6 2001/11/15 00:14:59 miod Exp $");
 
 #include "ssh1.h"
 #include "ssh2.h"
@@ -432,7 +432,7 @@ chan_mark_dead(Channel *c)
 }
 
 int
-chan_is_dead(Channel *c)
+chan_is_dead(Channel *c, int send)
 {
 	if (c->type == SSH_CHANNEL_ZOMBIE) {
 		debug("channel %d: zombie", c->self);
@@ -461,7 +461,16 @@ chan_is_dead(Channel *c)
 		       "read": "write");
 	} else {
 		if (!(c->flags & CHAN_CLOSE_SENT)) {
-			chan_send_close2(c);
+			if (send) {
+				chan_send_close2(c);
+			} else {
+				/* channel would be dead if we sent a close */
+				if (c->flags & CHAN_CLOSE_RCVD) {
+					debug("channel %d: almost dead",
+					    c->self);
+					return 1;
+				}
+			}
 		}
 		if ((c->flags & CHAN_CLOSE_SENT) &&
 		    (c->flags & CHAN_CLOSE_RCVD)) {

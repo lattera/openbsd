@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.69.2.5 2001/09/27 00:15:42 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.69.2.6 2001/11/15 00:15:00 miod Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -551,6 +551,7 @@ again:
 
 	SSLeay_add_all_algorithms();
 	ERR_load_crypto_strings();
+	channel_set_af(IPv4or6);
 
 	/* Initialize the command to execute on remote host. */
 	buffer_init(&command);
@@ -613,10 +614,10 @@ again:
 	} else  {
 		snprintf(buf, sizeof buf, "%.100s/%.100s", pw->pw_dir,
 		    _PATH_SSH_USER_CONFFILE);
-
-		/* Read systemwide configuration file. */
-		(void)read_config_file(_PATH_HOST_CONFIG_FILE, host, &options);
 		(void)read_config_file(buf, host, &options);
+
+		/* Read systemwide configuration file after use config. */
+		(void)read_config_file(_PATH_HOST_CONFIG_FILE, host, &options);
 	}
 
 	/* Fill configuration defaults. */
@@ -660,7 +661,7 @@ again:
 
 	/* Open a connection to the remote host. */
 
-	cerr = ssh_connect(host, &hostaddr, options.port,
+	cerr = ssh_connect(host, &hostaddr, options.port, IPv4or6,
 	    options.connection_attempts,
 	    original_effective_uid != 0 || !options.use_privileged_port,
 	    pw, options.proxy_command);
