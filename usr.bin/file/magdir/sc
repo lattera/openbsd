@@ -1,0 +1,6 @@
+#	$OpenBSD: src/usr.bin/file/magdir/sc,v 1.2 2004/06/03 03:14:20 tedu Exp $
+
+#------------------------------------------------------------------------------
+# sc:  file(1) magic for "sc" spreadsheet
+#
+38	string		Spreadsheet	sc spreadsheet file
