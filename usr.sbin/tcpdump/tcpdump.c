@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/tcpdump.c,v 1.35 2004/01/28 19:44:55 canacar Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/tcpdump.c,v 1.36 2004/04/28 02:17:03 mcbride Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -26,7 +26,7 @@ static const char copyright[] =
     "@(#) Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997\n\
 The Regents of the University of California.  All rights reserved.\n";
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.34 2003/09/25 13:32:58 jmc Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.35 2004/01/28 19:44:55 canacar Exp $ (LBL)";
 #endif
 
 /*
@@ -281,6 +281,8 @@ main(int argc, char **argv)
 				packettype = PT_RTCP;
 			else if (strcasecmp(optarg, "cnfp") == 0)
 				packettype = PT_CNFP;
+			else if (strcasecmp(optarg, "vrrp") == 0)
+				packettype = PT_VRRP;
 			else if (strcasecmp(optarg, "sack") == 0)
 				snaplen = SACK_SNAPLEN;
 			else
