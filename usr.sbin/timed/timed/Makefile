@@ -1,0 +1,16 @@
+#	$OpenBSD: src/usr.sbin/timed/timed/Attic/Makefile,v 1.6 2001/04/07 20:00:15 ho Exp $
+#
+#	@(#)Makefile	5.12 (Berkeley) 5/7/93
+#
+# optional flags are: MEASURE TESTING DEBUG
+
+CFLAGS+=-DHAVENIS
+PROG=	timed
+SRCS=	acksend.c candidate.c correct.c master.c networkdelta.c readmsg.c \
+	slave.c timed.c byteorder.c measure.c cksum.c
+DPADD=	${LIBUTIL}
+LDADD=	-lutil
+MAN=	timed.8
+
+.include "../../Makefile.inc"
+.include <bsd.prog.mk>
