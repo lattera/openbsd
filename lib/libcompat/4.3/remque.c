@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcompat/4.3/Attic/remque.c,v 1.2 2000/03/02 00:29:48 todd Exp $	*/
+
 /*
  *  Copyright (c) 1993 John Brezak
  *  All rights reserved.
@@ -27,7 +29,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$Id: remque.c,v 1.4 1993/10/21 21:08:57 jtc Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libcompat/4.3/Attic/remque.c,v 1.2 2000/03/02 00:29:48 todd Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <search.h>

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 1996/12/08 15:22:32 downsj Exp $
+# $OpenBSD: src/lib/libskey/Makefile,v 1.5 2000/03/02 00:29:51 todd Exp $
 
 LIB=	skey
 SRCS=	skeylogin.c skeysubr.c put.c

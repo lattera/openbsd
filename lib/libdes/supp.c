@@ -1,3 +1,4 @@
+/* $OpenBSD: src/lib/libdes/Attic/supp.c,v 1.2 2000/03/02 00:29:48 todd Exp $	*/
 /* crypto/des/supp.c */
 /* Copyright (C) 1995-1997 Eric Young (eay@mincom.oz.au)
  * All rights reserved.
@@ -87,7 +88,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id$
  */
 
 #include <stdio.h>

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcompat/4.3/Attic/regex.c,v 1.3 2000/03/02 00:29:48 todd Exp $	*/
+
 /*-
  * Copyright (c) 1992 The Regents of the University of California.
  * All rights reserved.
@@ -43,7 +45,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char sccsid[] = "from: @(#)regex.c	5.1 (Berkeley) 3/29/92";*/
-static char rcsid[] = "$Id: regex.c,v 1.1.1.1 1995/10/18 08:42:34 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libcompat/4.3/Attic/regex.c,v 1.3 2000/03/02 00:29:48 todd Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>

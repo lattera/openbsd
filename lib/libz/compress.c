@@ -1,9 +1,9 @@
+/*	$OpenBSD: src/lib/libz/compress.c,v 1.3 2000/03/02 00:29:51 todd Exp $	*/
 /* compress.c -- compress a memory buffer
  * Copyright (C) 1995-1998 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id$ */
 
 #include "zlib.h"
 

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcompat/4.1/Attic/gtty.c,v 1.2 2000/03/02 00:29:47 todd Exp $	*/
+
 /*
  * Copyright (c) 1994 Christopher G. Demetriou
  * All rights reserved.
@@ -29,7 +31,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: gtty.c,v 1.1 1994/05/21 05:20:34 cgd Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libcompat/4.1/Attic/gtty.c,v 1.2 2000/03/02 00:29:47 todd Exp $";
 #endif /* not lint */
 
 #include <sgtty.h>

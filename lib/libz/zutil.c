@@ -1,9 +1,9 @@
+/*	$OpenBSD: src/lib/libz/zutil.c,v 1.4 2000/03/02 00:29:52 todd Exp $	*/
 /* zutil.c -- target dependent utility functions for the compression library
  * Copyright (C) 1995-1998 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id$ */
 
 #include "zutil.h"
 

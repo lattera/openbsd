@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/liby/main.c,v 1.3 2000/03/02 00:29:51 todd Exp $	*/
+
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)main.c	5.3 (Berkeley) 1/13/91";*/
-static char rcsid[] = "$Id: main.c,v 1.1.1.1 1995/10/18 08:43:14 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/liby/main.c,v 1.3 2000/03/02 00:29:51 todd Exp $";
 #endif /* not lint */
 
 #include <stdlib.h>
