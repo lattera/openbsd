@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.32.2.1 2001/05/08 12:45:25 ho Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sa.c,v 1.32.2.2 2001/06/07 20:32:44 miod Exp $	*/
 /*	$EOM: sa.c,v 1.112 2000/12/12 00:22:52 niklas Exp $	*/
 
 /*
@@ -375,6 +375,7 @@ sa_create (struct exchange *exchange, struct transport *t)
   memcpy (sa->cookies, exchange->cookies, ISAKMP_HDR_COOKIES_LEN);
   memcpy (sa->message_id, exchange->message_id, ISAKMP_HDR_MESSAGE_ID_LEN);
   sa->doi = exchange->doi;
+  sa->policy_id = -1;
 
   if (sa->doi->sa_size)
     {
