@@ -18,12 +18,12 @@ Created: Wed Mar 29 02:18:23 1995 ylo
 
 #include "buffer.h"
 
-/* Stores an MP_INT in the buffer with a 2-byte msb first bit count, followed
+/* Stores an BIGNUM in the buffer with a 2-byte msb first bit count, followed
    by (bits+7)/8 bytes of binary data, msb first. */
-void buffer_put_mp_int(Buffer *buffer, MP_INT *value);
+void buffer_put_bignum(Buffer *buffer, BIGNUM *value);
 
-/* Retrieves an MP_INT from the buffer. */
-int buffer_get_mp_int(Buffer *buffer, MP_INT *value);
+/* Retrieves an BIGNUM from the buffer. */
+int buffer_get_bignum(Buffer *buffer, BIGNUM *value);
 
 /* Returns an integer from the buffer (4 bytes, msb first). */
 unsigned int buffer_get_int(Buffer *buffer);

@@ -18,7 +18,6 @@ The main loop for the interactive session (client side).
 RCSID("$Id: clientloop.c,v 1.4 1999/05/04 11:58:37 bg Exp $");
 
 #include "xmalloc.h"
-#include "randoms.h"
 #include "ssh.h"
 #include "packet.h"
 #include "buffer.h"
@@ -786,7 +785,7 @@ void client_process_output(fd_set *writeset)
       /* Write as much data as possible. */
       len = write(fileno(stderr), buffer_ptr(&stderr_buffer),
 		  buffer_len(&stderr_buffer));
-      if (len <= 0)
+      if (len <= 0) {
 	if (errno == EAGAIN)
 	  len = 0;
 	else
@@ -795,6 +794,7 @@ void client_process_output(fd_set *writeset)
 	    quit_pending = 1;
 	    return;
 	  }
+      }
       /* Consume printed characters from the buffer. */
       buffer_consume(&stderr_buffer, len);
     }
