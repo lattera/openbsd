@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/st.c,v 1.41 2004/08/01 23:01:06 marco Exp $	*/
+/*	$OpenBSD: src/sys/scsi/st.c,v 1.41.2.1 2004/11/02 01:05:50 brad Exp $	*/
 /*	$NetBSD: st.c,v 1.71 1997/02/21 23:03:49 thorpej Exp $	*/
 
 /*
@@ -1815,7 +1815,7 @@ st_interpret_sense(xs)
 	u_int8_t skey = sense->flags & SSD_KEY;
 	int32_t info;
 
-	if (((sense->flags & SDEV_OPEN) == 0) ||
+	if (((sc_link->flags & SDEV_OPEN) == 0) ||
 	    (serr != 0x70 && serr != 0x71))
 		return (EJUSTRETURN); /* let the generic code handle it */
 
