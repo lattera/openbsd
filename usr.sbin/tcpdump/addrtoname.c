@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/addrtoname.c,v 1.15 2000/10/03 14:31:54 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/addrtoname.c,v 1.16 2000/10/31 16:06:46 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -25,7 +25,7 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/addrtoname.c,v 1.14 2000/09/24 10:55:57 brad Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/addrtoname.c,v 1.15 2000/10/03 14:31:54 ho Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -654,7 +654,7 @@ tcpport_string(u_short port)
 	tp->addr = i;
 	tp->nxt = newhnamemem();
 
-	(void)sprintf(buf, "%u", i);
+	(void)snprintf(buf, sizeof(buf), "%u", i);
 	tp->name = savestr(buf);
 	return (tp->name);
 }
@@ -699,7 +699,7 @@ init_servarray(void)
 		while (table->name)
 			table = table->nxt;
 		if (nflag) {
-			(void)sprintf(buf, "%d", port);
+			(void)snprintf(buf, sizeof(buf), "%d", port);
 			table->name = savestr(buf);
 		} else
 			table->name = savestr(sv->s_name);
