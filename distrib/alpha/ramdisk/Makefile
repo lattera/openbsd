@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/alpha/ramdisk/Attic/Makefile,v 1.3 1997/05/08 00:50:01 niklas Exp $
+#	$OpenBSD: src/distrib/alpha/ramdisk/Attic/Makefile,v 1.4 1997/05/08 05:44:58 millert Exp $
 
 TOP=		${.CURDIR}/..
 
@@ -20,7 +20,7 @@ REALIMAGE!=	echo /tmp/image.${PID}
 STRIP?=		strip
 GZIP?=		gzip
 GZIPFLAGS?=	-9f
-INSTALLBOOT?=	/usr/mdec/installboot
+INSTALLBOOT?=	/usr/mdec/installboot -v
 
 FLOPPY?=	floppy.fs
 FLOPPYBLKS?=	2880
