@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ftpd/ftpd.c,v 1.71 2000/04/29 14:02:59 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/ftpd/ftpd.c,v 1.71.2.1 2000/07/05 22:20:08 jason Exp $	*/
 /*	$NetBSD: ftpd.c,v 1.15 1995/06/03 22:46:47 mycroft Exp $	*/
 
 /*
@@ -135,7 +135,7 @@ static char rcsid[] = "$NetBSD: ftpd.c,v 1.15 1995/06/03 22:46:47 mycroft Exp $"
 #include <varargs.h>
 #endif
 
-static char version[] = "Version 6.4/OpenBSD";
+static char version[] = "Version 6.5/OpenBSD";
 
 extern	off_t restart_point;
 extern	char cbuf[];
@@ -1011,7 +1011,7 @@ skip:
 		    "%s: anonymous/%.*s", remotehost,
 		    (int)(sizeof(proctitle) - sizeof(remotehost) -
 		    sizeof(": anonymous/")), passwd);
-		setproctitle(proctitle);
+		setproctitle("%s", proctitle);
 #endif /* HASSETPROCTITLE */
 		if (logging)
 			syslog(LOG_INFO, "ANONYMOUS FTP LOGIN FROM %s, %s",
@@ -1021,7 +1021,7 @@ skip:
 #ifdef HASSETPROCTITLE
 		snprintf(proctitle, sizeof(proctitle),
 		    "%s: %s", remotehost, pw->pw_name);
-		setproctitle(proctitle);
+		setproctitle("%s", proctitle);
 #endif /* HASSETPROCTITLE */
 		if (logging)
 			syslog(LOG_INFO, "FTP LOGIN FROM %s as %s",
@@ -2009,7 +2009,7 @@ dolog(sa)
 	remotehost[sizeof(remotehost)-1] = '\0';
 #ifdef HASSETPROCTITLE
 	snprintf(proctitle, sizeof(proctitle), "%s: connected", remotehost);
-	setproctitle(proctitle);
+	setproctitle("%s", proctitle);
 #endif /* HASSETPROCTITLE */
 
 	if (logging)
