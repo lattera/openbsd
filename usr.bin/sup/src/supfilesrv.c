@@ -42,6 +42,9 @@
  *	across the network to save BandWidth
  *
  * $Log: supfilesrv.c,v $
+ * Revision 1.1  1995/12/16 11:46:59  deraadt
+ * add sup to the tree
+ *
  * Revision 1.8  1995/10/29 23:54:49  christos
  * - runio fails when result != 0 not only < 0
  * - print vis-encoded file in the scanner.
@@ -1672,6 +1675,9 @@ va_dcl
 #endif
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
+	strcat(buf, " [");
+	strcat(buf, remotehost());
+	strcat(buf, "]");
 	goawayreason = salloc (buf);
 	(void) msggoaway ();
 	logerr ("%s",buf);
