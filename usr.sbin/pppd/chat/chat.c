@@ -31,7 +31,7 @@
  *
  */
 
-static char rcsid[] = "$Id: chat.c,v 1.6 1995/07/04 23:36:23 paulus Exp $";
+static char rcsid[] = "$Id: chat.c,v 1.1.1.1 1995/10/18 08:48:00 deraadt Exp $";
 
 #include <stdio.h>
 #include <time.h>
@@ -333,6 +333,8 @@ char *chat_file;
 
 	linect++;
 	sp = buf;
+	if ( *sp == '#')
+		continue;
 	while (*sp != '\0')
 	    {
 	    if (*sp == ' ' || *sp == '\t')
