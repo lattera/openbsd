@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.19 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.20 2004/03/18 02:07:52 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -33,69 +33,7 @@
 #ifndef _I386_INTR_H_
 #define _I386_INTR_H_
 
-/*
- * Intel APICs (advanced programmable interrupt controllers) have
- * bytesized priority registers where the upper nibble is the actual
- * interrupt priority level (a.k.a. IPL).  Interrupt vectors are
- * closely tied to these levels as interrupts whose vectors' upper
- * nibble is lower than or equal to the current level are blocked.
- * Not all 256 possible vectors are available for interrupts in
- * APIC systems, only
- *
- * For systems where instead the older ICU (interrupt controlling
- * unit, a.k.a. PIC or 82C59) is used, the IPL is not directly useful,
- * since the interrupt blocking is handled via interrupt masks instead
- * of levels.  However the IPL is easily used as an offset into arrays
- * of masks.
- */
-#define IPLSHIFT 4	/* The upper nibble of vectors is the IPL.	*/
-#define NIPL 16		/* Four bits of information gives as much.	*/
-#define IPL(level) ((level) >> IPLSHIFT)	/* Extract the IPL.	*/
-/* XXX Maybe this IDTVECOFF definition should be elsewhere? */
-#define IDTVECOFF 0x20	/* The lower 32 IDT vectors are reserved.	*/
-
-/*
- * This macro is only defined for 0 <= x < 14, i.e. there are fourteen
- * distinct priority levels available for interrupts.
- */
-#define MAKEIPL(priority) (IDTVECOFF + ((priority) << IPLSHIFT))
-
-/*
- * Interrupt priority levels.
- * XXX We are somewhat sloppy about what we mean by IPLs, sometimes
- * XXX we refer to the eight-bit value suitable for storing into APICs'
- * XXX priority registers, other times about the four-bit entity found
- * XXX in the former values' upper nibble, which can be used as offsets
- * XXX in various arrays of our implementation.  We are hoping that
- * XXX the context will provide enough information to not make this
- * XXX sloppy naming a real problem.
- */
-#define	IPL_NONE	0		/* nothing */
-#define	IPL_SOFTCLOCK	MAKEIPL(0)	/* timeouts */
-#define	IPL_SOFTNET	MAKEIPL(1)	/* protocol stacks */
-#define	IPL_BIO		MAKEIPL(2)	/* block I/O */
-#define	IPL_NET		MAKEIPL(3)	/* network */
-#define	IPL_SOFTTTY	MAKEIPL(4)	/* delayed terminal handling */
-#define	IPL_TTY		MAKEIPL(5)	/* terminal */
-#define	IPL_VM		MAKEIPL(6)	/* memory allocation */
-#define IPL_IMP		IPL_VM		/* XXX - should not be here. */
-#define	IPL_AUDIO	MAKEIPL(7)	/* audio */
-#define	IPL_CLOCK	MAKEIPL(8)	/* clock */
-#define	IPL_SCHED	IPL_CLOCK
-#define	IPL_STATCLOCK	MAKEIPL(9)	/* statclock */
-#define	IPL_HIGH	MAKEIPL(9)	/* everything */
-#define	IPL_IPI		MAKEIPL(10)	/* interprocessor interrupt */
-
-/* Interrupt sharing types. */
-#define	IST_NONE	0	/* none */
-#define	IST_PULSE	1	/* pulsed */
-#define	IST_EDGE	2	/* edge-triggered */
-#define	IST_LEVEL	3	/* level-triggered */
-
-/* Soft interrupt masks. */
-#define	SIR_CLOCK	31
-#define	SIR_NET		30
-#define	SIR_TTY		29
+#include <machine/intrdefs.h>
 
 #ifndef _LOCORE
 
