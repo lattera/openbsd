@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: tty.h,v 1.1 1999/05/08 11:06:40 brian Exp $
+ *	$Id: tty.h,v 1.2 1999/05/12 10:03:55 brian Exp $
  */
 
 struct physical;
@@ -32,3 +32,4 @@ struct device;
 extern struct device *tty_Create(struct physical *);
 extern struct device *tty_iov2device(int, struct physical *,
                                      struct iovec *, int *, int);
+extern int tty_DeviceSize(void);
