@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.38.2.3 2001/11/16 18:45:24 miod Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd/Makefile,v 1.38.2.4 2001/12/03 00:36:50 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -48,8 +48,8 @@ LDADD+= -lwrap
 DPADD+= ${LIBWRAP}
 .endif
 
-#.if (${SKEY:L} == "yes")
-#CFLAGS+= -DSKEY
-#LDADD+= -lskey
-#DPADD+= ${SKEY}
-#.endif
+.if (${SKEY:L} == "yes")
+CFLAGS+= -DSKEY
+LDADD+= -lskey
+DPADD+= ${SKEY}
+.endif
