@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.11 2004/06/05 23:08:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.33.2.12 2004/06/11 18:54:16 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1998-2001 Michael Shalayeff. All rights reserved.
@@ -900,6 +900,15 @@ apm_thread_create(v)
 	void *v;
 {
 	struct apm_softc *sc = v;
+
+#ifdef MULTIPROCESSOR
+	if (ncpus > 1) {
+		apm_disconnect(sc);
+		apm_dobusy = apm_doidle = 0;
+		return;
+	}
+#endif
+
 	if (kthread_create(apm_thread, sc, &sc->sc_thread,
 	    "%s", sc->sc_dev.dv_xname)) {
 		apm_disconnect(sc);
