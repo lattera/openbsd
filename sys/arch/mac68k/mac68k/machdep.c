@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91 2001/12/08 02:24:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.91.2.1 2002/01/31 22:55:13 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.207 1998/07/08 04:39:34 thorpej Exp $	*/
 
 /*
@@ -81,7 +81,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/exec.h>
@@ -181,7 +180,6 @@ int	(*mac68k_bell_callback) __P((void *, int, int, int));
 caddr_t	mac68k_bell_cookie;
 
 struct vm_map *exec_map = NULL;  
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 /*
@@ -495,9 +493,6 @@ again:
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 	printf("avail mem = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n",

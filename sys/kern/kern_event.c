@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.10 2001/10/26 12:03:27 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.10.2.1 2002/01/31 22:55:40 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon <jlemon@FreeBSD.org>
@@ -397,7 +397,6 @@ kqueue_register(struct kqueue *kq, struct kevent *kev, struct proc *p)
 		 * filter attach routine is responsible for insuring that
 		 * the identifier can be attached to it.
 		 */
-		printf("unknown filter: %d\n", kev->filter);
 		return (EINVAL);
 	}
 
@@ -890,7 +889,7 @@ void
 knote_init(void)
 {
 	pool_init(&knote_pool, sizeof(struct knote), 0, 0, 0, "knotepl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_KNOTE);
+	    &pool_allocator_nointr);
 }
 
 struct knote *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18 2001/12/05 16:25:44 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/vmparam.h,v 1.18.2.1 2002/01/31 22:55:18 niklas Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1992 Carnegie Mellon University
@@ -112,7 +112,6 @@
 struct pmap_physseg {
 	struct pv_entry *pvent;		/* pv table for this seg */
 	char *attrs;			/* page modify list for this seg */
-	struct simplelock *plock;	/* page lock for this seg */
 };
 #endif /* _LOCORE */
 

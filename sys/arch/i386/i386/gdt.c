@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.17 2001/11/06 19:53:14 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.17.2.1 2002/01/31 22:55:11 niklas Exp $	*/
 /*	$NetBSD: gdt.c,v 1.8 1996/05/03 19:42:06 christos Exp $	*/
 
 /*-
@@ -222,9 +222,8 @@ gdt_get_slot()
 			if (gdt_size >= MAXGDTSIZ)
 				panic("gdt_get_slot botch 2");
 			if (dynamic_gdt == gdt)
-				gdt_init();
-			else
-				gdt_grow();
+				panic("gdt_get_slot called before gdt_init");
+			gdt_grow();
 		}
 		slot = gdt_next++;
 	}

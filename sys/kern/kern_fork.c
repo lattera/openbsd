@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47 2001/11/06 19:53:20 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47.2.1 2002/01/31 22:55:40 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -43,7 +43,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/filedesc.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
@@ -273,8 +272,7 @@ again:
 	if (p1->p_flag & P_PROFIL)
 		startprofclock(p2);
 	p2->p_flag |= (p1->p_flag & (P_SUGID | P_SUGIDEXEC));
-	MALLOC(p2->p_cred, struct pcred *, sizeof(struct pcred),
-	    M_SUBPROC, M_WAITOK);
+	p2->p_cred = pool_get(&pcred_pool, PR_WAITOK);
 	bcopy(p1->p_cred, p2->p_cred, sizeof(*p2->p_cred));
 	p2->p_cred->p_refcnt = 1;
 	crhold(p1->p_ucred);

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.283 2001/11/30 00:17:02 nate Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/GENERIC,v 1.283.2.1 2002/01/31 22:55:10 niklas Exp $
 #	$NetBSD: GENERIC,v 1.48 1996/05/20 18:17:23 mrg Exp $
 #
 #	GENERIC -- everything that's currently supported
@@ -55,7 +55,7 @@ pchb*	at pci? dev ? function ?	# PCI-Host bridges
 ppb*	at pci? dev ? function ?	# PCI-PCI bridges
 pci*	at ppb? bus ?
 pci*	at pchb? bus ?
-pcib*	at pci? dev ? function ?	# PCI-ISA bridges (do nothing)
+pcib*	at pci? dev ? function ?	# PCI-ISA bridge
 
 # ISA PCMCIA controllers
 #option PCMCIAVERBOSE
@@ -186,10 +186,12 @@ mms1	at isa? port 0x238 irq 5
 wsmouse*	at lms? mux 0
 wsmouse*	at mms? mux 0
 
-bt0	at isa? port 0x330 irq ? drq ?	# BusLogic [57]4X SCSI controllers
-bt1	at isa? disable port 0x334 irq ? drq ? # BusLogic [57]4X SCSI controllers
-bt2	at isa? disable port ? irq ?
-scsibus* at bt?
+bha0	at isa? port 0x330 irq ? drq ?	# BusLogic [57]4X SCSI controllers
+bha1	at isa? disable port 0x334 irq ? drq ? # BusLogic [57]4X SCSI controllers
+bha2	at isa? disable port ? irq ?
+bha*	at pci? dev ? function ?
+#bha*	at eisa? slot ?			# XXX eisa still runs in isa-compat
+scsibus* at bha?
 aha0	at isa? port 0x330 irq ? drq ?	# Adaptec 154[02] SCSI controllers
 aha1	at isa? port 0x334 irq ? drq ?	# Adaptec 154[02] SCSI controllers
 aha*	at isapnp?
@@ -440,17 +442,24 @@ audio*	at maestro?
 audio*	at yds?
 audio*	at emu?
 
+bktr0	at pci? dev ? function ?
+
 # FM-Radio devices
-#sf4r0	at pci?			# SoundForte RadioLink SF64-PCR FM Radio Card
+#mr*	at pci? dev ? function ? # Guillemot Maxi Radio FM2000 PCI Radio Card
+#sf4r*	at pci? dev ? function ? # SoundForte RadioLink SF64-PCR FM Radio Card
 #sf2r0	at isa? port 0x384      # SoundForte RadioLink SF16-FMR2 FM Radio Card
 #az0	at isa? port 0x350      # Aztech/PackardBell FM Radio Card
+#rt0	at isa? port 0x30c	# AIMS Lab Radiotrack FM Radio Card
+#rtii0	at isa? port 0x30c	# AIMS Lab Radiotrack II FM Radio Card
 
 # FM-Radio support
-#radio*  at sf4r0
-#radio*  at sf2r0
-#radio*  at az0
-
-bktr0	at pci? dev ? function ?
+#radio*	at mr?
+#radio*	at sf4r?
+#radio*	at bktr?
+#radio*	at sf2r0
+#radio*	at az0
+#radio*	at rt0
+#radio*	at rtii0
 
 # Joystick driver. Probe is a little strange; add only if you have one.
 #joy0	at isa? port 0x201

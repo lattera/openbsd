@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.13 2001/12/14 21:44:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/pmap_bootstrap.c,v 1.13.2.1 2002/01/31 22:55:08 niklas Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.13 1997/06/10 18:56:50 veego Exp $	*/
 
 /* 

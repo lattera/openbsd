@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/mfs/mfs_vnops.c,v 1.17 2001/12/04 22:44:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/mfs/mfs_vnops.c,v 1.17.2.1 2002/01/31 22:55:50 niklas Exp $	*/
 /*	$NetBSD: mfs_vnops.c,v 1.8 1996/03/17 02:16:32 christos Exp $	*/
 
 /*
@@ -42,7 +42,6 @@
 #include <sys/kernel.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
-#include <sys/map.h>
 #include <sys/vnode.h>
 #include <sys/malloc.h>
 
@@ -323,9 +322,9 @@ mfs_reclaim(v)
 	struct vop_reclaim_args /* {
 		struct vnode *a_vp;
 	} */ *ap = v;
-	register struct vnode *vp = ap->a_vp;
+	struct vnode *vp = ap->a_vp;
 
-	FREE(vp->v_data, M_MFSNODE);
+	free(vp->v_data, M_MFSNODE);
 	vp->v_data = NULL;
 	return (0);
 }

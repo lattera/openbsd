@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/zlib.c,v 1.9 2001/01/29 06:12:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/zlib.c,v 1.9.6.1 2002/01/31 22:55:44 niklas Exp $	*/
 /*	$NetBSD: zlib.c,v 1.2 1996/03/16 23:55:40 christos Exp $	*/
 
 /*
@@ -3405,7 +3405,10 @@ int r;
       {
         r = t;
         if (r == Z_DATA_ERROR)
+        {
+          ZFREE(z, s->sub.trees.blens, s->sub.trees.nblens * sizeof(uInt));
           s->mode = BADB;
+        }
         LEAVE
       }
       s->sub.trees.index = 0;
@@ -3468,7 +3471,10 @@ int r;
         if (t != Z_OK)
         {
           if (t == (uInt)Z_DATA_ERROR)
+          {
+            ZFREE(z, s->sub.trees.blens, s->sub.trees.nblens * sizeof(uInt));
             s->mode = BADB;
+          }
           r = t;
           LEAVE
         }

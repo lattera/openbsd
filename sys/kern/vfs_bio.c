@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.54 2001/11/30 05:45:33 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.54.2.1 2002/01/31 22:55:41 niklas Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -64,11 +64,6 @@
 #include <uvm/uvm_extern.h>
 
 #include <miscfs/specfs/specdev.h>
-
-/* Macros to clear/set/test flags. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
 
 /*
  * Definitions for the buffer hash lists.
@@ -188,8 +183,7 @@ bufinit()
 	register int i;
 	int base, residual;
 
-	pool_init(&bufpool, sizeof(struct buf), 0, 0, 0, "bufpl", 0,
-	    NULL, NULL, M_DEVBUF);
+	pool_init(&bufpool, sizeof(struct buf), 0, 0, 0, "bufpl", NULL);
 	for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
 		TAILQ_INIT(dp);
 	bufhashtbl = hashinit(nbuf, M_CACHE, M_WAITOK, &bufhash);

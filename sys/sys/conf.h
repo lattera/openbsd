@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/conf.h,v 1.50 2001/11/01 12:13:47 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/conf.h,v 1.50.2.1 2002/01/31 22:55:48 niklas Exp $	*/
 /*	$NetBSD: conf.h,v 1.33 1996/05/03 20:03:32 christos Exp $	*/
 
 /*-
@@ -422,6 +422,12 @@ void	randomattach __P((void));
 	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
 	(dev_type_stop((*))) enodev, 0, (dev_type_select((*))) enodev, \
 	(dev_type_mmap((*))) enodev }
+
+/* open, close, write, ioctl */
+#define cdev_spkr_init(c,n) { \
+	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+	0, seltrue, (dev_type_mmap((*))) enodev }
 
 /* symbolic sleep message strings */
 extern char devopn[], devio[], devwait[], devin[], devout[];

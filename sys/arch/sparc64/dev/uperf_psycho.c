@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/uperf_psycho.c,v 1.3 2002/01/31 18:35:19 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/uperf_psycho.c,v 1.3.2.1 2002/01/31 22:55:24 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

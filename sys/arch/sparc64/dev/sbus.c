@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sbus.c,v 1.7 2001/10/15 03:36:16 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sbus.c,v 1.7.6.1 2002/01/31 22:55:24 niklas Exp $	*/
 /*	$NetBSD: sbus.c,v 1.46 2001/10/07 20:30:41 eeh Exp $ */
 
 /*-
@@ -144,7 +144,6 @@ static int sbus_get_intr __P((struct sbus_softc *, int,
 			      struct sbus_intr **, int *, int));
 int sbus_bus_mmap __P((bus_space_tag_t, bus_type_t, bus_addr_t,
 			      int, bus_space_handle_t *));
-bus_addr_t sbus_bus_addr __P((bus_space_tag_t, u_int, u_int));
 static int sbus_overtemp __P((void *));
 static int _sbus_bus_map __P((
 		bus_space_tag_t,
@@ -338,6 +337,8 @@ sbus_attach(parent, self, aux)
 	/* Enable the over temp intr */
 	ih = (struct intrhand *)
 		malloc(sizeof(struct intrhand), M_DEVBUF, M_NOWAIT);
+	if (ih == NULL)
+		panic("couldn't malloc intrhand");
 	ih->ih_map = &sc->sc_sysio->therm_int_map;
 	ih->ih_clr = NULL; /* &sc->sc_sysio->therm_clr_int; */
 	ih->ih_fun = sbus_overtemp;

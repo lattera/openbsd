@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116 2001/12/09 04:51:35 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.1 2002/01/31 22:55:23 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -189,14 +189,18 @@ struct pool pvpool;
  */
 static struct pool L1_pool;
 static struct pool L23_pool;
-void *pgt_page_alloc(unsigned long, int, int);
-void  pgt_page_free(void *, unsigned long, int);
+void *pgt_page_alloc(struct pool *, int);
+void  pgt_page_free(struct pool *, void *);
+
+struct pool_allocator pgt_allocator = {
+	pgt_page_alloc, pgt_page_free, 0,
+};
 
 /*
  * Page table pool back-end.
  */
 void *
-pgt_page_alloc(unsigned long sz, int flags, int mtype)
+pgt_page_alloc(struct pool *pp, int flags)
 {
 	struct vm_page *pg;
 	int nocache = (cpuinfo.flags & CPUFLG_CACHEPAGETABLES) == 0;
@@ -219,10 +223,10 @@ pgt_page_alloc(unsigned long sz, int flags, int mtype)
 	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
         return ((void *)va);
-}       
+}
    
 void
-pgt_page_free(void *v, unsigned long sz, int mtype)
+pgt_page_free(struct pool *pp, void *v)
 {
 	vaddr_t va = (vaddr_t)v;
 	paddr_t pa;
@@ -3235,8 +3239,7 @@ pmap_init()
 			sizeof(struct pvlist);
 	}
 
-	pool_init(&pvpool, sizeof(struct pvlist), 0, 0, 0, "pvpl", 0,
-	    NULL, NULL, 0);
+	pool_init(&pvpool, sizeof(struct pvlist), 0, 0, 0, "pvpl", NULL);
 
 	/*
 	 * We can set it here since it's only used in pmap_enter to see
@@ -3254,12 +3257,12 @@ pmap_init()
                 int n;
 
                 n = SRMMU_L1SIZE * sizeof(int);
-                pool_init(&L1_pool, n, n, 0, 0, "L1 pagetable", 0,
-                          pgt_page_alloc, pgt_page_free, 0);
+                pool_init(&L1_pool, n, n, 0, 0, "L1 pagetable",
+		    &pgt_allocator);
 
                 n = SRMMU_L2SIZE * sizeof(int);
-                pool_init(&L23_pool, n, n, 0, 0, "L2/L3 pagetable", 0,
-                          pgt_page_alloc, pgt_page_free, 0);
+                pool_init(&L23_pool, n, n, 0, 0, "L2/L3 pagetable",
+                    &pgt_allocator);
         }
 #endif
 }

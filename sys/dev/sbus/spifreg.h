@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1 2002/01/13 02:06:46 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/spifreg.h,v 1.1.2.1 2002/01/31 22:55:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Jason L. Wright (jason@thought.net)

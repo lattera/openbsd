@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfvar.h,v 1.58 2001/12/10 18:28:32 dhartmei Exp $ */
+/*	$OpenBSD: src/sys/net/pfvar.h,v 1.58.2.1 2002/01/31 22:55:44 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -191,6 +191,8 @@ struct pf_rule_addr {
 struct pf_rule {
 	char		 ifname[IFNAMSIZ];
 	char		 rt_ifname[IFNAMSIZ];
+#define PF_RULE_LABEL_SIZE	32
+	char		 label[PF_RULE_LABEL_SIZE];
 	struct ifnet	*ifp;
 	struct ifnet	*rt_ifp;
 	struct pf_rule_addr src;
@@ -243,6 +245,7 @@ struct pf_rule {
 struct pf_state_host {
 	struct pf_addr	addr;
 	u_int16_t	port;
+	u_int16_t	pad;
 };
 
 struct pf_state_peer {
@@ -251,6 +254,7 @@ struct pf_state_peer {
 	u_int32_t	seqdiff;	/* Sequence number modulator	*/
 	u_int16_t	max_win;
 	u_int8_t	state;
+	u_int8_t	pad;
 };
 
 struct pf_state {
@@ -299,6 +303,7 @@ struct pf_nat {
 	u_int8_t	 snot;
 	u_int8_t	 dnot;
 	u_int8_t	 ifnot;
+	u_int8_t	 no;
 };
 
 struct pf_binat {
@@ -312,6 +317,7 @@ struct pf_binat {
 	u_int8_t	 af;
 	u_int8_t	 proto;
 	u_int8_t	 dnot;
+	u_int8_t	 no;
 };
 
 struct pf_rdr {
@@ -332,6 +338,7 @@ struct pf_rdr {
 	u_int8_t	 dnot;
 	u_int8_t	 ifnot;
 	u_int8_t	 opts;
+	u_int8_t	 no;
 };
 
 struct pf_tree_key {
@@ -556,6 +563,7 @@ struct pfioc_tm {
 #define DIOCGETBINAT	_IOWR('D', 35, struct pfioc_binat)
 #define DIOCCHANGEBINAT	_IOWR('D', 36, struct pfioc_changebinat)
 #define DIOCADDSTATE	_IOWR('D', 37, struct pfioc_state)
+#define DIOCCLRRULECTRS	_IO  ('D', 38)
 
 #ifdef _KERNEL
 

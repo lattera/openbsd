@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pmap.h,v 1.14 2001/12/02 02:01:52 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pmap.h,v 1.14.2.1 2002/01/31 22:55:13 niklas Exp $	*/
 
 #ifndef	_MAC68K_PMAP_H_
 #define	_MAC68K_PMAP_H_

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17 2001/12/07 05:11:14 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.17.2.1 2002/01/31 22:55:24 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -50,7 +50,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/disklabel.h>
 #include <sys/device.h>
@@ -1468,6 +1467,7 @@ static struct {
 	{ "ide",	BUSCLASS_PCI,		"pciide" },
 	{ "disk",	BUSCLASS_NONE,		"wd" },
 	{ "cmdk",	BUSCLASS_NONE,		"wd" },
+	{ "pci108e,1101.1", BUSCLASS_NONE,	"gem" },
 	{ "network",	BUSCLASS_NONE,		"hme" },
 	{ "ethernet",	BUSCLASS_NONE,		"dc" },
 	{ "SUNW,fas",	BUSCLASS_NONE,		"esp" },

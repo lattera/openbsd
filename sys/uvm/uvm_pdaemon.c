@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.20 2001/11/28 19:28:15 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pdaemon.c,v 1.20.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_pdaemon.c,v 1.36 2001/06/27 18:52:10 thorpej Exp $	*/
 
 /*
@@ -164,12 +164,12 @@ uvmpd_tune()
 {
 	UVMHIST_FUNC("uvmpd_tune"); UVMHIST_CALLED(pdhist);
 
-	uvmexp.freemin = uvmexp.npages / 20;
+	uvmexp.freemin = uvmexp.npages / 30;
 
-	/* between 16k and 256k */
+	/* between 16k and 512k */
 	/* XXX:  what are these values good for? */
 	uvmexp.freemin = max(uvmexp.freemin, (16*1024) >> PAGE_SHIFT);
-	uvmexp.freemin = min(uvmexp.freemin, (256*1024) >> PAGE_SHIFT);
+	uvmexp.freemin = min(uvmexp.freemin, (512*1024) >> PAGE_SHIFT);
 
 	/* Make sure there's always a user page free. */
 	if (uvmexp.freemin < uvmexp.reserve_kernel + 1)
@@ -248,8 +248,16 @@ uvm_pageout(void *arg)
 		 * scan if needed
 		 */
 
+#ifdef UBC
 		if (uvmexp.free + uvmexp.paging < uvmexp.freetarg ||
+		    uvmexp.inactive < uvmexp.inactarg ||
+		    uvm_pgcnt_vnode >
+		    (uvmexp.active + uvmexp.inactive + uvmexp.wired +
+		     uvmexp.free) * 13 / 16) {
+#else
+		if (uvmexp.free < uvmexp.freetarg ||
 		    uvmexp.inactive < uvmexp.inactarg) {
+#endif
 			uvmpd_scan();
 		}
 
@@ -369,7 +377,7 @@ uvmpd_scan_inactive(pglst)
 	struct vm_anon *anon;
 	boolean_t swap_backed;
 	vaddr_t start;
-	int dirtyreacts, t;
+	int dirtyreacts;
 	UVMHIST_FUNC("uvmpd_scan_inactive"); UVMHIST_CALLED(pdhist);
 
 	/*
@@ -430,41 +438,14 @@ uvmpd_scan_inactive(pglst)
 
 			/*
 			 * move referenced pages back to active queue and
-			 * skip to next page.
+			 * skip to next page (unlikely to happen since
+			 * inactive pages shouldn't have any valid mappings
+			 * and we cleared reference before deactivating).
 			 */
 
 			if (pmap_is_referenced(p)) {
 				uvm_pageactivate(p);
 				uvmexp.pdreact++;
-				continue;
-			}
-
-			/*
-			 * enforce the minimum thresholds on different
-			 * types of memory usage.  if reusing the current
-			 * page would reduce that type of usage below its
-			 * minimum, reactivate the page instead and move
-			 * on to the next page.
-			 */
-
-			t = uvmexp.active + uvmexp.inactive + uvmexp.free;
-			if (p->uanon &&
-			    uvmexp.anonpages <= (t * uvmexp.anonmin) >> 8) {
-				uvm_pageactivate(p);
-				uvmexp.pdreanon++;
-				continue;
-			}
-			if (p->uobject && UVM_OBJ_IS_VTEXT(p->uobject) &&
-			    uvmexp.vtextpages <= (t * uvmexp.vtextmin) >> 8) {
-				uvm_pageactivate(p);
-				uvmexp.pdrevtext++;
-				continue;
-			}
-			if (p->uobject && UVM_OBJ_IS_VNODE(p->uobject) &&
-			    !UVM_OBJ_IS_VTEXT(p->uobject) &&
-			    uvmexp.vnodepages <= (t * uvmexp.vnodemin) >> 8) {
-				uvm_pageactivate(p);
-				uvmexp.pdrevnode++;
 				continue;
 			}
 
@@ -529,16 +510,9 @@ uvmpd_scan_inactive(pglst)
 
 			/*
 			 * we now have the object and the page queues locked.
-			 * the page is not busy.  remove all the permissions
-			 * from the page so we can sync the modified info
-			 * without any race conditions.  if the page is clean
-			 * we can free it now and continue.
+			 * the page is not busy.   if the page is clean we
+			 * can free it now and continue.
 			 */
-
-			pmap_page_protect(p, VM_PROT_NONE);
-			if ((p->flags & PG_CLEAN) != 0 && pmap_is_modified(p)) {
-				p->flags &= ~PG_CLEAN;
-			}
 
 			if (p->flags & PG_CLEAN) {
 				if (p->pqflags & PQ_SWAPBACKED) {
@@ -548,6 +522,8 @@ uvmpd_scan_inactive(pglst)
 					simple_unlock(&uvm.swap_data_lock);
 				}
 
+				/* zap all mappings with pmap_page_protect... */
+				pmap_page_protect(p, VM_PROT_NONE);
 				uvm_pagefree(p);
 				uvmexp.pdfreed++;
 
@@ -630,12 +606,15 @@ uvmpd_scan_inactive(pglst)
 			 * the page we are looking at is dirty.   we must
 			 * clean it before it can be freed.  to do this we
 			 * first mark the page busy so that no one else will
-			 * touch the page.
+			 * touch the page.   we write protect all the mappings
+			 * of the page so that no one touches it while it is
+			 * in I/O.
 			 */
 
 			swap_backed = ((p->pqflags & PQ_SWAPBACKED) != 0);
 			p->flags |= PG_BUSY;		/* now we own it */
 			UVM_PAGE_OWN(p, "scan_inactive");
+			pmap_page_protect(p, VM_PROT_READ);
 			uvmexp.pgswapout++;
 
 			/*

@@ -1,4 +1,4 @@
-$NetBSD: pcmciadevs,v 1.150 2001/11/27 03:25:16 enami Exp $
+	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs,v 1.78.2.1 2002/01/31 22:55:37 niklas Exp $
 /* $NetBSD: pcmciadevs,v 1.13 1998/08/17 23:10:12 thorpej Exp $ */
 
 /*
@@ -64,6 +64,7 @@ vendor SIMPLETECH		0x014d	Simple Technology
 vendor SYMBOL2			0x014d	Symbol
 vendor LUCENT			0x0156	Lucent
 vendor AIRONET			0x015f	Aironet Wireless Communications
+vendor ERICSSON			0x016b	Ericsson
 vendor PSION			0x016c	Psion
 vendor COMPAQ2			0x0183	Compaq
 vendor KINGSTON			0x0186	Kingston
@@ -79,6 +80,7 @@ vendor SYMBOL			0x026c	Symbol
 vendor BUFFALO			0x026f	BUFFALO (Melco Corporation)
 vendor LINKSYS2			0x0274	The Linksys Group
 vendor IODATA2			0x028a	I-O DATA
+vendor NWN			0x0602	No Wires Needed
 vendor BREEZECOM		0x0a02	BreezeCOM
 vendor NEWMEDIA2		0x10cd	NewMedia
 vendor LASAT			0x3401	Lasat
@@ -247,9 +249,14 @@ product NEWMEDIA2 BUSTOASTER	0x0001 NewMedia BusToaster
 
 /* Netgear */
 product NETGEAR FA410TXC	0x4530 Netgear FA410TXC
+product NETGEAR FA411		0x0411 Netgear FA411
 
 /* Nokia */
 product NOKIA C020_WLAN		0x20c0 Nokia C020
+
+/* No Wires Needed */
+product NWN WLAN_550		0x0002 NWN 550 WLAN
+product NWN WLAN_1148		0x0003 NWN 1148 WLAN
 
 /* Panasonic */
 product PANASONIC KXLC002	0x0304 Panasonic 4X CD-ROM Interface
@@ -259,6 +266,9 @@ product PANASONIC KME		0x2604 Panasonic CD-R/RW Interface
 /* Proxim */
 product PROXIM ROAMABOUT_2400FH	0x1058 Digital RoamAbout 2400FH
 product PROXIM RANGELAN2_7401	0x1158 Proxim RangeLAN2 7401
+
+/* Ericsson */
+product	ERICSSON WIRELESSLAN	0x0001 DSSS Wireless LAN PC Card
 
 /* Psion */
 product PSION GOLDCARD		0x0020 Psion Goldcard
@@ -283,6 +293,7 @@ product SIMPLETECH COMMUNICATOR288 0x0100 Simple Technology 28.8 Communicator
 
 /* Socket Communications */
 product SOCKET EA_ETHER		0x0000 Socket Communications EA
+product SOCKET LP_WLAN_CF	0x0001 Socket Communications Low Power WLAN
 product SOCKET PAGECARD		0x0003 Socket Communications PageCard
 product SOCKET DUAL_RS232	0x0006 Socket Communications Dual RS232
 product SOCKET LP_ETHER		0x000d Socket Communications LP-E

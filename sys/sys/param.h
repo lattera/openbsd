@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/param.h,v 1.44 2001/12/10 03:03:10 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/param.h,v 1.44.2.1 2002/01/31 22:55:49 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.23 1996/03/17 01:02:29 thorpej Exp $	*/
 
 /*-
@@ -157,6 +157,13 @@
  */
 #define	MAXPATHLEN	PATH_MAX
 #define MAXSYMLINKS	32
+
+/* Macros to set/clear/test flags. */
+#ifdef _KERNEL
+#define SET(t, f)	((t) |= (f))
+#define CLR(t, f)	((t) &= ~(f))
+#define ISSET(t, f)	((t) & (f))
+#endif
 
 /* Bit map related macros. */
 #define	setbit(a,i)	((a)[(i)/NBBY] |= 1<<((i)%NBBY))

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.2 2001/12/05 05:38:28 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.2.2.1 2002/01/31 22:55:38 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -50,12 +50,42 @@
 #include <dev/wscons/wscons_raster.h>
 #include <dev/rcons/raster.h>
 
+union bt_cmap {
+	u_int8_t cm_map[256][3];	/* 256 r/b/g entries */
+	u_int32_t cm_chip[256 * 3 / 4];	/* the way the chip is loaded */
+};
+
+#define	BT_ADDR		0x00		/* map address register */
+#define	BT_CMAP		0x04		/* colormap data register */
+#define	BT_CTRL		0x08		/* control register */
+#define	BT_OMAP		0x0c		/* overlay (cursor) map register */
+
+#define	BT_WRITE(sc, reg, val) \
+    bus_space_write_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg), (val))
+#define	BT_READ(sc, reg) \
+    bus_space_read_4((sc)->sc_bustag, (sc)->sc_bt_regs, (reg))
+
+#define	BT_INIT(sc) do {					\
+	BT_WRITE((sc), BT_ADDR, 0x06);	/* command reg */	\
+	BT_WRITE((sc), BT_CTRL, 0x73);	/* overlay plane */	\
+	BT_WRITE((sc), BT_ADDR, 0x04);  /* read mask */		\
+	BT_WRITE((sc), BT_CTRL, 0xff);	/* color planes */	\
+} while (0)
+
+#define	BT_D4M3(x)	((((x) >> 2) << 1) + ((x) >> 2)) /* (x / 4) * 3 */
+#define	BT_D4M4(x)	((x) & ~3)			 /* (x / 4) * 4 */
+
+#define	CGSIX_ROM_OFFSET	0x000000
 #define	CGSIX_BT_OFFSET		0x200000
 #define	CGSIX_BT_SIZE		(sizeof(u_int32_t) * 4)
+#define	CGSIX_DHC_OFFSET	0x240000
+#define	CGSIX_ALT_OFFSET	0x280000
 #define	CGSIX_FHC_OFFSET	0x300000
 #define	CGSIX_FHC_SIZE		(sizeof(u_int32_t) * 1)
 #define	CGSIX_THC_OFFSET	0x301000
 #define	CGSIX_THC_SIZE		(sizeof(u_int32_t) * 640)
+#define	CGSIX_FBC_OFFSET	0x700000
+#define	CGSIX_TEC_OFFSET	0x701000
 #define	CGSIX_VID_OFFSET	0x800000
 #define	CGSIX_VID_SIZE		(1024 * 1024)
 
@@ -63,6 +93,8 @@ struct cgsix_softc {
 	struct device sc_dev;
 	struct sbusdev sc_sd;
 	bus_space_tag_t sc_bustag;
+	bus_addr_t sc_paddr;
+	bus_type_t sc_btype;
 	bus_space_handle_t sc_bt_regs;
 	bus_space_handle_t sc_fhc_regs;
 	bus_space_handle_t sc_thc_regs;
@@ -71,6 +103,22 @@ struct cgsix_softc {
 	int sc_width, sc_height, sc_depth, sc_linebytes;
 	struct rcons sc_rcons;
 	struct raster sc_raster;
+	union bt_cmap sc_cmap;
+};
+
+#define	CG6_USER_FBC	0x70000000
+#define	CG6_USER_TEC	0x70001000
+#define	CG6_USER_BTREGS	0x70002000
+#define	CG6_USER_FHC	0x70004000
+#define	CG6_USER_THC	0x70005000
+#define	CG6_USER_ROM	0x70006000
+#define	CG6_USER_RAM	0x70016000
+#define	CG6_USER_DHC	0x80000000
+
+struct mmo {
+	u_long	mo_uaddr;		/* user (virtual address */
+	u_long	mo_size;		/* size, or 0 for video ram size */
+	u_long	mo_physoff;		/* offset from sc_physadr */
 };
 
 struct wsdisplay_emulops cgsix_emulops = {
@@ -89,7 +137,7 @@ struct wsscreen_descr cgsix_stdscreen = {
 	0, 0,	/* will be filled in -- XXX shouldn't, it's global. */
 	0,
 	0, 0,
-	WSSCREEN_REVERSE
+	WSSCREEN_REVERSE | WSSCREEN_WSCOLORS
 };
 
 const struct wsscreen_descr *cgsix_scrlist[] = {
@@ -109,6 +157,11 @@ int cgsix_show_screen __P((void *, void *, int,
     void (*cb) __P((void *, int, int)), void *));
 paddr_t cgsix_mmap __P((void *, off_t, int));
 int cgsix_is_console __P((int));
+int cg6_bt_getcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
+int cg6_bt_putcmap __P((union bt_cmap *, struct wsdisplay_cmap *));
+void cgsix_loadcmap __P((struct cgsix_softc *, u_int, u_int));
+void cgsix_setcolor __P((struct cgsix_softc *, u_int,
+    u_int8_t, u_int8_t, u_int8_t));
 
 static int a2int __P((char *, int));
 
@@ -151,10 +204,12 @@ cgsixattach(parent, self, aux)
 	struct cgsix_softc *sc = (struct cgsix_softc *)self;
 	struct sbus_attach_args *sa = aux;
 	struct wsemuldisplaydev_attach_args waa;
-	int console;
+	int console, i;
 	long defattr;
 
 	sc->sc_bustag = sa->sa_bustag;
+	sc->sc_btype = (bus_type_t)sa->sa_slot;
+	sc->sc_paddr = sbus_bus_addr(sa->sa_bustag, sa->sa_slot, sa->sa_offset);
 
 	if (sa->sa_nreg != 1) {
 		printf(": expected %d registers, got %d\n", 1, sa->sa_nreg);
@@ -193,6 +248,13 @@ cgsixattach(parent, self, aux)
 	}
 
 	console = cgsix_is_console(sa->sa_node);
+
+	BT_WRITE(sc, BT_ADDR, 0);
+	for (i = 0; i < 256; i++) {
+		sc->sc_cmap.cm_map[i][0] = BT_READ(sc, BT_CMAP) >> 24;
+		sc->sc_cmap.cm_map[i][1] = BT_READ(sc, BT_CMAP) >> 24;
+		sc->sc_cmap.cm_map[i][2] = BT_READ(sc, BT_CMAP) >> 24;
+	}
 
 	sc->sc_depth = getpropint(sa->sa_node, "depth", -1);
 	if (sc->sc_depth == -1)
@@ -241,9 +303,20 @@ cgsixattach(parent, self, aux)
 
 	printf("\n");
 
-	if (console)
+	if (console) {
+		cgsix_setcolor(sc, WSCOL_BLACK, 0, 0, 0);
+		cgsix_setcolor(sc, 255, 255, 255, 255);
+		cgsix_setcolor(sc, WSCOL_RED, 255, 0, 0);
+		cgsix_setcolor(sc, WSCOL_GREEN, 0, 255, 0);
+		cgsix_setcolor(sc, WSCOL_BROWN, 154, 85, 46);
+		cgsix_setcolor(sc, WSCOL_BLUE, 0, 0, 255);
+		cgsix_setcolor(sc, WSCOL_MAGENTA, 255, 255, 0);
+		cgsix_setcolor(sc, WSCOL_CYAN, 0, 255, 255);
+		cgsix_setcolor(sc, WSCOL_WHITE, 255, 255, 255);
+
 		wsdisplay_cnattach(&cgsix_stdscreen, &sc->sc_rcons,
 		    *sc->sc_rcons.rc_ccolp, *sc->sc_rcons.rc_crowp, defattr);
+	}
 
 	waa.console = console;
 	waa.scrdata = &cgsix_screenlist;
@@ -272,7 +345,9 @@ cgsix_ioctl(v, cmd, data, flags, p)
 	struct proc *p;
 {
 	struct cgsix_softc *sc = v;
+	struct wsdisplay_cmap *cm;
 	struct wsdisplay_fbinfo *wdf;
+	int error;
 
 	switch (cmd) {
 	case WSDISPLAYIO_GTYPE:
@@ -289,12 +364,20 @@ cgsix_ioctl(v, cmd, data, flags, p)
 		*(u_int *)data = sc->sc_linebytes;
 		break;
 
-#if 0
 	case WSDISPLAYIO_GETCMAP:
-		return vgafb_getcmap(vc, (struct wsdisplay_cmap *)data);
+		cm = (struct wsdisplay_cmap *)data;
+		error = cg6_bt_getcmap(&sc->sc_cmap, cm);
+		if (error)
+			return (error);
+		break;
+
 	case WSDISPLAYIO_PUTCMAP:
-		return vgafb_putcmap(vc, (struct wsdisplay_cmap *)data);
-#endif
+		cm = (struct wsdisplay_cmap *)data;
+		error = cg6_bt_putcmap(&sc->sc_cmap, cm);
+		if (error)
+			return (error);
+		cgsix_loadcmap(sc, cm->index, cm->count);
+		break;
 
 	case WSDISPLAYIO_SVIDEO:
 	case WSDISPLAYIO_GVIDEO:
@@ -353,17 +436,54 @@ cgsix_show_screen(v, cookie, waitok, cb, cbarg)
 }
 
 paddr_t
-cgsix_mmap(v, offset, prot)
+cgsix_mmap(v, off, prot)
 	void *v;
-	off_t offset;
+	off_t off;
 	int prot;
 {
-#if 0
 	struct cgsix_softc *sc = v;
-#endif
+	struct mmo *mo;
+	u_int u, sz;
 
-	if (offset & PGOFSET)
+	static struct mmo mmo[] = {
+		{ CG6_USER_RAM, 0, CGSIX_VID_OFFSET },
+		{ CG6_USER_FBC, 1, CGSIX_FBC_OFFSET },
+		{ CG6_USER_TEC, 1, CGSIX_TEC_OFFSET },
+		{ CG6_USER_BTREGS, 8192 /* XXX */, CGSIX_BT_OFFSET },
+		{ CG6_USER_FHC, 1, CGSIX_FHC_OFFSET },
+		{ CG6_USER_THC, 1, CGSIX_THC_OFFSET },
+		{ CG6_USER_ROM, 1, CGSIX_ROM_OFFSET },
+		{ CG6_USER_DHC, 1, CGSIX_DHC_OFFSET },
+	};
+#define	NMMO	(sizeof(mmo) / sizeof(*mmo))
+
+	if (off & PGOFSET)
 		return (-1);
+
+	/*
+	 * Entries with size 0 map video RAM (i.e., the size in fb data).
+	 *
+	 * Since we work in pages, the fact that the map offset table's
+	 * sizes are sometimes bizarre (e.g., 1) is effectively ignored:
+	 * one byte is as good as one page.
+	 */
+	for (mo = mmo; mo < &mmo[NMMO]; mo++) {
+		if ((u_long)off < mo->mo_uaddr)
+			continue;
+		u = off - mo->mo_uaddr;
+		sz = mo->mo_size ? mo->mo_size :
+		    sc->sc_linebytes * sc->sc_height;
+		if (u < sz) {
+			bus_space_handle_t bh;
+
+			if (bus_space_mmap(sc->sc_bustag, sc->sc_btype,
+			    sc->sc_paddr + u + mo->mo_physoff,
+			    BUS_SPACE_MAP_LINEAR, &bh))
+				return (-1);
+			return ((paddr_t)bh);
+		}
+	}
+
 	return (-1);
 }
 
@@ -386,4 +506,89 @@ cgsix_is_console(node)
 	extern int fbnode;
 
 	return (fbnode == node);
+}
+
+int
+cg6_bt_getcmap(bcm, rcm)
+	union bt_cmap *bcm;
+	struct wsdisplay_cmap *rcm;
+{
+	u_int index = rcm->index, count = rcm->count, i;
+	int error;
+
+	if (index >= 256 || index + count > 256)
+		return (EINVAL);
+	for (i = 0; i < count; i++) {
+		if ((error = copyout(&bcm->cm_map[index + i][0],
+		    &rcm->red[i], 1)) != 0)
+			return (error);
+		if ((error = copyout(&bcm->cm_map[index + i][1],
+		    &rcm->green[i], 1)) != 0)
+			return (error);
+		if ((error = copyout(&bcm->cm_map[index + i][2],
+		    &rcm->blue[i], 1)) != 0)
+			return (error);
+	}
+	return (0);
+}
+
+int
+cg6_bt_putcmap(bcm, rcm)
+	union bt_cmap *bcm;
+	struct wsdisplay_cmap *rcm;
+{
+	u_int index = rcm->index, count = rcm->count, i;
+	int error;
+
+	if (index >= 256 || rcm->count > 256 ||
+	    (rcm->index + rcm->count) > 256)
+		return (EINVAL);
+	for (i = 0; i < count; i++) {
+		if ((error = copyin(&rcm->red[i],
+		    &bcm->cm_map[index + i][0], 1)) != 0)
+			return (error);
+		if ((error = copyin(&rcm->green[i],
+		    &bcm->cm_map[index + i][1], 1)) != 0)
+			return (error);
+		if ((error = copyin(&rcm->blue[i],
+		    &bcm->cm_map[index + i][2], 1)) != 0)
+			return (error);
+	}
+	return (0);
+}
+
+void
+cgsix_loadcmap(sc, start, ncolors)
+	struct cgsix_softc *sc;
+	u_int start, ncolors;
+{
+	u_int cstart;
+	u_int32_t v;
+	int count;
+
+	cstart = BT_D4M3(start);
+	count = BT_D4M3(start + ncolors - 1) - BT_D4M3(start) + 3;
+	BT_WRITE(sc, BT_ADDR, BT_D4M4(start) << 24);
+	while (--count >= 0) {
+		v = sc->sc_cmap.cm_chip[cstart];
+		BT_WRITE(sc, BT_CMAP, v << 0);
+		BT_WRITE(sc, BT_CMAP, v << 8);
+		BT_WRITE(sc, BT_CMAP, v << 16);
+		BT_WRITE(sc, BT_CMAP, v << 24);
+		cstart++;
+	}
+}
+
+void
+cgsix_setcolor(sc, index, r, g, b)
+	struct cgsix_softc *sc;
+	u_int index;
+	u_int8_t r, g, b;
+{
+	union bt_cmap *bcm = &sc->sc_cmap;
+
+	bcm->cm_map[index][0] = r;
+	bcm->cm_map[index][1] = g;
+	bcm->cm_map[index][2] = b;
+	cgsix_loadcmap(sc, index, 1);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2 2001/12/05 00:11:51 millert Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/pmap_motorola.h,v 1.2.4.1 2002/01/31 22:55:13 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University

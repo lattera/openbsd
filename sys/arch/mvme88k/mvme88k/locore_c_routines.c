@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.17 2001/12/19 07:04:41 smurph Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.17.2.1 2002/01/31 22:55:19 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -28,18 +28,20 @@
 
 #include "assym.h"
 
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/systm.h>
 
+#include <machine/cpu_number.h>		/* cpu_number()		*/
+#include <machine/board.h>		/* m188 bit defines	*/
+#include <machine/cmmu.h>		/* DMT_VALID		*/
 #include <machine/asm.h>		/* END_OF_VECTOR_LIST, etc.	*/
 #include <machine/asm_macro.h>		/* enable/disable interrupts	*/
-#include <machine/mmu.h>
-#include <machine/board.h>		/* m188 bit defines	*/
-#include <machine/cmmu.h>
 #include <machine/cpu_number.h>		/* cpu_number()		*/
 #include <machine/locore.h>
+#ifdef M88100
 #include <machine/m88100.h>		/* DMT_VALID		*/
-#include <machine/param.h>
+#endif
 
 #ifdef DDB
 #include <ddb/db_output.h>		/* db_printf()		*/
@@ -67,13 +69,8 @@ typedef struct {
    word_two;
 } m88k_exception_vector_area;
 
-extern volatile unsigned int * int_mask_reg[MAX_CPUS]; /* in machdep.c */
+extern unsigned int *volatile int_mask_reg[MAX_CPUS]; /* in machdep.c */
 extern unsigned master_cpu;      /* in cmmu.c */
-
-#if defined(MVME187) || defined(MVME197)
-extern u_char *int_mask_level;
-extern u_char *int_pri_level;
-#endif /* defined(MVME187) || defined(MVME197) */
 
 /* FORWARDS */
 void vector_init(m88k_exception_vector_area *vector, unsigned *vector_init_list);
@@ -331,32 +328,32 @@ vector_init(m88k_exception_vector_area *vector, unsigned *vector_init_list)
 	for (num = 0; (vec = vector_init_list[num]) != END_OF_VECTOR_LIST; num++) {
 		if (vec != PREDEFINED_BY_ROM)
 			SET_VECTOR(num, to, vec);
-		__asm__ ("or  r0, r0, r0");
-		__asm__ ("or  r0, r0, r0");
-		__asm__ ("or  r0, r0, r0");
-		__asm__ ("or  r0, r0, r0");
+		__asm__ (NOP_STRING);
+		__asm__ (NOP_STRING);
+		__asm__ (NOP_STRING);
+		__asm__ (NOP_STRING);
 	}
 
 	switch (cputyp) {
 #ifdef M88110
 	case CPU_88110:
 		while (num < 496) {
-			SET_VECTOR(num, to, m197_sigsys);
+			SET_VECTOR(num, to, m88110_sigsys);
 			num++;
 		}
 		num++; /* skip 496, BUG ROM vector */
-		SET_VECTOR(450, to, m197_syscall_handler);
+		SET_VECTOR(450, to, m88110_syscall_handler);
 
 		while (num <= SIGSYS_MAX)
-			SET_VECTOR(num++, to, m197_sigsys);
+			SET_VECTOR(num++, to, m88110_sigsys);
 
 		while (num <= SIGTRAP_MAX)
-			SET_VECTOR(num++, to, m197_sigtrap);
+			SET_VECTOR(num++, to, m88110_sigtrap);
 
-		SET_VECTOR(504, to, m197_stepbpt);
-		SET_VECTOR(511, to, m197_userbpt);
+		SET_VECTOR(504, to, m88110_stepbpt);
+		SET_VECTOR(511, to, m88110_userbpt);
 		break;
-#endif /* MVME197 */
+#endif /* M88110 */
 #ifdef M88100
 	case CPU_88100:
 		while (num < 496) {
@@ -376,7 +373,7 @@ vector_init(m88k_exception_vector_area *vector, unsigned *vector_init_list)
 		SET_VECTOR(504, to, stepbpt);
 		SET_VECTOR(511, to, userbpt);
 		break;
-#endif /* defined(MVME187) || defined(MVME188) */
+#endif /* M88100 */
 	}
 }
 
@@ -503,7 +500,7 @@ spl(void)
 #if defined(MVME187) || defined(MVME197)
 	case BRD_187:
 	case BRD_197:
-		curspl = *int_mask_level;
+		curspl = *md.intr_mask;
 		break;
 #endif /* defined(MVME187) || defined(MVME197) */
 	}
@@ -532,7 +529,7 @@ db_spl(void)
 #if defined(MVME187) || defined(MVME197)
 	case BRD_187:
 	case BRD_197:
-		curspl = *int_mask_level;
+		curspl = *md.intr_mask;
 		break;
 #endif /* defined(MVME187) || defined(MVME197) */
 	}
@@ -579,8 +576,8 @@ setipl(unsigned level)
 #if defined(MVME187) || defined(MVME197)
 	case BRD_187:
 	case BRD_197:
-		curspl = *int_mask_level;
-		*int_mask_level = level;
+		curspl = *md.intr_mask;
+		*md.intr_mask = level;
 		break;
 #endif /* defined(MVME187) || defined(MVME197) */
 	}
@@ -617,8 +614,8 @@ db_setipl(unsigned level)
 #if defined(MVME187) || defined(MVME197)
 	case BRD_187:
 	case BRD_197:
-		curspl = *int_mask_level;
-		*int_mask_level = level;
+		curspl = *md.intr_mask;
+		*md.intr_mask = level;
 		break;
 #endif /* defined(MVME187) || defined(MVME197) */
 	}
@@ -638,14 +635,14 @@ db_setipl(unsigned level)
 #include <sys/simplelock.h>
 void
 simple_lock_init(lkp)
-	__volatile struct simplelock *lkp;
+	struct simplelock *volatile lkp;
 {
 	lkp->lock_data = 0;
 }
 
 int 
 test_and_set(lock)
-	__volatile int *lock;
+	int *volatile lock;
 {   
 #if 0
 	int oldlock = *lock;

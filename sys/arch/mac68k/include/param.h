@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/param.h,v 1.15 2001/12/05 01:57:15 provos Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/param.h,v 1.15.2.1 2002/01/31 22:55:13 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.28 1997/03/01 06:57:45 scottr Exp $	*/
 
 /*

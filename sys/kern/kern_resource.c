@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.16 2001/11/10 19:20:39 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.16.2.1 2002/01/31 22:55:40 niklas Exp $	*/
 /*	$NetBSD: kern_resource.c,v 1.38 1996/10/23 07:19:38 matthias Exp $	*/
 
 /*-
@@ -46,7 +46,7 @@
 #include <sys/kernel.h>
 #include <sys/file.h>
 #include <sys/resourcevar.h>
-#include <sys/malloc.h>
+#include <sys/pool.h>
 #include <sys/proc.h>
 
 #include <sys/mount.h>
@@ -340,15 +340,14 @@ sys_getrlimit(p, v, retval)
  */
 void
 calcru(p, up, sp, ip)
-	register struct proc *p;
-	register struct timeval *up;
-	register struct timeval *sp;
-	register struct timeval *ip;
+	struct proc *p;
+	struct timeval *up;
+	struct timeval *sp;
+	struct timeval *ip;
 {
-	register u_quad_t u, st, ut, it, tot;
-	register long sec, usec;
-	register int s;
-	struct timeval tv;
+	u_quad_t st, ut, it;
+	int freq;
+	int s;
 
 	s = splstatclock();
 	st = p->p_sticks;
@@ -356,36 +355,24 @@ calcru(p, up, sp, ip)
 	it = p->p_iticks;
 	splx(s);
 
-	tot = st + ut + it;
-	if (tot == 0) {
-		up->tv_sec = up->tv_usec = 0;
-		sp->tv_sec = sp->tv_usec = 0;
+	if (st + ut + it == 0) {
+		timerclear(up);
+		timerclear(sp);
 		if (ip != NULL)
-			ip->tv_sec = ip->tv_usec = 0;
+			timerclear(ip);
 		return;
 	}
 
-	sec = p->p_rtime.tv_sec;
-	usec = p->p_rtime.tv_usec;
-	if (p == curproc) {
-		/*
-		 * Adjust for the current time slice.  This is actually fairly
-		 * important since the error here is on the order of a time
-		 * quantum, which is much greater than the sampling error.
-		 */
-		microtime(&tv);
-		sec += tv.tv_sec - runtime.tv_sec;
-		usec += tv.tv_usec - runtime.tv_usec;
-	}
-	u = (u_quad_t) sec * 1000000 + usec;
-	st = (u * st) / tot;
+	freq = stathz ? stathz : hz;
+
+	st = st * 1000000 / freq;
 	sp->tv_sec = st / 1000000;
 	sp->tv_usec = st % 1000000;
-	ut = (u * ut) / tot;
+	ut = ut * 1000000 / freq;
 	up->tv_sec = ut / 1000000;
 	up->tv_usec = ut % 1000000;
 	if (ip != NULL) {
-		it = (u * it) / tot;
+		it = it * 1000000 / freq;
 		ip->tv_sec = it / 1000000;
 		ip->tv_usec = it % 1000000;
 	}
@@ -438,19 +425,26 @@ ruadd(ru, ru2)
 		*ip++ += *ip2++;
 }
 
+struct pool plimit_pool;
+
 /*
  * Make a copy of the plimit structure.
  * We share these structures copy-on-write after fork,
  * and copy when a limit is changed.
  */
 struct plimit *
-limcopy(lim)
-	struct plimit *lim;
+limcopy(struct plimit *lim)
 {
-	register struct plimit *newlim;
+	struct plimit *newlim;
+	static int initialized;
 
-	MALLOC(newlim, struct plimit *, sizeof(struct plimit),
-	    M_SUBPROC, M_WAITOK);
+	if (!initialized) {
+		pool_init(&plimit_pool, sizeof(struct plimit), 0, 0, 0,
+		    "plimitpl", &pool_allocator_nointr);
+		initialized = 1;
+	}
+
+	newlim = pool_get(&plimit_pool, PR_WAITOK);
 	bcopy(lim->pl_rlimit, newlim->pl_rlimit,
 	    sizeof(struct rlimit) * RLIM_NLIMITS);
 	newlim->p_lflags = 0;
@@ -459,11 +453,9 @@ limcopy(lim)
 }
 
 void
-limfree(lim)
-	struct plimit *lim;
+limfree(struct plimit *lim)
 {
-
 	if (--lim->p_refcnt > 0)
 		return;
-	FREE(lim, M_SUBPROC);
+	pool_put(&plimit_pool, lim);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/param.h,v 1.5 2001/11/30 20:57:52 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/param.h,v 1.5.2.1 2002/01/31 22:55:13 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.2 1997/06/10 18:21:23 veego Exp $	*/
 
 /*

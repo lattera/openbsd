@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_page_i.h,v 1.12 2001/11/28 19:28:15 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_page_i.h,v 1.12.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_page_i.h,v 1.19 2001/06/27 23:57:17 thorpej Exp $	*/
 
 /*
@@ -190,12 +190,11 @@ uvm_pageunwire(pg)
 }
 
 /*
- * uvm_pagedeactivate: deactivate page
+ * uvm_pagedeactivate: deactivate page -- no pmaps have access to page
  *
  * => caller must lock page queues
  * => caller must check to make sure page is not wired
  * => object that page belongs to must be locked (so we can adjust pg->flags)
- * => caller must clear the reference on the page before calling
  */
 
 PAGE_INLINE void

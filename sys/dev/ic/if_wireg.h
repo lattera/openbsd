@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7 2001/10/25 19:40:06 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wireg.h,v 1.7.2.1 2002/01/31 22:55:31 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -34,7 +34,7 @@
  *	From: if_wireg.h,v 1.5 1999/07/20 20:03:42 wpaul Exp $
  */
 
-#define WI_TIMEOUT	50000	/* XXX just a guess at a good value.  */
+#define WI_TIMEOUT	50000	/* 10x XXX just a guess at a good value.  */
 
 #define WI_PORT0	0
 #define WI_PORT1	1
@@ -78,25 +78,31 @@
  * register space access macros
  */
 #define CSR_WRITE_4(sc, reg, val)	\
-	bus_space_write_4(sc->wi_btag, sc->wi_bhandle, reg, val)
+	bus_space_write_4(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg) , val)
 #define CSR_WRITE_2(sc, reg, val)	\
-	bus_space_write_2(sc->wi_btag, sc->wi_bhandle, reg, val)
+	bus_space_write_2(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg) , val)
 #define CSR_WRITE_1(sc, reg, val)	\
-	bus_space_write_1(sc->wi_btag, sc->wi_bhandle, reg, val)
+	bus_space_write_1(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg) , val)
 
 #define CSR_READ_4(sc, reg)		\
-	bus_space_read_4(sc->wi_btag, sc->wi_bhandle, reg)
+	bus_space_read_4(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg))
 #define CSR_READ_2(sc, reg)		\
-	bus_space_read_2(sc->wi_btag, sc->wi_bhandle, reg)
+	bus_space_read_2(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg))
 #define CSR_READ_1(sc, reg)		\
-	bus_space_read_1(sc->wi_btag, sc->wi_bhandle, reg)
+	bus_space_read_1(sc->wi_btag, sc->wi_bhandle,	\
+	    (sc->sc_pci? reg * 2: reg))
 
 #define CSR_READ_RAW_2(sc, ba, dst, sz) \
-	bus_space_read_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, (ba), \
-		(dst), (sz))
+	bus_space_read_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, \
+	    (sc->sc_pci? ba * 2: ba), (dst), (sz))
 #define CSR_WRITE_RAW_2(sc, ba, dst, sz) \
-	bus_space_write_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, (ba), \
-		(dst), (sz))
+	bus_space_write_raw_multi_2((sc)->wi_btag, (sc)->wi_bhandle, \
+	    (sc->sc_pci? ba * 2: ba), (dst), (sz))
 
 /*
  * The WaveLAN/IEEE cards contain an 802.11 MAC controller which Lucent

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.18 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/cl.c,v 1.18.2.1 2002/01/31 22:55:17 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Dale Rahn. All rights reserved.
@@ -80,8 +80,8 @@
 #endif
 struct cl_cons {
 	void	*cl_paddr;
-	volatile struct clreg *cl_vaddr;
-	volatile struct pcctworeg *pcctwoaddr;
+	struct clreg *volatile cl_vaddr;
+	struct pcctworeg *volatile pcctwoaddr;
 	u_char	channel;
 } cl_cons;
 
@@ -941,7 +941,7 @@ int
 clcninit(cp)
 	struct consdev *cp;
 {
-	volatile struct clreg *cl_reg;
+	struct clreg *volatile cl_reg;
 	
 	cl_cons.cl_paddr = (void *)CD2400_BASE_ADDR;
 	cl_cons.cl_vaddr   = (struct clreg *)IIOV(cl_cons.cl_paddr);
@@ -983,7 +983,7 @@ int
 cl_instat(sc)
 	struct clsoftc *sc;
 {
-	volatile struct clreg *cl_reg;
+	struct clreg *volatile cl_reg;
 	if ( NULL == sc) {
 		cl_reg = cl_cons.cl_vaddr;
 	} else {
@@ -1001,8 +1001,8 @@ clcngetc(dev)
 #endif
 	int got_char = 0;
 	u_char ier_old = 0xff;
-	volatile struct clreg *cl_reg = cl_cons.cl_vaddr;
-	volatile struct pcctworeg *pcc2_base = cl_cons.pcctwoaddr;
+	struct clreg *volatile cl_reg = cl_cons.cl_vaddr;
+	struct pcctworeg *volatile pcc2_base = cl_cons.pcctwoaddr;
 	cl_reg->cl_car = 0;
 	if (!(cl_reg->cl_ier & 0x08)) {
 		ier_old = cl_reg->cl_ier;
@@ -1087,7 +1087,7 @@ clputc(sc, unit, c)
 	int s;
 	u_char schar;
 	u_char oldchannel;
-	volatile struct clreg *cl_reg;
+	struct clreg *volatile cl_reg;
 	if (0 == sc) {
 		/* output on console */
 		cl_reg = cl_cons.cl_vaddr;
@@ -1183,8 +1183,8 @@ clgetc(sc, channel)
 	struct clsoftc *sc;
 	int *channel;
 {
-	volatile struct clreg *cl_reg;
-	volatile struct pcctworeg *pcc2_base;
+	struct clreg *volatile cl_reg;
+	struct pcctworeg *volatile pcc2_base;
 	u_char val, reoir, licr, isrl, fifo_cnt, data;
 	if (0 == sc) {
 		cl_reg = cl_cons.cl_vaddr;
@@ -1643,9 +1643,6 @@ cl_rxintr(arg)
 	int i;
 	u_char reoir;
 	u_char buffer[CL_FIFO_MAX +1];
-#ifdef DDB
-	int wantddb = 0;
-#endif
 	
 	rir = sc->cl_reg->cl_rir;
 	if((rir & 0x40) == 0x0) {
@@ -1678,10 +1675,6 @@ cl_rxintr(arg)
 		reoir = 0x08;
 	} else
 	if (risrl & 0x01) {
-#ifdef DDB
-		if (sc->sc_cl[channel].cl_consio)
-			wantddb = 1;
-#endif
 		cl_break(sc, channel);
 		reoir = 0x08;
 	}
@@ -1805,10 +1798,6 @@ log(LOG_WARNING, "cl_txintr: DMAMODE channel %x dmabsts %x risrl %x risrh %x\n",
 		reoir = 0x08;
 		sc->cl_reg->cl_reoir = reoir;
 	}
-#ifdef DDB
-	if (wantddb != 0 && db_console != 0)
-		Debugger();
-#endif
 	return 1;
 }
 
@@ -1853,7 +1842,7 @@ cl_break (sc, channel)
 	int channel;
 {
 #ifdef DDB
-	if (db_console != 0)
+	if (sc->sc_cl[channel].cl_consio && db_console != 0)
 		Debugger();
 #else
 	log(LOG_WARNING, "%s%d[%d]: break detected\n", cl_cd.cd_name, 0, channel);
@@ -1871,14 +1860,15 @@ cl_dumpport(channel)
 		rbpr, rcor, tbpr, tcor, rpilr, rir, tpr, ier, ccr,
 		dmabsts, arbsts, brbsts, atbsts, btbsts,
 		csr, rts, dtr, rtprl, rtprh;
-	volatile void * parbadru, *parbadrl,  *parbsts, *parbcnt;
+	void *volatile parbadru, *volatile parbadrl,
+	     *volatile parbsts, *volatile parbcnt;
 	u_short rcbadru, rcbadrl, arbadru, arbadrl, arbcnt,
 		brbadru, brbadrl, brbcnt;
 	u_short tcbadru, tcbadrl, atbadru, atbadrl, atbcnt,
 		btbadru, btbadrl, btbcnt;
 	struct clsoftc *sc;
 
-	volatile struct clreg *cl_reg;
+	struct clreg *volatile cl_reg;
 	int s;
 
 	cl_reg = cl_cons.cl_vaddr;

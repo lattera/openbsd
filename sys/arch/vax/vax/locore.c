@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.20 2001/11/06 19:53:17 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/locore.c,v 1.20.2.1 2002/01/31 22:55:27 niklas Exp $	*/
 /*	$NetBSD: locore.c,v 1.43 2000/03/26 11:39:45 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.
@@ -246,17 +246,32 @@ start()
 		dep_call = &ka680_calls;
 		switch((vax_siedata & 0xff00) >> 8) {
 		case VAX_STYP_675:
-			strcpy(cpu_model,"VAX 4000 400"); break;
+			strcpy(cpu_model,"VAX 4000 400");
+			break;
 		case VAX_STYP_680:
-			strcpy(cpu_model,"VAX 4000 500"); break;
-		case VAX_STYP_681:
-			strcpy(cpu_model,"VAX 4000 500A"); break;
+			strcpy(cpu_model,"VAX 4000 500");
+			break;
 		case VAX_STYP_690:
-			strcpy(cpu_model,"VAX 4000 600"); break;
-		case VAX_STYP_691:
-			strcpy(cpu_model,"VAX 4000 605A"); break;
+			strcpy(cpu_model,"VAX 4000 600");
+			break;
 		default:
 			strcpy(cpu_model,"VAX - Unknown Omega Class");
+		}
+		break;
+	case VAX_BTYP_1305:
+		dep_call = &ka680_calls;
+		switch((vax_siedata & 0xff00) >> 8) {
+		case VAX_STYP_681:
+			strcpy(cpu_model,"VAX 4000 500A");
+			break;
+		case VAX_STYP_691:
+			strcpy(cpu_model,"VAX 4000 605A");
+			break;
+		case VAX_STYP_694:
+			strcpy(cpu_model,"VAX 4000 705A");
+			break;
+		default:
+			strcpy(cpu_model,"VAX - Unknown Legacy Class");
 		}
 		break;
 #endif

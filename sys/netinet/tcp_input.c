@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100 2001/07/07 22:22:04 provos Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.100.4.1 2002/01/31 22:55:45 niklas Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -176,7 +176,7 @@ tcp_reass(tp, th, m, tlen)
 	 * Allocate a new queue entry, before we throw away any data.
 	 * If we can't, just drop the packet.  XXX
 	 */
-	MALLOC(tiqe, struct ipqent *, sizeof(struct ipqent), M_IPQ, M_NOWAIT);
+	tiqe =  pool_get(&ipqent_pool, PR_NOWAIT);
 	if (tiqe == NULL) {
 		tcpstat.tcps_rcvmemdrop++;
 		m_freem(m);
@@ -207,7 +207,7 @@ tcp_reass(tp, th, m, tlen)
 				tcpstat.tcps_rcvduppack++;
 				tcpstat.tcps_rcvdupbyte += *tlen;
 				m_freem(m);
-				FREE(tiqe, M_IPQ);
+				pool_put(&ipqent_pool, tiqe);
 				return (0);
 			}
 			m_adj(m, i);
@@ -237,7 +237,7 @@ tcp_reass(tp, th, m, tlen)
 		nq = q->ipqe_q.le_next;
 		m_freem(q->ipqe_m);
 		LIST_REMOVE(q, ipqe_q);
-		FREE(q, M_IPQ);
+		pool_put(&ipqent_pool, q);
 	}
 
 	/* Insert the new fragment queue entry into place. */
@@ -273,7 +273,7 @@ present:
 			m_freem(q->ipqe_m);
 		else
 			sbappend(&so->so_rcv, q->ipqe_m);
-		FREE(q, M_IPQ);
+		pool_put(&ipqent_pool, q);
 		q = nq;
 	} while (q != NULL && q->ipqe_tcp->th_seq == tp->rcv_nxt);
 	sorwakeup(so);
@@ -864,7 +864,7 @@ findpcb:
 	 */
 	tp->t_idle = 0;
 	if (tp->t_state != TCPS_SYN_RECEIVED)
-		tp->t_timer[TCPT_KEEP] = tcp_keepidle;
+		TCP_TIMER_ARM(tp, TCPT_KEEP, tcp_keepidle);
 
 #ifdef TCP_SACK
 	if (!tp->sack_disable)
@@ -960,9 +960,9 @@ findpcb:
 				 * decide between more output or persist.
 				 */
 				if (tp->snd_una == tp->snd_max)
-					tp->t_timer[TCPT_REXMT] = 0;
-				else if (tp->t_timer[TCPT_PERSIST] == 0)
-					tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
+					TCP_TIMER_DISARM(tp, TCPT_REXMT);
+				else if (TCP_TIMER_ISARMED(tp, TCPT_PERSIST) == 0)
+					TCP_TIMER_ARM(tp, TCPT_REXMT, tp->t_rxtcur);
 
 				if (sb_notify(&so->so_snd))
 					sowwakeup(so);
@@ -1190,7 +1190,7 @@ findpcb:
 		tcp_rcvseqinit(tp);
 		tp->t_flags |= TF_ACKNOW;
 		tp->t_state = TCPS_SYN_RECEIVED;
-		tp->t_timer[TCPT_KEEP] = tcptv_keep_init;
+		TCP_TIMER_ARM(tp, TCPT_KEEP, tcptv_keep_init);
 		dropsocket = 0;		/* committed to socket */
 		tcpstat.tcps_accepts++;
 		goto trimthenstep6;
@@ -1243,7 +1243,7 @@ findpcb:
 			if (SEQ_LT(tp->snd_nxt, tp->snd_una))
 				tp->snd_nxt = tp->snd_una;
 		}
-		tp->t_timer[TCPT_REXMT] = 0;
+		TCP_TIMER_DISARM(tp, TCPT_REXMT);
 		tp->irs = th->th_seq;
 		tcp_rcvseqinit(tp);
 		tp->t_flags |= TF_ACKNOW;
@@ -1593,7 +1593,7 @@ trimthenstep6:
 				 * to keep a constant cwnd packets in the
 				 * network.
 				 */
-				if (tp->t_timer[TCPT_REXMT] == 0)
+				if (TCP_TIMER_ISARMED(tp, TCPT_REXMT) == 0)
 					tp->t_dupacks = 0;
 #if defined(TCP_SACK) && defined(TCP_FACK)
 				/* 
@@ -1630,7 +1630,7 @@ trimthenstep6:
 #endif
 #ifdef TCP_SACK
                     			if (!tp->sack_disable) {
-						tp->t_timer[TCPT_REXMT] = 0;
+						TCP_TIMER_DISARM(tp, TCPT_REXMT);
 						tp->t_rtt = 0;
 						tcpstat.tcps_sndrexmitfast++;
 #if defined(TCP_SACK) && defined(TCP_FACK) 
@@ -1653,7 +1653,7 @@ trimthenstep6:
 						goto drop;
 					}
 #endif /* TCP_SACK */
-					tp->t_timer[TCPT_REXMT] = 0;
+					TCP_TIMER_DISARM(tp, TCPT_REXMT);
 					tp->t_rtt = 0;
 					tp->snd_nxt = th->th_ack;
 					tp->snd_cwnd = tp->t_maxseg;
@@ -1774,10 +1774,10 @@ trimthenstep6:
 		 * timer, using current (possibly backed-off) value.
 		 */
 		if (th->th_ack == tp->snd_max) {
-			tp->t_timer[TCPT_REXMT] = 0;
+			TCP_TIMER_DISARM(tp, TCPT_REXMT);
 			needoutput = 1;
-		} else if (tp->t_timer[TCPT_PERSIST] == 0)
-			tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
+		} else if (TCP_TIMER_ISARMED(tp, TCPT_PERSIST) == 0)
+			TCP_TIMER_ARM(tp, TCPT_REXMT, tp->t_rxtcur);
 		/*
 		 * When new data is acked, open the congestion window.
 		 * If the window gives us less than ssthresh packets
@@ -1786,8 +1786,8 @@ trimthenstep6:
 		 * (maxseg^2 / cwnd per packet).
 		 */
 		{
-		register u_int cw = tp->snd_cwnd;
-		register u_int incr = tp->t_maxseg;
+		u_int cw = tp->snd_cwnd;
+		u_int incr = tp->t_maxseg;
 
 		if (cw > tp->snd_ssthresh)
 			incr = incr * incr / cw;
@@ -1840,7 +1840,7 @@ trimthenstep6:
 				 */
 				if (so->so_state & SS_CANTRCVMORE) {
 					soisdisconnected(so);
-					tp->t_timer[TCPT_2MSL] = tcp_maxidle;
+					TCP_TIMER_ARM(tp, TCPT_2MSL, tcp_maxidle);
 				}
 				tp->t_state = TCPS_FIN_WAIT_2;
 			}
@@ -1856,7 +1856,7 @@ trimthenstep6:
 			if (ourfinisacked) {
 				tp->t_state = TCPS_TIME_WAIT;
 				tcp_canceltimers(tp);
-				tp->t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
+				TCP_TIMER_ARM(tp, TCPT_2MSL, 2 * TCPTV_MSL);
 				soisdisconnected(so);
 			}
 			break;
@@ -1880,7 +1880,7 @@ trimthenstep6:
 		 * it and restart the finack timer.
 		 */
 		case TCPS_TIME_WAIT:
-			tp->t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
+			TCP_TIMER_ARM(tp, TCPT_2MSL, 2 * TCPTV_MSL);
 			goto dropafterack;
 		}
 	}
@@ -2053,7 +2053,7 @@ dodata:							/* XXX */
 		case TCPS_FIN_WAIT_2:
 			tp->t_state = TCPS_TIME_WAIT;
 			tcp_canceltimers(tp);
-			tp->t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
+			TCP_TIMER_ARM(tp, TCPT_2MSL, 2 * TCPTV_MSL);
 			soisdisconnected(so);
 			break;
 
@@ -2061,7 +2061,7 @@ dodata:							/* XXX */
 		 * In TIME_WAIT state restart the 2 MSL time_wait timer.
 		 */
 		case TCPS_TIME_WAIT:
-			tp->t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
+			TCP_TIMER_ARM(tp, TCPT_2MSL, 2 * TCPTV_MSL);
 			break;
 		}
 	}
@@ -2379,22 +2379,18 @@ tcp_update_sack_list(tp)
  * of holes (oldest to newest, in terms of the sequence space).  
  */             
 int
-tcp_sack_option(tp, th, cp, optlen)
-	struct tcpcb *tp;
-	struct tcphdr *th;
-	u_char *cp;
-	int    optlen;
+tcp_sack_option(struct tcpcb *tp, struct tcphdr *th, u_char *cp, int optlen)
 {       
 	int tmp_olen;
 	u_char *tmp_cp;
 	struct sackhole *cur, *p, *temp;
    
 	if (tp->sack_disable)
-		return 1;
+		return (1);
            
 	/* Note: TCPOLEN_SACK must be 2*sizeof(tcp_seq) */
 	if (optlen <= 2 || (optlen - 2) % TCPOLEN_SACK != 0)
-		return 1;
+		return (1);
 	tmp_cp = cp + 2;
 	tmp_olen = optlen - 2;
 	if (tp->snd_numholes < 0)
@@ -2404,9 +2400,9 @@ tcp_sack_option(tp, th, cp, optlen)
 	while (tmp_olen > 0) {
 		struct sackblk sack;
             
-		bcopy((char *) tmp_cp, (char *) &(sack.start), sizeof(tcp_seq));
+		bcopy(tmp_cp, (char *) &(sack.start), sizeof(tcp_seq));
 		NTOHL(sack.start); 
-		bcopy((char *) tmp_cp + sizeof(tcp_seq),
+		bcopy(tmp_cp + sizeof(tcp_seq),
 		    (char *) &(sack.end), sizeof(tcp_seq));
 		NTOHL(sack.end);
 		tmp_olen -= TCPOLEN_SACK;
@@ -2417,21 +2413,18 @@ tcp_sack_option(tp, th, cp, optlen)
 			continue; /* old block */
 #if defined(TCP_SACK) && defined(TCP_FACK)
 		/* Updates snd_fack.  */
-		if (SEQ_GEQ(sack.end, tp->snd_fack))
+		if (SEQ_GT(sack.end, tp->snd_fack))
 			tp->snd_fack = sack.end;
 #endif /* TCP_FACK */
 		if (SEQ_GT(th->th_ack, tp->snd_una)) {
 			if (SEQ_LT(sack.start, th->th_ack))
 				continue;
-		} else {
-			if (SEQ_LT(sack.start, tp->snd_una))
-				continue;
 		}
 		if (SEQ_GT(sack.end, tp->snd_max))
 			continue;
-		if (tp->snd_holes == 0) { /* first hole */
+		if (tp->snd_holes == NULL) { /* first hole */
 			tp->snd_holes = (struct sackhole *)
-			    malloc(sizeof(struct sackhole), M_PCB, M_NOWAIT);
+			    pool_get(&sackhl_pool, PR_NOWAIT);
 			if (tp->snd_holes == NULL) {
 				/* ENOBUFS, so ignore SACKed block for now*/
 				continue;  
@@ -2440,7 +2433,7 @@ tcp_sack_option(tp, th, cp, optlen)
 			cur->start = th->th_ack;
 			cur->end = sack.start;
 			cur->rxmit = cur->start;
-			cur->next = 0;
+			cur->next = NULL;
 			tp->snd_numholes = 1;
 			tp->rcv_lastsack = sack.end;
 			/* 
@@ -2462,8 +2455,8 @@ tcp_sack_option(tp, th, cp, optlen)
 			if (SEQ_GEQ(sack.start, cur->end)) {
 				/* SACKs data beyond the current hole */
 				cur->dups++;
-				if ( ((sack.end - cur->end)/tp->t_maxseg) >=
-					tcprexmtthresh)
+				if (((sack.end - cur->end)/tp->t_maxseg) >=
+				    tcprexmtthresh)
 					cur->dups = tcprexmtthresh;
 				p = cur;
 				cur = cur->next;
@@ -2481,15 +2474,15 @@ tcp_sack_option(tp, th, cp, optlen)
 					    tcp_seq_subtract(sack.end, 
 					    cur->start);
 #endif /* TCP_FACK */
-				if (SEQ_GEQ(sack.end,cur->end)){
+				if (SEQ_GEQ(sack.end, cur->end)) {
 					/* Acks entire hole, so delete hole */
 					if (p != cur) {
 						p->next = cur->next;
-						free(cur, M_PCB);
+						pool_put(&sackhl_pool, cur);
 						cur = p->next;
 					} else {
-						cur=cur->next;
-						free(p, M_PCB);
+						cur = cur->next;
+						pool_put(&sackhl_pool, p);
 						p = cur;
 						tp->snd_holes = p;
 					}
@@ -2512,10 +2505,10 @@ tcp_sack_option(tp, th, cp, optlen)
 					    sack.start);
 #endif /* TCP_FACK */
 				cur->end = sack.start;
-				cur->rxmit = min (cur->rxmit, cur->end);
+				cur->rxmit = min(cur->rxmit, cur->end);
 				cur->dups++;
-				if ( ((sack.end - cur->end)/tp->t_maxseg) >=
-					tcprexmtthresh)
+				if (((sack.end - cur->end)/tp->t_maxseg) >=
+				    tcprexmtthresh)
 					cur->dups = tcprexmtthresh;
 				p = cur;
 				cur = cur->next;
@@ -2527,8 +2520,8 @@ tcp_sack_option(tp, th, cp, optlen)
 				 * ACKs some data in middle of a hole; need to 
 				 * split current hole
 				 */
-				temp = (struct sackhole *)malloc(sizeof(*temp),
-				    M_PCB,M_NOWAIT);
+				temp = (struct sackhole *)
+				    pool_get(&sackhl_pool, PR_NOWAIT);
 				if (temp == NULL) 
 					continue; /* ENOBUFS */
 #if defined(TCP_SACK) && defined(TCP_FACK)
@@ -2545,11 +2538,11 @@ tcp_sack_option(tp, th, cp, optlen)
 				temp->start = sack.end;
 				temp->end = cur->end;
 				temp->dups = cur->dups;
-				temp->rxmit = max (cur->rxmit, temp->start);
+				temp->rxmit = max(cur->rxmit, temp->start);
 				cur->end = sack.start;
-				cur->rxmit = min (cur->rxmit, cur->end);
+				cur->rxmit = min(cur->rxmit, cur->end);
 				cur->dups++;
-				if ( ((sack.end - cur->end)/tp->t_maxseg) >=
+				if (((sack.end - cur->end)/tp->t_maxseg) >=
 					tcprexmtthresh)
 					cur->dups = tcprexmtthresh;
 				cur->next = temp;
@@ -2564,8 +2557,8 @@ tcp_sack_option(tp, th, cp, optlen)
 			 * Need to append new hole at end.
 			 * Last hole is p (and it's not NULL).
 			 */
-			temp = (struct sackhole *) malloc(sizeof(*temp),
-			    M_PCB, M_NOWAIT);
+			temp = (struct sackhole *)
+			    pool_get(&sackhl_pool, PR_NOWAIT);
 			if (temp == NULL) 
 				continue; /* ENOBUFS */
 			temp->start = tp->rcv_lastsack;
@@ -2596,7 +2589,7 @@ tcp_sack_option(tp, th, cp, optlen)
 	    tp->retran_data;
 #endif /* TCP_FACK */
 
-	return 0;
+	return (0);
 }   
 
 /*
@@ -2614,12 +2607,12 @@ tcp_del_sackholes(tp, th)
 		tcp_seq lastack = SEQ_GT(th->th_ack, tp->snd_una) ?
 			th->th_ack : tp->snd_una;
 		struct sackhole *cur = tp->snd_holes;
-		struct sackhole *prev = cur;
+		struct sackhole *prev;
 		while (cur)
 			if (SEQ_LEQ(cur->end, lastack)) {
-				cur = cur->next;
-				free(prev, M_PCB);
 				prev = cur;
+				cur = cur->next;
+				pool_put(&sackhl_pool, prev);
 				tp->snd_numholes--;
 			} else if (SEQ_LT(cur->start, lastack)) {
 				cur->start = lastack;
@@ -2659,7 +2652,7 @@ tcp_sack_partialack(tp, th)
 {
 	if (SEQ_LT(th->th_ack, tp->snd_last)) {
 		/* Turn off retx. timer (will start again next segment) */
-		tp->t_timer[TCPT_REXMT] = 0;
+		TCP_TIMER_DISARM(tp, TCPT_REXMT);
 		tp->t_rtt = 0;
 #ifndef TCP_FACK
 		/* 
@@ -2673,9 +2666,9 @@ tcp_sack_partialack(tp, th)
 		} else
 			tp->snd_cwnd = tp->t_maxseg;
 #endif
-		return 1;
+		return (1);
 	}
-	return 0;
+	return (0);
 }
 #endif /* TCP_SACK */
 
@@ -3080,7 +3073,7 @@ tcp_newreno(tp, th)
 		 */
 		tcp_seq onxt = tp->snd_nxt;
 		u_long  ocwnd = tp->snd_cwnd;
-		tp->t_timer[TCPT_REXMT] = 0;
+		TCP_TIMER_DISARM(tp, TCPT_REXMT);
 		tp->t_rtt = 0;
 		tp->snd_nxt = th->th_ack;
 		/* 

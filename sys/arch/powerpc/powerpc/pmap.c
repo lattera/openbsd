@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.52 2001/12/13 19:14:41 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.52.2.1 2002/01/31 22:55:21 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -55,6 +55,17 @@ struct pte_ovfl {
 };
 
 LIST_HEAD(pte_ovtab, pte_ovfl) *potable; /* Overflow entries for ptable */
+
+/* free lists for potable entries, it is not valid to pool_put
+ * in the pte spill handler.
+ * pofreebusy variable is a flag to indicate that the 
+ * higher level is maniuplating list0 and that spill cannot touch
+ * it, the higher level can only be touching one at a time.
+ * if list0 is busy list1 cannot be busy.
+ */
+LIST_HEAD(,pte_ovfl) pofreetable0 = LIST_HEAD_INITIALIZER(pofreetable0);
+LIST_HEAD(,pte_ovfl) pofreetable1 = LIST_HEAD_INITIALIZER(pofreetable1);
+volatile int pofreebusy;
 
 struct pmap kernel_pmap_;
 
@@ -397,6 +408,7 @@ pte_spill(addr)
 	struct pte_ovfl *po;
 	pte_t ps;
 	pte_t *pt;
+	vm_offset_t va;
 
 	asm ("mfsrin %0,%1" : "=r"(sr) : "r"(addr));
 	idx = pteidx(sr, addr);
@@ -420,7 +432,12 @@ pte_spill(addr)
 			pt->pte_hi &= ~PTE_VALID;
 			ps = *pt;
 			asm volatile ("sync");
-			tlbie(addr);
+			/* calculate the va of the address being removed */
+			va = ((pt->pte_hi & PTE_API) << ADDR_API_SHFT) |
+			    ((((pt->pte_hi >> PTE_VSID_SHFT) & SR_VSID)
+				^(idx ^ ((pt->pte_hi & PTE_HID) ? 0x3ff : 0)))
+				    & 0x3ff) << PAGE_SHIFT;
+			tlbie(va);
 			tlbsync();
 			*pt = po->po_pte;
 			asm volatile ("sync");
@@ -718,13 +735,12 @@ pmap_init()
 	for (i = npgs; --i >= 0;)
 		pv++->pv_idx = -1;
 #ifdef USE_PMAP_VP
-	pool_init(&pmap_vp_pool, PAGE_SIZE, 0, 0, 0, "ppvl",
-            0, NULL, NULL, M_VMPMAP);
+	pool_init(&pmap_vp_pool, PAGE_SIZE, 0, 0, 0, "ppvl", NULL);
 #endif
 	pool_init(&pmap_pv_pool, sizeof(struct pv_entry), 0, 0, 0, "pvpl",
-            0, NULL, NULL, M_VMPMAP);
+            NULL);
 	pool_init(&pmap_po_pool, sizeof(struct pte_ovfl), 0, 0, 0, "popl",
-            0, NULL, NULL, M_VMPMAP);
+            NULL);
 	pmap_attrib = (char *)pv;
 	bzero(pv, npgs);
 	pv = (struct pv_entry *)addr;
@@ -1038,6 +1054,22 @@ poalloc()
 	if (!pmap_initialized)
 		panic("poalloc");
 #endif
+	pofreebusy = 1;
+	if (!LIST_EMPTY(&pofreetable0)) {
+		po = LIST_FIRST(&pofreetable0);
+		LIST_REMOVE(po,po_list);
+		pofreebusy = 0;
+		return po;
+	}
+	pofreebusy = 0;
+
+	if (!LIST_EMPTY(&pofreetable1)) {
+		po = LIST_FIRST(&pofreetable1);
+		LIST_REMOVE(po,po_list);
+		pofreebusy = 0;
+		return po;
+	}
+
 	s = splimp();
 	po = pool_get(&pmap_po_pool, PR_NOWAIT);
 	splx(s);
@@ -1052,9 +1084,34 @@ pofree(po, freepage)
 	int freepage;
 {
 	int s;
-	s = splimp();
-	pool_put(&pmap_po_pool, po);
-	splx(s);
+	if (freepage) {
+		s = splimp();
+		pool_put(&pmap_po_pool, po);
+		splx(s);
+		while (!LIST_EMPTY(&pofreetable1)) {
+			po = LIST_FIRST(&pofreetable1);
+			LIST_REMOVE(po, po_list);
+			s = splimp();
+			pool_put(&pmap_po_pool, po);
+			splx(s);
+		}
+
+		pofreebusy = 1;
+		while (!LIST_EMPTY(&pofreetable0)) {
+			po = LIST_FIRST(&pofreetable0);
+			LIST_REMOVE(po, po_list);
+			s = splimp();
+			pool_put(&pmap_po_pool, po);
+			splx(s);
+		}
+		pofreebusy = 0;
+
+	} else {
+		if (pofreebusy == 0)
+			LIST_INSERT_HEAD(&pofreetable0, po, po_list);
+		else
+			LIST_INSERT_HEAD(&pofreetable1, po, po_list);
+	}
 }
 
 /*
@@ -1282,6 +1339,8 @@ pmap_enter_c_pv(pm, va, pa, prot, flags, cacheable, pv)
 	return (0);
 }
 
+#define KERN_MAP_PV TRUE
+
 void
 pmap_kenter_cache(va, pa, prot, cacheable)
 	vaddr_t va;
@@ -1290,7 +1349,7 @@ pmap_kenter_cache(va, pa, prot, cacheable)
 	int cacheable;
 {
 	pmap_enter_c_pv(pmap_kernel(), va, pa, prot, PMAP_WIRED, cacheable,
-		FALSE);
+		KERN_MAP_PV);
 }
 void
 pmap_kenter_pa(va, pa, prot)
@@ -1299,7 +1358,7 @@ pmap_kenter_pa(va, pa, prot)
 	vm_prot_t prot;
 {
 	pmap_enter_c_pv(pmap_kernel(), va, pa, prot, PMAP_WIRED,
-		PMAP_CACHE_DEFAULT, FALSE);
+		PMAP_CACHE_DEFAULT, KERN_MAP_PV);
 }
 
 void pmap_remove_pvl( struct pmap *pm, vm_offset_t va, vm_offset_t endva,
@@ -1310,7 +1369,7 @@ pmap_kremove(va, len)
 	vsize_t len;
 {
 	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
-		pmap_remove_pvl(pmap_kernel(), va, va + PAGE_SIZE, FALSE);
+		pmap_remove_pvl(pmap_kernel(), va, va + PAGE_SIZE, KERN_MAP_PV);
 	}
 }
 
@@ -1441,7 +1500,7 @@ pmap_extract(pm, va, pap)
 	int s = splimp();
 	boolean_t ret;
 	
-	if (!(ptp = pte_find(pm, va)) || (ptp->pte_hi & PTE_VALID) == 0) {
+	if (!(ptp = pte_find(pm, va))) {
 		/* return address 0 if not mapped??? */
 		ret = FALSE;
 		if (pm == pmap_kernel() && va < 0x80000000){
@@ -1506,6 +1565,11 @@ ptemodify(pa, mask, val)
 	int i, s;
 	char * pattr;
 	boolean_t ret;
+	u_int32_t pte_hi;
+	int found;
+	vaddr_t va;
+	sr_t sr;
+	struct pmap *pm;
 
 	ret = ptebits(pa, mask);
 	
@@ -1525,9 +1589,14 @@ ptemodify(pa, mask, val)
 
 	s = splimp();
 	for (; pv; pv = pv->pv_next) {
+		va = pv->pv_va;
+		pm = pv->pv_pmap;
+		sr = ptesr(pm->pm_sr, va);
+		pte_hi = ((sr & SR_VSID) << PTE_VSID_SHFT)
+		    | ((va & ADDR_PIDX) >> ADDR_API_SHFT);
+		found = 0;
 		for (ptp = ptable + pv->pv_idx * 8, i = 8; --i >= 0; ptp++)
-			if ((ptp->pte_hi & PTE_VALID)
-			    && (ptp->pte_lo & PTE_RPGN) == pa) {
+			if ((pte_hi | PTE_VALID) == ptp->pte_hi) {
 				ptp->pte_hi &= ~PTE_VALID;
 				asm volatile ("sync");
 				tlbie(pv->pv_va);
@@ -1536,10 +1605,14 @@ ptemodify(pa, mask, val)
 				ptp->pte_lo |= val;
 				asm volatile ("sync");
 				ptp->pte_hi |= PTE_VALID;
+				found = 1;
+				break;
 			}
-		for (ptp = ptable + (pv->pv_idx ^ ptab_mask) * 8, i = 8; --i >= 0; ptp++)
-			if ((ptp->pte_hi & PTE_VALID)
-			    && (ptp->pte_lo & PTE_RPGN) == pa) {
+		if (found)
+			continue;
+		for (ptp = ptable + (pv->pv_idx ^ ptab_mask) * 8, i = 8;
+		    --i >= 0; ptp++) {
+			if ((pte_hi | PTE_VALID | PTE_HID) == ptp->pte_hi) {
 				ptp->pte_hi &= ~PTE_VALID;
 				asm volatile ("sync");
 				tlbie(pv->pv_va);
@@ -1548,12 +1621,18 @@ ptemodify(pa, mask, val)
 				ptp->pte_lo |= val;
 				asm volatile ("sync");
 				ptp->pte_hi |= PTE_VALID;
+				found = 1;
 			}
-		for (po = potable[pv->pv_idx].lh_first; po; po = po->po_list.le_next)
-			if ((po->po_pte.pte_lo & PTE_RPGN) == pa) {
+		}
+		if (found)
+			continue;
+		for (po = potable[pv->pv_idx].lh_first;
+		    po; po = po->po_list.le_next) {
+			if (pte_hi == po->po_pte.pte_hi) {
 				po->po_pte.pte_lo &= ~mask;
 				po->po_pte.pte_lo |= val;
 			}
+		}
 	}
 	splx(s);
 

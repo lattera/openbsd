@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_ddb.h,v 1.8 2001/11/28 19:28:14 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_ddb.h,v 1.8.2.1 2002/01/31 22:55:50 niklas Exp $	*/
 /*	$NetBSD: uvm_ddb.h,v 1.7 2001/06/02 18:09:26 chs Exp $	*/
 
 /*
@@ -47,7 +47,7 @@ void	uvm_object_printit __P((struct uvm_object *, boolean_t,
 	    int (*) __P((const char *, ...))));
 void	uvm_page_printit __P((struct vm_page *, boolean_t,
 	    int (*) __P((const char *, ...))));
-void	uvmexp_print(void (*)(const char *, ...));
+void	uvmexp_print(int (*) __P((const char *, ...)));
 #endif /* DDB */
 
 #endif /* _KERNEL */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46 2001/12/04 23:22:42 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.53 2001/08/26 00:43:53 chs Exp $	*/
 
 /*
@@ -195,7 +195,7 @@ struct pool vndbuf_pool;
 
 #define	getvndxfer(vnx)	do {						\
 	int s = splbio();						\
-	vnx = pool_get(&vndxfer_pool, PR_MALLOCOK|PR_WAITOK);		\
+	vnx = pool_get(&vndxfer_pool, PR_WAITOK);			\
 	splx(s);							\
 } while (0)
 
@@ -205,7 +205,7 @@ struct pool vndbuf_pool;
 
 #define	getvndbuf(vbp)	do {						\
 	int s = splbio();						\
-	vbp = pool_get(&vndbuf_pool, PR_MALLOCOK|PR_WAITOK);		\
+	vbp = pool_get(&vndbuf_pool, PR_WAITOK);			\
 	splx(s);							\
 } while (0)
 
@@ -301,10 +301,10 @@ uvm_swap_init()
 
 
 	pool_init(&vndxfer_pool, sizeof(struct vndxfer), 0, 0, 0, "swp vnx",
-			    0, NULL, NULL, 0);
+	    NULL);
 
-	pool_init(&vndbuf_pool, sizeof(struct vndbuf), 0, 0, 0, "swp vnd", 0,
-			    NULL, NULL, 0);
+	pool_init(&vndbuf_pool, sizeof(struct vndbuf), 0, 0, 0, "swp vnd",
+	    NULL);
 
 	/*
 	 * Setup the initial swap partition
@@ -744,7 +744,7 @@ sys_swapctl(p, v, retval)
 	case SWAP_DUMPDEV:
 		if (vp->v_type != VBLK) {
 			error = ENOTBLK;
-			break;
+			goto out;
 		}
 		dumpdev = vp->v_rdev;
 		break;
@@ -851,7 +851,9 @@ sys_swapctl(p, v, retval)
 		/*
 		 * do the real work.
 		 */
-		error = swap_off(p, sdp);
+		if ((error = swap_off(p, sdp)) != 0)
+			goto out;
+
 		break;
 
 	default:
@@ -1044,19 +1046,15 @@ swap_on(p, sdp)
 		printf("leaving %d pages of swap\n", size);
 	}
 
-  	/*
-	 * try to add anons to reflect the new swap space.
-	 */
-
-	error = uvm_anon_add(size);
-	if (error) {
-		goto bad;
-	}
-
 	/*
 	 * add a ref to vp to reflect usage as a swap device.
 	 */
 	vref(vp);
+
+  	/*
+	 * add anons to reflect the new swap space
+	 */
+	uvm_anon_add(size);
 
 #ifdef UVM_SWAP_ENCRYPT
 	if (uvm_doswapencrypt)
@@ -1079,17 +1077,12 @@ swap_on(p, sdp)
 	simple_unlock(&uvm.swap_data_lock);
 	return (0);
 
-	/*
-	 * failure: clean up and return error.
-	 */
-
 bad:
-	if (sdp->swd_ex) {
-		extent_destroy(sdp->swd_ex);
-	}
-	if (vp != rootvp) {
+	/*
+	 * failure: close device if necessary and return error.
+	 */
+	if (vp != rootvp)
 		(void)VOP_CLOSE(vp, FREAD|FWRITE, p->p_ucred, p);
-	}
 	return (error);
 }
 

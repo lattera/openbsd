@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.47 2001/12/08 02:24:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.47.2.1 2002/01/31 22:55:26 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.77 1996/10/13 03:47:51 christos Exp $	*/
 
 /*
@@ -48,7 +48,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -103,7 +102,6 @@ label_t *nofault;
 vm_offset_t vmmap;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 /*
@@ -332,9 +330,6 @@ cpu_startup()
 	 * the kernel map (any kernel mapping is OK) and then the
 	 * device drivers clone the kernel mappings into DVMA space.
 	 */
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 	printf("avail mem = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n",

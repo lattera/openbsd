@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.47 2001/12/02 02:55:42 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/machdep.c,v 1.47.2.1 2002/01/31 22:55:09 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2000 Michael Shalayeff
@@ -35,7 +35,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -166,7 +165,6 @@ long mem_ex_storage[EXTENT_FIXED_STORAGE_SIZE(32) / sizeof(long)];
 struct extent *hppa_ex;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 
@@ -652,9 +650,6 @@ cpu_startup()
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 #ifdef DEBUG
 	pmapdebug = opmapdebug;

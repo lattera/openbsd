@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/bppioctl.h,v 1.1 2002/01/12 20:19:40 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/bppioctl.h,v 1.1.2.1 2002/01/31 22:55:24 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Iain Hibbert

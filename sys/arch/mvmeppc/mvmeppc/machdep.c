@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17 2001/12/08 02:24:06 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.17.2.1 2002/01/31 22:55:20 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -40,7 +40,6 @@
 #include <sys/timeout.h>
 #include <sys/exec.h>
 #include <sys/malloc.h>
-#include <sys/map.h>
 #include <sys/mbuf.h>
 #include <sys/mount.h>
 #include <sys/msgbuf.h>
@@ -134,7 +133,6 @@ int bufpages = 0;
 struct bat battable[16];
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int astpending;
@@ -567,10 +565,6 @@ cpu_startup()
 	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
 	
-
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
 	printf("avail mem = %d\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
 	    bufpages * PAGE_SIZE);

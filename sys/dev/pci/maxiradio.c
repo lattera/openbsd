@@ -1,9 +1,9 @@
-/* $OpenBSD: src/sys/dev/pci/Attic/maxiradio.c,v 1.2 2001/12/05 10:27:06 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/pci/Attic/maxiradio.c,v 1.2.2.1 2002/01/31 22:55:35 niklas Exp $ */
 /* $RuOBSD: maxiradio.c,v 1.5 2001/10/18 16:51:36 pva Exp $ */
 
 /*
  * Copyright (c) 2001 Maxim Tsyplakov <tm@oganer.net>
- * 		      Vladimir Popov <jumbo@narod.ru>
+ *		      Vladimir Popov <jumbo@narod.ru>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ int     mr_set_info(void *, struct radio_info *);
 int     mr_search(void *, int);
 
 /* config base I/O address ? */
-#define PCI_CBIO 0x6400	
+#define PCI_CBIO 0x6400
 
 #define MAXIRADIO_CAPS	RADIO_CAPS_DETECT_SIGNAL |			\
 			RADIO_CAPS_SET_MONO |				\
@@ -135,18 +135,12 @@ mr_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct mr_softc *sc = (struct mr_softc *) self;
 	struct pci_attach_args *pa = aux;
+	struct cfdata *cf = sc->sc_dev.dv_cfdata;
 	pci_chipset_tag_t pc = pa->pa_pc;
-	bus_addr_t iobase;
-	bus_size_t iosize;
 	pcireg_t csr;
-	
-	if (pci_io_find(pc, pa->pa_tag, PCI_CBIO, &iobase, &iosize)) {
-		printf (": can't find i/o base\n");
-		return;
-	}
 
-	if (bus_space_map(sc->tea.iot = pa->pa_iot, iobase, iosize,
-			  0, &sc->tea.ioh)) {
+	if (pci_mapreg_map(pa, PCI_CBIO, PCI_MAPREG_TYPE_IO, 0,
+	    &sc->tea.iot, &sc->tea.ioh, NULL, NULL, 0)) {
 		printf(": can't map i/o space\n");
 		return;
 	}
@@ -155,18 +149,21 @@ mr_attach(struct device *parent, struct device *self, void *aux)
 	csr = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 	pci_conf_write(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
 	    csr | PCI_COMMAND_MASTER_ENABLE);
-	
+
 	sc->freq = MIN_FM_FREQ;
 	sc->vol = 0;
 	sc->mute = 0;
 	sc->stereo = TEA5757_STEREO;
 	sc->lock = TEA5757_S030;
 	sc->tea.offset = 0;
+	sc->tea.flags = cf->cf_flags;
 	sc->tea.init = mr_init;
 	sc->tea.rset = mr_rset;
 	sc->tea.write_bit = mr_write_bit;
 	sc->tea.read = mr_hardware_read;
-	
+
+	printf(": Guillemot MaxiRadio FM2000 PCI\n");
+
 	radio_attach_mi(&mr_hw_if, sc, &sc->sc_dev);
 }
 
@@ -183,7 +180,7 @@ mr_get_info(void *v, struct radio_info *ri)
 	ri->lock = tea5757_decode_lock(sc->lock);
 
 	ri->freq = sc->freq = tea5757_decode_freq(mr_hardware_read(sc->tea.iot,
-				sc->tea.ioh, sc->tea.offset));
+	    sc->tea.ioh, sc->tea.offset), sc->tea.flags & TEA5757_TEA5759);
 
 	ri->info = mr_state(sc->tea.iot, sc->tea.ioh);
 
@@ -200,7 +197,7 @@ mr_set_info(void *v, struct radio_info *ri)
 	sc->stereo = ri->stereo ? TEA5757_STEREO: TEA5757_MONO;
 	sc->lock = tea5757_encode_lock(ri->lock);
 	ri->freq = sc->freq = tea5757_set_freq(&sc->tea,
-			sc->lock, sc->stereo, ri->freq);
+	    sc->lock, sc->stereo, ri->freq);
 	mr_set_mute(sc);
 
 	return (0);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/sf16fmr2.c,v 1.3 2001/12/18 18:48:08 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/isa/sf16fmr2.c,v 1.3.2.1 2002/01/31 22:55:33 niklas Exp $ */
 /* $RuOBSD: sf16fmr2.c,v 1.12 2001/10/18 16:51:36 pva Exp $ */
 
 /*
@@ -113,7 +113,7 @@ struct cfdriver sf2r_cd = {
 };
 
 void	sf2r_set_mute(struct sf2r_softc *);
-int	sf2r_find(bus_space_tag_t, bus_space_handle_t);
+int	sf2r_find(bus_space_tag_t, bus_space_handle_t, int);
 
 u_int32_t	sf2r_read_register(bus_space_tag_t, bus_space_handle_t, bus_size_t);
 
@@ -122,29 +122,30 @@ void	sf2r_rset(bus_space_tag_t, bus_space_handle_t, bus_size_t, u_int32_t);
 void	sf2r_write_bit(bus_space_tag_t, bus_space_handle_t, bus_size_t, int);
 
 int
-sf2r_probe(struct device *parent, void *self, void *aux)
+sf2r_probe(struct device *parent, void *match, void *aux)
 {
 	struct isa_attach_args *ia = aux;
 	bus_space_tag_t iot = ia->ia_iot;
 	bus_space_handle_t ioh;
-
+	struct cfdata *cf = match;
 	int iosize = 1, iobase = ia->ia_iobase;
 
 	if (!SF16FMR2_BASE_VALID(iobase)) {
 		printf("sf2r: configured iobase 0x%x invalid\n", iobase);
-		return 0;
+		return (0);
 	}
 
 	if (bus_space_map(iot, iobase, iosize, 0, &ioh))
-		return 0;
+		return (0);
+
+	if (!sf2r_find(iot, ioh, cf->cf_flags)) {
+		bus_space_unmap(iot, ioh, iosize);
+		return (0);
+	}
 
 	bus_space_unmap(iot, ioh, iosize);
-
-	if (!sf2r_find(iot, ioh))
-		return 0;
-
 	ia->ia_iosize = iosize;
-	return 1;
+	return (1);
 }
 
 void
@@ -152,6 +153,7 @@ sf2r_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct sf2r_softc *sc = (void *) self;
 	struct isa_attach_args *ia = aux;
+	struct cfdata *cf = sc->sc_dev.dv_cfdata;
 
 	sc->tea.iot = ia->ia_iot;
 	sc->mute = 0;
@@ -162,17 +164,20 @@ sf2r_attach(struct device *parent, struct device *self, void *aux)
 
 	/* remap I/O */
 	if (bus_space_map(sc->tea.iot, ia->ia_iobase, ia->ia_iosize,
-			  0, &sc->tea.ioh))
-		panic("sf2rattach: bus_space_map() failed");
+			  0, &sc->tea.ioh)) {
+		printf(": bus_space_map() failed\n");
+		return;
+	}
 
 	sc->tea.offset = 0;
+	sc->tea.flags = cf->cf_flags;
 
 	sc->tea.init = sf2r_init;
 	sc->tea.rset = sf2r_rset;
 	sc->tea.write_bit = sf2r_write_bit;
 	sc->tea.read = sf2r_read_register;
 
-	printf(": SoundForte RadioLink SF16-FMR2");
+	printf(": SoundForte RadioLink SF16-FMR2\n");
 	tea5757_set_freq(&sc->tea, sc->stereo, sc->lock, sc->freq);
 	sf2r_set_mute(sc);
 
@@ -207,7 +212,7 @@ sf2r_rset(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off, u_int32_t
 }
 
 int
-sf2r_find(bus_space_tag_t iot, bus_space_handle_t ioh)
+sf2r_find(bus_space_tag_t iot, bus_space_handle_t ioh, int flags)
 {
 	struct sf2r_softc sc;
 	u_int32_t freq;
@@ -215,6 +220,7 @@ sf2r_find(bus_space_tag_t iot, bus_space_handle_t ioh)
 	sc.tea.iot = iot;
 	sc.tea.ioh = ioh;
 	sc.tea.offset = 0;
+	sc.tea.flags = flags;
 	sc.tea.init = sf2r_init;
 	sc.tea.rset = sf2r_rset;
 	sc.tea.write_bit = sf2r_write_bit;
@@ -232,7 +238,8 @@ sf2r_find(bus_space_tag_t iot, bus_space_handle_t ioh)
 		tea5757_set_freq(&sc.tea, sc.stereo, sc.lock, sc.freq);
 		sf2r_set_mute(&sc);
 		freq = sf2r_read_register(iot, ioh, sc.tea.offset);
-		if (tea5757_decode_freq(freq) == sc.freq)
+		if (tea5757_decode_freq(freq, sc.tea.flags & TEA5757_TEA5759)
+				== sc.freq)
 			return 1;
 	}
 
@@ -304,7 +311,8 @@ sf2r_get_info(void *v, struct radio_info *ri)
 	ri->lock = tea5757_decode_lock(sc->lock);
 
 	buf = sf2r_read_register(sc->tea.iot, sc->tea.ioh, sc->tea.offset);
-	ri->freq  = sc->freq = tea5757_decode_freq(buf);
+	ri->freq  = sc->freq = tea5757_decode_freq(buf,
+			sc->tea.flags & TEA5757_TEA5759);
 	ri->info = 3 & (buf >> 24);
 
 	return (0);

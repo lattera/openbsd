@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/conf/files,v 1.233 2001/12/10 04:45:31 art Exp $
+#	$OpenBSD: src/sys/conf/files,v 1.233.2.1 2002/01/31 22:55:28 niklas Exp $
 #	$NetBSD: files,v 1.87 1996/05/19 17:17:50 jonathan Exp $
 
 #	@(#)files.newconf	7.5 (Berkeley) 5/10/93
@@ -121,7 +121,7 @@ file	dev/ic/adw.c		adw
 
 # BusLogic MultiMaster and MultiMaster Ultra SCSI controllers
 device	bha: scsi
-file	dev/ic/bha.c		bha
+file	dev/ic/bha.c		bha & (bha_pci | bha_isa | bha_eisa) needs-flag
 
 # ICP Vortex GDT RAID controllers
 device	gdt: scsi
@@ -493,7 +493,6 @@ file kern/subr_log.c
 file kern/subr_pool.c
 file kern/subr_prf.c
 file kern/subr_prof.c
-file kern/subr_rmap.c
 file kern/subr_userconf.c		boot_config
 file kern/subr_xxx.c
 file kern/sys_generic.c
@@ -676,7 +675,6 @@ file crypto/crypto.c			(inet & ipsec) | crypto
 file crypto/cryptodev.c			((inet & ipsec) | crypto)	needs-flag
 file crypto/criov.c			(inet & ipsec) | crypto
 file crypto/cryptosoft.c		(inet & ipsec) | crypto
-file crypto/cryptombuf.c		(inet & ipsec) | crypto
 file crypto/xform.c			(inet & ipsec) | crypto
 file crypto/deflate.c			(inet & ipsec) | crypto
 file netatalk/aarp.c			netatalk

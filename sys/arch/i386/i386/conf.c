@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84 2001/12/11 23:19:02 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.84.2.1 2002/01/31 22:55:11 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -97,12 +97,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 
 /* open, close, write, ioctl */
 #define	cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
-
-/* open, close, write, ioctl */
-#define	cdev_spkr_init(c,n) { \
 	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
 	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
 	0, seltrue, (dev_type_mmap((*))) enodev }
@@ -342,7 +336,7 @@ struct cdevsw	cdevsw[] =
 	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
 	cdev_iop_init(NIOP,iop),	/* 75: I2O IOP control interface */
 	cdev_radio_init(NRADIO, radio), /* 76: generic radio I/O */
-	cdev_ugen_init(NUSCANNER,uscanner),	/* 77: USB generic driver */
+	cdev_ugen_init(NUSCANNER,uscanner),	/* 77: USB scanners */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 
@@ -509,6 +503,7 @@ dev_rawpart(dv)
 		return (MAKEDISKDEV(majdev, dv->dv_unit, RAW_PART));
 		break;
 	default:
+		;
 	}
 
 	return (NODEV);

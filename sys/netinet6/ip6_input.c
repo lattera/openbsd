@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.38 2001/12/16 01:28:59 jasoni Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_input.c,v 1.38.2.1 2002/01/31 22:55:46 niklas Exp $	*/
 /*	$KAME: ip6_input.c,v 1.188 2001/03/29 05:34:31 itojun Exp $	*/
 
 /*
@@ -219,17 +219,6 @@ ip6_input(m)
 	u_int32_t rtalert = ~0;
 	int nxt, ours = 0;
 	struct ifnet *deliverifp = NULL;
-
-#if 0 /* IPSEC */
-	/*
-	 * should the inner packet be considered authentic?
-	 * see comment in ah4_input().
-	 */
-	if (m) {
-		m->m_flags &= ~M_AUTHIPHDR;
-		m->m_flags &= ~M_AUTHIPDGM;
-	}
-#endif
 
 	/*
 	 * mbuf statistics by kazu
@@ -1185,6 +1174,7 @@ ip6_savecontrol(in6p, mp, ip6, m)
 #endif
 		}
 	  loopend:
+	  	;
 	}
 	if ((in6p->in6p_flags & IN6P_HOPOPTS) && privileged) {
 		/* to be done */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.h,v 1.6 2001/07/27 15:48:38 itojun Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.h,v 1.6.4.1 2002/01/31 22:55:43 niklas Exp $	*/
 /*	$KAME: if_gif.h,v 1.17 2000/09/11 11:36:41 sumikawa Exp $	*/
 
 /*
@@ -58,8 +58,6 @@ struct gif_softc {
 #ifdef INET6
 #define gif_ro6 gifsc_gifscr.gifscr_ro6
 #endif
-
-#define	GIFF_INUSE	0x1	/* gif is in use */
 
 #define GIF_MTU		(1280)	/* Default MTU */
 #define	GIF_MTU_MIN	(1280)	/* Minimum MTU */

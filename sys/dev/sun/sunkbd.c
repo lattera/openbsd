@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sun/sunkbd.c,v 1.1 2002/01/25 03:24:53 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sun/sunkbd.c,v 1.1.2.1 2002/01/31 22:55:39 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)

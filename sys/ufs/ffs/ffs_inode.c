@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.28 2001/12/10 04:45:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.28.2.1 2002/01/31 22:55:49 niklas Exp $	*/
 /*	$NetBSD: ffs_inode.c,v 1.10 1996/05/11 18:27:19 mycroft Exp $	*/
 
 /*
@@ -270,6 +270,10 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	 */
 	oip->i_ffs_size = length;
 	uvm_vnp_setsize(ovp, length);
+
+
+/* XXXUBC - see revision 1.30 of ffs_inode.c */
+
 
 	/*
 	 * Calculate index into inode's block list of

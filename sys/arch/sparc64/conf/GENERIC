@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.34 2001/12/14 23:06:51 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC,v 1.34.2.1 2002/01/31 22:55:23 niklas Exp $
 # 	$NetBSD: GENERIC32,v 1.18 2001/07/20 00:07:12 eeh Exp $
 
 machine		sparc64
@@ -27,27 +27,43 @@ pci*	at ppb?
 ppb*	at pci? dev ? function ?
 ebus*	at pci?
 
+uperf*	at psycho?
+
+# PCI Ethernet
 hme*	at pci? dev ? function ?
 gem*	at pci? dev ? function ?
 dc*	at pci? dev ? function ?
 
+# PCI SCSI
 siop*	at pci? dev ? function ?
 scsibus* at siop?
 
-vgafb*		at pci? disable dev ? function ?
+# PCI Display
+vgafb*		at pci? dev ? function ?
 wsdisplay*	at vgafb?
+
+# PCI crypto
+hifn*		at pci? dev ? function ?
+ubsec*		at pci? dev ? function ?
+
+# PCI sound
+autri*		at pci? dev ? function ?	# Trident 4D WAVE
+midi*		at autri?
+audio*		at autri?
 
 # USB bridges
 ohci*	at pci? dev ? function ?
-usb*	at ohci?
+usb*	at ohci? flags 0x1
 
 # USB devices
 uhub*	at usb?
 uhub*	at uhub? port ? configuration ?
-ukbd*	at uhub?
+ukbd*	at uhub?				# USB keyboard
 wskbd*	at ukbd? console ?
-uhid*	at uhub? port ? configuration ?
-ugen*	at uhub? port ? configuration ?
+ums*	at uhub? port ? configuration ?		# USB mouse
+wsmouse* at ums?
+uhid*	at uhub? port ? configuration ?		# USB generic human interface
+ugen*	at uhub? port ? configuration ?		# USB generic device
 
 #### Standard system devices -- all required for a given architecture
 
@@ -55,16 +71,23 @@ auxio*	at ebus?
 beeper*	at ebus?
 
 # SAB82532 based serial ports
-#sab*	at ebus?
-#sabtty* at sab?
+sab*	at ebus?
+sabtty* at sab?
 
-#com*	at ebus?	#*BROKEN*
+# NS16550
+com*	at ebus?
+comkbd*	at ebus?
+wskbd* at comkbd?
 
 audioce*	at ebus?
 audio*		at audioce?
 
+uperf*	at sbus? slot ? offset ?
+
 zs*	at sbus? slot ? offset ?
 zstty*	at zs? channel ?
+zskbd*	at zs? channel ?
+wskbd*	at zskbd? console ?
 
 ## PROM console driver -- if all else fails
 pcons0	at mainbus0				# PROM console
@@ -88,6 +111,16 @@ qe*		at qec?
 be*		at qec?
 
 hme*		at sbus? slot ? offset ?
+
+# Magma serial/parallel port devices
+magma*		at sbus? slot ? offset ?
+mtty*		at magma?
+mbpp*		at magma?
+
+# Magma serial/parallel port devices
+spif*		at sbus? slot ? offset ?
+stty*		at spif?
+sbpp*		at spif?
 
 pciide*	at pci? dev ? function ? flags 0x0000
 wd*	at pciide? channel ? drive ? flags 0x0a00
@@ -129,11 +162,14 @@ nsphy*	at mii? phy ?				# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 ukphy*	at mii? phy ?				# Unknown PHYs
 
-cgsix*		at sbus? disable slot ? offset ?
+cgsix*		at sbus? slot ? offset ?
 wsdisplay*	at cgsix?
 
-cgthree*	at sbus? disable slot ? offset ?
+cgthree*	at sbus? slot ? offset ?
 wsdisplay*	at cgthree?
 
 audiocs*	at sbus? slot ? offset ?
 audio*		at audiocs?
+
+# mouse & keyboard multiplexor pseudo-devices
+pseudo-device	wsmux 	2

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40 2001/12/09 01:45:32 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.40.2.1 2002/01/31 22:55:23 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -59,7 +59,6 @@
 #include <sys/buf.h>
 #include <sys/exec.h>
 #include <sys/vnode.h>
-#include <sys/map.h>
 #include <sys/extent.h>
 
 #include <uvm/uvm_extern.h>

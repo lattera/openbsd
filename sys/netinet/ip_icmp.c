@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.42 2001/07/04 16:52:03 dhartmei Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.42.4.1 2002/01/31 22:55:45 niklas Exp $	*/
 /*	$NetBSD: ip_icmp.c,v 1.19 1996/02/13 23:42:22 christos Exp $	*/
 
 /*
@@ -104,11 +104,28 @@ int	icmpprintfs = 0;
 int	icmperrppslim = 100;
 int	icmperrpps_count = 0;
 struct timeval icmperrppslim_last;
+int	icmp_rediraccept = 1;
+int	icmp_redirtimeout = 10 * 60;
+static struct rttimer_queue *icmp_redirect_timeout_q = NULL;
 
 void icmp_mtudisc_timeout __P((struct rtentry *, struct rttimer *));
 int icmp_ratelimit __P((const struct in_addr *, const int, const int));
+static void icmp_redirect_timeout __P((struct rtentry *, struct rttimer *));
 
 extern	struct protosw inetsw[];
+
+void
+icmp_init()
+{
+	/* 
+	 * This is only useful if the user initializes redirtimeout to 
+	 * something other than zero.
+	 */
+	if (icmp_redirtimeout != 0) {
+		icmp_redirect_timeout_q = 
+			rt_timer_queue_create(icmp_redirtimeout);
+	}
+}
 
 /*
  * Generate an error packet of type error
@@ -287,6 +304,7 @@ icmp_input(m, va_alist)
 	extern u_char ip_protox[];
 	int hlen;
 	va_list ap;
+	struct rtentry *rt;
 
 	va_start(ap, m);
 	hlen = va_arg(ap, int);
@@ -350,32 +368,6 @@ icmp_input(m, va_alist)
 			break;
 
 		case ICMP_UNREACH_NEEDFRAG:
-#if 0 /*NRL INET6*/
-			if (icp->icmp_nextmtu) {
-				extern int ipv6_trans_mtu
-				    __P((struct mbuf **, int, int));
-				struct mbuf *m0 = m;
-
-				/*
-				 * Do cool v4-related path MTU, for now,
-				 * only v6-in-v4 can handle it.
-				 */
-				if (icmplen >= ICMP_V6ADVLENMIN &&
-				    icmplen >= ICMP_V6ADVLEN(icp) &&
-				    icp->icmp_ip.ip_p == IPPROTO_IPV6) {
-					/*
-					 * ipv6_trans_mtu returns 1 if
-					 * the mbuf is still intact.
-					 */
-					if (ipv6_trans_mtu(&m0,icp->icmp_nextmtu,
-					    hlen + ICMP_V6ADVLEN(icp))) {
-						m = m0;
-						goto raw;
-					} else
-						return;
-				}
-			}
-#endif /* INET6 */
 			code = PRC_MSGSIZE;
 			break;
 				
@@ -508,9 +500,10 @@ icmp_input(m, va_alist)
 			icmpdst.sin_addr = ip->ip_src;
 		else
 			icmpdst.sin_addr = ip->ip_dst;
-		if (m->m_pkthdr.rcvif != NULL)
-			ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
-			    m->m_pkthdr.rcvif));
+		if (m->m_pkthdr.rcvif == NULL)
+			break;
+		ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
+		    m->m_pkthdr.rcvif));
 		if (ia == 0)
 			break;
 		icp->icmp_type = ICMP_MASKREPLY;
@@ -536,6 +529,8 @@ reflect:
 		/* Free packet atttributes */
 		if (m->m_flags & M_PKTHDR)
 			m_tag_delete_chain(m, NULL);
+		if (icmp_rediraccept == 0)
+			goto freeit;
 		if (code > 3)
 			goto badcode;
 		if (icmplen < ICMP_ADVLENMIN || icmplen < ICMP_ADVLEN(icp) ||
@@ -562,9 +557,16 @@ reflect:
 		}
 #endif
 		icmpsrc.sin_addr = icp->icmp_ip.ip_dst;
+		rt = NULL;
 		rtredirect(sintosa(&icmpsrc), sintosa(&icmpdst),
 		    (struct sockaddr *)0, RTF_GATEWAY | RTF_HOST,
-		    sintosa(&icmpgw), (struct rtentry **)0);
+		    sintosa(&icmpgw), (struct rtentry **)&rt);
+		if (rt != NULL && icmp_redirtimeout != 0) {
+			(void)rt_timer_add(rt, icmp_redirect_timeout,
+			 		 icmp_redirect_timeout_q);
+		}
+		if (rt != NULL)
+			rtfree(rt);
 		pfctlinput(PRC_REDIRECT_HOST, sintosa(&icmpsrc));
 		break;
 
@@ -811,6 +813,32 @@ icmp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		    &icmperrppslim));
 		break;
+	case ICMPCTL_REDIRACCEPT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &icmp_rediraccept));
+		break;
+	case ICMPCTL_REDIRTIMEOUT: {
+		int error;
+
+		error = sysctl_int(oldp, oldlenp, newp, newlen,
+			    &icmp_redirtimeout);
+		if (icmp_redirect_timeout_q != NULL) {
+			if (icmp_redirtimeout == 0) {
+				rt_timer_queue_destroy(icmp_redirect_timeout_q,
+				    TRUE);
+				icmp_redirect_timeout_q = NULL;
+			} else {
+				rt_timer_queue_change(icmp_redirect_timeout_q,
+				    icmp_redirtimeout);
+			}
+		} else if (icmp_redirtimeout > 0) {
+			icmp_redirect_timeout_q =
+			    rt_timer_queue_create(icmp_redirtimeout);
+		}
+		return (error);
+
+		break;
+	}
 	default:
 		return (ENOPROTOOPT);
 	}
@@ -967,4 +995,18 @@ icmp_ratelimit(dst, type, code)
 
 	/*okay to send*/
 	return 0;
+}
+
+static void
+icmp_redirect_timeout(rt, r)
+	struct rtentry *rt;
+	struct rttimer *r;
+{
+	if (rt == NULL)
+		panic("icmp_redirect_timeout:  bad route to timeout");
+	if ((rt->rt_flags & (RTF_DYNAMIC | RTF_HOST)) == 
+	    (RTF_DYNAMIC | RTF_HOST)) {
+		rtrequest((int) RTM_DELETE, (struct sockaddr *)rt_key(rt),
+		    rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
+	}
 }

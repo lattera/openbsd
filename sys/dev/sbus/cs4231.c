@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cs4231.c,v 1.7 2001/10/01 04:10:49 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cs4231.c,v 1.7.6.1 2002/01/31 22:55:38 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -142,9 +142,9 @@ int	cs4231_getdev		__P((void *, struct audio_device *));
 int	cs4231_set_port		__P((void *, mixer_ctrl_t *));
 int	cs4231_get_port		__P((void *, mixer_ctrl_t *));
 int	cs4231_query_devinfo	__P((void *addr, mixer_devinfo_t *));
-void *	cs4231_alloc		__P((void *, u_long, int, int));
+void *	cs4231_alloc		__P((void *, int, size_t, int, int));
 void	cs4231_free		__P((void *, void *, int));
-u_long	cs4231_round_buffersize	__P((void *, u_long));
+size_t	cs4231_round_buffersize	__P((void *, int, size_t));
 int	cs4231_get_props	__P((void *));
 int	cs4231_trigger_output __P((void *, void *, void *, int,
     void (*intr)__P((void *)), void *arg, struct audio_params *));
@@ -407,6 +407,10 @@ cs4231_open(addr, flags)
 	    cs4231_read(sc, SP_MISC_INFO) | MODE2);
 
 	cs4231_setup_output(sc);
+
+	cs4231_write(sc, SP_PIN_CONTROL,
+	    cs4231_read(sc, SP_PIN_CONTROL) | INTERRUPT_ENABLE);
+
 	return (0);
 }
 
@@ -464,6 +468,8 @@ cs4231_close(addr)
 
 	cs4231_halt_input(sc);
 	cs4231_halt_output(sc);
+	cs4231_write(sc, SP_PIN_CONTROL,
+	    cs4231_read(sc, SP_PIN_CONTROL) & (~INTERRUPT_ENABLE));
 	sc->sc_open = 0;
 }
 
@@ -1248,10 +1254,11 @@ cs4231_query_devinfo(addr, dip)
 	return (err);
 }
 
-u_long
-cs4231_round_buffersize(addr, size)
+size_t
+cs4231_round_buffersize(addr, direction, size)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 {
 	return (size);
 }
@@ -1277,22 +1284,37 @@ cs4231_intr(v)
 	int r = 0;
 
 	csr = APC_READ(sc, APC_CSR);
-	status = CS_READ(sc, AD1848_STATUS);
-	if (status & (INTERRUPT_STATUS | SAMPLE_ERROR)) {
-		reg = cs4231_read(sc, CS_IRQ_STATUS);
-		if (reg & CS_AFS_PI) {
-			cs4231_write(sc, SP_LOWER_BASE_COUNT, 0xff);
-			cs4231_write(sc, SP_UPPER_BASE_COUNT, 0xff);
-		}
-		CS_WRITE(sc, AD1848_STATUS, 0);
+	APC_WRITE(sc, APC_CSR, csr);
+
+	if ((csr & APC_CSR_EIE) && (csr & APC_CSR_EI)) {
+		printf("%s: error interrupt\n", sc->sc_dev.dv_xname);
+		r = 1;
 	}
 
-	APC_WRITE(sc, APC_CSR, csr);
+	if ((csr & APC_CSR_PIE) && (csr & APC_CSR_PI)) {
+		/* playback interrupt */
+		r = 1;
+	}
+
+	if ((csr & APC_CSR_GIE) && (csr & APC_CSR_GI)) {
+		/* general interrupt */
+		status = CS_READ(sc, AD1848_STATUS);
+		if (status & (INTERRUPT_STATUS | SAMPLE_ERROR)) {
+			reg = cs4231_read(sc, CS_IRQ_STATUS);
+			if (reg & CS_AFS_PI) {
+				cs4231_write(sc, SP_LOWER_BASE_COUNT, 0xff);
+				cs4231_write(sc, SP_UPPER_BASE_COUNT, 0xff);
+			}
+			CS_WRITE(sc, AD1848_STATUS, 0);
+		}
+		r = 1;
+	}
+
 
 	if (csr & (APC_CSR_PI|APC_CSR_PMI|APC_CSR_PIE|APC_CSR_PD))
 		r = 1;
 
-	if (csr & APC_CSR_PM) {
+	if ((csr & APC_CSR_PMIE) && (csr & APC_CSR_PMI)) {
 		u_long nextaddr, togo;
 
 		p = sc->sc_nowplaying;
@@ -1315,20 +1337,23 @@ cs4231_intr(v)
 		r = 1;
 	}
 
+#if 0
 	if (csr & APC_CSR_CI) {
 		if (sc->sc_rintr != NULL) {
 			r = 1;
 			(*sc->sc_rintr)(sc->sc_rarg);
 		}
 	}
+#endif
 
 	return (r);
 }
 
 void *
-cs4231_alloc(addr, size, pool, flags)
+cs4231_alloc(addr, direction, size, pool, flags)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 	int pool;
 	int flags;
 {

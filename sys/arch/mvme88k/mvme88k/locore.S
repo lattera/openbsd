@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.23 2001/12/19 07:04:41 smurph Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/locore.S,v 1.23.2.1 2002/01/31 22:55:19 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -214,9 +214,9 @@ GLOBAL(start_text)	/* This is the *real* start upon poweron or reset */
 	
 	set	r11, r0,  1<PSR_SUPERVISOR_MODE_BIT>
 	set	r11, r11, 1<PSR_INTERRUPT_DISABLE_BIT>
-	set	r11, r11, 1<4>
-	set	r11, r11, 1<29>
-	set	r11, r11, 1<25>
+	set	r11, r11, 1<PSR_GRAPHICS_DISABLE_BIT>
+/*	set	r11, r11, 1<PSR_SERIAL_MODE_BIT> */
+	set	r11, r11, 1<PSR_SERIALIZE_BIT>
 	stcr	r11, PSR
 	stcr	r0,  VBR     /* set Vector Base Register to 0, ALWAYS! */
 	FLUSH_PIPELINE
@@ -314,8 +314,8 @@ ASGLOBAL(master_start)
 #ifdef M88110
 	cmp	r2, r8, CPU_88110 /* r8 contains cputyp */
 	bb1	ne, r2, 1f	/* if it's a 'mc88110, use different vectors */ 
-	or.u	r3, r0, hi16(_m197_vector_list)
-	or	r3, r3, lo16(_m197_vector_list)
+	or.u	r3, r0, hi16(_m88110_vector_list)
+	or	r3, r3, lo16(_m88110_vector_list)
 	bsr.n	_vector_init
 	ldcr	r2, VBR
 	br	2f
@@ -415,10 +415,10 @@ _vector_list_end:
 #endif /* M88100 */
 #ifdef M88110
 	.align 4096		  /* VBR points to page aligned list */
-	global _m197_vector_list, _m197_vector_list_end
-_m197_vector_list:   		  /* references memory BELOW this line */ 
+	global _m88110_vector_list, _m88110_vector_list_end
+_m88110_vector_list:   		  /* references memory BELOW this line */ 
 #include "machine/exception_vectors2.h"
-_m197_vector_list_end:
+_m88110_vector_list_end:
 	word END_OF_VECTOR_LIST
 #endif /* M88110 */	
 	.align 4096		  /* SDT (segment descriptor table */

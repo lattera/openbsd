@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/bha_isa.c,v 1.1 2002/01/24 22:38:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/bha_isa.c,v 1.1.2.1 2002/01/31 22:55:32 niklas Exp $	*/
 /*	$NetBSD: bha_isa.c,v 1.14 1998/08/15 10:10:51 mycroft Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/audio.c,v 1.32 2001/11/06 19:53:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/audio.c,v 1.32.2.1 2002/01/31 22:55:29 niklas Exp $	*/
 /*	$NetBSD: audio.c,v 1.105 1998/09/27 16:43:56 christos Exp $	*/
 
 /*
@@ -551,14 +551,10 @@ audio_alloc_ring(sc, r, direction, bufsize)
 	ROUNDSIZE(bufsize);
 	if (hw->round_buffersize)
 		bufsize = hw->round_buffersize(hdl, direction, bufsize);
-	else if (hw->round_buffersize_old)
-		bufsize = hw->round_buffersize_old(hdl, bufsize);
 	r->bufsize = bufsize;
 	if (hw->allocm)
 		r->start = hw->allocm(hdl, direction, r->bufsize, M_DEVBUF, 
 		    M_WAITOK);
-	else if (hw->allocm_old)
-		r->start = hw->allocm_old(hdl, r->bufsize, M_DEVBUF, M_WAITOK);
 	else
 		r->start = malloc(bufsize, M_DEVBUF, M_WAITOK);
 	if (r->start == 0)
@@ -1776,7 +1772,7 @@ audio_ioctl(dev, cmd, addr, flag, p)
 
 	default:
 		DPRINTF(("audio_ioctl: unknown ioctl\n"));
-		error = EINVAL;
+		error = ENOTTY;
 		break;
 	}
 	DPRINTF(("audio_ioctl(%d,'%c',%d) result %d\n",
@@ -3014,6 +3010,8 @@ mixer_ioctl(dev, cmd, addr, flag, p)
 		break;
 
 	case AUDIO_MIXER_WRITE:
+		if (!(flag & FWRITE))
+			return (EACCES);
 		DPRINTF(("AUDIO_MIXER_WRITE\n"));
 		error = hw->set_port(sc->hw_hdl, (mixer_ctrl_t *)addr);
 		if (!error && hw->commit_settings)
@@ -3023,7 +3021,7 @@ mixer_ioctl(dev, cmd, addr, flag, p)
 		break;
 
 	default:
-		error = EINVAL;
+		error = ENOTTY;
 		break;
 	}
 	DPRINTF(("mixer_ioctl(%d,'%c',%d) result %d\n",

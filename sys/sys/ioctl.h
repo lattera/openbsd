@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.4 2000/08/13 03:38:45 ericj Exp $	*/
+/*	$OpenBSD: src/sys/sys/ioctl.h,v 1.4.8.1 2002/01/31 22:55:48 niklas Exp $	*/
 /*	$NetBSD: ioctl.h,v 1.20 1996/01/30 18:21:47 thorpej Exp $	*/
 
 /*-
@@ -78,7 +78,7 @@ __END_DECLS
 
 /*
  * Keep outside _SYS_IOCTL_H_
- * Compatability with old terminal driver
+ * Compatibility with old terminal driver
  *
  * Source level -> #define USE_OLD_TTY
  * Kernel level -> options COMPAT_43 or COMPAT_SUNOS or ...

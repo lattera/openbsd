@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190 2001/12/14 08:35:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.190.2.1 2002/01/31 22:55:11 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -82,7 +82,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/exec.h>
@@ -243,7 +242,6 @@ bootarg_t *bootargp;
 vm_offset_t avail_end;
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 int kbd_reset;
@@ -397,9 +395,6 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
 	printf("avail mem = %lu (%uK)\n", ptoa(uvmexp.free),
 	    ptoa(uvmexp.free)/1024);
 	printf("using %d buffers containing %u bytes (%uK) of memory\n",
@@ -432,7 +427,6 @@ i386_proc0_tss_ldt_init()
 	struct pcb *pcb;
 	int x;
 
-	gdt_init();
 	curpcb = pcb = &proc0.p_addr->u_pcb;
 	pcb->pcb_flags = 0;
 	pcb->pcb_tss.tss_ioopt =
@@ -788,7 +782,9 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 			{
 				0, "Athlon Model 1", "Athlon Model 2",
 				"Duron", "Athlon Model 4 (Thunderbird)",
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, "Athlon Model 6 (Palomino)",
+				"Athlon Model 7 (Morgan)", 0,
+				0, 0, 0, 0, 0, 0, 0,
 				"K7 (Athlon)"		/* Default */
 			},
 			NULL
@@ -1606,12 +1602,8 @@ boot(howto)
 	splhigh();
 
 	/* Do a dump if requested. */
-	if (howto & RB_DUMP) {
-		/* Save registers. */
-		savectx(&dumppcb);
-
+	if (howto & RB_DUMP)
 		dumpsys();
-	}
 
 haltsys:
 	doshutdownhooks();

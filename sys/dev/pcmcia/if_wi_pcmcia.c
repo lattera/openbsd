@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15 2001/12/05 21:04:11 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/pcmcia/if_wi_pcmcia.c,v 1.15.2.1 2002/01/31 22:55:37 niklas Exp $ */
 /* $NetBSD: if_wi_pcmcia.c,v 1.14 2001/11/26 04:34:56 ichiro Exp $ */
 
 /*
@@ -74,7 +74,6 @@ int	wi_pcmcia_match		__P((struct device *, void *, void *));
 void	wi_pcmcia_attach	__P((struct device *, struct device *, void *));
 int	wi_pcmcia_detach	__P((struct device *, int));
 int	wi_pcmcia_activate	__P((struct device *, enum devact));
-void	wi_pcmcia_attach	__P((struct device *, struct device *, void *));
 
 int	wi_intr			__P((void *));
 int	wi_attach		__P((struct wi_softc *, int));
@@ -230,6 +229,10 @@ static const struct wi_pcmcia_product {
 	  PCMCIA_CIS_SIMPLETECH_SPECTRUM24_ALT,
 	  "LA4111 Spectrum24 WLAN PC Card"
 	},
+	{ PCMCIA_VENDOR_ERICSSON,
+	  PCMCIA_PRODUCT_ERICSSON_WIRELESSLAN,
+	  PCMCIA_CIS_ERICSSON_WIRELESSLAN,
+	  "DSSS Wireless LAN PC Card" },
 	{ 0,
 	  0,
 	  { NULL, NULL, NULL, NULL },

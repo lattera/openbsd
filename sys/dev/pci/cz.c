@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cz.c,v 1.4 2001/09/04 04:01:42 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/cz.c,v 1.4.4.1 2002/01/31 22:55:34 niklas Exp $ */
 /*	$NetBSD: cz.c,v 1.15 2001/01/20 19:10:36 thorpej Exp $	*/
 
 /*-
@@ -197,11 +197,6 @@ void	cztty_diag(void *arg);
 struct cfdriver cz_cd = {
 	0, "cz", DV_TTY
 };
-
-/* Macros to clear/set/test flags. */
-#define SET(t, f)       (t) |= (f)
-#define CLR(t, f)       (t) &= ~(f)
-#define ISSET(t, f)     ((t) & (f))
 
 /*
  * Macros to read and write the PLX.

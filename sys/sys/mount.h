@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.41 2001/11/27 05:27:12 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.41.2.1 2002/01/31 22:55:49 niklas Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -266,7 +266,8 @@ struct statfs {
 	uid_t	   f_owner;		/* user that mounted the file system */
 	u_int32_t  f_syncwrites;	/* count of sync writes since mount */
 	u_int32_t  f_asyncwrites;	/* count of async writes since mount */
-	u_int32_t  f_spare[4];		/* spare for later */
+	u_int32_t  f_ctime;		/* last mount [-u] time */
+	u_int32_t  f_spare[3];		/* spare for later */
 	char	   f_fstypename[MFSNAMELEN]; /* fs type name */
 	char	   f_mntonname[MNAMELEN];    /* directory on which mounted */
 	char	   f_mntfromname[MNAMELEN];  /* mounted file system */

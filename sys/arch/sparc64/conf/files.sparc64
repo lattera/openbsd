@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22 2001/12/14 14:59:04 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/files.sparc64,v 1.22.2.1 2002/01/31 22:55:23 niklas Exp $
 #	$NetBSD: files.sparc64,v 1.50 2001/08/10 20:53:50 eeh Exp $
 
 # maxpartitions must be first item in files.${ARCH}
@@ -18,13 +18,16 @@ file	arch/sparc64/dev/pcons.c		pcons needs-flag
 device	hme: ether, ifnet, mii, ifmedia
 file	dev/ic/hme.c			hme
 
+device	uperf
+file	arch/sparc64/dev/uperf.c		uperf needs-flag
+
 include "dev/sun/files.sun"
+include "dev/wscons/files.wscons"
 include "dev/sbus/files.sbus"
 include "dev/i2o/files.i2o"
 include "dev/mii/files.mii"
 include "dev/atapiscsi/files.atapiscsi"
 include "dev/ata/files.ata"
-include "dev/wscons/files.wscons"
 
 # COMPAT_NETBSD
 include "compat/netbsd/files.netbsd"
@@ -33,16 +36,20 @@ file	arch/sparc64/sparc64/netbsd_machdep.c	compat_netbsd
 attach sbus at mainbus
 file	arch/sparc64/dev/sbus.c			sbus
 
+define psycho {}
 device psycho: pcibus
 attach psycho at mainbus
 include "dev/pci/files.pci"
 file	arch/sparc64/dev/psycho.c		psycho
 file	arch/sparc64/dev/pci_machdep.c		psycho
 
+attach	uperf at psycho with uperf_psycho
+file	arch/sparc64/dev/uperf_psycho.c		uperf_psycho needs-flag
+
 attach	hme at pci with hme_pci
 file	dev/pci/if_hme_pci.c		hme_pci
 
-device vgafb: wsemuldisplaydev, wsrasteremulops
+device vgafb: wsemuldisplaydev, wsrasteremulops, wsemul_sun
 attach vgafb at pci
 file	arch/sparc64/dev/vgafb.c		vgafb
 
@@ -98,6 +105,13 @@ file	arch/sparc64/dev/ce4231.c		audioce
 attach com at ebus with com_ebus
 file	arch/sparc64/dev/com_ebus.c		com_ebus
 
+define sunkbd
+file	dev/sun/sunkbd.c			sunkbd
+
+device comkbd: tty, wskbddev, sunkbd
+attach comkbd at ebus
+file	arch/sparc64/dev/comkbd_ebus.c		comkbd
+
 device zs {channel = -1}
 attach zs at mainbus, sbus
 file	arch/sparc64/dev/zs.c			zs needs-flag
@@ -108,21 +122,9 @@ device zstty: tty
 attach zstty at zs
 file arch/sparc64/dev/z8530tty.c		zstty needs-flag
 
-device kbd
-attach kbd at zs with kbd_zs
-attach kbd at zstty
-file arch/sparc64/dev/kbd_zs.c			kbd_zs
-file arch/sparc64/dev/kbd.c			kbd needs-flag
-file dev/sun/kbd_tables.c 		kbd
-file arch/sparc64/dev/kd.c 		kbd
-file dev/sun/sunkbd.c			kbd needs-flag
-
-device ms
-attach ms at zs with ms_zs
-attach ms at zstty
-file dev/sun/ms_zs.c			ms_zs
-file dev/sun/ms.c			ms needs-flag
-file dev/sun/sunms.c			ms needs-flag
+device zskbd: tty, wskbddev, sunkbd
+attach zskbd at zs
+file arch/sparc64/dev/z8530kbd.c		zskbd needs-flag
 
 file	dev/cons.c
 file	arch/sparc64/dev/consinit.c

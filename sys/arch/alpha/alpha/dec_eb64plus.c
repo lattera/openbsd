@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/alpha/dec_eb64plus.c,v 1.1 2002/01/23 03:20:41 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/alpha/dec_eb64plus.c,v 1.1.2.1 2002/01/31 22:55:04 niklas Exp $ */
 /* $NetBSD: dec_eb64plus.c,v 1.25 2001/06/05 04:53:11 thorpej Exp $ */
 
 /*

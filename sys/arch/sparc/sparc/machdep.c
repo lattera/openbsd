@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.74 2001/12/08 02:24:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.74.2.1 2002/01/31 22:55:23 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -50,7 +50,6 @@
 #include <sys/signalvar.h>
 #include <sys/proc.h>
 #include <sys/user.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/device.h>
 #include <sys/reboot.h>
@@ -111,7 +110,6 @@
 #endif
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 /*
@@ -275,8 +273,6 @@ cpu_startup()
 	if (dvmamap_extent == 0)
 		panic("unable to allocate extent for dvma");
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif

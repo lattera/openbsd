@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28 2001/12/04 23:22:42 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_pager.c,v 1.49 2001/09/10 21:19:43 chris Exp $	*/
 
 /*
@@ -183,8 +183,7 @@ enter:
 		KASSERT(pp);
 		KASSERT(pp->flags & PG_BUSY);
 		pmap_enter(vm_map_pmap(pager_map), cva, VM_PAGE_TO_PHYS(pp),
-		    prot, PMAP_WIRED | ((pp->flags & PG_FAKE) ? prot :
-					VM_PROT_READ));
+		    prot, PMAP_WIRED | prot);
 	}
 	pmap_update(vm_map_pmap(pager_map));
 
@@ -326,28 +325,23 @@ uvm_mk_pcluster(uobj, pps, npages, center, flags, mlo, mhi)
 			if (pclust == NULL) {
 				break;			/* no page */
 			}
+			/* handle active pages */
+			/* NOTE: inactive pages don't have pmap mappings */
+			if ((pclust->pqflags & PQ_INACTIVE) == 0) {
+				if ((flags & PGO_DOACTCLUST) == 0) {
+					/* dont want mapped pages at all */
+					break;
+				}
 
-			if ((flags & PGO_DOACTCLUST) == 0) {
-				/* dont want mapped pages at all */
-				break;
-			}
-
-			/*
-			 * get an up-to-date view of the "clean" bit.
-			 * note this isn't 100% accurate, but it doesn't
-			 * have to be.  if it's not quite right, the
-			 * worst that happens is we don't cluster as
-			 * aggressively.  we'll sync-it-for-sure before
-			 * we free the page, and clean it if necessary.
-			 */
-			if ((pclust->flags & PG_CLEANCHK) == 0) {
-				if ((pclust->flags & (PG_CLEAN|PG_BUSY))
-				    == PG_CLEAN &&
-				   pmap_is_modified(pclust))
-					pclust->flags &= ~PG_CLEAN;
-
-				/* now checked */
-				pclust->flags |= PG_CLEANCHK;
+				/* make sure "clean" bit is sync'd */
+				if ((pclust->flags & PG_CLEANCHK) == 0) {
+					if ((pclust->flags & (PG_CLEAN|PG_BUSY))
+					   == PG_CLEAN &&
+					   pmap_is_modified(pclust))
+						pclust->flags &= ~PG_CLEAN;
+					/* now checked */
+					pclust->flags |= PG_CLEANCHK;
+				}
 			}
 
 			/* is page available for cleaning and does it need it */
@@ -855,7 +849,6 @@ uvm_aio_aiodone(bp)
 			pgs[i]->flags |= PG_CLEAN;
 			pgs[i]->flags &= ~PG_FAKE;
 		}
-		uvm_pageactivate(pg);
 		if (swap) {
 			if (pg->pqflags & PQ_ANON) {
 				simple_unlock(&pg->uanon->an_lock);

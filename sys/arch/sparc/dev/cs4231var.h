@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/cs4231var.h,v 1.3 2001/10/05 17:32:20 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/cs4231var.h,v 1.3.4.1 2002/01/31 22:55:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -53,7 +53,7 @@ struct cs_volume {
 struct cs4231_softc {
 	struct	device sc_dev;		/* base device */
 	struct	sbusdev sc_sd;		/* sbus device */
-	struct	intrhand sc_hwih;	/* hardware interrupt vectoring */
+	struct	intrhand sc_ih;		/* hardware interrupt vectoring */
 	struct	cs4231_regs *sc_regs;	/* CS4231/APC registers */
 	struct	evcnt sc_intrcnt;	/* statistics */
 	int	sc_node;		/* which sbus node */

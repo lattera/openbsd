@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.46 2001/12/10 00:58:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.46.2.1 2002/01/31 22:55:22 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.73 1997/07/29 09:41:53 fair Exp $ */
 
 /*
@@ -50,7 +50,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/map.h>
 #include <sys/buf.h>
 #include <sys/disklabel.h>
 #include <sys/device.h>

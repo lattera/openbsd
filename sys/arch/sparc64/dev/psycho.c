@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/psycho.c,v 1.9 2001/12/14 14:55:57 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/psycho.c,v 1.9.2.1 2002/01/31 22:55:23 niklas Exp $	*/
 /*	$NetBSD: psycho.c,v 1.39 2001/10/07 20:30:41 eeh Exp $	*/
 
 /*
@@ -33,6 +33,8 @@
  * Support for `psycho' and `psycho+' UPA to PCI bridge and 
  * UltraSPARC IIi and IIe `sabre' PCI controllers.
  */
+
+#include "uperf_psycho.h"
 
 #include <sys/param.h>
 #include <sys/device.h>
@@ -410,6 +412,16 @@ psycho_attach(parent, self, aux)
 	 * arrive here, start up the IOMMU and get a config space tag.
 	 */
 	if (osc == NULL) {
+#if NUPERF_PSYCHO > 0
+		if (sc->sc_mode == PSYCHO_MODE_PSYCHO) {
+			struct uperf_psycho_attach_args upaa;
+
+			upaa.upaa_name = "uperf";
+			upaa.upaa_regs = &sc->sc_regs->psy_pm;
+
+			(void)config_found(self, &upaa, psycho_print);
+		}
+#endif
 
 		/*
 		 * Establish handlers for interesting interrupts....
@@ -432,9 +444,11 @@ psycho_attach(parent, self, aux)
 		psycho_set_intr(sc, 15, psycho_bus_b,
 		    &sc->sc_regs->pciberr_int_map,
 		    &sc->sc_regs->pciberr_clr_int);
+#if 0
 		psycho_set_intr(sc, 15, psycho_powerfail,
 		    &sc->sc_regs->power_int_map, 
 		    &sc->sc_regs->power_clr_int);
+#endif
 		psycho_set_intr(sc, 1, psycho_wakeup,
 		    &sc->sc_regs->pwrmgt_int_map, 
 		    &sc->sc_regs->pwrmgt_clr_int);
@@ -522,6 +536,8 @@ psycho_set_intr(sc, ipl, handler, mapper, clearer)
 
 	ih = (struct intrhand *)malloc(sizeof(struct intrhand),
 	    M_DEVBUF, M_NOWAIT);
+	if (ih == NULL)
+		panic("couldn't malloc intrhand");
 	ih->ih_arg = sc;
 	ih->ih_map = mapper;
 	ih->ih_clr = clearer;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17 2001/12/14 23:14:02 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.17.2.1 2002/01/31 22:55:24 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -73,26 +73,18 @@
 #ifdef notyet
 #include "fb.h"
 #endif
-#define NFB 0
-#include "kbd.h"
-#include "ms.h"
-#if 0
-#include "sunkbd.h"
-#include "sunms.h"
-#else
-#define NSUNKBD 0
-#define NSUNMS 0
-#endif
 #include "zstty.h"
 #include "sab.h"
 #include "pcons.h"
 #include "com.h"
 #ifdef notyet
 #include "bpp.h"
-#include "magma.h"		/* has NMTTY and NMBPP */
+#else
+#define	NBPP 0
 #endif
-#define NBPP 0
-#define NMAGMA 0
+#include "magma.h"		/* has NMTTY and NMBPP */
+#include "spif.h"		/* has NSTTY and NSBPP */
+#include "uperf.h"
 
 #ifdef notyet
 #include "fdc.h"		/* has NFDC and NFD; see files.sparc */
@@ -107,6 +99,14 @@
 
 #include "rd.h"
 #include "ses.h"
+
+#include "usb.h"
+#include "uhid.h"
+#include "ugen.h"
+#include "ulpt.h"
+#include "urio.h"
+#include "ucom.h"
+#include "uscanner.h"
 
 #include "pf.h"
 
@@ -154,7 +154,7 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 struct cdevsw	cdevsw[] =
 {
 	cdev_cn_init(1,cn),		/* 0: virtual console */
-	cdev_tty_init(NKBD+NSUNKBD,kd), /* 1: Sun keyboard/display */
+	cdev_notdef(),			/* 1: tapemaster tape */
 	cdev_ctty_init(1,ctty),		/* 2: controlling terminal */
 	cdev_mm_init(1,mm),		/* 3: /dev/{null,mem,kmem,...} */
 	cdev_ses_init(NSES,ses),	/* 4: SCSI SES/SAF-TE */
@@ -166,7 +166,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 10: systech multi-terminal board */
 	cdev_notdef(),			/* 11: DES encryption chip */
 	cdev_tty_init(NZSTTY,zs),	/* 12: Zilog 8530 serial port */
-	cdev_mouse_init(NMS+NSUNMS,ms),	/* 13: /dev/mouse */
+	cdev_notdef(),			/* 13: /dev/mouse */
 	cdev_notdef(),			/* 14: cgone */
 	cdev_notdef(),			/* 15: sun /dev/winNNN */
 	cdev_log_init(1,log),		/* 16: /dev/klog */
@@ -175,14 +175,14 @@ struct cdevsw	cdevsw[] =
 	cdev_ch_init(NCH,ch),		/* 19: SCSI autochanger */
 	cdev_tty_init(NPTY,pts),	/* 20: pseudo-tty slave */
 	cdev_ptc_init(NPTY,ptc),	/* 21: pseudo-tty master */
-	cdev_fb_init(NFB,fb),		/* 22: /dev/fb indirect driver */
+	cdev_notdef(),			/* 22 */
 	cdev_disk_init(NCCD,ccd),	/* 23: concatenated disk driver */
 	cdev_fd_init(1,filedesc),	/* 24: file descriptor pseudo-device */
-	cdev_notdef(),			/* 25 */
+	cdev_uperf_init(NUPERF,uperf),	/* 25: performance counters */
 	cdev_disk_init(NWD,wd),		/* 26: IDE disk */
 	cdev_notdef(),			/* 27 */
 	cdev_notdef(),			/* 28: Systech VPC-2200 versatec/centronics */
-	cdev_mouse_init(NKBD+NSUNKBD,kbd),	/* 29: /dev/kbd */
+	cdev_notdef(),			/* 29 */
 	cdev_notdef(),			/* 30: Xylogics tape */
 	cdev_notdef(),			/* 31: /dev/cgtwo */
 	cdev_notdef(),			/* 32: should be /dev/gpone */
@@ -228,8 +228,8 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 68 */
 	cdev_audio_init(NAUDIO,audio),	/* 69: /dev/audio */
 	cdev_openprom_init(1,openprom),	/* 70: /dev/openprom */
-	cdev_notdef(),			/* 71 */
-	cdev_notdef(),			/* 72 */
+	cdev_tty_init(NMTTY,mtty),	/* 71: magma serial ports */
+	cdev_gen_init(NMBPP,mbpp),	/* 72: magma parallel ports */
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
 	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
 	cdev_crypto_init(NCRYPTO,crypto), /* 75: /dev/crypto */
@@ -248,13 +248,13 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 87 */
 	cdev_notdef(),			/* 88 */
 	cdev_notdef(),			/* 89 */
-	cdev_notdef(),			/* 90 */
-	cdev_notdef(),			/* 91 */
-	cdev_notdef(),			/* 92 */
-	cdev_notdef(),			/* 93 */
-	cdev_notdef(),			/* 94 */
-	cdev_notdef(),			/* 95 */
-	cdev_notdef(),			/* 96 */
+	cdev_usb_init(NUSB,usb),	/* 90: USB controller */
+	cdev_usbdev_init(NUHID,uhid),	/* 91: USB generic HID */
+	cdev_ugen_init(NUGEN,ugen),	/* 92: USB generic driver */
+	cdev_ulpt_init(NULPT,ulpt),	/* 93: USB printers */
+	cdev_usbdev_init(NURIO,urio),	/* 94: USB Diamond Rio 500 */
+	cdev_tty_init(NUCOM,ucom),	/* 95: USB tty */
+	cdev_ugen_init(NUSCANNER,uscanner), /* 96: USB scanners */
 	cdev_notdef(),			/* 97 */
 	cdev_notdef(),			/* 98 */
 	cdev_notdef(),			/* 99 */
@@ -270,8 +270,8 @@ struct cdevsw	cdevsw[] =
 #else
 	cdev_notdef(),
 #endif
-	cdev_notdef(),			/* 108 */
-	cdev_notdef(),			/* 109 */
+	cdev_tty_init(NSTTY,stty),	/* 108: spif serial ports */
+	cdev_gen_init(NSBPP,sbpp),	/* 109: spif parallel ports */
 	cdev_disk_init(NVND,vnd),	/* 110: vnode disk driver */
 	cdev_bpftun_init(NTUN,tun),	/* 111: network tunnel */
 	cdev_lkm_init(NLKM,lkm),	/* 112: loadable module driver */

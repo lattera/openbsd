@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38 2001/12/06 12:43:20 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_page.c,v 1.66 2001/09/10 21:19:43 chris Exp $	*/
 
 /*
@@ -697,8 +697,8 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 		/* XXXCDC: need some sort of lockout for this case */
 		paddr_t paddr;
 		npages = end - start;  /* # of pages */
-		pgs = malloc(sizeof(struct vm_page) * npages,
-		    M_VMPAGE, M_NOWAIT);
+		pgs = (vm_page *)uvm_km_alloc(kernel_map,
+		    sizeof(struct vm_page) * npages);
 		if (pgs == NULL) {
 			printf("uvm_page_physload: can not malloc vm_page "
 			    "structs for segment\n");
@@ -1056,10 +1056,6 @@ uvm_pagealloc_strat(obj, off, anon, flags, strat, free_list)
 
 	KASSERT(obj == NULL || anon == NULL);
 	KASSERT(off == trunc_page(off));
-
-	LOCK_ASSERT(obj == NULL || simple_lock_held(&obj->vmobjlock));
-	LOCK_ASSERT(anon == NULL || simple_lock_held(&anon->an_lock));
-
 	s = uvm_lock_fpageq();
 
 	/*
@@ -1179,7 +1175,9 @@ uvm_pagealloc_strat(obj, off, anon, flags, strat, free_list)
 	if (anon) {
 		anon->u.an_page = pg;
 		pg->pqflags = PQ_ANON;
-		uvmexp.anonpages++;
+#ifdef UBC
+		uvm_pgcnt_anon++;
+#endif
 	} else {
 		if (obj)
 			uvm_pageinsert(pg);
@@ -1332,10 +1330,11 @@ uvm_pagefree(pg)
 		pg->wire_count = 0;
 		uvmexp.wired--;
 	}
-
+#ifdef UBC
 	if (pg->uanon) {
-		uvmexp.anonpages--;
+		uvm_pgcnt_anon--;
 	}
+#endif
 
 	/*
 	 * and put on free queue
@@ -1400,8 +1399,6 @@ uvm_page_unbusy(pgs, npgs)
 			}
 		} else {
 			UVMHIST_LOG(ubchist, "unbusying pg %p", pg,0,0,0);
-			KASSERT(pg->wire_count ||
-				(pg->pqflags & (PQ_ACTIVE|PQ_INACTIVE)));
 			pg->flags &= ~(PG_WANTED|PG_BUSY);
 			UVM_PAGE_OWN(pg, NULL);
 		}

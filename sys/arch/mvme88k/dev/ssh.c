@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh.c,v 1.10 2001/12/16 23:49:46 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/ssh.c,v 1.10.2.1 2002/01/31 22:55:17 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Michael L. Hitch
@@ -55,7 +55,7 @@
 #include <uvm/uvm_pmap.h>
 
 #include <machine/autoconf.h>
-#include <machine/mmu.h>
+#include <machine/cmmu.h>
 #include <machine/pmap.h>
 
 #include <scsi/scsi_all.h>

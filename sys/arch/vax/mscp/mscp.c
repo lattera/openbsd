@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/mscp/mscp.c,v 1.6 2001/12/05 03:04:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/mscp/mscp.c,v 1.6.2.1 2002/01/31 22:55:26 niklas Exp $	*/
 /*	$NetBSD: mscp.c,v 1.16 2001/11/13 07:38:28 lukem Exp $	*/
 
 /*
@@ -186,6 +186,8 @@ loop:
 		int tmpno = ((mp->mscp_unit + 32) & 0xffe0) * sizeof(void *);
 		struct device **tmp = (struct device **)
 		    malloc(tmpno, M_DEVBUF, M_NOWAIT);
+		if (tmp == NULL)
+			panic("mscp_dorsp");
 		bzero(tmp, tmpno);
 		if (mi->mi_driveno) {
 			bcopy(mi->mi_dp, tmp, mi->mi_driveno);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4 2002/01/25 02:37:43 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/magmareg.h,v 1.4.2.1 2002/01/31 22:55:38 niklas Exp $	*/
 
 /* magmareg.h
  *

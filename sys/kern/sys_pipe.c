@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_pipe.c,v 1.40 2001/11/06 19:53:20 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_pipe.c,v 1.40.2.1 2002/01/31 22:55:41 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 John S. Dyson
@@ -846,7 +846,6 @@ void
 pipe_init()
 {
 	pool_init(&pipe_pool, sizeof(struct pipe), 0, 0, 0, "pipepl",
-		0, pool_page_alloc_nointr, pool_page_free_nointr,
-		M_PIPE);
+	    &pool_allocator_nointr);
 }
 

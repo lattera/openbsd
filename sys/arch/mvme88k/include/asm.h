@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/asm.h,v 1.18 2001/12/16 23:49:46 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/asm.h,v 1.18.2.1 2002/01/31 22:55:18 niklas Exp $	*/
 
 /*
  * Mach Operating System
@@ -61,13 +61,6 @@
 
 #define	ASBSS(name, size) \
 	.comm	_ASM_LABEL(name), size
-
-#define	PANIC(message) \
-	or.u	r2, r0, hi16(9f); \
-	bsr.n	_C_LABEL(panic); \
-	or	r2, r2, lo16(9f); \
-9: \
-	.string	message
 
 #ifdef _KERNEL
 
@@ -241,6 +234,13 @@
 #define	PSR_FPU_DISABLE_BIT		3
 #define	PSR_BIG_ENDIAN_MODE		30
 #define	PSR_SUPERVISOR_MODE_BIT		31
+/* 
+ * mc88110 PSR bit definitions (MVME197) 
+ */
+#define PSR_GRAPHICS_DISABLE_BIT	4
+#define PSR_SERIAL_MODE_BIT		29
+#define PSR_CARRY_BIT			28
+#define PSR_SERIALIZE_BIT		25
 
 /*
  * Status bits for an SXIP/SNIP/SFIP address.

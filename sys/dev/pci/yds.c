@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.9 2001/12/07 17:08:35 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.9.2.1 2002/01/31 22:55:36 niklas Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -171,9 +171,9 @@ int	yds_halt_input __P((void *));
 int	yds_getdev __P((void *, struct audio_device *));
 int	yds_mixer_set_port __P((void *, mixer_ctrl_t *));
 int	yds_mixer_get_port __P((void *, mixer_ctrl_t *));
-void   *yds_malloc __P((void *, u_long, int, int));
+void   *yds_malloc __P((void *, int, size_t, int, int));
 void	yds_free __P((void *, void *, int));
-u_long	yds_round_buffersize __P((void *, u_long));
+size_t	yds_round_buffersize __P((void *, int, size_t));
 paddr_t	yds_mappage __P((void *, void *, off_t, int));
 int	yds_get_props __P((void *));
 int	yds_query_devinfo __P((void *addr, mixer_devinfo_t *dip));
@@ -196,6 +196,9 @@ static int yds_halt __P((struct yds_softc *));
 static u_int32_t yds_get_lpfq __P((u_int));
 static u_int32_t yds_get_lpfk __P((u_int));
 static struct yds_dma *yds_find_dma __P((struct yds_softc *, void *));
+
+void yds_powerhook __P((int, void *));
+int	yds_init __P((void *sc));
 
 #ifdef AUDIO_DEBUG
 static void yds_dump_play_slot __P((struct yds_softc *, int));
@@ -663,13 +666,9 @@ yds_attach(parent, self, aux)
 	struct yds_codec_softc *codec;
 	char devinfo[256];
 	mixer_ctrl_t ctl;
-	int i, r, to;
-	int revision;
-	int ac97_id2;
+	int i, r;
 
 	pci_devinfo(pa->pa_id, pa->pa_class, 0, devinfo);
-	revision = PCI_REVISION(pa->pa_class);
-	printf(": %s (rev. 0x%02x)\n", devinfo, revision);
 
 	/* Map register to memory */
 	if (pci_mapreg_map(pa, YDS_PCI_MBA, PCI_MAPREG_TYPE_MEM, 0,
@@ -700,6 +699,7 @@ yds_attach(parent, self, aux)
 	sc->sc_pc = pc;
 	sc->sc_pcitag = pa->pa_tag;
 	sc->sc_id = pa->pa_id;
+	sc->sc_revision = PCI_REVISION(pa->pa_class);
 	sc->sc_flags = yds_get_dstype(sc->sc_id);
 #ifdef AUDIO_DEBUG
 	if (ydsdebug)
@@ -716,6 +716,7 @@ yds_attach(parent, self, aux)
 	reg = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 	reg |= (PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE |
 		PCI_COMMAND_MASTER_ENABLE);
+
 	pci_conf_write(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG, reg);
 	reg = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 
@@ -723,88 +724,8 @@ yds_attach(parent, self, aux)
 	for (i = 0x80; i < 0xc0; i += 2)
 		YWRITE2(sc, i, 0);
 
-	/* Download microcode */
-	if (yds_download_mcode(sc)) {
-		printf("%s: download microcode failed\n", sc->sc_dev.dv_xname);
-		return;
-	}
-	/* Allocate DMA buffers */
-	if (yds_allocate_slots(sc)) {
-		printf("%s: could not allocate slots\n", sc->sc_dev.dv_xname);
-		return;
-	}
-
-	/* Warm reset */
-	reg = pci_conf_read(pc, pa->pa_tag, YDS_PCI_DSCTRL);
-	pci_conf_write(pc, pa->pa_tag, YDS_PCI_DSCTRL, reg | YDS_DSCTRL_WRST);
-	delay(50000);
-
-	/*
-	 * Detect primary/secondary AC97
-	 *	YMF754 Hardware Specification Rev 1.01 page 24
-	 */
-	reg = pci_conf_read(pc, pa->pa_tag, YDS_PCI_DSCTRL);
-	pci_conf_write(pc, pa->pa_tag, YDS_PCI_DSCTRL,
-		reg & ~YDS_DSCTRL_CRST);
-	delay(400000);		/* Needed for 740C. */
-
-	/* Primary */
-	for (to = 0; to < AC97_TIMEOUT; to++) {
-		if ((YREAD2(sc, AC97_STAT_ADDR1) & AC97_BUSY) == 0)
-			break;
-		delay(1);
-	}
-	if (to == AC97_TIMEOUT) {
-		printf("%s: no AC97 avaliable\n", sc->sc_dev.dv_xname);
-		return;
-	}
-
-	/* Secondary */
-	/* Secondary AC97 is used for 4ch audio. Currently unused. */
-	ac97_id2 = -1;
-	if ((YREAD2(sc, YDS_ACTIVITY) & YDS_ACTIVITY_DOCKA) == 0)
-		goto detected;
-#if 0				/* reset secondary... */
-	YWRITE2(sc, YDS_GPIO_OCTRL,
-		YREAD2(sc, YDS_GPIO_OCTRL) & ~YDS_GPIO_GPO2);
-	YWRITE2(sc, YDS_GPIO_FUNCE,
-		(YREAD2(sc, YDS_GPIO_FUNCE)&(~YDS_GPIO_GPC2))|YDS_GPIO_GPE2);
-#endif
-	for (to = 0; to < AC97_TIMEOUT; to++) {
-		if ((YREAD2(sc, AC97_STAT_ADDR2) & AC97_BUSY) == 0)
-			break;
-		delay(1);
-	}
-	if (to < AC97_TIMEOUT) {
-		/* detect id */
-		for (ac97_id2 = 1; ac97_id2 < 4; ac97_id2++) {
-			YWRITE2(sc, AC97_CMD_ADDR,
-				AC97_CMD_READ | AC97_ID(ac97_id2) | 0x28);
-
-			for (to = 0; to < AC97_TIMEOUT; to++) {
-				if ((YREAD2(sc, AC97_STAT_ADDR2) & AC97_BUSY)
-				    == 0)
-					goto detected;
-				delay(1);
-			}
-		}
-		if (ac97_id2 == 4)
-			ac97_id2 = -1;
-detected:
-		;
-	}
-
-	pci_conf_write(pc, pa->pa_tag, YDS_PCI_DSCTRL,
-		       reg | YDS_DSCTRL_CRST);
-	delay (20);
-	pci_conf_write(pc, pa->pa_tag, YDS_PCI_DSCTRL,
-		reg & ~YDS_DSCTRL_CRST);
-	delay (400000);
-	for (to = 0; to < AC97_TIMEOUT; to++) {
-		if ((YREAD2(sc, AC97_STAT_ADDR1) & AC97_BUSY) == 0)
-			break;
-		delay(1);
-	}
+	/* Initialize the device */
+	yds_init(sc);
 
 	/*
 	 * Attach ac97 codec
@@ -876,6 +797,10 @@ detected:
 
 	sc->sc_legacy_iot = pa->pa_iot;
 	config_defer((struct device*) sc, yds_configure_legacy);
+
+	/* Watch for power changes */
+	sc->suspend = PWR_RESUME;
+	sc->powerhook = powerhook_establish(yds_powerhook, sc);
 }
 
 int
@@ -920,6 +845,13 @@ yds_read_codec(sc_, reg, data)
 		return EIO;
 	}
 
+	if (PCI_PRODUCT(sc->sc->sc_id) == PCI_PRODUCT_YAMAHA_YMF744 &&
+	    sc->sc->sc_revision < 2) {
+		int i;
+
+		for (i = 0; i < 600; i++)
+			YREAD2(sc->sc, sc->status_data);
+	}
 	*data = YREAD2(sc->sc, sc->status_data);
 
 	return 0;
@@ -981,7 +913,7 @@ yds_intr(p)
 	status = YREAD4(sc, YDS_STATUS);
 	DPRINTFN(1, ("yds_intr: status=%08x\n", status));
 	if ((status & (YDS_STAT_INT|YDS_STAT_TINT)) == 0) {
-#if NMPU > 0
+#if 0
 		if (sc->sc_mpu)
 			return mpu_intr(sc->sc_mpu);
 #endif
@@ -1553,16 +1485,6 @@ yds_trigger_input(addr, start, end, blksize, intr, arg, param)
 	}
 	sc->sc_rec.dma = p;
 
-#ifdef DIAGNOSTIC
-	{
-		u_int32_t ctrlsize;
-		if ((ctrlsize = YREAD4(sc, YDS_REC_CTRLSIZE)) !=
-		    sizeof(struct rec_slot) / sizeof(u_int32_t))
-			panic("%s: invalid rec slot ctrldata %d",
-				sc->sc_dev.dv_xname, ctrlsize);
-	}
-#endif
-
 	s = DMAADDR(p);
 	l = ((char *)end - (char *)start);
 	sc->sc_rec.length = l;
@@ -1745,9 +1667,10 @@ yds_get_portnum_by_name(sc, class, device, qualifier)
 }
 
 void *
-yds_malloc(addr, size, pool, flags)
+yds_malloc(addr, direction, size, pool, flags)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 	int pool, flags;
 {
 	struct yds_softc *sc = addr;
@@ -1799,10 +1722,11 @@ yds_find_dma(sc, addr)
 	return p;
 }
 
-u_long
-yds_round_buffersize(addr, size)
+size_t
+yds_round_buffersize(addr, direction, size)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 {
 	/*
 	 * Buffer size should be at least twice as bigger as a frame.
@@ -1837,4 +1761,132 @@ yds_get_props(addr)
 {
 	return (AUDIO_PROP_MMAP | AUDIO_PROP_INDEPENDENT | 
 		AUDIO_PROP_FULLDUPLEX);
+}
+
+void
+yds_powerhook(why, self)
+	int why;
+	void *self;
+{
+	struct yds_softc *sc = (struct yds_softc *)self;
+
+	if (why != PWR_RESUME) {
+		/* Power down */
+		DPRINTF(("yds: power down\n"));
+		sc->suspend = why;
+
+	} else {
+		/* Wake up */
+		DPRINTF(("yds: power resume\n"));
+		if (sc->suspend == PWR_RESUME) {
+			printf("%s: resume without suspend?\n",
+				sc->sc_dev.dv_xname);
+			sc->suspend = why;
+			return;
+		}
+		sc->suspend = why;
+		yds_init(sc);
+		(sc->sc_codec[0].codec_if->vtbl->restore_ports)(sc->sc_codec[0].codec_if);
+	}
+}
+
+int
+yds_init(sc_)
+	void *sc_;
+{
+	struct yds_softc *sc = sc_;
+	u_int32_t reg;
+
+	pci_chipset_tag_t pc = sc->sc_pc;
+
+	int to;
+
+	DPRINTF(("in yds_init()\n"));
+
+	/* Download microcode */
+	if (yds_download_mcode(sc)) {
+		printf("%s: download microcode failed\n", sc->sc_dev.dv_xname);
+		return -1;
+	}
+	/* Allocate DMA buffers */
+	if (yds_allocate_slots(sc)) {
+		printf("%s: could not allocate slots\n", sc->sc_dev.dv_xname);
+		return -1;
+	}
+
+	/* Warm reset */
+	reg = pci_conf_read(pc, sc->sc_pcitag, YDS_PCI_DSCTRL);
+	pci_conf_write(pc, sc->sc_pcitag, YDS_PCI_DSCTRL, reg | YDS_DSCTRL_WRST);
+	delay(50000);
+
+	/*
+	 * Detect primary/secondary AC97
+	 *	YMF754 Hardware Specification Rev 1.01 page 24
+	 */
+	reg = pci_conf_read(pc, sc->sc_pcitag, YDS_PCI_DSCTRL);
+	pci_conf_write(pc, sc->sc_pcitag, YDS_PCI_DSCTRL,
+		reg & ~YDS_DSCTRL_CRST);
+	delay(400000);		/* Needed for 740C. */
+
+	/* Primary */
+	for (to = 0; to < AC97_TIMEOUT; to++) {
+		if ((YREAD2(sc, AC97_STAT_ADDR1) & AC97_BUSY) == 0)
+			break;
+		delay(1);
+	}
+	if (to == AC97_TIMEOUT) {
+		printf("%s: no AC97 avaliable\n", sc->sc_dev.dv_xname);
+		return -1;
+	}
+
+	/* Secondary */
+	/* Secondary AC97 is used for 4ch audio. Currently unused. */
+	ac97_id2 = -1;
+	if ((YREAD2(sc, YDS_ACTIVITY) & YDS_ACTIVITY_DOCKA) == 0)
+		goto detected;
+#if 0				/* reset secondary... */
+	YWRITE2(sc, YDS_GPIO_OCTRL,
+		YREAD2(sc, YDS_GPIO_OCTRL) & ~YDS_GPIO_GPO2);
+	YWRITE2(sc, YDS_GPIO_FUNCE,
+		(YREAD2(sc, YDS_GPIO_FUNCE)&(~YDS_GPIO_GPC2))|YDS_GPIO_GPE2);
+#endif
+	for (to = 0; to < AC97_TIMEOUT; to++) {
+		if ((YREAD2(sc, AC97_STAT_ADDR2) & AC97_BUSY) == 0)
+			break;
+		delay(1);
+	}
+	if (to < AC97_TIMEOUT) {
+		/* detect id */
+		for (ac97_id2 = 1; ac97_id2 < 4; ac97_id2++) {
+			YWRITE2(sc, AC97_CMD_ADDR,
+				AC97_CMD_READ | AC97_ID(ac97_id2) | 0x28);
+
+			for (to = 0; to < AC97_TIMEOUT; to++) {
+				if ((YREAD2(sc, AC97_STAT_ADDR2) & AC97_BUSY)
+				    == 0)
+					goto detected;
+				delay(1);
+			}
+		}
+		if (ac97_id2 == 4)
+			ac97_id2 = -1;
+detected:
+		;
+	}
+
+	pci_conf_write(pc, sc->sc_pcitag, YDS_PCI_DSCTRL,
+		reg | YDS_DSCTRL_CRST);
+	delay (20);
+	pci_conf_write(pc, sc->sc_pcitag, YDS_PCI_DSCTRL,
+		reg & ~YDS_DSCTRL_CRST);
+	delay (400000);
+	for (to = 0; to < AC97_TIMEOUT; to++) {
+		if ((YREAD2(sc, AC97_STAT_ADDR1) & AC97_BUSY) == 0)
+			break;
+		delay(1);
+	}
+
+	DPRINTF(("out of yds_init()\n"));
+
+	return ac97_id2;
 }

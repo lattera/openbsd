@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/asm_macro.h,v 1.18 2001/12/16 23:49:46 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/asm_macro.h,v 1.18.2.1 2002/01/31 22:55:18 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -70,7 +70,7 @@ typedef unsigned long m88k_psr_type;
  */
 static __inline__ m88k_psr_type disable_interrupts_return_psr(void)
 {
-	m88k_psr_type temp, oldpsr;
+	register m88k_psr_type temp, oldpsr;
 	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (oldpsr));
 	__asm__ __volatile__ ("set  %1, %0, 1<1>" : "=r" (oldpsr), "=r" (temp));
 	__asm__ __volatile__ ("stcr %0, cr1" : "=r" (temp));
@@ -82,10 +82,20 @@ static __inline__ m88k_psr_type disable_interrupts_return_psr(void)
 /*
  * Sets the PSR. See comments above.
  */
-static __inline__ void set_psr(m88k_psr_type psr)
+static __inline__ void set_psr(register m88k_psr_type psr)
 {
 	__asm__ __volatile__ ("stcr %0, cr1" :: "r" (psr));
 	__asm__ __volatile__ (FLUSH_PIPELINE_STRING);
+}
+
+/*
+ * Gets the PSR. See comments above.
+ */
+static __inline__ m88k_psr_type get_psr(void)
+{
+	register m88k_psr_type psr;
+	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (psr));
+	return psr;
 }
 
 /*
@@ -93,7 +103,7 @@ static __inline__ void set_psr(m88k_psr_type psr)
  */
 static __inline__ m88k_psr_type enable_interrupts_return_psr(void)
 {
-	m88k_psr_type temp, oldpsr; /* need a temporary register */
+	register m88k_psr_type temp, oldpsr; /* need a temporary register */
 	__asm__ __volatile__ ("ldcr %0, cr1" : "=r" (oldpsr));
 	__asm__ __volatile__ ("clr  %1, %0, 1<1>" : "=r" (oldpsr), "=r" (temp));
 	__asm__ __volatile__ ("stcr %0, cr1" : "=r" (temp));

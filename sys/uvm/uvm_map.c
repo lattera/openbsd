@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34 2001/12/04 23:22:42 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.105 2001/09/10 21:19:42 chris Exp $	*/
 
 /*
@@ -356,13 +356,11 @@ uvm_map_init()
 	 * initialize the map-related pools.
 	 */
 	pool_init(&uvm_vmspace_pool, sizeof(struct vmspace),
-	    0, 0, 0, "vmsppl", 0,
-	    pool_page_alloc_nointr, pool_page_free_nointr, M_VMMAP);
+	    0, 0, 0, "vmsppl", &pool_allocator_nointr);
 	pool_init(&uvm_map_entry_pool, sizeof(struct vm_map_entry),
-	    0, 0, 0, "vmmpepl", 0,
-	    pool_page_alloc_nointr, pool_page_free_nointr, M_VMMAP);
+	    0, 0, 0, "vmmpepl", &pool_allocator_nointr);
 	pool_init(&uvm_map_entry_kmem_pool, sizeof(struct vm_map_entry),
-	    0, 0, 0, "vmmpekpl", 0, NULL, NULL, M_VMMAP);
+	    0, 0, 0, "vmmpekpl", NULL);
 }
 
 /*
@@ -2458,6 +2456,8 @@ uvm_map_pageable_all(map, flags, limit)
  * => we may sleep while cleaning if SYNCIO [with map read-locked]
  */
 
+int	amap_clean_works = 1;	/* XXX for now, just in case... */
+
 int
 uvm_map_clean(map, start, end, flags)
 	struct vm_map *map;
@@ -2495,10 +2495,8 @@ uvm_map_clean(map, start, end, flags)
 			vm_map_unlock_read(map);
 			return EINVAL;
 		}
-		if (end <= current->end) {
-			break;
-		}
-		if (current->end != current->next->start) {
+		if (end > current->end && (current->next == &map->header ||
+		    current->end != current->next->start)) {
 			vm_map_unlock_read(map);
 			return EFAULT;
 		}
@@ -2519,6 +2517,10 @@ uvm_map_clean(map, start, end, flags)
 		 */
 
 		if (amap == NULL || (flags & (PGO_DEACTIVATE|PGO_FREE)) == 0)
+			goto flush_object;
+
+		/* XXX for now, just in case... */
+		if (amap_clean_works == 0)
 			goto flush_object;
 
 		amap_lock(amap);
@@ -2573,8 +2575,15 @@ uvm_map_clean(map, start, end, flags)
 				}
 				KASSERT(pg->uanon == anon);
 
+#ifdef UBC
 				/* ...and deactivate the page. */
 				pmap_clear_reference(pg);
+#else
+				/* zap all mappings for the page. */
+				pmap_page_protect(pg, VM_PROT_NONE);
+
+				/* ...and deactivate the page. */
+#endif
 				uvm_pagedeactivate(pg);
 
 				uvm_unlock_pageq();

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pte.h,v 1.5 2001/11/30 20:58:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/pte.h,v 1.5.2.1 2002/01/31 22:55:13 niklas Exp $	*/
 
 #ifndef	_MACHINE_PTE_H_
 #define	_MACHINE_PTE_H_

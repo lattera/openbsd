@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.76 2001/10/05 21:01:10 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/com.c,v 1.76.4.1 2002/01/31 22:55:31 niklas Exp $	*/
 /*	$NetBSD: com.c,v 1.82.4.1 1996/06/02 09:08:00 mrg Exp $	*/
 
 /*
@@ -127,9 +127,9 @@ int	commajor;
 #ifdef KGDB
 #include <sys/kgdb.h>
 
-static int com_kgdb_addr;
-static bus_space_tag_t com_kgdb_iot;
-static bus_space_handle_t com_kgdb_ioh;
+int com_kgdb_addr;
+bus_space_tag_t com_kgdb_iot;
+bus_space_handle_t com_kgdb_ioh;
 
 int    com_kgdb_getc __P((void *));
 void   com_kgdb_putc __P((void *, int));
@@ -137,11 +137,6 @@ void   com_kgdb_putc __P((void *, int));
 
 #define	DEVUNIT(x)	(minor(x) & 0x7f)
 #define	DEVCUA(x)	(minor(x) & 0x80)
-
-/* Macros to clear/set/test flags. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
 
 int
 comspeed(freq, speed)
@@ -334,7 +329,7 @@ com_attach_subr(sc)
 	 * the kgdb device, it has exclusive use.
 	 */
 
-	if (iot == com_kgdb_iot && iobase == com_kgdb_addr &&
+	if (iot == com_kgdb_iot && sc->sc_iobase == com_kgdb_addr &&
 	    !ISSET(sc->sc_hwflags, COM_HW_CONSOLE)) {
 		printf("%s: kgdb\n", sc->sc_dev.dv_xname);
 		SET(sc->sc_hwflags, COM_HW_KGDB);
@@ -1404,7 +1399,7 @@ comintr(arg)
  * Following are all routines needed for COM to act as console
  */
 
-#if defined(arc) || defined(hppa)
+#if defined(arc)
 #undef CONADDR
 	extern int CONADDR;
 #endif

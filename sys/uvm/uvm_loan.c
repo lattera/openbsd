@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16 2001/12/04 23:22:42 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16.2.1 2002/01/31 22:55:51 niklas Exp $	*/
 /*	$NetBSD: uvm_loan.c,v 1.31 2001/08/27 02:34:29 chuck Exp $	*/
 
 /*
@@ -597,7 +597,6 @@ uvm_loanuobj(ufi, output, flags, va)
 		uvmfault_unlockall(ufi, amap, uobj, NULL);
 		return(-1);
 	}
-	/* anon is locked! */
 	anon->u.an_page = pg;
 	pg->uanon = anon;
 	uvm_lock_pageq();
@@ -612,7 +611,6 @@ uvm_loanuobj(ufi, output, flags, va)
 		wakeup(pg);
 	pg->flags &= ~(PG_WANTED|PG_BUSY);
 	UVM_PAGE_OWN(pg, NULL);
-	simple_unlock(&anon->an_lock);
 	return(1);
 }
 
@@ -672,18 +670,11 @@ uvm_loanzero(ufi, output, flags)
 
 		/* unlock everything */
 		uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
-		       ufi->entry->object.uvm_obj, anon);
+		       ufi->entry->object.uvm_obj, NULL);
 
 		/* out of swap causes us to fail */
 		if (anon == NULL)
 			return(-1);
-
-		/*
-		 * drop our reference; we're the only one,
-		 * so it's okay that the anon isn't locked
-		 * here.
-		 */
-		anon->an_ref--;
 
 		uvm_anfree(anon);
 		uvm_wait("loanzero2");		/* wait for pagedaemon */

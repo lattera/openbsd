@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2 2001/10/02 00:26:24 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2.6.1 2002/01/31 22:55:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -153,9 +153,9 @@ int	ce4231_getdev		__P((void *, struct audio_device *));
 int	ce4231_set_port		__P((void *, mixer_ctrl_t *));
 int	ce4231_get_port		__P((void *, mixer_ctrl_t *));
 int	ce4231_query_devinfo	__P((void *addr, mixer_devinfo_t *));
-void *	ce4231_alloc		__P((void *, u_long, int, int));
+void *	ce4231_alloc		__P((void *, int, size_t, int, int));
 void	ce4231_free		__P((void *, void *, int));
-u_long	ce4231_round_buffersize	__P((void *, u_long));
+size_t	ce4231_round_buffersize	__P((void *, int, size_t));
 int	ce4231_get_props	__P((void *));
 int	ce4231_trigger_output __P((void *, void *, void *, int,
     void (*intr)__P((void *)), void *arg, struct audio_params *));
@@ -243,14 +243,16 @@ ce4231_attach(parent, self, aux)
 		return;
 	}
 
-	if (bus_intr_establish(ea->ea_bustag, ea->ea_intrs[0], IPL_AUDIO, 0,
-	    ce4231_cintr, sc) == NULL) {
-		printf(": couldn't establish interrupt1\n");
+	sc->sc_cih = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[0],
+	    IPL_AUDIO, 0, ce4231_cintr, sc);
+	if (sc->sc_cih == NULL) {
+		printf(": couldn't establish capture interrupt\n");
 		return;
 	}
-	if (bus_intr_establish(ea->ea_bustag, ea->ea_intrs[1], IPL_AUDIO, 0,
-	    ce4231_pintr, sc) == NULL) {
-		printf(": couldn't establish interrupt1\n");
+	sc->sc_pih = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[1],
+	    IPL_AUDIO, 0, ce4231_pintr, sc);
+	if (sc->sc_pih == NULL) {
+		printf(": couldn't establish play interrupt1\n");
 		return;
 	}
 
@@ -433,6 +435,10 @@ ce4231_open(addr, flags)
 	    ce4231_read(sc, SP_MISC_INFO) | MODE2);
 
 	ce4231_setup_output(sc);
+
+	ce4231_write(sc, SP_PIN_CONTROL,
+	    ce4231_read(sc, SP_PIN_CONTROL) | INTERRUPT_ENABLE);
+
 	return (0);
 }
 
@@ -490,6 +496,8 @@ ce4231_close(addr)
 
 	ce4231_halt_input(sc);
 	ce4231_halt_output(sc);
+	ce4231_write(sc, SP_PIN_CONTROL,
+	    ce4231_read(sc, SP_PIN_CONTROL) & (~INTERRUPT_ENABLE));
 	sc->sc_open = 0;
 }
 
@@ -1274,10 +1282,11 @@ ce4231_query_devinfo(addr, dip)
 	return (err);
 }
 
-u_long
-ce4231_round_buffersize(addr, size)
+size_t
+ce4231_round_buffersize(addr, direction, size)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 {
 	return (size);
 }
@@ -1353,9 +1362,10 @@ ce4231_pintr(v)
 }
 
 void *
-ce4231_alloc(addr, size, pool, flags)
+ce4231_alloc(addr, direction, size, pool, flags)
 	void *addr;
-	u_long size;
+	int direction;
+	size_t size;
 	int pool;
 	int flags;
 {

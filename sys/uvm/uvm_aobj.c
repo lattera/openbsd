@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23 2001/11/28 19:28:14 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.23.2.1 2002/01/31 22:55:50 niklas Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.45 2001/06/23 20:52:03 chs Exp $	*/
 
 /*
@@ -586,11 +586,10 @@ uao_init()
 	 * kernel map!
 	 */
 	pool_init(&uao_swhash_elt_pool, sizeof(struct uao_swhash_elt),
-	    0, 0, 0, "uaoeltpl", 0, NULL, NULL, M_UVMAOBJ);
+	    0, 0, 0, "uaoeltpl", &pool_allocator_nointr);
 
 	pool_init(&uvm_aobj_pool, sizeof(struct uvm_aobj), 0, 0, 0,
-	    "aobjpl", 0,
-	    pool_page_alloc_nointr, pool_page_free_nointr, M_UVMAOBJ);
+	    "aobjpl", &pool_allocator_nointr);
 }
 
 /*

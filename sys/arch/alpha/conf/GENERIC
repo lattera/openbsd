@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93 2001/11/30 01:41:53 nate Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93.2.1 2002/01/31 22:55:05 niklas Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 
 machine	alpha
@@ -13,6 +13,7 @@ option		DEC_2100_A50	# Avanti etc:	AlphaStation 400, 200, etc.
 option		DEC_KN20AA	# KN20AA:	AlphaStation 600
 option		DEC_AXPPCI_33	# NoName:	AXPpci33, etc.
 option		DEC_EB164	# EB164:	AlphaPC 164
+option		DEC_EB64PLUS	# EB64+:	AlphaPC 64, etc.
 option		DEC_2000_300	# "Jensen":	2000/300 (DECpc AXP 150)
 option		DEC_550		# Miata:	Digital Personal Workstation
 option		DEC_6600	# EV6:		XP1000, 264DP OEM Board
@@ -211,8 +212,10 @@ isapnp0	at	isa?
 
 # ISA devices
 mcclock* at	isa? port 0x70
-#pcppi*	at	isa?				# PC prog. periph. interface
-#spkr0	at	pcppi?
+pcppi*	at	isa?				# PC prog. periph. interface
+spkr0	at	pcppi?				# IBM BASIC emulation
+isabeep0 at	pcppi?				# "keyboard" beep
+midi*	at	pcppi?
 pckbc*	at	isa?				# PC keyboard controller
 pckbd*	at	pckbc?				# PC keyboard (kbd port)
 pms*	at	pckbc?				# PS/2-style mouse (aux port)
@@ -305,4 +308,4 @@ hifn*	at pci? dev ? function ?	# Hi/fn 7751 crypto card
 
 #pseudo-device	raid		4	# RAIDframe disk driver
 pseudo-device	crypto		1
-
+pseudo-device	sequencer	1

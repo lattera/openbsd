@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.83 2001/11/27 05:27:12 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_syscalls.c,v 1.83.2.1 2002/01/31 22:55:41 niklas Exp $	*/
 /*	$NetBSD: vfs_syscalls.c,v 1.71 1996/04/23 10:29:02 mycroft Exp $	*/
 
 /*
@@ -105,18 +105,26 @@ sys_mount(p, v, retval)
 	u_long fstypenum = 0;
 #endif
 	char fstypename[MFSNAMELEN];
+	char fspath[MNAMELEN];
 	struct vattr va;
 	struct nameidata nd;
 	struct vfsconf *vfsp;
+	struct timeval tv;
 
 	if (usermount == 0 && (error = suser(p->p_ucred, &p->p_acflag)))
 		return (error);
 
 	/*
+	 * Mount points must fit in MNAMELEN, not MAXPATHLEN.
+	 */
+	error = copyinstr(SCARG(uap, path), fspath, MNAMELEN, NULL);
+	if (error)
+		return(error);
+
+	/*
 	 * Get vnode to be covered
 	 */
-	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_USERSPACE,
-	    SCARG(uap, path), p);
+	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, fspath, p);
 	if ((error = namei(&nd)) != 0)
 		return (error);
 	vp = nd.ni_vp;
@@ -260,6 +268,10 @@ update:
 	 * Mount the filesystem.
 	 */
 	error = VFS_MOUNT(mp, SCARG(uap, path), SCARG(uap, data), &nd, p);
+	if (!error) {
+		microtime(&tv);
+		mp->mnt_stat.f_ctime = tv.tv_sec;
+	}
 	if (mp->mnt_flag & MNT_UPDATE) {
 		vrele(vp);
 		if (mp->mnt_flag & MNT_WANTRDWR)

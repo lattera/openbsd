@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rnd.c,v 1.50 2001/09/24 02:23:44 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/rnd.c,v 1.50.4.1 2002/01/31 22:55:29 niklas Exp $	*/
 
 /*
  * random.c -- A strong random number generator
@@ -356,7 +356,7 @@ int	rnd_debug = 0x0000;
 /* pIII/333 reported to have some drops w/ these numbers */
 #define QEVLEN (1024 / sizeof(struct rand_event))
 #define QEVSLOW (QEVLEN * 3 / 4) /* yet another 0.75 for 60-minutes hour /-; */
-#define QEVSBITS 12
+#define QEVSBITS 10
 
 /* There is actually only one of these, globally. */
 struct random_bucket {
@@ -850,23 +850,25 @@ extract_entropy(buf, nbytes)
 	int	nbytes;
 {
 	struct random_bucket *rs = &random_state;
-	MD5_CTX tmp;
 	u_char buffer[16];
 
 	add_timer_randomness(nbytes);
 
-	if (rs->entropy_count / 8 > nbytes)
-		rs->entropy_count -= nbytes*8;
-	else
-		rs->entropy_count = 0;
-
 	while (nbytes) {
-		int i;
+		MD5_CTX tmp;
+		int i, s;
 
 		/* Hash the pool to get the output */
 		MD5Init(&tmp);
+		s = splhigh();
 		MD5Update(&tmp, (u_int8_t*)rs->pool, sizeof(rs->pool));
+		if (rs->entropy_count / 8 > nbytes)
+			rs->entropy_count -= nbytes * 8;
+		else
+			rs->entropy_count = 0;
 		MD5Final(buffer, &tmp);
+		bzero(&tmp, sizeof(tmp));
+		splx(s);
 
 		/*
 		 * In case the hash function has some recognizable
@@ -881,9 +883,6 @@ extract_entropy(buf, nbytes)
 		buffer[6] ^= buffer[ 9];
 		buffer[7] ^= buffer[ 8];
 
-		/* Modify pool so next hash will produce different results */
-		add_entropy_words((u_int32_t*)buffer, sizeof(buffer)/8);
-
 		/* Copy data to destination buffer */
 		if (nbytes < sizeof(buffer) / 2)
 			bcopy(buffer, buf, i = nbytes);
@@ -891,11 +890,12 @@ extract_entropy(buf, nbytes)
 			bcopy(buffer, buf, i = sizeof(buffer) / 2);
 		nbytes -= i;
 		buf += i;
+
+		/* Modify pool so next hash will produce different results */
 		add_timer_randomness(nbytes);
 	}
 
 	/* Wipe data from memory */
-	bzero(&tmp, sizeof(tmp));
 	bzero(&buffer, sizeof(buffer));
 }
 
@@ -920,7 +920,7 @@ randomread(dev, uio, ioflag)
 	int	ioflag;
 {
 	int	ret = 0;
-	int	s, i;
+	int	i;
 
 	if (uio->uio_resid == 0)
 		return 0;
@@ -929,7 +929,6 @@ randomread(dev, uio, ioflag)
 		u_int32_t buf[ POOLWORDS ];
 		int	n = min(sizeof(buf), uio->uio_resid);
 
-		s = splhigh();
 		switch(minor(dev)) {
 		case RND_RND:
 			ret = EIO;	/* no chip -- error */
@@ -986,7 +985,6 @@ randomread(dev, uio, ioflag)
 		default:
 			ret = ENXIO;
 		}
-		splx(s);
 		if (n != 0 && ret == 0)
 			ret = uiomove((caddr_t)buf, n, uio);
 	}
@@ -1109,7 +1107,7 @@ randomioctl(dev, cmd, data, flag, p)
 		}
 		break;
 	default:
-		ret = EINVAL;
+		ret = ENOTTY;
 	}
 
 	add_timer_randomness((u_long)p ^ (u_long)data ^ cmd);

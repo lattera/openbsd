@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50 2001/11/06 19:53:20 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.50.2.1 2002/01/31 22:55:40 niklas Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -152,7 +152,7 @@ void
 signal_init()
 {
 	pool_init(&sigacts_pool, sizeof(struct sigacts), 0, 0, 0, "sigapl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_SUBPROC);
+	    &pool_allocator_nointr);
 }
 
 /*
@@ -302,18 +302,17 @@ setsigvec(p, signum, sa)
 			p->p_flag |= P_NOCLDSTOP;
 		else
 			p->p_flag &= ~P_NOCLDSTOP;
-		if (sa->sa_flags & SA_NOCLDWAIT) {
-			/*
-			 * Paranoia: since SA_NOCLDWAIT is implemented by
-			 * reparenting the dying child to PID 1 (and
-			 * trust it to reap the zombie), PID 1 itself is
-			 * forbidden to set SA_NOCLDWAIT.
-			 */
-			if (p->p_pid == 1)
-				p->p_flag &= ~P_NOCLDWAIT;
-			else
-				p->p_flag |= P_NOCLDWAIT;
-		} else
+		/*
+		 * If the SA_NOCLDWAIT flag is set or the handler
+		 * is SIG_IGN we reparent the dying child to PID 1
+		 * (init) which will reap the zombie.  Because we use
+		 * init to do our dirty work we never set P_NOCLDWAIT
+		 * for PID 1.
+		 */
+		if (p->p_pid != 1 && ((sa->sa_flags & SA_NOCLDWAIT) ||
+		    sa->sa_handler == SIG_IGN))
+			p->p_flag |= P_NOCLDWAIT;
+		else
 			p->p_flag &= ~P_NOCLDWAIT;
 	}
 	if ((sa->sa_flags & SA_RESETHAND) != 0)
@@ -416,6 +415,8 @@ execsigs(p)
 	ps->ps_sigstk.ss_sp = 0;
 	ps->ps_flags = 0;
 	p->p_flag &= ~P_NOCLDWAIT;
+	if (ps->ps_sigact[SIGCHLD] == SIG_IGN)
+		ps->ps_sigact[SIGCHLD] = SIG_DFL;
 }
 
 /*
@@ -768,6 +769,10 @@ psignal(p, signum)
 		panic("psignal signal number");
 
 	KNOTE(&p->p_klist, NOTE_SIGNAL | signum);
+
+	/* Ignore signal if we are exiting */
+	if (p->p_flag & P_WEXIT)
+		return;
 
 	mask = sigmask(signum);
 	prop = sigprop[signum];
@@ -1228,6 +1233,9 @@ sigexit(p, signum)
 	register struct proc *p;
 	int signum;
 {
+
+	/* Mark process as going away */
+	p->p_flag |= P_WEXIT;
 
 	p->p_acflag |= AXSIG;
 	if (sigprop[signum] & SA_CORE) {

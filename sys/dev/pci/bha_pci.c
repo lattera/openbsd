@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bha_pci.c,v 1.1 2002/01/24 22:38:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bha_pci.c,v 1.1.2.1 2002/01/31 22:55:34 niklas Exp $	*/
 /*	$NetBSD: bha_pci.c,v 1.16 1998/08/15 10:10:53 mycroft Exp $	*/
 
 /*-

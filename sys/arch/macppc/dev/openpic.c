@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7 2001/11/06 19:53:15 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/openpic.c,v 1.7.2.1 2002/01/31 22:55:14 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -48,6 +48,7 @@
 #include <sys/systm.h>
 
 #include <uvm/uvm.h>
+#include <ddb/db_var.h>
 
 #include <machine/autoconf.h>
 #include <machine/intr.h>
@@ -376,15 +377,14 @@ intr_calculatemasks()
 	/*
 	 * There are tty, network and disk drivers that use free() at interrupt
 	 * time, so imp > (tty | net | bio).
-	 */
-	imask[IPL_IMP] |= imask[IPL_TTY] | imask[IPL_NET] | imask[IPL_BIO];
-
-	/*
+	 *
 	 * Enforce a hierarchy that gives slow devices a better chance at not
 	 * dropping data.
 	 */
-	imask[IPL_TTY] |= imask[IPL_NET] | imask[IPL_BIO];
 	imask[IPL_NET] |= imask[IPL_BIO];
+	imask[IPL_TTY] |= imask[IPL_NET];
+	imask[IPL_IMP] |= imask[IPL_TTY];
+	imask[IPL_CLOCK] |= imask[IPL_IMP] | SPL_CLOCK;
 
 	/*
 	 * These are pseudo-levels.
@@ -609,7 +609,7 @@ ext_intr_openpic()
 	int pcpl;
 	struct intrhand *ih;
 
-	pcpl = splhigh();       /* Turn off all */
+	pcpl = cpl;
 
 	realirq = openpic_read_irq(0);
 
@@ -625,11 +625,19 @@ ext_intr_openpic()
 			ipending |= r_imen;     /* Masked! Mark this as pending */
 			openpic_disable_irq(realirq);
 		} else {
+			splraise(intrmask[irq]);
+
+			/*
+			 * enable interrupts for the duration of the
+			 * interrupt handler 
+			 */
+			ppc_intr_enable(1);
 			ih = intrhand[irq];
 			while (ih) {
 				(*ih->ih_fun)(ih->ih_arg);
 				ih = ih->ih_next;
 			}
+			ppc_intr_disable();
 
 			uvmexp.intrs++;
 			evirq[realirq].ev_count++;
@@ -640,7 +648,9 @@ ext_intr_openpic()
 		realirq = openpic_read_irq(0);
 	}
 
+	ppc_intr_enable(1);
 	splx(pcpl);     /* Process pendings. */
+	ppc_intr_disable();
 }
 void
 openpic_init()
@@ -694,7 +704,8 @@ int
 openpic_prog_button (void *arg)
 {
 #ifdef DDB
-        Debugger();
+	if (db_console)
+		Debugger();
 #else
 	printf("programmer button pressed, debugger not available\n");
 #endif

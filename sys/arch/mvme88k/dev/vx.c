@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.15 2001/12/19 07:04:41 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.15.2.1 2002/01/31 22:55:18 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr. 
  * All rights reserved.
@@ -205,15 +205,9 @@ vxmatch(parent, self, aux)
 
 	vx_reg = (struct vxreg *)ca->ca_vaddr;
 	board_addr = (unsigned int)ca->ca_vaddr;
-	if (!badvaddr((unsigned)&vx_reg->ipc_cr, 1)) {
-		if (ca->ca_vec & 0x03) {
-			printf("xvt: bad vector 0x%x\n", ca->ca_vec);
+	if (badvaddr((unsigned)&vx_reg->ipc_cr, 1))
 			return (0);
-		}
 		return (1);
-	} else {
-		return (0);
-	}      
 }
 
 void
@@ -601,7 +595,7 @@ read_wakeup(sc, port)
 	int port;
 {
 	struct read_wakeup_packet rwp;
-	volatile struct vx_info *vxt;
+	struct vx_info *volatile vxt;
 	vxt = &sc->sc_info[port];
 	/* 
 	 * If we already have a read_wakeup paket 
@@ -639,8 +633,8 @@ vxread (dev, uio, flag)
 {
 	int unit, port;
 	struct tty *tp;
-	volatile struct vx_info *vxt;
-	volatile struct vxsoftc *sc;
+	struct vx_info *volatile vxt;
+	struct vxsoftc *volatile sc;
 
 	unit = VX_UNIT(dev);
 	if (unit >= vx_cd.cd_ndevs || 

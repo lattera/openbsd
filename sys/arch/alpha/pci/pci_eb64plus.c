@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb64plus.c,v 1.1 2002/01/23 03:20:41 ericj Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb64plus.c,v 1.1.2.1 2002/01/31 22:55:05 niklas Exp $ */
 /* $NetBSD: pci_eb64plus.c,v 1.10 2001/07/27 00:25:20 thorpej Exp $ */
 
 /*-

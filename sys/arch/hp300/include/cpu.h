@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16 2001/11/30 20:58:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16.2.1 2002/01/31 22:55:08 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*

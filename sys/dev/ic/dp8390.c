@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.19 2001/09/20 17:02:31 mpech Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390.c,v 1.19.4.1 2002/01/31 22:55:31 niklas Exp $	*/
 /*	$NetBSD: dp8390.c,v 1.13 1998/07/05 06:49:11 jonathan Exp $	*/
 
 /*
@@ -846,6 +846,14 @@ dp8390_ioctl(ifp, cmd, data)
 		default:
 			dp8390_init(sc);
 			break;
+		}
+		break;
+
+	case SIOCSIFMTU:
+		if (ifr->ifr_mtu > ETHERMTU || ifr->ifr_mtu < ETHERMIN) {
+			error = EINVAL;
+		} else if (ifp->if_mtu != ifr->ifr_mtu) {
+			ifp->if_mtu = ifr->ifr_mtu;
 		}
 		break;
 

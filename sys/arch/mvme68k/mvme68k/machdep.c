@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.61 2001/12/08 02:24:06 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.61.2.1 2002/01/31 22:55:15 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -76,7 +76,6 @@
 #include <sys/systm.h>
 #include <sys/signalvar.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
@@ -125,7 +124,6 @@
 char machine[] = "mvme68k";		/* cpu "architecture" */
 
 struct vm_map *exec_map = NULL;
-struct vm_map *mb_map = NULL;
 struct vm_map *phys_map = NULL;
 
 extern vm_offset_t avail_end;
@@ -396,8 +394,6 @@ again:
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif

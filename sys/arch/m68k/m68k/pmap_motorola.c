@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.13 2001/12/16 23:06:04 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m68k/m68k/pmap_motorola.c,v 1.13.2.1 2002/01/31 22:55:13 niklas Exp $ */
 
 /*
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -574,7 +574,7 @@ pmap_init()
 	 * Initialize the pmap pools.
 	 */
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, 0, "pmappl",
-	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_VMPMAP);
+	    &pool_allocator_nointr);
 
 	/*
 	 * Now it is safe to enable pv_table recording.

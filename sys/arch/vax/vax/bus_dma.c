@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.8 2001/12/08 02:24:07 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/bus_dma.c,v 1.8.2.1 2002/01/31 22:55:27 niklas Exp $	*/
 /*	$NetBSD: bus_dma.c,v 1.5 1999/11/13 00:32:20 thorpej Exp $	*/
 
 /*-
@@ -45,7 +45,6 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
-#include <sys/map.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
