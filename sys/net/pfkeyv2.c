@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.36.2.1 2000/09/01 13:50:31 jason Exp $ */
+/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.36.2.2 2000/11/10 21:51:55 jason Exp $ */
 /*
 %%% copyright-nrl-97
 This software is Copyright 1997-1998 by Randall Atkinson, Ronald Lee,
@@ -682,7 +682,7 @@ pfkeyv2_sendmessage(void **headers, int mode, struct socket *socket,
 	    /* Send to all registered promiscuous listeners */
 	    for (s = pfkeyv2_sockets; s; s = s->next)
 	      if ((s->flags & PFKEYV2_SOCKETFLAGS_PROMISC) &&
-		  (s->flags & PFKEYV2_SOCKETFLAGS_REGISTERED))
+		  !(s->flags & PFKEYV2_SOCKETFLAGS_REGISTERED))
 		pfkey_sendup(s->socket, packet, 1);
 
 	    m_freem(packet);
