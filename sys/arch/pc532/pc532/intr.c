@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: intr.c,v 1.5 1995/09/26 20:16:26 phil Exp $
+ *	$Id: intr.c,v 1.2 1995/10/26 01:11:53 deraadt Exp $
  */
 
 #define DEFINE_SPLX
@@ -176,6 +176,9 @@ softnet()
 	if (isr & (1 << NETISR_ARP)) arpintr();
 #endif
 	if (isr & (1 << NETISR_IP)) ipintr();
+#endif
+#ifdef NETATALK
+	if (isr & (1 << NETISR_ATALK)) atintr();
 #endif
 #ifdef IMP
 	if (isr & (1 << NETISR_IMP)) impintr();
