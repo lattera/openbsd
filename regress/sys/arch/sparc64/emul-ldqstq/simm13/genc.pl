@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#	$OpenBSD: src/regress/sys/arch/sparc64/emul-ldqstq/simm13/genc.pl,v 1.3 2003/07/13 06:39:44 jason Exp $
 #
 # Copyright (c) 2003 Jason L. Wright (jason@thought.net)
 # All rights reserved.
