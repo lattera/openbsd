@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/usr.sbin/ipsend/ipresend/Attic/ipresend.c,v 1.3 1998/01/26 04:16:58 dgregor Exp $     */
+/*     $OpenBSD: src/usr.sbin/ipsend/ipresend/Attic/ipresend.c,v 1.4 1999/03/31 05:50:19 deraadt Exp $     */
 /*
  * ipresend.c (C) 1995-1997 Darren Reed
  *
@@ -13,7 +13,7 @@
  */
 #if !defined(lint)
 static const char sccsid[] = "%W% %G% (C)1995 Darren Reed";
-static const char rcsid[] = "@(#)$Id: ipresend.c,v 2.0.2.9 1997/10/12 09:48:37 darrenr Exp $";
+static const char rcsid[] = "@(#)$Id: ipresend.c,v 1.3 1998/01/26 04:16:58 dgregor Exp $";
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ int	opts = 0;
 # ifdef	linux
 char	default_device[] = "eth0";
 # else
-#  ifdef	sun
+#  if defined(sun) || defined(__OpenBSD__)
 char	default_device[] = "le0";
 #  else
 #   ifdef	ultrix
@@ -146,7 +146,7 @@ char	**argv;
 			usage(name);
 		}
 
-	if (!ipr || !resend)
+	if (!ipr)
 		usage(name);
 
 	gwip.s_addr = 0;
