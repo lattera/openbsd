@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: md.c,v 1.7 1995/01/17 06:44:39 mycroft Exp $
+ *	$Id: md.c,v 1.1.1.1 1995/10/18 08:40:57 deraadt Exp $
  */
 
 #include <sys/param.h>
@@ -292,7 +292,7 @@ void
 md_swapout_exec_hdr(h)
 struct exec *h;
 {
-	/* NetBSD: Always leave magic alone */
+	/* NetBSD/OpenBSD: Always leave magic alone */
 	int skip = 1;
 #if 0
 	if (N_GETMAGIC(*h) == OMAGIC)
