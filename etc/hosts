@@ -1,0 +1,17 @@
+#	$OpenBSD: src/etc/hosts,v 1.6 2000/02/05 18:14:55 itojun Exp $
+#
+# Host Database
+# This file should contain the addresses and aliases
+# for local hosts that share this file.
+# It is used only for "ifconfig" and other operations
+# before the nameserver is started.
+#
+# RFC 1918 specifies that these networks are "internal". They can
+# be used behind an ipnat(4) redirector.
+# 10.0.0.0      10.255.255.255
+# 172.16.0.0    172.31.255.255
+# 192.168.0.0   192.168.255.255
+#
+127.0.0.1	localhost localhost.my.domain
+::1		localhost localhost.my.domain
+192.168.254.254	noname
