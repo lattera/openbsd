@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.16 2003/05/15 17:47:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.17 2003/05/15 18:48:58 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -99,7 +99,8 @@
 #include <machine/i82489reg.h>
 
 #define	GET_CPUINFO(reg)				\
-	movzbl	_C_LABEL(lapic_id)+3,reg	;	\
+	movl	_C_LABEL(lapic_id),reg	;		\
+	shrl	$LAPIC_ID_SHIFT,reg	; 		\
 	movl	_C_LABEL(cpu_info)(,reg,4),reg
 
 #define	GET_CURPROC(reg, treg)				\
