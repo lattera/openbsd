@@ -36,7 +36,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)funopen.c	5.2 (Berkeley) 2/5/91";*/
-static char *rcsid = "$Id: funopen.c,v 1.1 1994/02/07 22:06:02 proven Exp $";
+static char *rcsid = "$Id: funopen.c,v 1.1.1.1 1995/10/18 08:43:07 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <pthread.h>
@@ -48,7 +48,7 @@ FILE *
 funopen(cookie, readfn, writefn, seekfn, closefn)
 	const void *cookie;
 	int (*readfn)(), (*writefn)();
-#if __STDC__
+#ifdef __STDC__
 	fpos_t (*seekfn)(void *cookie, fpos_t off, int whence);
 #else
 	fpos_t (*seekfn)();

@@ -36,18 +36,18 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)fscanf.c	5.1 (Berkeley) 1/20/91";*/
-static char *rcsid = "$Id: fscanf.c,v 1.1 1994/02/07 22:05:57 proven Exp $";
+static char *rcsid = "$Id: fscanf.c,v 1.1.1.1 1995/10/18 08:43:07 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <pthread.h>
 #include <stdio.h>
-#if __STDC__
+#ifdef __STDC__
 #include <stdarg.h>
 #else
 #include <varargs.h>
 #endif
 
-#if __STDC__
+#ifdef __STDC__
 fscanf(FILE *fp, char const *fmt, ...) {
 	int r;
 	va_list ap;
