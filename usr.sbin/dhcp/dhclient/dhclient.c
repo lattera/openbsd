@@ -56,7 +56,7 @@
 
 #ifndef lint
 static char copyright[] =
-"$Id: dhclient.c,v 1.2 1998/09/20 08:49:35 deraadt Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
+"$Id: dhclient.c,v 1.3 1999/02/11 22:49:59 deraadt Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
 #include "dhcpd.h"
@@ -1793,6 +1793,11 @@ void script_init (ip, reason, medium)
 	} while (fd < 0);
 #endif
 
+#ifdef HAVE_MKSTEMP
+	if (fd == -1)
+		error ("can't write script file: %m");
+#endif
+		
 	scriptFile = fdopen (fd, "w");
 	if (!scriptFile)
 		error ("can't write script file: %m");
