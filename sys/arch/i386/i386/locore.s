@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.80 2004/07/20 20:16:44 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.80.2.1 2005/02/27 00:57:02 brad Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1242,6 +1242,8 @@ ENTRY(copyoutstr)
 
 1:	decl	%edx
 	jz	2f
+	cmpl	$VM_MAXUSER_ADDRESS,%edi
+	jae	_C_LABEL(copystr_fault)
 	lodsb
 	stosb
 	testb	%al,%al
