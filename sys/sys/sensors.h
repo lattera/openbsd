@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sensors.h,v 1.1 2003/04/25 20:06:41 grange Exp $	*/
+/*	$OpenBSD: src/sys/sys/sensors.h,v 1.1.2.1 2003/05/12 19:50:24 ho Exp $	*/
 
 /*
  * Copyright (c) 2003 Alexander Yurchenko <grange@openbsd.org>
