@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.92 2004/08/10 16:17:05 ho Exp $ */
+/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.92.2.1 2004/12/14 13:21:06 markus Exp $ */
 
 /*
  *	@(#)COPYRIGHT	1.1 (NRL) 17 January 1995
@@ -1807,6 +1807,11 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 	if (ipo->ipo_dstid)
 		i += sizeof(struct sadb_ident) + PADUP(ipo->ipo_dstid->ref_len);
 
+	if (ipo->ipo_local_cred)
+		i += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_cred->ref_len);
+
+	if (ipo->ipo_local_auth)
+		i += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_auth->ref_len);
 
 	/* Allocate */
 	if (!(p = malloc(i, M_PFKEY, M_DONTWAIT))) {
