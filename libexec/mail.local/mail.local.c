@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)mail.local.c	5.6 (Berkeley) 6/19/91";*/
-static char rcsid[] = "$Id: mail.local.c,v 1.7 1996/08/30 12:04:13 deraadt Exp $";
+static char rcsid[] = "$Id: mail.local.c,v 1.8 1996/10/16 06:30:56 millert Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -234,6 +234,7 @@ baditem(path)
 	if (rename(path, npath) != -1)
 		err(NOTFATAL, "nasty spool item %s renamed to %s",
 		    path, npath);
+	/* XXX if we fail to rename, another attempt will happen later */
 }
 
 char lpath[MAXPATHLEN];
