@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.68.2.2 2004/03/03 08:37:05 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.68.2.3 2004/08/20 22:40:18 brad Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -788,19 +788,25 @@ tcp6_ctlinput(cmd, sa, d)
 	void *d;
 {
 	struct tcphdr th;
+	struct tcpcb *tp;
 	void (*notify)(struct inpcb *, int) = tcp_notify;
 	struct ip6_hdr *ip6;
 	const struct sockaddr_in6 *sa6_src = NULL;
 	struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+	struct inpcb *inp;
 	struct mbuf *m;
+	tcp_seq seq;
 	int off;
 	struct {
 		u_int16_t th_sport;
 		u_int16_t th_dport;
+		u_int32_t th_seq;
 	} *thp;
 
 	if (sa->sa_family != AF_INET6 ||
-	    sa->sa_len != sizeof(struct sockaddr_in6))
+	    sa->sa_len != sizeof(struct sockaddr_in6) ||
+	    IN6_IS_ADDR_UNSPECIFIED(&sa6->sin6_addr) ||
+	    IN6_IS_ADDR_V4MAPPED(&sa6->sin6_addr))
 		return;
 	if ((unsigned)cmd >= PRC_NCMDS)
 		return;
@@ -846,23 +852,15 @@ tcp6_ctlinput(cmd, sa, d)
 #endif
 		m_copydata(m, off, sizeof(*thp), (caddr_t)&th);
 
+		/*
+		 * Check to see if we have a valid TCP connection
+		 * corresponding to the address in the ICMPv6 message
+		 * payload.
+		 */
+		inp = in6_pcbhashlookup(&tcbtable, &sa6->sin6_addr,
+		    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
+		    th.th_sport);
 		if (cmd == PRC_MSGSIZE) {
-			int valid = 0;
-
-			/*
-			 * Check to see if we have a valid TCP connection
-			 * corresponding to the address in the ICMPv6 message
-			 * payload.
-			 */
-			if (in6_pcbhashlookup(&tcbtable, &sa6->sin6_addr,
-			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
-			    th.th_sport))
-				valid++;
-			else if (in_pcblookup(&tcbtable, &sa6->sin6_addr,
-			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
-			    th.th_sport, INPLOOKUP_IPV6))
-				valid++;
-
 			/*
 			 * Depending on the value of "valid" and routing table
 			 * size (mtudisc_{hi,lo}wat), we will:
@@ -870,13 +868,17 @@ tcp6_ctlinput(cmd, sa, d)
 			 *   corresponding routing entry, or
 			 * - ignore the MTU change notification.
 			 */
-			icmp6_mtudisc_update((struct ip6ctlparam *)d, valid);
-
+			icmp6_mtudisc_update((struct ip6ctlparam *)d, inp != NULL);
 			return;
 		}
-
-		(void) in6_pcbnotify(&tcbtable, sa, th.th_dport,
-		    (struct sockaddr *)sa6_src, th.th_sport, cmd, NULL, notify);
+		if (inp) {
+			seq = ntohl(th.th_seq);
+			if (inp->inp_socket &&
+			    (tp = intotcpcb(inp)) &&
+			    SEQ_GEQ(seq, tp->snd_una) &&
+			    SEQ_LT(seq, tp->snd_max))
+				notify(inp, inet6ctlerrmap[cmd]);
+		}
 	} else {
 		(void) in6_pcbnotify(&tcbtable, sa, 0,
 		    (struct sockaddr *)sa6_src, 0, cmd, NULL, notify);
@@ -892,11 +894,18 @@ tcp_ctlinput(cmd, sa, v)
 {
 	register struct ip *ip = v;
 	register struct tcphdr *th;
+	struct tcpcb *tp;
+	struct inpcb *inp;
+	struct in_addr faddr;
+	tcp_seq seq;
 	extern int inetctlerrmap[];
 	void (*notify)(struct inpcb *, int) = tcp_notify;
 	int errno;
 
 	if (sa->sa_family != AF_INET)
+		return NULL;
+	faddr = satosin(sa)->sin_addr;
+	if (faddr.s_addr == INADDR_ANY)
 		return NULL;
 
 	if ((unsigned)cmd >= PRC_NCMDS)
@@ -906,22 +915,27 @@ tcp_ctlinput(cmd, sa, v)
 		notify = tcp_quench;
 	else if (PRC_IS_REDIRECT(cmd))
 		notify = in_rtchange, ip = 0;
-	else if (cmd == PRC_MSGSIZE && ip_mtudisc) {
-		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
+	else if (cmd == PRC_MSGSIZE && ip_mtudisc && ip) {
 		/*
 		 * Verify that the packet in the icmp payload refers
 		 * to an existing TCP connection.
 		 */
-		if (in_pcblookup(&tcbtable,
-				 &ip->ip_dst, th->th_dport,
-				 &ip->ip_src, th->th_sport,
-				 INPLOOKUP_WILDCARD)) {
+		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
+		seq = ntohl(th->th_seq);
+		inp = in_pcbhashlookup(&tcbtable,
+		    ip->ip_dst, th->th_dport, ip->ip_src, th->th_sport);
+		if (inp && (tp = intotcpcb(inp)) &&
+		    SEQ_GEQ(seq, tp->snd_una) &&
+		    SEQ_LT(seq, tp->snd_max)) {
 			struct icmp *icp;
 			icp = (struct icmp *)((caddr_t)ip -
 					      offsetof(struct icmp, icmp_ip));
 
 			/* Calculate new mtu and create corresponding route */
 			icmp_mtudisc(icp);
+		} else {
+			/* ignore if we don't have a matching connection */
+			return NULL;
 		}
 		notify = tcp_mtudisc, ip = 0;
 	} else if (cmd == PRC_MTUINC)
@@ -933,8 +947,16 @@ tcp_ctlinput(cmd, sa, v)
 
 	if (ip) {
 		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
-		in_pcbnotify(&tcbtable, sa, th->th_dport, ip->ip_src,
-			     th->th_sport, errno, notify);
+		inp = in_pcbhashlookup(&tcbtable,
+		    ip->ip_dst, th->th_dport, ip->ip_src, th->th_sport);
+		if (inp) {
+			seq = ntohl(th->th_seq);
+			if (inp->inp_socket &&
+			    (tp = intotcpcb(inp)) &&
+			    SEQ_GEQ(seq, tp->snd_una) &&
+			    SEQ_LT(seq, tp->snd_max))
+				notify(inp, errno);
+		}
 	} else
 		in_pcbnotifyall(&tcbtable, sa, errno, notify);
 
