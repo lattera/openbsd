@@ -1,10 +1,14 @@
-/*	$OpenBSD: src/usr.sbin/lpr/lpc/extern.h,v 1.4 2002/05/20 23:13:50 millert Exp $	*/
-/*	$NetBSD: extern.h,v 1.2 1995/11/15 22:27:36 pk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/lpr/common_source/common_vars.c,v 1.1 2002/05/20 23:13:50 millert Exp $	*/
+/*	$NetBSD: common.c,v 1.15 1999/09/26 10:32:27 mrg Exp $	*/
 
 /*
- * Copyright (c) 1989, 1993
+ * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
- *
+ * (c) UNIX System Laboratories, Inc.
+ * All or some portions of this file are derived from material licensed
+ * to the University of California by American Telephone and Telegraph
+ * Co. or Unix System Laboratories, Inc. and are reproduced herein with
+ * the permission of UNIX System Laboratories, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,29 +37,21 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *      @(#)extern.h	8.1 (Berkeley) 6/6/93
  */
 
+#ifndef lint
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/common_source/common_vars.c,v 1.1 2002/05/20 23:13:50 millert Exp $";
+#endif /* not lint */
 
-#include <sys/cdefs.h>
+#include <sys/param.h>
 
+#include "pathnames.h"
 
-__BEGIN_DECLS
-void	clean(int, char **);
-void	disable(int, char **);
-void	doabort(int, char **);
-void	down(int, char **);
-void	enable(int, char **);
-void	help(int, char **);
-void	quit(int, char **);
-void	restart(int, char **);
-void	startcmd(int, char **);
-void	status(int, char **);
-void	stop(int, char **);
-void	topq(int, char **);
-void	up(int, char **);
-__END_DECLS
-
-extern int NCMDS;
-extern struct cmd cmdtab[];
+char	*name;			/* program name */
+char	*printer;		/* printer name */
+char	host[MAXHOSTNAMELEN+1];	/* host machine name */
+char	*from = host;		/* client's machine name */
+char	*printcapdb[2] = { _PATH_PRINTCAP, 0 };
+char	*bp;			/* pointer into printcap buffer. */
+uid_t	uid, euid;		/* real and effective uids */
+u_int	wait_time = 300;	/* time out after 5 minutes by default */
