@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)amq.h	8.1 (Berkeley) 6/6/93
- *	$Id: amq.h,v 1.2 1994/06/13 20:50:44 mycroft Exp $
+ *	$Id: amq.h,v 1.1.1.1 1995/10/18 08:47:22 deraadt Exp $
  *
  */
 
@@ -46,7 +46,7 @@ typedef char *amq_string;
 bool_t xdr_amq_string();
 
 
-typedef long *time_type;
+typedef int *time_type;
 bool_t xdr_time_type();
 
 
