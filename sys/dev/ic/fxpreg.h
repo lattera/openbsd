@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_fxpreg.h,v 1.5 1998/07/02 21:15:46 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpreg.h,v 1.1 2000/04/18 18:44:27 jason Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
