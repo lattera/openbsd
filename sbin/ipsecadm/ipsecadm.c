@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sbin/ipsecadm/Attic/ipsecadm.c,v 1.23 1999/08/25 15:36:57 angelos Exp $ */
+/* $OpenBSD: src/sbin/ipsecadm/Attic/ipsecadm.c,v 1.24 1999/09/07 12:35:27 ho Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -387,8 +387,9 @@ main(int argc, char **argv)
 		  }
 		  else
 		  {
-		      fprintf(stderr, "%s: unknown command: %s", argv[0], 
+		      fprintf(stderr, "%s: unknown command: %s\n", argv[0], 
 			      argv[1]);
+		      usage();
 		      exit(1);
 		  }
     
