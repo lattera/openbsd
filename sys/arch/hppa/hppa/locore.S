@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.9 2004/06/05 23:10:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/hppa/locore.S,v 1.28.2.10 2004/06/07 18:46:50 tedu Exp $	*/
 
 /*
  * Copyright (c) 1998-2004 Michael Shalayeff
@@ -2810,6 +2810,8 @@ link_ok
 	copy    arg1, t2
 kstack_ok
 #endif
+	ldi	SONPROC, t1
+	stb	t1, P_STAT(arg1)
 	/* Skip context switch if same process. */
 	comb,=,n arg1, arg2, switch_return
 
