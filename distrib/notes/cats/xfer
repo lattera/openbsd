@@ -1,0 +1,17 @@
+dnl	$OpenBSD: src/distrib/notes/cats/Attic/xfer,v 1.4 2004/03/16 08:24:59 jmc Exp $
+Installation is supported from several media types, including:
+
+	CD-ROM
+	FFS partitions
+	DOS (FAT) partitions
+	EXT2 partitions
+	Tape
+	FTP
+	HTTP
+
+OpenBSDXferShortPrelude
+
+
+OpenBSDXferBareTape
+
+OpenBSDXferFFS
