@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootsd/conf.c,v 1.2 2001/07/04 08:06:53 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.1.1.1 1995/06/01 20:38:08 gwr Exp $	*/
 
 #include <sys/types.h>

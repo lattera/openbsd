@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libbug/delay.c,v 1.2 2001/07/04 08:09:26 niklas Exp $	*/
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.

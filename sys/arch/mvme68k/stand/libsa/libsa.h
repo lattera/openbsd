@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/libsa.h,v 1.4 2001/07/04 08:06:56 niklas Exp $	*/
+
 /*
  * libsa prototypes 
  */

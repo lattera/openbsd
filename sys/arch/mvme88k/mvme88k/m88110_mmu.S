@@ -1,3 +1,5 @@
+#	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_mmu.S,v 1.3 2001/07/04 08:09:24 niklas Exp $
+
 #ifndef ASSEMBLER
 #define	ASSEMBLER
 #endif /* ASSEMBLER */

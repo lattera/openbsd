@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/etherfun.h,v 1.2 2001/07/04 08:09:31 niklas Exp $	*/
+
 /*
  *
  * Copyright (c) 1995 Charles D. Cranor and Seth Widoff

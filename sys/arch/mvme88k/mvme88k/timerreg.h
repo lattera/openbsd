@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/timerreg.h,v 1.4 2001/07/04 08:09:25 niklas Exp $	*/
+
 struct ticktimer {
 	u_int ttcmpreg;		/* Timer compare register */
 	u_int ttcounter;	/* Timer counter */
