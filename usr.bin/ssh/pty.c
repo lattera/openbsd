@@ -14,8 +14,9 @@
  */
 
 #include "includes.h"
-RCSID("$Id: pty.c,v 1.8 1999/11/24 19:53:48 markus Exp $");
+RCSID("$Id: pty.c,v 1.9 1999/12/06 12:10:12 deraadt Exp $");
 
+#include <util.h>
 #include "pty.h"
 #include "ssh.h"
 
