@@ -1193,6 +1193,7 @@
 ./usr/libexec/smtpd
 ./usr/libexec/smtpfwdd
 ./usr/libexec/spellprog
+./usr/libexec/ssh-keysign
 ./usr/libexec/tcpd
 ./usr/libexec/telnetd
 ./usr/libexec/tftpd
