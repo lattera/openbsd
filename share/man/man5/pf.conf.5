@@ -1,0 +1,1114 @@
+.\"	$OpenBSD: src/share/man/man5/pf.conf.5,v 1.89 2002/09/30 23:41:46 frantzen Exp $
+.\"
+.\" Copyright (c) 2002, Daniel Hartmeier
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\"
+.\"    - Redistributions of source code must retain the above copyright
+.\"      notice, this list of conditions and the following disclaimer.
+.\"    - Redistributions in binary form must reproduce the above
+.\"      copyright notice, this list of conditions and the following
+.\"      disclaimer in the documentation and/or other materials provided
+.\"      with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+.\" FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+.\" COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+.\" BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+.\" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+.\" CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+.\" ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 2, 2002
+.Dt PF.CONF 5
+.Os
+.Sh NAME
+.Nm pf.conf
+.Nd filtering and translation (NAT) rules file for the
+packet filter
+.Sh DESCRIPTION
+The
+.Xr pf 4
+packet filter drops, passes and modifies packets according to the
+rules defined in this file.
+Filter rules are used to selectively pass traffic while translation
+rules specify which addresses are to be mapped and which are to be
+redirected.
+For each packet inspected by the filter, the set of rules is evaluated
+from top to bottom, and the last matching rule decides what action is
+performed.
+For each packet inspected by the translator, the set of rules is evaluated
+from top to bottom, and the first matching rule decides what action is
+performed.
+In short: filters are last match, nat is first match.
+Rules must be in order: options, scrub, nat, filter.
+.Sh FILTER RULES
+While filter rules are typically manipulated using
+.Xr pfctl 8
+other utilities may be written using the
+.Xr ioctl 2
+interface described in
+.Xr pf 4 .
+.Pp
+For each packet processed by the packet filter, the filter rules are
+evaluated in sequential order, from first to last.
+Each rule either matches the packet or doesn't.
+The last matching rule decides what action is taken.
+.Pp
+If no rule matches the packet, the default action is
+.Em pass .
+.Pp
+To block everything by default and only pass packets
+that match explicit rules, one uses
+.Bd -literal
+.Cm block in all
+.Cm block out all
+.Ed
+.Pp
+as the first two rules.
+.Pp
+For each packet processed by the translator, the translation rules are
+evaluated in sequential order, from first to last.
+Each rule either matches the packet or doesn't.
+The first matching rule decides what action is taken.
+.Pp
+If no rule matches the packet, the default action is to pass the packet
+up to the filter unmodified.
+It should be noted that all translations of packets occur before
+the filters are applied.
+Hence, rules for redirected packets should specify the address and port
+after translation.
+Note that all translation rules apply only to packets that pass through
+the specified interface.
+For instance, redirecting port 80 on an external interface to an internal
+web server will only work for connections originating from the outside.
+Connections to the address of the external interface from local hosts will
+not be redirected, since such packets do not actually pass through the
+external interface.
+Redirections can't reflect packets back through the interface they arrive
+on, they can only be redirected to hosts connected to different interfaces
+or to the firewall itself.
+.Sh OPTIONS
+.Ss timeout
+.Bl -tag -width interval -compact
+.It Em interval
+Interval between purging expired states and fragments.
+.It Em frag
+Seconds before an unassembled fragment is expired.
+.El
+.Pp
+When a packet matches a stateful connection, the seconds to live of the
+connection will be updated to that of the proto.modifier which corresponds
+to the connection state.
+Each packet which matches this state will reset the TTL.
+Tuning these values may improve the performance of the
+firewall at the risk of dropping valid idled connections.
+.Pp
+.Bl -tag -width "tcp.established " -compact
+.It Em tcp.first
+The state after the first packet.
+.It Em tcp.opening
+The state before the destination host ever sends a packet.
+.It Em tcp.established
+The fully established state.
+.It Em tcp.closing
+The state after the first FIN has been sent.
+.It Em tcp.finwait
+The state after both FINs have been exchanged and the connection is closed.
+Some hosts (notably web servers on Solaris) send TCP packets even after closing
+the connection.
+Increasing tcp.finwait (and possibly tcp.closing) can prevent blocking of
+such packets.
+.It Em tcp.closed
+The state after one endpoint sends a RST.
+.El
+.Pp
+ICMP and UDP are handled in a similar fashion to TCP but with a much more
+limited set of states:
+.Pp
+.Bl -tag -width "udp.multiple " -compact
+.It Em udp.first
+The state after the first packet.
+.It Em udp.single
+The state if the source host sends more than one packet but the destination
+host has never sent one back.
+.It Em udp.multiple
+The state if both hosts have sent packets.
+.It Em icmp.first
+The state after the first packet.
+.It Em icmp.error
+The state after an icmp error came back in response to an icmp packet.
+.El
+.Pp
+Other protocols are handled similarly to UDP:
+.Pp
+.Bl -tag -width "other.multiple " -compact
+.It Em other.first
+.It Em other.single
+.It Em other.multiple
+.El
+.Pp
+Example:
+.Bd -literal
+    set timeout tcp.established 3600
+    set timeout { tcp.opening 30, tcp.closing 900 }
+.Ed
+.Ss loginterface
+Enable collection of packet and byte count statistics for the given interface.
+These statistics can be viewed using
+.Bd -literal
+    # pfctl -s info
+.Ed
+.Pp
+In this example pf is told to collect statistics on the interface named dc0:
+.Bd -literal
+    set loginterface dc0
+.Ed
+.Pp
+One can unset the loginterface using
+.Bd -literal
+    set loginterface none
+.Ed
+.Pp
+.Ss limit
+Sets hard limits on the memory pools used by the packet filter.
+See
+.Xr pool 9
+for an explanation of memory pools.
+.Pp
+For example,
+.Bd -literal
+    set limit states 20000
+.Ed
+.Pp
+sets the maximum number of entries in the memory pool used by state table
+entries (generated by 'keep state' rules) to 20000.
+.Bd -literal
+    set limit frags 20000
+.Ed
+.Pp
+sets the maximum number of entries in the memory pool used for fragment
+reassembly (generated by 'scrub' rules) to 20000.
+.Pp
+These can be combined:
+.Bd -literal
+    set limit { states 20000, frags 20000 }
+.Ed
+.Ss optimization
+Optimize the engine to one of the following network topographies or
+environments:
+.Bl -tag -width "O high-latency " -compact
+.It Em default
+A normal network environment.
+Suitable for almost all networks.
+.It Em normal
+Alias for
+.Em default
+.It Em high-latency
+A high-latency environment (such as a satellite connection)
+.It Em satellite
+Alias for
+.Em high-latency
+.It Em aggressive
+Aggressively expire connections when they are likely no longer valid.
+This can greatly reduce the memory usage of the firewall at the cost of
+dropping idle connections early.
+.It Em conservative
+Extremely conservative settings.
+Pains will be taken to avoid dropping legitimate connections at the
+expense of greater memory utilization (possibly much greater on a busy
+network) and slightly increased processor utilization.
+.El
+Example:
+.Bd -literal
+    set optimization aggressive
+.Ed
+.Sh ACTIONS
+.Bl -tag -width Fl
+.It Em block
+The packet is blocked.
+Optionally, the filter can return a TCP RST or ICMP UNREACHABLE packet
+to the sender, where applicable.
+Returning ICMP packets can have
+an ICMP code set by number or name, TCP RST can have a TTL set.
+.It Em pass
+The packet is passed.
+.It Em scrub
+The packet is run through normalization/defragmentation.
+Scrub rules are not considered last matching rules.
+IPv6 packets are not defragmented.
+.It Em binat
+A
+.Em binat
+rule specifies a bidirectional mapping between an external IP address
+and an internal IP address.
+.It Em nat
+A
+.Em nat
+rule specifies that IP addresses are to be changed as the packet
+traverses the given interface.
+This technique allows a single IP address
+on the translating host to support network traffic for a larger range of
+machines on an "inside" network.
+Although in theory any IP address can be used on the inside, it is strongly
+recommended that one of the address ranges defined by RFC 1918 be used.
+These netblocks are:
+.Bd -literal
+10.0.0.0    - 10.255.255.255 (all of net 10, i.e., 10/8)
+172.16.0.0  - 172.31.255.255 (i.e., 172.16/12)
+192.168.0.0 - 192.168.255.255 (i.e., 192.168/16)
+.Ed
+.It Em rdr
+The packet is redirected to another destination and possibly a
+different port.
+.Em rdr
+rules can optionally specify port ranges instead of single ports.
+\'rdr ... port 2000:2999 -> ... port 4000\' redirects ports 2000 to 2999
+(including port 2000 and 2999) to the same port 4000.
+\'rdr ... port 2000:2999 -> ... port 4000:*\' redirects port 2000 to 4000,
+2001 to 4001, ..., 2999 to 4999.
+.El
+.Sh PARAMETERS
+The rule parameters specify for what packets a rule applies.
+A packet always comes in on or goes out through one interface.
+Most parameters are optional.
+If a parameter is specified, the rule only applies to packets with
+matching attributes.
+Certain parameters can be expressed as lists, in which case
+.Em pfctl
+generates all needed rule combinations.
+.Ss in or out
+The rule applies to incoming or outgoing packets.
+Either
+.Em in
+or
+.Em out
+must be specified.
+To cover both directions, two rules are needed.
+.Ss log
+.Bl -tag -width Fl
+.It Em log
+In addition to the action specified, a log message is generated.
+.It Em log-all
+Used with 
+.Sq keep state
+or
+.Sq modulate state
+rules.
+Not only the packet that creates state is logged, but all packets of
+the connection.
+.El
+.Pp
+The logged packets are sent to the
+.Em pflog0
+interface.
+This interface is monitored by the
+.Xr pflogd 8
+logging daemon which dumps the logged packets to the file
+.Em /var/log/pflog
+in
+.Xr pcap 3
+binary format.
+.Ss quick
+If a packet matches a rule which has the 
+.Sq quick
+option set, this rule
+is considered the last matching rule, and evaluation of subsequent rules
+is skipped.
+.Ss on <interface>
+The rule applies only to packets coming in on or going out through this
+particular interface.
+.Ss <af>
+The rule applies only to packets of this address family.
+Supported values are inet and inet6.
+.Ss proto <protocol>
+The rule applies only to packets of this protocol.
+Common protocols used here are tcp, udp, icmp and ipv6-icmp.
+.Ss from <source> port <source> to <dest> port <dest>
+The rule applies only to packets with the specified source and destination
+addresses/ports.
+.Pp
+Addresses can be specified in CIDR notation (matching netblocks), as
+symbolic host names or interface names, or as any of the following keywords:
+.Bl -tag -width no-route -compact
+.It Em any
+means any address;
+.It Em no-route
+means any address which is not currently routable.
+.El
+.Pp
+Host name resolution and interface to address translation are done at
+rule set load-time. 
+When the address of an interface (or host name) changes (by DHCP or PPP,
+for instance), the rule set must be reloaded for the change to be reflected
+in the kernel.
+Interface names surrounded by parentheses cause an automatic update of
+the rule whenever the referenced interface changes its address.
+Reloading the rule set is not required in this case.
+.Pp
+Ports can be specified using these operators
+.Bd -literal
+    = (equal), != (unequal), < (lesser), <= (lesser or equal), > (greater),
+    >= (greater or equal), >< (range) and <> (except range).
+.Ed
+.Pp
+>< and <> are binary operators (they take two arguments), and the range
+doesn't include the limits, for instance:
+.Bl -tag -width Fl
+.It Em port 2000 >< 2004
+means 
+.Sq all ports > 2000 and < 2004 ,
+hence ports 2001, 2002 and 2003.
+.It Em port 2000 <> 2004
+means 
+.Sq all ports < 2000 or > 2004 ,
+hence ports 1-1999 and 2005-65535.
+.El
+.Pp
+The host and port specifications are optional, as the following examples
+show:
+.Bd -literal
+    pass in all
+    pass in from any to any
+    pass in proto tcp from any port <= 1024 to any
+    pass in proto tcp from any to any port 25
+    pass in proto tcp from 10.0.0.0/8 port > 1024 to ! 10.1.2.3 port != 22
+.Ed
+.Ss user <user> group <group>
+The rule only applies to packets of sockets owned by the specified user
+and group.
+For outgoing connections initiated from the firewall, this is the user
+that opened the connection.
+For incoming connections to the firewall itself, this is the user that
+listens on the destination port.
+For forwarded connections, where the firewall isn't a connection endpoint,
+the user and group are
+.Em unknown .
+.Pp
+All packets, both outgoing and incoming, of one connection are associated
+with the same user and group.
+Only TCP and UDP packets can be associated with users, for other protocols
+these parameters are ignored.
+.Pp
+User and group refer to the effective (as opposed to the real) IDs, in
+case the socket is created by a setuid/setgid process.
+Note that user and group IDs are stored when a socket is created;
+when a process creates a listening socket as root (for instance, because
+it wants to bind to a privileged port) and subsequently sets another
+user ID (to drop privileges), the socket's uid remains root.
+.Pp
+User and group IDs can be specified as either numbers or names, the
+syntax is similar to the one for ports.
+The value
+.Em unknown
+matches packets of forwarded connections.
+.Em unknown
+can only be used with operators = and !=, other constructs
+like 'user >= unknown' are invalid.
+Forwarded packets with unknown user and group ID match only rules
+that explicitely compare against
+.Em unknown
+with operator = or !=, for instance 'user >= 0' does not match
+forwarded packets.
+The following example allows only selected users to open outgoing
+connections:
+.Bd -literal
+    block out proto { tcp, udp } all
+    pass  out proto { tcp, udp } all user { < 1000, dhartmei } keep state
+.Ed
+.Ss flags <a> | <a>/<b> | /<b>
+The rule only applies to TCP packets that have the flags <a> set
+out of set <b>.
+Flags not specified in <b> are ignored.
+If <b> is not set, all flags are specified.
+The flags are: (F)IN, (S)YN, (R)ST, (P)USH, (A)CK, (U)RG, (E)CE, and C(W)R.
+.Bl -tag -width Fl
+.It Em flags S/S
+Flag SYN is set.
+The other flags are ignored.
+.It Em flags S/SA
+Of SYN and ACK, exactly SYN is set.
+SYN, SYN+PSH, SYN+RST match, but SYN+ACK, ACK and ACK+RST don't.
+This is more restrictive than the previous example.
+.It Em flags S
+If the second set is not specified, it defaults to FSRPAUEW.
+Hence, only packets with SYN set and all other flags unset match this 
+rule.
+This is more restrictive than the previous example.
+.It Em flags /SFRA
+If the first set is not specified, it defaults to none.
+All of SYN, FIN, RST and ACK must be unset.
+.El
+.Ss icmp-type <type> code <code> and ipv6-icmp-type <type> code <code>
+The rule only applies to ICMP or ICMPv6 packets with the specified type
+and code.
+This parameter is only valid for rules that cover protocols icmp or
+ipv6-icmp.
+The protocol and the icmp type indicator (icmp-type or ipv6-icmp-type)
+must match.
+.Ss allow-opts
+By default, packets which contain IP options are blocked.
+When
+.Em allow-opts
+is specified for a
+.Em pass
+rule, packets that pass the filter based on that rule (last matching)
+do so even if they contain IP options.
+For packets that match state, the rule that initially created the
+state is used.
+The implicit
+.Em pass
+rule that is used when a packet doesn't match any rules does not
+allow IP options.
+.Ss label <string>
+Adds a label (name) to the rule, which can be used to identify the rule.
+For instance,
+.Em pfctl -s labels
+shows per-rule statistics for rules that have labels.
+.Pp
+The following macros can be used in labels:
+.Pp
+.Bl -tag -width $srcaddr -compact -offset indent
+.It Em $srcaddr
+the source IP address.
+.It Em $dstaddr
+the destination IP address.
+.It Em $srcport
+the source port specification.
+.It Em $dstport
+the destination port specification.
+.It Em $proto
+the protocol name.
+.It Em $nr
+the rule number.
+.El
+.Pp
+Example:
+.Bd -literal
+    ips = "{ 1.2.3.4, 1.2.3.5 }"
+    pass in proto tcp from any to $ips port >1023 label "$dstaddr:$dstport"
+.Ed
+.Pp
+expands to
+.Bd -literal
+    pass in proto tcp from any to 1.2.3.4 port >1023 label "1.2.3.4:>1023"
+    pass in proto tcp from any to 1.2.3.5 port >1023 label "1.2.3.5:>1023"
+.Ed
+.Pp
+Note that evaluation takes place at parse time.
+.Sh NO
+The
+.Sq no
+option is to a NAT rule what the
+.Sq quick
+option is to a filter rule.
+This option causes matching packets to remain untranslated.
+.Sh ROUTING
+If a packet matches a rule with a route option set, the packet filter will
+route the packet according to the type of route option.
+.Ss fastroute
+The
+.Em fastroute
+option does a normal route lookup to find the next hop for the packet.
+.Ss route-to
+The
+.Em route-to
+option routes the packet to the specified interface with an optional address
+for the next hop.
+.Ss dup-to
+The
+.Em dup-to
+option creates a duplicate of the packet and routes it like
+.Em route-to.
+The original packet gets routed as it normally would.
+.Sh MACROS
+.Em pfctl
+supports macro definition and expansion like:
+.Bd -literal
+    ext_if = "kue0"
+    pass out on $ext_if           from any to any         keep state
+    pass in  on $ext_if proto tcp from any to any port 25 keep state
+.Ed
+.Pp
+Macro names must start with a letter and may contain letters, digits
+and underscores.
+Macros are not expanded recursively.
+.Sh STATEFUL INSPECTION
+.Em pf
+is a stateful packet filter, which means it can track the state of
+a connection.
+Instead of passing all traffic to port 25, for instance, one can pass
+only the initial packet and keep state.
+.Pp
+If a packet matches a pass ... keep state rule, the filter creates
+a state for this connection and automatically lets pass all following
+packets of that connection.
+.Pp
+Before any rules are evaluated, the filter checks whether the packet
+matches any state.
+If it does, the packet is passed without evaluation of any rules.
+.Pp
+States are removed after the connection is closed or has timed out.
+.Pp
+This has several advantages.
+Comparing a packet to a state involves checking its sequence numbers.
+If the sequence numbers are outside the narrow windows of expected
+values, the packet is dropped.
+This prevents spoofing attacks, where the attacker sends packets with
+a fake source address/port but doesn't know the connection's sequence
+numbers.
+.Pp
+Also, looking up states is usually faster than evaluating rules.
+If one has 50 rules, all of them are evaluated sequentially in O(n).
+Even with 50000 states, only 16 comparisons are needed to match a
+state, since states are stored in a binary search tree that allows
+searches in O(log2 n).
+.Pp
+For instance:
+.Bd -literal
+    block out all
+    block in  all
+    pass out proto tcp from any to any         flags S/SA keep state
+    pass in  proto tcp from any to any port 25 flags S/SA keep state
+.Ed
+.Pp
+This rule set blocks everything by default.
+Only outgoing connections and incoming connection to port 25 are allowed.
+The inital packet of each connection has the SYN flag set, will be passed
+and creates state.
+All further packets of these connections are passed if they match a state.
+.Pp
+Specifying flags S/SA restricts state creation to the initial SYN
+packet of the TCP handshake.
+One can also be less restrictive, and allow state creation from
+intermediate 
+.Pq non-SYN
+packets.
+This will cause
+.Em pf
+to synchronize to existing connections, for instance
+if one flushes the state table.
+.Pp
+For UDP, which is stateless by nature, keep state will create state
+as well.
+UDP packets are matched to states using only host addresses and ports.
+.Pp
+ICMP messages fall in two categories: ICMP error messages, which always
+refer to a TCP or UDP packet, are matched against the refered to connection.
+If one keeps state on a TCP connection, and an ICMP source quench message
+referring to this TCP connection arrives, it will be matched to the right
+state and get passed.
+.Pp
+For ICMP queries, keep state creates an ICMP state, and
+.Em pf
+knows how to match ICMP replies to states.
+For example
+.Bd -literal
+    pass out inet proto icmp all icmp-type echoreq keep state
+.Ed
+.Pp
+lets echo requests 
+.Pq pings
+out, creates state, and matches incoming echo replies correctly to states.
+.Pp
+Note: nat/rdr rules implicitly create state for connections.
+.Sh STATE MODULATION
+Much of the security derived from TCP is attributable to how well the
+initial sequence numbers (ISNs) are chosen.
+Some popular stack implementations choose
+.Cm very
+poor ISNs and thus are normally susceptible to ISN prediction exploits.
+By applying a "modulate state" rule to a TCP connection, 
+.Em pf
+will create a high quality random sequence number for each connection
+endpoint.
+.Pp
+The "modulate state" directive implicitly keeps state on the rule and is
+only applicable to TCP connections.
+.Pp
+For instance:
+.Bd -literal
+    block out all
+    block in  all
+    pass out proto tcp from any to any                    modulate state
+    pass in  proto tcp from any to any port 25 flags S/SA modulate state
+.Ed
+.Pp
+Caveat:  If
+.Em pf
+picks up an already established connection
+.Po
+the firewall was rebooted, the state table was flushed, ...
+.Pc
+it will not be able to safely modulate the state of that connection.
+.Em pf
+will fall back and operate as if "keep state" was specified instead.
+Without this fallback, modulation would cause each host to
+think that the other end had somehow lost sync.
+.Pp
+Caveat:  If the state table is flushed or the firewall is rebooted,
+currently modulated connections can not be continued or picked
+up again by the firewall.
+State modulation causes the firewall to phase
+shift the sequencing of each side of a connection
+.Po
+add a random number to each side.
+.Pc
+Both sides of the connection will notice, that its peer has suddenly
+shifted its sequence by a random amount. 
+Neither side
+will be able to recover and the connection will stall and eventually close.
+.Sh STATE OPTIONS
+Both "keep state" and "modulate state" support the following options:
+.Bl -tag -width timeout_seconds -compact
+.It Em max number
+Limits the number of concurrent states the rule may create.
+When this limit is reached, further packets matching the rule that would
+create state are dropped, until existing states time out.
+.It Em timeout seconds
+Changes the timeout values used for states created by this rule.
+For a list of all valid timeout names, see
+.Xr pfctl 8 .
+.El
+.Pp
+Multiple options can be specified, separated by commas:
+.Bd -literal
+    pass in proto tcp from any to any port www flags S/SA \\
+      keep state (max 100, tcp.established 60, tcp.closing 5)
+.Ed
+.Sh NORMALIZATION
+Packet normalization is invoked via the
+.Pa scrub
+directive.
+Normalization is used to sanitize packet content in such
+a way that there are no ambiguities in packet interpretation on
+the receiving side.
+.Pp
+The normalizer does IP fragment reassembly to prevent attacks
+that confuse intrusion detection systems by sending overlapping
+IP fragments.
+.Ss no-df
+Clears the
+.Pa dont-fragment
+bit from a matching ip packet.
+.Ss min-ttl <number>
+Enforces a minimum ttl for matching ip packets.
+.Ss max-mss <number>
+Enforces a maximum mss for matching tcp packets.
+.Pp
+Normalization occurs before filtering, scrub rules and pass/block
+rules are evaluated independently.
+Hence, their relative position in the rule set is not relevant,
+and packets can't be blocked before normalization.
+.Sh BLOCKING SPOOFED TRAFFIC
+"Spoofing" is the faking of IP addresses, typically for malicious
+purposes.
+The 
+.Pa antispoof
+directive expands to a set of filter rules which will block all 
+traffic with a source IP from the network(s) directly connected 
+to the specified interface(s) from entering the system through 
+any other interface.
+.Pp
+For example, the line
+.Bd -literal
+    antispoof for lo0
+.Ed
+.Pp
+expands to
+.Bd -literal
+    block in on ! lo0 inet from 127.0.0.1/8 to any 
+    block in on ! lo0 inet6 from ::1 to any 
+.Ed
+.Pp
+For non-loopback interfaces, there are additional rules to block incoming 
+packets with a source IP address identical to the interface's IP(s).
+For example, assuming the interface wi0 had an IP address of 10.0.0.1 and a
+netmask of 255.255.255.0,
+the line
+.Bd -literal
+    antispoof for wi0 inet
+.Ed
+.Pp
+expands to
+.Bd -literal
+    block in on ! wi0 inet from 10.0.0.1/24 to any 
+    block in inet from 10.0.0.1 to any 
+.Ed
+.Sh FRAGMENT HANDLING
+The size of IP datagrams (packets) can be significantly larger than the
+the maximum transmission unit (MTU) of the network.  In cases when it is
+necessary or more effecient to send such large packets, the large packet
+will be fragmented into many smaller packets that will each fit onto the
+wire.  Unfortunately for a firewalling device, only the first logical
+fragment will contain the necessary header information for the
+subprotocol that allows
+.Em pf
+to filter on things such as TCP ports or to perform NAT.
+.Pp
+There are four options for handling fragments in the packet filter:
+.Pp
+Using scrub rules, fragments can be reassembled by normalization.
+In this case, fragments are buffered until they form a complete
+packet, and only the completed packet is passed on to the filter.
+The advantage is that filter rules have to deal only with complete
+packets, and can ignore fragments.  The drawback of caching fragments
+is the additional memory cost.  But the full reassembly method is the
+only method that currently works with NAT.
+Full reassembly is triggered by the
+.Pa fragment reassemble
+modifier on a
+.Pa scrub
+rule.  This is the default behavior of a
+.Pa scrub
+rule if no fragmentation modifier is supplied.
+.Pp
+Scrub also has two additional methods to track fragments without the
+high memory cost of full reassembly.  The first is enabled via the
+.Pa fragment crop
+modifier.
+.Em pf
+will track the fragments and cache a small range descriptor.  Duplicate
+fragments are dropped and overlaps are cropped.  Thus data will only
+occur once on the wire with ambiguities resolving to the first occurance.
+Unlike the
+.Pa fragment reassemble
+modifier, fragments are not buffered, they are passed as soon as they
+are received.  This reassembly mechanism does not yet work with NAT.
+.Pp
+Scrub's other method is the
+.Pa fragment drop-ovl
+modifier.  It is almost identical to the
+.Pa fragment crop
+modifier except that all overlapping or duplicate fragments will be
+dropped and will cause the following corresponding fragments to be
+dropped as well.
+.Pp
+The alternative is to filter individual fragments with filter rules.
+If no scrub rule applies to a fragment, it is passed to the filter.
+Filter rules with matching IP header parameters decide whether the
+fragment is passed or blocked, in the same way as complete packets
+are filtered.
+Without reassembly, fragments can only be filtered based on IP header
+fields (source/destination address, protocol), since subprotocol header
+fields are not available (TCP/UDP port numbers, ICMP code/type).
+The
+.Pa fragment
+option can be used to restrict filter rules to apply only to
+fragments but not complete packets.
+Filter rules without the
+.Pa fragment
+option still apply to fragments, if they only specify IP header fields.
+For instance, the rule 'pass in proto tcp from any to any port 80' never
+applies to a fragment, even if the fragment is part of a TCP packet with
+destination port 80, because without reassembly, this information is not
+available for each fragment.
+This also means that fragments can't create new or match existing
+state table entries, which makes stateful filtering and address
+translations (NAT, redirection) for fragments impossible.
+.Pp
+It's also possible to reassemble only certain fragments by specifying
+source or destination addresses or protocols as parameters in scrub
+rules.
+.Pp
+In most cases, the benefits of reassembly outweigh the additional
+memory cost, and it's recommended to use scrub rules to reassemble
+all fragments via the
+.Pa fragment reassemble
+modifier.
+.Pp
+The memory allocated for fragment caching can be limited using
+.Xr pfctl 8 .
+Once this limit is reached, fragments that would have to be cached
+are dropped until other entries time out. The timeout value can
+also be adjusted.
+.Pp
+Currently, only IPv4 fragments are supported and IPv6 fragments
+are blocked unconditionally.
+.Sh FILTER EXAMPLES
+.Bd -literal
+# The external interface is kue0
+# (157.161.48.183, the only routable address)
+# and the private network is 10.0.0.0/8, for which we are doing NAT.
+
+# use a macro for the interface name, so it can be changed easily
+ext_if = "kue0"
+
+# normalize all incoming traffic
+scrub in on $ext_if all fragment reassemble
+
+# block and log everything by default
+block             out log on $ext_if           all
+block             in  log on $ext_if           all
+block return-rst  out log on $ext_if proto tcp all
+block return-rst  in  log on $ext_if proto tcp all
+block return-icmp out log on $ext_if proto udp all
+block return-icmp in  log on $ext_if proto udp all
+
+# block anything coming from source we have no back routes for
+block in from no-route to any
+
+# block and log outgoing packets that don't have our address as source,
+# they are either spoofed or something is misconfigured (NAT disabled,
+# for instance), we want to be nice and don't send out garbage.
+block out log quick on $ext_if from ! 157.161.48.183 to any
+
+# silently drop broadcasts (cable modem noise)
+block in quick on $ext_if from any to 255.255.255.255
+
+# block and log incoming packets from reserved address space and invalid
+# addresses, they are either spoofed or misconfigured, we can't reply to
+# them anyway (hence, no return-rst).
+block in log quick on $ext_if from { 10.0.0.0/8, 172.16.0.0/12, \\
+	192.168.0.0/16, 255.255.255.255/32 } to any
+
+# ICMP
+
+# pass out/in certain ICMP queries and keep state (ping)
+# state matching is done on host addresses and ICMP id (not type/code),
+# so replies (like 0/0 for 8/0) will match queries
+# ICMP error messages (which always refer to a TCP/UDP packet) are
+# handled by the TCP/UDP states
+pass out on $ext_if inet proto icmp all icmp-type 8 code 0 keep state
+pass in  on $ext_if inet proto icmp all icmp-type 8 code 0 keep state
+
+# UDP
+
+# pass out all UDP connections and keep state
+pass out on $ext_if proto udp all keep state
+
+# pass in certain UDP connections and keep state (DNS)
+pass in on $ext_if proto udp from any to any port domain keep state
+
+# TCP
+
+# pass out all TCP connections and modulate state
+pass out on $ext_if proto tcp all modulate state
+
+# pass in certain TCP connections and keep state (SSH, SMTP, DNS, IDENT)
+pass in on $ext_if proto tcp from any to any port { ssh, smtp, domain, \\
+	auth } flags S/SA keep state
+
+# pass in data mode connections for ftp-proxy running on this host.
+# (see ftp-proxy(8) for details)
+pass in on $ext_if proto tcp from any to 157.161.48.183 port >= 49152 \\
+	flags S/SA keep state
+
+.Ed
+.Sh NAT EXAMPLES
+This example maps incoming requests on port 80 to port 8080, on
+which Apache Tomcat is running (say Tomcat is not run as root,
+therefore lacks permission to bind to port 80).
+.Bd -literal
+# map tomcat on 8080 to appear to be on 80
+rdr on ne3 proto tcp from any to any port 80 -> 127.0.0.1 port 8080
+.Ed
+.Pp
+In the example below, vlan12 is configured for the 192.168.168.1;
+the machine translates all packets coming from 192.168.168.0/24 to 204.92.77.111
+when they are going out any interface except vlan12.
+This has the net effect of making traffic from the 192.168.168.0/24
+network appear as though it is the Internet routeable address
+204.92.77.111 to nodes behind any interface on the router except
+for the nodes on vlan12.
+(Thus, 192.168.168.1 can talk to the 192.168.168.0/24 nodes.)
+.Bd -literal
+nat on ! vlan12 from 192.168.168.0/24 to any -> 204.92.77.111
+.Ed
+.Pp
+In the example below, fxp1 is the outside interface; the machine sits between a
+fake internal 144.19.74.* network, and a routable external IP of 204.92.77.100.
+The "no nat" rule excludes protocol AH from being translated.
+.Bd -literal
+#NO NAT
+no nat on fxp1 proto ah from 144.19.74.0/24 to any
+nat on fxp1 from 144.19.74.0/24 to any -> 204.92.77.100
+.Ed
+.Pp
+In the example below, fxp0 is the internal interface.
+Packets bound
+for one specific server, as well as those generated by the sysadmins
+are not proxied, all other connections are.
+.Bd -literal
+# NO RDR
+no rdr on fxp0 from any        to $server port 80
+no rdr on fxp0 from $sysadmins to any     port 80
+   rdr on fxp0 from any        to any     port 80 -> 127.0.0.1 port 80
+.Ed
+.Pp
+This longer example uses both a NAT and a redirection.
+Interface kue0 is the outside interface, and its external address is
+157.161.48.183.
+Interface fxp0 is the inside interface, and we are running
+.Xr ftp-proxy 8
+listening for outbound ftp sessions captured to port 8081.
+.Bd -literal
+# NAT
+# translate outgoing packets' source addresses (any protocol)
+# in this case, any address but the gateway's external address is mapped
+nat on kue0 inet from ! (kue0) to any -> (kue0)
+
+# NAT PROXYING
+# map outgoing packets' source port to an assigned proxy port instead of
+# an arbitrary port
+# in this case, proxy outgoing isakmp with port 500 on the gateway
+nat on kue0 inet proto udp from any port = isakmp to any -> (kue0) \\
+	port 500
+
+# BINAT
+# translate outgoing packets' source address (any protocol)
+# translate incoming packets' destination address to an internal machine
+# (bidirectional)
+binat on kue0 from 10.1.2.150 to any -> (kue0)
+
+# RDR
+# translate incoming packets' destination addresses
+# as an example, redirect a TCP and UDP port to an internal machine
+rdr on kue0 inet proto tcp from any to (kue0) port 8080 -> 10.1.2.151 \\
+	port 22
+rdr on kue0 inet proto udp from any to (kue0) port 8080 -> 10.1.2.151 \\
+	port 53
+
+# RDR
+# translate outgoing ftp control connections to send them to localhost
+# for proxying with ftp-proxy(8) running on port 8081
+rdr on fxp0 proto tcp from any to any port 21 -> 127.0.0.1 port 8081
+.Ed
+.Sh GRAMMAR
+Syntax for
+.Em pf.conf
+in BNF:
+.Bd -literal
+line           = ( option | pf_rule | nat_rule | binat_rule | rdr_rule |
+		   antispoof_rule )
+
+option         = set ( [ "timeout" ( timeout | "{" timeout-list "}" ) ] |
+                       [ "optimization" [ "default" | "normal" | 
+				"high-latency" | "satellite" | 
+				"aggressive" | "conservative" ] ]
+                       [ "limit" ( limit | "{" limit-list "}" ) ] |
+                       [ "loginterface" ( interface-name | "none" ) ] ) .
+
+pf_rule        = action ( "in" | "out" )
+                 [ "log" | "log-all" ] [ "quick" ]
+                 [ "on" ifspec ] [ route ] [ af ] [ protospec ]
+                 hosts
+                 [ user ] [ group ] [ flags ]
+                 [ icmp-type | ipv6-icmp-type ]
+                 [ ( "keep" | "modulate" ) "state" [ "(" state-opts ")" ] ]
+                 [ "fragment" ] [ "no-df" ] [ "min-ttl" number ]
+                 [ "max-mss" number ] [ fragmentation ] [ "allow-opts" ]
+                 [ "label" string ] .
+
+nat_rule       = [ "no" ] "nat" "on" ifspec  [ af ] [ protospec ] hosts
+                 [ "->" address [ portspec ] ] .
+
+binat_rule     = [ "no" ] "binat" "on" interface-name [ af ]
+		 [ "proto" ( proto-name | proto-number ) ]
+		 "from" address "to" ipspec [ "->" address ] .
+
+rdr_rule       = [ "no" ] "rdr" "on" ifspec [ af ] [ protospec ]
+		 "from" ipspec "to" ipspec [ portspec ]
+		 [ "->" address [ portspec ] ] .
+
+antispoof_rule = "antispoof" [ "log" ] [ "quick" ]
+		 "for" ( interface-name | "{" interface-list "}" )
+		 [ af ] .
+
+action         = "pass" | "block" [ return ] | "scrub" .
+return         = "return-rst" [ "(" "ttl" number ")" ] |
+                 "return-icmp"
+                     [ "(" ( icmp-code-name | icmp-code-number ) ")" ] |
+                 "return-icmp6"
+                     [ "(" ( icmp-code-name | icmp-code-number ) ")" ] .
+
+ifspec         = ( [ "!" ] interface-name ) | "{" interface-list "}"
+interface-list = [ "!" ] interface-name [ [ "," ] interface-list ] .
+route          = "fastroute" |
+                 "route-to" "(" interface-name address ")" |
+                 "route-to" interface-name |
+                 "dup-to" "(" interface-name address ")" |
+                 "dup-to" interface-name
+af	       = "inet" | "inet6" .
+
+protospec      = "proto" ( proto-name | proto-number | "{" proto-list "}" ) .
+proto-list     = ( proto-name | proto-number ) [ [ "," ] proto-list ] .
+
+hosts          = "all" |
+                 "from" ( "any" | "no-route" | "self" | host |
+                 "{" host-list "}" ) [ port ]
+                 "to"   ( "any" | "no-route" | "self" | host |
+                 "{" host-list "}" ) [ port ] .
+
+ipspec         = "any" | host | "{" host-list "}" .
+host           = [ "!" ] address [ "/" mask-bits ] .
+address        = ( interface-name | "(" interface-name ")" | host-name |
+                   ipv4-dotted-quad | ipv6-coloned-hex ) .
+host-list      = host [ [ "," ] host-list ] .
+
+port           = "port" ( unary-op | binary-op | "{" op-list "}" ) .
+portspec       = "port" ( number | name ) [ ":" ( "*" | number | name ) ] .
+user           = "user" ( unary-op | binary-op | "{" op-list "}" ) .
+group          = "group" ( unary-op | binary-op | "{" op-list "}" ) .
+
+unary-op       = [ "=" | "!=" | "<" | "<=" | ">" | ">=" ]
+                 ( name | number ) .
+binary-op      = number ( "<>" | "><" ) number .
+op-list        = ( unary-op | binary-op ) [ [ "," ] op-list ] .
+
+flags          = "flags" ( flag-set | flag-set "/" flag-set |
+                           "/" flag-set ) .
+flag-set       = [ "F" ] [ "S" ] [ "R" ] [ "P" ] [ "A" ] [ "U" ] [ "E" ]
+                 [ "W" ] .
+
+icmp-type      = "icmp-type" ( icmp-type-code | "{" icmp-list "}" ) . 
+ipv6-icmp-type = "ipv6-icmp-type" ( icmp-type-code | "{" icmp-list "}" ) . 
+icmp-type-code = ( icmp-type-name | icmp-type-number )
+                 [ "code" ( icmp-code-name | icmp-code-number ) ] .
+icmp-list      = icmp-type-code [ [ "," ] icmp-list ] . 
+
+state-opts     = state-opt [ [ "," ] state-opts ] .
+state-opt      = ( "max" seconds ) | ( timeout seconds ) .
+
+fragmentation  = [ "fragment reassemble" | "fragment crop" |
+                   "fragment drop-ovl" ] .
+
+timeout-list   = timeout [ [ "," ] timeout-list ] .
+timeout        = ( "tcp.first" | "tcp.opening" | "tcp.established" |
+                 "tcp.closing" | "tcp.finwait" | "tcp.closed" |
+                 "udp.first" | "udp.single" | "udp.multiple" |
+                 "icmp.first" | "icmp.error" |
+                 "other.first" | "other.multiple" ) seconds .
+seconds        = number .
+
+limit-list     = limit [ [ "," ] limit-list ] . 
+limit          = ( "states" | "frags" ) number .
+.Ed
+.Sh FILES
+.Bl -tag -width "/etc/pf.conf" -compact
+.It Pa /etc/hosts
+.It Pa /etc/pf.conf
+.It Pa /etc/protocols
+.It Pa /etc/services
+.El
+.Sh SEE ALSO
+.Xr pf 4 ,
+.Xr hosts 5 ,
+.Xr protocols 5 ,
+.Xr services 5 ,
+.Xr ftp-proxy 8 ,
+.Xr pfctl 8 ,
+.Xr pflogd 8
+.Sh HISTORY
+The
+.Nm
+file format appeared in
+.Ox 3.0 .
