@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/boot.c,v 1.15 1997/08/22 00:41:27 mickey Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/boot.c,v 1.16 1997/09/02 21:37:38 mickey Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -45,7 +45,6 @@ const char *const kernels[] = {
 };
 
 extern	const char version[];
-u_int	cnvmem, extmem;
 struct cmd_state cmd;
 
 void
