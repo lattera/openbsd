@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.389 2003/09/01 15:08:39 henning Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.389.2.1 2003/10/31 06:06:29 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1897,7 +1897,7 @@ pf_get_translation(struct pf_pdesc *pd, struct mbuf *m, int off, int direction,
 				else
 					PF_POOLMASK(naddr,
 					    &r->src.addr.v.a.addr,
-					    &r->src.addr.v.a.mask, saddr,
+					    &r->src.addr.v.a.mask, daddr,
 					    pd->af);
 				break;
 			}
