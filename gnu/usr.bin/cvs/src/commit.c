@@ -19,6 +19,7 @@
 #include "getline.h"
 #include "edit.h"
 #include "fileattr.h"
+#include "hardlink.h"
 
 static Dtype check_direntproc PROTO ((void *callerdat, char *dir,
 				      char *repos, char *update_dir,
@@ -80,7 +81,6 @@ static char *logfile;
 static List *mulist;
 static char *message;
 static time_t last_register_time;
-
 
 static const char *const commit_usage[] =
 {
@@ -622,9 +622,22 @@ commit (argc, argv)
     lock_tree_for_write (argc, argv, local, aflag);
 
     /*
-     * Set up the master update list
+     * Set up the master update list and hard link list
      */
     mulist = getlist ();
+
+#ifdef PRESERVE_PERMISSIONS_SUPPORT
+    if (preserve_perms)
+    {
+	hardlist = getlist ();
+
+	/*
+	 * We need to save the working directory so that
+	 * check_fileproc can construct a full pathname for each file.
+	 */
+	working_dir = xgetwd();
+    }
+#endif
 
     /*
      * Run the recursion processor to verify the files are all up-to-date
@@ -637,6 +650,17 @@ commit (argc, argv)
 	Lock_Cleanup ();
 	error (1, 0, "correct above errors first!");
     }
+
+#ifdef PRESERVE_PERMISSIONS_SUPPORT
+    if (preserve_perms)
+    {
+	/* hardlist now includes a complete index of the files
+	   to be committed, indexed by inode.  For each inode,
+	   compile a list of the files that are linked to it,
+	   and save this list in each file's hardlink_info node. */
+	(void) walklist (hardlist, cache_hardlinks_proc, NULL);
+    }
+#endif
 
     /*
      * Run the recursion processor to commit the files
@@ -992,6 +1016,43 @@ warning: file `%s' seems to still contain conflict indicators",
 		ci->rev = (char *) NULL;
 	    ci->tag = xstrdup (vers->tag);
 	    ci->options = xstrdup(vers->options);
+
+#ifdef PRESERVE_PERMISSIONS_SUPPORT
+	    if (preserve_perms)
+	    {
+		/* Add this file to hardlist, indexed on its inode.  When
+		   we are done, we can find out what files are hardlinked
+		   to a given file by looking up its inode in hardlist. */
+		char *fullpath;
+		Node *linkp;
+		struct hardlink_info *hlinfo;
+
+		/* Get the full pathname of the current file. */
+		fullpath = xmalloc (strlen(working_dir) +
+				    strlen(finfo->fullname) + 2);
+		sprintf (fullpath, "%s/%s", working_dir, finfo->fullname);
+
+		/* To permit following links in subdirectories, files
+                   are keyed on finfo->fullname, not on finfo->name. */
+		linkp = lookup_file_by_inode (fullpath);
+
+		/* If linkp is NULL, the file doesn't exist... maybe
+		   we're doing a remove operation? */
+		if (linkp != NULL)
+		{
+		    /* Create a new hardlink_info node, which will record
+		       the current file's status and the links listed in its
+		       `hardlinks' delta field.  We will append this
+		       hardlink_info node to the appropriate hardlist entry. */
+		    hlinfo = (struct hardlink_info *)
+			xmalloc (sizeof (struct hardlink_info));
+		    hlinfo->status = status;
+		    hlinfo->links = NULL;
+		    linkp->data = (char *) hlinfo;
+		}
+	    }
+#endif
+
 	    p->data = (char *) ci;
 	    (void) addnode (cilist, p);
 	    break;
@@ -1280,8 +1341,9 @@ commit_fileproc (finfo)
 	    server_scratch_entry_only ();
 			    SERVER_UPDATED,
 
-			    (struct stat *) NULL,
-			    /* Doesn't matter, it won't get checked.  */
+			    (mode_t) -1,
+			    (unsigned char *) NULL,
+			    (struct buffer *) NULL);
 			    SERVER_UPDATED, (struct stat *) NULL,
 			    (unsigned char *) NULL);
 	}
@@ -1645,9 +1707,8 @@ remove_file (finfo, tag, message)
 			    (RCSCHECKOUTPROC) NULL, (void *) NULL);
     retcode = RCS_checkout (rcs, "", rev ? corev : NULL, NULL, RUN_TTY,
                             lockflag, 1);
-    if (retcode != 0)
-    {
-		   "failed to check out `%s'", finfo->fullname);
+	error (0, 0,
+	       "failed to check out `%s'", finfo->fullname);
 	    error (0, retcode == -1 ? errno : 0,
 		   "failed to check out `%s'", rcs);
 	return (1);
@@ -1981,13 +2042,21 @@ internal error: `%s' didn't move out of the attic",
     /* when adding a file for the first time, and using a tag, we need
        to create a dead revision on the trunk.  */
     if (tag && newfile)
+	FILE *fp;
     {
 	char *tmp;
 	fname = xmalloc (strlen (file) + sizeof (CVSADM)
 			 + sizeof (CVSPREFIX) + 10);
 
 	/* move the new file out of the way. */
-	(void) sprintf (fname, "%s/%s%s", CVSADM, CVSPREFIX, file);
+
+	/* Create empty FILE.  Can't use copy_file with a DEVNULL
+	   argument -- copy_file now ignores device files. */
+	fp = fopen (file, "w");
+	if (fp == NULL)
+	    error (1, errno, "cannot open %s for writing", file);
+	if (fclose (fp) < 0)
+	    error (0, errno, "cannot close %s", file);
 	rename_file (file, fname);
 	copy_file (DEVNULL, file);
 
@@ -2156,18 +2225,31 @@ static int
     }
     else
     {
-    RCS_rewrite (rcs, NULL, NULL);
+
+    /* We used to call RCS_rewrite here, and that might seem
+       appropriate in order to write out the locked revision
+       information.  However, such a call would actually serve no
+       purpose.  CVS locks will prevent any interference from other
+       CVS processes.  The comment above rcs_internal_lockfile
+       explains that it is already unsafe to use RCS and CVS
+       simultaneously.  It follows that writing out the locked
+       revision information here would add no additional security.
+
+       If we ever do care about it, the proper fix is to create the
+       RCS lock file before calling this function, and maintain it
+       until the checkin is complete.
+
+       The call to RCS_lock is still required at present, since in
+       some cases RCS_checkin will determine which revision to check
+       in by looking for a lock.  FIXME: This is rather roundabout,
+       and a more straightforward approach would probably be easier to
+       understand.  */
 	(void) RCS_lock(rcs, rev, 1);
     }
 
 	if (sbranch != NULL)
 	    free (sbranch);
-    if (err == 0)
-    {
-	    sbranch = branch;
-	    (void) strcpy (sbranch, branch);
-	    free (branch);
-	    sbranch = NULL;
+	sbranch = branch;
 	else
 	    sbranch[0] = '\0';
 	return (0);
@@ -2182,7 +2264,8 @@ static int
     return (1);
 /* Called when "add"ing files to the RCS respository.  It doesn't seem to
    be possible to get RCS to use the right mode, so we change it after
-   the fact.  */
+   the fact.  TODO: now that RCS has been librarified, we have the power
+   to change this. */
 
  * initialized with "rcs -i".
  */
@@ -2192,6 +2275,12 @@ fix_rcs_modes (rcs, user)
     char *user;
     mode_t rcs_mode;
 {
+#ifdef PRESERVE_PERMISSIONS_SUPPORT
+    /* Do ye nothing to the modes on a symbolic link. */
+    if (preserve_perms && islink (user))
+	return;
+#endif
+
     if (CVS_STAT (user, &sb) < 0)
     {
 	/* FIXME: Should be ->fullname.  */
@@ -2200,6 +2289,9 @@ fix_rcs_modes (rcs, user)
     }
 
     /* Now we compute the new mode.
+
+       TODO: decide whether this whole thing can/should be skipped
+       when `preserve_perms' is set.  Almost certainly so. -twp
 
        The algorithm that we use is:
 
