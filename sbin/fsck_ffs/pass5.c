@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/fsck_ffs/pass5.c,v 1.13 2001/11/05 07:39:16 mpech Exp $	*/
+/*	$OpenBSD: src/sbin/fsck_ffs/pass5.c,v 1.14 2001/12/01 19:04:41 deraadt Exp $	*/
 /*	$NetBSD: pass5.c,v 1.16 1996/09/27 22:45:18 christos Exp $	*/
 
 /*
@@ -38,13 +38,14 @@
 #if 0
 static char sccsid[] = "@(#)pass5.c	8.6 (Berkeley) 11/30/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/fsck_ffs/pass5.c,v 1.13 2001/11/05 07:39:16 mpech Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/fsck_ffs/pass5.c,v 1.14 2001/12/01 19:04:41 deraadt Exp $";
 #endif
 #endif /* not lint */
 
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/lock.h>
+#include <sys/ucred.h>
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #include <ufs/ufs/quota.h>
