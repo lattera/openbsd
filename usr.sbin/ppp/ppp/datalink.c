@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: datalink.c,v 1.1 1998/08/31 00:22:19 brian Exp $
+ *	$Id: datalink.c,v 1.2 1998/10/29 02:21:44 brian Exp $
  */
 
 #include <sys/types.h>
@@ -811,6 +811,7 @@ datalink_Destroy(struct datalink *dl)
     }
   }
 
+  timer_Stop(&dl->dial_timer);
   result = dl->next;
   modem_Destroy(dl->physical);
   free(dl->name);
