@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.9 2004/06/11 19:03:23 drahn Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.4.2.10 2004/06/11 19:06:40 drahn Exp $	*/
 /*	$NetBSD: uvm_meter.c,v 1.21 2001/07/14 06:36:03 matt Exp $	*/
 
 /*
@@ -110,6 +110,7 @@ uvm_loadav(avg)
 		/* fall through */
 		case SRUN:
 		case SIDL:
+		case SONPROC:
 			nrun++;
 		}
 	}
