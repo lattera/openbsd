@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc_r/include/Attic/sched.h,v 1.2 1999/03/10 10:03:52 d Exp $	*/
 #ifndef _SCHED_H_
 #define _SCHED_H_
 
