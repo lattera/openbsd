@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/rtadvd/timer.h,v 1.2 1999/12/11 10:33:30 itojun Exp $	*/
+/*	$OpenBSD: src/usr.sbin/rtadvd/timer.h,v 1.3 2000/05/23 11:23:24 itojun Exp $	*/
+/*	$KAME: timer.h,v 1.2 2000/05/16 13:34:14 itojun Exp $	*/
 
 /*
  * Copyright (C) 1998 WIDE Project.
