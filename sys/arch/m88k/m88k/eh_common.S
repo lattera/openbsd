@@ -1,4 +1,4 @@
-/*   $OpenBSD: src/sys/arch/m88k/m88k/eh_common.S,v 1.4 2004/08/02 08:34:59 miod Exp $	*/
+/*   $OpenBSD: src/sys/arch/m88k/m88k/eh_common.S,v 1.5 2004/08/05 21:34:11 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -207,9 +207,6 @@
 
 #include <machine/param.h>
 #include <machine/asm.h>
-#ifdef MVME188
-#include <machine/m8820x.h>
-#endif
 #include <machine/trap.h>
 
 /*
