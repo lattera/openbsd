@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4.2.2 1996/09/24 09:35:51 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/start.S,v 1.4.2.3 1996/09/26 12:11:40 mickey Exp $	*/
 /*	$NetBSD: start.S,v 1.12 1995/01/18 17:34:18 mycroft Exp $	*/
 
 /*
@@ -68,14 +68,16 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <machine/asm.h>
 
+BOOTSEG		=	0x0100	# boot placement
 BOOTSTACK	=	0xfffc	# boot stack
 BOOTBIOS	=	0x7c0	# segment where we loaded
 BOOTRELOC	=	0x7a0	# segment where to relocate
 SIGNATURE	=	0xaa55	# MBR signature
 NUMPART		=	4	# number of partitions in partition table
 PARTSZ		=	16	# each partition table entry is 16 bytes
-BSDPART		=	0xA5	# value of boot_ind, means bsd partition
-BOOTABLE	=	0x80	# value of boot_flag, means bootable partition
+BSDPART		=	0xA5	# OpenBSD partition
+OLDBSDPART	=	0xA5	# BSD partition
+BOOTABLE	=	0x80	# bootable partition
 CHAR_S		=	'S'	# started
 CHAR_2		=	'2'	# loading 2nd stage boot
 CHAR_G		=	'G'	# jumping to it
@@ -97,6 +99,7 @@ CHAR_B		=	':'	# booting
 
 	.file	"start.S"
 	.code16
+	.globl	boot2
 
 ENTRY(boot1)
 #ifndef DOSREAD
@@ -110,7 +113,7 @@ ENTRY(boot1)
 
 start1:
 	# set up stack(%ss:%esp)
-	movw	$BOOTBIOS, %ax
+	movw	$BOOTSEG, %ax
 	movw	%ax, %ss
 	movl	$BOOTSTACK, %esp
 
@@ -133,25 +136,24 @@ start1:
 
 	# bootstrap passes us drive number in %dl
 	testb	$0x80, %dl
-	jnz	hd
+	jnz	1f
 #endif
 #ifndef	NOFD
-fd:
 	DBGMSG(CHAR_F)
 	# set up %ds
 	pushw	%cs
 	popw	%ds
-	movw	$0x0002, %cx	# cyl 0, sector 1
-	movb	$0x00, %dh	# head
-	jmp	doload
+	movw	$0x0001, %cx	# cyl 0, sector 1
+	xorb	%dh, %dh	# head
+	jmp	3f
 #endif
 #ifndef	NOHD
-hd:
+1:
 	DBGMSG(CHAR_H)
 	# movb	4(%si), %al	# partition type
 	.byte   0x8a, 0x44, 0x04
 	cmpb	$BSDPART, %al
-	je	found		# we are not a MBR
+	je	2f		# we are not a MBR
 
 	# set up %ds
 	pushw	%cs
@@ -161,27 +163,27 @@ hd:
 	.byte	0x81, 0xbf
 	.word	signature
 	.word	SIGNATURE
-	je	pt_ok
+	je	1f
 	DBGMSG(CHAR_P)
 
-pt_ok:
+1:
 	/* find the first active partition */
 	DBGMSG(CHAR_L)
 	movw	$pt, %si
 	movw	$NUMPART, %cx
-again:
+1:
 	# movb	(%si), %al
 	.byte	0x8a, 0x44, 0x00
 	cmpb	$BOOTABLE, %al
-	je	found
+	je	2f
 	addw	$PARTSZ, %si
-	loop	again
+	loop	1b
 	movw	$enoboot, %si
 	jmp	err_stop
 #endif
 
 #ifndef	NOHD
-found:
+2:
 	DBGMSG(CHAR_2)
 	# movb	1(%si), %dh	# head
 	.byte   0x8a, 0x74, 0x01
@@ -194,9 +196,9 @@ found:
 	pushw	%cs
 	popw	%ds
 	cmpb	$BSDPART, %al
-	jne	foreign	/* foreign partition */
+	jne	1f	/* foreign partition */
 #endif
-doload:
+3:
 	call	load
 
 	DBGMSG(CHAR_G)
@@ -205,16 +207,15 @@ doload:
 	# After ljmp, %cs is BOOTBIOS and boot1 (512 bytes) will be used
 	# as an internal buffer "intbuf".
 
-	jmp	boot2
+	ljmp	$BOOTSEG, $boot2
 	/* not reached */
 
 #ifndef	NOHD
-foreign:
+1:
 	# relocate the code to leave the space for next stage
 	DBGMSG(CHAR_R)
 	pushw	%es
 	pushw	%cx
-	pushw	%si
 	pushw	$BOOTRELOC
 	popw	%es
 	xorw	%si, %si
@@ -224,7 +225,6 @@ foreign:
 	rep
 	movsw
 	popw	%cx
-	popw	%si
 	popw	%es
 	# jump to the relocated code
 	ljmp $BOOTRELOC, $start2
@@ -270,7 +270,7 @@ err_stop:
 #
 #	message: write the error message in %ds:%si to console
 #
-
+	.globl	chr
 chr:
 /*
 #ifndef SERIAL
@@ -331,6 +331,7 @@ done:
 	jmp	boot2
 #endif /* DOSREAD */
 
+#if 0
 /* Conventional GDT indexes. */
 BOOT_CS_INDEX	=	3
 BOOT_CS16_INDEX	=	5
@@ -349,7 +350,7 @@ boot2:
 
 	/* fix up GDT entries for bootstrap */
 #define FIXUP(gdt_index) \
-	movl	%eax, _C_LABEL(Gdt)+(8*gdt_index)+2;  /* actually movw %ax */ \
+	movw	%ax, _C_LABEL(Gdt)+(8*gdt_index)+2; \
 	movb	%bl, _C_LABEL(Gdt)+(8*gdt_index)+4
 
 	shldl	$16, %eax, %ebx
@@ -361,7 +362,6 @@ boot2:
 	addl	$_C_LABEL(Gdt), %eax
 	movl	%eax, _C_LABEL(Gdtr)+2
 
-	DBGMSG(CHAR_B)
 	/* change to protected mode */
 	call	_C_LABEL(real_to_prot)
 
@@ -377,9 +377,8 @@ boot2:
 
 	movzbl	%dl, %edx	/* discard head (%dh) and random high bits */
 	pushl	%edx
-	jmp	_C_LABEL(boot)
-	#call	_C_LABEL(boot)
-
+	call	_C_LABEL(boot)
+#endif
 stop:
 	cli
 	hlt
@@ -412,3 +411,7 @@ signature:
 	.globl	_disklabel
 _disklabel:
 	. = _C_LABEL(boot1) + 0x400	
+
+
+	.asciz	"boot2"
+

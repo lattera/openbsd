@@ -52,14 +52,8 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include <machine/asm.h>
-
-#define	P2R \
-	call	_C_LABEL(prot_to_real) ; \
-	.code16
-	
-#define	R2P \
-	call	_C_LABEL(real_to_prot) ; \
-	.code32
+#define	addr32	.byte 0x67
+#define	data32	.byte 0x66
 
 /*
 # BIOS call "INT 0x13 Function 0x2" to read sectors from disk into memory
@@ -90,14 +84,17 @@ ENTRY(biosread)
 	movb	8(%ebp), %dl	# device
 	movl	28(%ebp), %ebx	# offset
 				# prot_to_real will set %es to BOOTSEG
-	P2R
+
+	call	_C_LABEL(prot_to_real)	# enter real mode
 
 	movb	$0x2, %ah	# subfunction
+	addr32
 	movb	24(%ebp), %al	# number of sectors
 	int	$0x13
 	setc	%bl
 
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot) # back to protected mode
 
 	xorl	%eax, %eax
 	movb	%bl, %al	# return value in %ax
@@ -118,18 +115,18 @@ ENTRY(biosread)
 #             %cl = attribute mask of files to look for
 */
 ENTRY(dosexit)
-	pushl	%ebp
-	movl	%esp, %ebp
-	pushl   %ebx
-	pushl   %esi
-	pushl   %edi
-	movl    0x8(%ebp), %ebx # exit code
-	P2R
-	movb    %bl, %al        # exit code
-	movb    $0x4c , %ah     # Exit
-	int     $0x21
-	cli
-	hlt
+      pushl %ebp
+      movl  %esp, %ebp
+      pushl   %ebx
+      pushl   %esi
+      pushl   %edi
+      movl    0x8(%ebp), %ebx # exit code
+      call    _C_LABEL(prot_to_real)  # enter real mode
+      movb    %bl, %al        # exit code
+      movb    $0x4c , %ah     # Exit
+      int     $0x21
+      cli
+      hlt
 
 ENTRY(dosopen)
       pushl %ebp
@@ -139,20 +136,19 @@ ENTRY(dosopen)
       pushl   %edi
       movl    0x8(%ebp), %edx # File name.
       movb    $0x0 , %cl      # Attribute mask.
-
-      P2R
-
+      call    _C_LABEL(prot_to_real)  # enter real mode
       movb    $0x3d, %ah      # Open existing file.
       movb    $0x0 , %al      # Compatibility mode
       int     $0x21
       jnc     ok1
+      addr32
       movl    %eax, _C_LABEL(doserrno)
+      data32
       movl    $-1, %eax
 ok1:
       pushl   %eax
-
-      R2P
-
+      data32
+      call    _C_LABEL(real_to_prot) # back to protected mode
       xorl    %eax, %eax
       popw    %ax             # return value in %eax
       popl    %edi
@@ -160,7 +156,6 @@ ok1:
       popl    %ebx
       popl    %ebp
       ret
-
 ENTRY(dosread)
       pushl %ebp
       movl  %esp, %ebp
@@ -170,20 +165,19 @@ ENTRY(dosread)
       movl    0x8(%ebp), %ebx # File handle
       movl    0xc(%ebp), %edx # Buffer.
       movl    0x10(%ebp) , %ecx       # Bytes to read
-
-      P2R
-
+      call    _C_LABEL(prot_to_real)  # enter real mode
       movb    $0x3f, %ah      # Read from file or device
       movb    $0x0 , %al      # Compatibility mode
       int     $0x21
       jnc     ok2
+      addr32
       movl    %eax, _C_LABEL(doserrno)
+      data32
       movl    $-1, %eax
 ok2:
       pushl   %eax
-
-      R2P
-
+      data32
+      call    _C_LABEL(real_to_prot) # back to protected mode
       xorl    %eax, %eax
       popw    %ax             # return value in %eax
       popl    %edi
@@ -191,34 +185,33 @@ ok2:
       popl    %ebx
       popl    %ebp
       ret
-
 ENTRY(dosclose)
-	pushl %ebp
-	movl  %esp, %ebp
-	pushl   %ebx
-	pushl   %esi
-	pushl   %edi
-	movl    0x8(%ebp), %ebx # File handle
-
-	P2R
-
-	movw    $0x003e, %ax      # Close file.
-	int     $0x21
-	jnc     ok3
-	movl    %eax, _C_LABEL(doserrno)
-	movl    $-1, %eax
+      pushl %ebp
+      movl  %esp, %ebp
+      pushl   %ebx
+      pushl   %esi
+      pushl   %edi
+      movl    0x8(%ebp), %ebx # File handle
+      call    _C_LABEL(prot_to_real)  # enter real mode
+      movb    $0x3e, %ah      # Close file.
+      movb    $0x0 , %al      # Compatibility mode
+      int     $0x21
+      jnc     ok3
+      addr32
+      movl    %eax, _C_LABEL(doserrno)
+      data32
+      movl    $-1, %eax
 ok3:
-	pushl	%eax	# real_to_prot uses %eax
-
-	R2P
-
-	popl	%eax
-	movzwl	%ax, %eax
-	popl	%edi
-	popl	%esi
-	popl	%ebx
-	popl	%ebp
-	ret
+      pushl   %eax
+      data32
+      call    _C_LABEL(real_to_prot) # back to protected mode
+      xorl    %eax, %eax
+      popw    %ax             # return value in %eax
+      popl    %edi
+      popl    %esi
+      popl    %ebx
+      popl    %ebp
+      ret
 #endif
 /*
 #ifndef SERIAL
@@ -243,21 +236,23 @@ ENTRY(putc)
 
 	movb	8(%ebp), %cl
 
-	P2R
+	call	_C_LABEL(prot_to_real)
 
 	movb	%cl, %al
 
 #ifndef SERIAL
 	movb	$0x0e, %ah
-	movw	$0x0001, %bx
+	data32
+	movl	$0x0001, %ebx
 	int	$0x10		# display a byte
 #else
 	movb	$0x01, %ah
-	xorw	%dx, %dx
+	xorl	%edx, %edx
 	int	$0x14		# display a byte
 #endif
 
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot)
 
 	popl	%edi
 	popl	%esi
@@ -287,20 +282,21 @@ ENTRY(getc)
 	pushl	%esi
 	pushl	%edi
 
-	P2R
+	call	_C_LABEL(prot_to_real)
 
 #ifndef SERIAL
 	movb	$0x00, %ah
 	int	$0x16
 #else
 	movb	$0x02, %ah
-	xorw	%dx, %dx
+	xorl	%edx, %edx
 	int	$0x14
 #endif
 
 	movb	%al, %bl	# real_to_prot uses %eax
 
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot)
 
 	xorl	%eax, %eax
 	movb	%bl, %al
@@ -338,7 +334,7 @@ ENTRY(ischar)
 	pushl	%esi
 	pushl	%edi
 
-	R2P
+	call	_C_LABEL(prot_to_real)
 
 #ifndef SERIAL
 	movb	$0x01, %ah
@@ -346,16 +342,18 @@ ENTRY(ischar)
 	setnz	%ah
 #else
 	movb	$0x03, %ah
-	xorw	%dx, %dx
+	xorl	%edx, %edx
 	int	$0x14
 	andb	$0x1f, %ah
 #endif
 
 	movb	%ah, %bl	# real_to_prot uses %eax
 
-	P2R
+	data32
+	call	_C_LABEL(real_to_prot)
 
-	movzbl	%bl, %eax
+	xorl	%eax, %eax
+	movb	%bl, %al
 
 	popl	%edi
 	popl	%esi
@@ -379,7 +377,7 @@ ENTRY(get_diskinfo)
 
 	movb	8(%ebp), %dl		# diskinfo(drive #)
 
-	P2R
+	call	_C_LABEL(prot_to_real)	# enter real mode
 
 	movb	$0x08, %ah		# ask for disk info
 	int	$0x13
@@ -401,7 +399,8 @@ ENTRY(get_diskinfo)
 	# carry = 0
 
 ok:
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot)	# back to protected mode
 
 	xorl	%eax, %eax
 
@@ -435,12 +434,14 @@ ENTRY(memsize)
 
 	movl	8(%ebp), %ebx
 
-	P2R
+	call	_C_LABEL(prot_to_real)	# enter real mode
 
 	testb	%bl, %bl
+	data32
 	jnz	xext
 	
 	int	$0x12
+	data32
 	jmp	xdone
 
 xext:
@@ -448,11 +449,12 @@ xext:
 	int	$0x15
 
 xdone:
-	pushl	%eax
+	movl	%eax, %ebx
 
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot)
 
-	popl	%eax
+	movl	%ebx, %eax
 	popl	%edi
 	popl	%esi
 	popl	%ebx
@@ -478,18 +480,19 @@ ENTRY(usleep)
 	movw	8(%ebp), %dx
 	movw	10(%ebp), %cx
 
-	P2R
+	call	_C_LABEL(prot_to_real)
 
 	movb	$0x86, %ah
 	int	$0x15
 	setnc	%ah
 
-	pushl	%eax	# real_to_prot uses %eax
+	movb	%ah, %bl	# real_to_prot uses %eax
 
-	R2P
+	data32
+	call	_C_LABEL(real_to_prot)
 
-	popl	%eax
-	movzbl	%al, %eax
+	xorl	%eax, %eax
+	movb	%bl, %al
 
 	popl	%ebx
 	popl	%ebp

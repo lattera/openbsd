@@ -30,15 +30,9 @@
 
 #include <sys/types.h>
 #include <machine/pio.h>
+#include <stand.h>
 
 void gateA20 __P((int on));
-/*void printf __P((const char *format, int data));*/ /* not quite right XXX */
-void putchar __P((int c));
-int gets __P((char *buf));
-int strcmp __P((const char *s1, const char *s2));
-void bcopy __P((char *from, char *to, int len));
-int awaitkey __P((int seconds));
-void twiddle __P((void));
 
 #define K_RDWR 		0x60		/* keyboard data & cmds (read/write) */
 #define K_STATUS 	0x64		/* keyboard status */
@@ -90,104 +84,5 @@ putchar(c)
 	if (c == '\n')
 		putc('\r');
 	putc(c);
-}
-
-int
-gets(buf)
-	char *buf;
-{
-	char *ptr = buf;
-	static char hadchar=0;
-
-#ifdef DOSREAD
-	/*
-	 *      Simulate keyboard input of the command line arguments.
-	 */
-	static int first=1;
-	int hadarg=0;
-
-	if (first) {
-		char *arg = (char *) 0x80;
-		int argcnt = *arg++;
-		while (argcnt && *arg==' ') {
-			arg++;
-			argcnt--;
-		}
-		while (argcnt--) {
-			if (*arg>='A' && *arg<='Z')
-				*arg += 'a' - 'A';
-			putchar(*arg);
-			*ptr++ = *arg++;
-			hadarg=1;
-		}
-		first=0;
-	}
-#endif
-	for (;;) {
-		register int c = getc();
-		hadchar=1;
-#ifdef DOSREAD
-		if (c == 3 || c== 27 ) {
-			printf("Exiting\n");
-			dosexit(0);
-			printf("Exiting failed\n");
-		}
-#endif
-		if (c == '\n' || c == '\r') {
-			putchar('\n');
-			*ptr = '\0';
-			return 1;
-		} else if (c == '\b' || c == '\177') {
-			if (ptr > buf) {
-				putchar('\b');
-#ifdef DOSREAD
-      if (hadarg) {
-        putchar('\n');
-        *ptr=0;
-        return 1;
-      }
-#endif
-				putchar(' ');
-				putchar('\b');
-				ptr--;
-			}
-		} else {
-			putchar(c);
-			*ptr++ = c;
-		}
-	}
-
-	/* shouldn't ever be reached; we have to return in the loop. */
-}
-
-/* Number of milliseconds to sleep during each microsleep */
-#define NAPTIME 50
-
-/*
- * awaitkey takes a number of seconds to wait for a key to be
- * struck. If a key is struck during the period, it returns true, else
- * it returns false. It returns (nearly) as soon as the key is
- * hit. Note that it does something only slightly smarter than busy waiting.
- */
-int
-awaitkey(seconds)
-	int seconds;
-{
-	int i;
-
-	/*
-	 * We sleep for brief periods (typically 50 milliseconds, set
-	 * by NAPTIME), polling the input buffer at the end of
-	 * each period.
-	 */
-	for (i = ((seconds*1000)/NAPTIME); i > 0; i--) {
-		/* multiply by 1000 to get microseconds. */
-		usleep(NAPTIME*1000);
-		if (ischar())
-			break;
-	}
-
-	/* If a character was hit, "i" will still be non-zero. */
-	return (i != 0);
 }
 

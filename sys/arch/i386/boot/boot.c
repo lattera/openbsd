@@ -63,14 +63,10 @@ int cflag;
 #endif
 char *name;
 char *names[] = {
-	"/bsd", "/obsd", "/bsd.old",
+	"/boot", "/oboot", "/boot.old",
 };
 #define NUMNAMES	(sizeof(names)/sizeof(char *))
 
-/* Number of seconds that prompt should wait during boot */
-#define PROMPTWAIT 5
-
-static void getbootdev __P((int *howto));
 static void loadprog __P((int howto));
 
 extern char version[];
@@ -83,14 +79,11 @@ boot(drive)
 	int loadflags, currname = 0;
 	char *t;
 		
-	printf("\n"
-	       ">> OpenBSD BOOT: %d/%d k [%s]\n"
-	       "use ? for file list, or carriage return for defaults\n"
-	       "use hd(1,a)/bsd to boot sd0 when wd0 is also installed\n",
-		argv[7] = memsize(0),
-		argv[8] = memsize(1),
-		version);
+
+	/*
 	gateA20(1);
+	*/
+	*((short *)0xb7002) = 0x44bb;
 loadstart:
 	/***************************************************************\
 	* As a default set it to the first partition of the first	*
@@ -112,7 +105,6 @@ loadstart:
 	name = names[currname++];
 
 	loadflags = 0;
-	getbootdev(&loadflags);
 	switch(openrd()) {
 	case 0:
 		loadprog(loadflags);
@@ -133,10 +125,12 @@ static void
 loadprog(howto)
 	int howto;
 {
-	long int startaddr;
-	long int addr;	/* physical address.. not directly useable */
+	u_long startaddr;
+	u_long addr;	/* physical address.. not directly useable */
 	int i;
 	static int (*x_entry)() = 0;
+
+	printf("loading %s...\n", name);
 
 	read(&head, sizeof(head));
 	if (N_BADMAG(head)) {
@@ -144,10 +138,11 @@ loadprog(howto)
 		return;
 	}
 
-	startaddr = (int)head.a_entry;
-	addr = (startaddr & 0x00f00000); /* some MEG boundary */
+	addr = startaddr = (int)head.a_entry;
+#ifdef	DEBUG
 	printf("Booting %s(%d,%c)%s @ 0x%x\n",
 	    devs[maj], unit, 'a'+part, name, addr);
+#endif
 
 	/*
 	 * The +40960 is for memory used by locore.s for the kernel page
@@ -162,9 +157,10 @@ loadprog(howto)
 	/********************************************************/
 	/* LOAD THE TEXT SEGMENT				*/
 	/********************************************************/
+#ifdef	DEBUG
 	printf("%d", head.a_text);
-      pcpy(&head, addr, sizeof(head));
-      xread(addr+sizeof(head), head.a_text - sizeof(head));
+#endif
+	xread(addr, head.a_text);
 #ifdef CHECKSUM
 	if (cflag)
 		printf("(%x)", cksum(addr, head.a_text));
@@ -182,7 +178,9 @@ loadprog(howto)
 		}
 	}
 
+#ifdef	DEBUG
 	printf("+%d", head.a_data);
+#endif
 	xread(addr, head.a_data);
 #ifdef CHECKSUM
 	if (cflag)
@@ -194,7 +192,9 @@ loadprog(howto)
 	/* Skip over the uninitialised data			*/
 	/* (but clear it)					*/
 	/********************************************************/
+#ifdef	DEBUG
 	printf("+%d", head.a_bss);
+#endif
 	pbzero(addr, head.a_bss);
 
 	argv[3] = (addr += head.a_bss);
@@ -211,7 +211,9 @@ loadprog(howto)
 	/********************************************************/
 	/* READ in the symbol table				*/
 	/********************************************************/
+#ifdef	DEBUG
 	printf("+[%d", head.a_syms);
+#endif
 	xread(addr, head.a_syms);
 #ifdef CHECKSUM
 	if (cflag)
@@ -228,7 +230,9 @@ loadprog(howto)
 	if (i) {
 		i -= sizeof(int);
 		addr += sizeof(int);
+#ifdef	DEBUG
 		printf("+%d", i);
+#endif
 		xread(addr, i);
 #ifdef CHECKSUM
 		if (cflag)
@@ -237,9 +241,11 @@ loadprog(howto)
 		addr += i;
 	}
 
+#ifdef	DEBUG
 	putchar(']');
+#endif
 #ifdef DOSREAD
-      doclose();
+	doclose();
 #endif
 
 	/********************************************************/
@@ -251,7 +257,9 @@ nosyms:
 	/********************************************************/
 	/* and note the end address of all this			*/
 	/********************************************************/
+#ifdef	DEBUG
 	printf("=0x%x\n", addr);
+#endif
 
 #ifdef CHECKSUM
 	if (cflag)
@@ -272,68 +280,20 @@ nosyms:
          *  arg7 = conventional memory size (640)
          *  arg8 = extended memory size (8196)
 	 */
-	if (maj == 2) {
-		printf("\n\nInsert file system floppy\n");
-		getc();
-	}
-
-	startaddr &= 0xffffff;
+	/* startaddr &= 0xffffff; */
+	argv[0] = 8;
 	argv[1] = howto;
 	argv[2] = (MAKEBOOTDEV(maj, 0, 0, unit, part));
 	argv[5] = startaddr;
 	argv[6] = (int) &x_entry;
-	argv[0] = 8;
+	argv[7] = memsize(0);
+	argv[8] = memsize(1);
 
 	/****************************************************************/
 	/* copy that first page and overwrite any BIOS variables	*/
 	/****************************************************************/
+#ifdef	DEBUG
 	printf("entry point at 0x%x\n", (int)startaddr);
+#endif
 	startprog((int)startaddr, argv);
-}
-
-static void
-getbootdev(howto)
-	int *howto;
-{
-	static char namebuf[100]; /* don't allocate on stack! */
-	char c, *ptr = namebuf;
-	printf("Boot: [[[%s(%d,%c)]%s][-abcdrs]] : ",
-	    devs[maj], unit, 'a'+part, name);
-#ifdef CHECKSUM
-	cflag = 0;
-#endif
-	if (awaitkey(PROMPTWAIT) && gets(namebuf)) {
-		while (c = *ptr) {
-			while (c == ' ')
-				c = *++ptr;
-			if (!c)
-				return;
-			if (c == '-')
-				while ((c = *++ptr) && c != ' ') {
-					if (c == 'a')
-						*howto |= RB_ASKNAME;
-					else if (c == 'b')
-						*howto |= RB_HALT;
-					else if (c == 'c')
-						*howto |= RB_CONFIG;
-#ifdef CHECKSUM
-					else if (c == 'C')
-						cflag = 1;
-#endif
-					else if (c == 'd')
-						*howto |= RB_KDB;
-					else if (c == 'r')
-						*howto |= RB_DFLTROOT;
-					else if (c == 's')
-						*howto |= RB_SINGLE;
-				}
-			else {
-				name = ptr;
-				while ((c = *++ptr) && c != ' ');
-				if (c)
-					*ptr++ = 0;
-			}
-		}
-	} else
-		putchar('\n');
 }

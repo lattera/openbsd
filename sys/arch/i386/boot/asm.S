@@ -1,6 +1,8 @@
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/asm.S,v 1.2.2.2 1996/09/26 12:11:29 mickey Exp $	*/
 /*	$NetBSD: asm.S,v 1.12 1995/03/12 00:10:53 mycroft Exp $	*/
 
 /*
+ * Changes by Michael Shalayeff 1996
  * Ported to boot 386BSD by Julian Elischer (julian@tfs.com) Sept 1992
  *
  * Mach Operating System
@@ -52,6 +54,8 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include <machine/asm.h>
+#define	addr32	.byte 0x67
+#define	data32	.byte 0x66
 
 CR0_PE		=	0x1
 
@@ -59,44 +63,110 @@ CR0_PE		=	0x1
 	.globl	_ourseg
 _ourseg:
 	.long	0
+	.text
+
+/*
+ *
+ */
+
+/* Conventional GDT indexes. */
+BOOT_CS_INDEX	=	3
+BOOT_CS16_INDEX	=	5
+BOOT_DS_INDEX	=	4
+
+	.globl	boot2
+boot2:
+	pushl	%cs
+	pushl	%cs
+	pushl	%cs
+	popl	%ds
+	popl	%es
+	data32
+	xorl	%eax, %eax
+	popl	%ax
+	data32
+	addr32
+	movl	%eax, _C_LABEL(ourseg)
+	shll	$4, %eax
+
+	/* fix up GDT entries for bootstrap */
+#define FIXUP(gdt_index) \
+	addr32; \
+	movl	%ax, _C_LABEL(Gdt)+(8*gdt_index)+2; /* actually movw %ax */ \
+	addr32; \
+	movb	%bl, _C_LABEL(Gdt)+(8*gdt_index)+4
+
+	data32
+	shldl	$16, %eax, %ebx
+	FIXUP(BOOT_CS_INDEX)
+	FIXUP(BOOT_CS16_INDEX)
+	FIXUP(BOOT_DS_INDEX)
+
+	/* fix up GDT pointer */
+	data32
+	addl	$_C_LABEL(Gdt), %eax
+	data32
+	movl	%eax, _C_LABEL(Gdtr)+2
+
+	/* change to protected mode */
+	data32
+	call	_C_LABEL(real_to_prot)
+
+	/* clear the bss */
+	movl	$_C_LABEL(edata), %edi
+	movl	$_C_LABEL(end), %ecx
+	subl	%edi, %ecx
+	xorb	%al, %al
+	rep
+	stosb
+
+	movzbl	%dl, %edx	/* discard head (%dh) and random high bits */
+	pushl	%edx
+	movl	$0xB7000, %eax
+	movw	$0x55aa, %es:(%eax)
+
+	ljmp	$0x18, $_C_LABEL(boot)
+
+	hlt
+	cli
 
 /*
  * real_to_prot()
  * 	transfer from real mode to protected mode.
  */
-	.code16
 ENTRY(real_to_prot)
 	# guarantee that interrupt is disabled when in prot mode
 	cli
 
 	# load the gdtr
+	addr32
+	data32
 	lgdt	_C_LABEL(Gdtr)
 
 	# set the PE bit of CR0
 	movl	%cr0, %eax
+	data32
 	orl	$CR0_PE, %eax
 	movl	%eax, %cr0 
 
 	# make intrasegment jump to flush the processor pipeline and
 	# reload CS register
-	ljmp	$0x18, $xprot
-
-xprot:
-	.code32
+	data32
+	ljmp	$0x18, $1f
+1:
 	# we are in USE32 mode now
 	# set up the protected mode segment registers : DS, SS, ES
-	movw	$0x20, %ax
-	movw	%ax, %ds
-	movw	%ax, %ss
-	movw	%ax, %es
+	movl	$0x20, %eax
+	movl	%ax, %ds
+	movl	%ax, %ss
+	movl	%ax, %es
 
-	lret
+	ret
 
 /*
  * prot_to_real()
  * 	transfer from protected mode to real mode
  */
-	.code32
 ENTRY(prot_to_real)
 	# set up a dummy stack frame for the second seg change.
 	# Adjust the intersegment jump instruction following
@@ -108,12 +178,10 @@ ENTRY(prot_to_real)
 
 	# Change to use16 mode.
 	ljmp	$0x28, $x16
-
 x16:
-	.code16
-
 	# clear the PE bit of CR0
 	movl	%cr0, %eax
+	data32
 	andl 	$~CR0_PE, %eax
 	movl	%eax, %cr0
 
@@ -128,15 +196,15 @@ x16:
 xreal:
 	# we are in real mode now
 	# set up the real mode segment registers : DS, SS, ES
-	movw	%cs, %ax
-	movw	%ax, %ds
-	movw	%ax, %ss
-	movw	%ax, %es
+	movl	%cs, %ax
+	movl	%ax, %ds
+	movl	%ax, %ss
+	movl	%ax, %es
 
-	#sti
+	sti
+	data32
 	ret
 
-	.code32
 /*
  * startprog(phyaddr)
  *	start the program on protected mode where phyaddr is the entry point
@@ -165,8 +233,7 @@ ENTRY(startprog)
 	pushl	$0			# dummy 'return' address
 	
 	# push on our entry address
-	movl	$0x8, %ebx		# segment
-	pushl	%ebx
+	pushl	$0x8			# segment
 	pushl	%ecx
 
 	# convert over the other data segs

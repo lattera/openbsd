@@ -31,25 +31,32 @@ LOADSZ=15
 DEBUG=	-g -DDEBUG
 
 OBJDUMP=/usr/i386-unknown-openbsd1.2/bin/objdump
-AFLAGS+=-v -Wa,-a -DLOADSZ=${LOADSZ} -B/usr/i386-unknown-openbsd1.2/bin
-CFLAGS+=-Werror -m386 -O2 -DNO_SPRINTF
-#	-DDO_BAD144
+AS=	/usr/i386-unknown-openbsd1.2/bin/as.new
+AFLAGS+=-DLOADSZ=${LOADSZ}
+CFLAGS+=-Werror -m386 -O2 -DNO_SPRINTF -DDO_BAD144
 # no 16-bit-code flag yet
 OBJDUMPFLAGS=-d
 
+CPPFLAGS=${DEBUG} -I. -I${.CURDIR} -I$S -I${.CURDIR}/../..
 # Uncomment this to make the boot block talk to a serial port.
 #CPPFLAGS+=-DSERIAL=0
-CPPFLAGS=${DEBUG} -I. -I${.CURDIR} -I$S -I${.CURDIR}/../..
 
 # SA lib stuff
 SAREL=
 .include "$S/lib/libsa/Makefile.inc"
+CFLAGS+=-I$S/lib/libsa
 
 # start.o should be first
 OBJS=	start.o table.o boot.o asm.o bios.o io.o disk.o sys.o
 CLEANFILES+=bootbios boot biosboot boot.sym machine ${MACHINE_ARCH}
 
 all: machine-links biosboot bootbios
+
+
+start.o: ${.CURDIR}/start.S
+	@echo ${CC} ${CPPFLAGS} ${AFLAGS} ${.CURDIR}/start.S
+	@${CC} -E ${CPPFLAGS} ${AFLAGS} ${.CURDIR}/start.S > $*.s
+	@(${AS} -o $*.o $*.s; rm $*.s)
 
 machine-links:
 	ln -fs ${.CURDIR}/../include machine
@@ -103,3 +110,4 @@ clean::
 	rm -f a.out [Ee]rrs mklog core *.core
 	rm -f ${OBJS} ${LOBJS} ${CLEANFILES}
 
+.include <bsd.prog.mk>
