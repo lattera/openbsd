@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_sha1.c,v 1.7 1999/02/17 18:10:23 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/sha1.c,v 1.1 2000/02/28 23:13:05 deraadt Exp $	*/
 
 /*
  * SHA-1 in C
@@ -22,7 +22,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
-#include <netinet/ip_sha1.h>
+#include <crypto/sha1.h>
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 

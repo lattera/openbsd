@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/Attic/ip_castsb.h,v 1.2 1999/02/17 18:09:55 deraadt Exp $       */
+/*      $OpenBSD: src/sys/crypto/castsb.h,v 1.1 2000/02/28 23:13:04 deraadt Exp $       */
 /*
  *	CAST-128 in C
  *	Written by Steve Reid <sreid@sea-to-sky.net>

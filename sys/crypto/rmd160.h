@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_rmd160.h,v 1.3 1999/02/17 18:10:08 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/crypto/rmd160.h,v 1.1 2000/02/28 23:13:05 deraadt Exp $	*/
 
 /*
  *      FILE:     rmd160.h
