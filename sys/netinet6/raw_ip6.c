@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.7.2.1 2002/06/11 03:31:38 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/raw_ip6.c,v 1.7.2.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: raw_ip6.c,v 1.69 2001/03/04 15:55:44 itojun Exp $	*/
 
 /*
@@ -247,11 +247,11 @@ rip6_input(mp, offp, proto)
 		if (proto == IPPROTO_NONE)
 			m_freem(m);
 		else {
-			char *prvnxtp = ip6_get_prevhdr(m, *offp); /* XXX */
+			u_int8_t *prvnxtp = ip6_get_prevhdr(m, *offp); /* XXX */
 			in6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_protounknown);
 			icmp6_error(m, ICMP6_PARAM_PROB,
 			    ICMP6_PARAMPROB_NEXTHEADER,
-			    prvnxtp - mtod(m, char *));
+			    prvnxtp - mtod(m, u_int8_t *));
 		}
 		ip6stat.ip6s_delivered--;
 	}
@@ -490,7 +490,7 @@ rip6_output(struct mbuf *m, ...)
 	if (in6p->in6p_flags & IN6P_MINMTU)
 		flags |= IPV6_MINMTU;
 #endif
-	
+
 	error = ip6_output(m, optp, &in6p->in6p_route, flags,
 	    in6p->in6p_moptions, &oifp);
 	if (so->so_proto->pr_protocol == IPPROTO_ICMPV6) {
@@ -511,7 +511,7 @@ rip6_output(struct mbuf *m, ...)
 		RTFREE(optp->ip6po_route.ro_rt);
 	if (control)
 		m_freem(control);
-	return(error);
+	return (error);
 }
 
 /*
@@ -578,7 +578,6 @@ rip6_usrreq(so, req, m, nam, control, p)
 	struct in6pcb *in6p = sotoin6pcb(so);
 	int s;
 	int error = 0;
-/*	extern	struct socket *ip6_mrouter; */ /* xxx */
 	int priv;
 
 	priv = 0;
@@ -611,7 +610,7 @@ rip6_usrreq(so, req, m, nam, control, p)
 		in6p = sotoin6pcb(so);
 		in6p->in6p_ip6.ip6_nxt = (long)nam;
 		in6p->in6p_cksum = -1;
-		
+
 		MALLOC(in6p->in6p_icmp6filt, struct icmp6_filter *,
 		    sizeof(struct icmp6_filter), M_PCB, M_NOWAIT);
 		if (in6p->in6p_icmp6filt == NULL) {
@@ -807,7 +806,7 @@ rip6_usrreq(so, req, m, nam, control, p)
 		/*
 		 * stat: don't bother with a blocksize
 		 */
-		return(0);
+		return (0);
 	/*
 	 * Not supported.
 	 */
@@ -832,5 +831,5 @@ rip6_usrreq(so, req, m, nam, control, p)
 	}
 	if (m != NULL)
 		m_freem(m);
-	return(error);
+	return (error);
 }

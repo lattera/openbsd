@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.3 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.4 2002/10/29 00:36:50 art Exp $	*/
 
 /*
  * Copyright 1998, 2000 Marshall Kirk McKusick. All Rights Reserved.
@@ -99,12 +99,13 @@ const char *softdep_typenames[] = {
 	"allocindir",
 	"freefrag",
 	"freeblks",
+	"freefile",
 	"diradd",
 	"mkdir",
 	"dirrem",
 };
 #define	TYPENAME(type) \
-	((unsigned)(type) < D_LAST ? softdep_typenames[type] : "???")
+	((unsigned)(type) <= D_LAST ? softdep_typenames[type] : "???")
 /*
  * Finding the current process.
  */
@@ -940,8 +941,6 @@ softdep_flushfiles(oldmnt, flags, p)
 	 * activity can keep us busy forever, so we just fail with EBUSY.
 	 */
 	if (loopcnt == 0) {
-		if (oldmnt->mnt_flag & MNT_UNMOUNT)
-			panic("softdep_flushfiles: looping");
 		error = EBUSY;
 	}
 	return (error);
@@ -2290,7 +2289,7 @@ handle_workitem_freeblocks(freeblks)
 		if ((bn = freeblks->fb_iblks[level]) == 0)
 			continue;
 		if ((error = indir_trunc(&tip, fsbtodb(fs, bn), level,
-		    baselbns[level], &blocksreleased)) == 0)
+		    baselbns[level], &blocksreleased)) != 0)
 			allerror = error;
 		ffs_blkfree(&tip, bn, fs->fs_bsize);
 		blocksreleased += nblocks;

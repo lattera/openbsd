@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/spx_usrreq.c,v 1.17.4.1 2002/06/11 03:31:38 art Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/spx_usrreq.c,v 1.17.4.2 2002/10/29 00:36:48 art Exp $	*/
 
 /*-
  *
@@ -469,7 +469,7 @@ update_window:
 			} /* else queue this packet; */
 		} else {
 			/*register struct socket *so = cb->s_ipxpcb->ipxp_socket;
-			if (so->so_state && SS_NOFDREF) {
+			if (so->so_state & SS_NOFDREF) {
 				m_freem(m0);
 				(void)spx_close(cb);
 			} else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.17.2.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_mroute.c,v 1.17.2.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: ip6_mroute.c,v 1.45 2001/03/25 08:38:51 itojun Exp $	*/
 
 /*
@@ -40,7 +40,7 @@
  * Modified by Mark J. Steiglitz, Stanford, May, 1991
  * Modified by Van Jacobson, LBL, January 1993
  * Modified by Ajit Thyagarajan, PARC, August 1993
- * Modified by Bill Fenenr, PARC, April 1994
+ * Modified by Bill Fenner, PARC, April 1994
  *
  * MROUTING Revision: 3.5.1.2 + PIM-SMv2 (pimd) Support
  */
@@ -280,10 +280,10 @@ mrt6_ioctl(cmd, data)
 
 	switch (cmd) {
 	case SIOCGETSGCNT_IN6:
-		return(get_sg_cnt((struct sioc_sg_req6 *)data));
+		return (get_sg_cnt((struct sioc_sg_req6 *)data));
 		break;		/* for safety */
 	case SIOCGETMIFCNT_IN6:
-		return(get_mif6_cnt((struct sioc_mif_req6 *)data));
+		return (get_mif6_cnt((struct sioc_mif_req6 *)data));
 		break;		/* for safety */
 	default:
 		return (EINVAL);
@@ -311,7 +311,7 @@ get_sg_cnt(req)
 		req->bytecnt = rt->mf6c_byte_cnt;
 		req->wrong_if = rt->mf6c_wrong_if;
 	} else
-		return(ESRCH);
+		return (ESRCH);
 #if 0
 		req->pktcnt = req->bytecnt = req->wrong_if = 0xffffffff;
 #endif
@@ -1487,7 +1487,7 @@ phyint_send(ip6, mifp, m)
 	 * if it would fit in the MTU of the interface.
 	 */
 	linkmtu = IN6_LINKMTU(ifp);
-	if (mb_copy->m_pkthdr.len < linkmtu || linkmtu < IPV6_MMTU) {
+	if (mb_copy->m_pkthdr.len <= linkmtu || linkmtu < IPV6_MMTU) {
 		dst6->sin6_len = sizeof(struct sockaddr_in6);
 		dst6->sin6_family = AF_INET6;
 		dst6->sin6_addr = ip6->ip6_dst;
@@ -1621,7 +1621,7 @@ pim6_input(mp, offp, proto)
 			log(LOG_DEBUG,"pim6_input: PIM packet too short\n");
 #endif
 		m_freem(m);
-		return(IPPROTO_DONE);
+		return (IPPROTO_DONE);
 	}
 
 	/*
@@ -1675,7 +1675,7 @@ pim6_input(mp, offp, proto)
 				    "pim6_input: invalid checksum\n");
 #endif
 			m_freem(m);
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	}
 #endif /* PIM_CHECKSUM */
@@ -1689,7 +1689,7 @@ pim6_input(mp, offp, proto)
 		    pim->pim_ver, PIM_VERSION);
 #endif
 		m_freem(m);
-		return(IPPROTO_DONE);
+		return (IPPROTO_DONE);
 	}
 
 	if (pim->pim_type == PIM_REGISTER) {
@@ -1715,7 +1715,7 @@ pim6_input(mp, offp, proto)
 				    reg_mif_num);
 #endif
 			m_freem(m);
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	
 		reghdr = (u_int32_t *)(pim + 1);
@@ -1736,7 +1736,7 @@ pim6_input(mp, offp, proto)
 			    pimlen, ip6_sprintf(&ip6->ip6_src));
 #endif
 			m_freem(m);
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	
 		eip6 = (struct ip6_hdr *) (reghdr + 1);
@@ -1759,7 +1759,7 @@ pim6_input(mp, offp, proto)
 			    (eip6->ip6_vfc & IPV6_VERSION));
 #endif
 			m_freem(m);
-			return(IPPROTO_NONE);
+			return (IPPROTO_NONE);
 		}
 	
 		/* verify the inner packet is destined to a mcast group */
@@ -1773,7 +1773,7 @@ pim6_input(mp, offp, proto)
 				    ip6_sprintf(&eip6->ip6_dst));
 #endif
 			m_freem(m);
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	
 		/*
@@ -1787,7 +1787,7 @@ pim6_input(mp, offp, proto)
 			    "could not copy register head\n");
 #endif
 			m_freem(m);
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	
 		/*
@@ -1805,7 +1805,7 @@ pim6_input(mp, offp, proto)
 		}
 #endif
 
- 		rc = looutput(mif6table[reg_mif_num].m6_ifp, m,
+		rc = looutput(mif6table[reg_mif_num].m6_ifp, m,
 			      (struct sockaddr *) &dst,
 			      (struct rtentry *) NULL);
 	
@@ -1821,5 +1821,5 @@ pim6_input(mp, offp, proto)
 	 */
   pim6_input_to_daemon:
 	rip6_input(&m, offp, proto);
-	return(IPPROTO_DONE);
+	return (IPPROTO_DONE);
 }

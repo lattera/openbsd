@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.3 2002/06/11 03:33:04 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.4 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_page.c,v 1.71 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
@@ -648,7 +648,8 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 	if (uvmexp.pagesize == 0)
 		panic("uvm_page_physload: page size not set!");
 	if (free_list >= VM_NFREELIST || free_list < VM_FREELIST_DEFAULT)
-		panic("uvm_page_physload: bad free list %d\n", free_list);
+		panic("uvm_page_physload: bad free list %d", free_list);
+
 	if (start >= end)
 		panic("uvm_page_physload: start >= end");
 
@@ -1135,7 +1136,7 @@ uvm_pagealloc_strat(obj, off, anon, flags, strat, free_list)
 		 */
 		pg->flags &= ~PG_CLEAN;
 		if (zeroit)
-			pmap_zero_page(VM_PAGE_TO_PHYS(pg));
+			pmap_zero_page(pg);
 	}
 
 	return(pg);
@@ -1203,7 +1204,7 @@ uvm_pagefree(pg)
 #ifdef DEBUG
 	if (pg->uobject == (void *)0xdeadbeef &&
 	    pg->uanon == (void *)0xdeadbeef) {
-		panic("uvm_pagefree: freeing free page %p\n", pg);
+		panic("uvm_pagefree: freeing free page %p", pg);
 	}
 #endif
 
@@ -1422,7 +1423,7 @@ uvm_pageidlezero()
 				uvmexp.free--;
 				uvm_unlock_fpageq(s);
 #ifdef PMAP_PAGEIDLEZERO
-				if (!PMAP_PAGEIDLEZERO(VM_PAGE_TO_PHYS(pg))) {
+				if (!PMAP_PAGEIDLEZERO(pg)) {
 
 					/*
 					 * The machine-dependent code detected
@@ -1441,7 +1442,7 @@ uvm_pageidlezero()
 					return;
 				}
 #else
-				pmap_zero_page(VM_PAGE_TO_PHYS(pg));
+				pmap_zero_page(pg);
 #endif /* PMAP_PAGEIDLEZERO */
 				pg->flags |= PG_ZERO;
 

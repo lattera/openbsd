@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.144.2.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.144.2.2 2002/10/29 00:36:47 art Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -191,7 +191,7 @@ reserve_spi(u_int32_t sspi, u_int32_t tspi, union sockaddr_union *src,
 	int nums, s;
 
 	/* Don't accept ranges only encompassing reserved SPIs. */
-	if (sproto != IPPROTO_IPCOMP && 
+	if (sproto != IPPROTO_IPCOMP &&
 	    (tspi < sspi || tspi <= SPI_RESERVED_MAX)) {
 		(*errval) = EINVAL;
 		return 0;
@@ -1213,7 +1213,7 @@ ipsp_skipcrypto_mark(struct tdb_ident *tdbi)
 {
 	struct tdb *tdb;
 	int s = spltdb();
- 
+
 	tdb = gettdb(tdbi->spi, &tdbi->dst, tdbi->proto);
 	if (tdb != NULL) {
 		tdb->tdb_flags |= TDBF_SKIPCRYPTO;
@@ -1228,7 +1228,7 @@ ipsp_skipcrypto_unmark(struct tdb_ident *tdbi)
 {
 	struct tdb *tdb;
 	int s = spltdb();
- 
+
 	tdb = gettdb(tdbi->spi, &tdbi->dst, tdbi->proto);
 	if (tdb != NULL) {
 		tdb->tdb_flags &= ~TDBF_SKIPCRYPTO;

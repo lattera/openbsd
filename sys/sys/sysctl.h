@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44.2.1 2002/06/11 03:32:34 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.44.2.2 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -141,8 +141,8 @@ struct ctlname {
 #define	KERN_DOMAINNAME		22	/* string: (YP) domainname */
 #define	KERN_MAXPARTITIONS	23	/* int: number of partitions/disk */
 #define	KERN_RAWPARTITION	24	/* int: raw partition number */
-#define	KERN_NTPTIME		25	/* struct: extended-precision time */
-#define	KERN_TIMEX		26	/* struct: ntp timekeeping state */
+/*define gap			25	*/
+/*define gap			26	*/
 #define	KERN_OSVERSION		27	/* string: kernel build version */
 #define	KERN_SOMAXCONN		28	/* int: listen queue maximum */
 #define	KERN_SOMINCONN		29	/* int: half-open controllable param */
@@ -176,7 +176,8 @@ struct ctlname {
 #define	KERN_TTYCOUNT		57	/* int: number of tty devices */
 #define KERN_NUMVNODES		58	/* int: number of vnodes in use */
 #define	KERN_MBSTAT		59	/* struct: mbuf statistics */
-#define	KERN_MAXID		60	/* number of valid kern ids */
+#define KERN_USERASYMCRYPTO	60	/* int: usercrypto */
+#define	KERN_MAXID		61	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -204,8 +205,8 @@ struct ctlname {
 	{ "domainname", CTLTYPE_STRING }, \
 	{ "maxpartitions", CTLTYPE_INT }, \
 	{ "rawpartition", CTLTYPE_INT }, \
-	{ "ntptime", CTLTYPE_STRUCT }, \
-	{ "timex", CTLTYPE_STRUCT }, \
+	{ "gap", 0 }, \
+	{ "gap", 0 }, \
 	{ "osversion", CTLTYPE_STRING }, \
 	{ "somaxconn", CTLTYPE_INT }, \
 	{ "sominconn", CTLTYPE_INT }, \
@@ -239,6 +240,7 @@ struct ctlname {
 	{ "ttycount", CTLTYPE_INT }, \
 	{ "numvnodes", CTLTYPE_INT }, \
 	{ "mbstat", CTLTYPE_STRUCT }, \
+	{ "userasymcrypto", CTLTYPE_INT }, \
 }
 
 /*
@@ -467,7 +469,6 @@ int sysctl_iflist(int, struct walkarg *);
 int sysctl_rtable(int *, u_int, void *, size_t *, void *, size_t);
 int sysctl_clockrate(char *, size_t *);
 int sysctl_vnode(char *, size_t *, struct proc *);
-int sysctl_ntptime(char *, size_t *);
 #ifdef GPROF
 int sysctl_doprof(int *, u_int, void *, size_t *, void *, size_t);
 #endif

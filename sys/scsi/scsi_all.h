@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.12 2001/11/11 21:38:17 krw Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_all.h,v 1.12.2.1 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: scsi_all.h,v 1.10 1996/09/12 01:57:17 thorpej Exp $	*/
 
 /*
@@ -199,6 +199,7 @@ struct scsi_changedef {
 #define T_CDROM		5
 #define T_SCANNER 	6
 #define T_OPTICAL 	7
+#define T_RDIRECT 	14
 #define T_NODEVICE	0x1F
 
 #define T_CHANGER	8

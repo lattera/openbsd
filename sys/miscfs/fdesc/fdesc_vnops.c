@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.1 2002/06/11 03:30:20 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.26.2.2 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -572,7 +572,6 @@ fdesc_setattr(v)
 		}
 		return (error);
 	}
-	FREF(fp);
 	vp = (struct vnode *)fp->f_data;
 	if (vp->v_mount->mnt_flag & MNT_RDONLY) {
 		error = EROFS;

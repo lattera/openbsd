@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/msgbuf.h,v 1.4.10.1 2002/06/11 03:32:33 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/msgbuf.h,v 1.4.10.2 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: msgbuf.h,v 1.8 1995/03/26 20:24:27 jtc Exp $	*/
 
 /*
@@ -46,7 +46,7 @@ struct	msgbuf {
 	char	msg_bufc[1];		/* buffer */
 };
 #ifdef _KERNEL
-struct	msgbuf *msgbufp;
+extern struct msgbuf *msgbufp;
 
 void	initmsgbuf(caddr_t buf, size_t bufsize);
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.2 2002/06/11 03:33:04 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.3 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.55 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*
@@ -264,7 +264,6 @@ uvn_put(uobj, offlo, offhi, flags)
 	LOCK_ASSERT(!simple_lock_held(&vp->v_interlock));
 	return error;
 }
-
 
 /*
  * uvn_get: get pages (synchronously) from backing store

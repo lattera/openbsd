@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/hd_input.c,v 1.3.26.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/hd_input.c,v 1.3.26.2 2002/10/29 00:36:46 art Exp $	*/
 /*	$NetBSD: hd_input.c,v 1.9 1996/04/13 01:34:16 cgd Exp $	*/
 
 /*
@@ -569,7 +569,7 @@ valid_nr(hdp, nr, finalbit)
 
 	/*
 	 * This section validates the frame's  N(R) value.  It's N(R) value
-	 * must be  in syncronization  with  our V(S)  value and  our "last
+	 * must be  in synchronization  with  our V(S)  value and  our "last
 	 * received nr" variable. If it is correct then we are able to send
 	 * more IFRAME's, else frame reject condition is entered.
 	 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.22.2.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.22.2.2 2002/10/29 00:36:46 art Exp $	*/
 /*	$KAME: in_gif.c,v 1.50 2001/01/22 07:27:16 itojun Exp $	*/
 
 /*
@@ -156,7 +156,7 @@ in_gif_output(ifp, family, m, rt)
 	m_copyback(m, offsetof(struct ip, ip_len), sizeof(u_int16_t),
 		   (caddr_t) &plen);
 
-	return ip_output(m, NULL, NULL, 0, NULL, NULL);
+	return ip_output(m, (void *)NULL, (void *)NULL, 0, (void *)NULL, (void *)NULL);
 }
 
 void
@@ -180,7 +180,7 @@ in_gif_input(struct mbuf *m, ...)
 	ip = mtod(m, struct ip *);
 
 	/* this code will be soon improved. */
-#define	satosin(sa)	((struct sockaddr_in *)(sa))	
+#define	satosin(sa)	((struct sockaddr_in *)(sa))
 	for (i = 0, sc = gif_softc; i < ngif; i++, sc++) {
 		if (sc->gif_psrc == NULL || sc->gif_pdst == NULL ||
 		    sc->gif_psrc->sa_family != AF_INET ||

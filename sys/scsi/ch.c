@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/ch.c,v 1.11.4.1 2002/06/11 03:32:13 art Exp $	*/
+/*	$OpenBSD: src/sys/scsi/ch.c,v 1.11.4.2 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: ch.c,v 1.26 1997/02/21 22:06:52 thorpej Exp $	*/
 
 /*
@@ -286,8 +286,11 @@ chioctl(dev, cmd, data, flags, p)
 	 * have the device open for writing.
 	 */
 	switch (cmd) {
+	case OCHIOGPICKER:
 	case CHIOGPICKER:
+	case OCHIOGPARAMS:
 	case CHIOGPARAMS:
+	case OCHIOGSTATUS:
 	case CHIOGSTATUS:
 		break;
 
@@ -297,22 +300,27 @@ chioctl(dev, cmd, data, flags, p)
 	}
 
 	switch (cmd) {
+	case OCHIOMOVE:
 	case CHIOMOVE:
 		error = ch_move(sc, (struct changer_move *)data);
 		break;
 
+	case OCHIOEXCHANGE:
 	case CHIOEXCHANGE:
 		error = ch_exchange(sc, (struct changer_exchange *)data);
 		break;
 
+	case OCHIOPOSITION:
 	case CHIOPOSITION:
 		error = ch_position(sc, (struct changer_position *)data);
 		break;
 
+	case OCHIOGPICKER:
 	case CHIOGPICKER:
 		*(int *)data = sc->sc_picker - sc->sc_firsts[CHET_MT];
 		break;
 
+	case OCHIOSPICKER:
 	case CHIOSPICKER:	{
 		int new_picker = *(int *)data;
 
@@ -321,6 +329,7 @@ chioctl(dev, cmd, data, flags, p)
 		sc->sc_picker = sc->sc_firsts[CHET_MT] + new_picker;
 		break;		}
 
+	case OCHIOGPARAMS:
 	case CHIOGPARAMS:	{
 		struct changer_params *cp = (struct changer_params *)data;
 
@@ -331,6 +340,7 @@ chioctl(dev, cmd, data, flags, p)
 		cp->cp_ndrives = sc->sc_counts[CHET_DT];
 		break;		}
 
+	case OCHIOGSTATUS:
 	case CHIOGSTATUS:	{
 		struct changer_element_status *ces =
 		    (struct changer_element_status *)data;

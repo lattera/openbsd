@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/cdio.h,v 1.10 2001/06/22 14:10:59 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/cdio.h,v 1.10.4.1 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: cdio.h,v 1.11 1996/02/19 18:29:04 scottr Exp $	*/
 
 #ifndef _SYS_CDIO_H_
@@ -169,7 +169,7 @@ struct ioc_read_subchannel {
 	int	data_len;
 	struct	cd_sub_channel_info *data;
 };
-#define CDIOCREADSUBCHANNEL _IOWR('c', 3, struct ioc_read_subchannel )
+#define CDIOCREADSUBCHANNEL _IOWR('c', 3, struct ioc_read_subchannel)
 
 struct ioc_toc_header {
 	u_short	len;
@@ -186,7 +186,7 @@ struct ioc_read_toc_entry {
 	struct	cd_toc_entry *data;
 };
 #define CDIOREADTOCENTRIES _IOWR('c', 5, struct ioc_read_toc_entry)
-#define CDIOREADTOCENTRYS _IOWR('c', 5, struct ioc_read_toc_entry)
+#define CDIOREADTOCENTRYS CDIOREADTOCENTRIES
 
 /* read LBA start of a given session; 0=last, others not yet supported */
 #define CDIOREADMSADDR _IOWR('c', 6, int)

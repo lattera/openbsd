@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.5.2.1 2002/06/11 03:30:46 art Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.5.2.2 2002/10/29 00:36:46 art Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -42,8 +42,8 @@
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/kernel.h>
-#include <sys/malloc.h>
 #include <sys/time.h>
+#include <sys/timeout.h>
 #include <sys/pool.h>
 
 #include <net/if.h>
@@ -63,9 +63,19 @@
 #include <netinet/in_pcb.h>
 #endif /* INET6 */
 
+#ifdef ALTQ
+#include <altq/altq.h>
+#endif
+
 void			 pfattach(int);
 int			 pfopen(dev_t, int, int, struct proc *);
 int			 pfclose(dev_t, int, int, struct proc *);
+int			 pf_compare_rules(struct pf_rule *,
+			    struct pf_rule *);
+int			 pf_compare_nats(struct pf_nat *, struct pf_nat *);
+int			 pf_compare_binats(struct pf_binat *,
+			    struct pf_binat *);
+int			 pf_compare_rdrs(struct pf_rdr *, struct pf_rdr *);
 int			 pfioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 extern struct timeout          pf_expire_to;
@@ -87,9 +97,9 @@ pfattach(int num)
 	    &pool_allocator_nointr);
 	pool_init(&pf_state_pl, sizeof(struct pf_state), 0, 0, 0, "pfstatepl",
 	    NULL);
-	pool_init(&pf_sport_pl, sizeof(struct pf_port_node), 0, 0, 0, "pfsport",
-	    NULL);
 	pool_init(&pf_addr_pl, sizeof(struct pf_addr_dyn), 0, 0, 0, "pfaddr",
+	    NULL);
+	pool_init(&pf_altq_pl, sizeof(struct pf_altq), 0, 0, 0, "pfaltqpl",
 	    NULL);
 
 	TAILQ_INIT(&pf_rules[0]);
@@ -100,6 +110,8 @@ pfattach(int num)
 	TAILQ_INIT(&pf_binats[1]);
 	TAILQ_INIT(&pf_rdrs[0]);
 	TAILQ_INIT(&pf_rdrs[1]);
+	TAILQ_INIT(&pf_altqs[0]);
+	TAILQ_INIT(&pf_altqs[1]);
 	pf_rules_active = &pf_rules[0];
 	pf_rules_inactive = &pf_rules[1];
 	pf_nats_active = &pf_nats[0];
@@ -108,9 +120,8 @@ pfattach(int num)
 	pf_binats_inactive = &pf_binats[1];
 	pf_rdrs_active = &pf_rdrs[0];
 	pf_rdrs_inactive = &pf_rdrs[1];
-
-	LIST_INIT(&pf_tcp_ports);
-	LIST_INIT(&pf_udp_ports);
+	pf_altqs_active = &pf_altqs[0];
+	pf_altqs_inactive = &pf_altqs[1];
 
 	timeout_set(&pf_expire_to, pf_purge_timeout, &pf_expire_to);
 	timeout_add(&pf_expire_to, pftm_interval * hz);
@@ -132,6 +143,131 @@ pfclose(dev_t dev, int flags, int fmt, struct proc *p)
 {
 	if (minor(dev) >= 1)
 		return (ENXIO);
+	return (0);
+}
+
+int
+pf_compare_rules(struct pf_rule *a, struct pf_rule *b)
+{
+	if (a->return_icmp != b->return_icmp ||
+	    a->return_icmp6 != b->return_icmp6 ||
+	    a->action != b->action ||
+	    a->direction != b->direction ||
+	    a->log != b->log ||
+	    a->quick != b->quick ||
+	    a->keep_state != b->keep_state ||
+	    a->af != b->af ||
+	    a->proto != b->proto ||
+	    a->type != b->type ||
+	    a->code != b->code ||
+	    a->flags != b->flags ||
+	    a->flagset != b->flagset ||
+	    a->rule_flag != b->rule_flag ||
+	    a->min_ttl != b->min_ttl ||
+	    a->tos != b->tos ||
+	    a->allow_opts != b->allow_opts ||
+	    a->ifnot != b->ifnot)
+		return (1);
+	if (PF_ANEQ(&a->src.addr.addr, &b->src.addr.addr, a->af) ||
+	    PF_ANEQ(&a->src.mask, &b->src.mask, a->af) ||
+	    a->src.port[0] != b->src.port[0] ||
+	    a->src.port[1] != b->src.port[1] ||
+	    a->src.not != b->src.not ||
+	    a->src.port_op != b->src.port_op)
+		return (1);
+	if (PF_ANEQ(&a->dst.addr.addr, &b->dst.addr.addr, a->af) ||
+	    PF_ANEQ(&a->dst.mask, &b->dst.mask, a->af) ||
+	    a->dst.port[0] != b->dst.port[0] ||
+	    a->dst.port[1] != b->dst.port[1] ||
+	    a->dst.not != b->dst.not ||
+	    a->dst.port_op != b->dst.port_op)
+		return (1);
+	if (strcmp(a->ifname, b->ifname) ||
+	    strcmp(a->label, b->label))
+		return (1);
+	return (0);
+}
+
+int
+pf_compare_nats(struct pf_nat *a, struct pf_nat *b)
+{
+	if (a->proto != b->proto ||
+	    a->af != b->af ||
+	    a->ifnot != b->ifnot ||
+	    a->no != b->no)
+		return (1);
+	if (PF_ANEQ(&a->src.addr.addr, &b->src.addr.addr, a->af) ||
+	    PF_ANEQ(&a->src.mask, &b->src.mask, a->af) ||
+	    a->src.port[0] != b->src.port[0] ||
+	    a->src.port[1] != b->src.port[1] ||
+	    a->src.not != b->src.not ||
+	    a->src.port_op != b->src.port_op)
+		return (1);
+	if (PF_ANEQ(&a->dst.addr.addr, &b->dst.addr.addr, a->af) ||
+	    PF_ANEQ(&a->dst.mask, &b->dst.mask, a->af) ||
+	    a->dst.port[0] != b->dst.port[0] ||
+	    a->dst.port[1] != b->dst.port[1] ||
+	    a->dst.not != b->dst.not ||
+	    a->dst.port_op != b->dst.port_op)
+		return (1);
+	if (PF_ANEQ(&a->raddr.addr, &b->raddr.addr, a->af))
+		return (1);
+	if (strcmp(a->ifname, b->ifname))
+		return (1);
+	return (0);
+}
+
+int
+pf_compare_binats(struct pf_binat *a, struct pf_binat *b)
+{
+	if (a->proto != b->proto ||
+	    a->dnot != b->dnot ||
+	    a->af != b->af ||
+	    a->no != b->no)
+		return (1);
+	if (PF_ANEQ(&a->saddr.addr, &b->saddr.addr, a->af))
+		return (1);
+	if (PF_ANEQ(&a->smask, &b->smask, a->af))
+		return (1);
+	if (PF_ANEQ(&a->daddr.addr, &b->daddr.addr, a->af))
+		return (1);
+	if (PF_ANEQ(&a->dmask, &b->dmask, a->af))
+		return (1);
+	if (PF_ANEQ(&a->raddr.addr, &b->raddr.addr, a->af))
+		return (1);
+	if (PF_ANEQ(&a->rmask, &b->rmask, a->af))
+		return (1);
+	if (strcmp(a->ifname, b->ifname))
+		return (1);
+	return (0);
+}
+
+int
+pf_compare_rdrs(struct pf_rdr *a, struct pf_rdr *b)
+{
+	if (a->dport != b->dport ||
+	    a->dport2 != b->dport2 ||
+	    a->rport != b->rport ||
+	    a->proto != b->proto ||
+	    a->af != b->af ||
+	    a->snot != b->snot ||
+	    a->dnot != b->dnot ||
+	    a->ifnot != b->ifnot ||
+	    a->opts != b->opts ||
+	    a->no != b->no)
+		return (1);
+	if (PF_ANEQ(&a->saddr.addr, &b->saddr.addr, a->af))
+		return (1);
+	if (PF_ANEQ(&a->smask, &b->smask, a->af))
+		return (1);
+	if (PF_ANEQ(&a->daddr.addr, &b->daddr.addr, a->af))
+		return (1);
+	if (PF_ANEQ(&a->dmask, &b->dmask, a->af))
+		return (1);
+	if (PF_ANEQ(&a->raddr.addr, &b->raddr.addr, a->af))
+		return (1);
+	if (strcmp(a->ifname, b->ifname))
+		return (1);
 	return (0);
 }
 
@@ -162,6 +298,9 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		case DIOCGETTIMEOUT:
 		case DIOCCLRRULECTRS:
 		case DIOCGETLIMIT:
+		case DIOCGETALTQS:
+		case DIOCGETALTQ:
+		case DIOCGETQSTATS:
 			break;
 		default:
 			return (EPERM);
@@ -182,6 +321,9 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		case DIOCGETBINATS:
 		case DIOCGETBINAT:
 		case DIOCGETLIMIT:
+		case DIOCGETALTQS:
+		case DIOCGETALTQ:
+		case DIOCGETQSTATS:
 			break;
 		default:
 			return (EACCES);
@@ -198,6 +340,9 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			pf_status.running = 1;
 			pf_status.states = states;
 			pf_status.since = time.tv_sec;
+			if (status_ifp != NULL)
+				strlcpy(pf_status.ifname, 
+				    status_ifp->if_xname, IFNAMSIZ);
 			DPFPRINTF(PF_DEBUG_MISC, ("pf: started\n"));
 		}
 		break;
@@ -269,7 +414,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			rule->ifp = NULL;
 		if (rule->rt_ifname[0]) {
 			rule->rt_ifp = ifunit(rule->rt_ifname);
-			if (rule->rt_ifname == NULL) {
+			if (rule->rt_ifp == NULL) {
 				pool_put(&pf_rule_pl, rule);
 				error = EINVAL;
 				break;
@@ -406,7 +551,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 				newrule->ifp = NULL;
 			if (newrule->rt_ifname[0]) {
 				newrule->rt_ifp = ifunit(newrule->rt_ifname);
-				if (newrule->rt_ifname == NULL) {
+				if (newrule->rt_ifp == NULL) {
 					pool_put(&pf_rule_pl, newrule);
 					error = EINVAL;
 					break;
@@ -480,8 +625,8 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		struct pf_nat *nat;
 
 		while ((nat = TAILQ_FIRST(pf_nats_inactive)) != NULL) {
-			pf_dynaddr_remove(&nat->saddr);
-			pf_dynaddr_remove(&nat->daddr);
+			pf_dynaddr_remove(&nat->src.addr);
+			pf_dynaddr_remove(&nat->dst.addr);
 			pf_dynaddr_remove(&nat->raddr);
 			TAILQ_REMOVE(pf_nats_inactive, nat, entries);
 			pool_put(&pf_nat_pl, nat);
@@ -527,11 +672,11 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			}
 		} else
 			nat->ifp = NULL;
-		if (pf_dynaddr_setup(&nat->saddr, nat->af) ||
-		    pf_dynaddr_setup(&nat->daddr, nat->af) ||
+		if (pf_dynaddr_setup(&nat->src.addr, nat->af) ||
+		    pf_dynaddr_setup(&nat->dst.addr, nat->af) ||
 		    pf_dynaddr_setup(&nat->raddr, nat->af)) {
-			pf_dynaddr_remove(&nat->saddr);
-			pf_dynaddr_remove(&nat->daddr);
+			pf_dynaddr_remove(&nat->src.addr);
+			pf_dynaddr_remove(&nat->dst.addr);
 			pf_dynaddr_remove(&nat->raddr);
 			pool_put(&pf_nat_pl, nat);
 			error = EINVAL;
@@ -561,8 +706,8 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 
 		/* Purge the old nat list */
 		while ((nat = TAILQ_FIRST(old_nats)) != NULL) {
-			pf_dynaddr_remove(&nat->saddr);
-			pf_dynaddr_remove(&nat->daddr);
+			pf_dynaddr_remove(&nat->src.addr);
+			pf_dynaddr_remove(&nat->dst.addr);
 			pf_dynaddr_remove(&nat->raddr);
 			TAILQ_REMOVE(old_nats, nat, entries);
 			pool_put(&pf_nat_pl, nat);
@@ -605,8 +750,8 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			break;
 		}
 		bcopy(nat, &pn->nat, sizeof(struct pf_nat));
-		pf_dynaddr_copyout(&pn->nat.saddr);
-		pf_dynaddr_copyout(&pn->nat.daddr);
+		pf_dynaddr_copyout(&pn->nat.src.addr);
+		pf_dynaddr_copyout(&pn->nat.dst.addr);
 		pf_dynaddr_copyout(&pn->nat.raddr);
 		splx(s);
 		break;
@@ -652,11 +797,11 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 				}
 			} else
 				newnat->ifp = NULL;
-			if (pf_dynaddr_setup(&newnat->saddr, newnat->af) ||
-			    pf_dynaddr_setup(&newnat->daddr, newnat->af) ||
+			if (pf_dynaddr_setup(&newnat->src.addr, newnat->af) ||
+			    pf_dynaddr_setup(&newnat->dst.addr, newnat->af) ||
 			    pf_dynaddr_setup(&newnat->raddr, newnat->af)) {
-				pf_dynaddr_remove(&newnat->saddr);
-				pf_dynaddr_remove(&newnat->daddr);
+				pf_dynaddr_remove(&newnat->src.addr);
+				pf_dynaddr_remove(&newnat->dst.addr);
 				pf_dynaddr_remove(&newnat->raddr);
 				pool_put(&pf_nat_pl, newnat);
 				error = EINVAL;
@@ -683,8 +828,8 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		}
 
 		if (pcn->action == PF_CHANGE_REMOVE) {
-			pf_dynaddr_remove(&oldnat->saddr);
-			pf_dynaddr_remove(&oldnat->daddr);
+			pf_dynaddr_remove(&oldnat->src.addr);
+			pf_dynaddr_remove(&oldnat->dst.addr);
 			pf_dynaddr_remove(&oldnat->raddr);
 			TAILQ_REMOVE(pf_nats_active, oldnat, entries);
 			pool_put(&pf_nat_pl, oldnat);
@@ -1262,7 +1407,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		splx(s);
 		secs = time.tv_sec;
 		ps->state.creation = secs - ps->state.creation;
-		if (ps->state.expire <= secs)
+		if (ps->state.expire <= (unsigned)secs)
 			ps->state.expire = 0;
 		else
 			ps->state.expire -= secs;
@@ -1290,7 +1435,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		RB_FOREACH(n, pf_state_tree, &tree_ext_gwy) {
 			int secs = time.tv_sec;
 
-			if ((nr + 1) * sizeof(*p) > ps->ps_len)
+			if ((nr + 1) * sizeof(*p) > (unsigned)ps->ps_len)
 				break;
 
 			bcopy(n->state, &pstore, sizeof(pstore));
@@ -1299,7 +1444,7 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			else
 				pstore.rule.nr = n->state->rule.ptr->nr;
 			pstore.creation = secs - pstore.creation;
-			if (pstore.expire <= secs)
+			if (pstore.expire <= (unsigned)secs)
 				pstore.expire = 0;
 			else
 				pstore.expire -= secs;
@@ -1320,10 +1465,16 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		struct pfioc_if *pi = (struct pfioc_if *)addr;
 		struct ifnet *ifp;
 
-		if ((ifp = ifunit(pi->ifname)) == NULL)
-			error = EINVAL;
-		else
-			status_ifp = ifp;
+		if (pi->ifname[0] == 0) {
+			status_ifp = NULL;
+			bzero(pf_status.ifname, IFNAMSIZ);
+		} else
+			if ((ifp = ifunit(pi->ifname)) == NULL)
+				error = EINVAL;
+			else {
+				status_ifp = ifp;
+				strlcpy(pf_status.ifname, ifp->if_xname, IFNAMSIZ);
+			}
 		break;
 	}
 
@@ -1344,6 +1495,9 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		pf_status.states = states;
 		pf_status.since = since;
 		pf_status.debug = debug;
+		if (status_ifp != NULL)
+			strlcpy(pf_status.ifname,
+			    status_ifp->if_xname, IFNAMSIZ);
 		break;
 	}
 
@@ -1472,6 +1626,255 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 		splx(s);
 		break;
 	}
+
+#ifdef ALTQ
+	case DIOCSTARTALTQ: {
+		struct pf_altq *altq;
+		struct ifnet *ifp;
+		struct tb_profile tb;
+
+		/* enable all altq interfaces on active list */
+		s = splsoftnet();
+		TAILQ_FOREACH(altq, pf_altqs_active, entries) {
+			if (altq->qname[0] == 0) {
+				if ((ifp = ifunit(altq->ifname)) == NULL) {
+					error = EINVAL;
+					break;
+				}
+				if (ifp->if_snd.altq_type != ALTQT_NONE)
+					error = altq_enable(&ifp->if_snd);
+				if (error != 0)
+					break;
+				/* set tokenbucket regulator */
+				tb.rate = altq->ifbandwidth;
+				tb.depth = altq->tbrsize;
+				error = tbr_set(&ifp->if_snd, &tb);
+				if (error != 0)
+					break;
+			}
+		}
+		splx(s);
+		DPFPRINTF(PF_DEBUG_MISC, ("altq: started\n"));
+		break;
+	}
+
+	case DIOCSTOPALTQ: {
+		struct pf_altq *altq;
+		struct ifnet *ifp;
+		struct tb_profile tb;
+		int err;
+
+		/* disable all altq interfaces on active list */
+		s = splsoftnet();
+		TAILQ_FOREACH(altq, pf_altqs_active, entries) {
+			if (altq->qname[0] == 0) {
+				if ((ifp = ifunit(altq->ifname)) == NULL) {
+					error = EINVAL;
+					break;
+				}
+				if (ifp->if_snd.altq_type != ALTQT_NONE) {
+					err = altq_disable(&ifp->if_snd);
+					if (err != 0 && error == 0)
+						error = err;
+				}
+				/* clear tokenbucket regulator */
+				tb.rate = 0;
+				err = tbr_set(&ifp->if_snd, &tb);
+				if (err != 0 && error == 0)
+					error = err;
+			}
+		}
+		splx(s);
+		DPFPRINTF(PF_DEBUG_MISC, ("altq: stopped\n"));
+		break;
+	}
+
+	case DIOCBEGINALTQS: {
+		u_int32_t *ticket = (u_int32_t *)addr;
+		struct pf_altq *altq;
+
+		/* Purge the old altq list */
+		while ((altq = TAILQ_FIRST(pf_altqs_inactive)) != NULL) {
+			TAILQ_REMOVE(pf_altqs_inactive, altq, entries);
+
+			if (altq->qname[0] == 0) {
+				/* detach and destroy the discipline */
+				error = altq_remove(altq);
+			}
+
+			pool_put(&pf_altq_pl, altq);
+		}
+
+		*ticket = ++ticket_altqs_inactive;
+		break;
+	}
+
+	case DIOCADDALTQ: {
+		struct pfioc_altq *pa = (struct pfioc_altq *)addr;
+		struct pf_altq *altq, *a;
+
+		if (pa->ticket != ticket_altqs_inactive) {
+			error = EBUSY;
+			break;
+		}
+		altq = pool_get(&pf_altq_pl, PR_NOWAIT);
+		if (altq == NULL) {
+			error = ENOMEM;
+			break;
+		}
+		bcopy(&pa->altq, altq, sizeof(struct pf_altq));
+
+		/*
+		 * if this is for a queue, find the discipline and
+		 * copy the necessary fields
+		 */
+		if (altq->qname[0] != 0) {
+			TAILQ_FOREACH(a, pf_altqs_inactive, entries) {
+				if (strncmp(a->ifname, altq->ifname, IFNAMSIZ)
+				    == 0 && a->qname[0] == 0) {
+					altq->altq_disc = a->altq_disc;
+					break;
+				}
+			}
+		}
+
+		error = altq_add(altq);
+
+		if (error) {
+			pool_put(&pf_altq_pl, altq);
+			break;
+		}
+
+		TAILQ_INSERT_TAIL(pf_altqs_inactive, altq, entries);
+
+		bcopy(altq, &pa->altq, sizeof(struct pf_altq));
+		break;
+	}
+
+	case DIOCCOMMITALTQS: {
+		u_int32_t *ticket = (u_int32_t *)addr;
+		struct pf_altqqueue *old_altqs;
+		struct pf_altq *altq;
+		int err;
+
+		if (*ticket != ticket_altqs_inactive) {
+			error = EBUSY;
+			break;
+		}
+
+		/* Swap altqs, keep the old. */
+		s = splsoftnet();
+		old_altqs = pf_altqs_active;
+		pf_altqs_active = pf_altqs_inactive;
+		pf_altqs_inactive = old_altqs;
+		ticket_altqs_active = ticket_altqs_inactive;
+
+		/* Attach new disciplines */
+		TAILQ_FOREACH(altq, pf_altqs_active, entries) {
+			if (altq->qname[0] == 0) {
+				/* attach the discipline */
+				error = altq_pfattach(altq);
+				if (error)
+					goto fail;
+			}
+		}
+
+		/* Purge the old altq list */
+		while ((altq = TAILQ_FIRST(pf_altqs_inactive)) != NULL) {
+			TAILQ_REMOVE(pf_altqs_inactive, altq, entries);
+
+			if (altq->qname[0] == 0) {
+				/* detach and destroy the discipline */
+				err = altq_pfdetach(altq);
+				if (err != 0 && error == 0)
+					error = err;
+				err = altq_remove(altq);
+				if (err != 0 && error == 0)
+					error = err;
+			}
+
+			pool_put(&pf_altq_pl, altq);
+		}
+		splx(s);
+		break;
+	}
+
+	case DIOCGETALTQS: {
+		struct pfioc_altq *pa = (struct pfioc_altq *)addr;
+		struct pf_altq *altq;
+
+		pa->nr = 0;
+		s = splsoftnet();
+		TAILQ_FOREACH(altq, pf_altqs_active, entries)
+			pa->nr++;
+		pa->ticket = ticket_altqs_active;
+		splx(s);
+		break;
+	}
+
+	case DIOCGETALTQ: {
+		struct pfioc_altq *pa = (struct pfioc_altq *)addr;
+		struct pf_altq *altq;
+		u_int32_t nr;
+
+		if (pa->ticket != ticket_altqs_active) {
+			error = EBUSY;
+			break;
+		}
+		nr = 0;
+		s = splsoftnet();
+		altq = TAILQ_FIRST(pf_altqs_active);
+		while ((altq != NULL) && (nr < pa->nr)) {
+			altq = TAILQ_NEXT(altq, entries);
+			nr++;
+		}
+		if (altq == NULL) {
+			error = EBUSY;
+			splx(s);
+			break;
+		}
+		bcopy(altq, &pa->altq, sizeof(struct pf_altq));
+		splx(s);
+		break;
+	}
+
+	case DIOCCHANGEALTQ:
+		/* CHANGEALTQ not supported yet! */
+		error = ENODEV;
+		break;
+
+	case DIOCGETQSTATS: {
+		struct pfioc_qstats *pq = (struct pfioc_qstats *)addr;
+		struct pf_altq *altq;
+		u_int32_t nr;
+		int nbytes;
+
+		if (pq->ticket != ticket_altqs_active) {
+			error = EBUSY;
+			break;
+		}
+		nbytes = pq->nbytes;
+		nr = 0;
+		s = splsoftnet();
+		altq = TAILQ_FIRST(pf_altqs_active);
+		while ((altq != NULL) && (nr < pq->nr)) {
+			altq = TAILQ_NEXT(altq, entries);
+			nr++;
+		}
+		if (altq == NULL) {
+			error = EBUSY;
+			splx(s);
+			break;
+		}
+		error = altq_getqstats(altq, pq->buf, &nbytes);
+		splx(s);
+		if (error == 0) {
+			pq->scheduler = altq->scheduler;
+			pq->nbytes = nbytes;
+		}
+		break;
+	}
+#endif /* ALTQ */
 
 	default:
 		error = ENODEV;

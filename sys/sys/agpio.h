@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/agpio.h,v 1.1 2002/07/12 20:17:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/sys/agpio.h,v 1.1.4.1 2002/10/29 00:36:49 art Exp $	*/
 
 /*-
  * Copyright (c) 2000 Doug Rabson

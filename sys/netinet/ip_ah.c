@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ah.c,v 1.63.4.1 2002/06/11 03:31:36 art Exp $ */
+/*	$OpenBSD: src/sys/netinet/ip_ah.c,v 1.63.4.2 2002/10/29 00:36:47 art Exp $ */
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -576,8 +576,7 @@ ah_input(struct mbuf *m, struct tdb *tdb, int skip, int protoff)
 
 	/* Notify on expiration. */
 	if (tdb->tdb_flags & TDBF_SOFT_BYTES &&
-	    tdb->tdb_cur_bytes >= tdb->tdb_soft_bytes)
-	{
+	    tdb->tdb_cur_bytes >= tdb->tdb_soft_bytes) {
 		pfkeyv2_expire(tdb, SADB_EXT_LIFETIME_SOFT);
 		tdb->tdb_flags &= ~TDBF_SOFT_BYTES;  /* Turn off checking. */
 	}
@@ -720,16 +719,16 @@ ah_input_cb(void *op)
 
 	/* Check for crypto errors. */
 	if (crp->crp_etype) {
+		FREE(tc, M_XDATA);
+
 		if (tdb->tdb_cryptoid != 0)
 			tdb->tdb_cryptoid = crp->crp_sid;
 
 		if (crp->crp_etype == EAGAIN) {
 			splx(s);
-			FREE(tc, M_XDATA);
 			return crypto_dispatch(crp);
 		}
 
-		FREE(tc, M_XDATA);
 		ahstat.ahs_noxform++;
 		DPRINTF(("ah_input_cb(): crypto error %d\n", crp->crp_etype));
 		error = crp->crp_etype;
@@ -1040,6 +1039,7 @@ ah_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 	 * Loop through mbuf chain; if we find an M_EXT mbuf with
 	 * more than one reference, replace the rest of the chain.
 	 */
+	mo = NULL;
 	mi = m;
 	while (mi != NULL &&
 	    (!(mi->m_flags & M_EXT) || !MCLISREFERENCED(mi))) {
@@ -1073,7 +1073,7 @@ ah_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 		    ntohl(tdb->tdb_spi)));
 
 		m_freem(m);
-		ahstat.ahs_wrap++;
+		ahstat.ahs_hdrops++;
 		return ENOBUFS;
 	}
 
@@ -1232,9 +1232,8 @@ ah_output_cb(void *op)
 	s = spltdb();
 
 	tdb = gettdb(tc->tc_spi, &tc->tc_dst, tc->tc_proto);
-
-	FREE(tc, M_XDATA);
 	if (tdb == NULL) {
+		FREE(tc, M_XDATA);
 		ahstat.ahs_notdb++;
 		DPRINTF(("ah_output_cb(): TDB is expired while in crypto\n"));
 		goto baddone;
@@ -1250,6 +1249,7 @@ ah_output_cb(void *op)
 			return crypto_dispatch(crp);
 		}
 
+		FREE(tc, M_XDATA);
 		ahstat.ahs_noxform++;
 		DPRINTF(("ah_output_cb(): crypto error %d\n", crp->crp_etype));
 		error = crp->crp_etype;
@@ -1258,6 +1258,7 @@ ah_output_cb(void *op)
 
 	/* Shouldn't happen... */
 	if (m == NULL) {
+		FREE(tc, M_XDATA);
 		ahstat.ahs_crypto++;
 		DPRINTF(("ah_output_cb(): bogus returned buffer from "
 		    "crypto\n"));
@@ -1271,6 +1272,8 @@ ah_output_cb(void *op)
 	 */
 	if ((tdb->tdb_flags & TDBF_SKIPCRYPTO) == 0)
 		m_copyback(m, 0, skip, ptr);
+
+	FREE(tc, M_XDATA);
 
 	/* No longer needed. */
 	crypto_freereq(crp);

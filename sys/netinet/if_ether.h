@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/if_ether.h,v 1.17.4.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/if_ether.h,v 1.17.4.2 2002/10/29 00:36:46 art Exp $	*/
 /*	$NetBSD: if_ether.h,v 1.22 1996/05/11 13:00:00 mycroft Exp $	*/
 
 /*
@@ -44,7 +44,7 @@
  */
 #define	ETHER_ADDR_LEN	6	/* Ethernet address length		*/
 #define ETHER_TYPE_LEN	2	/* Ethernet type field length		*/
-#define ETHER_CRC_LEN	4	/* Ethernet CRC lenght			*/
+#define ETHER_CRC_LEN	4	/* Ethernet CRC length			*/
 #define ETHER_HDR_LEN	((ETHER_ADDR_LEN * 2) + ETHER_TYPE_LEN)
 #define ETHER_MIN_LEN	64	/* Minimum frame length, CRC included	*/
 #define ETHER_MAX_LEN	1518	/* Maximum frame length, CRC included	*/
@@ -135,7 +135,7 @@ struct	ether_header {
  * Ethernet Address Resolution Protocol.
  *
  * See RFC 826 for protocol description.  Structure below is adapted
- * to resolving internet addresses.  Field names used correspond to 
+ * to resolving internet addresses.  Field names used correspond to
  * RFC 826.
  */
 struct	ether_arp {
@@ -191,10 +191,10 @@ struct sockaddr_inarp {
 #define	RTF_PERMANENT_ARP RTF_PROTO3    /* only manual overwrite of entry */
 
 #ifdef	_KERNEL
-u_int8_t etherbroadcastaddr[ETHER_ADDR_LEN];
-u_int8_t ether_ipmulticast_min[ETHER_ADDR_LEN];
-u_int8_t ether_ipmulticast_max[ETHER_ADDR_LEN];
-struct	ifqueue arpintrq;
+extern u_int8_t etherbroadcastaddr[ETHER_ADDR_LEN];
+extern u_int8_t ether_ipmulticast_min[ETHER_ADDR_LEN];
+extern u_int8_t ether_ipmulticast_max[ETHER_ADDR_LEN];
+extern struct ifqueue arpintrq;
 
 void	arpwhohas(struct arpcom *, struct in_addr *);
 void	arpintr(void);
@@ -205,6 +205,7 @@ void	arp_rtrequest(int, struct rtentry *, struct rt_addrinfo *);
 
 int	ether_addmulti(struct ifreq *, struct arpcom *);
 int	ether_delmulti(struct ifreq *, struct arpcom *);
+int	ether_multiaddr(struct sockaddr *, u_int8_t[], u_int8_t[]);
 #endif /* _KERNEL */
 
 /*

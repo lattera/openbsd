@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.39.2.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.c,v 1.39.2.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: nd6.c,v 1.280 2002/06/08 19:52:07 itojun Exp $	*/
 
 /*
@@ -243,9 +243,9 @@ nd6_option(ndopts)
 	int olen;
 
 	if (!ndopts)
-		panic("ndopts == NULL in nd6_option\n");
+		panic("ndopts == NULL in nd6_option");
 	if (!ndopts->nd_opts_last)
-		panic("uninitialized ndopts in nd6_option\n");
+		panic("uninitialized ndopts in nd6_option");
 	if (!ndopts->nd_opts_search)
 		return NULL;
 	if (ndopts->nd_opts_done)
@@ -295,9 +295,9 @@ nd6_options(ndopts)
 	int i = 0;
 
 	if (!ndopts)
-		panic("ndopts == NULL in nd6_options\n");
+		panic("ndopts == NULL in nd6_options");
 	if (!ndopts->nd_opts_last)
-		panic("uninitialized ndopts in nd6_options\n");
+		panic("uninitialized ndopts in nd6_options");
 	if (!ndopts->nd_opts_search)
 		return 0;
 
@@ -342,7 +342,7 @@ nd6_options(ndopts)
 		default:
 			/*
 			 * Unknown options must be silently ignored,
-			 * to accomodate future extension to the protocol.
+			 * to accommodate future extension to the protocol.
 			 */
 			nd6log((LOG_DEBUG,
 			    "nd6_options: unsupported option %d - "
@@ -410,12 +410,12 @@ nd6_timer(ignored_arg)
 
 		/* sanity check */
 		if (!rt)
-			panic("rt=0 in nd6_timer(ln=%p)\n", ln);
+			panic("rt=0 in nd6_timer(ln=%p)", ln);
 		if (rt->rt_llinfo && (struct llinfo_nd6 *)rt->rt_llinfo != ln)
-			panic("rt_llinfo(%p) is not equal to ln(%p)\n",
+			panic("rt_llinfo(%p) is not equal to ln(%p)",
 			      rt->rt_llinfo, ln);
 		if (!dst)
-			panic("dst=0 in nd6_timer(ln=%p)\n", ln);
+			panic("dst=0 in nd6_timer(ln=%p)", ln);
 
 		switch (ln->ln_state) {
 		case ND6_LLINFO_INCOMPLETE:
@@ -673,7 +673,7 @@ nd6_lookup(addr6, create, ifp)
 			struct ifaddr *ifa =
 			    ifaof_ifpforaddr((struct sockaddr *)&sin6, ifp);
 			if (ifa == NULL)
-				return(NULL);
+				return (NULL);
 
 			/*
 			 * Create a new route.  RTF_LLINFO is necessary
@@ -691,17 +691,17 @@ nd6_lookup(addr6, create, ifp)
 				    "neighbor(%s), errno=%d\n",
 				    ip6_sprintf(addr6), e);
 #endif
-				return(NULL);
+				return (NULL);
 			}
 			if (rt == NULL)
-				return(NULL);
+				return (NULL);
 			if (rt->rt_llinfo) {
 				struct llinfo_nd6 *ln =
 				    (struct llinfo_nd6 *)rt->rt_llinfo;
 				ln->ln_state = ND6_LLINFO_NOSTATE;
 			}
 		} else
-			return(NULL);
+			return (NULL);
 	}
 	rt->rt_refcnt--;
 	/*
@@ -720,13 +720,14 @@ nd6_lookup(addr6, create, ifp)
 	    rt->rt_gateway->sa_family != AF_LINK || rt->rt_llinfo == NULL ||
 	    (ifp && rt->rt_ifa->ifa_ifp != ifp)) {
 		if (create) {
-			log(LOG_DEBUG,
+			nd6log((LOG_DEBUG,
 			    "nd6_lookup: failed to lookup %s (if = %s)\n",
-			    ip6_sprintf(addr6), ifp ? ifp->if_xname : "unspec");
+			    ip6_sprintf(addr6),
+			    ifp ? ifp->if_xname : "unspec"));
 		}
-		return(NULL);
+		return (NULL);
 	}
-	return(rt);
+	return (rt);
 }
 
 /*
@@ -749,7 +750,7 @@ nd6_is_addr_neighbor(addr, ifp)
 	 */
 	if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
 	    ntohs(*(u_int16_t *)&addr->sin6_addr.s6_addr[2]) == ifp->if_index)
-		return(1);
+		return (1);
 
 	/*
 	 * If the address matches one of our on-link prefixes, it should be a
@@ -775,7 +776,7 @@ nd6_is_addr_neighbor(addr, ifp)
 	 */
 	if (!ip6_forwarding && TAILQ_FIRST(&nd_defrouter) == NULL &&
 	    nd6_defifindex == ifp->if_index) {
-		return(1);
+		return (1);
 	}
 
 	/*
@@ -783,9 +784,9 @@ nd6_is_addr_neighbor(addr, ifp)
 	 * in the neighbor cache.
 	 */
 	if ((rt = nd6_lookup(&addr->sin6_addr, 0, ifp)) != NULL)
-		return(1);
+		return (1);
 
-	return(0);
+	return (0);
 }
 
 /*
@@ -830,7 +831,7 @@ nd6_free(rt, gc)
 			 */
 			ln->ln_expire = dr->expire;
 			splx(s);
-			return(ln->ln_next);
+			return (ln->ln_next);
 		}
 
 		if (ln->ln_router || dr) {
@@ -890,7 +891,7 @@ nd6_free(rt, gc)
 	rtrequest(RTM_DELETE, rt_key(rt), (struct sockaddr *)0,
 	    rt_mask(rt), 0, (struct rtentry **)0);
 
-	return(next);
+	return (next);
 }
 
 /*
@@ -1409,10 +1410,10 @@ nd6_ioctl(cmd, data, ifp)
 		ndif->ifindex = nd6_defifindex;
 		break;
 	case SIOCSDEFIFACE_IN6:	/* XXX: should be implemented as a sysctl? */
-		return(nd6_setdefaultiface(ndif->ifindex));
+		return (nd6_setdefaultiface(ndif->ifindex));
 		break;
 	}
-	return(error);
+	return (error);
 }
 
 /*
@@ -1844,7 +1845,7 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 		    ND6_RETRANS_SEC(ND_IFINFO(ifp)->retrans);
 		nd6_ns_output(ifp, NULL, &dst->sin6_addr, ln, 0);
 	}
-	return(0);
+	return (0);
 
   sendpkt:
 #ifdef IPSEC
@@ -1865,7 +1866,7 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 			goto bad;
 		}
 #endif /* IPSEC */
-		return((*ifp->if_output)(origifp, m, (struct sockaddr *)dst,
+		return ((*ifp->if_output)(origifp, m, (struct sockaddr *)dst,
 					 rt));
 	}
 #ifdef IPSEC
@@ -1877,7 +1878,7 @@ nd6_output(ifp, origifp, m0, dst, rt0)
 		goto bad;
 	}
 #endif /* IPSEC */
-	return((*ifp->if_output)(ifp, m, (struct sockaddr *)dst, rt));
+	return ((*ifp->if_output)(ifp, m, (struct sockaddr *)dst, rt));
 
   bad:
 	if (m)
@@ -1906,9 +1907,9 @@ nd6_need_cache(ifp)
 	case IFT_L2VLAN:
 	case IFT_IEEE80211:
 	case IFT_GIF:		/* XXX need more cases? */
-		return(1);
+		return (1);
 	default:
-		return(0);
+		return (0);
 	}
 }
 
@@ -1928,26 +1929,26 @@ nd6_storelladdr(ifp, rt, m, dst, desten)
 		case IFT_FDDI:
 			ETHER_MAP_IPV6_MULTICAST(&SIN6(dst)->sin6_addr,
 						 desten);
-			return(1);
+			return (1);
 			break;
 		case IFT_ARCNET:
 			*desten = 0;
-			return(1);
+			return (1);
 		default:
 			m_freem(m);
-			return(0);
+			return (0);
 		}
 	}
 
 	if (rt == NULL) {
 		/* this could happen, if we could not allocate memory */
 		m_freem(m);
-		return(0);
+		return (0);
 	}
 	if (rt->rt_gateway->sa_family != AF_LINK) {
 		printf("nd6_storelladdr: something odd happens\n");
 		m_freem(m);
-		return(0);
+		return (0);
 	}
 	sdl = SDL(rt->rt_gateway);
 	if (sdl->sdl_alen == 0) {
@@ -1955,21 +1956,22 @@ nd6_storelladdr(ifp, rt, m, dst, desten)
 		printf("nd6_storelladdr: sdl_alen == 0, dst=%s, if=%s\n",
 		    ip6_sprintf(&SIN6(dst)->sin6_addr), ifp->if_xname);
 		m_freem(m);
-		return(0);
+		return (0);
 	}
 
 	bcopy(LLADDR(sdl), desten, sdl->sdl_alen);
-	return(1);
+	return (1);
 }
 
 int
 nd6_sysctl(name, oldp, oldlenp, newp, newlen)
 	int name;
-	void *oldp;
+	void *oldp;	/* syscall arg, need copyout */
 	size_t *oldlenp;
-	void *newp;
+	void *newp;	/* syscall arg, need copyin */
 	size_t newlen;
 {
+	void *p;
 	size_t ol, l;
 	int error;
 
@@ -1982,21 +1984,33 @@ nd6_sysctl(name, oldp, oldlenp, newp, newlen)
 		return EINVAL;
 	ol = oldlenp ? *oldlenp : 0;
 
+	if (oldp) {
+		p = malloc(*oldlenp, M_TEMP, M_WAITOK);
+		if (!p)
+			return ENOMEM;
+	} else
+		p = NULL;
 	switch (name) {
 	case ICMPV6CTL_ND6_DRLIST:
-		error = fill_drlist(oldp, oldlenp, ol);
+		error = fill_drlist(p, oldlenp, ol);
+		if (!error && p && oldp)
+			error = copyout(p, oldp, *oldlenp);
 		break;
 
 	case ICMPV6CTL_ND6_PRLIST:
-		error = fill_prlist(oldp, oldlenp, ol);
+		error = fill_prlist(p, oldlenp, ol);
+		if (!error && p && oldp)
+			error = copyout(p, oldp, *oldlenp);
 		break;
 
 	default:
 		error = ENOPROTOOPT;
 		break;
 	}
+	if (p)
+		free(p, M_TEMP);
 
-	return(error);
+	return (error);
 }
 
 static int
@@ -2047,7 +2061,7 @@ fill_drlist(oldp, oldlenp, ol)
 
 	splx(s);
 
-	return(error);
+	return (error);
 }
 
 static int
@@ -2149,5 +2163,5 @@ fill_prlist(oldp, oldlenp, ol)
 
 	splx(s);
 
-	return(error);
+	return (error);
 }

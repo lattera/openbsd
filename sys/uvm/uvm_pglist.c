@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.c,v 1.11.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.c,v 1.11.2.2 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_pglist.c,v 1.19 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*-

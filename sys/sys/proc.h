@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.51.2.2 2002/06/11 03:32:33 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.51.2.3 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -77,6 +77,7 @@ struct	pgrp {
  */
 struct exec_package;
 struct ps_strings;
+struct uvm_object;
 union sigval;
 
 struct	emul {
@@ -98,6 +99,7 @@ struct	emul {
 	int	(*e_fixup)(struct proc *, struct exec_package *);
 	char	*e_sigcode;		/* Start of sigcode */
 	char	*e_esigcode;		/* End of sigcode */
+	struct uvm_object *e_sigobject;	/* shared sigcode object */
 };
 
 /*
@@ -196,6 +198,7 @@ struct	proc {
 	char	p_comm[MAXCOMLEN+1];
 
 	struct 	pgrp *p_pgrp;	/* Pointer to process group. */
+	vaddr_t	p_sigcode;	/* user pointer to the signal code. */
 
 /* End area that is copied on creation. */
 #define	p_endcopy	p_addr
@@ -349,11 +352,12 @@ extern struct pool session_pool;	/* memory pool for sessions */
 extern struct pool pcred_pool;		/* memory pool for pcreds */
 
 #define	NQS	32			/* 32 run queues. */
-int	whichqs;			/* Bit mask summary of non-empty Q's. */
+extern int whichqs;			/* Bit mask summary of non-empty Q's. */
 struct	prochd {
 	struct	proc *ph_link;		/* Linked list of running processes. */
 	struct	proc *ph_rlink;
-} qs[NQS];
+};
+extern struct prochd qs[NQS];
 
 struct simplelock;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null_subr.c,v 1.9.14.1 2002/06/11 03:30:20 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null_subr.c,v 1.9.14.2 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: null_subr.c,v 1.6 1996/05/10 22:50:52 jtk Exp $	*/
 
 /*
@@ -239,7 +239,7 @@ loop:
 
 
 /*
- * Try to find an existing null_node vnode refering
+ * Try to find an existing null_node vnode referring
  * to it, otherwise make a new null_node vnode which
  * contains a reference to the lower vnode.
  *

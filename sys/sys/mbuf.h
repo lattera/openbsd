@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.54.4.2 2002/06/11 03:32:33 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.54.4.3 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -36,7 +36,7 @@
  *	@(#)mbuf.h	8.5 (Berkeley) 2/19/95
  */
 
-#ifndef M_WAITOK
+#ifndef _SYS_MALLOC_H_
 #include <sys/malloc.h>
 #endif
 #include <sys/pool.h>
@@ -533,10 +533,10 @@ struct	mbstat mbstat;
 extern	int nmbclust;			/* limit on the # of clusters */
 extern	int mblowat;			/* mbuf low water mark */
 extern	int mcllowat;			/* mbuf cluster low water mark */
-int	max_linkhdr;			/* largest link-level header */
-int	max_protohdr;			/* largest protocol header */
-int	max_hdr;			/* largest link+protocol header */
-int	max_datalen;			/* MHLEN - max_hdr */
+extern	int max_linkhdr;		/* largest link-level header */
+extern	int max_protohdr;		/* largest protocol header */
+extern	int max_hdr;			/* largest link+protocol header */
+extern	int max_datalen;		/* MHLEN - max_hdr */
 extern	int mbtypes[];			/* XXX */
 extern struct pool mbpool;
 extern struct pool mclpool;
@@ -596,6 +596,8 @@ struct m_tag *m_tag_next(struct mbuf *, struct m_tag *);
 #define PACKET_TAG_IN_PACKET_CHECKSUM		10 /* NIC checksumming done */
 #define PACKET_TAG_PF_GENERATED			11 /* PF generated, pass always */
 #define PACKET_TAG_PF_ROUTED			12 /* PF routed, no route loops */
+#define PACKET_TAG_PF_FRAGCACHE			13 /* PF fragment cached */
+#define	PACKET_TAG_PF_QID			14 /* PF queue id */
 
 #ifdef MBTYPES
 int mbtypes[] = {				/* XXX */

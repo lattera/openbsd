@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16.2.1 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_subr.c,v 1.16.2.2 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: exec_subr.c,v 1.9 1994/12/04 03:10:42 mycroft Exp $	*/
 
 /*
@@ -54,7 +54,7 @@
  */
 
 void
-new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
+new_vmcmd(evsp, proc, len, addr, vp, offset, prot, flags)
 	struct	exec_vmcmd_set *evsp;
 	int	(*proc)(struct proc * p, struct exec_vmcmd *);
 	u_long	len;
@@ -62,6 +62,7 @@ new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
 	struct	vnode *vp;
 	u_long	offset;
 	u_int	prot;
+	int	flags;
 {
 	struct exec_vmcmd    *vcp;
 
@@ -75,6 +76,7 @@ new_vmcmd(evsp, proc, len, addr, vp, offset, prot)
 		vref(vp);
 	vcp->ev_offset = offset;
 	vcp->ev_prot = prot;
+	vcp->ev_flags = flags;
 }
 #endif /* DEBUG */
 
@@ -105,8 +107,7 @@ vmcmdset_extend(evsp)
 }
 
 void
-kill_vmcmds(evsp)
-	struct	exec_vmcmd_set *evsp;
+kill_vmcmds(struct exec_vmcmd_set *evsp)
 {
 	struct exec_vmcmd *vcp;
 	int i;
@@ -125,6 +126,36 @@ kill_vmcmds(evsp)
 		free(evsp->evs_cmds, M_EXEC);
 	evsp->evs_cmds = evsp->evs_start;
 	evsp->evs_cnt = EXEC_DEFAULT_VMCMD_SETSIZE;
+}
+
+int
+exec_process_vmcmds(struct proc *p, struct exec_package *epp)
+{
+	struct exec_vmcmd *base_vc = NULL;
+	int error = 0;
+	int i;
+
+	for (i = 0; i < epp->ep_vmcmds.evs_used && !error; i++) {
+		struct exec_vmcmd *vcp;
+
+		vcp = &epp->ep_vmcmds.evs_cmds[i];
+
+		if (vcp->ev_flags & VMCMD_RELATIVE) {
+#ifdef DIAGNOSTIC
+			if (base_vc == NULL)
+				panic("exec_process_vmcmds: RELATIVE no base");
+#endif
+			vcp->ev_addr += base_vc->ev_addr;
+		}
+		error = (*vcp->ev_proc)(p, vcp);
+		if (vcp->ev_flags & VMCMD_BASE) {
+			base_vc = vcp;
+		}
+	}
+
+	kill_vmcmds(&epp->ep_vmcmds);
+
+	return (error);
 }
 
 /*
@@ -298,14 +329,14 @@ exec_setup_stack(p, epp)
 	    epp->ep_minsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
 	    epp->ep_minsaddr, NULLVP, 0,
-	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+	    VM_PROT_READ|VM_PROT_WRITE);
 #else
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
 	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
 	    epp->ep_maxsaddr, NULLVP, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
 	    (epp->ep_minsaddr - epp->ep_ssize), NULLVP, 0,
-	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+	    VM_PROT_READ|VM_PROT_WRITE);
 #endif
 
 	return 0;

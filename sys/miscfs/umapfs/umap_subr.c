@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap_subr.c,v 1.12.14.1 2002/06/11 03:30:21 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap_subr.c,v 1.12.14.2 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: umap_subr.c,v 1.8 1996/03/05 02:35:39 thorpej Exp $	*/
 
 /*
@@ -291,7 +291,7 @@ loop:
 
 
 /*
- * Try to find an existing umap_node vnode refering
+ * Try to find an existing umap_node vnode referring
  * to it, otherwise make a new umap_node vnode which
  * contains a reference to the target vnode.
  */

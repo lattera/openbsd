@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.2 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.96.2.3 2002/10/29 00:36:47 art Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -155,6 +155,8 @@ static __inline void ipq_unlock(void);
 
 struct pool ipqent_pool;
 
+struct ipstat ipstat;
+
 static __inline int
 ipq_lock_try()
 {
@@ -241,7 +243,7 @@ ip_init()
 	ipintrq.ifq_maxlen = ipqmaxlen;
 	TAILQ_INIT(&in_ifaddr);
 	if (ip_mtudisc != 0)
-		ip_mtudisc_timeout_q = 
+		ip_mtudisc_timeout_q =
 		    rt_timer_queue_create(ip_mtudisc_timeout);
 
 	/* Fill in list of ports not to allocate dynamically. */
@@ -585,7 +587,7 @@ found:
 				ipq_unlock();
 				goto bad;
 			}
-			    
+
 			ipqe = pool_get(&ipqent_pool, PR_NOWAIT);
 			if (ipqe == NULL) {
 				ipstat.ips_rcvmemdrop++;
@@ -654,7 +656,7 @@ found:
 	 * IPsec headers), and I don't think we lose much functionality
 	 * that's needed in the real world (who uses bundles anyway ?).
 	 */
-	mtag = m_tag_find(m, PACKET_TAG_IPSEC_IN_DONE, NULL); 
+	mtag = m_tag_find(m, PACKET_TAG_IPSEC_IN_DONE, NULL);
         s = splnet();
 	if (mtag) {
 		tdbi = (struct tdb_ident *)(mtag + 1);
@@ -1270,9 +1272,7 @@ ip_weadvertise(addr)
 	rt = rtalloc1(sintosa(&sin), 0);
 	if (rt == 0)
 		return 0;
-	
-	RTFREE(rt);
-	
+
 	if ((rt->rt_flags & RTF_GATEWAY) || (rt->rt_flags & RTF_LLINFO) == 0 ||
 	    rt->rt_gateway->sa_family != AF_LINK) {
 		RTFREE(rt);
@@ -1285,7 +1285,7 @@ ip_weadvertise(addr)
 			if (ifa->ifa_addr->sa_family != rt->rt_gateway->sa_family)
 				continue;
 
-			if (!bcmp(LLADDR((struct sockaddr_dl *)ifa->ifa_addr), 
+			if (!bcmp(LLADDR((struct sockaddr_dl *)ifa->ifa_addr),
 			    LLADDR((struct sockaddr_dl *)rt->rt_gateway),
 			    ETHER_ADDR_LEN)) {
 				RTFREE(rt);
@@ -1510,8 +1510,8 @@ ip_forward(m, srcrt)
 	}
 
 	error = ip_output(m, (struct mbuf *)0, &ipforward_rt,
-	    (IP_FORWARDING | (ip_directedbcast ? IP_ALLOWBROADCAST : 0)), 
-	    0, NULL, NULL);
+	    (IP_FORWARDING | (ip_directedbcast ? IP_ALLOWBROADCAST : 0)),
+	    0, (void *)NULL, (void *)NULL);
 	if (error)
 		ipstat.ips_cantforward++;
 	else {
@@ -1628,7 +1628,7 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		error = sysctl_int(oldp, oldlenp, newp, newlen,
 		    &ip_mtudisc);
 		if (ip_mtudisc != 0 && ip_mtudisc_timeout_q == NULL) {
-			ip_mtudisc_timeout_q = 
+			ip_mtudisc_timeout_q =
 			    rt_timer_queue_create(ip_mtudisc_timeout);
 		} else if (ip_mtudisc == 0 && ip_mtudisc_timeout_q != NULL) {
 			rt_timer_queue_destroy(ip_mtudisc_timeout_q, TRUE);
@@ -1640,7 +1640,7 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		error = sysctl_int(oldp, oldlenp, newp, newlen,
 		   &ip_mtudisc_timeout);
 		if (ip_mtudisc_timeout_q != NULL)
-			rt_timer_queue_change(ip_mtudisc_timeout_q, 
+			rt_timer_queue_change(ip_mtudisc_timeout_q,
 					      ip_mtudisc_timeout);
 		return (error);
 	case IPCTL_IPPORT_FIRSTAUTO:
@@ -1702,7 +1702,7 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 				   &ipsec_expire_acquire));
 	case IPCTL_IPSEC_IPCOMP_ALGORITHM:
 	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
-				       ipsec_def_comp, 
+				       ipsec_def_comp,
 				       sizeof(ipsec_def_comp)));
 	default:
 		return (EOPNOTSUPP);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.40.4.2 2002/06/11 03:31:37 art Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_spd.c,v 1.40.4.3 2002/10/29 00:36:47 art Exp $ */
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -466,7 +466,7 @@ ipsp_spd_lookup(struct mbuf *m, int af, int hlen, int *error, int direction,
 			    tdbp, inp, ipo);
 
   nomatchin: /* Nothing needed here, falling through */
-  	;
+	;
 		}
 
 		/* Check whether cached entry applies. */

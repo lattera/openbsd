@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.43.2.2 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_descrip.c,v 1.43.2.3 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: kern_descrip.c,v 1.42 1996/03/30 22:24:38 christos Exp $	*/
 
 /*
@@ -215,7 +215,7 @@ sys_dup(p, v, retval)
 	register_t *retval;
 {
 	struct sys_dup_args /* {
-		syscallarg(u_int) fd;
+		syscallarg(int) fd;
 	} */ *uap = v;
 	struct filedesc *fdp = p->p_fd;
 	int old = SCARG(uap, fd);
@@ -249,8 +249,8 @@ sys_dup2(p, v, retval)
 	register_t *retval;
 {
 	struct sys_dup2_args /* {
-		syscallarg(u_int) from;
-		syscallarg(u_int) to;
+		syscallarg(int) from;
+		syscallarg(int) to;
 	} */ *uap = v;
 	int old = SCARG(uap, from), new = SCARG(uap, to);
 	struct filedesc *fdp = p->p_fd;
@@ -285,6 +285,7 @@ restart:
 		if (new != i)
 			panic("dup2: fdalloc");
 	}
+	/* finishdup() does FRELE */
 	return (finishdup(p, fp, old, new, retval));
 }
 
@@ -511,8 +512,10 @@ finishdup(struct proc *p, struct file *fp, int old, int new, register_t *retval)
 	if (oldfp != NULL)
 		FREF(oldfp);
 
-	if (fp->f_count == LONG_MAX-2)
+	if (fp->f_count == LONG_MAX-2) {
+		FRELE(fp);
 		return (EDEADLK);
+	}
 	fdp->fd_ofiles[new] = fp;
 	fdp->fd_ofileflags[new] = fdp->fd_ofileflags[old] & ~UF_EXCLOSE;
 	fp->f_count++;

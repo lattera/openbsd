@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.3 2002/06/11 03:32:04 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.4 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: nfs_socket.c,v 1.27 1996/04/15 20:20:00 thorpej Exp $	*/
 
 /*
@@ -1071,12 +1071,11 @@ nfsmout:
  * siz arg. is used to decide if adding a cluster is worthwhile
  */
 int
-nfs_rephead(siz, nd, slp, err, cache, frev, mrq, mbp, bposp)
+nfs_rephead(siz, nd, slp, err, frev, mrq, mbp, bposp)
 	int siz;
 	struct nfsrv_descript *nd;
 	struct nfssvc_sock *slp;
 	int err;
-	int cache;
 	u_quad_t *frev;
 	struct mbuf **mrq;
 	struct mbuf **mbp;
@@ -1139,14 +1138,6 @@ nfs_rephead(siz, nd, slp, err, cache, frev, mrq, mbp, bposp)
 			ktvin.tv_usec =
 			    txdr_unsigned(nuidp->nu_timestamp.tv_usec);
 
-			/*
-			 * Encrypt the timestamp in ecb mode using the
-			 * session key.
-			 */
-#ifdef NFSKERB
-			XXX
-#endif
-
 			*tl++ = rpc_auth_kerb;
 			*tl++ = txdr_unsigned(3 * NFSX_UNSIGNED);
 			*tl = ktvout.tv_sec;
@@ -1191,7 +1182,7 @@ nfs_rephead(siz, nd, slp, err, cache, frev, mrq, mbp, bposp)
 	}
 
 	*mrq = mreq;
-	if (mrq != NULL)
+	if (mbp != NULL)
 		*mbp = mb;
 	*bposp = bpos;
 	if (err != 0 && err != NFSERR_RETVOID)
@@ -1671,14 +1662,6 @@ nfs_getreq(nd, nfsd, has_header)
 				return (0);
 			}
 
-			/*
-			 * Now, decrypt the timestamp using the session key
-			 * and validate it.
-			 */
-#ifdef NFSKERB
-			XXX
-#endif
-
 			tvout.tv_sec = fxdr_unsigned(long, tvout.tv_sec);
 			tvout.tv_usec = fxdr_unsigned(long, tvout.tv_usec);
 			if (nuidp->nu_expire < time.tv_sec ||
@@ -1881,7 +1864,7 @@ nfsrv_getstream(slp, waitflag)
 	struct mbuf *m, **mpp;
 	char *cp1, *cp2;
 	int len;
-	struct mbuf *om, *m2, *recm = NULL;
+	struct mbuf *om, *m2, *recm;
 	u_int32_t recmark;
 
 	if (slp->ns_flag & SLP_GETSTREAM)
@@ -1927,6 +1910,7 @@ nfsrv_getstream(slp, waitflag)
 	    /*
 	     * Now get the record part.
 	     */
+	    recm = NULL;
 	    if (slp->ns_cc == slp->ns_reclen) {
 		recm = slp->ns_raw;
 		slp->ns_raw = slp->ns_rawend = (struct mbuf *)0;

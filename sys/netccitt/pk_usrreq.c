@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_usrreq.c,v 1.3.4.1 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_usrreq.c,v 1.3.4.2 2002/10/29 00:36:46 art Exp $	*/
 /*	$NetBSD: pk_usrreq.c,v 1.10 1996/02/13 22:05:43 christos Exp $	*/
 
 /*
@@ -277,6 +277,7 @@ pk_usrreq(so, req, m, nam, control)
 			if (n && n->m_type == MT_OOBDATA) {
 				unsigned        len = n->m_pkthdr.len;
 				so->so_rcv.sb_mb = n->m_nextpkt;
+				SB_EMPTY_FIXUP(&so->so_rcv);
 				if (len != n->m_len &&
 				    (n = m_pullup(n, len)) == 0)
 					break;

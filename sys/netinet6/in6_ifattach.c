@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.21.2.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.21.2.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: in6_ifattach.c,v 1.124 2001/07/18 08:32:51 jinmei Exp $	*/
 
 /*
@@ -126,7 +126,7 @@ get_hw_ifid(ifp, in6)
 {
 	struct ifaddr *ifa;
 	struct sockaddr_dl *sdl;
-	u_int8_t *addr;
+	char *addr;
 	size_t addrlen;
 	static u_int8_t allzero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	static u_int8_t allone[8] =
@@ -351,7 +351,7 @@ in6_ifattach_linklocal(ifp, altifp)
 		if (get_ifid(ifp, altifp, &ifra.ifra_addr.sin6_addr) != 0) {
 			nd6log((LOG_ERR,
 			    "%s: no ifid available\n", ifp->if_xname));
-			return(-1);
+			return (-1);
 		}
 	}
 
@@ -387,11 +387,11 @@ in6_ifattach_linklocal(ifp, altifp)
 		 * suppress it.  (jinmei@kame.net 20010130)
 		 */
 		if (error != EAFNOSUPPORT)
-			log(LOG_NOTICE, "in6_ifattach_linklocal: failed to "
+			nd6log((LOG_NOTICE, "in6_ifattach_linklocal: failed to "
 			    "configure a link-local address on %s "
 			    "(errno=%d)\n",
-			    ifp->if_xname, error);
-		return(-1);
+			    ifp->if_xname, error));
+		return (-1);
 	}
 
 	/*
@@ -446,7 +446,7 @@ in6_ifattach_linklocal(ifp, altifp)
 	 */
 	if (nd6_prefix_lookup(&pr0) == NULL) {
 		if ((error = nd6_prelist_add(&pr0, NULL, NULL)) != 0)
-			return(error);
+			return (error);
 	}
 
 	return 0;
@@ -495,10 +495,10 @@ in6_ifattach_loopback(ifp)
 	 * NULL to the 3rd arg.
 	 */
 	if ((error = in6_update_ifa(ifp, &ifra, NULL)) != 0) {
-		log(LOG_ERR, "in6_ifattach_loopback: failed to configure "
+		nd6log((LOG_ERR, "in6_ifattach_loopback: failed to configure "
 		    "the loopback address on %s (errno=%d)\n",
-		    ifp->if_xname, error);
-		return(-1);
+		    ifp->if_xname, error));
+		return (-1);
 	}
 
 	return 0;
@@ -518,11 +518,11 @@ in6_nigroup(ifp, name, namelen, sa6)
 	struct sockaddr_in6 *sa6;
 {
 	const char *p;
-	u_char *q;
+	u_int8_t *q;
 	MD5_CTX ctxt;
 	u_int8_t digest[16];
-	char l;
-	char n[64];	/* a single label must not exceed 63 chars */
+	u_int8_t l;
+	u_int8_t n[64];	/* a single label must not exceed 63 chars */
 
 	if (!namelen || !name)
 		return -1;
@@ -533,7 +533,7 @@ in6_nigroup(ifp, name, namelen, sa6)
 	if (p - name > sizeof(n) - 1)
 		return -1;	/* label too long */
 	l = p - name;
-	strncpy(n, name, l);
+	strncpy((char *)n, name, l);
 	n[(int)l] = '\0';
 	for (q = n; *q; q++) {
 		if ('A' <= *q && *q <= 'Z')
@@ -591,8 +591,12 @@ in6_ifattach(ifp, altifp)
 	 * remember there could be some link-layer that has special
 	 * fragmentation logic.
 	 */
-	if (ifp->if_mtu < IPV6_MMTU)
+	if (ifp->if_mtu < IPV6_MMTU) {
+		nd6log((LOG_INFO, "in6_ifattach: "
+		    "%s has too small MTU, IPv6 not enabled\n",
+		    ifp->if_xname));
 		return;
+	}
 
 	/* create a multicast kludge storage (if we have not had one) */
 	in6_createmkludge(ifp);
@@ -619,15 +623,15 @@ in6_ifattach(ifp, altifp)
 	 * usually, we require multicast capability to the interface
 	 */
 	if ((ifp->if_flags & IFF_MULTICAST) == 0) {
-		log(LOG_INFO, "in6_ifattach: "
+		nd6log((LOG_INFO, "in6_ifattach: "
 		    "%s is not multicast capable, IPv6 not enabled\n",
-		    ifp->if_xname);
+		    ifp->if_xname));
 		return;
 	}
 
 	/*
-	 * assign loopback address for loopback interface
-	 * XXX multiple loopback interface case
+	 * assign loopback address for loopback interface.
+	 * XXX multiple loopback interface case.
 	 */
 	if ((ifp->if_flags & IFF_LOOPBACK) != 0) {
 		in6 = in6addr_loopback;
@@ -638,7 +642,7 @@ in6_ifattach(ifp, altifp)
 	}
 
 	/*
-	 * assign a link-local address, if there's none. 
+	 * assign a link-local address, if there's none.
 	 */
 	if (ip6_auto_linklocal) {
 		ia = in6ifa_ifpforlinklocal(ifp, 0);
@@ -681,6 +685,8 @@ in6_ifdetach(ifp)
 	/* undo everything done by in6_ifattach(), just in case */
 	for (ifa = ifp->if_addrlist.tqh_first; ifa; ifa = next)
 	{
+		next = ifa->ifa_list.tqe_next;
+
 		if (ifa->ifa_addr->sa_family != AF_INET6
 		 || !IN6_IS_ADDR_LINKLOCAL(&satosin6(&ifa->ifa_addr)->sin6_addr)) {
 			continue;
@@ -721,7 +727,7 @@ in6_ifdetach(ifp)
 			if (ia->ia_next)
 				ia->ia_next = oia->ia_next;
 			else {
-				nd6log((LOG_ERR, 
+				nd6log((LOG_ERR,
 				    "%s: didn't unlink in6ifaddr from list\n",
 				    ifp->if_xname));
 			}
@@ -752,7 +758,7 @@ in6_ifdetach(ifp)
 	rt = rtalloc1((struct sockaddr *)&sin6, 0);
 	if (rt && rt->rt_ifp == ifp) {
 		rtrequest(RTM_DELETE, (struct sockaddr *)rt_key(rt),
-			rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
+		    rt->rt_gateway, rt_mask(rt), rt->rt_flags, 0);
 		rtfree(rt);
 	}
 }

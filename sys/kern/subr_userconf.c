@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_userconf.c,v 1.26.4.1 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_userconf.c,v 1.26.4.2 2002/10/29 00:36:44 art Exp $	*/
 
 /*
  * Copyright (c) 1996-2001 Mats O Jansson <moj@stacken.kth.se>
@@ -505,6 +505,10 @@ userconf_change(devno)
 					;
 				lk = l = (int *)malloc(sizeof(int) * i,
 				    M_TEMP, M_NOWAIT);
+				if (lk == NULL) {
+					printf("out of memory.\n");
+					return;
+				}
 				bcopy(cd->cf_loc, l, sizeof(int) * i);
 			}
 
@@ -1108,13 +1112,13 @@ userconf_add(dev, len, unit, state)
 		/* Fix indexs in pv */
 		for (i = 0; i < pv_size; i++) {
 			if (pv[i] != -1 && pv[i] >= val)
-				pv[i] = pv[i]++;
+				pv[i]++;
 		}
 
 		/* Fix indexs in cfroots */
 		for (i = 0; i < cfroots_size; i++) {
 			if (cfroots[i] != -1 && cfroots[i] >= val)
-				cfroots[i] = cfroots[i]++;
+				cfroots[i]++;
 		}
 
 		userconf_maxdev++;

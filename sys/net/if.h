@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.h,v 1.31.4.2 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if.h,v 1.31.4.3 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: if.h,v 1.23 1996/05/07 02:40:27 thorpej Exp $	*/
 
 /*
@@ -172,7 +172,7 @@ struct ifnet {				/* and the entries */
 					/* timer routine */
 	void	(*if_watchdog)(struct ifnet *);
 	struct	ifaltq if_snd;		/* output queue (includes altq) */
-	struct ifprefix *if_prefixlist; /* linked list of prefixes per if */
+	struct sockaddr_dl *if_sadl;	/* pointer to our sockaddr_dl */
 
 	void	*if_afdata[AF_MAX];
 };
@@ -305,20 +305,6 @@ struct ifaddr {
 	int	ifa_metric;		/* cost of going out this interface */
 };
 #define	IFA_ROUTE	RTF_UP		/* route installed */
-
-/*
- * The prefix structure contains information about one prefix
- * of an interface.  They are maintained by the different address families,
- * are allocated and attached when an prefix or an address is set,
- * and are linked together so all prfefixes for an interface can be located.
- */
-struct ifprefix {
-	struct	sockaddr *ifpr_prefix;	/* prefix of interface */
-	struct	ifnet *ifpr_ifp;	/* back-pointer to interface */
-	struct ifprefix *ifpr_next;
-	u_char	ifpr_plen;		/* prefix length in bits */
-	u_char	ifpr_type;		/* protocol dependent prefix type */
-};
 
 /*
  * Message format for use in obtaining information about interfaces
@@ -542,10 +528,10 @@ do {									\
 #define	IFQ_INC_DROPS(ifq)		((ifq)->ifq_drops++)
 #define	IFQ_SET_MAXLEN(ifq, len)	((ifq)->ifq_maxlen = (len))
 
-struct ifnet_head ifnet;
-struct ifnet **ifindex2ifnet;
-struct ifnet *lo0ifp;
-int if_index;
+extern struct ifnet_head ifnet;
+extern struct ifnet **ifindex2ifnet;
+extern struct ifnet *lo0ifp;
+extern int if_index;
 
 void	ether_ifattach(struct ifnet *);
 void	ether_ifdetach(struct ifnet *);
@@ -556,6 +542,8 @@ int	ether_output(struct ifnet *,
 	   struct mbuf *, struct sockaddr *, struct rtentry *);
 char	*ether_sprintf(u_char *);
 
+void	if_alloc_sadl(struct ifnet *);
+void	if_free_sadl(struct ifnet *);
 void	if_attach(struct ifnet *);
 void	if_attachdomain(void);
 void	if_attachtail(struct ifnet *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.7.2.1 2002/06/11 03:30:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.7.2.2 2002/10/29 00:36:46 art Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@keromytis.org)
  *
@@ -157,9 +157,9 @@ export_sa(void **p, struct tdb *tdb)
 	if (tdb->tdb_flags & TDBF_INVALID)
 		sadb_sa->sadb_sa_state = SADB_SASTATE_LARVAL;
 
-	if (tdb->tdb_sproto == IPPROTO_IPCOMP) {
-		switch (tdb->tdb_compalgxform->type)
-		{
+	if (tdb->tdb_sproto == IPPROTO_IPCOMP &&
+	    tdb->tdb_compalgxform != NULL) {
+		switch (tdb->tdb_compalgxform->type) {
 		case CRYPTO_DEFLATE_COMP:
 			sadb_sa->sadb_sa_encrypt = SADB_X_CALG_DEFLATE;
 			break;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.40.2.1 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.40.2.2 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -60,6 +60,9 @@
 
 u_char	curpriority;		/* usrpri of curproc */
 int	lbolt;			/* once a second sleep address */
+
+int whichqs;			/* Bit mask summary of non-empty Q's. */
+struct prochd qs[NQS];
 
 void scheduler_start(void);
 
@@ -654,8 +657,8 @@ yield()
 	struct proc *p = curproc;
 	int s;
 
-	p->p_priority = p->p_usrpri;
 	s = splstatclock();
+	p->p_priority = p->p_usrpri;
 	setrunqueue(p);
 	p->p_stats->p_ru.ru_nvcsw++;
 	mi_switch();
@@ -681,8 +684,8 @@ preempt(newp)
 	if (newp != NULL)
 		panic("preempt: cpu_preempt not yet implemented");
 
-	p->p_priority = p->p_usrpri;
 	s = splstatclock();
+	p->p_priority = p->p_usrpri;
 	setrunqueue(p);
 	p->p_stats->p_ru.ru_nivcsw++;
 	mi_switch();
@@ -696,10 +699,12 @@ preempt(newp)
 void
 mi_switch()
 {
-	register struct proc *p = curproc;	/* XXX */
-	register struct rlimit *rlim;
-	register long s, u;
+	struct proc *p = curproc;	/* XXX */
+	struct rlimit *rlim;
+	long s, u;
 	struct timeval tv;
+
+	splassert(IPL_STATCLOCK);
 
 	/*
 	 * Compute the amount of time during which the current
@@ -890,15 +895,15 @@ db_show_all_procs(addr, haddr, count, modif)
 	switch (*mode) {
 
 	case 'a':
-		db_printf("  PID  %-10s  %18s  %18s  %18s\n",
+		db_printf("   PID  %-10s  %18s  %18s  %18s\n",
 		    "COMMAND", "STRUCT PROC *", "UAREA *", "VMSPACE/VM_MAP");
 		break;
 	case 'n':
-		db_printf("  PID  %5s  %5s  %5s  S  %10s  %-9s  %-16s\n",
+		db_printf("   PID  %5s  %5s  %5s  S  %10s  %-9s  %-16s\n",
 		    "PPID", "PGRP", "UID", "FLAGS", "WAIT", "COMMAND");
 		break;
 	case 'w':
-		db_printf("  PID  %-16s  %-8s  %18s  %s\n",
+		db_printf("   PID  %-16s  %-8s  %18s  %s\n",
 		    "COMMAND", "EMUL", "WAIT-CHANNEL", "WAIT-MSG");
 		break;
 	}

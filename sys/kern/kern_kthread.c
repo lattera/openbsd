@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.15.2.1 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.15.2.2 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -103,8 +103,7 @@ kthread_create(void (*func)(void *), void *arg,
  * current context.
  */
 void
-kthread_exit(ecode)
-	int ecode;
+kthread_exit(int ecode)
 {
 
 	/*
@@ -139,9 +138,7 @@ SIMPLEQ_HEAD(, kthread_q) kthread_q = SIMPLEQ_HEAD_INITIALIZER(kthread_q);
  * the caller to create threads for e.g. file systems and device drivers.
  */
 void
-kthread_create_deferred(func, arg)
-	void (*func)(void *);
-	void *arg;
+kthread_create_deferred(void (*func)(void *), void *arg)
 {
 	struct kthread_q *kq;
 
@@ -157,7 +154,7 @@ kthread_create_deferred(func, arg)
 }
 
 void
-kthread_run_deferred_queue()
+kthread_run_deferred_queue(void)
 {
 	struct kthread_q *kq;
 

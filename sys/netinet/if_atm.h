@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/netinet/Attic/if_atm.h,v 1.4.6.1 2002/06/11 03:31:36 art Exp $       */
+/*      $OpenBSD: src/sys/netinet/Attic/if_atm.h,v 1.4.6.2 2002/10/29 00:36:46 art Exp $       */
 
 /*
  *
@@ -15,7 +15,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by Charles D. Cranor and 
+ *      This product includes software developed by Charles D. Cranor and
  * 	Washington University.
  * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
@@ -37,5 +37,5 @@
  */
 
 void atm_rtrequest(int, struct rtentry *, struct rt_addrinfo *);
-int atmresolve(struct rtentry *, struct mbuf *, struct sockaddr *, 
+int atmresolve(struct rtentry *, struct mbuf *, struct sockaddr *,
 		struct atm_pseudohdr *);

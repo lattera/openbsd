@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_syscalls.c,v 1.5.22.1 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/lfs/Attic/lfs_syscalls.c,v 1.5.22.2 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: lfs_syscalls.c,v 1.10 1996/02/09 22:28:56 christos Exp $	*/
 
 /*-
@@ -123,6 +123,8 @@ lfs_markv(p, v, retval)
 		return (EINVAL);
 
 	cnt = SCARG(uap, blkcnt);
+	if (cnt > SIZE_T_MAX / sizeof(BLOCK_INFO))
+		return (EINVAL);
 	start = malloc(cnt * sizeof(BLOCK_INFO), M_SEGMENT, M_WAITOK);
 	error = copyin(SCARG(uap, blkiov), start, cnt * sizeof(BLOCK_INFO));
 	if (error)

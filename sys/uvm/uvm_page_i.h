@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_page_i.h,v 1.12.2.2 2002/02/02 03:28:27 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_page_i.h,v 1.12.2.3 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_page_i.h,v 1.20 2001/09/15 20:36:47 chs Exp $	*/
 
 /*
@@ -255,7 +255,7 @@ uvm_pagezero(pg)
 	struct vm_page *pg;
 {
 	pg->flags &= ~PG_CLEAN;
-	pmap_zero_page(VM_PAGE_TO_PHYS(pg));
+	pmap_zero_page(pg);
 }
 
 /*
@@ -271,7 +271,7 @@ uvm_pagecopy(src, dst)
 {
 
 	dst->flags &= ~PG_CLEAN;
-	pmap_copy_page(VM_PAGE_TO_PHYS(src), VM_PAGE_TO_PHYS(dst));
+	pmap_copy_page(src, dst);
 }
 
 /*

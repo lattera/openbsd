@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/raw_usrreq.c,v 1.4.2.1 2002/06/11 03:30:46 art Exp $	*/
+/*	$OpenBSD: src/sys/net/raw_usrreq.c,v 1.4.2.2 2002/10/29 00:36:46 art Exp $	*/
 /*	$NetBSD: raw_usrreq.c,v 1.11 1996/02/13 22:00:43 christos Exp $	*/
 
 /*
@@ -283,7 +283,7 @@ raw_usrreq(so, req, m, nam, control)
 	 */
 	case PRU_RCVOOB:
 	case PRU_RCVD:
-		return(EOPNOTSUPP);
+		return (EOPNOTSUPP);
 
 	case PRU_LISTEN:
 	case PRU_ACCEPT:

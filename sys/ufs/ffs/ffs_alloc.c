@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.37.2.1 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.37.2.2 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: ffs_alloc.c,v 1.11 1996/05/11 18:27:09 mycroft Exp $	*/
 
 /*
@@ -1790,5 +1790,5 @@ ffs_fserr(fs, uid, cp)
 	char *cp;
 {
 
-	log(LOG_ERR, "uid %d on %s: %s\n", uid, fs->fs_fsmnt, cp);
+	log(LOG_ERR, "uid %u on %s: %s\n", uid, fs->fs_fsmnt, cp);
 }

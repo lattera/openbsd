@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.19.2.2 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.19.2.3 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: ext2fs_vfsops.c,v 1.40 2000/11/27 08:39:53 chs Exp $	*/
 
 /*
@@ -970,7 +970,7 @@ ext2fs_fhtovp(mp, fhp, vpp)
 	ufhp = (struct ufid *)fhp;
 	fs = VFSTOUFS(mp)->um_e2fs;
 	if ((ufhp->ufid_ino < EXT2_FIRSTINO && ufhp->ufid_ino != EXT2_ROOTINO) ||
-		ufhp->ufid_ino >= fs->e2fs_ncg * fs->e2fs.e2fs_ipg)
+		ufhp->ufid_ino > fs->e2fs_ncg * fs->e2fs.e2fs_ipg)
 		return (ESTALE);
 
 	if ((error = VFS_VGET(mp, ufhp->ufid_ino, &nvp)) != 0) {
@@ -1101,7 +1101,7 @@ ext2fs_checksb(fs, ronly)
 		}
 		if (fs2h32(fs->e2fs_features_incompat) &
 		    ~EXT2F_INCOMPAT_SUPP) {
-			printf("Ext2 fs: unsupported optionnal feature\n");
+			printf("Ext2 fs: unsupported optional feature\n");
 			return (EINVAL);      /* XXX needs translation */
 		}
 		if (!ronly && fs2h32(fs->e2fs_features_rocompat) &

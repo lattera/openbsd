@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx.h,v 1.14.6.1 2002/06/11 03:31:38 art Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx.h,v 1.14.6.2 2002/10/29 00:36:48 art Exp $	*/
 
 /*-
  *
@@ -193,7 +193,7 @@ struct ipx {
 	{ 0, 0 }, \
 	{ 0, 0 }, \
 	{ "spx", CTLTYPE_NODE }, \
-};
+}
 
 #ifdef _KERNEL
 

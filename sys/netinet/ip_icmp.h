@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.h,v 1.14.4.2 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.h,v 1.14.4.3 2002/10/29 00:36:47 art Exp $	*/
 /*	$NetBSD: ip_icmp.h,v 1.10 1996/02/13 23:42:28 christos Exp $	*/
 
 /*
@@ -77,7 +77,7 @@ struct icmp {
 
 		/* ICMP_UNREACH_NEEDFRAG -- Path MTU Discovery (RFC1191) */
 		struct ih_pmtu {
-			  n_short ipm_void;    
+			  n_short ipm_void;
 			  n_short ipm_nextmtu;
 		} ih_pmtu;
 

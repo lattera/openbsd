@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.11.2.2 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.11.2.3 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: mld6.c,v 1.26 2001/02/16 14:50:35 itojun Exp $	*/
 
 /*
@@ -265,7 +265,7 @@ mld6_input(m, off)
 			timer = 1;
 		mld6_all_nodes_linklocal.s6_addr16[1] =
 			htons(ifp->if_index); /* XXX */
-		
+
 		for (in6m = ia->ia6_multiaddrs.lh_first;
 		     in6m;
 		     in6m = in6m->in6m_entry.le_next)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.8.4.2 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.8.4.3 2002/10/29 00:36:45 art Exp $	*/
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -102,6 +102,7 @@ faithattach(faith)
 		ifp->if_hdrlen = 0;
 		ifp->if_addrlen = 0;
 		if_attach(ifp);
+		if_alloc_sadl(ifp);
 #if NBPFILTER > 0
 		bpfattach(&ifp->if_bpf, ifp, DLT_NULL, sizeof(u_int));
 #endif

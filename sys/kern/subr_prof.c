@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prof.c,v 1.9.2.1 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prof.c,v 1.9.2.2 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: subr_prof.c,v 1.12 1996/04/22 01:38:50 christos Exp $	*/
 
 /*-
@@ -198,7 +198,7 @@ sys_profil(p, v, retval)
 /*
  * Collect user-level profiling statistics; called on a profiling tick,
  * when a process is running in user-mode.  This routine may be called
- * from an interrupt context. Schedule and AST that will vector us to
+ * from an interrupt context. Schedule an AST that will vector us to
  * trap() with a context in which copyin and copyout will work.
  * Trap will then call addupc_task().
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syslog.h,v 1.6.2.1 2002/06/11 03:32:34 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/syslog.h,v 1.6.2.2 2002/10/29 00:36:49 art Exp $	*/
 /*	$NetBSD: syslog.h,v 1.14 1996/04/03 20:46:44 christos Exp $	*/
 
 /*
@@ -201,13 +201,13 @@ void	closelog(void);
 void	openlog(const char *, int, int);
 int	setlogmask(int);
 void	syslog(int, const char *, ...)
-    __attribute__((__format__(__printf__,2,3)));
+    __attribute__((__format__(__syslog__,2,3)));
 void	vsyslog(int, const char *, _BSD_VA_LIST_);
 void	closelog_r(struct syslog_data *);
 void	openlog_r(const char *, int, int, struct syslog_data *);
 int	setlogmask_r(int, struct syslog_data *);
 void	syslog_r(int, struct syslog_data *, const char *, ...)
-     __attribute__((__format__(__printf__,3,4)));
+     __attribute__((__format__(__syslog__,3,4)));
 void	vsyslog_r(int, struct syslog_data *, const char *, 
      _BSD_VA_LIST_);
 __END_DECLS

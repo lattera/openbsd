@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_inet.c,v 1.6.4.1 2002/06/11 03:31:38 art Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_inet.c,v 1.6.4.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$NetBSD: tp_inet.c,v 1.11 1996/03/16 23:13:49 christos Exp $	*/
 
 /*-
@@ -468,7 +468,7 @@ tpip_output_dg(struct mbuf *m0, ...)
 	}
 #endif
 
-	error = ip_output(m, (struct mbuf *) 0, ro, IP_ALLOWBROADCAST, NULL);
+	error = ip_output(m, (struct mbuf *)0, ro, IP_ALLOWBROADCAST, (void *)NULL, (void *)NULL);
 
 #ifdef ARGO_DEBUG
 	if (argo_debug[D_EMIT]) {

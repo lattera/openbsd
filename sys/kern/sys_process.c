@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.14.2.2 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.14.2.3 2002/10/29 00:36:44 art Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -144,7 +144,7 @@ sys_ptrace(p, v, retval)
 		 *	traced. This is good security.]
 		 */
 		if ((t->p_cred->p_ruid != p->p_cred->p_ruid ||
-			ISSET(t->p_flag, P_SUGID)) &&
+		    ISSET(t->p_flag, P_SUGID)) &&
 		    (error = suser(p->p_ucred, &p->p_acflag)) != 0)
 			return (error);
 

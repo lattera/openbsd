@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.3 2002/06/11 03:33:03 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.4 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.114 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
@@ -198,8 +198,8 @@ static void uvm_map_unreference_amap(struct vm_map_entry *, int);
 int uvm_map_spacefits(struct vm_map *, vaddr_t *, vsize_t, struct vm_map_entry *,
     voff_t, vsize_t);
 
-int _uvm_tree_sanity(struct vm_map *map, char *name);
-static int uvm_rb_subtree_space(struct vm_map_entry *);
+int _uvm_tree_sanity(vm_map_t map, const char *name);
+static vsize_t		uvm_rb_subtree_space(vm_map_entry_t);
 
 static __inline int
 uvm_compare(struct vm_map_entry *a, struct vm_map_entry *b)
@@ -299,10 +299,14 @@ uvm_rb_remove(struct vm_map *map, struct vm_map_entry *entry)
 		uvm_rb_fixup(map, parent);
 }
 
+#ifdef DEBUG
+#define uvm_tree_sanity(x,y) _uvm_tree_sanity(x,y)
+#else
 #define uvm_tree_sanity(x,y)
+#endif
 
 int
-_uvm_tree_sanity(struct vm_map *map, char *name)
+_uvm_tree_sanity(struct vm_map *map, const char *name)
 {
 	struct vm_map_entry *tmp, *trtmp;
 	int n = 0, i = 1;
@@ -389,9 +393,11 @@ uvm_mapent_alloc(map)
 		}
 		me->flags = UVM_MAP_STATIC;
 	} else if (map == kernel_map) {
+		splassert(IPL_NONE);
 		me = pool_get(&uvm_map_entry_kmem_pool, PR_WAITOK);
 		me->flags = UVM_MAP_KMEM;
 	} else {
+		splassert(IPL_NONE);
 		me = pool_get(&uvm_map_entry_pool, PR_WAITOK);
 		me->flags = 0;
 	}
@@ -602,8 +608,8 @@ uvm_map_clip_start(map, entry, start)
 
 /*
  * uvm_map_clip_end: ensure that the entry ends at or before
- *	the ending address, if it does't we split the reference
- *
+ *	the ending address, if it doesn't we split the reference
+ * 
  * => caller should use UVM_MAP_CLIP_END macro rather than calling
  *    this directly
  * => map must be locked by caller
@@ -1010,7 +1016,7 @@ uvm_map_lookup_entry(map, address, entry)
 		use_tree = 1;
 	}
 
-	uvm_tree_sanity(map, __FUNCTION__);
+	uvm_tree_sanity(map, __func__);
 
 	if (use_tree) {
 		struct vm_map_entry *prev = &map->header;
@@ -3476,8 +3482,8 @@ uvmspace_fork(vm1)
 			 *    process is sharing the amap with another
 			 *    process.  if we do not clear needs_copy here
 			 *    we will end up in a situation where both the
-			 *    parent and child process are refering to the
-			 *    same amap with "needs_copy" set.  if the
+			 *    parent and child process are referring to the
+			 *    same amap with "needs_copy" set.  if the 
 			 *    parent write-faults, the fault routine will
 			 *    clear "needs_copy" in the parent by allocating
 			 *    a new amap.   this is wrong because the
@@ -3590,7 +3596,7 @@ uvm_map_printit(map, full, pr)
 	struct vm_map_entry *entry;
 
 	(*pr)("MAP %p: [0x%lx->0x%lx]\n", map, map->min_offset,map->max_offset);
-	(*pr)("\t#ent=%d, sz=%d, ref=%d, version=%d, flags=0x%x\n",
+	(*pr)("\t#ent=%d, sz=%u, ref=%d, version=%u, flags=0x%x\n",
 	    map->nentries, map->size, map->ref_count, map->timestamp,
 	    map->flags);
 	(*pr)("\tpmap=%p(resident=%d)\n", map->pmap, 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.54.4.2 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.54.4.3 2002/10/29 00:36:47 art Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -409,7 +409,7 @@ tcp_usrreq(so, req, m, nam, control)
 	 * marker if URG set.  Possibly send more data.
 	 */
 	case PRU_SEND:
-		sbappend(&so->so_snd, m);
+		sbappendstream(&so->so_snd, m);
 		error = tcp_output(tp);
 		break;
 
@@ -457,7 +457,7 @@ tcp_usrreq(so, req, m, nam, control)
 		 * of data past the urgent section.
 		 * Otherwise, snd_up should be one lower.
 		 */
-		sbappend(&so->so_snd, m);
+		sbappendstream(&so->so_snd, m);
 		tp->snd_up = tp->snd_una + so->so_snd.sb_cc;
 		tp->t_force = 1;
 		error = tcp_output(tp);
@@ -608,7 +608,7 @@ tcp_ctloutput(op, so, level, optname, mp)
 				tp->t_flags &= ~TF_SIGNATURE;
 			break;
 #endif /* TCP_SIGNATURE */
- 		default:
+		default:
 			error = ENOPROTOOPT;
 			break;
 		}
@@ -814,7 +814,7 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 		lin = (struct sockaddr_in *)&tir.laddr;
 		break;
 	default:
-		return(EINVAL);
+		return (EINVAL);
 	}
 
 	s = splsoftnet();

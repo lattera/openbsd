@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.140.2.2 2002/06/11 03:31:36 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.140.2.3 2002/10/29 00:36:47 art Exp $	*/
 /*	$NetBSD: ip_output.c,v 1.28 1996/02/13 23:43:07 christos Exp $	*/
 
 /*
@@ -210,6 +210,12 @@ ip_output(struct mbuf *m0, ...)
 			ifp = ia->ia_ifp;
 			mtu = ifp->if_mtu;
 			ip->ip_ttl = 1;
+		} else if ((IN_MULTICAST(ip->ip_dst.s_addr) ||
+		    (ip->ip_dst.s_addr == INADDR_BROADCAST)) &&
+		    imo != NULL && imo->imo_multicast_ifp != NULL) {
+			ifp = imo->imo_multicast_ifp;
+			mtu = ifp->if_mtu;
+			IFP_TO_IA(ifp, ia);
 		} else {
 			if (ro->ro_rt == 0)
 				rtalloc(ro);
@@ -366,6 +372,12 @@ ip_output(struct mbuf *m0, ...)
 			ifp = ia->ia_ifp;
 			mtu = ifp->if_mtu;
 			ip->ip_ttl = 1;
+		} else if ((IN_MULTICAST(ip->ip_dst.s_addr) ||
+		    (ip->ip_dst.s_addr == INADDR_BROADCAST)) &&
+		    imo != NULL && imo->imo_multicast_ifp != NULL) {
+			ifp = imo->imo_multicast_ifp;
+			mtu = ifp->if_mtu;
+			IFP_TO_IA(ifp, ia);
 		} else {
 			if (ro->ro_rt == 0)
 				rtalloc(ro);
@@ -408,14 +420,20 @@ ip_output(struct mbuf *m0, ...)
 		/*
 		 * See if the caller provided any multicast options
 		 */
-		if (imo != NULL) {
+		if (imo != NULL)
 			ip->ip_ttl = imo->imo_multicast_ttl;
-			if (imo->imo_multicast_ifp != NULL) {
-				ifp = imo->imo_multicast_ifp;
-				mtu = ifp->if_mtu;
-			}
-		} else
+		else
 			ip->ip_ttl = IP_DEFAULT_MULTICAST_TTL;
+
+		/*
+		 * if we don't know the outgoing ifp yet, we can't generate
+		 * output
+		 */
+		if (!ifp) {
+			ipstat.ips_noroute++;
+			error = EHOSTUNREACH;
+			goto bad;
+		}
 
 		/*
 		 * Confirm that the outgoing interface supports multicast,
@@ -716,7 +734,7 @@ sendit:
 	if (error == EMSGSIZE)
 		goto bad;
 
-	for (m = m0; m; m = m0) {
+	for (; m; m = m0) {
 		m0 = m->m_nextpkt;
 		m->m_nextpkt = 0;
 		if (error == 0)

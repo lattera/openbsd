@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_subr.c,v 1.2.10.1 2002/06/11 03:30:21 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/tcfs/Attic/tcfs_subr.c,v 1.2.10.2 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: tcfs_subr.c,v 1.6 1996/05/10 22:50:52 jtk Exp $	*/
 
 /*
@@ -238,7 +238,7 @@ loop:
 
 
 /*
- * Try to find an existing tcfs_node vnode refering
+ * Try to find an existing tcfs_node vnode referring
  * to it, otherwise make a new tcfs_node vnode which
  * contains a reference to the lower vnode.
  *

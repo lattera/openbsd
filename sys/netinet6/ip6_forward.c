@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.20.2.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.20.2.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: ip6_forward.c,v 1.75 2001/06/29 12:42:13 jinmei Exp $	*/
 
 /*
@@ -403,7 +403,7 @@ ip6_forward(m, srcrt)
 		}
 		m_freem(m);
 		return;
- 	}
+	}
 
 	if (rt->rt_flags & RTF_GATEWAY)
 		dst = (struct sockaddr_in6 *)rt->rt_gateway;

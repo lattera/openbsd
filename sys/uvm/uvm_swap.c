@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.3 2002/06/11 03:33:04 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.4 2002/10/29 00:36:50 art Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.57 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*
@@ -1147,7 +1147,7 @@ swap_off(p, sdp)
 	uvmexp.swpages -= sdp->swd_npages;
 
 	if (swaplist_find(sdp->swd_vp, 1) == NULL)
-		panic("swap_off: swapdev not in list\n");
+		panic("swap_off: swapdev not in list");
 	swaplist_trim();
 	simple_unlock(&uvm.swap_data_lock);
 
@@ -1684,7 +1684,7 @@ uvm_swap_free(startslot, nslots)
 #ifdef UVM_SWAP_ENCRYPT
 	{
 		int i;
-		if (swap_encrypt_initalized) {
+		if (swap_encrypt_initialized) {
 			/* Dereference keys */
 			for (i = 0; i < nslots; i++)
 				if (uvm_swap_needdecrypt(sdp, startslot + i))
@@ -1928,7 +1928,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/* 
 	 * decrypt swap
 	 */
-	if (swap_encrypt_initalized &&
+	if (swap_encrypt_initialized &&
 	    (bp->b_flags & B_READ) && !(bp->b_flags & B_ERROR)) {
 		int i;
 		caddr_t data = bp->b_data;

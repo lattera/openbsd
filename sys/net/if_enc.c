@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_enc.c,v 1.36.4.1 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_enc.c,v 1.36.4.2 2002/10/29 00:36:45 art Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -111,6 +111,7 @@ encattach(int nenc)
 	ifp->if_snd.ifq_maxlen = ifqmaxlen;
 	ifp->if_hdrlen = ENC_HDRLEN;
 	if_attach(ifp);
+	if_alloc_sadl(ifp);
 
 #if NBPFILTER > 0
 	bpfattach(&encif[i].sc_if.if_bpf, ifp, DLT_ENC, ENC_HDRLEN);

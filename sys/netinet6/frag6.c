@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/frag6.c,v 1.11.4.1 2002/06/11 03:31:37 art Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/frag6.c,v 1.11.4.2 2002/10/29 00:36:48 art Exp $	*/
 /*	$KAME: frag6.c,v 1.40 2002/05/27 21:40:31 itojun Exp $	*/
 
 /*
@@ -336,14 +336,14 @@ frag6_input(mp, offp, proto)
 			    offset - sizeof(struct ip6_frag) +
 			    offsetof(struct ip6_frag, ip6f_offlg));
 			IP6Q_UNLOCK();
-			return(IPPROTO_DONE);
+			return (IPPROTO_DONE);
 		}
 	} else if (fragoff + frgpartlen > IPV6_MAXPACKET) {
 		icmp6_error(m, ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER,
 			    offset - sizeof(struct ip6_frag) +
 				offsetof(struct ip6_frag, ip6f_offlg));
 		IP6Q_UNLOCK();
-		return(IPPROTO_DONE);
+		return (IPPROTO_DONE);
 	}
 	/*
 	 * If it's the first fragment, do the above check for each
@@ -586,7 +586,7 @@ insert:
 	 * Store NXT to the original.
 	 */
 	{
-		char *prvnxtp = ip6_get_prevhdr(m, offset); /* XXX */
+		u_int8_t *prvnxtp = ip6_get_prevhdr(m, offset); /* XXX */
 		*prvnxtp = nxt;
 	}
 

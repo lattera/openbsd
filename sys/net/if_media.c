@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_media.c,v 1.6.6.1 2002/06/11 03:30:45 art Exp $	*/
+/*	$OpenBSD: src/sys/net/if_media.c,v 1.6.6.2 2002/10/29 00:36:45 art Exp $	*/
 /*	$NetBSD: if_media.c,v 1.10 2000/03/13 23:52:39 soren Exp $	*/
 
 /*-
@@ -226,7 +226,7 @@ ifmedia_ioctl(ifp, ifr, ifm, cmd)
 	int error = 0, sticky;
 
 	if (ifp == NULL || ifr == NULL || ifm == NULL)
-		return(EINVAL);
+		return (EINVAL);
 
 	switch (cmd) {
 
