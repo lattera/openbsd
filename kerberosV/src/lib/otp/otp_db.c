@@ -33,10 +33,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-RCSID("$KTH: otp_db.c,v 1.17 1999/12/02 16:58:44 joda Exp $");
+RCSID("$KTH: otp_db.c,v 1.20 2003/04/16 16:20:58 lha Exp $");
 #endif
 
 #include "otp_locl.h"
+
+#if !defined(HAVE_NDBM) && !defined(HAVE_DB_NDBM)
+#include "ndbm_wrap.h"
+#endif
 
 #define RETRIES 5
 
@@ -195,7 +199,7 @@ otp_put (void *v, OtpContext *ctx)
 
   if (rem < len)
       return -1;
-  strcpy (p, ctx->alg->name);
+  strlcpy (p, ctx->alg->name, rem);
   p += len;
   rem -= len;
 
@@ -220,7 +224,7 @@ otp_put (void *v, OtpContext *ctx)
   len = strlen(ctx->seed) + 1;
   if (rem < len)
       return -1;
-  strcpy (p, ctx->seed);
+  strlcpy (p, ctx->seed, rem);
   p += len;
   rem -= len;
   dat.dptr  = buf;
