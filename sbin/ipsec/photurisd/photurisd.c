@@ -32,7 +32,7 @@
  */
 
 #ifndef lint 
-static char rcsid[] = "$Id: photurisd.c,v 1.2 1997/07/23 12:28:53 provos Exp $";
+static char rcsid[] = "$Id: photurisd.c,v 1.3 1997/07/24 23:47:18 provos Exp $";
 #endif 
 
 #define _PHOTURIS_C_
@@ -107,7 +107,8 @@ init_vars(void)
      return 1;
 }
 
-void main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
      int ch;
      int primes = 0, ignore = 0;
