@@ -33,7 +33,7 @@
 
 #if defined(SYSLIBC_SCCS)
 	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/m68k/sys/brk.S,v 1.4 2003/06/02 20:18:31 millert Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/m68k/sys/brk.S,v 1.4.2.1 2003/12/25 21:23:58 brad Exp $"
 #endif /* SYSLIBC_SCCS */
 
 #include "SYS.h"
@@ -56,7 +56,7 @@ ENTRY(brk)
 	movl	minbrk,d0
 #endif
 	cmpl	sp@(4),d0
-	jle	ok
+	jls	ok
 	movl	d0,sp@(4)
 ok:
 	movl	#SYS_break,d0
