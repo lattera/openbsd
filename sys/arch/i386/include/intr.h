@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.4 2001/10/27 09:57:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.5 2001/10/28 22:41:19 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -185,9 +185,9 @@ softintr(sir, vec)
 }
 
 #define	setsoftast()	(astpending = 1)
-#define	setsoftclock()	softintr(1 << SIR_CLOCK,IPL_CLOCK)
-#define	setsoftnet()	softintr(1 << SIR_NET,IPL_NET)
-#define	setsofttty()	softintr(1 << SIR_TTY,IPL_TTY)
+#define	setsoftclock()	softintr(1 << SIR_CLOCK,IPL_SOFTCLOCK)
+#define	setsoftnet()	softintr(1 << SIR_NET,IPL_SOFTNET)
+#define	setsofttty()	softintr(1 << SIR_TTY,IPL_SOFTTTY)
 
 #define I386_IPI_HALT	0x00000001
 #define I386_IPI_TLB	0x00000002
