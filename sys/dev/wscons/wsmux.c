@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6 2001/03/30 16:38:14 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.4.1 2001/05/14 22:26:33 niklas Exp $	*/
 /*	$NetBSD: wsmux.c,v 1.9 2000/05/28 10:33:14 takemura Exp $	*/
 
 /*

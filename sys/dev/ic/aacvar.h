@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aacvar.h,v 1.1 2000/11/10 09:39:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aacvar.h,v 1.1.4.1 2001/05/14 22:23:19 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith

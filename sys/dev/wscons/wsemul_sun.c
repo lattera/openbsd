@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_sun.c,v 1.3 2001/04/14 04:48:00 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_sun.c,v 1.3.4.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsemul_sun.c,v 1.11 2000/01/05 11:19:36 drochner Exp $ */
 
 /*

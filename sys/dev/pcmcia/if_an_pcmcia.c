@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.4 2001/04/06 18:02:58 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.4.4.1 2001/05/14 22:26:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff

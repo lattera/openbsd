@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25 1999/06/06 15:39:15 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/midway.c,v 1.25.4.1 2001/05/14 22:24:00 niklas Exp $	*/
 /*	(sync'd to midway.c 1.68)	*/
 
 /*
@@ -1138,10 +1138,6 @@ caddr_t data;
 		error = EINVAL;
 		break;
 
-#if defined(SIOCSIFMTU)		/* ??? copied from if_de */
-#if !defined(ifr_mtu)
-#define ifr_mtu ifr_metric
-#endif
 	case SIOCSIFMTU:
 	    /*
 	     * Set the interface MTU.
@@ -1157,7 +1153,6 @@ caddr_t data;
 	    en_reset(sc);
 	    en_init(sc);
 	    break;
-#endif /* SIOCSIFMTU */
 
 	default: 
 	    error = EINVAL;
@@ -1577,7 +1572,7 @@ struct ifnet *ifp;
        *	[including AAL5 PDU, if AAL5]
        */
 
-      got = mlen - sizeof(struct atm_pseudohdr *);
+      got = mlen - sizeof(struct atm_pseudohdr);
       toadd = (aal == MID_TBD_AAL5) ? MID_PDU_SIZE : 0;	/* PDU */
       cellcnt = (got + toadd + (MID_ATMDATASZ - 1)) / MID_ATMDATASZ;
       need = cellcnt * MID_ATMDATASZ;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pckbdreg.h,v 1.1 2000/11/13 20:12:35 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pckbdreg.h,v 1.1.4.1 2001/05/14 22:26:04 niklas Exp $ */
 /* $NetBSD: pckbdreg.h,v 1.2 1998/04/07 13:43:16 hannken Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ahc_pci.c,v 1.12.2.1 2000/03/24 09:09:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ahc_pci.c,v 1.12.2.2 2001/05/14 22:25:32 niklas Exp $	*/
 /*	$NetBSD: ahc_pci.c,v 1.9 1996/10/21 22:56:24 thorpej Exp $	*/
 
 /*
@@ -55,6 +55,19 @@
 #include <dev/ic/aic7xxxreg.h>
 #include <dev/ic/aic7xxxvar.h>
 #include <dev/ic/smc93cx6var.h>
+
+/* 
+ * XXX memory-mapped is busted on some i386 on-board chips.
+ * for i386, we don't even try it.  Also, suppress the damn 
+ * PCI bus errors messages on i386.  They are not fatal, and are 
+ * usually caused by some other device on the PCI bus.  But some 
+ * ahc cards won't work without ACKing them.  So just ACK and go!  
+ * XXX- smurph
+ */
+#ifndef i386
+#define AHC_ALLOW_MEMIO
+#define AHC_SHOW_PCI_ERRORS
+#endif
 
 /*
  * Under normal circumstances, these messages are unnecessary
@@ -161,6 +174,7 @@ void *match, *aux;
 		case PCI_PRODUCT_ADP_AIC7860:
 		case PCI_PRODUCT_ADP_2940AU:
 		case PCI_PRODUCT_ADP_AIC7870:
+		case PCI_PRODUCT_ADP_2930CU:
 		case PCI_PRODUCT_ADP_2940:
 		case PCI_PRODUCT_ADP_3940:
 		case PCI_PRODUCT_ADP_3985:
@@ -171,15 +185,15 @@ void *match, *aux;
 		case PCI_PRODUCT_ADP_398XU:
 		case PCI_PRODUCT_ADP_2944U:
 		case PCI_PRODUCT_ADP_2940UWPro:
-		case PCI_PRODUCT_ADP_AIC6915:
 		case PCI_PRODUCT_ADP_7895:
 			return (1);
 		}
 			break;
 	case PCI_VENDOR_ADP2:
 		switch (PCI_PRODUCT(pa->pa_id)) {
-		case PCI_PRODUCT_ADP2_2940U2:
 		case PCI_PRODUCT_ADP2_AIC7890:
+		case PCI_PRODUCT_ADP2_2940U2:
+		case PCI_PRODUCT_ADP2_2930U2:
 		case PCI_PRODUCT_ADP2_AIC7892:
 		case PCI_PRODUCT_ADP2_29160:
 		case PCI_PRODUCT_ADP2_19160B:
@@ -204,11 +218,6 @@ void *aux;
 	struct ahc_softc *ahc = (void *)self;
 	bus_space_tag_t  iot;
 	bus_space_handle_t ioh;
-#ifdef AHC_ALLOW_MEMIO
-	bus_space_tag_t memt;
-	bus_space_handle_t memh;
-	int	memh_valid;
-#endif
 	pci_intr_handle_t ih;
 	pcireg_t	   command;
 	const char *intrstr;
@@ -313,6 +322,7 @@ void *aux;
 		switch (PCI_PRODUCT(pa->pa_id)) {
 		case PCI_PRODUCT_ADP2_AIC7890:
 		case PCI_PRODUCT_ADP2_2940U2:
+		case PCI_PRODUCT_ADP2_2930U2:
 			ahc_c |= AHC_AIC7890;
 			ahc_f = AHC_AIC7890_FE;
 			ahc_flags |= AHC_NEWEEPROM_FMT;
@@ -352,23 +362,37 @@ void *aux;
 			/* TTT */
 		}
 	}
-	
-#ifdef AHC_ALLOW_MEMIO
-	memh_valid = (pci_mapreg_map(pa, AHC_PCI_MEMADDR,
-	    PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT, 0,
-	    &memt, &memh, NULL, NULL) == 0);
-#endif
-	ioh_valid = (pci_mapreg_map(pa, AHC_PCI_IOADDR,
-	    PCI_MAPREG_TYPE_IO, 0, &iot, &ioh, NULL, NULL) == 0);
 
-	if (ioh_valid) {
-		/* do nothing */
 #ifdef AHC_ALLOW_MEMIO
-	} else if (memh_valid) {
-		/* do nothing */
+	/*
+	 * attempt to use memory mapping on hardware that supports it.
+	 * e.g powerpc  XXX - smurph
+	 *
+	 * Note:  If this fails, IO mapping is used.
+	 */
+	if ((command & PCI_COMMAND_MEM_ENABLE) != 0) {
+		pcireg_t memtype;
+		memtype = pci_mapreg_type(pa->pa_pc, pa->pa_tag, AHC_PCI_MEMADDR);
+		switch (memtype) {
+		case PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT:
+		case PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_64BIT:
+			ioh_valid = (pci_mapreg_map(pa, AHC_PCI_MEMADDR,
+				memtype, 0, &iot, &ioh, NULL, NULL) == 0);
+			break;
+		default:
+			ioh_valid = 0;
+		}
+	}
+	
+	if (!ioh_valid) /* try to drop back to IO mapping */
 #endif
-	} else {
-		/* error out */
+	{
+		ioh_valid = (pci_mapreg_map(pa, AHC_PCI_IOADDR,
+		    PCI_MAPREG_TYPE_IO, 0, &iot, &ioh, NULL, NULL) == 0);
+	}
+
+	if (!ioh_valid) {
+		/* Game Over.  Insert coin... */
 		printf(": unable to map registers\n");
 		return;
 	}
@@ -428,7 +452,8 @@ void *aux;
 		sfunct = ahc_inb(ahc, SFUNCT) & ~ALT_MODE;
 		ahc_outb(ahc, SFUNCT, sfunct | ALT_MODE);
 		optionmode = ahc_inb(ahc, OPTIONMODE);
-		printf("OptionMode = %x\n", optionmode);
+		if (bootverbose)
+			printf("%s: OptionMode = %x\n", ahc_name(ahc), optionmode);
 		ahc_outb(ahc, OPTIONMODE, OPTIONMODE_DEFAULTS);
 		/* Send CRC info in target mode every 4K */
 		ahc_outb(ahc, TARGCRCCNT, 0);
@@ -442,13 +467,13 @@ void *aux;
 
 	if (pci_intr_map(pa->pa_pc, pa->pa_intrtag, pa->pa_intrpin,
 			 pa->pa_intrline, &ih)) {
-		printf("%s: couldn't map interrupt\n", ahc->sc_dev.dv_xname);
+		printf(": couldn't map interrupt\n", ahc->sc_dev.dv_xname);
 		ahc_free(ahc);
 		return;
 	}
 	intrstr = pci_intr_string(pa->pa_pc, ih);
 	ahc->sc_ih = pci_intr_establish(pa->pa_pc, ih, IPL_BIO, ahc_intr, ahc,
-                                        ahc->sc_dev.dv_xname);
+	    ahc->sc_dev.dv_xname);
 
 	if (ahc->sc_ih == NULL) {
 		printf(": couldn't establish interrupt");
@@ -701,7 +726,7 @@ struct ahc_softc *ahc;
 
 	}
 	ahc_ext_scbram_config(ahc, enable, pcheck, fast);
-}             
+}
 
 /*
  * Check the external port logic for a serial eeprom
@@ -1326,16 +1351,19 @@ struct ahc_softc *ahc;
 {
 	pcireg_t status1;
 	struct ahc_pci_data *pd = ahc->pci_data;
-        
+
 	if ((ahc_inb(ahc, ERROR) & PCIERRSTAT) == 0)
-                return 0;
+		return 0;
 
 	status1 = pci_conf_read(pd->pc, pd->tag, PCI_COMMAND_STATUS_REG);
 
+/* define AHC_SHOW_PCI_ERRORS to get painful errors on your i386 console */
+#ifdef AHC_SHOW_PCI_ERRORS	
 	if (status1 & DPE) {
 		printf("%s: Data Parity Error Detected during address "
 				 "or write data phase\n", ahc_name(ahc));
 	}
+#endif
 	if (status1 & SSE) {
 		printf("%s: Signal System Error Detected\n", ahc_name(ahc));
 	}
@@ -1362,5 +1390,5 @@ struct ahc_softc *ahc;
 		ahc_outb(ahc, CLRINT, CLRPARERR);
 	}
 
-        return 1;
+	return 1;
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txpreg.h,v 1.22 2001/05/09 02:25:09 jason Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_txpreg.h,v 1.22.2.1 2001/05/14 22:25:48 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell <aaron@monkey.org>.
@@ -165,7 +165,6 @@
 #define	TXP_CMD_GET_IP_ADDRESS			0x4a
 #define	TXP_CMD_READ_PCI_REG			0x4c
 #define	TXP_CMD_WRITE_PCI_REG			0x4d
-#define	TXP_CMD_OFFLOAD_READ			0x4e
 #define	TXP_CMD_OFFLOAD_WRITE			0x4f
 #define	TXP_CMD_HELLO_RESPONSE			0x57
 #define	TXP_CMD_ENABLE_RX_FILTER		0x58
@@ -248,9 +247,8 @@ struct txp_tx_desc {
 #define	TX_PFLAGS_PRIO		0x00000040	/* priority field valid */
 #define	TX_PFLAGS_UDPCKSUM	0x00000080	/* udp checksum */
 #define	TX_PFLAGS_PADFRAME	0x00000100	/* pad frame */
-#define	TX_PFLAGS_VLANTAG_M	0x0ffff000	/* vlan tag mask */
-#define	TX_PFLAGS_VLANPRI_M	0x00700000	/* vlan priority mask */
-#define	TX_PFLAGS_VLANTAG_S	12		/* amount to shift tag */
+#define	TX_PFLAGS_VLANTAG_M	0x000ff000	/* vlan tag mask */
+#define	TX_PFLAGS_VLANPRI_M	0x00300000	/* vlan priority mask */
 
 struct txp_rx_desc {
 	volatile u_int8_t	rx_flags;	/* type/descriptor flags */
@@ -309,14 +307,6 @@ struct txp_rxbuf_desc {
 	volatile u_int32_t	rb_paddrhi;
 	volatile u_int32_t	rb_vaddrlo;
 	volatile u_int32_t	rb_vaddrhi;
-};
-
-/* Extension descriptor */
-struct txp_ext_desc {
-	volatile u_int32_t	ext_1;
-	volatile u_int32_t	ext_2;
-	volatile u_int32_t	ext_3;
-	volatile u_int32_t	ext_4;
 };
 
 struct txp_cmd_desc {
@@ -495,7 +485,7 @@ struct txp_hostvar {
 #define	STAT_ROM_EEPROM_LOAD		0x00000002
 #define	STAT_WAITING_FOR_BOOT		0x00000007
 #define	STAT_RUNNING			0x00000009
-#define	STAT_WAITING_FOR_HOST_REQUEST	0x0000000d
+#define	STAT_WAITING_FOR_HOST_REQUEST	0x0000000D
 #define	STAT_WAITING_FOR_SEGMENT	0x00000010
 #define	STAT_SLEEPING			0x00000011
 #define	STAT_HALTED			0x00000014
@@ -506,16 +496,6 @@ struct txp_hostvar {
 #define	CMD_ENTRIES			32
 #define	RSP_ENTRIES			32
 
-#define	OFFLOAD_TCPCKSUM		0x00000002	/* tcp checksum */
-#define	OFFLOAD_UDPCKSUM		0x00000004	/* udp checksum */
-#define	OFFLOAD_IPCKSUM			0x00000008	/* ip checksum */
-#define	OFFLOAD_IPSEC			0x00000010	/* ipsec enable */
-#define	OFFLOAD_BCAST			0x00000020	/* broadcast throttle */
-#define	OFFLOAD_DHCP			0x00000040	/* dhcp prevention */
-#define	OFFLOAD_VLAN			0x00000080	/* vlan enable */
-#define	OFFLOAD_FILTER			0x00000100	/* filter enable */
-#define	OFFLOAD_TCPSEG			0x00000200	/* tcp segmentation */
-
 /*
  * Macros for converting array indices to offsets within the descriptor
  * arrays.  The chip operates on offsets, but it's much easier for us
@@ -525,9 +505,12 @@ struct txp_hostvar {
 #define	TXP_OFFSET2IDX(off)	((off) >> 4)
 
 struct txp_dma_alloc {
-	u_int64_t		dma_paddr;
 	caddr_t			dma_vaddr;
+	u_int64_t		dma_paddr;
+	bus_size_t		dma_siz;
 	bus_dmamap_t		dma_map;
+	bus_dma_segment_t	dma_seg;
+	int			dma_nseg;
 };
 
 struct txp_cmd_ring {
@@ -555,6 +538,11 @@ struct txp_rx_ring {
 	struct txp_rx_desc	*r_desc;	/* base address of descs */
 	volatile u_int32_t	*r_roff;	/* hv read offset ptr */
 	volatile u_int32_t	*r_woff;	/* hv write offset ptr */
+};
+
+/* Software transmit list */
+struct txp_swtx {
+	struct mbuf		*tx_mbuf;
 };
 
 struct txp_softc {

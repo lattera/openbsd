@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dl10019.c,v 1.1 2001/03/29 01:26:47 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dl10019.c,v 1.1.4.1 2001/05/14 22:23:41 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-

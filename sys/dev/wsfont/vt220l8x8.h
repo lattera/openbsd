@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/vt220l8x8.h,v 1.1 2001/03/18 04:30:24 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/vt220l8x8.h,v 1.1.4.1 2001/05/14 22:26:36 niklas Exp $ */
 /* 	$NetBSD: vt220l8x8.h,v 1.3 2000/01/05 18:44:25 ad Exp $	*/
 
 /*

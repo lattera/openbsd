@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8 2001/04/16 03:18:18 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/auich.c,v 1.8.4.1 2001/05/14 22:25:33 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000,2001 Michael Shalayeff

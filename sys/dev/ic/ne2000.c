@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ne2000.c,v 1.7 1999/03/26 06:34:26 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ne2000.c,v 1.7.6.1 2001/05/14 22:24:03 niklas Exp $	*/
 /*	$NetBSD: ne2000.c,v 1.12 1998/06/10 01:15:50 thorpej Exp $	*/
 
 /*-
@@ -102,11 +102,10 @@ struct cfdriver ne_cd = {
 	NULL, "ne", DV_IFNET
 };
 
-void
-ne2000_attach(nsc, myea, media, nmedia, defmedia)
+int
+ne2000_attach(nsc, myea)
 	struct ne2000_softc *nsc;
 	u_int8_t *myea;
-	int *media, nmedia, defmedia;
 {
 	struct dp8390_softc *dsc = &nsc->sc_dp8390;
 	bus_space_tag_t nict = dsc->sc_regt;
@@ -117,17 +116,26 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 	int memsize, i, useword;
 
 	/*
-	 * Detect it again; this gives us the memory size.
+	 * Detect it again unless caller specified it; this gives us
+	 * the memory size.
 	 */
-	nsc->sc_type = ne2000_detect(nsc);
 	if (nsc->sc_type == 0) {
-		printf("%s: where did the card go?\n", dsc->sc_dev.dv_xname);
-		return;
+		nsc->sc_type = ne2000_detect(nsc);
+		if (nsc->sc_type == 0) {
+			printf("%s: where did the card go?\n",
+			    dsc->sc_dev.dv_xname);
+			return (1);
+		}
 	}
 
-	useword = (nsc->sc_type != NE2000_TYPE_NE1000);
+	useword = NE2000_USE_WORD(nsc);
 
 	dsc->cr_proto = ED_CR_RD2;
+	if (nsc->sc_type == NE2000_TYPE_AX88190) {
+		dsc->rcr_proto = ED_RCR_INTT;
+		dsc->sc_flags |= DP8390_DO_AX88190_WORKAROUND;
+	} else
+		dsc->rcr_proto = 0;
 
 	/*
 	 * DCR gets:
@@ -137,8 +145,7 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 	 *
 	 * NE1000 gets byte-wide DMA, NE2000 gets word-wide DMA.
 	 */
-	dsc->dcr_reg = ED_DCR_FT1 | ED_DCR_LS |
-	    (nsc->sc_type != NE2000_TYPE_NE1000 ? ED_DCR_WTS : 0);
+	dsc->dcr_reg = ED_DCR_FT1 | ED_DCR_LS | (useword ? ED_DCR_WTS : 0);
 
 	dsc->test_mem = ne2000_test_mem;
 	dsc->ring_copy = ne2000_ring_copy;
@@ -150,9 +157,19 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 		dsc->sc_reg_map[i] = i;
 
 	/*
-	 * 8k of memory plus an additional 8k if an NE2000.
+	 * 8k of memory for NE1000, 16k otherwise.
 	 */
-	memsize = 8192 + (nsc->sc_type != NE2000_TYPE_NE1000 ? 8192 : 0);
+	switch (nsc->sc_type) {
+	case NE2000_TYPE_NE1000:
+		memsize = 8192;
+		break;
+	case NE2000_TYPE_NE2000:
+	case NE2000_TYPE_AX88190:		/* XXX really? */
+	case NE2000_TYPE_DL10019:
+	case NE2000_TYPE_DL10022:
+		memsize = 8192 * 2;
+		break;
+	}
 
 	/*
 	 * NIC memory doens't start at zero on an NE board.
@@ -231,25 +248,41 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 
 	dsc->mem_size = memsize;
 
-	if (myea == NULL && nsc->sc_type != NE2000_TYPE_DL10019) {
+	if (myea == NULL) {
 		/* Read the station address. */
-		ne2000_readmem(nict, nich, asict, asich, 0, romdata,
-		    sizeof(romdata), useword);
-		for (i = 0; i < ETHER_ADDR_LEN; i++)
+		if (nsc->sc_type == NE2000_TYPE_AX88190) {
+			/* Select page 0 registers. */
+			bus_space_write_1(nict, nich, ED_P0_CR,
+			    ED_CR_RD2 | ED_CR_PAGE_0 | ED_CR_STA);
+			/* Select word transfer. */
+			bus_space_write_1(nict, nich, ED_P0_DCR, ED_DCR_WTS);
+			ne2000_readmem(nict, nich, asict, asich,
+			    NE2000_AX88190_NODEID_OFFSET,
+			    dsc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN, useword);
+		} else {
+			ne2000_readmem(nict, nich, asict, asich, 0, romdata,
+			    sizeof(romdata), useword);
+			for (i = 0; i < ETHER_ADDR_LEN; i++)
 #ifdef __NetBSD__
-			dsc->sc_enaddr[i] = romdata[i * (useword ? 2 : 1)];
+				dsc->sc_enaddr[i] =
+				    romdata[i * (useword ? 2 : 1)];
 #else
-			dsc->sc_arpcom.ac_enaddr[i] =
-				romdata[i * (useword ? 2 : 1)];
+				dsc->sc_arpcom.ac_enaddr[i] =
+				    romdata[i * (useword ? 2 : 1)];
 #endif
-	}
+		}
+	} else
+		bcopy(myea, dsc->sc_arpcom.ac_enaddr, ETHER_ADDR_LEN);
 
 	/* Clear any pending interrupts that might have occurred above. */
 	bus_space_write_1(nict, nich, ED_P0_ISR, 0xff);
 
-	if (dp8390_config(dsc, media, nmedia, defmedia)) {
+	if (dsc->sc_media_init == NULL)
+		dsc->sc_media_init = dp8390_media_init;
+
+	if (dp8390_config(dsc)) {
 		printf("%s: setup failed\n", dsc->sc_dev.dv_xname);
-		return;
+		return (1);
 	}
 
 	/*
@@ -258,6 +291,8 @@ ne2000_attach(nsc, myea, media, nmedia, defmedia)
 	 */
 	dsc->mem_ring =
 	    dsc->mem_start + ((dsc->txb_cnt * ED_TXBUF_SIZE) << ED_PAGE_SHIFT);
+
+	return (0);
 }
 
 /*
@@ -405,20 +440,8 @@ ne2000_detect(nsc)
 
 		rv = NE2000_TYPE_NE2000;
 	} else {
-		tmp = 0;
-		for (i = 4; i < 12; i++)
-			tmp += bus_space_read_1(asict, asich, i);
-
-		if (tmp == 0xff) {
-			for (i = 0; i < ETHER_ADDR_LEN; i++)
-				dsc->sc_arpcom.ac_enaddr[i] =
-					bus_space_read_1(asict, asich, i + 4);
-
-			rv = NE2000_TYPE_DL10019;
-		} else {
-			/* We're an NE1000. */
-			rv = NE2000_TYPE_NE1000;
-		}
+		/* We're an NE1000. */
+		rv = NE2000_TYPE_NE1000;
 	}
 
 	/* Clear any pending interrupts that might have occurred above. */
@@ -615,7 +638,7 @@ ne2000_ring_copy(sc, src, dst, amount)
 	bus_space_tag_t asict = nsc->sc_asict;
 	bus_space_handle_t asich = nsc->sc_asich;
 	u_short tmp_amount;
-	int useword = (nsc->sc_type != NE2000_TYPE_NE1000);
+	int useword = NE2000_USE_WORD(nsc);
 
 	/* Does copy wrap to lower addr in ring buffer? */
 	if (src + amount > sc->mem_end) {
@@ -646,7 +669,7 @@ ne2000_read_hdr(sc, buf, hdr)
 
 	ne2000_readmem(sc->sc_regt, sc->sc_regh, nsc->sc_asict, nsc->sc_asich,
 	    buf, (u_int8_t *)hdr, sizeof(struct dp8390_ring),
-	    (nsc->sc_type != NE2000_TYPE_NE1000));
+	    NE2000_USE_WORD(nsc));
 #if BYTE_ORDER == BIG_ENDIAN
 	hdr->count = swap16(hdr->count);
 #endif
@@ -767,4 +790,12 @@ ne2000_writemem(nict, nich, asict, asich, src, dst, len, useword)
 	 */
 	while (((bus_space_read_1(nict, nich, ED_P0_ISR) & ED_ISR_RDC) !=
 	    ED_ISR_RDC) && --maxwait);
+}
+
+int
+ne2000_detach(sc, flags)
+	struct ne2000_softc *sc;
+	int flags;
+{
+	return (dp8390_detach(&sc->sc_dp8390, flags));
 }

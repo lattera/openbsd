@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/omron12x20.h,v 1.1 2001/03/18 04:30:23 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/omron12x20.h,v 1.1.4.1 2001/05/14 22:26:34 niklas Exp $ */
 /*	$NetBSD$	*/
 /*
  * Copyright (c) 1992 OMRON Corporation.

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/cardbus/com_cardbus.c,v 1.4 2001/01/08 21:41:13 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/cardbus/com_cardbus.c,v 1.4.4.1 2001/05/14 22:23:12 niklas Exp $ */
 /* $NetBSD: com_cardbus.c,v 1.4 2000/04/17 09:21:59 joda Exp $ */
 
 /*

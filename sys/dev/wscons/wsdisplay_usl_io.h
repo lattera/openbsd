@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay_usl_io.h,v 1.1 2000/05/16 23:49:11 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay_usl_io.h,v 1.1.6.1 2001/05/14 22:26:30 niklas Exp $ */
 /* $NetBSD: wsdisplay_usl_io.h,v 1.1 1998/06/11 22:00:04 drochner Exp $ */
 
 #define VT_OPENQRY	_IOR('v', 1, int)

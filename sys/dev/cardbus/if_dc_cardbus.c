@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5 2001/04/06 17:14:14 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/if_dc_cardbus.c,v 1.5.4.1 2001/05/14 22:23:13 niklas Exp $	*/
 
 #include <sys/param.h>
 #include <sys/systm.h>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/Attic/egavar.h,v 1.2 2001/02/02 20:25:39 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/isa/Attic/egavar.h,v 1.2.4.1 2001/05/14 22:24:31 niklas Exp $ */
 /* $NetBSD: egavar.h,v 1.1 1999/12/13 16:28:57 drochner Exp $ */
 
 /*

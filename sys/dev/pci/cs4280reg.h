@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4280reg.h,v 1.1 2000/06/30 03:28:08 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cs4280reg.h,v 1.1.6.1 2001/05/14 22:25:38 niklas Exp $	*/
 /*	$NetBSD: cs4280reg.h,v 1.3 2000/05/15 01:35:29 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pccbbreg.h,v 1.2 2000/07/06 19:49:11 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/pccbbreg.h,v 1.2.6.1 2001/05/14 22:25:52 niklas Exp $ */
 /*	$NetBSD: pccbbreg.h,v 1.5 2000/06/07 09:02:47 haya Exp $	*/
 /*
  * Copyright (c) 1999 HAYAKAWA Koichi.  All rights reserved.

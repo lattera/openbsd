@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pci/pciidevar.h,v 1.2 1999/07/18 21:25:20 csapuntz Exp $	*/
-/*	$NetBSD: pciidevar.h,v 1.2 1998/10/12 16:09:22 bouyer Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciidevar.h,v 1.2.4.1 2001/05/14 22:25:56 niklas Exp $	*/
+/*	$NetBSD: pciidevar.h,v 1.6 2001/01/12 16:04:00 bouyer Exp $	*/
 
 /*
  * Copyright (c) 1998 Christopher G. Demetriou.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/brgphyreg.h,v 1.2 2001/04/11 05:47:52 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/brgphyreg.h,v 1.2.4.1 2001/05/14 22:25:20 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000

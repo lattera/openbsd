@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_stereg.h,v 1.3 1999/12/08 00:29:26 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_stereg.h,v 1.3.2.1 2001/05/14 22:25:47 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -503,6 +503,7 @@ struct ste_softc {
 	struct device		sc_dev;
 	void			*sc_ih;
 	struct arpcom		arpcom;
+	struct timeout		sc_stats_tmo;
 	mii_data_t		sc_mii;
 	bus_space_tag_t		ste_btag;
 	bus_space_handle_t	ste_bhandle;

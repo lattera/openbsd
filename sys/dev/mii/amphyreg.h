@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/amphyreg.h,v 1.1 2000/10/17 15:59:10 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/amphyreg.h,v 1.1.6.1 2001/05/14 22:25:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

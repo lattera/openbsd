@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ata/ata.c,v 1.4 1999/11/17 01:22:55 csapuntz Exp $      */
+/*      $OpenBSD: src/sys/dev/ata/ata.c,v 1.4.2.1 2001/05/14 22:23:05 niklas Exp $      */
 /*      $NetBSD: ata.c,v 1.9 1999/04/15 09:41:09 bouyer Exp $      */
 /*
  * Copyright (c) 1998 Manuel Bouyer.  All rights reserved.
@@ -38,9 +38,12 @@
 #include <sys/device.h>
 #include <sys/syslog.h>
 
-#include <dev/ic/wdcreg.h>
+#include <machine/bus.h>
+
 #include <dev/ata/atareg.h>
 #include <dev/ata/atavar.h>
+#include <dev/ic/wdcreg.h>
+#include <dev/ic/wdcvar.h>
 
 #define DEBUG_FUNCS  0x08
 #define DEBUG_PROBE  0x10
@@ -67,16 +70,18 @@ ata_get_params(drvp, flags, prms)
 
 	int i;
 	u_int16_t *p;
+	int try = 0;
 
-	WDCDEBUG_PRINT(("wdc_ata_get_parms\n"), DEBUG_FUNCS);
+	WDCDEBUG_PRINT(("ata_get_parms\n"), DEBUG_FUNCS);
 
+ again:
 	bzero(tb, sizeof(tb));
 	bzero(prms, sizeof(struct ataparams));
 	bzero(&wdc_c, sizeof(struct wdc_command));
 
 	if (drvp->drive_flags & DRIVE_ATA) {
 		wdc_c.r_command = WDCC_IDENTIFY;
-		wdc_c.r_st_bmask = WDCS_DRDY;
+		wdc_c.r_st_bmask = (try == 0) ? WDCS_DRDY : 0;
 		wdc_c.r_st_pmask = WDCS_DRQ;
 		wdc_c.timeout = 1000; /* 1s */
 	} else if (drvp->drive_flags & DRIVE_ATAPI) {
@@ -100,6 +105,22 @@ ata_get_params(drvp, flags, prms)
 	}
 
 	if (wdc_c.flags & (AT_ERROR | AT_TIMEOU | AT_DF)) {
+		struct channel_softc *chp = drvp->chnl_softc;
+
+		WDCDEBUG_PRINT(("IDENTIFY failed: 0x%x\n", wdc_c.flags)
+		    , DEBUG_PROBE);
+
+		/* Andreas Gunnarsson reports a setup with a flash
+		   disk where the ATA drive remains comatose until
+		   it is sent a command */  
+		if (try == 0 && (drvp->drive_flags & DRIVE_ATA) &&
+		    (wdc_c.flags & AT_TIMEOU) &&
+		    !(chp->ch_flags & WDCS_BSY)) {
+			WDCDEBUG_PRINT(("Retrying IDENTIFY\n"), DEBUG_PROBE);
+			try++;
+			goto again;
+		}
+
 		return CMD_ERR;
 	} else {
 #if BYTE_ORDER == BIG_ENDIAN
@@ -156,7 +177,7 @@ ata_set_mode(drvp, mode, flags)
 {
 	struct wdc_command wdc_c;
 
-	WDCDEBUG_PRINT(("wdc_ata_set_mode=0x%x\n", mode), DEBUG_FUNCS);
+	WDCDEBUG_PRINT(("ata_set_mode=0x%x\n", mode), DEBUG_FUNCS);
 	bzero(&wdc_c, sizeof(struct wdc_command));
 
 	wdc_c.r_command = SET_FEATURES;
@@ -172,6 +193,30 @@ ata_set_mode(drvp, mode, flags)
 		return CMD_ERR;
 	}
 	return CMD_OK;
+}
+
+void
+ata_dmaerr(drvp)
+	struct ata_drive_datas *drvp;
+{
+	/*
+	 * Downgrade decision: if we get NERRS_MAX in NXFER.
+	 * We start with n_dmaerrs set to NERRS_MAX-1 so that the
+	 * first error within the first NXFER ops will immediatly trigger
+	 * a downgrade.
+	 * If we got an error and n_xfers is bigger than NXFER reset counters.
+	 */
+	drvp->n_dmaerrs++;
+	if (drvp->n_dmaerrs >= NERRS_MAX && drvp->n_xfers <= NXFER) {
+		wdc_downgrade_mode(drvp);
+		drvp->n_dmaerrs = NERRS_MAX-1;
+		drvp->n_xfers = 0;
+		return;
+	}
+	if (drvp->n_xfers > NXFER) {
+		drvp->n_dmaerrs = 1; /* just got an error */
+		drvp->n_xfers = 1; /* restart counting from this error */
+	}
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2 2000/05/31 15:52:50 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/rbus.c,v 1.2.6.1 2001/05/14 22:23:13 niklas Exp $ */
 /*	$NetBSD: rbus.c,v 1.3 1999/11/06 06:20:53 soren Exp $	*/
 /*
  * Copyright (c) 1999

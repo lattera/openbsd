@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/urio.h,v 1.3 2000/11/08 18:10:38 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/urio.h,v 1.3.4.1 2001/05/14 22:26:23 niklas Exp $	*/
 /*	$NetBSD: urio.h,v 1.2 2000/04/27 15:26:49 augustss Exp $	*/
 
 /*

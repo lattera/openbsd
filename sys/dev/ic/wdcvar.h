@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/wdcvar.h,v 1.7 1999/12/14 18:07:43 csapuntz Exp $     */
+/*      $OpenBSD: src/sys/dev/ic/wdcvar.h,v 1.7.2.1 2001/05/14 22:24:25 niklas Exp $     */
 /*	$NetBSD: wdcvar.h,v 1.17 1999/04/11 20:50:29 bouyer Exp $	*/
 
 /*-
@@ -37,6 +37,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/timeout.h>
+
 #define	WAITTIME    (10 * hz)    /* time to wait for a completion */
 	/* this is a lot for hard drives, but not for cdroms */
 
@@ -45,6 +47,9 @@ struct channel_queue {  /* per channel queue (may be shared) */
 };
 
 struct channel_softc_vtbl;
+
+
+#define WDC_OPTION_PROBE_VERBOSE   0x10000
 
 struct channel_softc { /* Per channel data */
 	struct channel_softc_vtbl  *_vtbl;
@@ -64,18 +69,21 @@ struct channel_softc { /* Per channel data */
 	/* Our state */
 	int ch_flags;
 #define WDCF_ACTIVE   0x01	/* channel is active */
+#define WDCF_ONESLAVE 0x02      /* slave-only channel */
 #define WDCF_IRQ_WAIT 0x10	/* controller is waiting for irq */
-#define WDCF_ONESLAVE 0x20      /* slave-only channel */
+#define WDCF_DMA_WAIT 0x20      /* controller is waiting for DMA */
+#define WDCF_VERBOSE_PROBE 0x40 /* verbose probe */
 	u_int8_t ch_status;         /* copy of status register */
 	u_int8_t ch_error;          /* copy of error register */
 	/* per-drive infos */
 	struct ata_drive_datas ch_drive[2];
-	
+
 	/*
 	 * channel queues. May be the same for all channels, if hw channels
 	 * are not independants
 	 */
 	struct channel_queue *ch_queue;
+	struct timeout ch_timo;
 };
 
 /*
@@ -144,6 +152,9 @@ struct wdc_softc { /* Per controller state */
 #define	WDC_CAPABILITY_ATAPI_NOSTREAM 0x0080 /* Don't use stream f on ATAPI */
 #define WDC_CAPABILITY_NO_EXTRA_RESETS 0x0100 /* only reset once */
 #define WDC_CAPABILITY_PREATA 0x0200 /* ctrl can be a pre-ata one */
+#define WDC_CAPABILITY_IRQACK 0x0400    /* callback to ack interrupt */
+#define WDC_CAPABILITY_SINGLE_DRIVE 0x800 /* Don't proble second drive */
+#define WDC_CAPABILITY_NO_ATAPI_DMA 0x1000 /* Don't do DMA with ATAPI */
 	u_int8_t      PIO_cap; /* highest PIO mode supported */
 	u_int8_t      DMA_cap; /* highest DMA mode supported */
 	u_int8_t      UDMA_cap; /* highest UDMA mode supported */
@@ -161,11 +172,15 @@ struct wdc_softc { /* Per controller state */
 	void            *dma_arg;
 	int            (*dma_init) __P((void *, int, int, void *, size_t,
 	                int));
-	void           (*dma_start) __P((void *, int, int, int));
-	int            (*dma_finish) __P((void *, int, int, int));
+	void           (*dma_start) __P((void *, int, int));
+	int            (*dma_finish) __P((void *, int, int));
 /* flags passed to DMA functions */
 #define WDC_DMA_READ 0x01
-#define WDC_DMA_POLL 0x02
+#define WDC_DMA_IRQW 0x02
+	int             dma_status; /* status return from dma_finish() */
+#define WDC_DMAST_NOIRQ 0x01    /* missing IRQ */
+#define WDC_DMAST_ERR   0x02    /* DMA error */
+#define WDC_DMAST_UNDER 0x04    /* DMA underrun */
 
 	/* if WDC_CAPABILITY_HWLOCK set in 'cap' */
 	int            (*claim_hw) __P((void *, int));
@@ -173,15 +188,19 @@ struct wdc_softc { /* Per controller state */
 
 	/* if WDC_CAPABILITY_MODE set in 'cap' */
 	void 		(*set_modes) __P((struct channel_softc *));
+
+	/* if WDC_CAPABILITY_IRQACK set in 'cap' */
+	void            (*irqack) __P((struct channel_softc *));
 };
 
  /*
   * Description of a command to be handled by a controller.
   * These commands are queued in a list.
   */
+struct atapi_return_args;
+
 struct wdc_xfer {
 	volatile u_int c_flags;    
-#define C_INUSE  	0x0001 /* xfer struct is in use */
 #define C_ATAPI  	0x0002 /* xfer is ATAPI request */
 #define C_TIMEOU  	0x0004 /* xfer processing timed out */
 #define C_NEEDDONE  	0x0010 /* need to call upper-level done */
@@ -204,16 +223,15 @@ struct wdc_xfer {
 	LIST_ENTRY(wdc_xfer) free_list;
 	void (*c_start) __P((struct channel_softc *, struct wdc_xfer *));
 	int  (*c_intr)  __P((struct channel_softc *, struct wdc_xfer *, int));
-	int (*c_done)  __P((struct channel_softc *, struct wdc_xfer *, int));
+        void (*c_kill_xfer) __P((struct channel_softc *, struct wdc_xfer *));
 
 	/* Used by ATAPISCSI */
-	int timeout;
-	int endticks;
-	int delay;
-	unsigned int expect_irq:1;
-	unsigned int claim_irq:1;
-
-	int (*next) __P((struct channel_softc *, struct wdc_xfer *, int));
+ 	volatile int endticks;
+	struct timeout atapi_poll_to;
+	void (*next) __P((struct channel_softc *, struct wdc_xfer *, int,
+			 struct atapi_return_args *));
+	void (*c_done)  __P((struct channel_softc *, struct wdc_xfer *, int,
+			 struct atapi_return_args *));
 	
 	/* Used for tape devices */
 	int  transfer_len;
@@ -226,6 +244,8 @@ struct wdc_xfer {
 
 int   wdcprobe __P((struct channel_softc *));
 void  wdcattach __P((struct channel_softc *));
+int   wdcdetach __P((struct channel_softc *, int));
+int   wdcactivate __P((struct device *, enum devact));
 int   wdcintr __P((void *));
 void  wdc_exec_xfer __P((struct channel_softc *, struct wdc_xfer *));
 struct wdc_xfer *wdc_get_xfer __P((int)); /* int = WDC_NOSLEEP/CANSLEEP */
@@ -237,8 +257,10 @@ void  wdcrestart __P((void*));
 int   wdcreset	__P((struct channel_softc *, int));
 #define VERBOSE 1 
 #define SILENT 0 /* wdcreset will not print errors */
-int   wdcwait __P((struct channel_softc *, int, int, int));
-void  wdcbit_bucket __P(( struct channel_softc *, int));
+int   wdc_wait_for_status __P((struct channel_softc *, int, int, int));
+int   wdc_dmawait __P((struct channel_softc *, struct wdc_xfer *, int));
+void  wdcbit_bucket __P((struct channel_softc *, int));
+
 void  wdccommand __P((struct channel_softc *, u_int8_t, u_int8_t, u_int16_t,
 	                  u_int8_t, u_int8_t, u_int8_t, u_int8_t));
 void   wdccommandshort __P((struct channel_softc *, int, int));
@@ -250,11 +272,13 @@ void	wdc_delref __P((struct channel_softc *));
 /*	
  * ST506 spec says that if READY or SEEKCMPLT go off, then the read or write
  * command is aborted.
- */   
+ */
+#define wdcwait(chp, status, mask, timeout) ((wdc_wait_for_status((chp), (status), (mask), (timeout)) >= 0) ? 0 : -1)
 #define wait_for_drq(chp, timeout) wdcwait((chp), WDCS_DRQ, WDCS_DRQ, (timeout))
 #define wait_for_unbusy(chp, timeout)	wdcwait((chp), 0, 0, (timeout))
 #define wait_for_ready(chp, timeout) wdcwait((chp), WDCS_DRDY, \
 	WDCS_DRDY, (timeout))
+
 /* ATA/ATAPI specs says a device can take 31s to reset */
 #define WDC_RESET_WAIT 31000
 
@@ -268,3 +292,4 @@ int wdc_select_drive __P((struct channel_softc *, int, int));
 void wdc_output_bytes __P((struct ata_drive_datas *drvp, void *, unsigned int));
 void wdc_input_bytes __P((struct ata_drive_datas *drvp, void *, unsigned int));
 
+void wdc_print_current_modes __P((struct channel_softc *));

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pcdisplay_subr.c,v 1.4 2001/04/14 04:44:01 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pcdisplay_subr.c,v 1.4.4.1 2001/05/14 22:24:05 niklas Exp $ */
 /* $NetBSD: pcdisplay_subr.c,v 1.16 2000/06/08 07:01:19 cgd Exp $ */
 
 /*

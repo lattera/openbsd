@@ -33,7 +33,7 @@
  * SUCH DAMAGE.
  *
  * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx.c,v 1.40 2000/01/07 23:08:17 gibbs Exp $
- * $OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.18.6.1 2000/03/24 09:09:08 niklas Exp $
+ * $OpenBSD: src/sys/dev/ic/aic7xxx.c,v 1.18.6.2 2001/05/14 22:23:24 niklas Exp $
  */
 /*
  * A few notes on features of the driver.
@@ -91,10 +91,6 @@
 #include <machine/bus.h>
 #include <machine/intr.h>
 
-#include <dev/pci/pcireg.h>
-#include <dev/pci/pcivar.h>
-#include <dev/pci/pcidevs.h>
-
 #include <sys/malloc.h>
 #include <sys/buf.h>
 #include <sys/proc.h>
@@ -126,7 +122,10 @@
 #define AHC_TMODE_ENABLE 0
 #endif
 #include <sys/kernel.h>
-#define offsetof(s, e) ((char *)&((s *)0)->e - (char *)((s *)0))
+
+#ifndef le32toh
+#define le32toh	letoh32  /* to match Free/Net macros */
+#endif
 
 #define	IS_SCSIBUS_B(ahc, sc_link)	\
 	((sc_link)->scsibus == (ahc)->sc_link_b.scsibus)
@@ -323,6 +322,11 @@ STATIC void	ahc_set_width __P((struct ahc_softc *ahc,
 			      u_int width, u_int type, int paused, int done));
 STATIC void	ahc_set_tags __P((struct ahc_softc *ahc,
 				  struct ahc_devinfo *devinfo,int enable));
+STATIC int      ahc_istagged_device __P((struct ahc_softc *ahc,
+					 struct scsi_xfer *xs,
+					 int nocmdcheck));
+STATIC void     ahc_check_tags __P((struct ahc_softc *ahc,
+				    struct scsi_xfer *xs));
 STATIC void	ahc_construct_sdtr __P((struct ahc_softc *ahc,
 				   u_int period, u_int offset));
 STATIC void	ahc_construct_wdtr __P((struct ahc_softc *ahc, u_int bus_width));
@@ -377,8 +381,9 @@ STATIC INLINE	void   ahc_list_remove __P((struct ahc_softc *ahc,
 					    struct scsi_xfer *xs));
 STATIC INLINE	struct scsi_xfer *ahc_list_next __P((struct ahc_softc *ahc,
 						     struct scsi_xfer *xs));
-
 STATIC int32_t ahc_scsi_cmd __P((struct scsi_xfer *xs));
+static __inline void ahc_swap_hscb __P((struct hardware_scb *));
+static __inline void ahc_swap_sg __P((struct ahc_dma_seg *));
 
 struct cfdriver ahc_cd = {
 	NULL, "ahc", DV_DULL
@@ -400,6 +405,25 @@ static struct scsi_device ahc_dev =
 	NULL, /* have no async handler */
 	NULL, /* Use default 'done' routine */
 };
+
+static __inline void
+ahc_swap_hscb(struct hardware_scb *hscb)
+{
+	hscb->SG_pointer = htole32(hscb->SG_pointer);
+	hscb->data = htole32(hscb->data);
+	hscb->datalen = htole32(hscb->datalen);
+	/*
+	 * No need to swap cmdpointer; it's either 0 or set to
+	 * cmdstore_busaddr, which is already swapped.
+	 */
+}
+
+static __inline void
+ahc_swap_sg(struct ahc_dma_seg *sg)
+{
+	sg->addr = htole32(sg->addr);
+	sg->len = htole32(sg->len);
+}
 
 STATIC void
 ahcminphys(bp)
@@ -619,6 +643,12 @@ ahcfreescb(ahc, scb)
 	int opri;
 
 	hscb = scb->hscb;
+
+#ifdef AHC_DEBUG
+	if (ahc_debug & AHC_SHOWSCBALLOC)
+		printf("%s: free SCB tag %x\n", ahc_name(ahc), hscb->tag);
+#endif
+
 	opri = splbio();
 
 	if ((ahc->flags & AHC_RESOURCE_SHORTAGE) != 0 ||
@@ -631,8 +661,10 @@ ahcfreescb(ahc, scb)
 	scb->flags = SCB_FREE;
 	hscb->control = 0;
 	hscb->status = 0;
+	timeout_del(&scb->xs->stimeout);
 
 	SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, scb, links);
+
 	splx(opri);
 }
 
@@ -675,7 +707,7 @@ ahc_createdmamem(ahc, size, mapp, vaddr, baddr, seg, nseg, what)
 	int *nseg;
 	const char *what;
 {
-	int error, rseg, level = 0;
+	int error, level = 0;
 	int dma_flags = BUS_DMA_NOWAIT;
 	bus_dma_tag_t tag = ahc->sc_dmat;
 	const char *myname = ahc_name(ahc);
@@ -713,12 +745,7 @@ ahc_createdmamem(ahc, size, mapp, vaddr, baddr, seg, nseg, what)
 		goto out;
         }
 
-	*baddr = seg[0].ds_addr;
-
-	if (bootverbose)
-		printf("%s: dmamem for %s at phys %lx virt %lx nseg %d size %d\n",
-		       myname, what, (unsigned long)*baddr,
-		       (unsigned long)*vaddr, *nseg, size);
+	*baddr = (*mapp)->dm_segs[0].ds_addr;
 	return 0;
 out:
 	switch (level) {
@@ -729,7 +756,7 @@ out:
 		bus_dmamem_unmap(tag, *vaddr, size);
 		/* FALLTHROUGH */
 	case 1:
-		bus_dmamem_free(tag, seg, rseg);
+		bus_dmamem_free(tag, seg, *nseg);
 		break;
 	default:
 		break;
@@ -761,20 +788,21 @@ ahc_print_scb(scb)
 {
 	struct hardware_scb *hscb = scb->hscb;
 
-	printf("scb:%p control:0x%x tcl:0x%x cmdlen:%d cmdpointer:0x%lx\n",
+	printf("scb:%p tag %x control:0x%x tcl:0x%x cmdlen:%d cmdpointer:0x%lx\n",
 		scb,
+		hscb->tag,
 		hscb->control,
 		hscb->tcl,
 		hscb->cmdlen,
-		hscb->cmdpointer );
-	printf("        datlen:%d data:0x%lx segs:0x%x segp:0x%lx\n",
-		hscb->datalen,
-		hscb->data,
+		(unsigned long)le32toh(hscb->cmdpointer));
+	printf("        datlen:%u data:0x%lx segs:0x%x segp:0x%lx\n",
+		le32toh(hscb->datalen),
+		(unsigned long)(le32toh(hscb->data)),
 		hscb->SG_count,
-		hscb->SG_pointer);
-	printf("	sg_addr:%lx sg_len:%ld\n",
-		scb->sg_list[0].addr,
-		scb->sg_list[0].len);
+		(unsigned long)(le32toh(hscb->SG_pointer)));
+	printf("	sg_addr:%lx sg_len:%lu\n",
+		(unsigned long)(le32toh(scb->sg_list[0].addr)),
+		(unsigned long)(le32toh(scb->sg_list[0].len)));
 	printf("	cdb:%x %x %x %x %x %x %x %x %x %x %x %x\n",
 		hscb->cmdstore[0], hscb->cmdstore[1], hscb->cmdstore[2],
 		hscb->cmdstore[3], hscb->cmdstore[4], hscb->cmdstore[5],
@@ -821,8 +849,8 @@ static const int num_phases = (sizeof(phase_table)/sizeof(phase_table[0])) - 1;
  */
 #define AHC_SYNCRATE_DT		0
 #define AHC_SYNCRATE_ULTRA2	1
-#define AHC_SYNCRATE_ULTRA	2
-#define AHC_SYNCRATE_FAST	5
+#define AHC_SYNCRATE_ULTRA	3
+#define AHC_SYNCRATE_FAST	6
 static struct ahc_syncrate ahc_syncrates[] = {
       /* ultra2    fast/ultra  period     rate */
 	{ 0x42,      0x000,      9,      "80.0" },
@@ -1372,7 +1400,7 @@ ahc_set_syncrate(ahc, devinfo, syncrate, period, offset, type, paused, done)
 	 * Print messages if we're verbose and at the end of a negotiation
 	 * cycle.
 	 */
-	if (done && bootverbose) {
+	if (done) {
 		if (offset != 0) {
 			printf("%s: target %d synchronous at %sMHz, "
 			       "offset = 0x%x\n", ahc_name(ahc),
@@ -1465,8 +1493,10 @@ ahc_set_tags(ahc, devinfo, enable)
 				    &tstate);
 	if (enable)
 		tstate->tagenable |= devinfo->target_mask;
-	else
+	else {
 		tstate->tagenable &= ~devinfo->target_mask;
+		tstate->tagdisable |= devinfo->target_mask;
+	}
 }
 
 /*
@@ -1505,7 +1535,7 @@ ahc_attach(ahc)
 			ahc->sc_link.adapter_buswidth = 16;
 	}
 
-/*
+	/*
 	 * ask the adapter what subunits are present
 	 */
 	if ((ahc->flags & AHC_CHANNEL_B_PRIMARY) == 0) {
@@ -1931,6 +1961,8 @@ ahc_handle_seqint(ahc, intstat)
 				hscb->cmdpointer = hscb->cmdstore_busaddr;
 				hscb->cmdlen = sizeof(*sc);
 				scb->sg_count = hscb->SG_count;
+				ahc_swap_hscb(hscb);
+				ahc_swap_sg(scb->sg_list);
 				scb->flags |= SCB_SENSE;
 				/*
 				 * Ensure the target is busy since this
@@ -1943,11 +1975,8 @@ ahc_handle_seqint(ahc, intstat)
 				 * Ensure we have enough time to actually
 				 * retrieve the sense.
 				 */
-				if (!(scb->xs->flags & SCSI_POLL)) {
-				untimeout(ahc_timeout, (caddr_t)scb);
-					timeout(ahc_timeout, (caddr_t)scb,
-					    5 * hz);
-				}
+				if (!(scb->xs->flags & SCSI_POLL))
+					timeout_add(&scb->xs->stimeout, 5 * hz);
 			}
 			break;
 		case SCSI_BUSY:
@@ -2026,12 +2055,12 @@ ahc_handle_seqint(ahc, intstat)
 					/* XXX Ever executed??? */
 					ahc_setup_target_msgin(ahc, &devinfo);
 			}
-			}
+		}
 
 		/* Pass a NULL path so that handlers generate their own */
 		ahc_handle_message_phase(ahc, /*path*/NULL);
 		break;
-		}
+	}
 	case PERR_DETECTED:
 	{
 		/*
@@ -2094,8 +2123,8 @@ ahc_handle_seqint(ahc, intstat)
 			for (i = 0; i < scb->sg_count; i++) {
 				printf("sg[%d] - Addr 0x%x : Length %d\n",
 				       i,
-				       scb->sg_list[i].addr,
-				       scb->sg_list[i].len);
+				       (unsigned int)le32toh(scb->sg_list[i].addr),
+				       (unsigned int)le32toh(scb->sg_list[i].len));
 			}
 		}
 		/*
@@ -2352,6 +2381,7 @@ ahc_handle_scsiint(ahc, intstat)
 					       SCB_LUN(scb), tag,
 					       ROLE_INITIATOR,
 					       XS_DRIVER_STUFFUP);
+				sc_print_addr(scb->xs->sc_link);
 			} else {
 				/*
 				 * We had not fully identified this connection,
@@ -2590,9 +2620,10 @@ ahc_handle_msg_reject(ahc, devinfo)
 		struct tmode_tstate *tstate;
 
 		/* note 8bit xfers */
-		printf("%s:%c:%d: refuses WIDE negotiation.  Using "
-		       "8bit transfers\n", ahc_name(ahc),
-		       devinfo->channel, devinfo->target);
+		if (bootverbose)
+			printf("%s:%c:%d: refuses WIDE negotiation.  Using "
+			       "8bit transfers\n", ahc_name(ahc),
+			       devinfo->channel, devinfo->target);
 		ahc_set_width(ahc, devinfo,
 			      MSG_EXT_WDTR_BUS_8_BIT,
 			      AHC_TRANS_ACTIVE|AHC_TRANS_GOAL,
@@ -2626,14 +2657,16 @@ ahc_handle_msg_reject(ahc, devinfo)
 				 AHC_TRANS_ACTIVE|AHC_TRANS_GOAL,
 				 /*paused*/TRUE,
 				 /*done*/TRUE);
-		printf("%s:%c:%d: refuses synchronous negotiation. "
-		       "Using asynchronous transfers\n",
-		       ahc_name(ahc),
-		       devinfo->channel, devinfo->target);
+		if (bootverbose)
+			printf("%s:%c:%d: refuses synchronous negotiation. "
+			       "Using asynchronous transfers\n",
+			       ahc_name(ahc),
+			       devinfo->channel, devinfo->target);
 	} else if ((scb->hscb->control & MSG_SIMPLE_Q_TAG) != 0) {
-		printf("%s:%c:%d: refuses tagged commands.  Performing "
-		       "non-tagged I/O\n", ahc_name(ahc),
-		       devinfo->channel, devinfo->target);
+		if (bootverbose)
+			printf("%s:%c:%d: refuses tagged commands.  Performing "
+			       "non-tagged I/O\n", ahc_name(ahc),
+			       devinfo->channel, devinfo->target);
 			
 		ahc_set_tags(ahc, devinfo, FALSE);
 
@@ -3319,13 +3352,14 @@ ahc_handle_ign_wide_residue(ahc, devinfo)
 			sg_index = scb->sg_count - resid_sgcnt;
 
 			if (sg_index != 0
-			 && (scb->sg_list[sg_index].len < data_cnt)) {
-				u_int sg_addr;
+			 && (le32toh(scb->sg_list[sg_index].len) < data_cnt)) {
+				u_int32_t sg_addr;
 
 				sg_index--;
 				data_cnt = 1;
-				data_addr = scb->sg_list[sg_index].addr
-					  + scb->sg_list[sg_index].len - 1;
+				data_addr = le32toh(scb->sg_list[sg_index].addr)
+					  + le32toh(scb->sg_list[sg_index].len)
+					  - 1;
 				
 				/*
 				 * The physical address base points to the
@@ -3402,7 +3436,7 @@ ahc_done(ahc, scb)
 	
 	LIST_REMOVE(scb, pend_links);
 
-	untimeout(ahc_timeout, (caddr_t)scb);
+	timeout_del(&scb->xs->stimeout);
 
 #ifdef AHC_DEBUG
 	if (ahc_debug & AHC_SHOWCMDS) {
@@ -3415,7 +3449,7 @@ ahc_done(ahc, scb)
 	target = sc_link->target;
 	
 	if (xs->datalen) {
-		int op;
+		bus_dmasync_op_t op;
 	
 		if ((xs->flags & SCSI_DATA_IN) != 0)
 			op = BUS_DMASYNC_POSTREAD;
@@ -3430,7 +3464,8 @@ ahc_done(ahc, scb)
 	 * XXX if we are holding two commands per lun, 
 	 *     send the next command.
 	 */
-	ahc_index_busy_tcl(ahc, scb->hscb->tcl, /*unbusy*/TRUE);
+	if (!(scb->hscb->control & TAG_ENB))
+		ahc_index_busy_tcl(ahc, scb->hscb->tcl, /*unbusy*/TRUE);
 
 	/*
 	 * If the recovery SCB completes, we have to be
@@ -3449,10 +3484,9 @@ ahc_done(ahc, scb)
 		while (scbp != NULL) {
 			struct scsi_xfer *txs = scbp->xs;
 
-			if (!(txs->flags & SCSI_POLL)) {
-				timeout(ahc_timeout, scbp,
+			if (!(txs->flags & SCSI_POLL))
+				timeout_add(&scbp->xs->stimeout,
 				    (scbp->xs->timeout * hz)/1000);
-			}
 			scbp = LIST_NEXT(scbp, pend_links);
 		}
 
@@ -3486,7 +3520,7 @@ ahc_done(ahc, scb)
 		 */
 		bzero(&xs->sense, sizeof(struct scsi_sense));
 		bcopy(&ahc->scb_data->sense[scb->hscb->tag],
-		      &xs->sense, scb->sg_list->len);
+		      &xs->sense, le32toh(scb->sg_list->len));
 		xs->error = XS_SENSE;
 	}
 	if (scb->flags & SCB_FREEZE_QUEUE) {
@@ -3510,6 +3544,7 @@ ahc_done(ahc, scb)
 		splx(s);
 	} else {
 		xs->flags |= ITSDONE;
+		ahc_check_tags(ahc, xs);
 		scsi_done(xs);
 	}
 
@@ -3639,6 +3674,9 @@ ahc_init(ahc)
 	for (i = 0; i < 256; i++)
 		ahc->qoutfifo[i] = SCB_LIST_NULL;
 
+	bus_dmamap_sync(ahc->sc_dmat, ahc->shared_data_dmamap,
+			BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+	
 	/*
 	 * Allocate a tstate to house information for our
 	 * initiator presence on the bus as well as the user
@@ -3835,6 +3873,7 @@ ahc_init(ahc)
 		tstate->ultraenb = ultraenb;
 		tstate->discenable = discenable;
 		tstate->tagenable = 0; /* Wait until the XPT says its okay */
+		tstate->tagdisable = 0;
 	}
 	ahc->user_discenable = discenable;
 	ahc->user_tagenable = tagenable;
@@ -3915,7 +3954,7 @@ ahc_init(ahc)
 
 	/*
 	 * Setup the allowed SCSI Sequences based on operational mode.
-	 * If we are a target, we'll enalbe select in operations once
+	 * If we are a target, we'll enable select in operations once
 	 * we've had a lun enabled.
 	 */
 	scsiseq_template = ENSELO|ENAUTOATNO|ENAUTOATNP;
@@ -4045,6 +4084,7 @@ ahc_scsi_cmd(xs)
 	struct tmode_tstate *tstate;
 	u_int target_id;
 	u_int our_id;
+	char channel;
 	int s, tcl;
 	u_int16_t mask;
 	int dontqueue = 0, fromqueue = 0;
@@ -4080,6 +4120,9 @@ ahc_scsi_cmd(xs)
 		goto get_scb;
 	}
 
+	/* determine safety of software queueing */
+	dontqueue = xs->flags & SCSI_POLL;
+	
 	/*
 	 * If no new requests are accepted, just insert into the
 	 * private queue to wait for our turn.
@@ -4088,7 +4131,8 @@ ahc_scsi_cmd(xs)
 
 	if (ahc->queue_blocked ||
 	    ahc->devqueue_blocked[xs->sc_link->target] ||
-	    ahc_index_busy_tcl(ahc, tcl, FALSE) != SCB_LIST_NULL) {
+	    (!ahc_istagged_device(ahc, xs, 0) &&
+	     ahc_index_busy_tcl(ahc, tcl, FALSE) != SCB_LIST_NULL)) {
 		if (dontqueue) {
 			splx(s);
 			xs->error = XS_DRIVER_STUFFUP;
@@ -4163,18 +4207,34 @@ get_scb:
 	tcl = XS_TCL(ahc, xs);
 
 #ifdef DIAGNOSTIC
-	if (ahc_index_busy_tcl(ahc, tcl, FALSE) != SCB_LIST_NULL)
+	if (!ahc_istagged_device(ahc, xs, 0) &&
+	    ahc_index_busy_tcl(ahc, tcl, FALSE) != SCB_LIST_NULL)
 		panic("ahc: queuing for busy target");
 #endif
 	
 	scb->xs = xs;
 	hscb = scb->hscb;
 	hscb->tcl = tcl;
+	timeout_set(&xs->stimeout, ahc_timeout, scb);
 
-	ahc_busy_tcl(ahc, scb);
+	if (ahc_istagged_device(ahc, xs, 0))
+		scb->hscb->control |= MSG_SIMPLE_Q_TAG;
+	else
+		ahc_busy_tcl(ahc, scb);
 
 	splx(s);
  
+	channel = SIM_CHANNEL(ahc, xs->sc_link);
+	if (ahc->inited_channels[channel - 'A'] == 0) {
+		if ((channel == 'A' && (ahc->flags & AHC_RESET_BUS_A)) ||
+		    (channel == 'B' && (ahc->flags & AHC_RESET_BUS_B))) {
+			s = splbio();
+			ahc_reset_channel(ahc, channel, TRUE);
+			splx(s);
+		}
+		ahc->inited_channels[channel - 'A'] = 1;
+	}
+
 	/*
 	 * Put all the arguments for the xfer in the scb
 	 */
@@ -4245,6 +4305,7 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 		while (dm_segs < end_seg) {
 			sg->addr = dm_segs->ds_addr;
 			sg->len = dm_segs->ds_len;
+			ahc_swap_sg(sg);
 			sg++;
 			dm_segs++;
 		}
@@ -4271,7 +4332,8 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 	 * be aborted.
 	 */
 	if (xs->flags & ITSDONE) {
-		ahc_index_busy_tcl(ahc, scb->hscb->tcl, TRUE);
+		if (!ahc_istagged_device(ahc, xs, 0))
+			ahc_index_busy_tcl(ahc, scb->hscb->tcl, TRUE);
 		if (nsegments != 0)
 			bus_dmamap_unload(ahc->sc_dmat, scb->dmamap);
 		ahcfreescb(ahc, scb);
@@ -4283,14 +4345,15 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 	if (scb->sg_count > 255)
 		panic("ahc bad sg_count");
 #endif
+
+	ahc_swap_hscb(scb->hscb);
 		
 	LIST_INSERT_HEAD(&ahc->pending_scbs, scb, pend_links);
 
 	scb->flags |= SCB_ACTIVE;
 
 	if (!(xs->flags & SCSI_POLL))
-	timeout(ahc_timeout, (caddr_t)scb, 
-		    (xs->timeout * hz) / 1000);
+		timeout_add(&xs->stimeout, (xs->timeout * hz) / 1000);
 
 	if ((scb->flags & SCB_TARGET_IMMEDIATE) != 0) {
 #if 0
@@ -4322,6 +4385,7 @@ ahc_execute_scb(arg, dm_segs, nsegments)
 
 #ifdef AHC_DEBUG
 	if (ahc_debug & AHC_SHOWCMDS) {
+		sc_print_addr(xs->sc_link);
 		printf("opcode %d tag %x len %d flags %x control %x fpos %u"
 		    " rate %x\n",
 		    xs->cmdstore.opcode, scb->hscb->tag, scb->hscb->datalen,
@@ -4395,7 +4459,8 @@ ahc_setup_data(ahc, xs, scb)
 			    (xs->flags & SCSI_NOSLEEP) ?
 			    BUS_DMA_NOWAIT : BUS_DMA_WAITOK);
 		if (error) {
-			ahc_index_busy_tcl(ahc, hscb->tcl, TRUE);
+			if (!ahc_istagged_device(ahc, xs, 0))
+				ahc_index_busy_tcl(ahc, hscb->tcl, TRUE);
 			return (TRY_AGAIN_LATER);	/* XXX fvdl */
 		}
 		error = ahc_execute_scb(scb,
@@ -4490,8 +4555,10 @@ ahcallocscbs(ahc)
 		next_scb->hscb = &scb_data->hscbs[scb_data->numscbs];
 		next_scb->hscb->tag = ahc->scb_data->numscbs;
 		next_scb->hscb->cmdstore_busaddr = 
-			ahc_hscb_busaddr(ahc, next_scb->hscb->tag) + 
-			offsetof(struct hardware_scb, cmdstore);	
+		    ahc_hscb_busaddr(ahc, next_scb->hscb->tag)
+		  + offsetof(struct hardware_scb, cmdstore);
+		next_scb->hscb->cmdstore_busaddr =
+		    htole32(next_scb->hscb->cmdstore_busaddr);
 		SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, next_scb, links);
 		segs += AHC_NSEG;
 		physaddr += (AHC_NSEG * sizeof(struct ahc_dma_seg));
@@ -4624,6 +4691,8 @@ ahc_download_instr(ahc, instrptr, dconsts)
 	/* Structure copy */
 	instr = *(union ins_formats*)&seqprog[instrptr * 4];
 
+	instr.integer = le32toh(instr.integer);
+
 	fmt1_ins = &instr.format1;
 	fmt3_ins = NULL;
 
@@ -4711,6 +4780,7 @@ ahc_download_instr(ahc, instrptr, dconsts)
 				      |	(fmt1_ins->opcode << 25);
 			}
 		}
+		instr.integer = htole32(instr.integer);
 		ahc_outsb(ahc, SEQRAM, instr.bytes, 4);
 		break;
 	default:
@@ -4744,7 +4814,7 @@ ahc_set_recoveryscb(ahc, scb)
 		 */
 		scbp = ahc->pending_scbs.lh_first;
 		while (scbp != NULL) {
-			untimeout(ahc_timeout, scbp);
+			timeout_del(&scbp->xs->stimeout);
 			scbp = scbp->pend_links.le_next;
 		}
 	}
@@ -4830,8 +4900,8 @@ ahc_timeout(void *arg)
 		for (i = 0; i < scb->sg_count; i++) {
 			printf("sg[%d] - Addr 0x%x : Length %d\n",
 			       i,
-			       scb->sg_list[i].addr,
-			       scb->sg_list[i].len);
+			       le32toh(scb->sg_list[i].addr),
+			       le32toh(scb->sg_list[i].len));
 		}
 	}
 #endif
@@ -4893,8 +4963,8 @@ bus_reset:
 				scb->flags |= SCB_OTHERTCL_TIMEOUT;
 				newtimeout = MAX(active_scb->xs->timeout,
 						 scb->xs->timeout);
-				timeout(ahc_timeout, scb,
-					    (newtimeout * hz) / 1000);
+				timeout_add(&scb->xs->stimeout,
+				    (newtimeout * hz) / 1000);
 				splx(s);
 				return;
 			} 
@@ -4913,6 +4983,7 @@ bus_reset:
 
 				/* Will clear us from the bus */
 				restart_sequencer(ahc);
+				splx(s);
 				return;
 			} 
 
@@ -4922,7 +4993,8 @@ bus_reset:
 			sc_print_addr(active_scb->xs->sc_link);
 			printf("BDR message in message buffer\n");
 			active_scb->flags |=  SCB_DEVICE_RESET;
-			    timeout(ahc_timeout, (caddr_t)active_scb, 2 * hz);
+			    timeout_add(&active_scb->xs->stimeout, 2 * hz);
+			unpause_sequencer(ahc);
 		} else {
 			int	 disconnected;
 
@@ -4998,6 +5070,11 @@ bus_reset:
 				printf("Queuing a BDR SCB\n");
 				ahc->qinfifo[ahc->qinfifonext++] =
 				    scb->hscb->tag;
+
+				bus_dmamap_sync(ahc->sc_dmat,
+				    ahc->shared_data_dmamap,
+				    BUS_DMASYNC_PREWRITE);
+
 				if ((ahc->features & AHC_QUEUE_REGS) != 0) {
 					ahc_outb(ahc, HNSCB_QOFF,
 						 ahc->qinfifonext);
@@ -5005,7 +5082,7 @@ bus_reset:
 					ahc_outb(ahc, KERNEL_QINPOS,
 						 ahc->qinfifonext);
 				}
-				timeout(ahc_timeout, (caddr_t)scb, 2 * hz);
+				timeout_add(&scb->xs->stimeout, 2 * hz);
 				unpause_sequencer(ahc);
 			} else {
 				/* Go "immediatly" to the bus reset */
@@ -5579,7 +5656,7 @@ ahc_calc_residual(scb)
 		sg = scb->sg_count - resid_sgs;
 		while (resid_sgs > 0) {
 
-			resid += scb->sg_list[sg].len;
+			resid += le32toh(scb->sg_list[sg].len);
 			sg++;
 			resid_sgs--;
 		}
@@ -5739,4 +5816,97 @@ ahc_shutdown(void *arg)
 
 	for (i = TARG_SCSIRATE; i < HA_274_BIOSCTRL; i++)
 		ahc_outb(ahc, i, 0);
+}
+
+STATIC void
+ahc_check_tags(ahc, xs)
+struct ahc_softc *ahc;
+struct scsi_xfer *xs;
+{
+	struct scsi_inquiry_data *inq;
+	struct ahc_devinfo devinfo;
+	struct tmode_tstate *tstate;
+	int target_id, our_id;
+	char channel;
+
+	if (xs->cmd->opcode != INQUIRY || xs->error != XS_NOERROR)
+		return;
+
+	if (xs->sc_link->quirks & SDEV_NOTAGS)
+		return;
+
+	target_id = xs->sc_link->target;
+	our_id = SIM_SCSI_ID(ahc, xs->sc_link);
+	channel = SIM_CHANNEL(ahc, xs->sc_link);
+
+	(void)ahc_fetch_transinfo(ahc, channel, our_id, target_id, &tstate);
+	ahc_compile_devinfo(&devinfo, our_id, target_id,
+	    xs->sc_link->lun, channel, ROLE_INITIATOR);
+
+	if (tstate->tagdisable & devinfo.target_mask)
+		return;
+
+	/*
+	 * Sneak a look at the results of the SCSI Inquiry
+	 * command and see if we can do Tagged queing.  This
+	 * should really be done by the higher level drivers.
+	 */
+	inq = (struct scsi_inquiry_data *)xs->data;
+	if ((inq->flags & SID_CmdQue) && !(ahc_istagged_device(ahc, xs, 1))) {
+#ifdef AHC_DEBUG 
+		printf("%s: target %d using tagged queuing\n",
+			ahc_name(ahc), xs->sc_link->target);
+#endif 
+		ahc_set_tags(ahc, &devinfo, TRUE);
+
+		if (ahc->scb_data->maxhscbs >= 16 ||
+		    (ahc->flags & AHC_PAGESCBS)) {
+			/* Default to 16 tags */
+			xs->sc_link->openings += 14;
+		} else {
+			/*
+			 * Default to 4 tags on whimpy
+			 * cards that don't have much SCB
+			 * space and can't page.  This prevents
+			 * a single device from hogging all
+			 * slots.  We should really have a better
+			 * way of providing fairness.
+			 */
+			xs->sc_link->openings += 2;
+		}
+	}
+}
+
+STATIC int
+ahc_istagged_device(ahc, xs, nocmdcheck)
+struct ahc_softc *ahc;
+struct scsi_xfer *xs;
+int nocmdcheck;
+{
+	char channel;
+	u_int our_id, target;
+	struct tmode_tstate *tstate;
+	struct ahc_devinfo devinfo;
+
+	if (xs->sc_link->quirks & SDEV_NOTAGS)
+		return 0;
+
+	/*
+	 * XXX never do these commands with tags. Should really be
+	 * in a higher layer.
+	 */
+	if (!nocmdcheck && (xs->cmd->opcode == INQUIRY ||
+	     xs->cmd->opcode == TEST_UNIT_READY ||
+	     xs->cmd->opcode == REQUEST_SENSE))
+		return 0;
+
+	channel = SIM_CHANNEL(ahc, xs->sc_link);
+	our_id = SIM_SCSI_ID(ahc, xs->sc_link);
+	target = xs->sc_link->target;
+	(void)ahc_fetch_transinfo(ahc, channel, our_id, target, &tstate);
+
+	ahc_compile_devinfo(&devinfo, our_id, target,
+	    xs->sc_link->lun, channel, ROLE_INITIATOR);
+
+	return (tstate->tagenable & devinfo.target_mask);
 }

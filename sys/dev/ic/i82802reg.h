@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82802reg.h,v 1.1 2000/04/10 20:07:47 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82802reg.h,v 1.1.8.1 2001/05/14 22:23:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff

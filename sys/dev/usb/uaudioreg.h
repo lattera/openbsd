@@ -1,12 +1,13 @@
-/*	$OpenBSD: src/sys/dev/usb/uaudioreg.h,v 1.1 1999/11/11 15:54:59 ho Exp $	*/
-/*	$NetBSD: uaudioreg.h,v 1.2 1999/10/13 20:13:29 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uaudioreg.h,v 1.1.2.1 2001/05/14 22:26:20 niklas Exp $ */
+/*	$NetBSD: uaudioreg.h,v 1.6 2000/05/30 10:10:17 augustss Exp $	*/
 
 /*
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
- * Author: Lennart Augustsson <augustss@carlstedt.se>
- *         Carlstedt Research & Technology
+ * This code is derived from software contributed to The NetBSD Foundation
+ * by Lennart Augustsson (lennart@augustsson.net) at
+ * Carlstedt Research & Technology.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -71,7 +72,7 @@ typedef struct {
 	 */
 	uByte		bRefresh;
 	uByte		bSynchAddress;
-} usb_endpoint_descriptor_audio_t;
+} UPACKED usb_endpoint_descriptor_audio_t;
 
 struct usb_audio_control_descriptor {
 	uByte		bLength;
@@ -81,7 +82,7 @@ struct usb_audio_control_descriptor {
 	uWord		wTotalLength;
 	uByte		bInCollection;
 	uByte		baInterfaceNr[1];
-};
+} UPACKED;
 
 struct usb_audio_streaming_interface_descriptor {
 	uByte		bLength;
@@ -90,7 +91,7 @@ struct usb_audio_streaming_interface_descriptor {
 	uByte		bTerminalLink;
 	uByte		bDelay;
 	uWord		wFormatTag;
-};
+} UPACKED;
 
 struct usb_audio_streaming_endpoint_descriptor {
 	uByte		bLength;
@@ -99,7 +100,7 @@ struct usb_audio_streaming_endpoint_descriptor {
 	uByte		bmAttributes;
 	uByte		bLockDelayUnits;
 	uWord		wLockDelay;
-};
+} UPACKED;
 
 struct usb_audio_streaming_type1_descriptor {
 	uByte		bLength;
@@ -115,13 +116,13 @@ struct usb_audio_streaming_type1_descriptor {
 #define UA_GETSAMP(p, n) ((p)->tSamFreq[(n)*3+0] | ((p)->tSamFreq[(n)*3+1] << 8) | ((p)->tSamFreq[(n)*3+2] << 16))
 #define UA_SAMP_LO(p) UA_GETSAMP(p, 0)
 #define UA_SAMP_HI(p) UA_GETSAMP(p, 1)
-};
+} UPACKED;
 
 struct usb_audio_cluster {
 	uByte		bNrChannels;
 	uWord		wChannelConfig;
 	uByte		iChannelNames;
-};
+} UPACKED;
 
 /* UDESCSUB_AC_INPUT */
 struct usb_audio_input_terminal {
@@ -135,7 +136,7 @@ struct usb_audio_input_terminal {
 	uWord		wChannelConfig;
 	uByte		iChannelNames;
 	uByte		iTerminal;
-};
+} UPACKED;
 
 /* UDESCSUB_AC_OUTPUT */
 struct usb_audio_output_terminal {
@@ -147,7 +148,7 @@ struct usb_audio_output_terminal {
 	uByte		bAssocTerminal;
 	uByte		bSourceId;
 	uByte		iTerminal;
-};
+} UPACKED;
 
 /* UDESCSUB_AC_MIXER */
 struct usb_audio_mixer_unit {
@@ -156,16 +157,16 @@ struct usb_audio_mixer_unit {
 	uByte		bDescriptorSubtype;
 	uByte		bUnitId;
 	uByte		bNrInPins;
-	uByte		baSourceId[255]; /* length is really bNrInPins */
+	uByte		baSourceId[255]; /* [bNrInPins] */
 	/* struct usb_audio_mixer_unit_1 */
-};
+} UPACKED;
 struct usb_audio_mixer_unit_1 {
 	uByte		bNrChannels;
 	uWord		wChannelConfig;
 	uByte		iChannelNames;
-	uByte		bmControls[255];
+	uByte		bmControls[255]; /* [bNrChannels] */
 	/*uByte		iMixer;*/
-};
+} UPACKED;
 
 /* UDESCSUB_AC_SELECTOR */
 struct usb_audio_selector_unit {
@@ -174,9 +175,9 @@ struct usb_audio_selector_unit {
 	uByte		bDescriptorSubtype;
 	uByte		bUnitId;
 	uByte		bNrInPins;
-	uByte		baSourceId[255];
+	uByte		baSourceId[255]; /* [bNrInPins] */
 	/* uByte	iSelector; */
-};
+} UPACKED;
 
 /* UDESCSUB_AC_FEATURE */
 struct usb_audio_feature_unit {
@@ -188,7 +189,7 @@ struct usb_audio_feature_unit {
 	uByte		bControlSize;
 	uByte		bmaControls[255]; /* size for more than enough */
 	/* uByte	iFeature; */
-};
+} UPACKED;
 
 /* UDESCSUB_AC_PROCESSING */
 struct usb_audio_processing_unit {
@@ -198,17 +199,23 @@ struct usb_audio_processing_unit {
 	uByte		bUnitId;
 	uWord		wProcessType;
 	uByte		bNrInPins;
-	uByte		baSourceId[255];
+	uByte		baSourceId[255]; /* [bNrInPins] */
 	/* struct usb_audio_processing_unit_1 */
-};
+} UPACKED;
 struct usb_audio_processing_unit_1{
 	uByte		bNrChannels;
 	uWord		wChannelConfig;
 	uByte		iChannelNames;
 	uByte		bControlSize;
-	uByte		bmControls[255];
-	/*uByte		iProcessing;*/
-};
+	uByte		bmControls[255]; /* [bControlSize] */
+#define UA_PROC_ENABLE_MASK 1
+} UPACKED;
+
+struct usb_audio_processing_unit_updown {
+	uByte		iProcessing;
+	uByte		bNrModes;
+	uWord		waModes[255]; /* [bNrModes] */
+} UPACKED;
 
 /* UDESCSUB_AC_EXTENSION */
 struct usb_audio_extension_unit {
@@ -218,20 +225,84 @@ struct usb_audio_extension_unit {
 	uByte		bUnitId;
 	uWord		wExtensionCode;
 	uByte		bNrInPins;
-	uByte		baSourceId[255];
+	uByte		baSourceId[255]; /* [bNrInPins] */
 	/* struct usb_audio_extension_unit_1 */
-};
+} UPACKED;
 struct usb_audio_extension_unit_1 {
 	uByte		bNrChannels;
 	uWord		wChannelConfig;
 	uByte		iChannelNames;
 	uByte		bControlSize;
-	uByte		bmControls[255];
-#define UA_EXT_ENABLE 0
+	uByte		bmControls[255]; /* [bControlSize] */
+#define UA_EXT_ENABLE_MASK 1
+#define UA_EXT_ENABLE 1
 	/*uByte		iExtension;*/
-};
+} UPACKED;
 
-#define UAT_STREAM 0x0101
+/* USB terminal types */
+#define UAT_UNDEFINED		0x0100
+#define UAT_STREAM		0x0101
+#define UAT_VENDOR		0x01ff
+/* input terminal types */
+#define UATI_UNDEFINED		0x0200
+#define UATI_MICROPHONE		0x0201
+#define UATI_DESKMICROPHONE	0x0202
+#define UATI_PERSONALMICROPHONE	0x0203
+#define UATI_OMNIMICROPHONE	0x0204
+#define UATI_MICROPHONEARRAY	0x0205
+#define UATI_PROCMICROPHONEARR	0x0206
+/* output terminal types */
+#define UATO_UNDEFINED		0x0300
+#define UATO_SPEAKER		0x0301
+#define UATO_HEADPHONES		0x0302
+#define UATO_DISPLAYAUDIO	0x0303
+#define UATO_DESKTOPSPEAKER	0x0304
+#define UATO_ROOMSPEAKER	0x0305
+#define UATO_COMMSPEAKER	0x0306
+#define UATO_SUBWOOFER		0x0307
+/* bidir terminal types */
+#define UATB_UNDEFINED		0x0400
+#define UATB_HANDSET		0x0401
+#define UATB_HEADSET		0x0402
+#define UATB_SPEAKERPHONE	0x0403
+#define UATB_SPEAKERPHONEESUP	0x0404
+#define UATB_SPEAKERPHONEECANC	0x0405
+/* telephony terminal types */
+#define UATT_UNDEFINED		0x0500
+#define UATT_PHONELINE		0x0501
+#define UATT_TELEPHONE		0x0502
+#define UATT_DOWNLINEPHONE	0x0503
+/* external terminal types */
+#define UATE_UNDEFINED		0x0600
+#define UATE_ANALOGCONN		0x0601
+#define UATE_DIGITALAUIFC	0x0602
+#define UATE_LINECONN		0x0603
+#define UATE_LEGACYCONN		0x0604
+#define UATE_SPDIF		0x0605
+#define UATE_1394DA		0x0606
+#define UATE_1394DV		0x0607
+/* embedded function terminal types */
+#define UATF_UNDEFINED		0x0700
+#define UATF_CALIBNOISE		0x0701
+#define UATF_EQUNOISE		0x0702
+#define UATF_CDPLAYER		0x0703
+#define UATF_DAT		0x0704
+#define UATF_DCC		0x0705
+#define UATF_MINIDISK		0x0706
+#define UATF_ANALOGTAPE		0x0707
+#define UATF_PHONOGRAPH		0x0708
+#define UATF_VCRAUDIO		0x0709
+#define UATF_VIDEODISCAUDIO	0x070a
+#define UATF_DVDAUDIO		0x070b
+#define UATF_TVTUNERAUDIO	0x070c
+#define UATF_SATELLITE		0x070d
+#define UATF_CABLETUNER		0x070e
+#define UATF_DSS		0x070f
+#define UATF_RADIORECV		0x0710
+#define UATF_RADIOXMIT		0x0711
+#define UATF_MULTITRACK		0x0712
+#define UATF_SYNTHESIZER	0x0713
+
 
 #define SET_CUR 0x01
 #define GET_CUR 0x81
@@ -276,3 +347,33 @@ struct usb_audio_extension_unit_1 {
 #define FORMAT_TYPE_I 1
 #define FORMAT_TYPE_II 2
 #define FORMAT_TYPE_III 3
+
+#define UA_PROC_MASK(n) (1<< ((n)-1))
+#define PROCESS_UNDEFINED		0
+#define  XX_ENABLE_CONTROL			1
+#define UPDOWNMIX_PROCESS		1
+#define  UD_ENABLE_CONTROL			1
+#define  UD_MODE_SELECT_CONTROL			2
+#define DOLBY_PROLOGIC_PROCESS		2
+#define  DP_ENABLE_CONTROL			1
+#define  DP_MODE_SELECT_CONTROL			2
+#define P3D_STEREO_EXTENDER_PROCESS	3
+#define  P3D_ENABLE_CONTROL			1
+#define  P3D_SPACIOUSNESS_CONTROL		2
+#define REVERBATION_PROCESS		4
+#define  RV_ENABLE_CONTROL			1
+#define  RV_LEVEL_CONTROL			2
+#define  RV_TIME_CONTROL			3
+#define  RV_FEEDBACK_CONTROL			4
+#define CHORUS_PROCESS			5
+#define  CH_ENABLE_CONTROL			1
+#define  CH_LEVEL_CONTROL			2
+#define  CH_RATE_CONTROL			3
+#define  CH_DEPTH_CONTROL			4
+#define DYN_RANGE_COMP_PROCESS		6
+#define  DR_ENABLE_CONTROL			1
+#define  DR_COMPRESSION_RATE_CONTROL		2
+#define  DR_MAXAMPL_CONTROL			3
+#define  DR_THRESHOLD_CONTROL			4
+#define  DR_ATTACK_TIME_CONTROL			5
+#define  DR_RELEASE_TIME_CONTROL		6

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5 2000/02/03 18:47:06 angelos Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_cnw.c,v 1.5.2.1 2001/05/14 22:26:06 niklas Exp $	*/
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -341,8 +341,8 @@ cnw_disable(sc)
 {
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 
-	pcmcia_function_disable(sc->sc_pf);
 	pcmcia_intr_disestablish(sc->sc_pf, sc->sc_ih);
+	pcmcia_function_disable(sc->sc_pf);
 	ifp->if_flags &= ~IFF_RUNNING;
 	ifp->if_timer = 0;
 }
@@ -438,10 +438,6 @@ cnw_attach(parent, self, aux)
 	/* Attach the interface */
 	if_attach(ifp);
 	ether_ifattach(ifp);
-#if NBPFILTER > 0
-	bpfattach(&sc->sc_arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
-		  sizeof(struct ether_header));
-#endif
 
 	/* Disable the card now, and turn it on when the interface goes up */
 	pcmcia_function_disable(sc->sc_pf);
@@ -890,8 +886,8 @@ cnw_activate(dev, act)
 	case DVACT_DEACTIVATE:
 		ifp->if_timer = 0;
 		ifp->if_flags &= ~IFF_RUNNING; /* XXX no cnw_stop() ? */
-		pcmcia_function_disable(sc->sc_pf);
 		pcmcia_intr_disestablish(sc->sc_pf, sc->sc_ih);
+		pcmcia_function_disable(sc->sc_pf);
 		break;
 	}
 	splx(s);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2 2000/09/17 17:08:16 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/if_fxp_cardbus.c,v 1.2.6.1 2001/05/14 22:23:13 niklas Exp $ */
 /*	$NetBSD: if_fxp_cardbus.c,v 1.12 2000/05/08 18:23:36 thorpej Exp $	*/
 
 /*

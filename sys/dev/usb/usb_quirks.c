@@ -1,12 +1,13 @@
-/*	$OpenBSD: src/sys/dev/usb/usb_quirks.c,v 1.2 1999/09/27 18:03:56 fgsch Exp $	*/
-/*	$NetBSD: usb_quirks.c,v 1.14 1999/09/15 13:57:09 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/usb_quirks.c,v 1.2.4.1 2001/05/14 22:26:24 niklas Exp $ */
+/*	$NetBSD: usb_quirks.c,v 1.31 2000/10/24 14:57:35 augustss Exp $	*/
+/*	$FreeBSD: src/sys/dev/usb/usb_quirks.c,v 1.13 1999/11/17 22:33:47 n_hibma Exp $	*/
 
 /*
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
- * by Lennart Augustsson (augustss@carlstedt.se) at
+ * by Lennart Augustsson (lennart@augustsson.net) at
  * Carlstedt Research & Technology.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,9 +41,6 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#if defined(__FreeBSD__)
-#include <sys/bus.h>
-#endif
  
 #include <dev/usb/usb.h>
 
@@ -53,32 +51,46 @@
 extern int usbdebug;
 #endif
 
-struct usbd_quirk_entry {
+Static const struct usbd_quirk_entry {
 	u_int16_t idVendor;
 	u_int16_t idProduct;
 	u_int16_t bcdDevice;
 	struct usbd_quirks quirks;
-} quirks[] = {
+} usb_quirks[] = {
  { USB_VENDOR_KYE, USB_PRODUCT_KYE_NICHE,	    0x100, { UQ_NO_SET_PROTO}},
- { USB_VENDOR_INSIDEOUT,USB_PRODUCT_INSIDEOUT_EDGEPORT4, 
+ { USB_VENDOR_INSIDEOUT, USB_PRODUCT_INSIDEOUT_EDGEPORT4, 
    						    0x094, { UQ_SWAP_UNICODE}},
  { USB_VENDOR_BTC, USB_PRODUCT_BTC_BTC7932,	    0x100, { UQ_NO_STRINGS }},
- { USB_VENDOR_ADS, USB_PRODUCT_ADS_ENET,	    0x002, { UQ_NO_STRINGS }},
+ { USB_VENDOR_ADS, USB_PRODUCT_ADS_UBS10BT,	    0x002, { UQ_NO_STRINGS }},
  { USB_VENDOR_PERACOM, USB_PRODUCT_PERACOM_SERIAL1, 0x101, { UQ_NO_STRINGS }},
+ { USB_VENDOR_WACOM, USB_PRODUCT_WACOM_CT0405U,     0x101, { UQ_NO_STRINGS }},
  { USB_VENDOR_DALLAS, USB_PRODUCT_DALLAS_J6502,	    0x0a2, { UQ_BAD_ADC }},
- { USB_VENDOR_LOGITECH, USB_PRODUCT_LOGITECH_N48,   0x110, { UQ_MS_REVZ }},
+ { USB_VENDOR_DALLAS, USB_PRODUCT_DALLAS_J6502,	    0x0a2, { UQ_AU_NO_XU }},
+ { USB_VENDOR_ALTEC, USB_PRODUCT_ALTEC_ADA70,	    0x103, { UQ_BAD_ADC }},
+ { USB_VENDOR_ALTEC, USB_PRODUCT_ALTEC_ASC495,      0x000, { UQ_BAD_AUDIO }},
+ { USB_VENDOR_QTRONIX, USB_PRODUCT_QTRONIX_980N,    0x110, { UQ_SPUR_BUT_UP }},
+ { USB_VENDOR_ALCOR2, USB_PRODUCT_ALCOR2_KBD_HUB,   0x001, { UQ_SPUR_BUT_UP }},
+ { USB_VENDOR_MCT, USB_PRODUCT_MCT_HUB0100,         0x102, { UQ_BUS_POWERED }},
+ { USB_VENDOR_MCT, USB_PRODUCT_MCT_USB232,          0x102, { UQ_BUS_POWERED }},
+ { USB_VENDOR_METRICOM, USB_PRODUCT_METRICOM_RICOCHET_GS,
+ 	0x100, { UQ_ASSUME_CM_OVER_DATA | UQ_NO_STRINGS }},
+ { USB_VENDOR_TI, USB_PRODUCT_TI_UTUSB41,	    0x110, { UQ_POWER_CLAIM }},
+ { USB_VENDOR_ACERP, USB_PRODUCT_ACERP_ACERSCAN_320U,
+						    0x000, { UQ_NO_STRINGS }},
+ { USB_VENDOR_TELEX, USB_PRODUCT_TELEX_MIC1,	    0x009, { UQ_AU_NO_FRAC }},
+ { USB_VENDOR_SILICONPORTALS, USB_PRODUCT_SILICONPORTALS_YAPPHONE,
+   						    0x100, { UQ_AU_INP_ASYNC }},
  { 0, 0, 0, { 0 } }
 };
 
-struct usbd_quirks usbd_no_quirk = { 0 };
+const struct usbd_quirks usbd_no_quirk = { 0 };
 
-struct usbd_quirks *
-usbd_find_quirk(d)
-	usb_device_descriptor_t *d;
+const struct usbd_quirks *
+usbd_find_quirk(usb_device_descriptor_t *d)
 {
-	struct usbd_quirk_entry *t;
+	const struct usbd_quirk_entry *t;
 
-	for (t = quirks; t->idVendor != 0; t++) {
+	for (t = usb_quirks; t->idVendor != 0; t++) {
 		if (t->idVendor  == UGETW(d->idVendor) &&
 		    t->idProduct == UGETW(d->idProduct) &&
 		    t->bcdDevice == UGETW(d->bcdDevice))

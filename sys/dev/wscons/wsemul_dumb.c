@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_dumb.c,v 1.1 2000/05/16 23:49:11 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_dumb.c,v 1.1.6.1 2001/05/14 22:26:30 niklas Exp $ */
 /* $NetBSD: wsemul_dumb.c,v 1.7 2000/01/05 11:19:36 drochner Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/unicode.h,v 1.1 2000/05/16 23:49:10 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/unicode.h,v 1.1.6.1 2001/05/14 22:26:28 niklas Exp $ */
 /* $NetBSD: unicode.h,v 1.1 1999/02/20 18:20:02 drochner Exp $ */
 
 /*

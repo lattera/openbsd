@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5 2000/12/29 14:03:01 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.1 2001/05/14 22:25:45 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman

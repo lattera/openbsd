@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cmpcireg.h,v 1.1 2000/04/27 02:19:41 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cmpcireg.h,v 1.1.8.1 2001/05/14 22:25:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Takuya SHIOZAKI

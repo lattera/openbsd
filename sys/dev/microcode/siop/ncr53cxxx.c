@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/siop/ncr53cxxx.c,v 1.2 2001/03/01 17:14:27 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/siop/ncr53cxxx.c,v 1.2.4.1 2001/05/14 22:25:16 niklas Exp $ */
 /*	$NetBSD: ncr53cxxx.c,v 1.5 2000/10/23 14:51:51 bouyer Exp $	*/
 
 /*

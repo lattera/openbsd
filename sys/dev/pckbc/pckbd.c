@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pckbd.c,v 1.2 2001/02/02 20:19:04 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pckbd.c,v 1.2.4.1 2001/05/14 22:26:04 niklas Exp $ */
 /* $NetBSD: pckbd.c,v 1.24 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-

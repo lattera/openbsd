@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdtvar.h,v 1.2.2.1 2000/03/02 07:04:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdtvar.h,v 1.2.2.2 2001/05/14 22:23:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Niklas Hallqvist.  All rights reserved.
@@ -51,7 +51,7 @@ extern int gdt_debug;
 #define GDT_RETRIES		100000000	/* 100000 * 1us = 100s */
 #define GDT_TIMEOUT		100000000	/* 100000 * 1us = 100s */
 #define GDT_POLL_TIMEOUT	10000000	/* 10000 * 1us = 10s */
-#define GDT_WATCH_TIMEOUT	10000000	/* 10000 * 1us = 10s */
+#define GDT_WATCH_TIMEOUT	10000		/* 10000 * 1ms = 10s */
 #define GDT_SCRATCH_SZ		4096		/* 4KB scratch buffer */
 
 /* Context structure for interrupt services */
@@ -209,8 +209,6 @@ struct gdt_softc {
 	u_int16_t sc_raw_feat;
 	u_int16_t sc_cache_feat;
 
-	int sc_spl;
-
 	void (*sc_copy_cmd) __P((struct gdt_softc *, struct gdt_ccb *));
 	u_int8_t (*sc_get_status) __P((struct gdt_softc *));
 	void (*sc_intr) __P((struct gdt_softc *, struct gdt_intr_ctx *));
@@ -220,8 +218,9 @@ struct gdt_softc {
 };
 
 /* XXX These have to become spinlocks in case of SMP */
-#define GDT_LOCK_GDT(gdt) (gdt)->sc_spl = splbio()
-#define GDT_UNLOCK_GDT(gdt) splx((gdt)->sc_spl)
+#define GDT_LOCK_GDT(gdt) splbio()
+#define GDT_UNLOCK_GDT(gdt, lock) splx(lock)
+typedef int gdt_lock_t;
 
 void	gdtminphys __P((struct buf *));
 int	gdt_attach __P((struct gdt_softc *));

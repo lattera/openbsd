@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.1 2001/03/26 22:17:06 chris Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.1.4.1 2001/05/14 22:25:55 niklas Exp $	*/
 /*      $NetBSD: pciide_hpt_reg.h,v 1.3 2001/01/05 15:20:53 bouyer Exp $       */
 
 /*

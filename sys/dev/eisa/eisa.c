@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/eisa.c,v 1.6 1996/11/28 23:27:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/eisa.c,v 1.6.14.1 2001/05/14 22:23:15 niklas Exp $	*/
 /*	$NetBSD: eisa.c,v 1.15 1996/10/21 22:31:01 thorpej Exp $	*/
 
 /*
@@ -140,6 +140,7 @@ eisaattach(parent, self, aux)
 		bus_space_handle_t slotioh;
 		int i;
 
+		ea.ea_dmat = eba->eba_dmat;
 		ea.ea_iot = iot;
 		ea.ea_memt = memt;
 		ea.ea_ec = ec;
@@ -236,7 +237,7 @@ eisa_devinfo(id, cp)
 	const char *name;
 	int onlyvendor;
 #ifdef EISAVERBOSE
-	struct eisa_knowndev *edp;
+	const struct eisa_knowndev *edp;
 	int match;
 	const char *unmatched = "unknown ";
 #else

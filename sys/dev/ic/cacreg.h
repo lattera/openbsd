@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cacreg.h,v 1.2 2001/02/07 04:47:26 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cacreg.h,v 1.2.4.1 2001/05/14 22:23:37 niklas Exp $	*/
 /*	$NetBSD: cacreg.h,v 1.5 2001/01/10 16:48:04 ad Exp $	*/
 
 /*-

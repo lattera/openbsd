@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siopreg.h,v 1.3 2001/04/15 06:01:29 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siopreg.h,v 1.3.4.1 2001/05/14 22:24:12 niklas Exp $ */
 /*	$NetBSD: siopreg.h,v 1.7 2000/10/06 16:35:13 bouyer Exp $	*/
 
 /*

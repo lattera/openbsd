@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8 2000/11/09 17:39:07 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8.4.1 2001/05/14 22:24:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998

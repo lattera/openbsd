@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/dev/rasops/Makefile,v 1.1 2001/03/18 04:32:44 nate Exp $
+#	$OpenBSD: src/sys/dev/rasops/Makefile,v 1.1.4.1 2001/05/14 22:26:14 niklas Exp $
 #	$NetBSD: Makefile,v 1.1 1998/06/12 23:22:55 cgd Exp $
 
 INCSDIR= /usr/include/dev/rasops

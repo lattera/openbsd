@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pci_quirks.c,v 1.2 2000/03/28 03:43:54 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pci_quirks.c,v 1.2.8.1 2001/05/14 22:25:52 niklas Exp $	*/
 /*	$NetBSD: pci_quirks.c,v 1.1 1998/05/31 06:03:44 cgd Exp $	*/
 
 /*

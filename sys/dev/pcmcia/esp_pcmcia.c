@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/esp_pcmcia.c,v 1.2 2000/06/20 04:56:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/esp_pcmcia.c,v 1.2.6.1 2001/05/14 22:26:05 niklas Exp $	*/
 /*	$NetBSD: esp_pcmcia.c,v 1.8 2000/06/05 15:36:45 tsutsui Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/puc/com_puc.c,v 1.1 1999/10/26 13:08:44 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/puc/com_puc.c,v 1.1.2.1 2001/05/14 22:26:09 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997 - 1999, Jason Downs.  All rights reserved.
@@ -124,6 +124,9 @@ com_puc_attach(parent, self, aux)
 	sc->sc_iot = pa->t;
 	sc->sc_ioh = pa->h;
 	sc->sc_iobase = pa->a;
+	sc->sc_frequency = COM_FREQ;
+	if (pa->flags)
+		sc->sc_frequency = pa->flags & PUC_COM_CLOCKMASK;
 
 	com_puc_attach2(sc);
 }

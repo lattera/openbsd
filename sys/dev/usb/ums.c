@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ums.c,v 1.5 2001/05/03 02:20:34 aaron Exp $ */
-/*	$NetBSD: ums.c,v 1.47 2001/01/23 14:04:14 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ums.c,v 1.5.2.1 2001/05/14 22:26:23 niklas Exp $ */
+/*	$NetBSD: ums.c,v 1.45 2000/10/08 20:52:18 augustss Exp $	*/
 
 /*
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
@@ -306,10 +306,10 @@ USB_ATTACH(ums)
 	a.accessops = &ums_accessops;
 	a.accesscookie = sc;
 
+	sc->sc_wsmousedev = config_found(self, &a, wsmousedevprint);
+
 	usbd_add_drv_event(USB_EVENT_DRIVER_ATTACH, sc->sc_udev,
 			   USBDEV(sc->sc_dev));
-
-	sc->sc_wsmousedev = config_found(self, &a, wsmousedevprint);
 
 	USB_ATTACH_SUCCESS_RETURN;
 }

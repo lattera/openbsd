@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pckbc/wskbdmap_mfii.h,v 1.1 2000/11/13 20:12:35 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pckbc/wskbdmap_mfii.h,v 1.1.4.1 2001/05/14 22:26:05 niklas Exp $ */
 /*	$NetBSD: wskbdmap_mfii.h,v 1.1 1998/09/17 18:21:04 drochner Exp $	*/
 
 /*-

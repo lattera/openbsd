@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23 2001/04/08 01:05:12 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xl.c,v 1.23.4.1 2001/05/14 22:24:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsevent.c,v 1.2 2000/08/01 13:51:18 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsevent.c,v 1.2.6.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsevent.c,v 1.5 2000/03/30 12:45:44 augustss Exp $ */
 
 /*

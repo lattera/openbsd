@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1 2001/03/05 15:13:42 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/i82365_isapnp.c,v 1.1.4.1 2001/05/14 22:24:37 niklas Exp $ */
 /*	$NetBSD: i82365_isapnp.c,v 1.8 2000/02/23 17:22:11 soren Exp $	*/
 
 /*

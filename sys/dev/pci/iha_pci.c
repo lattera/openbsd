@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/iha_pci.c,v 1.2 2001/03/29 23:53:38 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/iha_pci.c,v 1.2.4.1 2001/05/14 22:25:49 niklas Exp $ */
 /*
  * Initio INI-9xxxU/UW SCSI Device Driver
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/midi.c,v 1.3 2000/01/03 19:38:13 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/midi.c,v 1.3.2.1 2001/05/14 22:23:01 niklas Exp $	*/
 /*	$NetBSD: midi.c,v 1.10 1998/12/20 14:26:44 drochner Exp $	*/
 
 /*
@@ -38,6 +38,7 @@
  */
 
 #include "midi.h"
+#include "audio.h"
 #include "sequencer.h"
 
 #include <sys/param.h>
@@ -170,6 +171,7 @@ midi_attach(sc, parent)
 	sc->sc_dev = parent;
 	sc->hw_if->getinfo(sc->hw_hdl, &mi);
 	sc->props = mi.props;
+	timeout_set(&sc->timeo, midi_timeout, sc);
 	printf(": <%s>\n", mi.name);
 }
 
@@ -527,7 +529,7 @@ midi_start_output(sc, intr)
 		psignal(sc->async, SIGIO);
 	if (mb->used > 0) {
 		if (!(sc->props & MIDI_PROP_OUT_INTR))
-			timeout(midi_timeout, sc, midi_wait);
+			timeout_add(&sc->timeo, midi_wait);
 	} else
 		sc->pbus = 0;
 	splx(s);
@@ -742,11 +744,11 @@ midi_getinfo(dev, mi)
 
 #endif /* NMIDI > 0 */
 
-#if NMIDI > 0 || NMIDIBUS > 0
+#if (NMIDI > 0 || NMIDIBUS > 0) && NAUDIO > 0
 
 int	midiprint __P((void *, const char *));
 
-void
+struct device *
 midi_attach_mi(mhwp, hdlp, dev)
 	struct midi_hw_if *mhwp;
 	void *hdlp;
@@ -757,13 +759,13 @@ midi_attach_mi(mhwp, hdlp, dev)
 #ifdef DIAGNOSTIC
 	if (mhwp == NULL) {
 		printf("midi_attach_mi: NULL\n");
-		return;
+		return 0;
 	}
 #endif
 	arg.type = AUDIODEV_TYPE_MIDI;
 	arg.hwif = mhwp;
 	arg.hdl = hdlp;
-	(void)config_found(dev, &arg, midiprint);
+	return config_found(dev, &arg, midiprint);
 }
 
 int

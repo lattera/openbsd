@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_keys.c,v 1.1 2000/05/16 23:49:11 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_keys.c,v 1.1.6.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsemul_vt100_keys.c,v 1.3 1999/04/22 20:06:02 mycroft Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/bold8x16.h,v 1.1 2001/03/18 04:30:23 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/bold8x16.h,v 1.1.4.1 2001/05/14 22:26:33 niklas Exp $ */
 /*	 $NetBSD: bold8x16.h,v 1.4 2000/01/05 18:44:22 ad Exp $ */
 
 /*-

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/vga_subr.c,v 1.1 2000/11/15 20:17:38 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/vga_subr.c,v 1.1.4.1 2001/05/14 22:24:21 niklas Exp $ */
 /* $NetBSD: vga_subr.c,v 1.6 2000/01/25 02:44:03 ad Exp $ */
 
 /*

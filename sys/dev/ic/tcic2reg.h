@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/tcic2reg.h,v 1.1 2000/05/15 04:17:28 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/tcic2reg.h,v 1.1.6.1 2001/05/14 22:24:17 niklas Exp $	*/
 /*	$NetBSD: tcic2reg.h,v 1.1 1999/03/23 20:04:14 bad Exp $	*/
 
 /*-

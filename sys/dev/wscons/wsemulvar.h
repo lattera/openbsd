@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemulvar.h,v 1.3 2001/03/14 02:49:23 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemulvar.h,v 1.3.4.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsemulvar.h,v 1.6 1999/01/17 15:46:15 drochner Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1 1999/11/30 07:55:56 cmetz Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.1 2001/05/14 22:23:44 niklas Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -1027,6 +1027,7 @@ dpt_scsi_cmd(xs)
 #ifdef __OpenBSD__
 		if ((xs->flags & SCSI_RESET) != 0) {
 #endif /* __OpenBSD__ */
+			splx(s);
 			xs->error = XS_DRIVER_STUFFUP;
 			return (COMPLETE);
 		}

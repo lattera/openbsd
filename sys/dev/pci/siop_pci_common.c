@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5 2001/04/15 06:01:30 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5.4.1 2001/05/14 22:25:57 niklas Exp $ */
 /*	$NetBSD: siop_pci_common.c,v 1.6 2001/01/10 15:50:20 thorpej Exp $	*/
 
 /*

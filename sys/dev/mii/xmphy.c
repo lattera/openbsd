@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/xmphy.c,v 1.2 2000/08/29 19:00:36 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/xmphy.c,v 1.2.6.1 2001/05/14 22:25:28 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000

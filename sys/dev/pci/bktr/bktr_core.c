@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_core.c,v 1.1 2001/03/28 03:27:09 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_core.c,v 1.1.4.1 2001/05/14 22:26:02 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_core.c,v 1.114 2000/10/31 13:09:56 roger Exp $ */
 
 /*

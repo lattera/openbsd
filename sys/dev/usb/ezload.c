@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/usb/ezload.c,v 1.2 2001/05/03 02:20:31 aaron Exp $ */
-/*	$NetBSD: ezload.c,v 1.2 2001/01/18 20:28:23 jdolecek Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/ezload.c,v 1.2.2.1 2001/05/14 22:26:18 niklas Exp $ */
+/*	$NetBSD: ezload.c,v 1.1 2001/01/02 18:49:56 augustss Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.

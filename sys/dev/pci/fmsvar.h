@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fmsvar.h,v 1.2 2000/10/14 18:04:07 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/fmsvar.h,v 1.2.6.1 2001/05/14 22:25:41 niklas Exp $ */
 /*	$NetBSD: fmsvar.h,v 1.1 1999/11/01 21:54:12 augustss Exp $	*/
 
 /*-

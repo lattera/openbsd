@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/if_ep_eisa.c,v 1.11.8.1 2000/03/24 09:09:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/if_ep_eisa.c,v 1.11.8.2 2001/05/14 22:23:17 niklas Exp $	*/
 /*	$NetBSD: if_ep_eisa.c,v 1.13 1997/04/18 00:50:33 cgd Exp $	*/
 
 /*
@@ -66,6 +66,9 @@
 #include <machine/cpu.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
+
+#include <dev/mii/mii.h>
+#include <dev/mii/miivar.h>
 
 #include <dev/ic/elink3var.h>
 #include <dev/ic/elink3reg.h>
@@ -196,8 +199,9 @@ ep_eisa_attach(parent, self, aux)
 		printf("\n");
 		return;
 	}
-	if (intrstr != NULL)
-		printf("%s ", intrstr);
 
 	epconfig(sc, chipset, NULL);
+
+	if (intrstr != NULL)
+		printf(" %s\n", intrstr);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/sony8x16.h,v 1.1 2001/03/18 04:30:23 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/sony8x16.h,v 1.1.4.1 2001/05/14 22:26:35 niklas Exp $ */
 /*	$NetBSD: sony8x16.h,v 1.1 2000/11/21 11:44:45 tsutsui Exp $	*/
 /*
  * Copyright (c) 1992, 1993

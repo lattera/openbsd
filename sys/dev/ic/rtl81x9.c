@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2 2001/04/13 15:58:43 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.1 2001/05/14 22:24:10 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998

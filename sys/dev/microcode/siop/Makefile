@@ -1,4 +1,4 @@
-# $OpenBSD: src/sys/dev/microcode/siop/Makefile,v 1.1 2001/02/15 04:07:59 krw Exp $
+# $OpenBSD: src/sys/dev/microcode/siop/Makefile,v 1.1.4.1 2001/05/14 22:25:16 niklas Exp $
 # $NetBSD: Makefile,v 1.1 2000/04/21 17:57:01 bouyer Exp $
 
 all: siop.out

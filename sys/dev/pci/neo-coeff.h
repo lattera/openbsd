@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/Attic/neo-coeff.h,v 1.2 2001/01/26 22:33:33 mickey Exp $       */
+/*      $OpenBSD: src/sys/dev/pci/Attic/neo-coeff.h,v 1.2.4.1 2001/05/14 22:25:51 niklas Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>

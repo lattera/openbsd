@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6 2001/04/15 06:01:29 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siop_common.c,v 1.6.4.1 2001/05/14 22:24:11 niklas Exp $ */
 /*	$NetBSD: siop_common.c,v 1.12 2001/02/11 18:04:50 bouyer Exp $	*/
 
 /*

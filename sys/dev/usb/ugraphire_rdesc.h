@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/Attic/ugraphire_rdesc.h,v 1.1 2001/01/28 09:43:41 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/Attic/ugraphire_rdesc.h,v 1.1.4.1 2001/05/14 22:26:21 niklas Exp $ */
 /*	$NetBSD:  $	*/
 /*
  * Copyright (c) 2000 Nick Hibma <n_hibma@freebsd.org>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4 2001/03/28 20:02:59 angelos Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ises.c,v 1.4.4.1 2001/05/14 22:25:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Håkan Olsson (ho@crt.se)

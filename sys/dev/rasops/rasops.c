@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops.c,v 1.1 2001/03/18 04:32:44 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/rasops/rasops.c,v 1.1.4.1 2001/05/14 22:26:15 niklas Exp $ */
 /*	 $NetBSD: rasops.c,v 1.35 2001/02/02 06:01:01 marcus Exp $	*/
 
 /*-

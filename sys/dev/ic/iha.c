@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3 2001/02/20 00:47:33 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.1 2001/05/14 22:23:52 niklas Exp $ */
 /*
  * Initio INI-9xxxU/UW SCSI Device Driver
  *

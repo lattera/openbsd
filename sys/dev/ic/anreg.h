@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/anreg.h,v 1.6 2001/04/06 19:14:55 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/anreg.h,v 1.6.4.1 2001/05/14 22:23:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

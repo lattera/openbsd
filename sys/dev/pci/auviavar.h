@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auviavar.h,v 1.3 2000/12/27 02:50:07 mickey Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auviavar.h,v 1.3.4.1 2001/05/14 22:25:33 niklas Exp $ */
 /*	$NetBSD: auviavar.h,v 1.1 2000/03/31 04:45:29 tsarna Exp $	*/
 
 /*-

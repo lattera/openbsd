@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ukbdvar.h,v 1.2 2000/11/08 18:10:38 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ukbdvar.h,v 1.2.4.1 2001/05/14 22:26:22 niklas Exp $ */
 /*	$NetBSD: ukbdvar.h,v 1.2 2000/06/01 14:29:00 augustss Exp $	*/
 
 /*-

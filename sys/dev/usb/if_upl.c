@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_upl.c,v 1.2 2001/02/20 19:39:47 mickey Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_upl.c,v 1.2.4.1 2001/05/14 22:26:19 niklas Exp $ */
 /*	$NetBSD: if_upl.c,v 1.10 2000/12/08 02:24:07 augustss Exp $	*/
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.

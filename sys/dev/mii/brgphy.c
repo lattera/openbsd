@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/brgphy.c,v 1.4 2001/04/12 04:51:27 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/brgphy.c,v 1.4.4.1 2001/05/14 22:25:20 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000

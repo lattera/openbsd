@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/mc6845reg.h,v 1.1 2000/11/15 20:21:09 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/mc6845reg.h,v 1.1.4.1 2001/05/14 22:23:59 niklas Exp $ */
 /* $NetBSD: mc6845reg.h,v 1.1 1998/05/28 16:48:40 drochner Exp $ */
 
 /*

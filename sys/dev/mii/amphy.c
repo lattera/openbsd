@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/amphy.c,v 1.2 2000/11/20 16:22:15 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/amphy.c,v 1.2.4.1 2001/05/14 22:25:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

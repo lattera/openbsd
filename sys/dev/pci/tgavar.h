@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tgavar.h,v 1.4 2001/03/18 04:37:21 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tgavar.h,v 1.4.4.1 2001/05/14 22:25:58 niklas Exp $ */
 /* $NetBSD: tgavar.h,v 1.8 2000/04/02 19:01:11 nathanw Exp $ */
 
 /*

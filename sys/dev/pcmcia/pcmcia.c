@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia.c,v 1.25 2000/02/05 22:10:50 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia.c,v 1.25.2.1 2001/05/14 22:26:07 niklas Exp $	*/
 /*	$NetBSD: pcmcia.c,v 1.9 1998/08/13 02:10:55 eeh Exp $	*/
 
 /*
@@ -102,6 +102,12 @@ pcmcia_match(parent, match, aux)
 	struct device *parent;
 	void *match, *aux;
 {
+	struct cfdata *cf = match;
+	struct pcmciabus_attach_args *paa = aux;
+
+	if (strcmp(paa->paa_busname, cf->cf_driver->cd_name))
+		return 0;
+
 	/* If the autoconfiguration got this far, there's a socket here. */
 	return (1);
 }
@@ -145,8 +151,10 @@ pcmcia_power(why, arg)
 		d = pf->child;
 		if (d == NULL)
 			continue;
-		if (d->dv_cfdata->cf_attach->ca_activate)
-			(*d->dv_cfdata->cf_attach->ca_activate)(d, act);
+		if (act == DVACT_ACTIVATE)
+			config_activate(pf->child);
+		else
+			config_deactivate(pf->child);
 	}
 }
 
@@ -172,7 +180,7 @@ pcmcia_card_attach(dev)
 
 	pcmcia_check_cis_quirks(sc);
 
-#if 0
+#if 1
 	/*
 	 * Bail now if the card has no functions, or if there was an error in
 	 * the CIS.
@@ -544,6 +552,7 @@ pcmcia_function_enable(pf)
 
  done:
 	pf->pf_flags |= PFF_ENABLED;
+	delay(1000);
 	return (0);
 
  bad:

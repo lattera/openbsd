@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpreg.h,v 1.2 2000/04/26 19:12:08 chris Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpreg.h,v 1.2.8.1 2001/05/14 22:23:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman

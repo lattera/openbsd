@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pucdata.c,v 1.2 1999/11/14 01:27:57 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pucdata.c,v 1.2.2.1 2001/05/14 22:25:56 niklas Exp $	*/
 /*	$NetBSD: pucdata.c,v 1.6 1999/07/03 05:55:23 cgd Exp $	*/
 
 /*
@@ -43,6 +43,8 @@
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
 #include <dev/pci/pucvar.h>
+#include <dev/pci/pcidevs.h>
+#include <dev/ic/comreg.h>
 
 const struct puc_device_description puc_devices[] = {
 	/*
@@ -57,8 +59,8 @@ const struct puc_device_description puc_devices[] = {
 	 * network/misc (0x02/0x80) device.
 	 */
 	{   /* "Dolphin Peripherals 4014", */
-	    {	0x10b5,	0x9050,	0xd84d,	0x6810	},
-	    {	0xffff,	0xffff,	0xffff,	0xffff	},
+	    {	PCI_VENDOR_PLX,	PCI_PRODUCT_PLX_9050,		0xd84d,	0x6810	},
+	    {	0xffff,	0xffff,					0xffff,	0xffff	},
 	    {
 		{ PUC_PORT_TYPE_LPT, 0x20, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x24, 0x00 },
@@ -77,11 +79,11 @@ const struct puc_device_description puc_devices[] = {
 	 * network/misc (0x02/0x80) device.
 	 */
 	{   /* "Dolphin Peripherals 4035", */
-	    {	0x10b5,	0x9050,	0xd84d,	0x6808	},
-	    {	0xffff,	0xffff,	0xffff,	0xffff	},
+	    {	PCI_VENDOR_PLX, PCI_PRODUCT_PLX_9050,	0xd84d,	0x6808	},
+	    {	0xffff,	0xffff,				0xffff,	0xffff	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
@@ -107,65 +109,65 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Serial PCI 16C550 (10x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C550 (10x family)", */
-	    {	0x131f,	0x1000,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1000,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial PCI 16C650 (10x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C650 (10x family)", */
-	    {	0x131f,	0x1001,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1001,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial PCI 16C850 (10x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C850 (10x family)", */
-	    {	0x131f,	0x1002,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1002,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C550 (10x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C550 (10x family)", */
-	    {	0x131f,	0x1010,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1010,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C650 (10x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C650 (10x family)", */
-	    {	0x131f,	0x1011,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1011,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C850 (10x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C850 (10x family)", */
-	    {	0x131f,	0x1012,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1012,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber Parallel PCI (10x family): 1P */
 	{   /* "SIIG Cyber Parallel PCI (10x family)", */
-	    {	0x131f,	0x1020,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1020,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
 	    },
@@ -173,8 +175,8 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Parallel Dual PCI (10x family): 2P */
 	{   /* "SIIG Cyber Parallel Dual PCI (10x family)", */
-	    {	0x131f,	0x1021,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1021,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x20, 0x00 },
@@ -183,100 +185,100 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Serial Dual PCI 16C550 (10x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C550 (10x family)", */
-	    {	0x131f,	0x1030,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1030,	0,	0	},
 	    {	0xffff,	0xffff,	0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial Dual PCI 16C650 (10x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C650 (10x family)", */
-	    {	0x131f,	0x1031,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1031,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial Dual PCI 16C850 (10x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C850 (10x family)", */
-	    {	0x131f,	0x1032,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1032,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C550 (10x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C550 (10x family)", */
-	    {	0x131f,	0x1034,	0,	0	},	/* XXX really? */
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1034,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x20, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C650 (10x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C650 (10x family)", */
-	    {	0x131f,	0x1035,	0,	0	},	/* XXX really? */
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1035,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x20, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C850 (10x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C850 (10x family)", */
-	    {	0x131f,	0x1036,	0,	0	},	/* XXX really? */
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1036,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x20, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C550 (10x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C550 (10x family)", */
-	    {	0x131f,	0x1050,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1050,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x20, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x24, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x24, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C650 (10x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C650 (10x family)", */
-	    {	0x131f,	0x1051,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1051,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x20, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x24, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x24, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C850 (10x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C850 (10x family)", */
-	    {	0x131f,	0x1052,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_1052,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x20, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x24, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x24, 0x00, COM_FREQ },
 	    },
 	},
 
@@ -286,8 +288,8 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Parallel PCI (20x family): 1P */
 	{   /* "SIIG Cyber Parallel PCI (20x family)", */
-	    {	0x131f,	0x2020,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2020,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
 		{ PUC_PORT_TYPE_LPT, 0x10, 0x00 },
 	    },
@@ -295,8 +297,8 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Parallel Dual PCI (20x family): 2P */
 	{   /* "SIIG Cyber Parallel Dual PCI (20x family)", */
-	    {	0x131f,	0x2021,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2021,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
 		{ PUC_PORT_TYPE_LPT, 0x10, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
@@ -305,10 +307,10 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber 2P1S PCI 16C550 (20x family): 1S, 2P */
 	{   /* "SIIG Cyber 2P1S PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2040,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2040,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
@@ -316,10 +318,10 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber 2P1S PCI 16C650 (20x family): 1S, 2P */
 	{   /* "SIIG Cyber 2P1S PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2041,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2041,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
@@ -327,10 +329,10 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber 2P1S PCI 16C850 (20x family): 1S, 2P */
 	{   /* "SIIG Cyber 2P1S PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2042,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2042,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 		{ PUC_PORT_TYPE_LPT, 0x1c, 0x00 },
 	    },
@@ -338,160 +340,175 @@ const struct puc_device_description puc_devices[] = {
 
 	/* SIIG Cyber Serial PCI 16C550 (20x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2000,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2000,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial PCI 16C650 (20x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2001,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2001,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial PCI 16C850 (20x family): 1S */
 	{   /* "SIIG Cyber Serial PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2002,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2002,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C550 (20x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2010,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2010,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C650 (20x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2011,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2011,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber I/O PCI 16C850 (20x family): 1S, 1P */
 	{   /* "SIIG Cyber I/O PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2012,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2012,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x14, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber Serial Dual PCI 16C550 (20x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2030,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2030,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial Dual PCI 16C650 (20x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2031,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2031,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber Serial Dual PCI 16C850 (20x family): 2S */
 	{   /* "SIIG Cyber Serial Dual PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2032,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2032,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C550 (20x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2060,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2060,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C650 (20x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2061,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2061,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 2S1P PCI 16C850 (20x family): 2S, 1P */
 	{   /* "SIIG Cyber 2S1P PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2062,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2062,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
 		{ PUC_PORT_TYPE_LPT, 0x18, 0x00 },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C550 (20x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C550 (20x family)", */
-	    {	0x131f,	0x2050,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2050,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C650 (20x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C650 (20x family)", */
-	    {	0x131f,	0x2051,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2051,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
 	/* SIIG Cyber 4S PCI 16C850 (20x family): 4S */
 	{   /* "SIIG Cyber 4S PCI 16C850 (20x family)", */
-	    {	0x131f,	0x2052,	0,	0	},
-	    {	0xffff,	0xffff,	0,	0	},
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2052,	0,	0	},
+	    {	0xffff,	0xffff,				0,	0	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x14, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x1c, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
 	    },
 	},
 
+	/* SIIG Cyber 8S PCI 16C850 (20x family): 8S */
+	{   /* "SIIG Cyber 8S PCI 16C850 (20x family)", */
+	    {	PCI_VENDOR_SIIG, PCI_PRODUCT_SIIG_2081,	0,	0	},
+	    {	0xffff, 0xffff,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x08, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x10, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x20, 0x18, COM_FREQ },
+	    },
+	},
 
 	/*
 	 * VScom PCI-800, as sold on http://www.swann.com.au/isp/titan.html.
@@ -501,31 +518,155 @@ const struct puc_device_description puc_devices[] = {
 	 * the card.
 	 */
 	{   /* "VScom PCI-800", */
-	    {	0x10b5,	0x1076,	0x10b5,	0x1076	},
-	    {	0xffff,	0xffff,	0xffff,	0xffff	},
+	    {	PCI_VENDOR_PLX,	PCI_PRODUCT_PLX_1076,	0x10b5,	0x1076	},
+	    {	0xffff,	0xffff,				0xffff,	0xffff	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x18, 0x00 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x08 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x10 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x18 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x20 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x28 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x30 },
-		{ PUC_PORT_TYPE_COM, 0x18, 0x38 },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x08, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x10, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x18, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x20, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x28, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x30, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x38, COM_FREQ },
+	    },
+	},
+
+	/*
+	 * Titan PCI-800H. Uses 8 16950 UART, behind a PCI chips that offers
+	 * 4 com port on PCI device 0 and 4 on PCI device 1. PCI device 0 has
+	 * device ID 3 and PCI device 1 device ID 4. Uses a 14.7456 Mhz crystal
+	 * instead of the standart 1.8432Mhz.
+	 */
+	{   /* "VScom PCI-800H", */
+	    {	PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI800H_0,	0, 0	},
+	    {	0xffff, 0xffff,						0, 0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x08, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x10, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x18, COM_FREQ * 8 },
+	    },
+	},
+	{   /* "VScom PCI-800H", */
+	    {	PCI_VENDOR_OXFORD, PCI_PRODUCT_OXFORD_VSCOM_PCI800H_1,	0, 0	},
+	    {	0xffff, 0xffff,						0, 0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x08, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x10, COM_FREQ * 8 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x18, COM_FREQ * 8 },
 	    },
 	},
 
 	/* NEC PK-UG-X001 K56flex PCI Modem card.
 	   NEC MARTH bridge chip and Rockwell RCVDL56ACF/SP using. */
 	{   /* "NEC PK-UG-X001 K56flex PCI Modem", */
-	    {	0x1033,	0x0074,	0x1033,	0x8014	},
-	    {	0xffff,	0xffff,	0xffff,	0xffff	},
+	    {	PCI_VENDOR_NEC,	PCI_PRODUCT_NEC_MARTH,	0x1033,	0x8014	},
+	    {	0xffff,	0xffff,				0xffff,	0xffff	},
 	    {
-		{ PUC_PORT_TYPE_COM, 0x10, 0x00 },
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/*NEC PK-UG-X008 */
+	{   /* "NEC PK-UG-X008", */
+	    {	PCI_VENDOR_NEC,	PCI_PRODUCT_NEC_PKUG,	0x1033,	0x8012	},
+	    {	0xffff,	0xffff,				0xffff,	0xffff	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* Lava Computers 2SP-PCI (0x8000-0x8003) */
+	{   /* "Lava Computers 2SP-PCI parallel port", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_TWOSP_1P,	0,	0	},
+	    {	0xffff,	0xfffc,					0,	0	},
+	    {
+		{ PUC_PORT_TYPE_LPT, 0x10, 0x00 },
+	    },
+	},
+
+	/* Lava Computers 2SP-PCI and Quattro-PCI serial ports */
+	{   /* "Lava Computers dual serial port", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_TWOSP_2S,	0,	0	},
+	    {	0xffff,	0xfffc,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* Lava Computers LavaPort-Dual and LavaPort-Quad 4*clock PCI serial ports */
+	{   /* "Lava Computers high-speed port", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_LAVAPORT_0,	0,	0	},
+	    {	0xffff,	0xfffc,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ*4 },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ*4 },
+	    },
+	},
+
+	/* Lava Computers LavaPort-650 */
+	{   /* "Lava Computers high-speed port", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_650,	0,	0	},
+	    {	0xffff,	0xfffc,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ*4 },
+	    },
+	},
+
+	/* Koutech IOFLEX-2S PCI Dual Port Serial, port 1 */
+	{   /* "Koutech IOFLEX-2S PCI Dual Port Serial, port 1", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_IOFLEX_2S_0,	0,	0	},
+	    {	0xffff,	0xfffc,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* Koutech IOFLEX-2S PCI Dual Port Serial, port 2 */
+	{   /* "Koutech IOFLEX-2S PCI Dual Port Serial, port 2", */
+	    {	PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_IOFLEX_2S_1,	0,	0	},
+	    {	0xffff,	0xfffc,				0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* Lava Computers Octopus-550 serial ports */
+	{   /* "Lava Computers Octopus-550 8-port serial", */
+	    {   PCI_VENDOR_LAVA, PCI_PRODUCT_LAVA_OCTOPUS950_0, 0,      0       },
+	    {   0xffff, 0xfffc,				 0,      0       },
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x14, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x18, 0x00, COM_FREQ },
+		{ PUC_PORT_TYPE_COM, 0x1c, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* US Robotics (3Com) PCI Modems */
+	{   /* "US Robotics (3Com) 3CP5609 PCI 16550 Modem", */
+	    {	PCI_VENDOR_USR, PCI_PRODUCT_USR_3CP5610,	0,	0	},
+	    {	0xffff,	0xffff,					0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x10, 0x00, COM_FREQ },
+	    },
+	},
+
+	/* IBM 33L4618: AT&T/Lucent Venus Modem */
+	{   /* "IBM 33L4618: AT&T/Lucent Venus Modem", */
+	    /* "Actiontec 56K PCI Master" */
+	    {	PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_VENUSMODEM, 0,	0	},
+	    {	0xffff,	0xffff,					0,	0	},
+	    {
+		{ PUC_PORT_TYPE_COM, 0x18, 0x08, COM_FREQ },
 	    },
 	},
 
 	{   /* NULL, */
+
 	    {	0,	0,	0,	0	},
 	    {	0,	0,	0,	0	},
 	    {

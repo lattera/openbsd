@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/Attic/psm_intelli.c,v 1.3 2001/02/19 02:27:06 jbm Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/Attic/psm_intelli.c,v 1.3.4.1 2001/05/14 22:26:05 niklas Exp $ */
 /* $NetBSD: psm_intelli.c,v 1.8 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-

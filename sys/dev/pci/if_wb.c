@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.1 2000/02/20 11:57:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.2 2001/05/14 22:25:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -96,6 +96,7 @@
 #include <sys/socket.h>
 #include <sys/device.h>
 #include <sys/queue.h>
+#include <sys/timeout.h>
 
 #include <net/if.h>
 #include <net/if_dl.h>
@@ -915,7 +916,8 @@ wb_attach(parent, self, aux)
 	sc->sc_mii.mii_readreg = wb_miibus_readreg;
 	sc->sc_mii.mii_writereg = wb_miibus_writereg;
 	sc->sc_mii.mii_statchg = wb_miibus_statchg;
-	mii_phy_probe(self, &sc->sc_mii, 0xffffffff);
+	mii_attach(self, &sc->sc_mii, 0xffffffff, MII_PHY_ANY, MII_OFFSET_ANY,
+	    0);
 	if (LIST_FIRST(&sc->sc_mii.mii_phys) == NULL) {
 		ifmedia_add(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE,0,NULL);
 		ifmedia_set(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE);
@@ -928,10 +930,6 @@ wb_attach(parent, self, aux)
 	if_attach(ifp);
 	ether_ifattach(ifp);
 
-#if NBPFILTER > 0
-	bpfattach(&sc->arpcom.ac_if.if_bpf, ifp,
-	    DLT_EN10MB, sizeof(struct ether_header));
-#endif
 	shutdownhook_establish(wb_shutdown, sc);
 
 fail:
@@ -1328,8 +1326,8 @@ wb_tick(xsc)
 
 	s = splimp();
 	mii_tick(&sc->sc_mii);
-	timeout(wb_tick, sc, hz);
 	splx(s);
+	timeout_add(&sc->wb_tick_tmo, hz);
 }
 
 /*
@@ -1630,7 +1628,8 @@ void wb_init(xsc)
 
 	(void)splx(s);
 
-	timeout(wb_tick, sc, hz);
+	timeout_set(&sc->wb_tick_tmo, wb_tick, sc);
+	timeout_add(&sc->wb_tick_tmo, hz);
 
 	return;
 }
@@ -1772,7 +1771,7 @@ void wb_stop(sc)
 	ifp = &sc->arpcom.ac_if;
 	ifp->if_timer = 0;
 
-	untimeout(wb_tick, sc);
+	timeout_del(&sc->wb_tick_tmo);
 
 	WB_CLRBIT(sc, WB_NETCFG, (WB_NETCFG_RX_ON|WB_NETCFG_TX_ON));
 	CSR_WRITE_4(sc, WB_IMR, 0x00000000);

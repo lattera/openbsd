@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5 2001/03/03 21:29:23 deraadt Exp $       */
+/*      $OpenBSD: src/sys/dev/pci/neo.c,v 1.5.4.1 2001/05/14 22:25:51 niklas Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_chars.c,v 1.3 2001/03/14 02:49:22 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_chars.c,v 1.3.4.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsemul_vt100_chars.c,v 1.4 1999/02/20 18:20:02 drochner Exp $ */
 
 /*

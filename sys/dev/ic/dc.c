@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.27 2001/04/13 15:56:10 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dc.c,v 1.27.4.1 2001/05/14 22:23:40 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/maestro_reg.h,v 1.1 2001/01/11 23:36:38 espie Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/maestro_reg.h,v 1.1.4.1 2001/05/14 22:25:50 niklas Exp $	*/
 /*-
  * Copyright (c) 1999-2000 Taku YAMAMOTO <taku@cent.saitama-u.ac.jp>
  * All rights reserved.
@@ -24,7 +24,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: maestro_reg.h,v 1.2 2001/01/09 16:37:24 espie Exp $
+ *	$Id: maestro_reg.h,v 1.1 2001/01/11 23:36:38 espie Exp $
  * $FreeBSD: /c/ncvs/src/sys/dev/sound/pci/maestro_reg.h,v 1.1 2000/09/06 20:10:54 cg Exp $
  */
 

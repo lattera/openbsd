@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cs4281reg.h,v 1.2 2001/02/09 21:15:23 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/cs4281reg.h,v 1.2.4.1 2001/05/14 22:25:38 niklas Exp $ */
 /*	$Tera: cs4281reg.h,v 1.9 2000/12/31 10:52:25 tacha Exp $	*/
 
 /*

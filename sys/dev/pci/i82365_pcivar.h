@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/i82365_pcivar.h,v 1.2 2000/10/14 18:04:07 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/i82365_pcivar.h,v 1.2.6.1 2001/05/14 22:25:42 niklas Exp $ */
 /*	$NetBSD: i82365_pcivar.h,v 1.2 2000/02/22 16:04:47 thorpej Exp $	*/
 
 /*

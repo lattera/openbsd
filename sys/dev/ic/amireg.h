@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/amireg.h,v 1.3 2001/04/30 15:26:44 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/amireg.h,v 1.3.2.1 2001/05/14 22:23:29 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -274,7 +274,6 @@ struct ami_iocmd {
 	u_int8_t	acc_cmplidl[AMI_MAXSTATACK];
 	u_int8_t	acc_poll;
 	u_int8_t	acc_ack;
-	u_int8_t	acc_pad[0x3e];	/* pad to 128 bytes */
 };
 
 struct ami_sgent {
@@ -330,8 +329,7 @@ struct ami_iocmd64 {
 	u_int8_t	acc_cmplidl[AMI_MAXSTATACK];
 	u_int8_t	acc_poll;
 	u_int8_t	acc_ack;
-	u_int8_t	acc_pad[0x32];	/* pad to 128 bytes */
-};
+} __attribute__((packed));
 
 struct ami_sgent64 {
 	u_int32_t	asg_addr_l;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82365var.h,v 1.5 1999/08/08 01:07:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82365var.h,v 1.5.4.1 2001/05/14 22:23:49 niklas Exp $	*/
 /*	$NetBSD: i82365var.h,v 1.4 1998/05/23 18:32:29 matt Exp $	*/
 
 /*
@@ -31,6 +31,7 @@
  */
 
 #include <sys/device.h>
+#include <sys/timeout.h>
 
 #include <dev/pcmcia/pcmciareg.h>
 #include <dev/pcmcia/pcmciachip.h>
@@ -49,7 +50,12 @@ struct pcic_event {
 #define PCIC_EVENT_REMOVAL	1
 
 struct pcic_handle {
-	struct pcic_softc *sc;
+	struct device *ph_parent;
+	bus_space_tag_t ph_bus_t;
+	bus_space_handle_t ph_bus_h;
+	u_int8_t (*ph_read) __P((struct pcic_handle *, int));
+	void (*ph_write) __P((struct pcic_handle *, int, int));
+
 	int	vendor;
 	int	sock;
 	int	flags;
@@ -117,6 +123,7 @@ struct pcic_softc {
 
 	/* this needs to be large enough to hold PCIC_MEM_PAGES bits */
 	int	subregionmask;
+#define PCIC_MAX_MEM_PAGES	(8 * sizeof(int))
 
 	/* used by memory window mapping functions */
 	bus_addr_t membase;
@@ -135,6 +142,10 @@ struct pcic_softc {
 	int	irq;
 	void	*ih;
 
+	/* used by socket event polling */
+	struct timeout poll_timeout;
+	int poll_established;
+
 	struct pcic_handle handle[PCIC_NSLOTS];
 };
 
@@ -145,9 +156,7 @@ int	pcic_vendor __P((struct pcic_handle *));
 void	pcic_attach __P((struct pcic_softc *));
 void	pcic_attach_sockets __P((struct pcic_softc *));
 int	pcic_intr __P((void *arg));
-
-static inline int pcic_read __P((struct pcic_handle *, int));
-static inline void pcic_write __P((struct pcic_handle *, int, int));
+void	pcic_poll_intr __P((void *arg));
 
 int	pcic_chip_mem_alloc __P((pcmcia_chipset_handle_t, bus_size_t,
 	    struct pcmcia_mem_handle *));
@@ -168,29 +177,10 @@ void	pcic_chip_io_unmap __P((pcmcia_chipset_handle_t, int));
 void	pcic_chip_socket_enable __P((pcmcia_chipset_handle_t));
 void	pcic_chip_socket_disable __P((pcmcia_chipset_handle_t));
 
-static __inline int pcic_read __P((struct pcic_handle *, int));
-static __inline int
-pcic_read(h, idx)
-	struct pcic_handle *h;
-	int idx;
-{
-	if (idx != -1)
-		bus_space_write_1(h->sc->iot, h->sc->ioh, PCIC_REG_INDEX,
-		    h->sock + idx);
-	return (bus_space_read_1(h->sc->iot, h->sc->ioh, PCIC_REG_DATA));
-}
+void	pcic_power __P((int, void *));
 
-static __inline void pcic_write __P((struct pcic_handle *, int, int));
-static __inline void
-pcic_write(h, idx, data)
-	struct pcic_handle *h;
-	int idx;
-	int data;
-{
-	if (idx != -1)
-		bus_space_write_1(h->sc->iot, h->sc->ioh, PCIC_REG_INDEX,
-		    h->sock + idx);
-	if (data != -1)
-		bus_space_write_1(h->sc->iot, h->sc->ioh, PCIC_REG_DATA,
-		   (data));
-}
+#define pcic_read(h, idx) \
+	(*(h)->ph_read)((h), (idx))
+
+#define pcic_write(h, idx, data) \
+	(*(h)->ph_write)((h), (idx), (data))

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5.2.1 2000/02/20 11:57:05 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5.2.2 2001/05/14 22:25:47 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -44,6 +44,7 @@
 #include <sys/errno.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/timeout.h>
 
 #include <net/if.h>
 #include <net/if_dl.h>
@@ -590,7 +591,7 @@ int ste_intr(xsc)
 			ste_txeoc(sc);
 
 		if (status & STE_ISR_STATS_OFLOW) {
-			untimeout(ste_stats_update, sc);
+			timeout_del(&sc->sc_stats_tmo);
 			ste_stats_update(sc);
 		}
 
@@ -824,7 +825,7 @@ void ste_stats_update(xsc)
 			ste_start(ifp);
 	}
 
-	timeout(ste_stats_update, sc, hz);
+	timeout_add(&sc->sc_stats_tmo, hz);
 	splx(s);
 
 	return;
@@ -996,7 +997,8 @@ void ste_attach(parent, self, aux)
 	sc->sc_mii.mii_writereg = ste_miibus_writereg;
 	sc->sc_mii.mii_statchg = ste_miibus_statchg;
 	ifmedia_init(&sc->sc_mii.mii_media, 0, ste_ifmedia_upd,ste_ifmedia_sts);
-	mii_phy_probe(self, &sc->sc_mii, 0xffffffff);
+	mii_attach(self, &sc->sc_mii, 0xffffffff, MII_PHY_ANY, MII_OFFSET_ANY,
+	    0);
 	if (LIST_FIRST(&sc->sc_mii.mii_phys) == NULL) {
 		ifmedia_add(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE, 0, NULL);
 		ifmedia_set(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE);
@@ -1009,10 +1011,6 @@ void ste_attach(parent, self, aux)
 	if_attach(ifp);
 	ether_ifattach(ifp);
 
-#if NBPFILTER > 0
-	bpfattach(&sc->arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
-	    sizeof(struct ether_header));
-#endif
 	shutdownhook_establish(ste_shutdown, sc);
 
 fail:
@@ -1101,6 +1099,7 @@ void ste_init_tx_list(sc)
 	cd = &sc->ste_cdata;
 	ld = sc->ste_ldata;
 	for (i = 0; i < STE_TX_LIST_CNT; i++) {
+		cd->ste_tx_chain[i].ste_ptr = &ld->ste_tx_list[i];
 		cd->ste_tx_chain[i].ste_phys = vtophys(&ld->ste_tx_list[i]);
 		if (i == (STE_TX_LIST_CNT - 1))
 			cd->ste_tx_chain[i].ste_next =
@@ -1224,7 +1223,8 @@ void ste_init(xsc)
 
 	splx(s);
 
-	timeout(ste_stats_update, sc, hz);
+	timeout_set(&sc->sc_stats_tmo, ste_stats_update, sc);
+	timeout_add(&sc->sc_stats_tmo, hz);
 
 	return;
 }
@@ -1237,7 +1237,7 @@ void ste_stop(sc)
 
 	ifp = &sc->arpcom.ac_if;
 
-	untimeout(ste_stats_update, sc);
+	timeout_del(&sc->sc_stats_tmo);
 
 	CSR_WRITE_2(sc, STE_IMR, 0);
 	STE_SETBIT2(sc, STE_MACCTL1, STE_MACCTL1_TX_DISABLE);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/isesvar.h,v 1.1 2001/01/29 08:45:58 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/isesvar.h,v 1.1.4.1 2001/05/14 22:25:50 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Håkan Olsson (ho@crt.se)

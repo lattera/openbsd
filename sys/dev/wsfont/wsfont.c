@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1 2001/03/18 04:30:24 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/wsfont.c,v 1.1.4.1 2001/05/14 22:26:36 niklas Exp $ */
 /* 	$NetBSD: wsfont.c,v 1.17 2001/02/07 13:59:24 ad Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wscons_callbacks.h,v 1.3 2001/02/10 19:42:06 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wscons_callbacks.h,v 1.3.4.1 2001/05/14 22:26:28 niklas Exp $ */
 /* $NetBSD: wscons_callbacks.h,v 1.12 2000/03/06 21:37:16 thorpej Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wskbdvar.h,v 1.1 2000/05/16 23:49:12 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wskbdvar.h,v 1.1.6.1 2001/05/14 22:26:32 niklas Exp $ */
 /* $NetBSD: wskbdvar.h,v 1.8 1999/12/01 23:22:59 augustss Exp $ */
 
 /*

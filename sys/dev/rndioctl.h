@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/Attic/rndioctl.h,v 1.6 1997/06/24 02:45:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/rndioctl.h,v 1.6.12.1 2001/05/14 22:23:03 niklas Exp $	*/
 
 /*
- * Copyright (c) 1996 Michael Shalayeff.
+ * Copyright (c) 1996,2000 Michael Shalayeff.
  *
  * This software derived from one contributed by Theodore Ts'o.
  *
@@ -46,12 +46,13 @@ struct rnd_pool_info {
 	u_int32_t *buf;
 };
 
-#define RNDGETENTCNT	_IOR('R', 0, sizeof(u_int))
-#define RNDADDTOENTCNT	_IOW('R', 1, sizeof(u_int))
-#define RNDGETPOOL	_IOWR('R', 2, sizeof(struct rnd_pool_info))
-#define RNDADDENTROPY	_IOW('R', 3, sizeof(u_int))
+#define RNDGETENTCNT	_IOR('R', 0, u_int)
+#define RNDADDTOENTCNT	_IOW('R', 1, u_int)
+#define RNDGETPOOL	_IOWR('R', 2, struct rnd_pool_info)
+#define RNDADDENTROPY	_IOW('R', 3, u_int)
 #define RNDZAPENTCNT	_IO( 'R', 4)
 #define RNDSTIRARC4	_IO( 'R', 5)
+#define RNDCLRSTATS	_IO( 'R', 6)
 
 
 #endif /* __RNDIOCTL_H__ */

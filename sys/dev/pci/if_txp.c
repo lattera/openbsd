@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27 2001/05/10 00:44:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_txp.c,v 1.27.2.1 2001/05/14 22:25:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001
@@ -116,13 +116,9 @@ void txp_set_filter __P((struct txp_softc *));
 int txp_cmd_desc_numfree __P((struct txp_softc *));
 int txp_command __P((struct txp_softc *, u_int16_t, u_int16_t, u_int32_t,
     u_int32_t, u_int16_t *, u_int32_t *, u_int32_t *, int));
-int txp_command2 __P((struct txp_softc *, u_int16_t, u_int16_t, u_int32_t,
-    u_int32_t, struct txp_rsp_desc **, int));
 int txp_response __P((struct txp_softc *, u_int32_t, u_int16_t, u_int16_t,
     struct txp_rsp_desc **));
-void txp_rsp_fixup __P((struct txp_softc *, struct txp_rsp_desc *,
-    struct txp_rsp_desc *));
-void txp_vlan_enable __P((struct txp_softc *));
+void txp_rsp_fixup __P((struct txp_softc *, struct txp_rsp_desc *));
 
 void txp_ifmedia_sts __P((struct ifnet *, struct ifmediareq *));
 int txp_ifmedia_upd __P((struct ifnet *));
@@ -236,10 +232,6 @@ txp_attach(parent, self, aux)
 		return;
 
 	txp_set_filter(sc);
-
-#if NVLAN > 0
-	txp_vlan_enable(sc);
-#endif
 
 	sc->sc_arpcom.ac_enaddr[0] = ((u_int8_t *)&p1)[1];
 	sc->sc_arpcom.ac_enaddr[1] = ((u_int8_t *)&p1)[0];
@@ -536,7 +528,6 @@ txp_intr(vsc)
 	void *vsc;
 {
 	struct txp_softc *sc = vsc;
-	struct txp_hostvar *hv = sc->sc_hostvar;
 	u_int32_t isr;
 	int claimed = 0;
 
@@ -557,8 +548,7 @@ txp_intr(vsc)
 		if ((*sc->sc_rxlor.r_roff) != (*sc->sc_rxlor.r_woff))
 			txp_rx_reclaim(sc, &sc->sc_rxlor);
 
-		if (hv->hv_rx_buf_write_idx == hv->hv_rx_buf_read_idx)
-			txp_rxbuf_reclaim(sc);
+		txp_rxbuf_reclaim(sc);
 
 		if (sc->sc_txhir.r_cnt && (sc->sc_txhir.r_cons !=
 		    TXP_OFFSET2IDX(*(sc->sc_txhir.r_off))))
@@ -617,14 +607,6 @@ txp_rx_reclaim(sc, r)
 #endif
 
 		m_adj(m, sizeof(struct ether_header));
-
-#if NVLAN > 0
-		if (rxd->rx_stat & RX_STAT_VLAN) {
-			if (vlan_input_tag(eh, m, htons(rxd->rx_vlan >> 16)) < 0)
-				ifp->if_noproto++;
-			goto next;
-		}
-#endif
 
 		ether_input(ifp, eh, m);
 
@@ -773,7 +755,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate host ring\n");
 		goto bail_boot;
 	}
-	bzero(sc->sc_host_dma.dma_vaddr, sizeof(struct txp_hostvar));
+	bzero(sc->sc_host_dma.dma_vaddr, sc->sc_host_dma.dma_siz);
 	boot->br_hostvar_lo = sc->sc_host_dma.dma_paddr & 0xffffffff;
 	boot->br_hostvar_hi = sc->sc_host_dma.dma_paddr >> 32;
 	sc->sc_hostvar = (struct txp_hostvar *)sc->sc_host_dma.dma_vaddr;
@@ -784,7 +766,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate high tx ring\n");
 		goto bail_host;
 	}
-	bzero(sc->sc_txhiring_dma.dma_vaddr, sizeof(struct txp_tx_desc) * TX_ENTRIES);
+	bzero(sc->sc_txhiring_dma.dma_vaddr, sc->sc_txhiring_dma.dma_siz);
 	boot->br_txhipri_lo = sc->sc_txhiring_dma.dma_paddr & 0xffffffff;
 	boot->br_txhipri_hi = sc->sc_txhiring_dma.dma_paddr >> 32;
 	boot->br_txhipri_siz = TX_ENTRIES * sizeof(struct txp_tx_desc);
@@ -799,7 +781,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate low tx ring\n");
 		goto bail_txhiring;
 	}
-	bzero(sc->sc_txloring_dma.dma_vaddr, sizeof(struct txp_tx_desc) * TX_ENTRIES);
+	bzero(sc->sc_txloring_dma.dma_vaddr, sc->sc_txloring_dma.dma_siz);
 	boot->br_txlopri_lo = sc->sc_txloring_dma.dma_paddr & 0xffffffff;
 	boot->br_txlopri_hi = sc->sc_txloring_dma.dma_paddr >> 32;
 	boot->br_txlopri_siz = TX_ENTRIES * sizeof(struct txp_tx_desc);
@@ -814,7 +796,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate high rx ring\n");
 		goto bail_txloring;
 	}
-	bzero(sc->sc_rxhiring_dma.dma_vaddr, sizeof(struct txp_rx_desc) * RX_ENTRIES);
+	bzero(sc->sc_rxhiring_dma.dma_vaddr, sc->sc_rxhiring_dma.dma_siz);
 	boot->br_rxhipri_lo = sc->sc_rxhiring_dma.dma_paddr & 0xffffffff;
 	boot->br_rxhipri_hi = sc->sc_rxhiring_dma.dma_paddr >> 32;
 	boot->br_rxhipri_siz = RX_ENTRIES * sizeof(struct txp_rx_desc);
@@ -829,7 +811,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate low rx ring\n");
 		goto bail_rxhiring;
 	}
-	bzero(sc->sc_rxloring_dma.dma_vaddr, sizeof(struct txp_rx_desc) * RX_ENTRIES);
+	bzero(sc->sc_rxloring_dma.dma_vaddr, sc->sc_rxloring_dma.dma_siz);
 	boot->br_rxlopri_lo = sc->sc_rxloring_dma.dma_paddr & 0xffffffff;
 	boot->br_rxlopri_hi = sc->sc_rxloring_dma.dma_paddr >> 32;
 	boot->br_rxlopri_siz = RX_ENTRIES * sizeof(struct txp_rx_desc);
@@ -844,7 +826,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate command ring\n");
 		goto bail_rxloring;
 	}
-	bzero(sc->sc_cmdring_dma.dma_vaddr, sizeof(struct txp_cmd_desc) * CMD_ENTRIES);
+	bzero(sc->sc_cmdring_dma.dma_vaddr, sc->sc_cmdring_dma.dma_siz);
 	boot->br_cmd_lo = sc->sc_cmdring_dma.dma_paddr & 0xffffffff;
 	boot->br_cmd_hi = sc->sc_cmdring_dma.dma_paddr >> 32;
 	boot->br_cmd_siz = CMD_ENTRIES * sizeof(struct txp_cmd_desc);
@@ -858,7 +840,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate response ring\n");
 		goto bail_cmdring;
 	}
-	bzero(sc->sc_rspring_dma.dma_vaddr, sizeof(struct txp_rsp_desc) * RSP_ENTRIES);
+	bzero(sc->sc_rspring_dma.dma_vaddr, sc->sc_rspring_dma.dma_siz);
 	boot->br_resp_lo = sc->sc_rspring_dma.dma_paddr & 0xffffffff;
 	boot->br_resp_hi = sc->sc_rspring_dma.dma_paddr >> 32;
 	boot->br_resp_siz = CMD_ENTRIES * sizeof(struct txp_rsp_desc);
@@ -872,7 +854,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate rx buffer ring\n");
 		goto bail_rspring;
 	}
-	bzero(sc->sc_rxbufring_dma.dma_vaddr, sizeof(struct txp_rxbuf_desc) * RXBUF_ENTRIES);
+	bzero(sc->sc_rxbufring_dma.dma_vaddr, sc->sc_rxbufring_dma.dma_siz);
 	boot->br_rxbuf_lo = sc->sc_rxbufring_dma.dma_paddr & 0xffffffff;
 	boot->br_rxbuf_hi = sc->sc_rxbufring_dma.dma_paddr >> 32;
 	boot->br_rxbuf_siz = RXBUF_ENTRIES * sizeof(struct txp_rxbuf_desc);
@@ -906,7 +888,7 @@ txp_alloc_rings(sc)
 		printf(": can't allocate response ring\n");
 		goto bail_rxbufring;
 	}
-	bzero(sc->sc_zero_dma.dma_vaddr, sizeof(u_int32_t));
+	bzero(sc->sc_zero_dma.dma_vaddr, sc->sc_zero_dma.dma_siz);
 	boot->br_zero_lo = sc->sc_zero_dma.dma_paddr & 0xffffffff;
 	boot->br_zero_hi = sc->sc_zero_dma.dma_paddr >> 32;
 
@@ -977,35 +959,38 @@ txp_dma_malloc(sc, size, dma, mapflags)
 {
         int r;
 
-	if ((r = bus_dmamap_create(sc->sc_dmat, size, 1, size, 0,
-	    BUS_DMA_NOWAIT, &dma->dma_map)) != 0)
-		return (r);
-
 	if ((r = bus_dmamem_alloc(sc->sc_dmat, size, PAGE_SIZE, 0,
-	    dma->dma_map->dm_segs, dma->dma_map->dm_nsegs,
-	    &dma->dma_map->dm_nsegs, BUS_DMA_NOWAIT)) != 0) {
-		bus_dmamap_destroy(sc->sc_dmat, dma->dma_map);
+	    &dma->dma_seg, 1, &dma->dma_nseg, BUS_DMA_NOWAIT)) != 0) {
+		return (r);
+	}
+	if (dma->dma_nseg != 1) {
+		bus_dmamem_free(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg);
+		return (-1);
+	}
+	   
+	if ((r = bus_dmamem_map(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg,
+	    size, &dma->dma_vaddr, mapflags | BUS_DMA_NOWAIT)) != 0) {
+		bus_dmamem_free(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg);
 		return (r);
 	}
 
-	if ((r = bus_dmamem_map(sc->sc_dmat, dma->dma_map->dm_segs,
-	    dma->dma_map->dm_nsegs, size, &dma->dma_vaddr,
-	    mapflags | BUS_DMA_NOWAIT)) != 0) {
-		bus_dmamem_free(sc->sc_dmat, dma->dma_map->dm_segs,
-		    dma->dma_map->dm_nsegs);
-		bus_dmamap_destroy(sc->sc_dmat, dma->dma_map);
+	if ((r = bus_dmamap_create(sc->sc_dmat, size, dma->dma_nseg,
+	    size, 0, BUS_DMA_NOWAIT, &dma->dma_map)) != 0) {
+		bus_dmamem_unmap(sc->sc_dmat, dma->dma_vaddr, size);
+		bus_dmamem_free(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg);
 		return (r);
 	}
 
 	if ((r = bus_dmamap_load(sc->sc_dmat, dma->dma_map, dma->dma_vaddr,
 	    size, NULL, BUS_DMA_NOWAIT)) != 0) {
-		bus_dmamem_unmap(sc->sc_dmat, dma->dma_vaddr, size);
-		bus_dmamem_free(sc->sc_dmat, dma->dma_map->dm_segs, dma->dma_map->dm_nsegs);
 		bus_dmamap_destroy(sc->sc_dmat, dma->dma_map);
+		bus_dmamem_unmap(sc->sc_dmat, dma->dma_vaddr, size);
+		bus_dmamem_free(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg);
 		return (r);
 	}
 
 	dma->dma_paddr = dma->dma_map->dm_segs[0].ds_addr;
+	dma->dma_siz = size;
 
 	return (0);
 }
@@ -1015,10 +1000,10 @@ txp_dma_free(sc, dma)
 	struct txp_softc *sc;
 	struct txp_dma_alloc *dma;
 {
-	bus_dmamem_unmap(sc->sc_dmat, dma->dma_vaddr, dma->dma_map->dm_mapsize);
-	bus_dmamem_free(sc->sc_dmat, dma->dma_map->dm_segs, dma->dma_map->dm_nsegs);
 	bus_dmamap_unload(sc->sc_dmat, dma->dma_map);
 	bus_dmamap_destroy(sc->sc_dmat, dma->dma_map);
+	bus_dmamem_unmap(sc->sc_dmat, dma->dma_vaddr, dma->dma_siz);
+	bus_dmamem_free(sc->sc_dmat, &dma->dma_seg, dma->dma_nseg);
 }
 
 int
@@ -1145,11 +1130,8 @@ txp_start(ifp)
 	struct txp_tx_ring *r = &sc->sc_txhir;
 	struct txp_tx_desc *txd;
 	struct txp_frag_desc *fxd;
-	struct mbuf *mhead, *m;
+	struct mbuf *m;
 	u_int32_t firstprod, firstcnt, prod, cnt;
-#if NVLAN > 0
-	struct ifvlan		*ifv;
-#endif
 
 	if ((ifp->if_flags & (IFF_RUNNING | IFF_OACTIVE)) != IFF_RUNNING)
 		return;
@@ -1161,7 +1143,6 @@ txp_start(ifp)
 		IF_DEQUEUE(&ifp->if_snd, m);
 		if (m == NULL)
 			break;
-		mhead = m;
 
 		if ((TX_ENTRIES - cnt) < 4) {
 			ifp->if_flags |= IFF_OACTIVE;
@@ -1185,15 +1166,6 @@ txp_start(ifp)
 		txd->tx_addrhi = 0;
 		txd->tx_totlen = 0;
 		txd->tx_pflags = 0;
-
-#if NVLAN > 0
-		if ((m->m_flags & (M_PROTO1|M_PKTHDR)) == (M_PROTO1|M_PKTHDR) &&
-		    m->m_pkthdr.rcvif != NULL) {
-			ifv = m->m_pkthdr.rcvif->if_softc;
-			txd->tx_pflags = TX_PFLAGS_VLAN |
-			    (htons(ifv->ifv_tag) << TX_PFLAGS_VLANTAG_S);
-		}
-#endif
 
 		fxd = (struct txp_frag_desc *)(r->r_desc + prod);
 		while (m != NULL) {
@@ -1224,12 +1196,6 @@ txp_start(ifp)
 		}
 
 		ifp->if_timer = 5;
-
-#if NBPFILTER > 0
-		if (ifp->if_bpf)
-			bpf_mtap(ifp->if_bpf, mhead);
-#endif
-
 		WRITE_REG(sc, r->r_reg, TXP_IDX2OFFSET(prod));
 	}
 
@@ -1244,7 +1210,7 @@ oactive:
 }
 
 /*
- * Handle simple commands sent to the typhoon
+ * XXX this needs to have a callback mechanism
  */
 int
 txp_command(sc, id, in1, in2, in3, out1, out2, out3, wait)
@@ -1300,8 +1266,6 @@ txp_command(sc, id, in1, in2, in3, out1, out2, out3, wait)
 	}
 	if (i == 1000 || rsp == NULL) {
 		printf("%s: 0x%x command failed\n", TXP_DEVNAME(sc), id);
-		if (rsp != NULL)
-			free(rsp, M_DEVBUF);
 		return (-1);
 	}
 
@@ -1312,67 +1276,10 @@ txp_command(sc, id, in1, in2, in3, out1, out2, out3, wait)
 	if (out3 != NULL)
 		*out3 = rsp->rsp_par3;
 
-	free(rsp, M_DEVBUF);
-
-	return (0);
-}
-
-int
-txp_command2(sc, id, in1, in2, in3, rspp, wait)
-	struct txp_softc *sc;
-	u_int16_t id, in1;
-	u_int32_t in2, in3;
-	struct txp_rsp_desc **rspp;
-	int wait;
-{
-	struct txp_hostvar *hv = sc->sc_hostvar;
-	struct txp_cmd_desc *cmd;
-	u_int32_t idx, i;
-	u_int16_t seq;
-
-	if (txp_cmd_desc_numfree(sc) == 0) {
-		printf("%s: no free cmd descriptors\n", TXP_DEVNAME(sc));
-		return (-1);
-	}
-
-	idx = sc->sc_cmdring.lastwrite;
-	cmd = (struct txp_cmd_desc *)(((u_int8_t *)sc->sc_cmdring.base) + idx);
-	bzero(cmd, sizeof(*cmd));
-
-	cmd->cmd_numdesc = 0;
-	cmd->cmd_seq = seq = sc->sc_seq++;
-	cmd->cmd_id = id;
-	cmd->cmd_par1 = in1;
-	cmd->cmd_par2 = in2;
-	cmd->cmd_par3 = in3;
-	cmd->cmd_flags = CMD_FLAGS_TYPE_CMD |
-	    (wait ? CMD_FLAGS_RESP : 0) | CMD_FLAGS_VALID;
-
-	idx += sizeof(struct txp_cmd_desc);
-	if (idx == sc->sc_cmdring.size)
+	idx += sizeof(struct txp_rsp_desc);
+	if (idx == sc->sc_rspring.size)
 		idx = 0;
-	sc->sc_cmdring.lastwrite = idx;
-
-	WRITE_REG(sc, TXP_H2A_2, sc->sc_cmdring.lastwrite);
-
-	if (!wait)
-		return (0);
-
-	for (i = 0; i < 10000; i++) {
-		idx = hv->hv_resp_read_idx;
-		if (idx != hv->hv_resp_write_idx) {
-			*rspp = NULL;
-			if (txp_response(sc, idx, cmd->cmd_id, seq, rspp))
-				return (-1);
-			if (*rspp != NULL)
-				break;
-		}
-		DELAY(50);
-	}
-	if (i == 1000 || (*rspp) == NULL) {
-		printf("%s: 0x%x command failed\n", TXP_DEVNAME(sc), id);
-		return (-1);
-	}
+	sc->sc_rspring.lastwrite = hv->hv_resp_read_idx = idx;
 
 	return (0);
 }
@@ -1392,18 +1299,13 @@ txp_response(sc, ridx, id, seq, rspp)
 		rsp = (struct txp_rsp_desc *)(((u_int8_t *)sc->sc_rspring.base) + ridx);
 
 		if (id == rsp->rsp_id && rsp->rsp_seq == seq) {
-			*rspp = (struct txp_rsp_desc *)malloc(
-			    sizeof(struct txp_rsp_desc) * (rsp->rsp_numdesc + 1),
-			    M_DEVBUF, M_NOWAIT);
-			if ((*rspp) == NULL)
-				return (-1);
-			txp_rsp_fixup(sc, rsp, *rspp);
+			*rspp = rsp;
 			return (0);
 		}
 
 		if (rsp->rsp_flags & RSP_FLAGS_ERROR) {
 			printf("%s: response error!\n", TXP_DEVNAME(sc));
-			txp_rsp_fixup(sc, rsp, NULL);
+			txp_rsp_fixup(sc, rsp);
 			ridx = hv->hv_resp_read_idx;
 			continue;
 		}
@@ -1422,7 +1324,7 @@ txp_response(sc, ridx, id, seq, rspp)
 			    rsp->rsp_id);
 		}
 
-		txp_rsp_fixup(sc, rsp, NULL);
+		txp_rsp_fixup(sc, rsp);
 		ridx = hv->hv_resp_read_idx;
 		hv->hv_resp_read_idx = ridx;
 	}
@@ -1431,25 +1333,19 @@ txp_response(sc, ridx, id, seq, rspp)
 }
 
 void
-txp_rsp_fixup(sc, rsp, dst)
+txp_rsp_fixup(sc, rsp)
 	struct txp_softc *sc;
-	struct txp_rsp_desc *rsp, *dst;
+	struct txp_rsp_desc *rsp;
 {
-	struct txp_rsp_desc *src = rsp;
 	struct txp_hostvar *hv = sc->sc_hostvar;
 	u_int32_t i, ridx;
 
 	ridx = hv->hv_resp_read_idx;
 
 	for (i = 0; i < rsp->rsp_numdesc + 1; i++) {
-		if (dst != NULL)
-			bcopy(src, dst++, sizeof(struct txp_rsp_desc));
 		ridx += sizeof(struct txp_rsp_desc);
-		if (ridx == sc->sc_rspring.size) {
-			src = sc->sc_rspring.base;
+		if (ridx == sc->sc_rspring.size)
 			ridx = 0;
-		} else
-			src++;
 		sc->sc_rspring.lastwrite = hv->hv_resp_read_idx = ridx;
 	}
 	
@@ -1651,33 +1547,26 @@ txp_set_filter(sc)
 	struct arpcom *ac = &sc->sc_arpcom;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	u_int32_t crc, carry, hashbit, hash[2];
-	u_int16_t filter;
+	u_int16_t filter = 0;
 	u_int8_t octet;
 	int i, j, mcnt = 0;
 	struct ether_multi *enm;
 	struct ether_multistep step;
 
-	if (ifp->if_flags & IFF_PROMISC) {
-		filter = TXP_RXFILT_PROMISC;
-		goto setit;
-	}
-
 again:
-	filter = TXP_RXFILT_DIRECT;
-
-	if (ifp->if_flags & IFF_BROADCAST)
-		filter |= TXP_RXFILT_BROADCAST;
-
-	if (ifp->if_flags & IFF_ALLMULTI)
-		filter |= TXP_RXFILT_ALLMULTI;
+	if (ifp->if_flags & IFF_PROMISC)
+		filter = TXP_RXFILT_PROMISC;
+	else if (ifp->if_flags & IFF_ALLMULTI)
+		filter = TXP_RXFILT_DIRECT | TXP_RXFILT_ALLMULTI |
+		    TXP_RXFILT_BROADCAST;
 	else {
+		filter = TXP_RXFILT_DIRECT | TXP_RXFILT_BROADCAST;
 		hash[0] = hash[1] = 0;
 
 		ETHER_FIRST_MULTI(step, ac, enm);
 		while (enm != NULL) {
 			if (bcmp(enm->enm_addrlo, enm->enm_addrhi, ETHER_ADDR_LEN)) {
 				/*
-				 * We must listen to a range of multicast
 				 * addresses.  For now, just accept all
 				 * multicasts, rather than trying to set only
 				 * those filter bits needed to match the range.
@@ -1717,40 +1606,6 @@ again:
 		}
 	}
 
-setit:
 	txp_command(sc, TXP_CMD_RX_FILTER_WRITE, filter, 0, 0,
 	    NULL, NULL, NULL, 1);
-}
-
-void
-txp_vlan_enable(sc)
-	struct txp_softc *sc;
-{
-	struct txp_rsp_desc *rsp = NULL;
-	struct txp_ext_desc *ext;
-
-	/* Setup type filter */
-	if (txp_command(sc, TXP_CMD_VLAN_ETHER_TYPE_WRITE, ETHERTYPE_8021Q,
-	    0, 0, NULL, NULL, NULL, 1))
-		goto out;
-
-	/*
-	 * Try to enable VLAN offload capability
-	 */
-	if (txp_command2(sc, TXP_CMD_OFFLOAD_READ, 0, 0, 0, &rsp, 1))
-		goto out;
-
-	if (rsp->rsp_numdesc != 1)
-		goto out;
-	ext = (struct txp_ext_desc *)(rsp + 1);
-
-	if (txp_command(sc, TXP_CMD_OFFLOAD_WRITE, 0,
-	    (ext->ext_1 | OFFLOAD_VLAN) & rsp->rsp_par2,
-	    (ext->ext_2 | OFFLOAD_VLAN) & rsp->rsp_par3,
-	    NULL, NULL, NULL, 1))
-		goto out;
-
-out:
-	if (rsp != NULL)
-		free(rsp, M_DEVBUF);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/twe_pci.c,v 1.3 2000/12/07 20:49:36 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/twe_pci.c,v 1.3.4.1 2001/05/14 22:26:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2 2000/10/14 18:04:07 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/fms.c,v 1.2.6.1 2001/05/14 22:25:41 niklas Exp $ */
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-

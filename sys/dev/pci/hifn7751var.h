@@ -1,11 +1,14 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.1 2000/03/24 09:09:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751var.h,v 1.3.6.2 2001/05/14 22:25:42 niklas Exp $	*/
 
 /*
- *  Invertex AEON / Hi/fn 7751 driver
- *  Copyright (c) 1999 Invertex Inc. All rights reserved.
+ * Invertex AEON / Hi/fn 7751 driver
+ * Copyright (c) 1999 Invertex Inc. All rights reserved.
+ * Copyright (c) 1999 Theo de Raadt
+ * Copyright (c) 2000 Network Security Technologies, Inc.
+ *			http://www.netsec.net
  *
- *  Please send any comments, feedback, bug-fixes, or feature requests to
- *  software@invertex.com.
+ * Please send any comments, feedback, bug-fixes, or feature requests to
+ * software@invertex.com.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,8 +36,8 @@
  *
  */
 
-#ifndef __HIFN_EXPORT_H__
-#define __HIFN_EXPORT_H__
+#ifndef __HIFN7751VAR_H__
+#define __HIFN7751VAR_H__
 
 /*
  *  Length values for cryptography
@@ -52,7 +55,7 @@
 #define HIFN_SHA1_LENGTH		20
 #define HIFN_MAC_TRUNC_LENGTH		12
 
-#define MAX_SCATTER 10
+#define MAX_SCATTER 64
 
 /*
  *  hifn_command_t
@@ -85,14 +88,6 @@
  *  and used again if either of these flags are not specified.
  *
  *	HIFN_CRYPT_NEW_KEY, HIFN_MAC_NEW_KEY
- *
- *  Whether we block or not waiting for the dest data to be ready is
- *  determined by whether a callback function is given.  The other
- *  place we could block is when all the DMA rings are full.  If 
- *  it is not okay to block while waiting for an open slot in the
- *  rings, include in the following value:
- *
- *	HIFN_DMA_FULL_NOBLOCK
  *
  *  result_flags
  *  ------------
@@ -165,29 +160,20 @@
  *  the dest_length does not have to be exact, values larger than required
  *  are fine.
  *
- *  dest_ready_callback
- *  -------------------
- *  Callback routine called from HIFN's interrupt handler.  The routine
- *  must be quick and non-blocking.  The callback routine is passed a
- *  pointer to the same hifn_command_t structure used to initiate the
- *  command.
- *
- *  If this value is null, the hifn_crypto() routine will block until the
- *  dest data is ready.
- *
  *  private_data
  *  ------------
  *  An unsigned long quantity (i.e. large enough to hold a pointer), that
  *  can be used by the callback routine if desired.
  */
+struct hifn_softc;
+
 typedef struct hifn_command {
-	u_int	flags;
 	volatile u_int result_flags;
 
 	u_short	session_num;
+	u_int16_t base_masks, cry_masks, mac_masks;
 
-	u_char	*iv, *ck, *mac;
-	int	iv_len, ck_len, mac_len;
+	u_char	iv[HIFN_IV_LENGTH], *ck, mac[HIFN_MAC_KEY_LENGTH];
 
 	struct mbuf *src_m;
 	long	src_packp[MAX_SCATTER];
@@ -201,11 +187,11 @@ typedef struct hifn_command {
 	int	dst_npa;
 	int	dst_l;
 
-	u_short mac_header_skip;
-	u_short crypt_header_skip;
+	u_short mac_header_skip, mac_process_len;
+	u_short crypt_header_skip, crypt_process_len;
 
-	void (*dest_ready_callback)(struct hifn_command *);
 	u_long private_data;
+	struct hifn_softc *softc;
 } hifn_command_t;
 
 /*
@@ -214,24 +200,6 @@ typedef struct hifn_command {
 #define HIFN_CRYPTO_SUCCESS	0
 #define HIFN_CRYPTO_BAD_INPUT	(-1)
 #define HIFN_CRYPTO_RINGS_FULL	(-2)
-
-
-/*
- *  Defines for the "config" parameter of hifn_command_t
- */
-#define HIFN_ENCODE		0x0001
-#define HIFN_DECODE		0x0002
-#define HIFN_CRYPT_3DES		0x0004
-#define HIFN_CRYPT_DES		0x0008
-#define HIFN_MAC_MD5		0x0010
-#define HIFN_MAC_SHA1		0x0020
-#define HIFN_MAC_TRUNC		0x0040
-#define HIFN_CRYPT_NEW_KEY	0x0080
-#define HIFN_MAC_NEW_KEY	0x0100
-#define HIFN_DMA_FULL_NOBLOCK	0x0200
-
-#define HIFN_USING_CRYPT(f)	((f) & (HIFN_CRYPT_3DES|HIFN_CRYPT_DES))
-#define HIFN_USING_MAC(f)	((f) & (HIFN_MAC_MD5|HIFN_MAC_SHA1))
 
 /*
  *  Defines for the "result_flags" parameter of hifn_command_t.
@@ -250,16 +218,9 @@ typedef struct hifn_command {
  *
  *  Blocking/Non-blocking Issues
  *  ============================
- *  If the dest_ready_callback field of the hifn_command structure
- *  is NULL, hifn_encrypt will block until the dest_data is ready --
- *  otherwise hifn_encrypt() will return immediately and the 
- *  dest_ready_callback routine will be called when the dest data is
- *  ready.
- *
- *  The routine can also block when waiting for an open slot when all
- *  DMA rings are full.  You can avoid this behaviour by sending the
- *  HIFN_DMA_FULL_NOBLOCK as part of the command flags.  This will
- *  make hifn_crypt() return immediately when the rings are full.
+ *  The driver cannot block in hifn_crypto (no calls to tsleep) currently.
+ *  hifn_crypto() returns HIFN_CRYPTO_RINGS_FULL if there is not enough
+ *  room in any of the rings for the request to proceed.
  *
  *  Return Values
  *  =============
@@ -272,7 +233,6 @@ typedef struct hifn_command {
  *                              behaviour was requested.
  *
  *************************************************************************/
-int hifn_crypto __P((hifn_command_t *command));
 
 /*
  * Convert back and forth from 'sid' to 'card' and 'session'
@@ -283,4 +243,4 @@ int hifn_crypto __P((hifn_command_t *command));
 
 #endif /* _KERNEL */
 
-#endif /* __HIFN_EXPORT_H__ */
+#endif /* __HIFN7751VAR_H__ */

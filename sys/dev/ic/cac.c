@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5 2001/04/23 10:47:56 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cac.c,v 1.5.4.1 2001/05/14 22:23:37 niklas Exp $	*/
 /*	$NetBSD: cac.c,v 1.15 2000/11/08 19:20:35 ad Exp $	*/
 
 /*
@@ -710,8 +710,8 @@ cac_scsi_cmd(xs)
 			splx(s);
 			xs->error = XS_DRIVER_STUFFUP;
 			scsi_done(xs);
-		} else
-			splx(s);
+		}
+		splx(s);
 		return (COMPLETE);
 
 

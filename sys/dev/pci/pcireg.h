@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12 1999/10/26 17:43:58 downsj Exp $	*/
-/*	$NetBSD: pcireg.h,v 1.11 1996/08/10 15:42:33 mycroft Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12.2.1 2001/05/14 22:25:56 niklas Exp $	*/
+/*	$NetBSD: pcireg.h,v 1.26 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1995, 1996 Christopher G. Demetriou.  All rights reserved.
@@ -315,6 +315,8 @@ typedef u_int8_t pci_revision_t;
  */
 #define	PCI_MAPREG_START		0x10
 #define	PCI_MAPREG_END			0x28
+#define	PCI_MAPREG_PPB_END		0x18
+#define	PCI_MAPREG_PCB_END		0x14
 
 #define	PCI_MAPREG_TYPE(mr)						\
 	    ((mr) & PCI_MAPREG_TYPE_MASK)
@@ -340,6 +342,12 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_MAPREG_MEM_SIZE(mr)						\
 	    (PCI_MAPREG_MEM_ADDR(mr) & -PCI_MAPREG_MEM_ADDR(mr))
 #define	PCI_MAPREG_MEM_ADDR_MASK		0xfffffff0
+
+#define	PCI_MAPREG_MEM64_ADDR(mr)					\
+	    ((mr) & PCI_MAPREG_MEM64_ADDR_MASK)
+#define	PCI_MAPREG_MEM64_SIZE(mr)					\
+	    (PCI_MAPREG_MEM64_ADDR(mr) & -PCI_MAPREG_MEM64_ADDR(mr))
+#define	PCI_MAPREG_MEM64_ADDR_MASK		0xfffffffffffffff0
 
 #define	PCI_MAPREG_IO_ADDR(mr)						\
 	    ((mr) & PCI_MAPREG_IO_ADDR_MASK)
@@ -374,6 +382,15 @@ typedef u_int8_t pci_revision_t;
 #define PCI_CAP_HOTSWAP	6
 
 /*
+ * Power Management Control Status Register; access via capability pointer.
+ */
+#define PCI_PMCSR_STATE_MASK	0x03
+#define PCI_PMCSR_STATE_D0	0x00
+#define PCI_PMCSR_STATE_D1	0x01
+#define PCI_PMCSR_STATE_D2	0x02
+#define PCI_PMCSR_STATE_D3	0x03
+
+/*
  * Interrupt Configuration Register; contains interrupt pin and line.
  */
 #define	PCI_INTERRUPT_REG		0x3c
@@ -391,10 +408,21 @@ typedef u_int8_t pci_intr_line_t;
 #define	PCI_INTERRUPT_LINE(icr) \
 	    (((icr) >> PCI_INTERRUPT_LINE_SHIFT) & PCI_INTERRUPT_LINE_MASK)
 
+#define	PCI_MIN_GNT_SHIFT			16
+#define	PCI_MIN_GNT_MASK			0xff
+#define	PCI_MIN_GNT(icr) \
+	    (((icr) >> PCI_MIN_GNT_SHIFT) & PCI_MIN_GNT_MASK)
+
+#define	PCI_MAX_LAT_SHIFT			24
+#define	PCI_MAX_LAT_MASK			0xff
+#define	PCI_MAX_LAT(icr) \
+	    (((icr) >> PCI_MAX_LAT_SHIFT) & PCI_MAX_LAT_MASK)
+
 #define	PCI_INTERRUPT_PIN_NONE			0x00
 #define	PCI_INTERRUPT_PIN_A			0x01
 #define	PCI_INTERRUPT_PIN_B			0x02
 #define	PCI_INTERRUPT_PIN_C			0x03
 #define	PCI_INTERRUPT_PIN_D			0x04
+#define	PCI_INTERRUPT_PIN_MAX			0x04
 
 #endif /* _DEV_PCI_PCIREG_H_ */

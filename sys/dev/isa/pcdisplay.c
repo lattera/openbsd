@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/pcdisplay.c,v 1.4 2001/02/02 20:25:40 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/isa/pcdisplay.c,v 1.4.4.1 2001/05/14 22:24:47 niklas Exp $ */
 /* $NetBSD: pcdisplay.c,v 1.9.4.1 2000/06/30 16:27:48 simonb Exp $ */
 
 /*

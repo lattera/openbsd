@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/if_xl_cardbus.c,v 1.9 2000/09/29 05:28:28 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/if_xl_cardbus.c,v 1.9.6.1 2001/05/14 22:23:13 niklas Exp $ */
 /*	$NetBSD: if_xl_cardbus.c,v 1.13 2000/03/07 00:32:52 mycroft Exp $	*/
 
 /*

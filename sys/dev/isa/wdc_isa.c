@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/isa/wdc_isa.c,v 1.4 1999/10/09 03:42:04 csapuntz Exp $     */
+/*      $OpenBSD: src/sys/dev/isa/wdc_isa.c,v 1.4.4.1 2001/05/14 22:24:53 niklas Exp $     */
 /*	$NetBSD: wdc_isa.c,v 1.15 1999/05/19 14:41:25 bouyer Exp $ */
 
 /*-
@@ -91,8 +91,8 @@ struct cfattach wdc_isa_ca = {
 #if NISADMA > 0
 static void	wdc_isa_dma_setup __P((struct wdc_isa_softc *));
 static int	wdc_isa_dma_init __P((void*, int, int, void *, size_t, int));
-static void 	wdc_isa_dma_start __P((void*, int, int, int));
-static int	wdc_isa_dma_finish __P((void*, int, int, int));
+static void 	wdc_isa_dma_start __P((void*, int, int));
+static int	wdc_isa_dma_finish __P((void*, int, int));
 #endif	/* NISADMA > 0 */
 
 int
@@ -107,6 +107,7 @@ wdc_isa_probe(parent, match, aux)
 {
 	struct channel_softc ch;
 	struct isa_attach_args *ia = aux;
+	struct cfdata *cf = match;
 	int result = 0;
 
 	bzero(&ch, sizeof ch);
@@ -119,6 +120,9 @@ wdc_isa_probe(parent, match, aux)
 	if (bus_space_map(ch.ctl_iot, ia->ia_iobase + WDC_ISA_AUXREG_OFFSET,
 	    WDC_ISA_AUXREG_NPORTS, 0, &ch.ctl_ioh))
 		goto outunmap;
+
+	if (cf->cf_flags & WDC_OPTION_PROBE_VERBOSE)
+		ch.ch_flags |= WDCF_VERBOSE_PROBE;
 
 	result = wdcprobe(&ch);
 	if (result) {
@@ -197,6 +201,7 @@ wdc_isa_attach(parent, self, aux)
 		return;
 	}
 	wdcattach(&sc->wdc_channel);
+	wdc_print_current_modes(&sc->wdc_channel);
 }
 
 #if NISADMA > 0
@@ -239,7 +244,7 @@ wdc_isa_dma_init(v, channel, drive, databuf, datalen, read)
 }
 
 static void
-wdc_isa_dma_start(v, channel, drive, read)
+wdc_isa_dma_start(v, channel, drive)
 	void *v;
 	int channel, drive;
 {
@@ -247,10 +252,9 @@ wdc_isa_dma_start(v, channel, drive, read)
 }
 
 static int
-wdc_isa_dma_finish(v, channel, drive, read)
+wdc_isa_dma_finish(v, channel, drive)
 	void *v;
 	int channel, drive;
-	int read;
 {
 	struct wdc_isa_softc *sc = v;
 

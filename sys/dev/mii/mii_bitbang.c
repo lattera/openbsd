@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii_bitbang.c,v 1.1 2001/03/11 02:48:19 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii_bitbang.c,v 1.1.4.1 2001/05/14 22:25:24 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-

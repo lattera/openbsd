@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/bmtphyreg.h,v 1.1 2001/04/11 06:47:31 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/bmtphyreg.h,v 1.1.4.1 2001/05/14 22:25:20 niklas Exp $	*/
 /*	$NetBSD: bmtphyreg.h,v 1.1 1998/08/10 23:58:39 thorpej Exp $	*/
 
 #ifndef _DEV_MII_BMTPHYREG_H_

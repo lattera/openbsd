@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4 2000/09/17 17:08:16 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxpvar.h,v 1.4.6.1 2001/05/14 22:23:47 niklas Exp $	*/
 /*	$NetBSD: if_fxpvar.h,v 1.1 1997/06/05 02:01:58 thorpej Exp $	*/
 
 /*                  

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.1 2000/03/24 09:09:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/ad1848.c,v 1.19.4.2 2001/05/14 22:24:28 niklas Exp $	*/
 /*	$NetBSD: ad1848.c,v 1.45 1998/01/30 02:02:38 augustss Exp $	*/
 
 /*
@@ -1648,7 +1648,7 @@ ad1848_malloc(addr, size, pool, flags)
 {
 	struct ad1848_softc *sc = addr;
 
-	return isa_malloc(sc->sc_isa, 4, size, pool, flags);
+	return isa_malloc(sc->sc_isa, 1, size, pool, flags);
 }
 
 void

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pcdisplayvar.h,v 1.4 2001/04/14 04:44:01 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pcdisplayvar.h,v 1.4.4.1 2001/05/14 22:24:06 niklas Exp $ */
 /* $NetBSD: pcdisplayvar.h,v 1.8 2000/01/25 02:44:03 ad Exp $ */
 
 /*

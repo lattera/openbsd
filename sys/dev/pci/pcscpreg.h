@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcscpreg.h,v 1.2 2001/02/14 05:11:21 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcscpreg.h,v 1.2.4.1 2001/05/14 22:25:56 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_amd_reg.h,v 1.3 2001/04/04 07:02:52 csapuntz Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_amd_reg.h,v 1.3.4.1 2001/05/14 22:25:55 niklas Exp $ 	*/
 /*	$NetBSD: pciide_amd_reg.h,v 1.2 2000/07/06 15:08:11 bouyer Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.h,v 1.1 2001/03/28 03:27:09 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/bktr/bktr_os.h,v 1.1.4.1 2001/05/14 22:26:03 niklas Exp $	*/
 /* $FreeBSD: src/sys/dev/bktr/bktr_os.h,v 1.4 2000/04/16 07:56:58 roger Exp $ */
 
 /*

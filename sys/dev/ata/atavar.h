@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/atavar.h,v 1.4 1999/10/09 03:42:03 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/dev/ata/atavar.h,v 1.4.4.1 2001/05/14 22:23:05 niklas Exp $	*/
 /*	$NetBSD: atavar.h,v 1.13 1999/03/10 13:11:43 bouyer Exp $	*/
 
 /*
@@ -55,6 +55,7 @@ struct ata_drive_datas {
 #define DRIVE_DMAERR	0x0100 /* Udma transfer had crc error, don't try DMA */
 #define DRIVE_DSCBA	0x0200 /* DSC in buffer availability mode */
 #define DRIVE_DSCWAIT	0x0400 /* In wait for DSC to be asserted */
+
     /*
      * Current setting of drive's PIO, DMA and UDMA modes.
      * Is initialised by the disks drivers at attach time, and may be
@@ -78,12 +79,13 @@ struct ata_drive_datas {
     /* 0x20-0x40 reserved for ATAPI_CFG_DRQ_MASK */
     u_int8_t atapi_cap;
 
-    /* Number of DMA errors. Reset to 0 after every successful transfers. */
     u_int8_t n_dmaerrs;
-    /* downgrade mode after this many successive errors */
-#define NERRS_MAX 2
+    u_int32_t n_xfers;
+#define NERRS_MAX 4
+#define NXFER 1000
 
-    struct device *drv_softc; /* ATA/PI drive's softc, can be NULL */
+    char drive_name[31];
+    int  cf_flags;
     void *chnl_softc; /* channel softc */
 };
 
@@ -151,6 +153,8 @@ struct wdc_command {
     void *callback_arg;  /* argument passed to *callback() */
 };
 
+extern int at_poll;
+
 int wdc_exec_command __P((struct ata_drive_datas *, struct wdc_command*));
 #define WDC_COMPLETE 0x01
 #define WDC_QUEUED   0x02
@@ -164,6 +168,7 @@ void wdc_reset_channel __P((struct ata_drive_datas *));
 
 int wdc_ata_addref __P((struct ata_drive_datas *));
 void wdc_ata_delref __P((struct ata_drive_datas *));
+void wdc_ata_kill_pending __P((struct ata_drive_datas *));
 
 struct ataparams;
 int ata_get_params __P((struct ata_drive_datas*, u_int8_t,
@@ -174,4 +179,5 @@ int ata_set_mode __P((struct ata_drive_datas*, u_int8_t, u_int8_t));
 #define CMD_ERR   1
 #define CMD_AGAIN 2
 
+void ata_dmaerr __P((struct ata_drive_datas *));
 void ata_perror __P((struct ata_drive_datas *, int, char *));

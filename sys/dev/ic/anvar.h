@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3 2001/02/27 06:43:10 tholo Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/anvar.h,v 1.3.4.1 2001/05/14 22:23:31 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

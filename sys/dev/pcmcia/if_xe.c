@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11 2000/02/02 19:09:59 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.1 2001/05/14 22:26:07 niklas Exp $	*/
 
 /*
- * Copyright (c) 1999 Niklas Hallqvist, C Stone, Job de Haas
+ * Copyright (c) 1999 Niklas Hallqvist, Brandon Creighton, Job de Haas
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -404,11 +404,12 @@ xe_pcmcia_attach(parent, self, aux)
 	sc->sc_mii.mii_readreg = xe_mdi_read;
 	sc->sc_mii.mii_writereg = xe_mdi_write;
 	sc->sc_mii.mii_statchg = xe_statchg;
-	ifmedia_init(&sc->sc_mii.mii_media, 0, xe_mediachange,
+	ifmedia_init(&sc->sc_mii.mii_media, IFM_IMASK, xe_mediachange,
 	    xe_mediastatus);
 	DPRINTF(XED_MII | XED_CONFIG,
 	    ("bmsr %x\n", xe_mdi_read(&sc->sc_dev, 0, 1)));
-	mii_phy_probe(self, &sc->sc_mii, 0xffffffff);
+	mii_attach(self, &sc->sc_mii, 0xffffffff, MII_PHY_ANY, MII_OFFSET_ANY,
+	    0);
 	if (LIST_FIRST(&sc->sc_mii.mii_phys) == NULL)
 		ifmedia_add(&sc->sc_mii.mii_media, IFM_ETHER | IFM_AUTO, 0,
 		    NULL);
@@ -419,10 +420,6 @@ xe_pcmcia_attach(parent, self, aux)
 	 */
 	if_attach(ifp);
 	ether_ifattach(ifp);
-#if NBPFILTER > 0
-	bpfattach(&sc->sc_arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
-	    sizeof(struct ether_header));
-#endif	/* NBPFILTER > 0 */
 
 	/*
 	 * Reset and initialize the card again for DINGO (as found in Linux
@@ -462,14 +459,10 @@ xe_pcmcia_detach(dev, flags)
 	struct xe_pcmcia_softc *psc = (struct xe_pcmcia_softc *)dev;
 	struct xe_softc *sc = &psc->sc_xe;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
-	struct mii_softc *msc;
 	int rv = 0;
 
-	for (msc = LIST_FIRST(&sc->sc_mii.mii_phys); msc;
-	    msc = LIST_FIRST(&sc->sc_mii.mii_phys)) {
-		LIST_REMOVE(msc, mii_list);
-		rv |= config_detach(&msc->mii_dev, flags);
-	}
+	mii_detach(&sc->sc_mii, MII_PHY_ANY, MII_OFFSET_ANY);
+	ifmedia_delete_instance(&sc->sc_mii.mii_media, IFM_INST_ANY);
 
 	pcmcia_io_unmap(psc->sc_pf, psc->sc_io_window);
 	pcmcia_io_free(psc->sc_pf, &psc->sc_pcioh);
@@ -504,8 +497,8 @@ xe_pcmcia_activate(dev, act)
 		ifp->if_timer = 0;
 		if (ifp->if_flags & IFF_RUNNING)
 			xe_stop(&sc->sc_xe);
-		pcmcia_function_disable(sc->sc_pf);
 		pcmcia_intr_disestablish(sc->sc_pf, sc->sc_xe.sc_ih);
+		pcmcia_function_disable(sc->sc_pf);
 		break;
 	}
 	splx(s);
@@ -946,7 +939,7 @@ xe_mdi_pulse_bits(sc, data, len)
 	u_int32_t mask;
 
 	for (mask = 1 << (len - 1); mask; mask >>= 1)
-		xe_mdi_pulse (sc, data & mask);
+		xe_mdi_pulse(sc, data & mask);
 }
 
 /* Read a PHY register. */
@@ -1140,6 +1133,7 @@ xe_start(ifp)
 	if (len < ETHER_MIN_LEN - ETHER_CRC_LEN)
 		pad = ETHER_MIN_LEN - ETHER_CRC_LEN - len;
 
+	PAGE(sc, 0);
 	space = bus_space_read_2(bst, bsh, offset + TSO0) & 0x7fff;
 	if (len + pad + 2 > space) {
 		DPRINTF(XED_FIFO,
@@ -1161,7 +1155,6 @@ xe_start(ifp)
 	 */
 	s = splhigh();
 
-	PAGE(sc, 0);
 	bus_space_write_2(bst, bsh, offset + TSO2, (u_int16_t)len + pad + 2);
 	bus_space_write_2(bst, bsh, offset + EDP, (u_int16_t)len + pad);
 	for (m = m0; m; ) {
@@ -1278,7 +1271,6 @@ xe_ioctl(ifp, command, data)
 		 * such as IFF_PROMISC are handled.
 		 */
 		if (ifp->if_flags & IFF_UP) {
-			xe_full_reset(sc);
 			xe_init(sc);
 		} else {
 			if (ifp->if_flags & IFF_RUNNING)
@@ -1360,7 +1352,7 @@ xe_set_address(sc)
 		for (page = 0x50, num = arp->ac_multicnt; num > 0 && enm;
 		    num--) {
 			if (bcmp(enm->enm_addrlo, enm->enm_addrhi,
-			    sizeof (enm->enm_addrlo)) != 0) {
+			    sizeof(enm->enm_addrlo)) != 0) {
 				/*
 				 * The multicast address is really a range;
 				 * it's easier just to accept all multicasts.
@@ -1387,7 +1379,7 @@ xe_set_address(sc)
 }
 
 void
-xe_cycle_power (sc)
+xe_cycle_power(sc)
 	struct xe_softc *sc;
 {
 	bus_space_tag_t bst = sc->sc_bst;
@@ -1407,7 +1399,7 @@ xe_cycle_power (sc)
 }
 
 void
-xe_full_reset (sc)
+xe_full_reset(sc)
 	struct xe_softc *sc;
 {
 	bus_space_tag_t bst = sc->sc_bst;
@@ -1415,7 +1407,7 @@ xe_full_reset (sc)
 	bus_addr_t offset = sc->sc_offset;
 
 	/* Do an as extensive reset as possible on all functions. */
-	xe_cycle_power (sc);
+	xe_cycle_power(sc);
 	bus_space_write_1(bst, bsh, offset + CR, SOFT_RESET);
 	DELAY(20000);
 	bus_space_write_1(bst, bsh, offset + CR, 0);
@@ -1559,7 +1551,7 @@ xe_full_reset (sc)
 
 #ifdef XEDEBUG
 void
-xe_reg_dump (sc)
+xe_reg_dump(sc)
 	struct xe_softc *sc;
 {
 	int page, i;

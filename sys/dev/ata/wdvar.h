@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ata/wdvar.h,v 1.1 1999/07/18 21:25:18 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/dev/ata/wdvar.h,v 1.1.4.1 2001/05/14 22:23:06 niklas Exp $	*/
 /*	$NetBSD: wdvar.h,v 1.3 1998/11/11 19:38:27 bouyer Exp $	*/
 
 /*
@@ -47,7 +47,7 @@ struct ata_bio {
     int multi; /* number of blocks to transfer in multi-mode */
     struct disklabel *lp; /* pointer to drive's label info */
     daddr_t blkno; /* block addr */
-    daddr_t blkdone; /* number of blks transfered */
+    daddr_t blkdone; /* number of blks transferred */
     daddr_t nblks; /* number of block currently transfering */
     int     nbytes; /* number of bytes currently transfering */
     long    bcount; /* total number of bytes */
@@ -58,8 +58,10 @@ struct ata_bio {
 #define ERR_DF	2 /* Drive fault */
 #define ERR_DMA 3 /* DMA error */
 #define TIMEOUT 4 /* device timed out */
+#define ERR_NODEV 5 /* device bas been detached */
     u_int8_t r_error; /* copy of error register */
     daddr_t badsect[127];    /* 126 plus trailing -1 marker */
+    struct wd_softc *wd;
 };
 
 /* drive states stored in ata_drive_datas */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wskbdutil.c,v 1.2 2001/04/14 04:48:01 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wskbdutil.c,v 1.2.4.1 2001/05/14 22:26:32 niklas Exp $	*/
 /*	$NetBSD: wskbdutil.c,v 1.7 1999/12/21 11:59:13 drochner Exp $	*/
 
 /*-

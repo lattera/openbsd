@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.49 2001/05/14 16:51:48 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsec.c,v 1.49.2.1 2001/05/14 22:26:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Jason L. Wright (jason@thought.net)
@@ -108,12 +108,13 @@ ubsec_probe(parent, match, aux)
 	struct pci_attach_args *pa = (struct pci_attach_args *) aux;
 
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BLUESTEEL &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5501 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5601))
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5501)
+		return (1);
+	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BLUESTEEL &&
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5601)
 		return (1);
 	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
-	    (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5805 ||
-	     PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5820))
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5805)
 		return (1);
 	return (0);
 }
@@ -140,13 +141,11 @@ ubsec_attach(parent, self, aux)
 	if ((PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BLUESTEEL &&
 	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BLUESTEEL_5601) ||
 	    (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5805))
-		sc->sc_flags |= UBS_FLAGS_KEY;
-
-	if (PCI_VENDOR(pa->pa_id) == PCI_VENDOR_BROADCOM &&
-	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5820)
-		sc->sc_flags |= UBS_FLAGS_KEY | UBS_FLAGS_LONGCTX;
-
+	    PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_BROADCOM_5805)) {
+		sc->sc_statmask |= BS_STAT_MCR2_DONE;
+		sc->sc_5601 = 1;
+	}
+	
 	cmd = pci_conf_read(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG);
 	cmd |= PCI_COMMAND_MEM_ENABLE | PCI_COMMAND_MASTER_ENABLE;
 	pci_conf_write(pc, pa->pa_tag, PCI_COMMAND_STATUS_REG, cmd);
@@ -195,16 +194,14 @@ ubsec_attach(parent, self, aux)
 	crypto_register(sc->sc_cid, CRYPTO_MD5_HMAC, NULL, NULL, NULL);
 	crypto_register(sc->sc_cid, CRYPTO_SHA1_HMAC, NULL, NULL, NULL);
 
-	if (sc->sc_flags & UBS_FLAGS_KEY) {
-		sc->sc_statmask |= BS_STAT_MCR2_DONE;
-		timeout_set(&sc->sc_rngto, ubsec_rng, sc);
-		timeout_add(&sc->sc_rngto, 1);
-		printf(", rng");
-	}
-
 	WRITE_REG(sc, BS_CTRL,
 	    READ_REG(sc, BS_CTRL) | BS_CTRL_MCR1INT | BS_CTRL_DMAERR |
-	    ((sc->sc_flags & UBS_FLAGS_KEY) ? BS_CTRL_MCR2INT : 0));
+	    (sc->sc_5601 ? BS_CTRL_MCR2INT : 0));
+
+	if (sc->sc_5601) {
+		timeout_set(&sc->sc_rngto, ubsec_rng, sc);
+		timeout_add(&sc->sc_rngto, 1);
+	}
 
 	printf(": %s\n", intrstr);
 }
@@ -279,7 +276,7 @@ ubsec_intr(arg)
 		ubsec_feed(sc);
 	}
 
-	if ((sc->sc_flags & UBS_FLAGS_KEY) && (stat & BS_STAT_MCR2_DONE)) {
+	if (sc->sc_5601 && (stat & BS_STAT_MCR2_DONE)) {
 		while (!SIMPLEQ_EMPTY(&sc->sc_qchip2)) {
 			q2 = SIMPLEQ_FIRST(&sc->sc_qchip2);
 
@@ -305,9 +302,7 @@ int
 ubsec_feed(sc)
 	struct ubsec_softc *sc;
 {
-#ifdef UBSEC_DEBUG
 	static int max;
-#endif
 	struct ubsec_q *q;
 	struct ubsec_mcr *mcr;
 	int npkts, i, l;
@@ -329,13 +324,13 @@ ubsec_feed(sc)
 
 #ifdef UBSEC_DEBUG
 	printf("merging %d records\n", npkts);
+#endif
 
 	/* XXX temporary aggregation statistics reporting code */
 	if (max < npkts) {
 		max = npkts;
 		printf("%s: new max aggregate %d\n", sc->sc_dv.dv_xname, max);
 	}
-#endif
 
 	for (mcr2 = mcr, i = 0; i < npkts; i++) {
 		q = SIMPLEQ_FIRST(&sc->sc_queue);
@@ -450,7 +445,7 @@ ubsec_newsession(sidp, cri)
 			    sizeof(struct ubsec_session), M_DEVBUF, M_NOWAIT);
 			if (ses == NULL)
 				return (ENOMEM);
-			bcopy(sc->sc_sessions, ses, sesn *
+			bcopy(sc->sc_sessions, ses, (sesn + 1) *
 			    sizeof(struct ubsec_session));
 			bzero(sc->sc_sessions, sesn *
 			    sizeof(struct ubsec_session));
@@ -600,9 +595,6 @@ ubsec_process(crp)
 	if (crp->crp_flags & CRYPTO_F_IMBUF) {
 		q->q_src_m = (struct mbuf *)crp->crp_buf;
 		q->q_dst_m = (struct mbuf *)crp->crp_buf;
-	} else if (crp->crp_flags & CRYPTO_F_IOV) {
-		q->q_src = (struct uio *)crp->crp_buf;
-		q->q_dst = (struct uio *)crp->crp_buf;
 	} else {
 		err = EINVAL;
 		goto errout;	/* XXX only handle mbufs right now */
@@ -618,6 +610,7 @@ ubsec_process(crp)
 
 	q->q_mcr->mcr_pkts = 1;
 	q->q_mcr->mcr_flags = 0;
+	q->q_mcr->mcr_cmdctxp = vtophys(&q->q_ctx);
 	q->q_sc = sc;
 	q->q_crp = crp;
 
@@ -677,34 +670,17 @@ ubsec_process(crp)
 				q->q_ctx.pc_iv[1] = ses->ses_iv[1];
 			}
 
-			if ((enccrd->crd_flags & CRD_F_IV_PRESENT) == 0) {
-				if (crp->crp_flags & CRYPTO_F_IMBUF)
-					m_copyback(q->q_src_m, enccrd->crd_inject,
-					    8, (caddr_t)q->q_ctx.pc_iv);
-				else if (crp->crp_flags & CRYPTO_F_IOV) {
-					if (crp->crp_iv == NULL) {
-						err = EINVAL;
-						goto errout;
-					}
-					bcopy(crp->crp_iv,
-					    (caddr_t)q->q_ctx.pc_iv, 8);
-				}
-			}
+			if ((enccrd->crd_flags & CRD_F_IV_PRESENT) == 0)
+				m_copyback(q->q_src_m, enccrd->crd_inject,
+				    8, (caddr_t)q->q_ctx.pc_iv);
 		} else {
 			q->q_ctx.pc_flags |= UBS_PKTCTX_INBOUND;
 
 			if (enccrd->crd_flags & CRD_F_IV_EXPLICIT)
 				bcopy(enccrd->crd_iv, q->q_ctx.pc_iv, 8);
-			else if (crp->crp_flags & CRYPTO_F_IMBUF)
+			else
 				m_copydata(q->q_src_m, enccrd->crd_inject,
 				    8, (caddr_t)q->q_ctx.pc_iv);
-			else if (crp->crp_flags & CRYPTO_F_IOV) {
-				if (crp->crp_iv == NULL) {
-					err = EINVAL;
-					goto errout;
-				}
-				bcopy(crp->crp_iv, (caddr_t)q->q_ctx.pc_iv, 8);
-			}
 		}
 
 		q->q_ctx.pc_deskey[0] = ses->ses_deskey[0];
@@ -767,12 +743,8 @@ ubsec_process(crp)
 	}
 	q->q_ctx.pc_offset = coffset >> 2;
 
-	if (crp->crp_flags & CRYPTO_F_IMBUF)
-		q->q_src_l = mbuf2pages(q->q_src_m, &q->q_src_npa, q->q_src_packp,
-		    q->q_src_packl, MAX_SCATTER, &nicealign);
-	else if (crp->crp_flags & CRYPTO_F_IOV)
-		q->q_src_l = iov2pages(q->q_src, &q->q_src_npa, q->q_src_packp,
-		    q->q_src_packl, MAX_SCATTER, &nicealign);
+	q->q_src_l = mbuf2pages(q->q_src_m, &q->q_src_npa, q->q_src_packp,
+	    q->q_src_packl, MAX_SCATTER, &nicealign);
 	if (q->q_src_l == 0) {
 		err = ENOMEM;
 		goto errout;
@@ -850,10 +822,7 @@ ubsec_process(crp)
 		    q->q_mcr->mcr_opktbuf.pb_next);
 #endif
 	} else {
-		if (!nicealign && (crp->crp_flags & CRYPTO_F_IOV)) {
-			err = EINVAL;
-			goto errout;
-		} else if (!nicealign && (crp->crp_flags & CRYPTO_F_IMBUF)) {
+		if (!nicealign) {
 			int totlen, len;
 			struct mbuf *m, *top, **mp;
 
@@ -905,12 +874,8 @@ ubsec_process(crp)
 		} else
 			q->q_dst_m = q->q_src_m;
 
-		if (crp->crp_flags & CRYPTO_F_IMBUF)
-			q->q_dst_l = mbuf2pages(q->q_dst_m, &q->q_dst_npa,
-			    q->q_dst_packp, q->q_dst_packl, MAX_SCATTER, NULL);
-		else if (crp->crp_flags & CRYPTO_F_IOV)
-			q->q_dst_l = iov2pages(q->q_dst, &q->q_dst_npa,
-			    q->q_dst_packp, q->q_dst_packl, MAX_SCATTER, NULL);
+		q->q_dst_l = mbuf2pages(q->q_dst_m, &q->q_dst_npa,
+		    q->q_dst_packp, q->q_dst_packl, MAX_SCATTER, NULL);
 
 #ifdef UBSEC_DEBUG
 		printf("dst skip: %d\n", dskip);
@@ -978,24 +943,6 @@ ubsec_process(crp)
 #endif
 	}
 
-	if (sc->sc_flags & UBS_FLAGS_LONGCTX) {
-		/* transform small context into long context */
-		q->q_mcr->mcr_cmdctxp = vtophys(&q->q_ctxl);
-		q->q_ctxl.pc_len = sizeof(struct ubsec_pktctx_long);
-		q->q_ctxl.pc_type = UBS_PKTCTX_TYPE_IPSEC;
-		q->q_ctxl.pc_flags = q->q_ctx.pc_flags;
-		q->q_ctxl.pc_offset = q->q_ctx.pc_offset;
-		for (i = 0; i < 6; i++)
-			q->q_ctxl.pc_deskey[i] = q->q_ctx.pc_deskey[i];
-		for (i = 0; i < 5; i++)
-			q->q_ctxl.pc_hminner[i] = q->q_ctx.pc_hminner[i];
-		for (i = 0; i < 5; i++)
-			q->q_ctxl.pc_hmouter[i] = q->q_ctx.pc_hmouter[i];   
-		q->q_ctxl.pc_iv[0] = q->q_ctx.pc_iv[0];
-		q->q_ctxl.pc_iv[1] = q->q_ctx.pc_iv[1];
-	} else
-		q->q_mcr->mcr_cmdctxp = vtophys(&q->q_ctx);
-
 	s = splnet();
 	SIMPLEQ_INSERT_TAIL(&sc->sc_queue, q, q_next);
 	sc->sc_nqueue++;
@@ -1007,7 +954,7 @@ errout:
 	if (q != NULL) {
 		if (q->q_mcr)
 			free(q->q_mcr, M_DEVBUF);
-		if (q->q_dst_m && q->q_src_m != q->q_dst_m)
+		if (q->q_src_m != q->q_dst_m)
 			m_freem(q->q_dst_m);
 		free(q, M_DEVBUF);
 	}
@@ -1035,15 +982,9 @@ ubsec_callback(q)
 			if (crd->crd_alg != CRYPTO_DES_CBC &&
 			    crd->crd_alg != CRYPTO_3DES_CBC)
 				continue;
-			if (crp->crp_flags & CRYPTO_F_IMBUF)
-				m_copydata((struct mbuf *)crp->crp_buf,
-				    crd->crd_skip + crd->crd_len - 8, 8,
-				    (caddr_t)q->q_sc->sc_sessions[q->q_sesn].ses_iv);
-			else if (crp->crp_flags & CRYPTO_F_IOV) {
-				cuio_copydata((struct uio *)crp->crp_buf,
-				    crd->crd_skip + crd->crd_len - 8, 8,
-				    (caddr_t)q->q_sc->sc_sessions[q->q_sesn].ses_iv);
-			}
+			m_copydata((struct mbuf *)crp->crp_buf,
+			    crd->crd_skip + crd->crd_len - 8, 8,
+			    (caddr_t)q->q_sc->sc_sessions[q->q_sesn].ses_iv);
 			break;
 		}
 	}
@@ -1052,11 +993,8 @@ ubsec_callback(q)
 		if (crd->crd_alg != CRYPTO_MD5_HMAC &&
 		    crd->crd_alg != CRYPTO_SHA1_HMAC)
 			continue;
-		if (crp->crp_flags & CRYPTO_F_IMBUF)
-			m_copyback((struct mbuf *)crp->crp_buf,
-			    crd->crd_inject, 12, (caddr_t)q->q_macbuf);
-		else if (crp->crp_flags & CRYPTO_F_IOV && crp->crp_mac)
-			bcopy((caddr_t)q->q_macbuf, crp->crp_mac, 12);
+		m_copyback((struct mbuf *)crp->crp_buf,
+		    crd->crd_inject, 12, (caddr_t)q->q_macbuf);
 		break;
 	}
 
@@ -1166,7 +1104,6 @@ ubsec_rng(vsc)
 	int s;
 
 	s = splnet();
-	sc->sc_nqueue2++;
 	if (sc->sc_nqueue2 >= UBS_MAX_NQUEUE) {
 		splx(s);
 		goto out;
@@ -1201,6 +1138,7 @@ ubsec_rng(vsc)
 
 	s = splnet();
 	SIMPLEQ_INSERT_TAIL(&sc->sc_queue2, q, q_next);
+	sc->sc_nqueue2++;
 	ubsec_feed2(sc);
 	splx(s);
 
@@ -1210,8 +1148,5 @@ out:
 	/*
 	 * Something weird happened, generate our own call back.
 	 */
-	s = splnet();
-	sc->sc_nqueue2--;
-	splx(s);
 	timeout_add(&sc->sc_rngto, 1);
 }

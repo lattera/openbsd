@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pckbcvar.h,v 1.1 2000/11/13 20:12:34 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pckbcvar.h,v 1.1.4.1 2001/05/14 22:24:07 niklas Exp $ */
 /* $NetBSD: pckbcvar.h,v 1.4 2000/06/09 04:58:35 soda Exp $ */
 
 /*

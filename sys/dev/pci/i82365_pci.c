@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3 2000/09/04 17:07:52 mickey Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/i82365_pci.c,v 1.3.6.1 2001/05/14 22:25:42 niklas Exp $ */
 /*	$NetBSD: i82365_pci.c,v 1.11 2000/02/24 03:42:44 itohy Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.25 2000/02/03 19:42:19 angelos Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/com_pcmcia.c,v 1.25.2.1 2001/05/14 22:26:05 niklas Exp $	*/
 /*	$NetBSD: com_pcmcia.c,v 1.15 1998/08/22 17:47:58 msaitoh Exp $	*/
 
 /*
@@ -225,8 +225,9 @@ com_pcmcia_match(parent, match, aux)
 	    i++) {
 		for (j = 0; j < 4; j++)
 			if (com_pcmcia_prod[i].cis1_info[j] &&
-			    strcmp(com_pcmcia_prod[i].cis1_info[j],
-			    pa->card->cis1_info[j]))
+			    pa->card->cis1_info[j] &&
+			    strcmp(pa->card->cis1_info[j],
+			    com_pcmcia_prod[i].cis1_info[j]))
 				break;
 		if (j == 4)
 			return 1;
@@ -249,13 +250,13 @@ com_pcmcia_activate(dev, act)
 		pcmcia_function_enable(sc->sc_pf);
 		printf("%s:", sc->sc_com.sc_dev.dv_xname);
 		sc->sc_ih = pcmcia_intr_establish(sc->sc_pf, IPL_TTY,
-						  comintr, sc);
+		    comintr, sc);
 		printf("\n");
 		break;
 
 	case DVACT_DEACTIVATE:
-		pcmcia_function_disable(sc->sc_pf);
 		pcmcia_intr_disestablish(sc->sc_pf, sc->sc_ih);
+		pcmcia_function_disable(sc->sc_pf);
 		break;
 	}
 	splx(s);
@@ -331,10 +332,9 @@ found:
 	sc->sc_iobase = -1;
 	sc->enable = com_pcmcia_enable;
 	sc->disable = com_pcmcia_disable;
-	
-#ifdef notyet
 	sc->sc_frequency = COM_FREQ;
 
+#ifdef notyet
 	com_attach_subr(sc);
 #endif
 	/* establish the interrupt. */
@@ -421,8 +421,8 @@ com_pcmcia_disable(sc)
 {
 	struct com_pcmcia_softc *psc = (struct com_pcmcia_softc *) sc;
 
-	com_pcmcia_disable1(sc);
 	pcmcia_intr_disestablish(psc->sc_pf, psc->sc_ih);
+	com_pcmcia_disable1(sc);
 }
 
 void

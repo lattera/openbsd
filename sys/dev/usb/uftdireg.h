@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uftdireg.h,v 1.2 2001/02/20 04:15:29 nate Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/usb/uftdireg.h,v 1.2.4.1 2001/05/14 22:26:21 niklas Exp $ 	*/
 /*
  * Definitions for the FTDI USB Single Port Serial Converter - 
  * known as FTDI_SIO (Serial Input/Output application of the chipset) 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/sequencer.c,v 1.2 1999/07/23 13:18:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/sequencer.c,v 1.2.4.1 2001/05/14 22:23:03 niklas Exp $	*/
 /*	$NetBSD: sequencer.c,v 1.13 1998/11/25 22:17:07 augustss Exp $	*/
 
 /*
@@ -68,7 +68,7 @@
 #define ADDTIMEVAL(a, b) ( \
 	(a)->tv_sec += (b)->tv_sec, \
 	(a)->tv_usec += (b)->tv_usec, \
-	(a)->tv_usec > 1000000 ? ((a)->tv_sec++, (a)->tv_usec -= 1000000) : 0\
+	(a)->tv_usec >= 1000000 ? ((a)->tv_sec++, (a)->tv_usec -= 1000000) : 0\
 	)
 
 #define SUBTIMEVAL(a, b) ( \
@@ -211,6 +211,7 @@ sequenceropen(dev, flags, ifmt, p)
 	SEQ_QINIT(&sc->inq);
 	SEQ_QINIT(&sc->outq);
 	sc->lowat = SEQ_MAXQ / 2;
+	timeout_set(&sc->timo, seq_timeout, sc);
 
 	seq_reset(sc);
 
@@ -320,7 +321,7 @@ sequencerclose(dev, flags, ifmt, p)
 	seq_drain(sc);
 	s = splaudio();
 	if (sc->timeout) {
-		untimeout(seq_timeout, sc);
+		timeout_del(&sc->timo);
 		sc->timeout = 0;
 	}
 	splx(s);
@@ -894,7 +895,7 @@ seq_timer(sc, cmd, parm, b)
 			}
 #endif
 			sc->timeout = 1;
-			timeout(seq_timeout, sc, ticks);
+			timeout_add(&sc->timo, ticks);
 		}
 #ifdef SEQUENCER_DEBUG
 		else if (tick < 0)

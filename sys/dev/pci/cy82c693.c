@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cy82c693.c,v 1.4 2001/02/26 16:21:46 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cy82c693.c,v 1.4.4.1 2001/05/14 22:25:39 niklas Exp $	*/
 /* $NetBSD: cy82c693.c,v 1.1 2000/06/06 03:07:39 thorpej Exp $ */
 
 /*-

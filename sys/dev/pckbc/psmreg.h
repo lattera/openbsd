@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/Attic/psmreg.h,v 1.2 2001/02/02 20:20:08 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/Attic/psmreg.h,v 1.2.4.1 2001/05/14 22:26:05 niklas Exp $ */
 /* $NetBSD: psmreg.h,v 1.1 1998/03/22 15:41:28 drochner Exp $ */
 
 /* mouse commands */

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tgareg.h,v 1.4 2001/03/18 04:37:21 nate Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tgareg.h,v 1.4.4.1 2001/05/14 22:25:58 niklas Exp $ */
 /* $NetBSD: tgareg.h,v 1.3 2000/03/04 10:28:00 elric Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/cardslot.c,v 1.1 2000/04/08 05:50:52 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/cardslot.c,v 1.1.8.1 2001/05/14 22:23:11 niklas Exp $ */
 /*	$NetBSD: cardslot.c,v 1.9 2000/03/22 09:35:06 haya Exp $	*/
 
 /*

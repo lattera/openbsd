@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rln_pcmcia.c,v 1.9 2000/02/05 13:55:45 d Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rln_pcmcia.c,v 1.9.2.1 2001/05/14 22:26:07 niklas Exp $	*/
 /*
  * David Leonard <d@openbsd.org>, 1999. Public domain.
  *
@@ -107,7 +107,8 @@ rln_pcmcia_product_lookup(pa)
 		for (j = 0; j < 4; j++) {
 			if (rpp->cis[j] == NULL)
 				return rpp;
-			if (strcmp(pa->card->cis1_info[j], rpp->cis[j]) != 0)
+			if (pa->card->cis1_info[j] &&
+			    strcmp(pa->card->cis1_info[j], rpp->cis[j]) != 0)
 				break;
 		}
 		if (j == 4)
@@ -285,8 +286,8 @@ rln_pcmcia_activate(dev, act)
 		ifp->if_timer = 0;
 		if (ifp->if_flags & IFF_RUNNING)
 			rlnstop(sc);
-		pcmcia_function_disable(psc->psc_pf);
 		pcmcia_intr_disestablish(psc->psc_pf, psc->psc_ih);
+		pcmcia_function_disable(psc->psc_pf);
 		break;
 	}
 	splx(s);

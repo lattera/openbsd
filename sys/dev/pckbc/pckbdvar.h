@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pckbdvar.h,v 1.1 2000/11/13 20:12:35 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pckbdvar.h,v 1.1.4.1 2001/05/14 22:26:04 niklas Exp $ */
 /* $NetBSD: pckbdvar.h,v 1.3 2000/03/10 06:10:35 thorpej Exp $ */
 
 int	pckbd_cnattach __P((pckbc_tag_t, int));

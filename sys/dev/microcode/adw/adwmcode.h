@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.h,v 1.1 2001/04/11 03:55:00 krw Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/adw/adwmcode.h,v 1.1.4.1 2001/05/14 22:24:57 niklas Exp $ */
 /*      $NetBSD: adwmcode.h,v 1.5 2000/05/27 18:24:51 dante Exp $        */
 
 /*

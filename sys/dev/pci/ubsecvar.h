@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/ubsecvar.h,v 1.15 2001/05/14 02:45:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/ubsecvar.h,v 1.15.2.1 2001/05/14 22:26:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Theo de Raadt
@@ -33,7 +33,7 @@ struct ubsec_softc {
 	bus_space_handle_t	sc_sh;		/* memory handle */
 	bus_space_tag_t		sc_st;		/* memory tag */
 	bus_dma_tag_t		sc_dmat;	/* dma tag */
-	int			sc_flags;	/* device specific flags */
+	int			sc_5601;	/* device is 5601 */
 	u_int32_t		sc_statmask;	/* interrupt status mask */
 	int32_t			sc_cid;		/* crypto tag */
 	SIMPLEQ_HEAD(,ubsec_q)	sc_queue;	/* packet queue, mcr1 */
@@ -47,9 +47,6 @@ struct ubsec_softc {
 	struct timeout		sc_rngto;	/* rng timeout */
 };
 
-#define	UBS_FLAGS_KEY		0x01		/* has key accelerator */
-#define	UBS_FLAGS_LONGCTX	0x02		/* uses long ipsec ctx */
-
 struct ubsec_q {
 	SIMPLEQ_ENTRY(ubsec_q)		q_next;
 	struct cryptop			*q_crp;
@@ -57,11 +54,9 @@ struct ubsec_q {
 	struct ubsec_pktbuf		q_srcpkt[MAX_SCATTER-1];
 	struct ubsec_pktbuf		q_dstpkt[MAX_SCATTER-1];
 	struct ubsec_pktctx		q_ctx;
-	struct ubsec_pktctx_long	q_ctxl;
 
 	struct ubsec_softc		*q_sc;
 	struct mbuf 		      	*q_src_m, *q_dst_m;
-	struct uio			*q_src, *q_dst;
 
 	long				q_src_packp[MAX_SCATTER];
 	int				q_src_packl[MAX_SCATTER];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsksymvar.h,v 1.3 2001/03/08 07:42:20 maja Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsksymvar.h,v 1.3.4.1 2001/05/14 22:26:32 niklas Exp $	*/
 /*	$NetBSD: wsksymvar.h,v 1.8.4.1 2000/07/07 09:50:21 hannken Exp $ */
 
 /*-

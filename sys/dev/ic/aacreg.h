@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aacreg.h,v 1.2 2000/12/06 21:16:45 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aacreg.h,v 1.2.4.1 2001/05/14 22:23:19 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith

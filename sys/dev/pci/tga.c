@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6 2001/03/19 00:18:05 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.1 2001/05/14 22:25:57 niklas Exp $ */
 /* $NetBSD: tga.c,v 1.31 2001/02/11 19:34:58 nathanw Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsmoused.h,v 1.1 2001/04/14 04:44:02 aaron Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsmoused.h,v 1.1.4.1 2001/05/14 22:26:33 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Baptiste Marchand, Julien Montagne and Jerome Verdon

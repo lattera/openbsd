@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.15 2001/04/17 04:34:08 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/an.c,v 1.15.4.1 2001/05/14 22:23:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

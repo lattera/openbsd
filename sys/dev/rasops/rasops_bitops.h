@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rasops/rasops_bitops.h,v 1.1 2001/03/18 04:32:45 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/rasops/rasops_bitops.h,v 1.1.4.1 2001/05/14 22:26:16 niklas Exp $ */
 /* 	$NetBSD: rasops_bitops.h,v 1.6 2000/04/12 14:22:30 pk Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/stivar.h,v 1.3 2001/03/20 08:32:20 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/stivar.h,v 1.3.4.1 2001/05/14 22:24:16 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff

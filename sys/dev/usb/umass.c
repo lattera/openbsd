@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10 2001/02/24 00:06:32 mickey Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umass.c,v 1.10.4.1 2001/05/14 22:26:23 niklas Exp $ */
 /*	$NetBSD: umass.c,v 1.49 2001/01/21 18:56:38 augustss Exp $	*/
 /*-
  * Copyright (c) 1999 MAEKAWA Masahide <bishop@rr.iij4u.or.jp>,

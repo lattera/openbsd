@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50 2000/02/08 01:25:02 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.1 2001/05/14 22:25:50 niklas Exp $	*/
 /*	$NetBSD: ncr.c,v 1.63 1997/09/23 02:39:15 perry Exp $	*/
 
 /**************************************************************************
@@ -210,8 +210,6 @@
 #else
 #include <stddef.h>
 #endif
-
-#define	offsetof(type, member)	((size_t)(&((type *)0)->member))
 
 #include <sys/param.h>
 #include <sys/time.h>
@@ -1466,7 +1464,7 @@ static	void	ncr_attach	(pcici_t tag, int unit);
 
 #if 0
 static char ident[] =
-	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50 2000/02/08 01:25:02 millert Exp $\n";
+	"\n$OpenBSD: src/sys/dev/pci/Attic/ncr.c,v 1.50.2.1 2001/05/14 22:25:50 niklas Exp $\n";
 #endif
 
 static const u_long	ncr_version = NCR_VERSION	* 11
@@ -1507,7 +1505,10 @@ static int ncr_cache; /* to be aligned _NOT_ static */
 #define	NCR_875_ID2	(0x008f1000ul)
 #define	NCR_885_ID	(0x000d1000ul)
 #define	NCR_895_ID	(0x000c1000ul)
+#define	NCR_895A_ID	(0x00121000ul)
 #define	NCR_896_ID	(0x000b1000ul)
+#define	NCR_1510_ID	(0x00101000ul)
+#define	NCR_1510D_ID	(0x000a1000ul)
 
 #ifdef __OpenBSD__
 
@@ -3489,7 +3490,16 @@ static ncr_chip ncr_chip_table[] = {
  {NCR_895_ID, 0x00,	7, 31, 7,
  FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_DFS|FE_LDSTR|FE_PFEN|FE_RAM}
  ,
+ {NCR_895A_ID, 0x00,	7, 31, 7,
+ FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_DFS|FE_LDSTR|FE_PFEN|FE_RAM}
+ ,
  {NCR_896_ID, 0x00,	7, 31, 7,
+ FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_DFS|FE_LDSTR|FE_PFEN|FE_RAM}
+ ,
+ {NCR_1510_ID, 0x00,	7, 31, 7,
+ FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_DFS|FE_LDSTR|FE_PFEN|FE_RAM}
+ ,
+ {NCR_1510D_ID, 0x00,	7, 31, 7,
  FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_DFS|FE_LDSTR|FE_PFEN|FE_RAM}
 };
 
@@ -6357,7 +6367,7 @@ static void ncr_int_ma (ncb_p np, u_char dstat)
 
 
 	/*
-	**	The data in the dma fifo has not been transfered to
+	**	The data in the dma fifo has not been transferred to
 	**	the target -> add the amount to the rest
 	**	and clear the data.
 	**	Check the sstat2 register in case of wide transfer.

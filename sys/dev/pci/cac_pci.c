@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3 2001/04/16 03:18:19 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cac_pci.c,v 1.3.4.1 2001/05/14 22:25:35 niklas Exp $	*/
 /*	$NetBSD: cac_pci.c,v 1.10 2001/01/10 16:48:04 ad Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cmpcivar.h,v 1.2 2000/08/26 13:07:50 kevlo Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cmpcivar.h,v 1.2.6.1 2001/05/14 22:25:36 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Takuya SHIOZAKI

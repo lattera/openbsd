@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/eisa/cac_eisa.c,v 1.1 2000/12/17 21:35:03 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/eisa/cac_eisa.c,v 1.1.4.1 2001/05/14 22:23:15 niklas Exp $	*/
 /*	$NetBSD: cac_eisa.c,v 1.1 2000/09/01 12:15:20 ad Exp $	*/
 
 /*-

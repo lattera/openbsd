@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/audiovar.h,v 1.6 1998/11/03 21:00:11 downsj Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/audiovar.h,v 1.6.6.1 2001/05/14 22:23:00 niklas Exp $	*/
 /*	$NetBSD: audiovar.h,v 1.18 1998/03/03 09:16:16 augustss Exp $	*/
 
 /*
@@ -49,7 +49,7 @@
 
 #define AUMINBUF 512
 #define AUMINBLK 32
-#define AUMINNOBLK 3
+#define AUMINNOBLK 2
 struct audio_ringbuffer {
 	int	bufsize;	/* allocated memory */
 	int	blksize;	/* I/O block size */
@@ -132,6 +132,9 @@ struct audio_softc {
 
 	struct	au_mixer_ports sc_inports, sc_outports;
 	int	sc_monitor_port;
+
+        int     sc_refcnt;
+        int     sc_dying;
 
 #ifdef AUDIO_INTR_TIME
 	u_long	sc_pfirstintr;	/* first time we saw a play interrupt */

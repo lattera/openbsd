@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1 2001/04/11 06:47:31 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1.4.1 2001/05/14 22:25:19 niklas Exp $	*/
 /*	$NetBSD: nsphy.c,v 1.25 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*

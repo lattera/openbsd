@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/mii/eephyreg.h,v 1.1 2001/04/13 00:25:02 mjacob Exp $ */
+/* $OpenBSD: src/sys/dev/mii/eephyreg.h,v 1.1.4.1 2001/05/14 22:25:21 niklas Exp $ */
 /*
  * Principal Author: Parag Patel
  * Copyright (c) 2001

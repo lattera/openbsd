@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.2 2000/03/02 07:04:39 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sf.c,v 1.4.2.3 2001/05/14 22:25:46 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $FreeBSD: src/sys/pci/if_sf.c,v 1.18 1999/12/05 20:02:44 wpaul Exp $
+ * $FreeBSD: src/sys/pci/if_sf.c,v 1.23 2000/07/14 19:11:02 wpaul Exp $
  */
 
 /*
@@ -91,6 +91,7 @@
 #include <sys/errno.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/timeout.h>
 
 #include <net/if.h>
 #include <net/if_dl.h>
@@ -749,7 +750,8 @@ void sf_attach(parent, self, aux)
 	sc->sc_mii.mii_writereg = sf_miibus_writereg;
 	sc->sc_mii.mii_statchg = sf_miibus_statchg;
 	ifmedia_init(&sc->sc_mii.mii_media, 0, sf_ifmedia_upd, sf_ifmedia_sts);
-	mii_phy_probe(self, &sc->sc_mii, 0xffffffff);
+	mii_attach(self, &sc->sc_mii, 0xffffffff, MII_PHY_ANY, MII_OFFSET_ANY,
+	    0);
 	if (LIST_FIRST(&sc->sc_mii.mii_phys) == NULL) {
 		ifmedia_add(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE, 0, NULL);
 		ifmedia_set(&sc->sc_mii.mii_media, IFM_ETHER|IFM_NONE);
@@ -762,10 +764,6 @@ void sf_attach(parent, self, aux)
 	if_attach(ifp);
 	ether_ifattach(ifp);
 
-#if NBPFILTER > 0
-	bpfattach(&sc->arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
-		  sizeof(struct ether_header));
-#endif
 	shutdownhook_establish(sf_shutdown, sc);
 
 fail:
@@ -1025,7 +1023,7 @@ int sf_intr(arg)
 
 		if (status & SF_ISR_ABNORMALINTR) {
 			if (status & SF_ISR_STATSOFLOW) {
-				untimeout(sf_stats_update, sc);
+				timeout_del(&sc->sc_stats_tmo);
 				sf_stats_update(sc);
 			} else
 				sf_init(sc);
@@ -1095,6 +1093,11 @@ void sf_init(xsc)
 		SF_CLRBIT(sc, SF_RXFILT, SF_RXFILT_BROAD);
 	}
 
+	/*
+	 * Load the multicast filter.
+	 */
+	sf_setmulti(sc);
+
 	/* Init the completion queue indexes */
 	csr_write_4(sc, SF_CQ_CONSIDX, 0);
 	csr_write_4(sc, SF_CQ_PRODIDX, 0);
@@ -1141,9 +1144,10 @@ void sf_init(xsc)
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
 
-	timeout(sf_stats_update, sc, hz);
-
 	splx(s);
+
+	timeout_set(&sc->sc_stats_tmo, sf_stats_update, sc);
+	timeout_add(&sc->sc_stats_tmo, hz);
 
 	return;
 }
@@ -1277,7 +1281,7 @@ void sf_stop(sc)
 
 	ifp = &sc->arpcom.ac_if;
 
-	untimeout(sf_stats_update, sc);
+	timeout_del(&sc->sc_stats_tmo);
 
 	csr_write_4(sc, SF_GEN_ETH_CTL, 0);
 	csr_write_4(sc, SF_CQ_CONSIDX, 0);
@@ -1356,9 +1360,9 @@ void sf_stats_update(xsc)
 			sf_start(ifp);
 	}
 
-	timeout(sf_stats_update, sc, hz);
-
 	splx(s);
+
+	timeout_add(&sc->sc_stats_tmo, hz);
 
 	return;
 }

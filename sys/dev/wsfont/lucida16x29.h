@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wsfont/lucida16x29.h,v 1.1 2001/03/18 04:30:23 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/wsfont/lucida16x29.h,v 1.1.4.1 2001/05/14 22:26:34 niklas Exp $ */
 /*	 $NetBSD: lucida16x29.h,v 1.3 1999/05/18 21:51:58 ad Exp $ */
 
 /*

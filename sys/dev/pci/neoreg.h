@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/neoreg.h,v 1.1 2000/04/13 00:10:52 csapuntz Exp $       */
+/*      $OpenBSD: src/sys/dev/pci/neoreg.h,v 1.1.8.1 2001/05/14 22:25:51 niklas Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/cardbus_exrom.h,v 1.1 2000/04/08 05:50:52 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/cardbus_exrom.h,v 1.1.8.1 2001/05/14 22:23:09 niklas Exp $ */
 /* $NetBSD: cardbus_exrom.h,v 1.2 1999/12/15 12:28:54 kleink Exp $ */
 
 /*

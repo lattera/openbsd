@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/microcode/isp/asm_1040.h,v 1.2 2001/02/12 23:16:57 mjacob Exp $ */
+/* $OpenBSD: src/sys/dev/microcode/isp/asm_1040.h,v 1.2.4.1 2001/05/14 22:24:59 niklas Exp $ */
 /*
  * Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000 Qlogic, Inc.
  * All rights reserved.

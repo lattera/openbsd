@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofnet.c,v 1.3 1999/10/28 04:25:25 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofnet.c,v 1.3.2.1 2001/05/14 22:25:31 niklas Exp $	*/
 /*	$NetBSD: ofnet.c,v 1.4 1996/10/16 19:33:21 ws Exp $	*/
 
 /*
@@ -164,11 +164,6 @@ printf("\nethernet dev: path %s\n", path);
 
 	if_attach(ifp);
 	ether_ifattach(ifp);
-
-#if NBPFILTER > 0
-	bpfattach(&of->sc_arpcom.ac_if.if_bpf, ifp, DLT_EN10MB,
-		  sizeof(struct ether_header));
-#endif
 
 	dk_establish(0, self);					/* XXX */
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13 2001/04/06 17:14:14 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.1 2001/05/14 22:25:43 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

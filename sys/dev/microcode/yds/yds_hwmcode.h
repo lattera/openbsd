@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/yds/yds_hwmcode.h,v 1.3 2001/04/16 08:16:40 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/microcode/yds/yds_hwmcode.h,v 1.3.4.1 2001/05/14 22:25:17 niklas Exp $	*/
 
 /*=============================================================================
  Copyright (c) 1997-1999  Yamaha Corporation. All Rights Reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/spkr.c,v 1.2 1999/01/02 00:58:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/spkr.c,v 1.2.6.1 2001/05/14 22:24:52 niklas Exp $	*/
 /*	$NetBSD: spkr.c,v 1.1 1998/04/15 20:26:18 drochner Exp $	*/
 
 /*
@@ -62,7 +62,7 @@ void tone(hz, ticks)
 /* emit tone of frequency hz for given number of ticks */
     u_int hz, ticks;
 {
-	pcppi_bell(ppicookie, hz, ticks, 1);
+	pcppi_bell(ppicookie, hz, ticks, PCPPI_BELL_SLEEP);
 }
 
 static void
@@ -172,7 +172,7 @@ playtone(pitch, value, sustain)
 
     if (pitch == -1)
 	rest(whole * snum / (value * sdenom));
-    else
+    else if (pitch >= 0 && pitch < (sizeof(pitchtab) / sizeof(pitchtab[0])))
     {
 	sound = (whole * snum) / (value * sdenom)
 		- (whole * (FILLTIME - fill)) / (value * FILLTIME);

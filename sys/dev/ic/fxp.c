@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13 2001/04/06 04:42:05 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/fxp.c,v 1.13.4.1 2001/05/14 22:23:47 niklas Exp $	*/
 /*	$NetBSD: if_fxp.c,v 1.2 1997/06/05 02:01:55 thorpej Exp $	*/
 
 /*

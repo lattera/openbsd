@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_opti_reg.h,v 1.1 2000/06/13 03:56:42 chris Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_opti_reg.h,v 1.1.6.1 2001/05/14 22:25:55 niklas Exp $	*/
 /*	$NetBSD: pciide_opti_reg.h,v 1.2 2000/06/07 20:42:53 scw Exp $	*/
 
 /*-

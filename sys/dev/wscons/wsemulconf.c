@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemulconf.c,v 1.3 2001/03/14 02:49:23 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemulconf.c,v 1.3.4.1 2001/05/14 22:26:31 niklas Exp $ */
 /* $NetBSD: wsemulconf.c,v 1.4 2000/01/05 11:19:37 drochner Exp $ */
 
 /*

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1.2.1 2000/03/24 09:09:21 niklas Exp $	*/
-/*	$NetBSD: if_rayreg.h,v 1.2 2000/02/27 20:40:43 augustss Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1.2.2 2001/05/14 22:26:07 niklas Exp $	*/
+/*	$NetBSD: if_rayreg.h,v 1.3 2000/08/10 11:48:46 ad Exp $	*/
 
 /* 
  * Copyright (c) 2000 Christian E. Hopps

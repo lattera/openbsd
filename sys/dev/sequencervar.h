@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/sequencervar.h,v 1.1 1999/01/02 00:02:39 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/sequencervar.h,v 1.1.6.1 2001/05/14 22:23:04 niklas Exp $	*/
 /*	$NetBSD: sequencervar.h,v 1.5 1998/11/25 22:17:07 augustss Exp $	*/
 
 /*
@@ -89,6 +89,7 @@ struct sequencer_softc {
 	struct	selinfo wsel;	/* write selector */
 	struct	selinfo rsel;	/* read selector */
 	struct	proc *async;	/* process who wants audio SIGIO */
+	struct	timeout timo;	/* timeout handle */
 
 	char	doingsysex;	/* doing a SEQ_SYSEX */
 

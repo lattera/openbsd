@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/tcic2_isa.c,v 1.1 2000/05/15 04:17:29 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/tcic2_isa.c,v 1.1.6.1 2001/05/14 22:24:52 niklas Exp $	*/
 /*	$NetBSD: tcic2_isa.c,v 1.2 1999/04/08 16:14:29 bad Exp $	*/
 
 #undef	TCICISADEBUG

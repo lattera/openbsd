@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isasubr.c,v 1.10 1999/08/11 12:02:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/i82365_isasubr.c,v 1.10.4.1 2001/05/14 22:24:38 niklas Exp $	*/
 /*	$NetBSD: i82365_isasubr.c,v 1.1 1998/06/07 18:28:31 sommerfe Exp $  */
 
 /*
@@ -86,7 +86,7 @@ char	pcic_isa_intr_list[] = {
 };
 
 struct pcic_ranges pcic_isa_addr[] = {
-	{ 0x340, 0x040 },
+	{ 0x340, 0x030 },
 	{ 0x300, 0x030 },
 	{ 0x390, 0x020 },
 	{ 0x400, 0xbff },
@@ -192,8 +192,9 @@ pcic_isa_chip_intr_establish(pch, pf, ipl, fct, arg)
 	void *arg;
 {
 	struct pcic_handle *h = (struct pcic_handle *)pch;
-	isa_chipset_tag_t ic = h->sc->intr_est;
-	int irq, ist;
+	struct pcic_softc *sc = (struct pcic_softc *)(h->ph_parent);
+	isa_chipset_tag_t ic = sc->intr_est;
+	int irq, ist, reg;
 	void *ih;
 
 	if (pf->cfe->flags & PCMCIA_CFE_IRQLEVEL)
@@ -201,20 +202,21 @@ pcic_isa_chip_intr_establish(pch, pf, ipl, fct, arg)
 	else if (pf->cfe->flags & PCMCIA_CFE_IRQPULSE)
 		ist = IST_PULSE;
 	else
-		ist = IST_LEVEL;
+		ist = IST_EDGE;
 
-	irq = pcic_intr_find(h->sc, ist);
+	irq = pcic_intr_find(sc, ist);
 	if (!irq)
 		return (NULL);
+
+	h->ih_irq = irq;
+	reg = pcic_read(h, PCIC_INTR);
+	reg &= ~(PCIC_INTR_IRQ_MASK | PCIC_INTR_ENABLE);
+	pcic_write(h, PCIC_INTR, reg | irq);
 
 	ih = isa_intr_establish(ic, irq, ist, ipl, fct, arg,
 	    h->pcmcia->dv_xname);
 	if (!ih)
 		return (NULL);
-
-	h->ih_irq = irq;
-	pcic_write(h, PCIC_INTR,
-	    (pcic_read(h, PCIC_INTR) & ~PCIC_INTR_IRQ_MASK) | irq);
 
 	printf(" irq %d", irq);
 	return (ih);
@@ -226,16 +228,17 @@ pcic_isa_chip_intr_disestablish(pch, ih)
 	void *ih;
 {
 	struct pcic_handle *h = (struct pcic_handle *) pch;
-	isa_chipset_tag_t ic = h->sc->intr_est;
+	struct pcic_softc *sc = (struct pcic_softc *)(h->ph_parent);
+	isa_chipset_tag_t ic = sc->intr_est;
 	int reg;
 
 	h->ih_irq = 0;
 
+	isa_intr_disestablish(ic, ih);
+
 	reg = pcic_read(h, PCIC_INTR);
 	reg &= ~(PCIC_INTR_IRQ_MASK | PCIC_INTR_ENABLE);
 	pcic_write(h, PCIC_INTR, reg);
-
-	isa_intr_disestablish(ic, ih);
 }
 
 int
@@ -260,7 +263,7 @@ pcic_intr_find(sc, ist)
 {
 	struct pcic_handle *ph = &sc->handle[0];
 	isa_chipset_tag_t ic = sc->intr_est;
-	int i, tickle, check, irq, chosen_irq = 0;
+	int i, tickle, check, irq, chosen_irq = 0, csc_touched = 0;
 	void *ih;
 	u_int8_t saved_csc_intr;
 
@@ -310,6 +313,7 @@ pcic_intr_find(sc, ist)
 				    (saved_csc_intr & ~PCIC_CSC_INTR_IRQ_MASK)
 				    | PCIC_CSC_INTR_CD_ENABLE
 				    | (irq << PCIC_CSC_INTR_IRQ_SHIFT));
+				csc_touched = 1;
 
 				/* Teehee, you tickle me! ;-) */
 				pcic_write(ph, PCIC_CARD_DETECT,
@@ -334,13 +338,12 @@ pcic_intr_find(sc, ist)
 					goto out;
 				}
 			}
-
-			if (tickle)
-				/* Restore card detection bit. */
-				pcic_write(ph, PCIC_CSC_INTR, saved_csc_intr);
 		}
 	}
 
 out:
+	if (csc_touched)
+		/* Restore card detection bit. */
+		pcic_write(ph, PCIC_CSC_INTR, saved_csc_intr);
 	return (chosen_irq);
 }

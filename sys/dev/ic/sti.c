@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5 2001/03/20 08:32:20 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/sti.c,v 1.5.4.1 2001/05/14 22:24:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2001 Michael Shalayeff

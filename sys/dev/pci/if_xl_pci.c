@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7 2000/10/14 15:44:21 aaron Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_xl_pci.c,v 1.7.6.1 2001/05/14 22:25:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs_data.h,v 1.9 2001/01/27 21:16:11 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs_data.h,v 1.9.4.1 2001/05/14 22:23:11 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.

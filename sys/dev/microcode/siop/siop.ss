@@ -1,4 +1,4 @@
-;	$OpenBSD: src/sys/dev/microcode/siop/siop.ss,v 1.3 2001/04/15 06:01:32 krw Exp $
+;	$OpenBSD: src/sys/dev/microcode/siop/siop.ss,v 1.3.4.1 2001/05/14 22:25:17 niklas Exp $
 ;	$NetBSD: siop.ss,v 1.12 2000/10/23 14:53:53 bouyer Exp $
 
 ;
