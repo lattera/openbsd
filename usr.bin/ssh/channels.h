@@ -32,7 +32,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.7 2001/11/15 00:14:59 miod Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.8 2001/11/15 22:50:30 miod Exp $"); */
 
 #ifndef CHANNEL_H
 #define CHANNEL_H
@@ -56,7 +56,7 @@
 #define SSH_CHANNEL_ZOMBIE		14	/* Almost dead. */
 #define SSH_CHANNEL_MAX_TYPE		15
 
-#define SSH_CHANNEL_PATH_LEN		30
+#define SSH_CHANNEL_PATH_LEN		256
 
 struct Channel;
 typedef struct Channel Channel;

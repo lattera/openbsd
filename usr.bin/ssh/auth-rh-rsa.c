@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.17.2.5 2001/09/27 00:15:41 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.17.2.6 2001/11/15 22:50:30 miod Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -24,7 +24,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth-rh-rsa.c,v 1.17.2.5 2001/09/27 00:15:41 mi
 #include "hostfile.h"
 #include "pathnames.h"
 #include "auth.h"
-#include "tildexpand.h"
 #include "canohost.h"
 
 /*
