@@ -1,0 +1,147 @@
+.Dd February 25, 2000
+.Dt MG 1
+.Os
+.Sh NAME
+.Nm mg
+.Nd emacs-like text editor
+.Sh SYNOPSIS
+.Nm mg
+.Op Ar
+.Sh DESCRIPTION
+.Nm
+is intended to be a small, fast, and portable editor for
+people who can't (or don't want to) run the real emacs for one
+reason or another, or are not familiar with the
+.Xr vi 1
+editor.
+It is compatible with emacs because there shouldn't
+be any reason to learn more editor types than emacs or
+.Xr vi 1 .
+.Pp
+Normal editing commands are very similar to Gnu Emacs.
+In the following examples, ^X means control-X, and M-X means Meta-X,
+where the Meta key may be either a special key on your keyboard
+or the ALT key; otherwise ESC followed by the key X works as well.
+.Pp
+.Bl -tag -width xxxxx -compact
+.It ^f
+Forward character
+.It ^b
+Backwards character
+.It ^n
+Next line
+.It ^p
+Previous line
+.It ^a
+Start of line
+.It ^e
+End of line
+.It ^d
+delete current character
+.It ^s
+interactive search forward
+.It ^r
+interactive search backwards
+.It ^o
+Open a new line at cursor position
+.It ^t
+transpose characters
+.It ^u
+Repeat next command 4 times (can be cascaded, ie. ^u^u^f will move 16 characters forward)
+.Pp
+.It ^k
+kill to end of line (placing into kill buffer)
+.It ^y
+yank kill buffer into current location
+.It ^@
+set mark
+.It ^w
+kill region (cuts from previously set mark to current location, into kill buffer)
+.It M-w
+copy region (into kill buffer)
+.Pp
+.It ^v
+Next page
+.It M-v
+Previous page
+.It M-<
+start of buffer
+.It M->
+end of buffer
+.Pp
+.It ^x^c
+Quit (you will be asked if you want to save files)
+.El
+.Pp
+For more key bindings, type
+.Dq M-x describe-bindings .
+.Pp
+.Nm
+differs primarily in not having special modes for tasks other than
+straight editing, e.g., mail and news, and in not having special modes that
+support various programming languages.
+It does have text justification
+and auto-fill mode.
+Since it is written completely in C, there is no
+language in which you can write extensions.
+However, you can rebind keys and change some parameters.
+There are no limits to line length or format.
+Command, buffer, and file name completion and listing can
+be done using the spacebar and
+.Ql ? ,
+respectively.
+.Pp
+Amonst other major differences, the
+.Nm
+configuration files are much simpler than real emacs.
+There are two configuration files,
+.Pa .mg ,
+and
+.Pa .mg-TERM .
+Here,
+.Ev TERM
+represents the name of you terminal type; e.g., if your terminal type
+is set to
+.Dq vt100 ,
+.Nm
+will use
+.Pa .mg-vt100
+as a startup file.
+The terminal type startup file is used first.
+See the manual for a full list of the commands that can
+go in the files.
+.Pp
+Here's another example sequence that you may find useful.
+By default,
+.Dq ()
+and
+.Dq []
+are recognized as brackets, so bracket matching can be done.
+The following defines
+.Dq {}
+as brackets, and turns on the mode that causes
+the cursor to "blink" to show you matching brackets.
+.Bd -literal -offset indent
+global-set-key } blink-matching-paren-hack
+blink-matching-paren
+set-default-mode blink
+.Ed
+.Sh FILES
+.Bl -tag -width xxxx -compact
+.It Pa ~/.mg
+normal startup file
+.It Pa ~/.mg-TERM
+terminal-specific startup file
+.El
+.Sh SEE ALSO
+.Xr vi 1
+.Sh BUGS
+When you type
+.Ql ?
+to list possible file names, buffer names, etc.,
+a help buffer is created for the possibilities.
+In Gnu Emacs,
+this buffer goes away the next time you type a real command.
+In
+.Nm mg ,
+you must use "M-x 1" to get rid of it.
