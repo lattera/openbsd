@@ -1,0 +1,120 @@
+.\"	$OpenBSD: src/usr.bin/tsort/tsort.1,v 1.8 2001/04/07 14:17:37 espie Exp $
+.\"	$NetBSD: tsort.1,v 1.6 1996/01/17 20:37:49 mycroft Exp $
+.\"
+.\" Copyright (c) 1990, 1993, 1994
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" This manual is derived from one contributed to Berkeley by
+.\" Michael Rendell of Memorial University of Newfoundland.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)tsort.1	8.3 (Berkeley) 4/1/94
+.\"
+.Dd November 1, 1999
+.Dt TSORT 1
+.Os
+.Sh NAME
+.Nm tsort
+.Nd topological sort of a directed graph
+.Sh SYNOPSIS
+.Nm tsort
+.Op Fl f
+.Op Fl h Ar file
+.Op Fl l
+.Op Fl q
+.Op Fl r
+.Op Fl w
+.Op Ar file
+.Sh DESCRIPTION
+.Nm tsort
+takes a list of pairs of node names representing directed arcs in
+a graph and prints the nodes in topological order on standard output.
+Input is taken from the named
+.Ar file ,
+or from standard input if no file
+is given.
+.Pp
+Node names in the input are separated by white space and there must
+be an even number of node pairs.
+.Pp
+Presence of a node in a graph can be represented by an arc from the node
+to itself.
+This is useful when a node is not connected to any other nodes.
+.Pp
+If the graph contains a cycle (and therefore cannot be properly sorted),
+one of the arcs in the cycle is ignored and the sort continues.
+Cycles are reported on standard error.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl f
+Resolve ambiguities by selecting nodes based on the order of apparition
+of the first component of the pairs.
+.It Fl h Ar file
+Use
+.Ar file ,
+which holds an ordered list of nodes, to resolve ambiguities.
+In case of duplicates, the first entry is chosen.
+.It Fl l
+Search for and display the longest cycle.
+.It Fl q
+Do not display informational messages about cycles.  
+This is primarily intended for building libraries, where optimal ordering 
+is not critical, and cycles occur often.
+.It Fl r
+Reverse the ordering relation.
+.It Fl v
+Inform on the exact number of edges broken while breaking cycles.
+If a hints file was used, inform on seen nodes absent from that file.
+.It Fl w
+Exit with exit code the number of cycles
+.Nm
+had to break.
+.El
+.Sh SEE ALSO
+.Xr ar 1 ,
+.Xr lorder 1 ,
+.Rs
+.%A Donald E. Knuth
+.%B The Art of Computer Programming
+.%V Vol. 1
+.%P pp 258-268
+.%D 1973
+.Re
+.Sh HISTORY
+A
+.Nm
+command appeared in
+.At v7 .
+This
+.Nm tsort
+command was completely rewritten by Marc Espie for
+.Ox ,
+to finally use the well-known optimal algorithms for topological sorting.
