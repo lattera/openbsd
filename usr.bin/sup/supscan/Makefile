@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1 1995/12/16 11:47:07 deraadt Exp $
+#	$Id: Makefile,v 1.2 1995/12/17 12:58:17 deraadt Exp $
 
 PROG=	supscan
 NOMAN=
@@ -10,7 +10,7 @@ DPADD+=	${LIBUTIL}
 BINOWN=	root
 BINGRP=	daemon
 BINMODE=555
-BINDIR=	/usr/bin
+BINDIR=	/usr/sbin
 CFLAGS+=-I${.CURDIR}/../src
 .PATH:	${.CURDIR}/../src
 
