@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/lpr/lpd/recvjob.c,v 1.15 2001/08/30 17:38:13 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/lpr/lpd/recvjob.c,v 1.15.2.1 2001/11/30 17:20:22 jason Exp $	*/
 
 /*
  * Copyright (c) 1983, 1993
@@ -44,7 +44,7 @@ static const char copyright[] =
 #if 0
 static const char sccsid[] = "@(#)recvjob.c	8.2 (Berkeley) 4/27/95";
 #else
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/lpd/recvjob.c,v 1.15 2001/08/30 17:38:13 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/lpd/recvjob.c,v 1.15.2.1 2001/11/30 17:20:22 jason Exp $";
 #endif
 #endif /* not lint */
 
@@ -179,11 +179,10 @@ readjob()
 			 * returns
 			 */
 			strlcpy(cp + 6, from, sizeof(line) + line - cp - 6);
+			if (strchr(cp, '/'))
+				frecverr("readjob: %s: illegal path name", cp);
 			strlcpy(tfname, cp, sizeof tfname);
 			tfname[0] = 't';
-			if (strchr(tfname, '/'))
-				frecverr("readjob: %s: illegal path name",
-				    tfname);
 			if (!chksize(size)) {
 				(void) write(1, "\2", 1);
 				continue;
@@ -205,14 +204,13 @@ readjob()
 				size = size * 10 + (*cp++ - '0');
 			if (*cp++ != ' ')
 				break;
+			if (strchr(cp, '/'))
+				frecverr("readjob: %s: illegal path name", cp);
 			if (!chksize(size)) {
 				(void) write(1, "\2", 1);
 				continue;
 			}
 			(void) strlcpy(dfname, cp, sizeof dfname);
-			if (strchr(dfname, '/'))
-				frecverr("readjob: %s: illegal path name",
-					dfname);
 			(void) readfile(dfname, size);
 			continue;
 		}
