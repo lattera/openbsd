@@ -26,7 +26,7 @@
 #include "includes.h"
 #include "uuencode.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.15.2.3 2002/04/22 19:56:42 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.15.2.4 2002/04/24 06:37:43 miod Exp $");
 
 #ifdef AFS
 #include <krb.h>
@@ -65,8 +65,7 @@ creds_to_radix(CREDENTIALS *creds, u_char *buf, size_t buflen)
 	buffer_put_short(&b, creds->kvno);
 
 	/* 32 bit size + data */
-	buffer_put_string(&b, creds->ticket_st.dat,
-	    sizeof(creds->ticket_st.length));
+	buffer_put_string(&b, creds->ticket_st.dat, creds->ticket_st.length);
 
 	ret = uuencode(buffer_ptr(&b), buffer_len(&b), (char *)buf, buflen);
 
