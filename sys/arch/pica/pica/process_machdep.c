@@ -79,6 +79,7 @@ process_read_regs(p, regs)
 	struct proc *p;
 	struct reg *regs;
 {
+	bcopy((caddr_t)p->p_md.md_regs, (caddr_t)regs, sizeof(struct reg));
 	return (0);
 }
 
@@ -87,6 +88,8 @@ process_write_regs(p, regs)
 	struct proc *p;
 	struct reg *regs;
 {
+	bcopy((caddr_t)regs, (caddr_t)p->p_md.md_regs, sizeof(struct reg));
+/*XXX Clear to user set bits!! */
 	return (0);
 }
 
@@ -94,6 +97,8 @@ int
 process_sstep(p, sstep)
 	struct proc *p;
 {
+	if(sstep)
+		cpu_singlestep(p);
 	return (0);
 }
 
@@ -102,6 +107,7 @@ process_set_pc(p, addr)
 	struct proc *p;
 	caddr_t addr;
 {
+	p->p_md.md_regs[PC] = (int)addr;
 	return (0);
 }
 
