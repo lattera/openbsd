@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips/mips/Attic/vm_machdep.c,v 1.1 1998/03/16 09:03:38 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips/mips/Attic/vm_machdep.c,v 1.2 1998/03/18 12:07:46 pefo Exp $	*/
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -39,7 +39,6 @@
  * from: Utah Hdr: vm_machdep.c 1.21 91/04/06
  *
  *	from: @(#)vm_machdep.c	8.3 (Berkeley) 1/4/94
- *      $Id: vm_machdep.c,v 1.7 1998/01/28 13:46:00 pefo Exp $
  */
 
 #include <sys/param.h>
