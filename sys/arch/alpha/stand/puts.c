@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/alpha/stand/puts.c,v 1.2 1996/07/29 23:01:27 niklas Exp $	*/
+
 
 void
 puts(s)

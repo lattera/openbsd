@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/alpha/mcclockvar.h,v 1.2 1996/07/29 22:57:48 niklas Exp $	*/
 /*	$NetBSD: mcclockvar.h,v 1.2 1996/04/17 22:22:38 cgd Exp $	*/
 
 /*

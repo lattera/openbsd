@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/include/stdarg.h,v 1.3 1996/07/29 22:59:21 niklas Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.3 1995/12/26 00:15:47 mycroft Exp $	*/
 
 /*-

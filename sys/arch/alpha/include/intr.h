@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/include/intr.h,v 1.2 1996/07/29 22:58:52 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.1 1996/04/12 01:42:17 cgd Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/include/Attic/fbio.h,v 1.2 1996/07/29 22:58:43 niklas Exp $	*/
 /*	$NetBSD: fbio.h,v 1.2 1996/05/01 19:44:21 cgd Exp $	*/
 
 /*

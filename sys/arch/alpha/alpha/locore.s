@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/alpha/locore.s,v 1.4 1996/07/29 22:57:41 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.13.4.1 1996/06/13 18:06:59 cgd Exp $	*/
 
 /*

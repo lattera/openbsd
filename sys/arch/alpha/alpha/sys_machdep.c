@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/alpha/sys_machdep.c,v 1.3 1996/07/29 22:58:05 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.3 1995/11/23 02:34:35 cgd Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/alpha/cpu.c,v 1.4 1996/07/29 22:57:18 niklas Exp $	*/
 /*	$NetBSD: cpu.c,v 1.9 1996/04/29 16:36:19 cgd Exp $	*/
 
 /*
