@@ -1,8 +1,7 @@
-/*	$OpenBSD: src/libexec/rpc.rquotad/rquotad.c,v 1.12 2002/06/09 04:18:55 deraadt Exp $	*/
+/*	$OpenBSD: src/libexec/rpc.rquotad/rquotad.c,v 1.13 2002/06/09 17:42:16 itojun Exp $	*/
+
 /*
- * by Manuel Bouyer (bouyer@ensta.fr)
- * 
- * There is no copyright, you can use it as you want.
+ * by Manuel Bouyer (bouyer@ensta.fr). Public domain.
  */
 
 #include <sys/param.h>
