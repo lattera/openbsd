@@ -21,7 +21,7 @@ SOFTWARE.
 ************************************************************************/
 
 #ifndef lint
-static char rcsid[] = "$Id: readfile.c,v 1.2 1996/06/23 10:22:26 deraadt Exp $";
+static char rcsid[] = "$Id: readfile.c,v 1.3 1998/11/28 04:07:24 millert Exp $";
 #endif
 
 
@@ -819,7 +819,7 @@ eval_symbol(symbol, hp)
 	if ((*symbol)[0] == 'T') {	/* generic symbol */
 		(*symbol)++;
 		value = get_u_long(symbol);
-		sprintf(current_tagname, "T%d", value);
+		snprintf(current_tagname, sizeof(current_tagname), "T%d", value);
 		eat_whitespace(symbol);
 		if ((*symbol)[0] != '=') {
 			return E_SYNTAX_ERROR;
