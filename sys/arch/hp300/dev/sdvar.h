@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sdvar.h,v 1.9.18.1 2002/06/11 03:35:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/sdvar.h,v 1.9.18.2 2003/05/19 21:39:16 tedu Exp $	*/
 /*	$NetBSD: sdvar.h,v 1.7 1997/03/31 07:40:07 scottr Exp $	*/
 
 /*
@@ -74,9 +74,9 @@ struct	sd_softc {
 #define SDF_RMEDIA	0x20
 #define SDF_ERROR	0x40
 
-#define	sdunit(x)	DISKUNIT(x)
-#define sdpart(x)	DISKPART(x)
-#define sdlabdev(d)	MAKEDISKDEV(major(d), sdunit(d), RAW_PART)
+#define	SDUNIT(x)	DISKUNIT(x)
+#define SDPART(x)	DISKPART(x)
+#define SDLABELDEV(d)	MAKEDISKDEV(major(d), SDUNIT(d), RAW_PART)
 
 #define	b_cylin		b_resid
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.12.2.1 2002/06/11 03:33:40 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/pci/pci_eb164.c,v 1.12.2.2 2003/05/19 21:38:53 tedu Exp $ */
 /* $NetBSD: pci_eb164.c,v 1.27 2000/06/06 00:50:15 thorpej Exp $ */
 
 /*-
@@ -253,7 +253,7 @@ dec_eb164_intr_string(ccv, ih)
 
         if (ih > EB164_MAX_IRQ)
                 panic("dec_eb164_intr_string: bogus eb164 IRQ 0x%lx", ih);
-        sprintf(irqstr, "eb164 irq %ld", ih);
+        snprintf(irqstr, sizeof irqstr, "eb164 irq %ld", ih);
         return (irqstr);
 }
 

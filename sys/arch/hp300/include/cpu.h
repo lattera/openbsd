@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16.2.2 2002/06/11 03:35:20 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/include/cpu.h,v 1.16.2.3 2003/05/19 21:39:16 tedu Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 1998/02/13 07:41:51 scottr Exp $	*/
 
 /*
@@ -117,7 +117,7 @@ extern int astpending;		/* need to trap before returning to user mode */
  * CTL_MACHDEP definitions.
  */
 #define	CPU_CONSDEV		1	/* dev_t: console terminal device */
-#define	CPU_CPUSPEED		2	/* CPU speed in Mhz */
+#define	CPU_CPUSPEED		2	/* CPU speed in MHz */
 #define	CPU_MACHINEID		3	/* machine id (HP_XXX) */
 #define	CPU_MMUID		4	/* mmu id (MMUID_*) */
 #define	CPU_MAXID		5	/* number of valid machdep ids */

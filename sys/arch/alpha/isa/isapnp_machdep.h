@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/alpha/isa/isapnp_machdep.h,v 1.2.2.1 2003/05/19 21:38:53 tedu Exp $	*/
 /*	$NetBSD: isapnp_machdep.h,v 1.5 2000/06/01 00:04:50 cgd Exp $	*/
 
 /*-

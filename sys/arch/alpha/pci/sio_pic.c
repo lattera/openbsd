@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/pci/sio_pic.c,v 1.19.2.2 2002/10/29 00:28:01 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/pci/sio_pic.c,v 1.19.2.3 2003/05/19 21:38:53 tedu Exp $	*/
 /* $NetBSD: sio_pic.c,v 1.28 2000/06/06 03:10:13 thorpej Exp $ */
 
 /*-
@@ -441,7 +441,7 @@ sio_intr_string(v, irq)
 	if (irq == 0 || irq >= ICU_LEN || irq == 2)
 		panic("sio_intr_string: bogus isa irq 0x%x", irq);
 
-	sprintf(irqstr, "isa irq %d", irq);
+	snprintf(irqstr, sizeof irqstr, "isa irq %d", irq);
 	return (irqstr);
 }
 

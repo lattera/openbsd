@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/tc/ioasic.c,v 1.7.16.1 2002/06/11 03:33:41 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/tc/ioasic.c,v 1.7.16.2 2003/05/19 21:38:53 tedu Exp $ */
 /* $NetBSD: ioasic.c,v 1.34 2000/07/18 06:10:06 thorpej Exp $ */
 
 /*-
@@ -211,7 +211,7 @@ ioasicattach(parent, self, aux)
 		cp = malloc(12, M_DEVBUF, M_NOWAIT);
 		if (cp == NULL)
 			panic("ioasicattach");
-		sprintf(cp, "slot %lu", i);
+		snprintf(cp, 12, "slot %lu", i);
 #ifdef EVCNT_COUNTERS
 		evcnt_attach_dynamic(&ioasicintrs[i].iai_evcnt,
 		    EVCNT_TYPE_INTR, pevcnt, self->dv_xname, cp);

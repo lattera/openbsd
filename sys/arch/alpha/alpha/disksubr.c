@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.32.6.1 2002/06/11 03:33:39 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/alpha/disksubr.c,v 1.32.6.2 2003/05/19 21:38:52 tedu Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -39,7 +39,7 @@
  */
 
 /*
- * This disksubr.c module started to take it's present form on OpenBSD/alpha
+ * This disksubr.c module started to take its present form on OpenBSD/alpha
  * but it was always thought it should be made completely MI and not need to
  * be in that alpha-specific tree at all.
  *

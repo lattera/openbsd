@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/alpha/tc/tc_3000_300.c,v 1.6.16.1 2002/06/11 03:33:41 art Exp $ */
+/* $OpenBSD: src/sys/arch/alpha/tc/tc_3000_300.c,v 1.6.16.2 2003/05/19 21:38:53 tedu Exp $ */
 /* $NetBSD: tc_3000_300.c,v 1.26 2001/07/27 00:25:21 thorpej Exp $ */
 
 /*
@@ -111,7 +111,7 @@ tc_3000_300_intr_setup()
 		cp = malloc(12, M_DEVBUF, M_NOWAIT);
 		if (cp == NULL)
 			panic("tc_3000_300_intr_setup");
-		sprintf(cp, "slot %lu", i);
+		snprintf(cp, 12, "slot %lu", i);
 #ifdef EVCNT_COUNTERS
 		evcnt_attach_dynamic(&tc_3000_300_intr[i].tci_evcnt,
 		    EVCNT_TYPE_INTR, NULL, "tc", cp);

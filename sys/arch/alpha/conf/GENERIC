@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93.2.3 2002/10/29 00:28:00 art Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.93.2.4 2003/05/19 21:38:52 tedu Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 
 machine	alpha
@@ -36,7 +36,10 @@ option		TCVERBOSE		# recognize "unknown" TC devices
 option		USBVERBOSE
 
 # Wscons options
-option		WSDISPLAY_COMPAT_RAWKBD # can get raw scancodes
+option		WSDISPLAY_COMPAT_USL		# VT handling
+option		WSDISPLAY_COMPAT_RAWKBD		# can get raw scancodes
+option		WSDISPLAY_DEFAULTSCREENS=6
+option		WSDISPLAY_COMPAT_PCVT		# emulate some ioctls
 
 option		APERTURE		# in-kernel aperture driver for XFree86
 option		USER_PCICONF		# user-space PCI configuration

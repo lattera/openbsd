@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ac.c,v 1.8.4.1 2002/06/11 03:35:19 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/dev/Attic/ac.c,v 1.8.4.2 2003/05/19 21:39:16 tedu Exp $	*/
 /*	$NetBSD: ac.c,v 1.9 1997/04/02 22:37:21 scottr Exp $	*/
 
 /*
@@ -62,16 +62,15 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 
+#include <sys/conf.h>
+
 #include <hp300/dev/scsireg.h>
 #include <hp300/dev/scsivar.h>
 #include <hp300/dev/acioctl.h>
 #include <hp300/dev/acvar.h>
 
-/* cdev_decl(ac); */
-/* XXX we should use macros to do these... */
-int	acopen(dev_t, int, int, struct proc *);
-int	acclose(dev_t, int, int, struct proc *);
-int	acioctl(dev_t, u_long, caddr_t, int, struct proc *);
+bdev_decl(ac);
+cdev_decl(ac);
 
 static int	acmatch(struct device *, void *, void *);
 static void	acattach(struct device *, struct device *, void *);
@@ -506,7 +505,7 @@ acconvert(sbuf, dbuf, ne)
 		}
 #ifdef DEBUG
 		if (ne < 0 || bcount < 0)
-			panic("acconvert: inconsistant");
+			panic("acconvert: inconsistent");
 #endif
 	}
 }
