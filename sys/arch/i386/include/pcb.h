@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.2 2001/07/14 10:02:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pcb.h,v 1.3.16.3 2003/04/11 16:12:57 niklas Exp $	*/
 /*	$NetBSD: pcb.h,v 1.21 1996/01/08 13:51:42 mycroft Exp $	*/
 
 /*-
@@ -64,7 +64,6 @@ struct pcb {
 #define	pcb_fs	pcb_tss.tss_fs
 #define	pcb_gs	pcb_tss.tss_gs
 #define	pcb_ldt_sel	pcb_tss.tss_ldt
-	int	pcb_tss_sel;
         union	descriptor *pcb_ldt;	/* per process (user) LDT */
         int	pcb_ldt_len;		/*      number of LDT entries */
 	int	pcb_cr0;		/* saved image of CR0 */

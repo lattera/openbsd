@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.6 2003/04/04 15:02:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.7 2003/04/11 16:12:56 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -105,13 +105,20 @@
 int     cpu_match __P((struct device *, void *, void *));
 void    cpu_attach __P((struct device *, struct device *, void *));
 
+/*
+ * Statically-allocated CPU info for the primary CPU (or the only
+ * CPU, on uniprocessors).  The CPU info list is initialized to
+ * point at it.
+ */
+struct cpu_info cpu_info_primary;
+struct cpu_info *cpu_info_list = &cpu_info_primary;
+
 #ifdef MULTIPROCESSOR
 /*
  * Array of CPU info structures.  Must be statically-allocated because
  * curproc, etc. are used early.
  */
 
-static struct cpu_info cpu_info_primary; /* XXX */
 struct cpu_info *cpu_info[I386_MAXPROCS] = { &cpu_info_primary };
 
 void   	cpu_hatch __P((void *));
@@ -213,7 +220,7 @@ cpu_attach(parent, self, aux)
 		    ci->ci_dev.dv_xname);
 		return;
 	}
-	pcb = ci->ci_idle_pcb = (struct pcb *) kstack;
+	pcb = ci->ci_idle_pcb = (struct pcb *)kstack;
 	memset(pcb, 0, USPACE);
 
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
@@ -267,6 +274,8 @@ cpu_attach(parent, self, aux)
 		printf("application processor");
 		printf(")\n");
 		identifycpu(ci);
+		ci->ci_next = cpu_info_list->ci_next;
+		cpu_info_list->ci_next = ci;
 		break;
 
 	default:
@@ -325,10 +334,27 @@ cpu_boot_secondary_processors()
 			continue;
 		if ((ci->ci_flags & CPUF_PRESENT) == 0)
 			continue;
-		i386_init_pcb_tss_ldt(ci->ci_idle_pcb);
 		if (ci->ci_flags & (CPUF_BSP|CPUF_SP|CPUF_PRIMARY))
 			continue;
 		cpu_boot_secondary(ci);
+	}
+}
+
+void
+cpu_init_idle_pcbs()
+{
+	struct cpu_info *ci;
+	u_long i;
+
+	for (i=0; i < I386_MAXPROCS; i++) {
+		ci = cpu_info[i];
+		if (ci == NULL)
+			continue;
+		if (ci->ci_idle_pcb == NULL)
+			continue;
+		if ((ci->ci_flags & CPUF_PRESENT) == 0)
+			continue;
+		i386_init_pcb_tss_ldt(ci);
 	}
 }
 
@@ -378,7 +404,9 @@ cpu_hatch(void *v)
 {
 	struct cpu_info *ci = (struct cpu_info *)v;
         struct region_descriptor region;
+#if 0
 	volatile int i;
+#endif
 	int s;
 
 	cpu_init_idt();
@@ -395,6 +423,7 @@ cpu_hatch(void *v)
 	    cpu_number());
 	printf("%s: stack is %p\n", ci->ci_dev.dv_xname, &region);
 
+#if 0
 	if (first_app_cpu == NULL)
 		first_app_cpu = ci;
 	printf("%s: sending IPI to CPU %d\n", ci->ci_dev.dv_xname,
@@ -408,6 +437,7 @@ cpu_hatch(void *v)
 	printf("%s: sending another IPI to CPU %d\n", ci->ci_dev.dv_xname,
 	    cpu_info_primary.ci_cpuid);
 	i386_send_ipi(&cpu_info_primary, I386_IPI_GMTB);
+#endif
 
 	splx(s);
 	/* XXX Just run and collect IPIs */

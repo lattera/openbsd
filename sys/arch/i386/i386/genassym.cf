@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/i386/genassym.cf,v 1.7.6.7 2001/12/05 00:39:10 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/i386/genassym.cf,v 1.7.6.8 2003/04/11 16:12:56 niklas Exp $
 #
 # Copyright (c) 1982, 1990 The Regents of the University of California.
 # All rights reserved.
@@ -110,7 +110,6 @@ member	pcb_fs
 member	pcb_gs
 member	pcb_cr0
 member	pcb_ldt_sel
-member	pcb_tss_sel
 member	pcb_onfault
 
 # frame definitions
@@ -179,10 +178,13 @@ member	ih_count
 member	ih_next
 endif
 
+define	P_MD_TSS_SEL		offsetof(struct proc, p_md.md_tss_sel)
+
 ifdef MULTIPROCESSOR
 define	CPU_INFO_CURPROC	offsetof(struct cpu_info, ci_curproc)
 define	CPU_INFO_CURPCB		offsetof(struct cpu_info, ci_curpcb)
 define	CPU_INFO_IDLE_PCB	offsetof(struct cpu_info, ci_idle_pcb)
+define	CPU_INFO_IDLE_TSS_SEL	offsetof(struct cpu_info, ci_idle_tss_sel)
 define	CPU_INFO_LEVEL		offsetof(struct cpu_info, ci_level)
 define	CPU_INFO_VENDOR		offsetof(struct cpu_info, ci_vendor[0])
 define	CPU_INFO_SIGNATURE	offsetof(struct cpu_info, ci_signature)

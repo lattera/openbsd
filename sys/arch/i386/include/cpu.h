@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.9 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.10 2003/04/11 16:12:57 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -81,8 +81,9 @@
 
 /* XXX stuff to move to cpuvar.h later */
 struct cpu_info {
-	struct device ci_dev;		/* pointer to our device */
+	struct device ci_dev;		/* our device */
 	struct schedstate_percpu ci_schedstate; /* scheduler state */
+	struct cpu_info *ci_next;	/* next cpu */
 	
 	/* 
 	 * Public members. 
@@ -102,6 +103,7 @@ struct cpu_info {
 	int ci_fpsaving;		/* save in progress */
 	struct pcb *ci_curpcb;		/* VA of current HW PCB */
 	struct pcb *ci_idle_pcb;	/* VA of current PCB */
+	int ci_idle_tss_sel;		/* TSS selector of idle PCB */
 
 	paddr_t ci_idle_pcb_paddr;	/* PA of idle PCB */
 	u_long ci_flags;		/* flags; see below */
@@ -119,6 +121,8 @@ struct cpu_info {
 
 	int		ci_want_resched;
 	int		ci_astpending;
+
+	volatile u_int32_t ci_tlb_ipi_mask;
 };
 	
 /*
@@ -138,6 +142,18 @@ struct cpu_info {
 #define	CPUF_PRESENT	0x1000		/* CPU is present */
 #define	CPUF_RUNNING	0x2000		/* CPU is running */
 
+/*
+ * We statically allocate the CPU info for the primary CPU (or,
+ * the only CPU on uniprocessors), and the primary CPU is the
+ * first CPU on the CPU info list.
+ */
+extern struct cpu_info cpu_info_primary;
+extern struct cpu_info *cpu_info_list;
+
+#define	CPU_INFO_ITERATOR		int
+#define	CPU_INFO_FOREACH(cii, ci)	cii = 0, ci = cpu_info_list; \
+					ci != NULL; ci = ci->ci_next
+
 #ifdef MULTIPROCESSOR
 
 #define I386_MAXPROCS		0x10
@@ -152,6 +168,7 @@ extern struct cpu_info	*cpu_info[I386_MAXPROCS];
 extern u_long		 cpus_running;
 
 extern void cpu_boot_secondary_processors __P((void));
+extern void cpu_init_idle_pcbs __P((void));
 
 #define want_resched (curcpu()->ci_want_resched)
 #define astpending (curcpu()->ci_astpending)
@@ -288,7 +305,7 @@ void	dkcsumattach(void);
 void	dumpconf(void);
 void	cpu_reset(void);
 void	i386_proc0_tss_ldt_init(void);
-void	i386_init_pcb_tss_ldt(struct pcb *);
+void	i386_init_pcb_tss_ldt(struct cpu_info *);
 
 /* locore.s */
 struct region_descriptor;

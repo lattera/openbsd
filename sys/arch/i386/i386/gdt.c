@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.6 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.11.6.7 2003/04/11 16:12:56 niklas Exp $	*/
 /*	$NetBSD: gdt.c,v 1.8 1996/05/03 19:42:06 christos Exp $	*/
 
 /*-
@@ -119,7 +119,7 @@ gdt_compact()
 
 	for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
 		pcb = &p->p_addr->u_pcb;
-		oslot = IDXSEL(pcb->pcb_tss_sel);
+		oslot = IDXSEL(p->p_md.md_tss_sel);
 		if (oslot >= gdt_count) {
 			while (dynamic_gdt[slot].sd.sd_type != SDT_SYSNULL) {
 				if (++slot >= gdt_count)
@@ -127,7 +127,7 @@ gdt_compact()
 			}
 			dynamic_gdt[slot] = dynamic_gdt[oslot];
 			dynamic_gdt[oslot].gd.gd_type = SDT_SYSNULL;
-			pcb->pcb_tss_sel = GSEL(slot, SEL_KPL);
+			p->p_md.md_tss_sel = GSEL(slot, SEL_KPL);
 		}
 		oslot = IDXSEL(pcb->pcb_ldt_sel);
 		if (oslot >= gdt_count) {
@@ -262,24 +262,22 @@ gdt_put_slot(slot)
 	gdt_unlock();
 }
 
-void
-tss_alloc(pcb)
-	struct pcb *pcb;
+int
+tss_alloc(struct pcb *pcb)
 {
 	int slot;
 
 	slot = gdt_get_slot();
 	setsegment(&dynamic_gdt[slot].sd, &pcb->pcb_tss, sizeof(struct pcb) - 1,
 	    SDT_SYS386TSS, SEL_KPL, 0, 0);
-	pcb->pcb_tss_sel = GSEL(slot, SEL_KPL);
+	return (GSEL(slot, SEL_KPL));
 }
 
 void
-tss_free(pcb)
-	struct pcb *pcb;
+tss_free(int sel)
 {
 
-	gdt_put_slot(IDXSEL(pcb->pcb_tss_sel));
+	gdt_put_slot(IDXSEL(sel));
 }
 
 void

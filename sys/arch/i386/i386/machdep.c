@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.14 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.15 2003/04/11 16:12:57 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -429,24 +429,12 @@ cpu_startup()
 void
 i386_proc0_tss_ldt_init()
 {
+	int x;
 	struct pcb *pcb;
 
 	curpcb = pcb = &proc0.p_addr->u_pcb;
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = (int)proc0.p_addr + USPACE - 16;
-
-	i386_init_pcb_tss_ldt(pcb);
-
-	ltr(pcb->pcb_tss_sel);
-	lldt(pcb->pcb_ldt_sel);
-
-	proc0.p_md.md_regs = (struct trapframe *)pcb->pcb_tss.tss_esp0 - 1;
-}
-
-void
-i386_init_pcb_tss_ldt(struct pcb *pcb)
-{
-	int x;
 
 	pcb->pcb_flags = 0;
 	pcb->pcb_tss.tss_ioopt =
@@ -457,7 +445,30 @@ i386_init_pcb_tss_ldt(struct pcb *pcb)
 
 	pcb->pcb_ldt_sel = pmap_kernel()->pm_ldt_sel = GSEL(GLDT_SEL, SEL_KPL);
 	pcb->pcb_cr0 = rcr0();
-	tss_alloc(pcb);
+	proc0.p_md.md_tss_sel = tss_alloc(pcb);
+
+	ltr(proc0.p_md.md_tss_sel);
+	lldt(pcb->pcb_ldt_sel);
+
+	proc0.p_md.md_regs = (struct trapframe *)pcb->pcb_tss.tss_esp0 - 1;
+}
+
+void
+i386_init_pcb_tss_ldt(struct cpu_info *ci)
+{
+	int x;
+	struct pcb *pcb = ci->ci_idle_pcb;
+
+	pcb->pcb_flags = 0;
+	pcb->pcb_tss.tss_ioopt =
+	    ((caddr_t)pcb->pcb_iomap - (caddr_t)&pcb->pcb_tss) << 16;
+	for (x = 0; x < sizeof(pcb->pcb_iomap) / 4; x++)
+		pcb->pcb_iomap[x] = 0xffffffff;
+	pcb->pcb_iomap_pad = 0xff;
+
+	pcb->pcb_ldt_sel = pmap_kernel()->pm_ldt_sel = GSEL(GLDT_SEL, SEL_KPL);
+	pcb->pcb_cr0 = rcr0();
+	ci->ci_idle_tss_sel = tss_alloc(pcb);
 }  
 
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.9 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.10 2003/04/11 16:12:56 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -118,6 +118,10 @@ cpu_configure()
 	ioapic_enable();
 #endif
 
+#ifdef MULTIPROCESSOR
+	/* propagate TSS and LDT configuration to the idle pcb's. */
+	cpu_init_idle_pcbs();
+#endif
 	spl0();
 
 	/*

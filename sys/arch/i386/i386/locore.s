@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.11 2003/04/06 09:43:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.12 2003/04/11 16:12:56 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1503,6 +1503,11 @@ NENTRY(remrunqueue)
  * something to come ready.
  */
 ENTRY(idle)
+	pushl	%esi
+	call	_C_LABEL(pmap_deactivate)
+	addl	$4,%esp
+
+2:	
 	cli
 	movl	_C_LABEL(whichqs),%ecx
 	testl	%ecx,%ecx
@@ -1521,7 +1526,7 @@ ENTRY(idle)
 #else
 	hlt
 #endif
-	jmp	_C_LABEL(idle)
+	jmp	2b
 
 #ifdef DIAGNOSTIC
 NENTRY(switch_error)
@@ -1630,6 +1635,10 @@ sw1:	bsfl	%ecx,%ebx		# find a full q
 	 *   %edi - new process
 	 */
 
+	pushl	%esi
+	call	_C_LABEL(pmap_deactivate)
+	addl	$4,%esp
+
 	movl	P_ADDR(%esi),%esi
 
 	/* Save segment registers. */
@@ -1670,13 +1679,19 @@ switch_exited:
 	jnz	switch_restored
 #endif
 
+	/*
+	 * Activate the address space.  We're curproc, so %cr3 will
+	 * be reloaded, but we're not yet curpcb, so the LDT won't
+	 * be reloaded, although the PCB copy of the selector will
+	 * be refreshed from the pmap.
+	 */
+	pushl	%edi
+	call	_C_LABEL(pmap_activate)
+	addl	$4,%esp
+	
 	/* Load TSS info. */
 	movl	_C_LABEL(dynamic_gdt),%eax
-	movl	PCB_TSS_SEL(%esi),%edx
-
-	/* Switch address space. */
-	movl	PCB_CR3(%esi),%ecx
-	movl	%ecx,%cr3
+	movl	P_MD_TSS_SEL(%edi),%edx
 
 	/* Switch TSS. */
 	andl	$~0x0200,4-SEL_KPL(%eax,%edx,1)
@@ -1738,9 +1753,11 @@ ENTRY(switch_exit)
 #ifndef MULTIPROCESSOR
 	movl	$_C_LABEL(proc0),%ebx
 	movl	P_ADDR(%ebx),%esi
+	movl	P_MD_TSS_SEL(%ebx),%dx
 #else
 	GET_CPUINFO(%ebx)
 	movl	CPU_INFO_IDLE_PCB(%ebx),%esi
+	movl	CPU_INFO_IDLE_TSS_SEL(%ebx),%edx
 #endif
 
 	/* In case we fault... */
@@ -1755,7 +1772,6 @@ ENTRY(switch_exit)
 
 	/* Load TSS info. */
 	movl	_C_LABEL(dynamic_gdt),%eax
-	movl	PCB_TSS_SEL(%esi),%edx
 
 	/* Switch address space. */
 	movl	PCB_CR3(%esi),%ecx

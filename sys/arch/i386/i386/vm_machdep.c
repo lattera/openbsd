@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.8 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.9 2003/04/11 16:12:57 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -97,20 +97,21 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	/* Sync curpcb (which is presumably p1's PCB) and copy it to p2. */
 	savectx(curcpu()->ci_curpcb);
 	*pcb = p1->p_addr->u_pcb;
+
 	/*
 	 * Preset these so that gdt_compact() doesn't get confused if called
 	 * during the allocations below.
+	 *
+	 * Note: pcb_ldt_sel is handled in the pmap_activate() call when
+	 * we run the new process.
 	 */
-	pcb->pcb_tss_sel = GSEL(GNULL_SEL, SEL_KPL);
-	/*
-	 * Activate the addres space.  Note this will refresh pcb_ldt_sel.
-	 */
-	pmap_activate(p2);
+	p2->p_md.md_tss_sel = GSEL(GNULL_SEL, SEL_KPL);
 
 	/* Fix up the TSS. */
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = (int)p2->p_addr + USPACE - 16;
-	tss_alloc(pcb);
+
+	p2->p_md.md_tss_sel = tss_alloc(pcb);
 
 	/*
 	 * Copy the trapframe, and arrange for the child to return directly
@@ -177,10 +178,7 @@ void
 cpu_wait(p)
      struct proc *p;
 {
-	struct pcb *pcb;
-
-	pcb = &p->p_addr->u_pcb;
-	tss_free(pcb);
+	tss_free(p->p_md.md_tss_sel);
 }
 
 /*
