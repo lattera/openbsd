@@ -1,8 +1,8 @@
-/*	$Id: version.c,v 1.3 1995/12/06 10:54:56 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootsd/version.c,v 1.2 1998/08/22 07:17:23 smurph Exp $ */
 
 /*
  * make a random change to this file when you want the bootblock
- * revision to increase. like change this x to a y, or something.
+ * revision to increase. like change this q to an x, or something.
  */
 
-char *version = "$Revision: 1.3 $";
+char *version = "$Revision: 1.2 $";
