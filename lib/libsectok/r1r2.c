@@ -1,4 +1,4 @@
-/* $Id: r1r2.c,v 1.4 2001/07/02 20:07:08 rees Exp $ */
+/* $Id: r1r2.c,v 1.2 2001/07/30 20:02:08 rees Exp $ */
 
 /*
 copyright 1999
@@ -35,11 +35,15 @@ such damages.
  */
 
 #ifdef __palmos__
-#define NULL 0
-#define printf palmprintf
-#else
-#include <stdio.h>
+#include <Common.h>
+#include <System/SysAll.h>
+#include <System/Unix/sys_types.h>
+#include <System/Unix/unix_stdlib.h>
+#include <System/Unix/unix_string.h>
+#include <UI/UIAll.h>
+#include "field.h"
 #endif
+#include <stdio.h>
 
 #include "sectok.h"
 

@@ -1,4 +1,4 @@
-/* $Id: sc7816.c,v 1.5 2001/06/26 16:26:14 deraadt Exp $ */
+/* $Id: sc7816.c,v 1.2 2001/07/30 20:02:08 rees Exp $ */
 
 /*
 copyright 2000
@@ -38,8 +38,17 @@ such damages.
  * University of Michigan CITI, August 2000
  */
 
+#ifdef __palmos__
+#include <Common.h>
+#include <System/SysAll.h>
+#include <System/Unix/unix_stdlib.h>
+#include <System/Unix/unix_string.h>
+#include <UI/UIAll.h>
+#include "field.h"
+#else
 #include <stdlib.h>
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
