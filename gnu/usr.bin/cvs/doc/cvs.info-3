@@ -1,5 +1,5 @@
-This is Info file cvs.info, produced by Makeinfo-1.64 from the input
-file ../../work/ccvs/doc/cvs.texinfo.
+This is Info file cvs.info, produced by Makeinfo version 1.67 from the
+input file ../../work/ccvs/doc/cvs.texinfo.
 
    Copyright (C) 1992, 1993 Signum Support AB Copyright (C) 1993, 1994
 Free Software Foundation, Inc.
@@ -860,6 +860,17 @@ arguments passed to the command are, in order, the TAGNAME, OPERATION
 (`add' for `tag', `mov' for `tag -F', and `del' for `tag -d'),
 REPOSITORY, and any remaining are pairs of FILENAME REVISION.  A
 non-zero exit of the filter program will cause the tag to be aborted.
+
+   Here is an example of using taginfo to log tag and rtag commands.
+In the taginfo file put:
+
+     ALL /usr/local/cvsroot/CVSROOT/loggit
+
+   Where `/usr/local/cvsroot/CVSROOT/loggit' contains the following
+script:
+
+     #!/bin/sh
+     echo "$@" >>/home/kingdon/cvsroot/CVSROOT/taglog
 
 
 File: cvs.info,  Node: annotate,  Prev: user-defined logging,  Up: History browsing

@@ -1,5 +1,5 @@
-This is Info file cvs.info, produced by Makeinfo-1.64 from the input
-file ../../work/ccvs/doc/cvs.texinfo.
+This is Info file cvs.info, produced by Makeinfo version 1.67 from the
+input file ../../work/ccvs/doc/cvs.texinfo.
 
    Copyright (C) 1992, 1993 Signum Support AB Copyright (C) 1993, 1994
 Free Software Foundation, Inc.
@@ -253,6 +253,12 @@ systems call a "get" or a "fetch".
 
      The FILES and options are processed as for the `cvs watch'
      commands.
+
+     *Caution:* If the PRESERVEPERMISSIONS option is enabled in the
+     repository (*note config::.), CVS will not change the permissions
+     on any of the FILES.  The reason for this change is to ensure that
+     using `cvs edit' does not interfere with the ability to store file
+     permissions in the CVS repository.
 
 
    Normally when you are done with a set of changes, you use the `cvs
@@ -857,7 +863,7 @@ here, but if you discover such a use, don't.  CVS is likely to make this
 an error in some future release.
 
 
-File: cvs.info,  Node: Builds,  Next: CVS commands,  Prev: Tracking sources,  Up: Top
+File: cvs.info,  Node: Builds,  Next: Special Files,  Prev: Tracking sources,  Up: Top
 
 How your build system interacts with CVS
 ****************************************
@@ -906,7 +912,57 @@ kind of thing is Odin (see
 `ftp://ftp.cs.colorado.edu/pub/distribs/odin').
 
 
-File: cvs.info,  Node: CVS commands,  Next: Invoking CVS,  Prev: Builds,  Up: Top
+File: cvs.info,  Node: Special Files,  Next: CVS commands,  Prev: Builds,  Up: Top
+
+Special Files
+*************
+
+   In normal circumstances, CVS works only with regular files.  Every
+file in a project is assumed to be persistent; it must be possible to
+open, read and close them; and so on.  CVS also ignores file
+permissions and ownerships, leaving such issues to be resolved by the
+developer at installation time.  In other words, it is not possible to
+"check in" a device into a repository; if the device file cannot be
+opened, CVS will refuse to handle it.  Files also lose their ownerships
+and permissions during repository transactions.
+
+   If the configuration variable PRESERVEPERMISSIONS (*note config::.)
+is set in the repository, CVS will preserve file permissions and
+ownership across repository transactions, and will permit checkin and
+checkout of special files and symbolic links.
+
+   Using this option affects the behavior of CVS in several ways.
+First, some of the new operations supported by CVS are not accessible
+to all users.  In particular, file ownership and special file
+characteristics may only be changed by the superuser.  When the
+PRESERVEPERMISSIONS configuration variable is set, therefore, users
+will have to be `root' in order to perform CVS operations.
+
+   A more subtle difference is that CVS considers a file to have
+changed only if its contents have changed (specifically, if the
+modification time of the working file does not match that of the
+repository's file).  Therefore, if only the permissions or ownership
+have changed, or if a device's major or minor numbers have changed, CVS
+will not notice.  In order to commit such a change to the repository,
+you must force the commit with `cvs commit -f'.  This also means that
+if a file's permissions have changed and the repository file is newer
+than the working copy, performing `cvs update' will silently change the
+permissions on the working copy.
+
+   It is worth noting that only regular files may be merged, for
+reasons that hopefully are obvious.  If `cvs update' or `cvs checkout
+-j' attempts to merge a symbolic link with a regular file, or two
+device files for different kinds of devices, CVS will report a conflict
+and refuse to perform the merge.  At the same time, `cvs diff' will not
+report any differences between these files, since no meaningful textual
+comparisons can be made on files which contain no text.
+
+   The PreservePermissions features do not work with client/server CVS.
+Another limitation is that hard links must be to other files within
+the same directory; hard links across directories are not supported.
+
+
+File: cvs.info,  Node: CVS commands,  Next: Invoking CVS,  Prev: Special Files,  Up: Top
 
 Guide to CVS commands
 *********************
@@ -1044,121 +1100,4 @@ options (*note Global options::.).  For example the following line in
      cvs -z6
 
    causes CVS to use compression level 6.
-
-
-File: cvs.info,  Node: Global options,  Next: Common options,  Prev: ~/.cvsrc,  Up: CVS commands
-
-Global options
-==============
-
-   The available `cvs_options' (that are given to the left of
-`cvs_command') are:
-
-`--allow-root=ROOTDIR'
-     Specify legal CVSROOT directory.  See *Note Password
-     authentication server::.
-
-`-a'
-     Authenticate all communication between the client and the server.
-     Only has an effect on the CVS client.  As of this writing, this is
-     only implemented when using a GSSAPI connection (*note GSSAPI
-     authenticated::.).  Authentication prevents certain sorts of
-     attacks involving hijacking the active TCP connection.  Enabling
-     authentication does not enable encryption.
-
-`-b BINDIR'
-     In CVS 1.9.18 and older, this specified that RCS programs are in
-     the BINDIR directory.  Current versions of CVS do not run RCS
-     programs; for compatibility this option is accepted, but it does
-     nothing.
-
-`-T TEMPDIR'
-     Use TEMPDIR as the directory where temporary files are located.
-     Overrides the setting of the `$TMPDIR' environment variable and
-     any precompiled directory.  This parameter should be specified as
-     an absolute pathname.
-
-`-d CVS_ROOT_DIRECTORY'
-     Use CVS_ROOT_DIRECTORY as the root directory pathname of the
-     repository.  Overrides the setting of the `$CVSROOT' environment
-     variable.  *Note Repository::.
-
-`-e EDITOR'
-     Use EDITOR to enter revision log information.  Overrides the
-     setting of the `$CVSEDITOR' and `$EDITOR' environment variables.
-     For more information, see *Note Committing your changes::.
-
-`-f'
-     Do not read the `~/.cvsrc' file.  This option is most often used
-     because of the non-orthogonality of the CVS option set.  For
-     example, the `cvs log' option `-N' (turn off display of tag names)
-     does not have a corresponding option to turn the display on.  So
-     if you have `-N' in the `~/.cvsrc' entry for `log', you may need
-     to use `-f' to show the tag names.
-
-`-H'
-`--help'
-     Display usage information about the specified `cvs_command' (but
-     do not actually execute the command).  If you don't specify a
-     command name, `cvs -H' displays overall help for CVS, including a
-     list of other help options.
-
-`-l'
-     Do not log the `cvs_command' in the command history (but execute it
-     anyway).  *Note history::, for information on command history.
-
-`-n'
-     Do not change any files.  Attempt to execute the `cvs_command',
-     but only to issue reports; do not remove, update, or merge any
-     existing files, or create any new files.
-
-     Note that CVS will not necessarily produce exactly the same output
-     as without `-n'.  In some cases the output will be the same, but
-     in other cases CVS will skip some of the processing that would
-     have been required to produce the exact same output.
-
-`-Q'
-     Cause the command to be really quiet; the command will only
-     generate output for serious problems.
-
-`-q'
-     Cause the command to be somewhat quiet; informational messages,
-     such as reports of recursion through subdirectories, are
-     suppressed.
-
-`-r'
-     Make new working files files read-only.  Same effect as if the
-     `$CVSREAD' environment variable is set (*note Environment
-     variables::.).  The default is to make working files writable,
-     unless watches are on (*note Watches::.).
-
-`-s VARIABLE=VALUE'
-     Set a user variable (*note Variables::.).
-
-`-t'
-     Trace program execution; display messages showing the steps of CVS
-     activity.  Particularly useful with `-n' to explore the potential
-     impact of an unfamiliar command.
-
-`-v'
-`--version'
-     Display version and copyright information for CVS.
-
-`-w'
-     Make new working files read-write.  Overrides the setting of the
-     `$CVSREAD' environment variable.  Files are created read-write by
-     default, unless `$CVSREAD' is set or `-r' is given.
-
-`-x'
-     Encrypt all communication between the client and the server.  Only
-     has an effect on the CVS client.  As of this writing, this is only
-     implemented when using a GSSAPI connection (*note GSSAPI
-     authenticated::.) or a Kerberos connection (*note Kerberos
-     authenticated::.).  Enabling encryption implies that message
-     traffic is also authenticated.  Encryption support is not
-     available by default; it must be enabled using a special configure
-     option, `--enable-encryption', when you build CVS.
-
-`-z GZIP-LEVEL'
-     Set the compression level.  Only has an effect on the CVS client.
 
