@@ -31,11 +31,14 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)ptrace.h	8.1 (Berkeley) 6/10/93
- *      $Id: ptrace.h,v 1.3 1994/05/27 09:02:07 glass Exp $
+ *      $Id: ptrace.h,v 1.1.1.1 1995/10/18 10:39:14 deraadt Exp $
  */
 
 /*
  * Machine dependent trace commands.
  *
- * None for the pica at this time.
  */
+
+#define	PT_GETREGS	 (PT_FIRSTMACH+0)
+#define	PT_SETREGS	 (PT_FIRSTMACH+1)
+#define	PT_STEP		 (PT_FIRSTMACH+2)
