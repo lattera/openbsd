@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/file/magic.h,v 1.2 2004/05/19 02:36:26 tedu Exp $ */
 /*
  * Copyright (c) Christos Zoulas 2003.
  * All Rights Reserved.

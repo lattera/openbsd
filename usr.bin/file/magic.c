@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/file/magic.c,v 1.2 2004/05/19 02:36:26 tedu Exp $ */
 /*
  * Copyright (c) Christos Zoulas 2003.
  * All Rights Reserved.
@@ -65,7 +66,7 @@
 #include "patchlevel.h"
 
 #ifndef	lint
-FILE_RCSID("@(#)$Id: magic.c,v 1.20 2004/03/23 15:33:43 christos Exp $")
+FILE_RCSID("@(#)$Id: magic.c,v 1.1 2004/05/19 02:34:27 tedu Exp $")
 #endif	/* lint */
 
 #ifdef __EMX__
