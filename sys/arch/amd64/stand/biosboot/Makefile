@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/amd64/stand/biosboot/Makefile,v 1.1 2004/02/03 12:09:47 mickey Exp $
+#	$OpenBSD: src/sys/arch/amd64/stand/biosboot/Makefile,v 1.2 2004/05/17 22:49:46 drahn Exp $
 
 MAN=	biosboot.8
 
@@ -7,6 +7,7 @@ PROG=	biosboot
 SRCS=	biosboot.S
 LD=ld
 LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -N -x -Bstatic
+LDFLAGS+=-L/usr/libdata 
 INSTALL_STRIP=
 SADIR=	${.CURDIR}/..
 
