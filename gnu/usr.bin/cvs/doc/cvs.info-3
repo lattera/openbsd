@@ -22,6 +22,81 @@ and this permission notice may be included in translations approved by
 the Free Software Foundation instead of in the original English.
 
 
+File: cvs.info,  Node: Sticky tags,  Prev: Creating a branch,  Up: Branches
+
+Sticky tags
+===========
+
+   The `-r release-1-0-patches' flag that was given to `checkout' in
+the previous example is "sticky", that is, it will apply to subsequent
+commands in this directory.  If you commit any modifications, they are
+committed on the branch.  You can later merge the modifications into
+the main trunk.  *Note Merging::.
+
+   You can use the `status' command to see what sticky tags or dates
+are set:
+
+     $ vi driver.c   # Fix the bugs
+     $ cvs commit -m "Fixed initialization bug" driver.c
+     Checking in driver.c;
+     /usr/local/cvsroot/yoyodyne/tc/driver.c,v  <--  driver.c
+     new revision: 1.7.2.1; previous revision: 1.7
+     done
+     $ cvs status -v driver.c
+     ===================================================================
+     File: driver.c          Status: Up-to-date
+     
+         Version:            1.7.2.1 Sat Dec  5 19:35:03 1992
+         RCS Version:        1.7.2.1 /usr/local/cvsroot/yoyodyne/tc/driver.c,v
+         Sticky Tag:         release-1-0-patches (branch: 1.7.2)
+         Sticky Date:        (none)
+         Sticky Options:     (none)
+     
+         Existing Tags:
+             release-1-0-patches             (branch: 1.7.2)
+             release-1-0                     (revision: 1.7)
+
+   The sticky tags will remain on your working files until you delete
+them with `cvs update -A'.  The `-A' option retrieves the version of
+the file from the head of the trunk, and forgets any sticky tags,
+dates, or options.
+
+   Sticky tags are not just for branches.  For example, suppose that
+you want to avoid updating your working directory, to isolate yourself
+from possibly destabilizing changes other people are making.  You can,
+of course, just refrain from running `cvs update'.  But if you want to
+avoid updating only a portion of a larger tree, then sticky tags can
+help.  If you check out a certain revision (such as 1.4) it will become
+sticky.  Subsequent `cvs update' will not retrieve the latest revision
+until you reset the tag with `cvs update -A'.  Likewise, use of the
+`-D' option to `update' or `checkout' sets a "sticky date", which,
+similarly, causes that date to be used for future retrievals.
+
+   Many times you will want to retrieve an old version of a file
+without setting a sticky tag.  The way to do that is with the `-p'
+option to `checkout' or `update', which sends the contents of the file
+to standard output.  For example, suppose you have a file named `file1'
+which existed as revision 1.1, and you then removed it (thus adding a
+dead revision 1.2).  Now suppose you want to add it again, with the same
+contents it had previously.  Here is how to do it:
+
+     $ cvs update -p -r 1.1 file1 >file1
+     ===================================================================
+     Checking out file1
+     RCS:  /tmp/cvs-sanity/cvsroot/first-dir/Attic/file1,v
+     VERS: 1.1
+     ***************
+     $ cvs add file1
+     cvs add: re-adding file file1 (in place of dead revision 1.2)
+     cvs add: use 'cvs commit' to add this file permanently
+     $ cvs commit -m test
+     Checking in file1;
+     /tmp/cvs-sanity/cvsroot/first-dir/file1,v  <--  file1
+     new revision: 1.3; previous revision: 1.2
+     done
+     $
+
+
 File: cvs.info,  Node: Merging,  Next: Recursive behavior,  Prev: Branches,  Up: Top
 
 Merging
@@ -1194,73 +1269,4 @@ commitinfo::.), but you should think twice before you enforce such a
 convention.  By making the development environment too controlled it
 might become too regimented and thus counter-productive to the real
 goal, which is to get software written.
-
-
-File: cvs.info,  Node: CVS commands,  Next: Invoking CVS,  Prev: Revision management,  Up: Top
-
-Guide to CVS commands
-*********************
-
-   This appendix describes the overall structure of CVS commands, and
-describes some commands in detail (others are described elsewhere; for
-a quick reference to CVS commands, *note Invoking CVS::.).
-
-* Menu:
-
-* Structure::                   Overall structure of CVS commands
-* ~/.cvsrc::                    Default options with the ~/.csvrc file
-* Global options::              Options you give to the left of cvs_command
-* Common options::              Options you give to the right of cvs_command
-* admin::                       Administration front end for rcs
-* checkout::                    Checkout sources for editing
-* commit::                      Check files into the repository
-* diff::                        Run diffs between revisions
-* export::                      Export sources from CVS, similar to checkout
-* history::                     Show status of files and users
-* import::                      Import sources into CVS, using vendor branches
-* log::                         Print out 'rlog' information for files
-* rdiff::                       'patch' format diffs between releases
-* release::                     Indicate that a Module is no longer in use
-* rtag::                        Add a tag to a module
-* status::                      Status info on the revisions
-* tag::                         Add a tag to checked out version
-* update::                      Bring work tree in sync with repository
-
-
-File: cvs.info,  Node: Structure,  Next: ~/.cvsrc,  Up: CVS commands
-
-Overall structure of CVS commands
-=================================
-
-   The overall format of all CVS commands is:
-
-     cvs [ cvs_options ] cvs_command [ command_options ] [ command_args ]
-
-`cvs'
-     The name of the CVS program.
-
-`cvs_options'
-     Some options that affect all sub-commands of CVS.  These are
-     described below.
-
-`cvs_command'
-     One of several different sub-commands.  Some of the commands have
-     aliases that can be used instead; those aliases are noted in the
-     reference manual for that command.  There are only two situations
-     where you may omit `cvs_command': `cvs -H' elicits a list of
-     available commands, and `cvs -v' displays version information on
-     CVS itself.
-
-`command_options'
-     Options that are specific for the command.
-
-`command_args'
-     Arguments to the commands.
-
-   There is unfortunately some confusion between `cvs_options' and
-`command_options'.  `-l', when given as a `cvs_option', only affects
-some of the commands.  When it is given as a `command_option' is has a
-different meaning, and is accepted by more commands.  In other words,
-do not take the above categorization too seriously.  Look at the
-documentation instead.
 
