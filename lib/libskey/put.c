@@ -8,7 +8,7 @@
  *
  * Dictionary lookup and extraction.
  *
- * $Id: put.c,v 1.7 1997/07/24 23:00:25 millert Exp $
+ * $OpenBSD: src/lib/libskey/put.c,v 1.9 1997/07/27 21:36:04 millert Exp $
  */
 
 #include <stdio.h>
