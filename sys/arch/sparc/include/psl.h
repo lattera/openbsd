@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.3.12.5 2003/06/07 11:14:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/psl.h,v 1.3.12.6 2004/06/07 18:46:20 deraadt Exp $	*/
 /*	$NetBSD: psl.h,v 1.12 1997/03/10 21:49:11 pk Exp $ */
 
 /*
@@ -95,6 +95,7 @@
  */
 #define IPL_AUHARD	13		/* hard audio interrupts */
 #define IPL_STATCLOCK	14		/* statclock() */
+#define IPL_HIGH	15		/* splhigh() */
 
 #if defined(_KERNEL) && !defined(_LOCORE)
 
