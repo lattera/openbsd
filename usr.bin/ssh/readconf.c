@@ -14,7 +14,7 @@ Functions for reading the configuration files.
 */
 
 #include "includes.h"
-RCSID("$Id: readconf.c,v 1.7 1999/09/30 08:03:39 deraadt Exp $");
+RCSID("$Id: readconf.c,v 1.8 1999/10/03 21:50:03 provos Exp $");
 
 #include "ssh.h"
 #include "cipher.h"
@@ -303,6 +303,10 @@ void process_config_line(Options *options, const char *host,
 
     case oBatchMode:
       intptr = &options->batch_mode;
+      goto parse_flag;
+
+    case oCheckHostIP:
+      intptr = &options->check_host_ip;
       goto parse_flag;
 
     case oStrictHostKeyChecking:
