@@ -15,7 +15,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: log-client.c,v 1.5 1999/11/23 22:25:53 markus Exp $");
+RCSID("$Id: log-client.c,v 1.6 1999/11/24 00:26:02 deraadt Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"
@@ -45,12 +45,12 @@ log_init(char *av0, LogLevel level, SyslogFacility ignored1, int ignored2)
 	}
 }
 
-#define MSGBUFSIZE 1024
+#define MSGBUFSIZ 1024
 
 void
 do_log(LogLevel level, const char *fmt, va_list args)
 {
-	char msgbuf[MSGBUFSIZE];
+	char msgbuf[MSGBUFSIZ];
 
 	if (level > log_level)
 		return;
