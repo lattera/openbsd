@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/control.h,v 1.5 1997/09/21 04:21:06 niklas Exp $	*/
 /*	$NetBSD: control.h,v 1.14 1996/11/20 18:57:06 gwr Exp $	*/
 
 /*-

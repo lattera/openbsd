@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/remote-sl.h,v 1.2 1997/09/21 04:21:21 niklas Exp $ */
 /*	$NetBSD: remote-sl.h,v 1.1 1996/06/15 14:34:35 gwr Exp $ */
 
 /*

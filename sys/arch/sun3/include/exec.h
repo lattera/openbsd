@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/exec.h,v 1.7 1997/09/21 04:21:08 niklas Exp $	*/
 /*	$NetBSD: exec.h,v 1.8 1994/11/21 21:33:39 gwr Exp $	*/
 
 /*

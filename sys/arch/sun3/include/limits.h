@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/limits.h,v 1.3 1997/09/21 04:21:14 niklas Exp $	*/
 /*	$NetBSD: limits.h,v 1.6 1994/11/21 21:33:49 gwr Exp $	*/
 
 #ifndef _MACHINE_LIMITS_H_

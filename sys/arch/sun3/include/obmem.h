@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/obmem.h,v 1.3 1997/09/21 04:21:15 niklas Exp $	*/
 /*	$NetBSD: obmem.h,v 1.7 1996/11/20 18:57:15 gwr Exp $	*/
 
 /*-
