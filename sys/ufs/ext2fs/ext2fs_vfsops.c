@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.6 1997/11/09 13:12:17 provos Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_vfsops.c,v 1.7 1997/11/10 19:30:24 provos Exp $	*/
 /*	$NetBSD: ext2fs_vfsops.c,v 1.1 1997/06/11 09:34:07 bouyer Exp $	*/
 
 /*
@@ -599,8 +599,8 @@ ext2fs_mountfs(devvp, mp, p)
 
 	mp->mnt_data = (qaddr_t)ump;
 	mp->mnt_stat.f_fsid.val[0] = (long)dev;
-	mp->mnt_stat.f_fsid.val[1] = makefstype(MOUNT_EXT2FS);
-	mp->mnt_maxsymlinklen = mp->mnt_vfc->vfc_typenum;;
+	mp->mnt_stat.f_fsid.val[1] = mp->mnt_vfc->vfc_typenum;
+	mp->mnt_maxsymlinklen = EXT2_MAXSYMLINKLEN;
 	ump->um_mountp = mp;
 	ump->um_dev = dev;
 	ump->um_devvp = devvp;
