@@ -385,6 +385,8 @@ extern int trace;		/* Show all commands */
 extern int noexec;		/* Don't modify disk anywhere */
 extern int logoff;		/* Don't write history entry */
 
+extern int top_level_admin;
+
 #ifdef AUTH_SERVER_SUPPORT
 extern char *Pserver_Repos;     /* used to check that same repos is
                                    transmitted in pserver auth and in

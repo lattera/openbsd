@@ -41,6 +41,12 @@ int quiet = 0;
 int trace = 0;
 int noexec = 0;
 int logoff = 0;
+
+/* Set if we should be writing CVSADM directories at top level.  At
+   least for now we'll make the default be off (the CVS 1.9, not CVS
+   1.9.2, behavior). */
+int top_level_admin = 0;
+
 mode_t cvsumask = UMASK_DFLT;
 
 char *CurDir;
@@ -281,6 +287,10 @@ lookup_command_attribute (cmd_name)
     }
 
 
+    /* The following commands do not use a checked-out working
+       directory.  We conservatively assume that everything else does.
+       Feel free to add to this list if you are _certain_ something
+       something doesn't use the WD. */
     if ((strcmp (cmd_name, "checkout") != 0) &&
         (strcmp (cmd_name, "init") != 0) &&
         (strcmp (cmd_name, "login") != 0) &&
@@ -296,8 +306,10 @@ lookup_command_attribute (cmd_name)
     /* The following commands do not modify the repository; we
        conservatively assume that everything else does.  Feel free to
        add to this list if you are _certain_ something is safe. */
-    if ((strcmp (cmd_name, "checkout") != 0) &&
+    if ((strcmp (cmd_name, "annotate") != 0) &&
+        (strcmp (cmd_name, "checkout") != 0) &&
         (strcmp (cmd_name, "diff") != 0) &&
+        (strcmp (cmd_name, "rdiff") != 0) &&
         (strcmp (cmd_name, "update") != 0) &&
         (strcmp (cmd_name, "history") != 0) &&
         (strcmp (cmd_name, "editors") != 0) &&
