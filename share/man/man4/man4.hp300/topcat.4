@@ -1,0 +1,122 @@
+.\"	$OpenBSD: src/share/man/man4/man4.hp300/topcat.4,v 1.2 2003/03/19 11:14:25 miod Exp $
+.\"
+.\" Copyright (c) 1990, 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the Systems Programming Group of the University of Utah Computer
+.\" Science Department.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     from: @(#)tc.4	8.1 (Berkeley) 6/9/93
+.\"
+.Dd March 16, 2003
+.Dt TOPCAT 4 hp300
+.Os
+.Sh NAME
+.Nm topcat
+.Nd
+.Tn HP98544
+.Dq Topcat ,
+.Tn HP98550
+.Dq Catseye
+and
+.Tn A1416A
+.Dq Kathmandu
+frame buffers
+.Sh DESCRIPTION
+The
+.Tn HP98544 ,
+.Tn HP98545
+and
+.Tn HP98547
+.Dq Topcat ,
+as well as the
+.Tn HP98548 ,
+.Tn HP98549
+and
+.Tn HP98550
+.Dq Catseye
+and the
+.Tn A1416A
+.Dq Kathmandu
+are accelerated frame buffers, with the following resolution and color depth:
+.Bl -tag -width A1416A -offset indent -compact
+.It 98544
+1024x768 monochrome
+.Dq Topcat
+.It 98545
+1024x768 4-bit color
+.Dq Topcat
+.It 98547
+1024x768 6-bit color
+.Dq Topcat
+.It 98548
+1024x768 6-bit color
+.Dq Catseye
+.It 98549
+1280x1024 monochrome
+.Dq Catseye
+.It 98550
+1280x1024 8-bit color
+.Dq Catseye
+.It A1416A
+1280x1024 8-bit color
+.Dq Kathmandu
+.El
+.Pp
+The
+.Nm
+driver provides a frame buffer abstraction to the
+.Xr grf 4
+driver, and the associated
+.Xr ite 4
+console framework.
+.Pp
+The Topcat, Catseye and Kathmandu display cards are not user configurable.
+If one is present on a
+system, it will always have a frame buffer address of 0x200000 and a control
+register address of 0x560000.
+These are the
+.Tn HP
+series 300
+.Tn ITE
+(Internal
+Terminal Emulator) defaults.
+The device can also be used as a graphics output device.
+.Pp
+.Sh SEE ALSO
+.Xr ioctl 2 ,
+.Xr dvbox 4 ,
+.Xr gbox 4 ,
+.Xr grf 4 ,
+.Xr hyper 4 ,
+.Xr intro 4 ,
+.Xr rbox 4
