@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/make/lst.lib/Attic/lstDatum.c,v 1.6 2000/03/26 16:21:33 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/make/lst.lib/Attic/lstDatum.c,v 1.7 2000/06/10 01:41:06 espie Exp $	*/
 /*	$NetBSD: lstDatum.c,v 1.5 1996/11/06 17:59:35 christos Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 #if 0
 static char sccsid[] = "@(#)lstDatum.c	8.1 (Berkeley) 6/6/93";
 #else
-static char rcsid[] = "$OpenBSD: src/usr.bin/make/lst.lib/Attic/lstDatum.c,v 1.6 2000/03/26 16:21:33 espie Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/make/lst.lib/Attic/lstDatum.c,v 1.7 2000/06/10 01:41:06 espie Exp $";
 #endif
 #endif /* not lint */
 
@@ -65,7 +65,7 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/make/lst.lib/Attic/lstDatum.c,v 1.6
  *
  *-----------------------------------------------------------------------
  */
-ClientData
+void *
 Lst_Datum(ln)
     LstNode	ln;
 {
