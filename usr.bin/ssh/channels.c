@@ -17,13 +17,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.63 2000/06/25 20:17:57 provos Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.64 2000/07/16 08:27:21 markus Exp $");
 
 #include "ssh.h"
 #include "packet.h"
 #include "xmalloc.h"
 #include "buffer.h"
-#include "authfd.h"
 #include "uidswap.h"
 #include "readconf.h"
 #include "servconf.h"
@@ -33,6 +32,11 @@ RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.63 2000/06/25 20:17:57 provos Ex
 #include "compat.h"
 
 #include "ssh2.h"
+
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
+#include "key.h"
+#include "authfd.h"
 
 /* Maximum number of fake X11 displays to try. */
 #define MAX_DISPLAYS  1000
