@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.36 2000/03/26 06:40:50 angelos Exp $ */
+/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.36.2.1 2000/09/01 13:50:31 jason Exp $ */
 /*
 %%% copyright-nrl-97
 This software is Copyright 1997-1998 by Randall Atkinson, Ronald Lee,
@@ -250,11 +250,11 @@ export_sa(void **p, struct tdb *tdb)
 		break;
 
 	    case CRYPTO_CAST_CBC:
-		sadb_sa->sadb_sa_encrypt = SADB_X_EALG_BLF;
+		sadb_sa->sadb_sa_encrypt = SADB_X_EALG_CAST;
 		break;
 
 	    case CRYPTO_BLF_CBC:
-		sadb_sa->sadb_sa_encrypt = SADB_X_EALG_CAST;
+		sadb_sa->sadb_sa_encrypt = SADB_X_EALG_BLF;
 		break;
 
 	    case CRYPTO_SKIPJACK_CBC:
@@ -1565,6 +1565,16 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		    encapnetmask.sen_type = SENT_IP4;
 		    encapnetmask.sen_ip_src = flow->flow_srcmask.sin.sin_addr;
 		    encapnetmask.sen_ip_dst = flow->flow_dstmask.sin.sin_addr;
+	  	    if (flow->flow_proto)
+		    {
+		        encapnetmask.sen_proto = 0xff;
+
+		        if (flow->flow_src.sin.sin_port)
+		          encapnetmask.sen_sport = 0xffff;
+
+		        if (flow->flow_dst.sin.sin_port)
+		          encapnetmask.sen_dport = 0xffff;
+		    }
 		    break;
 #endif /* INET */
 
@@ -1585,6 +1595,16 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 					     flow->flow_srcmask.sin6.sin6_addr;
 		    encapnetmask.sen_ip6_dst =
 					     flow->flow_dstmask.sin6.sin6_addr;
+		    if (flow->flow_proto)
+		    {
+		        encapnetmask.sen_ip6_proto = 0xff;
+
+		        if (flow->flow_src.sin6.sin6_port)
+		          encapnetmask.sen_ip6_sport = 0xffff;
+
+		        if (flow->flow_dst.sin6.sin6_port)
+		          encapnetmask.sen_ip6_dport = 0xffff;
+		    }
 		    break;
 #endif /* INET6 */
 	    }
@@ -1602,16 +1622,6 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			encapgw.sen_ipsp_spi = sa2->tdb_spi;
 			encapgw.sen_ipsp_sproto = sa2->tdb_sproto;
 
-			if (flow->flow_proto)
-			{
-			    encapnetmask.sen_proto = 0xff;
-
-			    if (flow->flow_src.sin.sin_port)
-			      encapnetmask.sen_sport = 0xffff;
-
-			    if (flow->flow_dst.sin.sin_port)
-			      encapnetmask.sen_dport = 0xffff;
-			}
 			break;
 #endif /* INET */
 
@@ -1624,16 +1634,6 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			encapgw.sen_ipsp6_spi = sa2->tdb_spi;
 			encapgw.sen_ipsp6_sproto = sa2->tdb_sproto;
 
-			if (flow->flow_proto)
-			{
-			    encapnetmask.sen_ip6_proto = 0xff;
-
-			    if (flow->flow_src.sin6.sin6_port)
-			      encapnetmask.sen_ip6_sport = 0xffff;
-
-			    if (flow->flow_dst.sin6.sin6_port)
-			      encapnetmask.sen_ip6_dport = 0xffff;
-			}
 			break;
 #endif /* INET6 */
 
@@ -2140,11 +2140,11 @@ pfkeyv2_acquire(struct tdb *tdb, int rekey)
 		    break;
 
 		case CRYPTO_CAST_CBC:
-		    sadb_comb->sadb_comb_encrypt = SADB_X_EALG_BLF;
+		    sadb_comb->sadb_comb_encrypt = SADB_X_EALG_CAST;
 		    break;
 
 		case CRYPTO_BLF_CBC:
-		    sadb_comb->sadb_comb_encrypt = SADB_X_EALG_CAST;
+		    sadb_comb->sadb_comb_encrypt = SADB_X_EALG_BLF;
 		    break;
 
 		case CRYPTO_SKIPJACK_CBC:
