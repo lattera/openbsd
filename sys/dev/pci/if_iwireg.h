@@ -1,4 +1,4 @@
-/*	$Id: if_iwireg.h,v 1.3 2004/11/22 21:34:35 damien Exp $ */
+/*	$Id: if_iwireg.h,v 1.4 2004/11/23 21:28:22 damien Exp $ */
 
 /*-
  * Copyright (c) 2004
@@ -288,6 +288,7 @@ struct iwi_associate {
 	u_int16_t	intval;
 	u_int8_t	dst[IEEE80211_ADDR_LEN];
 	u_int32_t	reserved3;
+	u_int16_t	reserved4;
 } __attribute__((__packed__));
 
 /* structure for command IWI_CMD_SCAN */
