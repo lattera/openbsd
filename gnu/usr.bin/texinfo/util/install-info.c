@@ -1,7 +1,7 @@
 /* install-info -- create Info directory entry(ies) for an Info file.
    Copyright (C) 1996 Free Software Foundation, Inc.
 
-$Id: install-info.c,v 1.12 1996/10/03 23:13:36 karl Exp $
+$Id: install-info.c,v 1.1.1.1 1996/12/15 21:39:32 downsj Exp $
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -412,7 +412,7 @@ main (argc, argv)
 
   while (1)
     {
-      int opt = getopt_long (argc, argv, "i:d:e:s:hHr", longopts, 0);
+      int opt = getopt_long (argc, argv, "i:d:e:s:hHrD", longopts, 0);
 
       if (opt == EOF)
         break;
