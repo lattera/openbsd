@@ -1,0 +1,15 @@
+#	$OpenBSD: src/distrib/alpha/ramdisk/Attic/list,v 1.5 1997/08/20 22:42:13 deraadt Exp $
+
+# we strip comments from files since we need the space...
+
+# the disktab explanation file
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/disktab.preinstall > etc/disktab.preinstall
+
+# and the installation tools
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/dot.profile > .profile
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/dot.instutils > .instutils
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/disktab.shadow > etc/disktab.shadow
+SPECIAL	sed -e "/^VERSION=/s/=.*/=${REV}/" -e '/^#[ 	].*$/d' < ${CURDIR}/../../miniroot/install.sub > install.sub
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/../../miniroot/install.sh > install
+SPECIAL	sed -e '/^#[ 	].*$/d' < ${CURDIR}/install.md > install.md
+SPECIAL	chmod 755 install
