@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/tcpdump/packetdat.awk,v 1.2 1996/03/04 15:59:15 mickey Exp $
+#	$OpenBSD: src/usr.sbin/tcpdump/packetdat.awk,v 1.3 1996/06/10 07:47:27 deraadt Exp $
 #	$NetBSD: packetdat.awk,v 1.2 1995/03/06 19:10:59 mycroft Exp $
 
 BEGIN	{
