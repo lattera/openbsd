@@ -1,27 +1,11 @@
 /*
- * Copyright (c) 1984,1985,1989,1994,1995  Mark Nudelman
- * All rights reserved.
+ * Copyright (C) 1984-2002  Mark Nudelman
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice in the documentation and/or other materials provided with 
- *    the distribution.
+ * You may distribute under the terms of either the GNU General Public
+ * License or the Less License, as specified in the README file.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR 
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
- * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * For more information about less, or for information on how to 
+ * contact the author, see the README file.
  */
 
 
@@ -31,13 +15,205 @@
  */
 
 #include "less.h"
-#if MSOFTC
+#include "lglob.h"
+#if MSDOS_COMPILER
 #include <dos.h>
+#if MSDOS_COMPILER==WIN32C && !defined(_MSC_VER)
+#include <dir.h>
+#endif
+#if MSDOS_COMPILER==DJGPPC
+#include <glob.h>
+#include <dir.h>
+#define _MAX_PATH	PATH_MAX
+#endif
+#endif
+#ifdef _OSK
+#include <rbf.h>
+#ifndef _OSK_MWC32
+#include <modes.h>
+#endif
+#endif
+#if OS2
+#include <signal.h>
 #endif
 
+#if HAVE_STAT
+#include <sys/stat.h>
+#ifndef S_ISDIR
+#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
+#endif
+#ifndef S_ISREG
+#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
+#endif
+#endif
+
+
 extern int force_open;
+extern int secure;
+extern int use_lessopen;
 extern IFILE curr_ifile;
 extern IFILE old_ifile;
+#if SPACES_IN_FILENAMES
+extern char openquote;
+extern char closequote;
+#endif
+
+/*
+ * Remove quotes around a filename.
+ */
+	public char *
+shell_unquote(str)
+	char *str;
+{
+	char *name;
+	char *p;
+
+	name = p = (char *) ecalloc(strlen(str)+1, sizeof(char));
+	if (*str == openquote)
+	{
+		str++;
+		while (*str != '\0')
+		{
+			if (*str == closequote)
+			{
+				if (str[1] != closequote)
+					break;
+				str++;
+			}
+			*p++ = *str++;
+		}
+	} else
+	{
+		char *esc = get_meta_escape();
+		int esclen = strlen(esc);
+		while (*str != '\0')
+		{
+			if (esclen > 0 && strncmp(str, esc, esclen) == 0)
+				str += esclen;
+			*p++ = *str++;
+		}
+	}
+	*p = '\0';
+	return (name);
+}
+
+/*
+ * Get the shell's escape character.
+ */
+	public char *
+get_meta_escape()
+{
+	char *s;
+
+	s = lgetenv("LESSMETAESCAPE");
+	if (s == NULL)
+		s = DEF_METAESCAPE;
+	return (s);
+}
+
+/*
+ * Get the characters which the shell considers to be "metacharacters".
+ */
+	static char *
+metachars()
+{
+	static char *mchars = NULL;
+
+	if (mchars == NULL)
+	{
+		mchars = lgetenv("LESSMETACHARS");
+		if (mchars == NULL)
+			mchars = DEF_METACHARS;
+	}
+	return (mchars);
+}
+
+/*
+ * Is this a shell metacharacter?
+ */
+	static int
+metachar(c)
+	char c;
+{
+	return (strchr(metachars(), c) != NULL);
+}
+
+/*
+ * Insert a backslash before each metacharacter in a string.
+ */
+	public char *
+shell_quote(s)
+	char *s;
+{
+	char *p;
+	char *newstr;
+	int len;
+	char *esc = get_meta_escape();
+	int esclen = strlen(esc);
+	int use_quotes = 0;
+	int have_quotes = 0;
+
+	/*
+	 * Determine how big a string we need to allocate.
+	 */
+	len = 1; /* Trailing null byte */
+	for (p = s;  *p != '\0';  p++)
+	{
+		len++;
+		if (*p == openquote || *p == closequote)
+			have_quotes = 1;
+		if (metachar(*p))
+		{
+			if (esclen == 0)
+			{
+				/*
+				 * We've got a metachar, but this shell 
+				 * doesn't support escape chars.  Use quotes.
+				 */
+				use_quotes = 1;
+			} else
+			{
+				/*
+				 * Allow space for the escape char.
+				 */
+				len += esclen;
+			}
+		}
+	}
+	if (use_quotes)
+	{
+		if (have_quotes)
+			/*
+			 * We can't quote a string that contains quotes.
+			 */
+			return (NULL);
+		len = strlen(s) + 3;
+	}
+	/*
+	 * Allocate and construct the new string.
+	 */
+	newstr = p = (char *) ecalloc(len, sizeof(char));
+	if (use_quotes)
+	{
+		sprintf(newstr, "%c%s%c", openquote, s, closequote);
+	} else
+	{
+		while (*s != '\0')
+		{
+			if (metachar(*s))
+			{
+				/*
+				 * Add the escape char.
+				 */
+				strcpy(p, esc);
+				p += esclen;
+			}
+			*p++ = *s++;
+		}
+		*p = '\0';
+	}
+	return (newstr);
+}
 
 /*
  * Return a pathname that points to a specified file in a specified directory.
@@ -49,6 +225,7 @@ dirfile(dirname, filename)
 	char *filename;
 {
 	char *pathname;
+	char *qpathname;
 	int f;
 
 	if (dirname == NULL || *dirname == '\0')
@@ -60,23 +237,21 @@ dirfile(dirname, filename)
 					sizeof(char));
 	if (pathname == NULL)
 		return (NULL);
-#if MSOFTC || OS2
-	sprintf(pathname, "%s\\%s", dirname, filename);
-#else
-	sprintf(pathname, "%s/%s", dirname, filename);
-#endif
+	sprintf(pathname, "%s%s%s", dirname, PATHNAME_SEP, filename);
 	/*
 	 * Make sure the file exists.
 	 */
-	f = open(pathname, OPEN_READ);
+	qpathname = shell_unquote(pathname);
+	f = open(qpathname, OPEN_READ);
 	if (f < 0)
 	{
 		free(pathname);
 		pathname = NULL;
 	} else
 	{
-		close (f);
+		close(f);
 	}
+	free(qpathname);
 	return (pathname);
 }
 
@@ -92,23 +267,33 @@ homefile(filename)
 	/*
 	 * Try $HOME/filename.
 	 */
-	pathname = dirfile(getenv("HOME"), filename);
+	pathname = dirfile(lgetenv("HOME"), filename);
 	if (pathname != NULL)
 		return (pathname);
 #if OS2
 	/*
 	 * Try $INIT/filename.
 	 */
-	pathname = dirfile(getenv("INIT"), filename);
+	pathname = dirfile(lgetenv("INIT"), filename);
 	if (pathname != NULL)
 		return (pathname);
 #endif
-#if MSOFTC || OS2
+#if MSDOS_COMPILER || OS2
 	/*
 	 * Look for the file anywhere on search path.
 	 */
 	pathname = (char *) calloc(_MAX_PATH, sizeof(char));
+#if MSDOS_COMPILER==DJGPPC
+	{
+		char *res = searchpath(filename);
+		if (res == 0)
+			*pathname = '\0';
+		else
+			strcpy(pathname, res);
+	}
+#else
 	_searchenv(filename, "PATH", pathname);
+#endif
 	if (*pathname != '\0')
 		return (pathname);
 	free(pathname);
@@ -117,25 +302,10 @@ homefile(filename)
 }
 
 /*
- * Find out where the help file is.
- */
-	public char *
-find_helpfile()
-{
-	register char *helpfile;
-	
-	if ((helpfile = getenv("LESSHELP")) != NULL)
-		return (save(helpfile));
-#if MSOFTC || OS2
-	return (homefile(HELPFILE));
-#else
-	return (save(HELPFILE));
-#endif
-}
-
-/*
  * Expand a string, substituting any "%" with the current filename,
  * and any "#" with the previous filename.
+ * But a string of N "%"s is just replaced with N-1 "%"s.
+ * Likewise for a string of N "#"s.
  * {{ This is a lot of work just to support % and #. }}
  */
 	public char *
@@ -145,6 +315,11 @@ fexpand(s)
 	register char *fr, *to;
 	register int n;
 	register char *e;
+	IFILE ifile;
+
+#define	fchar_ifile(c) \
+	((c) == '%' ? curr_ifile : \
+	 (c) == '#' ? old_ifile : NULL_IFILE)
 
 	/*
 	 * Make one pass to see how big a buffer we 
@@ -156,20 +331,29 @@ fexpand(s)
 		switch (*fr)
 		{
 		case '%':
-			if (curr_ifile == NULL_IFILE)
-			{
-				/* error("No current file", NULL_PARG); */
-				return (save(s));
-			}
-			n += strlen(get_filename(curr_ifile));
-			break;
 		case '#':
-			if (old_ifile == NULL_IFILE)
+			if (fr > s && fr[-1] == *fr)
 			{
-				/* error("No previous file", NULL_PARG); */
-				return (save(s));
+				/*
+				 * Second (or later) char in a string
+				 * of identical chars.  Treat as normal.
+				 */
+				n++;
+			} else if (fr[1] != *fr)
+			{
+				/*
+				 * Single char (not repeated).  Treat specially.
+				 */
+				ifile = fchar_ifile(*fr);
+				if (ifile == NULL_IFILE)
+					n++;
+				else
+					n += strlen(get_filename(ifile));
 			}
-			n += strlen(get_filename(old_ifile));
+			/*
+			 * Else it is the first char in a string of
+			 * identical chars.  Just discard it.
+			 */
 			break;
 		default:
 			n++;
@@ -188,12 +372,21 @@ fexpand(s)
 		switch (*fr)
 		{
 		case '%':
-			strcpy(to, get_filename(curr_ifile));
-			to += strlen(to);
-			break;
 		case '#':
-			strcpy(to, get_filename(old_ifile));
-			to += strlen(to);
+			if (fr > s && fr[-1] == *fr)
+			{
+				*to++ = *fr;
+			} else if (fr[1] != *fr)
+			{
+				ifile = fchar_ifile(*fr);
+				if (ifile == NULL_IFILE)
+					*to++ = *fr;
+				else
+				{
+					strcpy(to, get_filename(ifile));
+					to += strlen(to);
+				}
+			}
 			break;
 		default:
 			*to++ = *fr;
@@ -215,10 +408,14 @@ fcomplete(s)
 	char *s;
 {
 	char *fpat;
+	char *qs;
+
+	if (secure)
+		return (NULL);
 	/*
 	 * Complete the filename "s" by globbing "s*".
 	 */
-#if MSOFTC
+#if MSDOS_COMPILER && (MSDOS_COMPILER == MSOFTC || MSDOS_COMPILER == BORLANDC)
 	/*
 	 * But in DOS, we have to glob "s*.*".
 	 * But if the final component of the filename already has
@@ -226,30 +423,34 @@ fcomplete(s)
 	 * (Thus, "FILE" is globbed as "FILE*.*", 
 	 *  but "FILE.A" is globbed as "FILE.A*").
 	 */
-	char *slash;
-	for (slash = s+strlen(s)-1;  slash > s;  slash--)
-		if (*slash == '/' || *slash == '\\')
-			break;
-	fpat = (char *) ecalloc(strlen(s)+4, sizeof(char));
-	if (strchr(slash, '.') == NULL)
-		sprintf(fpat, "%s*.*", s);
-	else
-		sprintf(fpat, "%s*", s);
+	{
+		char *slash;
+		for (slash = s+strlen(s)-1;  slash > s;  slash--)
+			if (*slash == *PATHNAME_SEP || *slash == '/')
+				break;
+		fpat = (char *) ecalloc(strlen(s)+4, sizeof(char));
+		if (strchr(slash, '.') == NULL)
+			sprintf(fpat, "%s*.*", s);
+		else
+			sprintf(fpat, "%s*", s);
+	}
 #else
 	fpat = (char *) ecalloc(strlen(s)+2, sizeof(char));
 	sprintf(fpat, "%s*", s);
 #endif
-	s = glob(fpat);
+	qs = lglob(fpat);
+	s = shell_unquote(qs);
 	if (strcmp(s,fpat) == 0)
 	{
 		/*
 		 * The filename didn't expand.
 		 */
-		free(s);
-		s = NULL;
+		free(qs);
+		qs = NULL;
 	}
+	free(s);
 	free(fpat);
-	return (s);
+	return (qs);
 }
 #endif
 
@@ -290,10 +491,6 @@ seek_filesize(f)
 		return (NULL_POSITION);
 	return ((POSITION) spos);
 }
-
-#if GLOB
-
-FILE *popen();
 
 /*
  * Read a string from a file.
@@ -338,103 +535,248 @@ readfd(fd)
 	return (buf);
 }
 
+
+
+#if HAVE_POPEN
+
+FILE *popen();
+
 /*
  * Execute a shell command.
  * Return a pointer to a pipe connected to the shell command's standard output.
  */
 	static FILE *
-shellcmd(cmd, s1, s2)
+shellcmd(cmd)
 	char *cmd;
-	char *s1;
-	char *s2;
 {
-	char *scmd;
-	char *scmd2;
-	char *shell;
 	FILE *fd;
-	int len;
-	
-	len = strlen(cmd) + 
-		(s1 == NULL ? 0 : strlen(s1)) + 
-		(s2 == NULL ? 0 : strlen(s2)) + 1;
-	scmd = (char *) ecalloc(len, sizeof(char));
-	sprintf(scmd, cmd, s1, s2);
+
 #if HAVE_SHELL
-	shell = getenv("SHELL");
+	char *shell;
+
+	shell = lgetenv("SHELL");
 	if (shell != NULL && *shell != '\0')
 	{
+		char *scmd;
+		char *esccmd;
+
 		/*
-		 * Read the output of <$SHELL -c "cmd">.
+		 * Read the output of <$SHELL -c cmd>.  
+		 * Escape any metacharacters in the command.
 		 */
-		scmd2 = (char *) ecalloc(strlen(shell) + strlen(scmd) + 7,
-					sizeof(char));
-		sprintf(scmd2, "%s -c \"%s\"", shell, scmd);
-		free(scmd);
-		scmd = scmd2;
-	}
+		esccmd = shell_quote(cmd);
+		if (esccmd == NULL)
+		{
+			fd = popen(cmd, "r");
+		} else
+		{
+			scmd = (char *) ecalloc(strlen(shell) + strlen(esccmd) + 5,
+						sizeof(char));
+			sprintf(scmd, "%s %s %s", shell, shell_coption(), esccmd);
+			free(esccmd);
+			fd = popen(scmd, "r");
+			free(scmd);
+		}
+	} else
 #endif
-	fd = popen(scmd, "r");
-	free(scmd);
+	{
+		fd = popen(cmd, "r");
+	}
+	/*
+	 * Redirection in `popen' might have messed with the
+	 * standard devices.  Restore binary input mode.
+	 */
+	SET_BINARY(0);
 	return (fd);
 }
 
+#endif /* HAVE_POPEN */
+
+
 /*
- * Expand a filename, doing any shell-level substitutions.
+ * Expand a filename, doing any system-specific metacharacter substitutions.
  */
 	public char *
-glob(filename)
+lglob(filename)
 	char *filename;
 {
 	char *gfilename;
+	char *ofilename;
 
-	filename = fexpand(filename);
-#if OS2
+	ofilename = fexpand(filename);
+	if (secure)
+		return (ofilename);
+	filename = shell_unquote(ofilename);
+
+#ifdef DECL_GLOB_LIST
 {
-	char **list;
-	int cnt;
+	/*
+	 * The globbing function returns a list of names.
+	 */
 	int length;
+	char *p;
+	char *qfilename;
+	DECL_GLOB_LIST(list)
 
-	list = _fnexplode(filename);
-	if (list == NULL)
-		return (filename);
-	length = 0;
-	for (cnt = 0;  list[cnt] != NULL;  cnt++)
-	  	length += strlen(list[cnt]) + 1;
-	gfilename = (char *) ecalloc(length, sizeof(char));
-	for (cnt = 0;  list[cnt] != NULL;  cnt++)
+	GLOB_LIST(filename, list);
+	if (GLOB_LIST_FAILED(list))
 	{
-		strcat(gfilename, list[cnt]);
-	  	strcat(gfilename, " ");
+		free(filename);
+		return (ofilename);
 	}
-	_fnexplodefree(list);
+	length = 1; /* Room for trailing null byte */
+	for (SCAN_GLOB_LIST(list, p))
+	{
+		INIT_GLOB_LIST(list, p);
+		qfilename = shell_quote(p);
+		if (qfilename != NULL)
+		{
+	  		length += strlen(qfilename) + 1;
+			free(qfilename);
+		}
+	}
+	gfilename = (char *) ecalloc(length, sizeof(char));
+	for (SCAN_GLOB_LIST(list, p))
+	{
+		INIT_GLOB_LIST(list, p);
+		qfilename = shell_quote(p);
+		if (qfilename != NULL)
+		{
+			sprintf(gfilename + strlen(gfilename), "%s ", qfilename);
+			free(qfilename);
+		}
+	}
+	/*
+	 * Overwrite the final trailing space with a null terminator.
+	 */
+	*--p = '\0';
+	GLOB_LIST_DONE(list);
 }
 #else
+#ifdef DECL_GLOB_NAME
 {
-	FILE *fd;
+	/*
+	 * The globbing function returns a single name, and
+	 * is called multiple times to walk thru all names.
+	 */
+	register char *p;
+	register int len;
+	register int n;
+	char *pathname;
+	char *qpathname;
+	DECL_GLOB_NAME(fnd,drive,dir,fname,ext,handle)
+	
+	GLOB_FIRST_NAME(filename, &fnd, handle);
+	if (GLOB_FIRST_FAILED(handle))
+	{
+		free(filename);
+		return (ofilename);
+	}
+
+	_splitpath(filename, drive, dir, fname, ext);
+	len = 100;
+	gfilename = (char *) ecalloc(len, sizeof(char));
+	p = gfilename;
+	do {
+		n = strlen(drive) + strlen(dir) + strlen(fnd.GLOB_NAME) + 1;
+		pathname = (char *) ecalloc(n, sizeof(char));
+		sprintf(pathname, "%s%s%s", drive, dir, fnd.GLOB_NAME);
+		qpathname = shell_quote(pathname);
+		free(pathname);
+		if (qpathname != NULL)
+		{
+			n = strlen(qpathname);
+			while (p - gfilename + n + 2 >= len)
+			{
+				/*
+				 * No room in current buffer.
+				 * Allocate a bigger one.
+				 */
+				len *= 2;
+				*p = '\0';
+				p = (char *) ecalloc(len, sizeof(char));
+				strcpy(p, gfilename);
+				free(gfilename);
+				gfilename = p;
+				p = gfilename + strlen(gfilename);
+			}
+			strcpy(p, qpathname);
+			free(qpathname);
+			p += n;
+			*p++ = ' ';
+		}
+	} while (GLOB_NEXT_NAME(handle, &fnd) == 0);
 
 	/*
-	 * We get the shell to expand the filename for us by passing
+	 * Overwrite the final trailing space with a null terminator.
+	 */
+	*--p = '\0';
+	GLOB_NAME_DONE(handle);
+}
+#else
+#if HAVE_POPEN
+{
+	/*
+	 * We get the shell to glob the filename for us by passing
 	 * an "echo" command to the shell and reading its output.
 	 */
-	fd = shellcmd("echo %s", filename, (char*)NULL);
+	FILE *fd;
+	char *s;
+	char *lessecho;
+	char *cmd;
+	char *esc;
+
+	esc = get_meta_escape();
+	if (strlen(esc) == 0)
+		esc = "-";
+	esc = shell_quote(esc);
+	if (esc == NULL)
+	{
+		free(filename);
+		return (ofilename);
+	}
+	lessecho = lgetenv("LESSECHO");
+	if (lessecho == NULL || *lessecho == '\0')
+		lessecho = "lessecho";
+	/*
+	 * Invoke lessecho, and read its output (a globbed list of filenames).
+	 */
+	cmd = (char *) ecalloc(strlen(lessecho) + strlen(ofilename) + (7*strlen(metachars())) + 24, sizeof(char));
+	sprintf(cmd, "%s -p0x%x -d0x%x -e%s ", lessecho, openquote, closequote, esc);
+	free(esc);
+	for (s = metachars();  *s != '\0';  s++)
+		sprintf(cmd + strlen(cmd), "-n0x%x ", *s);
+	sprintf(cmd + strlen(cmd), "-- %s", ofilename);
+	fd = shellcmd(cmd);
+	free(cmd);
 	if (fd == NULL)
 	{
 		/*
 		 * Cannot create the pipe.
 		 * Just return the original (fexpanded) filename.
 		 */
-		return (filename);
+		free(filename);
+		return (ofilename);
 	}
 	gfilename = readfd(fd);
 	pclose(fd);
 	if (*gfilename == '\0')
 	{
 		free(gfilename);
-		return (filename);
+		free(filename);
+		return (ofilename);
 	}
-	free(filename);
 }
+#else
+	/*
+	 * No globbing functions at all.  Just use the fexpanded filename.
+	 */
+	gfilename = save(filename);
 #endif
+#endif
+#endif
+	free(filename);
+	free(ofilename);
 	return (gfilename);
 }
 
@@ -448,13 +790,20 @@ open_altfile(filename, pf, pfd)
 	int *pf;
 	void **pfd;
 {
+#if !HAVE_POPEN
+	return (NULL);
+#else
 	char *lessopen;
-	char *gfilename;
-	int returnfd = 0;
+	char *cmd;
 	FILE *fd;
+#if HAVE_FILENO
+	int returnfd = 0;
+#endif
 	
+	if (!use_lessopen || secure)
+		return (NULL);
 	ch_ungetchar(-1);
-	if ((lessopen = getenv("LESSOPEN")) == NULL)
+	if ((lessopen = lgetenv("LESSOPEN")) == NULL)
 		return (NULL);
 	if (strcmp(filename, "-") == 0)
 		return (NULL);
@@ -464,10 +813,20 @@ open_altfile(filename, pf, pfd)
 		 * If LESSOPEN starts with a |, it indicates 
 		 * a "pipe preprocessor".
 		 */
+#if HAVE_FILENO
 		lessopen++;
 		returnfd = 1;
+#else
+		error("LESSOPEN pipe is not supported", NULL_PARG);
+		return (NULL);
+#endif
 	}
-	fd = shellcmd(lessopen, filename, (char*)NULL);
+
+	cmd = (char *) ecalloc(strlen(lessopen) + strlen(filename) + 2, 
+			sizeof(char));
+	sprintf(cmd, lessopen, filename);
+	fd = shellcmd(cmd);
+	free(cmd);
 	if (fd == NULL)
 	{
 		/*
@@ -475,9 +834,9 @@ open_altfile(filename, pf, pfd)
 		 */
 		return (NULL);
 	}
+#if HAVE_FILENO
 	if (returnfd)
 	{
-#if HAVE_FILENO
 		int f;
 		char c;
 
@@ -486,6 +845,7 @@ open_altfile(filename, pf, pfd)
 		 * If it does, push the char back on the pipe.
 		 */
 		f = fileno(fd);
+		SET_BINARY(f);
 		if (read(f, &c, 1) != 1)
 		{
 			/*
@@ -498,19 +858,17 @@ open_altfile(filename, pf, pfd)
 		*pfd = (void *) fd;
 		*pf = f;
 		return (save("-"));
-#else
-		error("LESSOPEN pipe is not supported", NULL_PARG);
-		return (NULL);
-#endif
 	}
-	gfilename = readfd(fd);
+#endif
+	cmd = readfd(fd);
 	pclose(fd);
-	if (*gfilename == '\0')
+	if (*cmd == '\0')
 		/*
 		 * Pipe is empty.  This means there is no alt file.
 		 */
 		return (NULL);
-	return (gfilename);
+	return (cmd);
+#endif /* HAVE_POPEN */
 }
 
 /*
@@ -522,114 +880,69 @@ close_altfile(altfilename, filename, pipefd)
 	char *filename;
 	void *pipefd;
 {
+#if HAVE_POPEN
 	char *lessclose;
 	FILE *fd;
+	char *cmd;
 	
+	if (secure)
+		return;
 	if (pipefd != NULL)
+	{
+#if OS2
+		/*
+		 * The pclose function of OS/2 emx sometimes fails.
+		 * Send SIGINT to the piped process before closing it.
+		 */
+		kill(((FILE*)pipefd)->_pid, SIGINT);
+#endif
 		pclose((FILE*) pipefd);
-	if ((lessclose = getenv("LESSCLOSE")) == NULL)
+	}
+	if ((lessclose = lgetenv("LESSCLOSE")) == NULL)
 	     	return;
-	fd = shellcmd(lessclose, filename, altfilename);
-	pclose(fd);
-}
-		
-#else
-#if MSOFTC
-
-	public char *
-glob(filename)
-	char *filename;
-{
-	register char *gfilename;
-	register char *p;
-	register int len;
-	register int n;
-	struct find_t fnd;
-	char drive[_MAX_DRIVE];
-	char dir[_MAX_DIR];
-	char fname[_MAX_FNAME];
-	char ext[_MAX_EXT];
-	
-	filename = fexpand(filename);
-	if (_dos_findfirst(filename, ~0, &fnd) != 0)
-		return (filename);
-		
-	_splitpath(filename, drive, dir, fname, ext);
-	len = 100;
-	gfilename = (char *) ecalloc(len, sizeof(char));
-	p = gfilename;
-	do {
-		n = strlen(drive) + strlen(dir) + strlen(fnd.name);
-		while (p - gfilename + n+2 >= len)
-		{
-			len *= 2;
-			*p = '\0';
-			p = (char *) ecalloc(len, sizeof(char));
-			strcpy(p, gfilename);
-			free(gfilename);
-			gfilename = p;
-			p = gfilename + strlen(gfilename);
-		}
-		sprintf(p, "%s%s%s", drive, dir, fnd.name);
-		p += n;
-		*p++ = ' ';
-	} while (_dos_findnext(&fnd) == 0);
-	
-	*--p = '\0';
-	return (gfilename);
-}
-	
-	public char *
-open_altfile(filename)
-	char *filename;
-{
-	return (NULL);
-}
-
-	public void
-close_altfile(altfilename, filename)
-	char *altfilename;
-	char *filename;
-{
-}
-		
-#else
-
-	public char *
-glob(filename)
-	char *filename;
-{
-	return (fexpand(filename));
-}
-
-	
-	public char *
-open_altfile(filename)
-	char *filename;
-{
-     	return (NULL);
-}
-
-	public void
-close_altfile(altfilename, filename)
-	char *altfilename;
-	char *filename;
-{
-}
-		
+	cmd = (char *) ecalloc(strlen(lessclose) + strlen(filename) + 
+			strlen(altfilename) + 2, sizeof(char));
+	sprintf(cmd, lessclose, filename, altfilename);
+	fd = shellcmd(cmd);
+	free(cmd);
+	if (fd != NULL)
+		pclose(fd);
 #endif
-#endif
+}
+		
+/*
+ * Is the specified file a directory?
+ */
+	public int
+is_dir(filename)
+	char *filename;
+{
+	int isdir = 0;
 
-
+	filename = shell_unquote(filename);
 #if HAVE_STAT
+{
+	int r;
+	struct stat statbuf;
 
-#include <sys/stat.h>
-#ifndef S_ISDIR
-#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
+	r = stat(filename, &statbuf);
+	isdir = (r >= 0 && S_ISDIR(statbuf.st_mode));
+}
+#else
+#ifdef _OSK
+{
+	register int f;
+
+	f = open(filename, S_IREAD | S_IFDIR);
+	if (f >= 0)
+		close(f);
+	isdir = (f >= 0);
+}
 #endif
-#ifndef S_ISREG
-#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
 #endif
+	free(filename);
+	return (isdir);
+}
 
 /*
  * Returns NULL if the file can be opened and
@@ -640,35 +953,42 @@ close_altfile(altfilename, filename)
 bad_file(filename)
 	char *filename;
 {
-	register char *m;
-	struct stat statbuf;
+	register char *m = NULL;
 
-	if (stat(filename, &statbuf) < 0)
-		return (errno_message(filename));
-
-	if (force_open)
-		return (NULL);
-
-	if (S_ISDIR(statbuf.st_mode))
+	filename = shell_unquote(filename);
+	if (is_dir(filename))
 	{
-		static char is_dir[] = " is a directory";
-		m = (char *) ecalloc(strlen(filename) + sizeof(is_dir), 
+		static char is_a_dir[] = " is a directory";
+
+		m = (char *) ecalloc(strlen(filename) + sizeof(is_a_dir), 
 			sizeof(char));
 		strcpy(m, filename);
-		strcat(m, is_dir);
-		return (m);
-	}
-	if (!S_ISREG(statbuf.st_mode))
+		strcat(m, is_a_dir);
+	} else
 	{
-		static char not_reg[] = " is not a regular file";
-		m = (char *) ecalloc(strlen(filename) + sizeof(not_reg), 
-			sizeof(char));
-		strcpy(m, filename);
-		strcat(m, not_reg);
-		return (m);
-	}
+#if HAVE_STAT
+		int r;
+		struct stat statbuf;
 
-	return (NULL);
+		r = stat(filename, &statbuf);
+		if (r < 0)
+		{
+			m = errno_message(filename);
+		} else if (force_open)
+		{
+			m = NULL;
+		} else if (!S_ISREG(statbuf.st_mode))
+		{
+			static char not_reg[] = " is not a regular file (use -f to see it)";
+			m = (char *) ecalloc(strlen(filename) + sizeof(not_reg),
+				sizeof(char));
+			strcpy(m, filename);
+			strcat(m, not_reg);
+		}
+#endif
+	}
+	free(filename);
+	return (m);
 }
 
 /*
@@ -679,37 +999,27 @@ bad_file(filename)
 filesize(f)
 	int f;
 {
+#if HAVE_STAT
 	struct stat statbuf;
 
-	if (fstat(f, &statbuf) < 0)
-		/*
-		 * Can't stat; try seeking to the end.
-		 */
-		return (seek_filesize(f));
-
-	return ((POSITION) statbuf.st_size);
-}
-
+	if (fstat(f, &statbuf) >= 0)
+		return ((POSITION) statbuf.st_size);
 #else
+#ifdef _OSK
+	long size;
 
-/*
- * If we have no way to find out, just say the file is good.
- */
-	public char *
-bad_file(filename)
-	char *filename;
-{
-	return (NULL);
-}
-
-/*
- * We can find the file size by seeking.
- */
-	public POSITION
-filesize(f)
-	int f;
-{
+	if ((size = (long) _gs_size(f)) >= 0)
+		return ((POSITION) size);
+#endif
+#endif
 	return (seek_filesize(f));
 }
 
-#endif
+/*
+ * 
+ */
+	public char *
+shell_coption()
+{
+	return ("-c");
+}

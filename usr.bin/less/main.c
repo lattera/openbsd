@@ -1,27 +1,11 @@
 /*
- * Copyright (c) 1984,1985,1989,1994,1995  Mark Nudelman
- * All rights reserved.
+ * Copyright (C) 1984-2002  Mark Nudelman
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice in the documentation and/or other materials provided with 
- *    the distribution.
+ * You may distribute under the terms of either the GNU General Public
+ * License or the Less License, as specified in the README file.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR 
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
- * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * For more information about less, or for information on how to 
+ * contact the author, see the README file.
  */
 
 
@@ -30,7 +14,9 @@
  */
 
 #include "less.h"
-#include "position.h"
+#if MSDOS_COMPILER==WIN32C
+#include <windows.h>
+#endif
 
 public char *	every_first_cmd = NULL;
 public int	new_file;
@@ -39,15 +25,13 @@ public IFILE	curr_ifile = NULL_IFILE;
 public IFILE	old_ifile = NULL_IFILE;
 public struct scrpos initial_scrpos;
 public int	any_display = FALSE;
+public POSITION	start_attnpos = NULL_POSITION;
+public POSITION	end_attnpos = NULL_POSITION;
 public int	wscroll;
 public char *	progname;
 public int	quitting;
-
-extern int	quit_at_eof;
-extern int	cbufs;
-extern int	errmsgs;
-extern int	screen_trashed;
-extern int	force_open;
+public int	secure;
+public int	dohelp;
 
 #if LOGFILE
 public int	logfile = -1;
@@ -61,11 +45,17 @@ public char *	editproto;
 #endif
 
 #if TAGS
-extern char *	tagfile;
+extern char *	tags;
 extern char *	tagoption;
 extern int	jump_sline;
 #endif
 
+#ifdef WIN32
+static char consoleTitle[256];
+#endif
+
+extern int	missing_cap;
+extern int	know_dumb;
 
 
 /*
@@ -77,6 +67,7 @@ main(argc, argv)
 	char *argv[];
 {
 	IFILE ifile;
+	char *s;
 
 #ifdef __EMX__
 	_response(&argc, &argv);
@@ -84,33 +75,59 @@ main(argc, argv)
 #endif
 
 	progname = *argv++;
+	argc--;
+
+	secure = 0;
+	s = lgetenv("LESSSECURE");
+	if (s != NULL && *s != '\0')
+		secure = 1;
+
+#ifdef WIN32
+	if (getenv("HOME") == NULL)
+	{
+		/*
+		 * If there is no HOME environment variable,
+		 * try the concatenation of HOMEDRIVE + HOMEPATH.
+		 */
+		char *drive = getenv("HOMEDRIVE");
+		char *path  = getenv("HOMEPATH");
+		if (drive != NULL && path != NULL)
+		{
+			char *env = (char *) ecalloc(strlen(drive) + 
+					strlen(path) + 6, sizeof(char));
+			strcpy(env, "HOME=");
+			strcat(env, drive);
+			strcat(env, path);
+			putenv(env);
+		}
+	}
+	GetConsoleTitle(consoleTitle, sizeof(consoleTitle)/sizeof(char));
+#endif /* WIN32 */
 
 	/*
 	 * Process command line arguments and LESS environment arguments.
 	 * Command line arguments override environment arguments.
 	 */
+	is_tty = isatty(1);
 	get_term();
 	init_cmds();
 	init_prompt();
 	init_charset();
+	init_line();
 	init_option();
-	scan_option(getenv("LESS"));
+	s = lgetenv("LESS");
+	if (s != NULL)
+		scan_option(save(s));
 
-#if GNU_OPTIONS
-	/*
-	 * Special case for "less --help" and "less --version".
-	 */
-	if (argc == 2)
-	{
-		if (strcmp(argv[0], "--help") == 0)
-			scan_option("-?");
-		if (strcmp(argv[0], "--version") == 0)
-			scan_option("-V");
-	}
-#endif
 #define	isoptstring(s)	(((s)[0] == '-' || (s)[0] == '+') && (s)[1] != '\0')
-	while (--argc > 0 && (isoptstring(argv[0]) || isoptpending()))
-		scan_option(*argv++);
+	while (argc > 0 && (isoptstring(*argv) || isoptpending()))
+	{
+		s = *argv++;
+		argc--;
+		if (strcmp(s, "--") == 0)
+			break;
+		scan_option(s);
+	}
 #undef isoptstring
 
 	if (isoptpending())
@@ -124,14 +141,14 @@ main(argc, argv)
 	}
 
 #if EDITOR
-	editor = getenv("VISUAL");
+	editor = lgetenv("VISUAL");
 	if (editor == NULL || *editor == '\0')
 	{
-		editor = getenv("EDITOR");
+		editor = lgetenv("EDITOR");
 		if (editor == NULL || *editor == '\0')
 			editor = EDIT_PGM;
 	}
-	editproto = getenv("LESSEDIT");
+	editproto = lgetenv("LESSEDIT");
 	if (editproto == NULL || *editproto == '\0')
 		editproto = "%E ?lm+%lm. %f";
 #endif
@@ -141,9 +158,12 @@ main(argc, argv)
 	 * to "register" them with the ifile system.
 	 */
 	ifile = NULL_IFILE;
-	while (--argc >= 0)
+	if (dohelp)
+		ifile = get_ifile(FAKE_HELPFILE, ifile);
+	while (argc-- > 0)
 	{
-#if MSOFTC || OS2
+		char *filename;
+#if (MSDOS_COMPILER && MSDOS_COMPILER != DJGPPC)
 		/*
 		 * Because the "shell" doesn't expand filename patterns,
 		 * treat each argument as a filename pattern rather than
@@ -152,28 +172,35 @@ main(argc, argv)
 		 */
 		struct textlist tlist;
 		char *gfilename;
-		char *filename;
 		
-		gfilename = glob(*argv++);
+		gfilename = lglob(*argv++);
 		init_textlist(&tlist, gfilename);
 		filename = NULL;
 		while ((filename = forw_textlist(&tlist, filename)) != NULL)
-			ifile = get_ifile(filename, ifile);
+		{
+			(void) get_ifile(filename, ifile);
+			ifile = prev_ifile(NULL_IFILE);
+		}
 		free(gfilename);
 #else
-		ifile = get_ifile(*argv++, ifile);
+		filename = shell_quote(*argv);
+		if (filename == NULL)
+			filename = *argv;
+		argv++;
+		(void) get_ifile(filename, ifile);
+		ifile = prev_ifile(NULL_IFILE);
 #endif
 	}
 	/*
 	 * Set up terminal, etc.
 	 */
-	is_tty = isatty(1);
 	if (!is_tty)
 	{
 		/*
 		 * Output is not a tty.
 		 * Just copy the input file(s) to output.
 		 */
+		SET_BINARY(1);
 		if (nifile() == 0)
 		{
 			if (edit_stdin() == 0)
@@ -187,16 +214,18 @@ main(argc, argv)
 		quit(QUIT_OK);
 	}
 
+	if (missing_cap && !know_dumb)
+		error("WARNING: terminal is not fully functional", NULL_PARG);
 	init_mark();
-	raw_mode(1);
 	open_getchr();
+	raw_mode(1);
 	init_signals(1);
 
 	/*
 	 * Select the first file to examine.
 	 */
 #if TAGS
-	if (tagoption != NULL)
+	if (tagoption != NULL || strcmp(tags, "-") == 0)
 	{
 		/*
 		 * A -t option was given.
@@ -210,9 +239,7 @@ main(argc, argv)
 			quit(QUIT_ERROR);
 		}
 		findtag(tagoption);
-		if (tagfile == NULL)
-			quit(QUIT_ERROR);
-		if (edit(tagfile))  /* Edit file which contains the tag */
+		if (edit_tagfile())  /* Edit file which contains the tag */
 			quit(QUIT_ERROR);
 		/*
 		 * Search for the line which contains the tag.
@@ -238,20 +265,7 @@ main(argc, argv)
 	commands();
 	quit(QUIT_OK);
 	/*NOTREACHED*/
-}
-
-/*
- * Copy a string, truncating to the specified length if necessary.
- * Unlike strncpy(), the resulting string is guaranteed to be null-terminated.
- */
-	public void
-strtcpy(to, from, len)
-	char *to;
-	char *from;
-	unsigned int len;
-{
-	strncpy(to, from, len);
-	to[len-1] = '\0';
+	return (0);
 }
 
 /*
@@ -286,6 +300,7 @@ ecalloc(count, size)
 	error("Cannot allocate memory", NULL_PARG);
 	quit(QUIT_ERROR);
 	/*NOTREACHED*/
+	return (NULL);
 }
 
 /*
@@ -298,6 +313,41 @@ skipsp(s)
 	while (*s == ' ' || *s == '\t')	
 		s++;
 	return (s);
+}
+
+/*
+ * See how many characters of two strings are identical.
+ * If uppercase is true, the first string must begin with an uppercase
+ * character; the remainder of the first string may be either case.
+ */
+	public int
+sprefix(ps, s, uppercase)
+	char *ps;
+	char *s;
+	int uppercase;
+{
+	register int c;
+	register int sc;
+	register int len = 0;
+
+	for ( ;  *s != '\0';  s++, ps++)
+	{
+		c = *ps;
+		if (uppercase)
+		{
+			if (len == 0 && SIMPLE_IS_LOWER(c))
+				return (-1);
+			if (SIMPLE_IS_UPPER(c))
+				c = SIMPLE_TO_LOWER(c);
+		}
+		sc = *s;
+		if (len > 0 && SIMPLE_IS_UPPER(sc))
+			sc = SIMPLE_TO_LOWER(sc);
+		if (c != sc)
+			break;
+		len++;
+	}
+	return (len);
 }
 
 /*
@@ -319,12 +369,12 @@ quit(status)
 		save_status = status;
 	quitting = 1;
 	edit((char*)NULL);
-	if (any_display)
+	if (any_display && is_tty)
 		clear_bot();
 	deinit();
 	flush();
 	raw_mode(0);
-#if MSOFTC
+#if MSDOS_COMPILER && MSDOS_COMPILER != DJGPPC
 	/* 
 	 * If we don't close 2, we get some garbage from
 	 * 2's buffer when it flushes automatically.
@@ -333,5 +383,9 @@ quit(status)
 	 */
 	close(2);
 #endif
+#if WIN32
+	SetConsoleTitle(consoleTitle);
+#endif
+	close_getchr();
 	exit(status);
 }
