@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf_filter.c,v 1.13 2004/02/23 19:06:50 markus Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf_filter.c,v 1.13.2.1 2004/05/10 04:16:03 brad Exp $	*/
 /*	$NetBSD: bpf_filter.c,v 1.12 1996/02/13 22:00:00 christos Exp $	*/
 
 /*
@@ -80,6 +80,7 @@
 
 int	bpf_m_xword(struct mbuf *, int, int *);
 int	bpf_m_xhalf(struct mbuf *, int, int *);
+extern int bpf_maxbufsize;
 
 int
 bpf_m_xword(m, k, err)
@@ -482,39 +483,98 @@ bpf_validate(f, len)
 	struct bpf_insn *f;
 	int len;
 {
-	int i;
+	int i, from;
 	struct bpf_insn *p;
 
-	for (i = 0; i < len; ++i) {
-		/*
-		 * Check that that jumps are forward, and within 
-		 * the code block.
-		 */
-		p = &f[i];
-		if (BPF_CLASS(p->code) == BPF_JMP) {
-			int from = i + 1;
+	if (len < 1 || len > BPF_MAXINSNS)
+		return 0;
 
-			if (BPF_OP(p->code) == BPF_JA) {
-				if (from + p->k < from ||
-				    from + p->k >= len)
-					return 0;
-			}
-			else if (from + p->jt >= len || from + p->jf >= len)
-				return 0;
-		}
+	for (i = 0; i < len; ++i) {
+		p = &f[i];
+		switch (BPF_CLASS(p->code)) {
 		/*
 		 * Check that memory operations use valid addresses.
 		 */
-		if ((BPF_CLASS(p->code) == BPF_ST ||
-		     (BPF_CLASS(p->code) == BPF_LD && 
-		      (p->code & 0xe0) == BPF_MEM)) &&
-		    (p->k >= BPF_MEMWORDS || p->k < 0))
+		case BPF_LD:
+		case BPF_LDX:
+			switch (BPF_MODE(p->code)) {
+			case BPF_IMM:
+				break;
+			case BPF_ABS:
+			case BPF_IND:
+			case BPF_MSH:
+				/*
+				 * More strict check with actual packet length
+				 * is done runtime.
+				 */
+				if (p->k < 0 || p->k >= bpf_maxbufsize)
+					return 0;
+				break;
+			case BPF_MEM:
+				if (p->k < 0 || p->k >= BPF_MEMWORDS)
+					return 0;
+				break;
+			case BPF_LEN:
+				break;
+			default:
+				return 0;
+			}
+			break;
+		case BPF_ST:
+		case BPF_STX:
+			if (p->k < 0 || p->k >= BPF_MEMWORDS)
+				return 0;
+			break;
+		case BPF_ALU:
+			switch (BPF_OP(p->code)) {
+			case BPF_ADD:
+			case BPF_SUB:
+			case BPF_OR:
+			case BPF_AND:
+			case BPF_LSH:
+			case BPF_RSH:
+			case BPF_NEG:
+				break;
+			case BPF_DIV:
+				/*
+				 * Check for constant division by 0.
+				 */
+				if (BPF_RVAL(p->code) == BPF_K && p->k == 0)
+					return 0;
+			default:
+				return 0;
+			}
+			break;
+		case BPF_JMP:
+			/*
+			 * Check that that jumps are forward, and within 
+			 * the code block.
+			 */
+			from = i + 1;
+			switch (BPF_OP(p->code)) {
+			case BPF_JA:
+				if (from + p->k < from || from + p->k >= len)
+					return 0;
+				break;
+			case BPF_JEQ:
+			case BPF_JGT:
+			case BPF_JGE:
+			case BPF_JSET:
+				if (from + p->jt >= len || from + p->jf >= len)
+					return 0;
+				break;
+			default:
+				return 0;
+			}
+			break;
+		case BPF_RET:
+			break;
+		case BPF_MISC:
+			break;
+		default:
 			return 0;
-		/*
-		 * Check for constant division by 0.
-		 */
-		if (p->code == (BPF_ALU|BPF_DIV|BPF_K) && p->k == 0)
-			return 0;
+		}
+
 	}
 	return BPF_CLASS(f[len - 1].code) == BPF_RET;
 }
