@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.23 2002/03/06 00:23:27 markus Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.24 2003/05/14 18:16:20 jakob Exp $
 
 CFLAGS+=	-I${.CURDIR}/..
 
@@ -14,6 +14,8 @@ CDIAGFLAGS+=	-Wunused
 
 #CFLAGS+=	-DSMARTCARD
 #LDADD+=	-lsectok
+
+#CFLAGS+=	-DDNS
 
 .include <bsd.obj.mk>
 
