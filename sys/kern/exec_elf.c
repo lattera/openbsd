@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.44 2003/02/18 03:54:40 drahn Exp $	*/
+/*	$OpenBSD: src/sys/kern/exec_elf.c,v 1.44.2.1 2003/11/03 22:07:49 margarida Exp $	*/
 
 /*
  * Copyright (c) 1996 Per Fogelstrom
@@ -786,6 +786,7 @@ ELFNAME(os_pt_note)(struct proc *p, struct exec_package *epp, Elf_Ehdr *eh,
 
 	for (ph = hph;  ph < &hph[eh->e_phnum]; ph++) {
 		if (ph->p_type != PT_NOTE ||
+		    ph->p_filesz > 1024 ||
 		    ph->p_filesz < sizeof(Elf_Note) + name_size)
 			continue;
 
