@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/pioctl.h,v 1.2 1998/08/30 17:35:46 art Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/xfs_pioctl.h,v 1.1 1998/08/30 18:06:26 art Exp $	*/
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska HÅˆgskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
