@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/db_disasm.c,v 1.2 1996/12/28 06:21:48 rahnds Exp $	*/
 
 #include <sys/types.h>
 #include <sys/param.h>

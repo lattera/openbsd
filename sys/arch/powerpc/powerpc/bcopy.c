@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/bcopy.c,v 1.2 1996/12/28 06:21:37 rahnds Exp $	*/
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -36,7 +37,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)bcopy.c	5.11 (Berkeley) 6/21/91";*/
-static char *rcsid = "$Id: bcopy.c,v 1.1 1996/09/30 16:34:40 ws Exp $";
+static char *rcsid = "$Id: bcopy.c,v 1.1.1.1 1996/12/21 20:35:56 rahnds Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/cdefs.h>
