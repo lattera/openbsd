@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/lib/libusb/Attic/usbvar.h,v 1.1 2001/09/02 17:50:40 pvalchev Exp $	*/
-/*	$NetBSD: usbvar.h,v 1.2 1999/05/11 21:15:46 augustss Exp $	*/
+/*	$OpenBSD: src/lib/libusbhid/data.c,v 1.1 2001/12/30 07:04:38 pvalchev Exp $	*/
+/*	$NetBSD: data.c,v 1.8 2000/04/02 11:10:53 augustss Exp $	*/
 
 /*
  * Copyright (c) 1999 Lennart Augustsson <augustss@netbsd.org>
@@ -27,8 +27,65 @@
  * SUCH DAMAGE.
  */
 
-struct report_desc {
-	unsigned int size;
-	unsigned char data[1];
-};
+#include <stdlib.h>
+#include "usbhid.h"
 
+int
+hid_get_data(const void *p, const hid_item_t *h)
+{
+	const unsigned char *buf;
+	unsigned int hpos;
+	unsigned int hsize;
+	int data;
+	int i, end, offs;
+
+	buf = p;
+	hpos = h->pos;			/* bit position of data */
+	hsize = h->report_size;		/* bit length of data */
+
+	if (hsize == 0)
+		return (0);
+	offs = hpos / 8;
+	end = (hpos + hsize) / 8 - offs;
+	data = 0;
+	for (i = 0; i <= end; i++)
+		data |= buf[offs + i] << (i*8);
+	data >>= hpos % 8;
+	data &= (1 << hsize) - 1;
+	if (h->logical_minimum < 0) {
+		/* Need to sign extend */
+		hsize = sizeof data * 8 - hsize;
+		data = (data << hsize) >> hsize;
+	}
+	return (data);
+}
+
+void
+hid_set_data(void *p, const hid_item_t *h, int data)
+{
+	unsigned char *buf;
+	unsigned int hpos;
+	unsigned int hsize;
+	int i, end, offs, mask;
+
+	buf = p;
+	hpos = h->pos;			/* bit position of data */
+	hsize = h->report_size;		/* bit length of data */
+
+	if (hsize != 32) {
+		mask = (1 << hsize) - 1;
+		data &= mask;
+	} else
+		mask = ~0;
+
+	data <<= (hpos % 8);
+	mask <<= (hpos % 8);
+	mask = ~mask;
+
+	offs = hpos / 8;
+	end = (hpos + hsize) / 8 - offs;
+
+	for (i = 0; i <= end; i++)
+		buf[offs + i] = (buf[offs + i] & (mask >> (i*8))) |
+			((data >> (i*8)) & 0xff);
+}

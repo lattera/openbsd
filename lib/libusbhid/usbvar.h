@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/lib/libusb/Attic/descr.c,v 1.1 2001/09/02 17:50:40 pvalchev Exp $	*/
-/*	$NetBSD: descr.c,v 1.9 2000/09/24 02:13:24 augustss Exp $	*/
+/*	$OpenBSD: src/lib/libusbhid/usbvar.h,v 1.1 2001/12/30 07:04:38 pvalchev Exp $	*/
+/*	$NetBSD: usbvar.h,v 1.2 1999/05/11 21:15:46 augustss Exp $	*/
 
 /*
  * Copyright (c) 1999 Lennart Augustsson <augustss@netbsd.org>
@@ -27,49 +27,8 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+struct report_desc {
+	unsigned int size;
+	unsigned char data[1];
+};
 
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-
-#include <dev/usb/usb.h>
-
-#include "usb.h"
-#include "usbvar.h"
-
-report_desc_t
-hid_get_report_desc(int fd)
-{
-	struct usb_ctl_report_desc rep;
-
-	rep.size = 0;
-	if (ioctl(fd, USB_GET_REPORT_DESC, &rep) < 0)
-		return (NULL);
-
-	return hid_use_report_desc(rep.data, (unsigned int)rep.size);
-}
-
-report_desc_t
-hid_use_report_desc(unsigned char *data, unsigned int size)
-{
-	report_desc_t r;
-
-	r = malloc(sizeof(*r) + size);
-	if (r == 0) {
-		errno = ENOMEM;
-		return (NULL);
-	}
-	r->size = size;
-	memcpy(r->data, data, size);
-	return (r);
-}
-
-void
-hid_dispose_report_desc(report_desc_t r)
-{
-
-	free(r);
-}

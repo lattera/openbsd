@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/lib/libusb/Attic/data.c,v 1.1 2001/09/02 17:50:40 pvalchev Exp $	*/
-/*	$NetBSD: data.c,v 1.8 2000/04/02 11:10:53 augustss Exp $	*/
+/*	$OpenBSD: src/lib/libusbhid/descr.c,v 1.1 2001/12/30 07:04:38 pvalchev Exp $	*/
+/*	$NetBSD: descr.c,v 1.9 2000/09/24 02:13:24 augustss Exp $	*/
 
 /*
  * Copyright (c) 1999 Lennart Augustsson <augustss@netbsd.org>
@@ -27,65 +27,49 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+
+#include <errno.h>
 #include <stdlib.h>
-#include "usb.h"
+#include <string.h>
+#include <unistd.h>
+#include <sys/time.h>
 
-int
-hid_get_data(const void *p, const hid_item_t *h)
+#include <dev/usb/usb.h>
+
+#include "usbhid.h"
+#include "usbvar.h"
+
+report_desc_t
+hid_get_report_desc(int fd)
 {
-	const unsigned char *buf;
-	unsigned int hpos;
-	unsigned int hsize;
-	int data;
-	int i, end, offs;
+	struct usb_ctl_report_desc rep;
 
-	buf = p;
-	hpos = h->pos;			/* bit position of data */
-	hsize = h->report_size;		/* bit length of data */
+	rep.size = 0;
+	if (ioctl(fd, USB_GET_REPORT_DESC, &rep) < 0)
+		return (NULL);
 
-	if (hsize == 0)
-		return (0);
-	offs = hpos / 8;
-	end = (hpos + hsize) / 8 - offs;
-	data = 0;
-	for (i = 0; i <= end; i++)
-		data |= buf[offs + i] << (i*8);
-	data >>= hpos % 8;
-	data &= (1 << hsize) - 1;
-	if (h->logical_minimum < 0) {
-		/* Need to sign extend */
-		hsize = sizeof data * 8 - hsize;
-		data = (data << hsize) >> hsize;
+	return hid_use_report_desc(rep.data, (unsigned int)rep.size);
+}
+
+report_desc_t
+hid_use_report_desc(unsigned char *data, unsigned int size)
+{
+	report_desc_t r;
+
+	r = malloc(sizeof(*r) + size);
+	if (r == 0) {
+		errno = ENOMEM;
+		return (NULL);
 	}
-	return (data);
+	r->size = size;
+	memcpy(r->data, data, size);
+	return (r);
 }
 
 void
-hid_set_data(void *p, const hid_item_t *h, int data)
+hid_dispose_report_desc(report_desc_t r)
 {
-	unsigned char *buf;
-	unsigned int hpos;
-	unsigned int hsize;
-	int i, end, offs, mask;
 
-	buf = p;
-	hpos = h->pos;			/* bit position of data */
-	hsize = h->report_size;		/* bit length of data */
-
-	if (hsize != 32) {
-		mask = (1 << hsize) - 1;
-		data &= mask;
-	} else
-		mask = ~0;
-
-	data <<= (hpos % 8);
-	mask <<= (hpos % 8);
-	mask = ~mask;
-
-	offs = hpos / 8;
-	end = (hpos + hsize) / 8 - offs;
-
-	for (i = 0; i <= end; i++)
-		buf[offs + i] = (buf[offs + i] & (mask >> (i*8))) |
-			((data >> (i*8)) & 0xff);
+	free(r);
 }
