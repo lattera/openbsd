@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.13 2004/06/13 07:31:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.14 2004/06/13 18:42:25 grange Exp $	*/
 /* 	$NetBSD: ioapic.c,v 1.7 2003/07/14 22:32:40 lukem Exp $	*/
 
 /*-
@@ -370,8 +370,10 @@ apic_set_redir(struct ioapic_softc *sc, int pin)
 				redlo &= ~IOAPIC_REDLO_ACTLO;
 		}
 	}
-	ioapic_write(sc, IOAPIC_REDLO(pin), redlo);
+	/* Do atomic write */
+	ioapic_write(sc, IOAPIC_REDLO(pin), IOAPIC_REDLO_MASK);
 	ioapic_write(sc, IOAPIC_REDHI(pin), redhi);
+	ioapic_write(sc, IOAPIC_REDLO(pin), redlo);
 	if (mp_verbose)
 		ioapic_print_redir(sc, "int", pin);
 }
