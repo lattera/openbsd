@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.23 2004/04/05 10:15:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.24 2004/04/06 13:36:43 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -1836,8 +1836,6 @@ pmap_steal_ptp(obj, offset)
 				pmaps_hand->pm_pdir[idx] = 0;	/* zap! */
 				pmaps_hand->pm_stats.resident_count--;
 #ifdef MULTIPROCESSOR
-/* XXX */
-printf("pmap_steal_ptp got something\n");
 				pmap_apte_flush(pmaps_hand);
 #else
 				if (pmap_is_curpmap(pmaps_hand))
