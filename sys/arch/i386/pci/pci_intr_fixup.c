@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.5 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_intr_fixup.c,v 1.13.2.6 2002/03/28 10:31:05 niklas Exp $	*/
 /*	$NetBSD: pci_intr_fixup.c,v 1.10 2000/08/10 21:18:27 soda Exp $	*/
 
 /*
@@ -126,18 +126,18 @@ pciintr_icu_handle_t pciintr_icu_handle;
 int pcibios_irqs_hint = PCIBIOS_IRQS_HINT;
 #endif
 
-struct pciintr_link_map *pciintr_link_lookup __P((int));
-struct pcibios_intr_routing *pciintr_pir_lookup __P((int, int));
-int	pciintr_bitmap_count_irq __P((int, int *));
+struct pciintr_link_map *pciintr_link_lookup(int);
+struct pcibios_intr_routing *pciintr_pir_lookup(int, int);
+int	pciintr_bitmap_count_irq(int, int *);
 
 SIMPLEQ_HEAD(, pciintr_link_map) pciintr_link_map_list;
 
 const struct pciintr_icu_table {
 	pci_vendor_id_t	piit_vendor;
 	pci_product_id_t piit_product;
-	int (*piit_init) __P((pci_chipset_tag_t,
+	int (*piit_init)(pci_chipset_tag_t,
 		bus_space_tag_t, pcitag_t, pciintr_icu_tag_t *,
-		pciintr_icu_handle_t *));
+		pciintr_icu_handle_t *);
 } pciintr_icu_table[] = {
 	{ PCI_VENDOR_INTEL,	PCI_PRODUCT_INTEL_82371MX,
 	  piix_init },
@@ -181,7 +181,7 @@ const struct pciintr_icu_table {
 	  NULL },
 };
 
-const struct pciintr_icu_table *pciintr_icu_lookup __P((pcireg_t));
+const struct pciintr_icu_table *pciintr_icu_lookup(pcireg_t);
 
 const struct pciintr_icu_table *
 pciintr_icu_lookup(id)

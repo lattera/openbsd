@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/clock.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/clock.c,v 1.1.2.3 2002/03/28 10:36:03 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 1996/09/30 16:34:40 ws Exp $	*/
 
 /*
@@ -61,7 +61,7 @@ static volatile u_long lasttb;
 #define YEAR0		1900
 
 static u_long
-chiptotime __P((int sec, int min, int hour, int day, int mon, int year));
+chiptotime(int sec, int min, int hour, int day, int mon, int year);
 
 struct chiptime {
 	int     sec;
@@ -73,7 +73,7 @@ struct chiptime {
 	int     year;
 };
 
-static void timetochip __P((struct chiptime *c));
+static void timetochip(struct chiptime *c);
 
 /*
  * For now we let the machine run with boot time, not changing the clock

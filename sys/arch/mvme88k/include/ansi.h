@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.4 2001/10/31 03:01:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.5 2002/03/28 10:36:02 niklas Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -55,7 +55,7 @@
 #define	_BSD_TIMER_T_	int
 
 #if 0
-#define	_BSD_VA_LIST_	char*			/* va_list */
+#define	_BSD_VA_LIST_	char *			/* va_list */
 #endif
 
 #include "va-m88k.h"

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.5 2002/03/06 02:04:45 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.6 2002/03/28 10:36:02 niklas Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -57,11 +57,11 @@
 
 caddr_t zeropage;
 
-int mmopen __P((dev_t, int, int));
-int mmclose __P((dev_t, int, int));
-int mmrw __P((dev_t, struct uio *, int));
-paddr_t mmmmap __P((dev_t, off_t, int));
-int mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
+int mmopen(dev_t, int, int);
+int mmclose(dev_t, int, int);
+int mmrw(dev_t, struct uio *, int);
+paddr_t mmmmap(dev_t, off_t, int);
+int mmioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 /*ARGSUSED*/
 int

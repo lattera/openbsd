@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.5 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/vmparam.h,v 1.9.4.6 2002/03/28 10:31:03 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -106,7 +106,7 @@
 #ifndef _LOCORE
 #define __HAVE_PMAP_PHYSSEG
 struct pmap_physseg {
-	struct pv_entry *pvent;
+	struct pv_head *pvhead;
 };
 #endif
 

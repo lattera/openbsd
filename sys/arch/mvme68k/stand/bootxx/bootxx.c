@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/bootxx.c,v 1.3.4.1 2001/10/31 03:01:17 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/bootxx.c,v 1.3.4.2 2002/03/28 10:34:06 niklas Exp $ */
 /*	$NetBSD: bootxx.c,v 1.5 1995/10/13 21:44:57 gwr Exp $ */
 
 /*
@@ -87,7 +87,7 @@ main()
 		_rtt();
 	}
 
-	addr = (char*)LOADADDR;
+	addr = (char *)LOADADDR;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

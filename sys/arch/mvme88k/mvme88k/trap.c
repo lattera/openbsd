@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.6 2002/03/06 02:04:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/trap.c,v 1.8.4.7 2002/03/28 10:36:03 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -102,12 +102,12 @@ unsigned traptrace = 0;
 #define SYSTEMMODE(PSR) (((struct psr*)&(PSR))->psr_mode != 0)
 
 /* sigh */
-extern int procfs_domem __P((struct proc *, struct proc *, void *, struct uio *));
+extern int procfs_domem(struct proc *, struct proc *, void *, struct uio *);
 
-extern void regdump __P((struct trapframe *f));
-void error_fatal __P((struct m88100_saved_state *frame));
-void error_fault __P((struct m88100_saved_state *frame));
-void error_reset __P((struct m88100_saved_state *frame));
+extern void regdump(struct trapframe *f);
+void error_fatal(struct m88100_saved_state *frame);
+void error_fault(struct m88100_saved_state *frame);
+void error_reset(struct m88100_saved_state *frame);
 
 char  *trap_type[] = {
 	"Reset",
@@ -711,7 +711,7 @@ m88110_trap(unsigned type, struct m88100_saved_state *frame)
 	extern struct vm_map *kernel_map;
 	extern unsigned guarded_access_start;
 	extern unsigned guarded_access_end;
-	extern pt_entry_t *pmap_pte __P((pmap_t, vm_offset_t));
+	extern pt_entry_t *pmap_pte(pmap_t, vm_offset_t);
 
 	uvmexp.traps++;
 

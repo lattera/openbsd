@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/frame.h,v 1.11.2.1 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/frame.h,v 1.11.2.2 2002/03/28 10:27:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -34,8 +34,6 @@
 
 #ifndef _MACHINE_FRAME_H_
 #define _MACHINE_FRAME_H_
-
-#include <machine/reg.h>
 
 /*
  * Call frame definitions

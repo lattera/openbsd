@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.5 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.1.4.6 2002/03/28 10:36:02 niklas Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr. 
  * All rights reserved.
@@ -103,62 +103,62 @@ struct vxsoftc {
 
 /* prototypes */
 
-void *get_next_envelope __P((struct envelope *thisenv));
-struct envelope *get_status_head __P((struct vxsoftc *sc));
-void set_status_head __P((struct vxsoftc *sc, void *envp));
-struct packet *get_packet __P((struct vxsoftc *sc, struct envelope *thisenv));
-struct envelope *find_status_packet __P((struct vxsoftc *sc, struct packet * pktp));
+void *get_next_envelope(struct envelope *thisenv);
+struct envelope *get_status_head(struct vxsoftc *sc);
+void set_status_head(struct vxsoftc *sc, void *envp);
+struct packet *get_packet(struct vxsoftc *sc, struct envelope *thisenv);
+struct envelope *find_status_packet(struct vxsoftc *sc, struct packet * pktp);
 
-void read_wakeup __P((struct vxsoftc *sc, int port));
-int  bpp_send __P((struct vxsoftc *sc, void *pkt, int wait_flag));
+void read_wakeup(struct vxsoftc *sc, int port);
+int  bpp_send(struct vxsoftc *sc, void *pkt, int wait_flag);
 
-int  create_channels __P((struct vxsoftc *sc));
-int  env_isvalid __P((struct envelope *thisenv));
-void memcpy2 __P((void *dest, const void *src, size_t size));
-void *get_free_envelope __P((struct vxsoftc *sc));
-void put_free_envelope __P((struct vxsoftc *sc, void *envp));
-void *get_free_packet __P((struct vxsoftc *sc));
-void put_free_packet __P((struct vxsoftc *sc, void *pktp));
+int  create_channels(struct vxsoftc *sc);
+int  env_isvalid(struct envelope *thisenv);
+void memcpy2(void *dest, const void *src, size_t size);
+void *get_free_envelope(struct vxsoftc *sc);
+void put_free_envelope(struct vxsoftc *sc, void *envp);
+void *get_free_packet(struct vxsoftc *sc);
+void put_free_packet(struct vxsoftc *sc, void *pktp);
 
-int  vx_init __P((struct vxsoftc *sc));
-int  vx_event __P((struct vxsoftc *sc, struct packet *evntp));
+int  vx_init(struct vxsoftc *sc);
+int  vx_event(struct vxsoftc *sc, struct packet *evntp);
 
-void vx_unblock __P((struct tty *tp));
-int  vx_ccparam __P((struct vxsoftc *sc, struct termios *par, int port));
+void vx_unblock(struct tty *tp);
+int  vx_ccparam(struct vxsoftc *sc, struct termios *par, int port);
 
-int  vx_param __P((struct tty *tp, struct termios *t));
-int  vx_intr __P((void * arg));
-int  vx_sintr __P((struct vxsoftc *sc));
-int  vx_poll __P((struct vxsoftc *sc, struct packet *wpktp));
-void vx_overflow __P((struct vxsoftc *sc, int port, long *ptime, u_char *msg));
-void vx_frame __P((struct vxsoftc *sc, int port));
-void vx_break __P(( struct vxsoftc *sc, int port));
-int  vx_mctl __P((dev_t dev, int bits, int how));
+int  vx_param(struct tty *tp, struct termios *t);
+int  vx_intr(void * arg);
+int  vx_sintr(struct vxsoftc *sc);
+int  vx_poll(struct vxsoftc *sc, struct packet *wpktp);
+void vx_overflow(struct vxsoftc *sc, int port, long *ptime, u_char *msg);
+void vx_frame(struct vxsoftc *sc, int port);
+void vx_break( struct vxsoftc *sc, int port);
+int  vx_mctl(dev_t dev, int bits, int how);
 
-int  vxmatch __P((struct device *parent, void *self, void *aux));
-void vxattach __P((struct device *parent, struct device *self, void *aux));
+int  vxmatch(struct device *parent, void *self, void *aux);
+void vxattach(struct device *parent, struct device *self, void *aux);
 
-int  vxopen  __P((dev_t dev, int flag, int mode, struct proc *p));
-int  vxclose __P((dev_t dev, int flag, int mode, struct proc *p));
-int  vxread  __P((dev_t dev, struct uio *uio, int flag));
-int  vxwrite __P((dev_t dev, struct uio *uio, int flag));
-int  vxioctl __P((dev_t dev, int cmd, caddr_t data, int flag, struct proc *p));
-void vxstart __P((struct tty *tp));
-int  vxstop  __P((struct tty *tp, int flag));
+int  vxopen(dev_t dev, int flag, int mode, struct proc *p);
+int  vxclose(dev_t dev, int flag, int mode, struct proc *p);
+int  vxread(dev_t dev, struct uio *uio, int flag);
+int  vxwrite(dev_t dev, struct uio *uio, int flag);
+int  vxioctl(dev_t dev, int cmd, caddr_t data, int flag, struct proc *p);
+void vxstart(struct tty *tp);
+int  vxstop(struct tty *tp, int flag);
 
-void   vxputc __P((struct vxsoftc *sc, int port, u_char c));
+void   vxputc(struct vxsoftc *sc, int port, u_char c);
 
-struct tty * vxtty __P((dev_t));
-short dtr_ctl __P((struct vxsoftc *, int, int));
-short rts_ctl __P((struct vxsoftc *, int, int));
-short flush_ctl __P((struct vxsoftc *, int, int));
-u_short vxtspeed __P((int));
-void read_chars __P((struct vxsoftc *, int));
-void ccode __P((struct vxsoftc *, int, char));
-void wzero __P((void *, size_t));
-int create_free_queue __P((struct vxsoftc *));
-void print_dump __P((struct vxsoftc *));
-struct envelope *get_cmd_tail __P((struct vxsoftc *));
+struct tty * vxtty(dev_t);
+short dtr_ctl(struct vxsoftc *, int, int);
+short rts_ctl(struct vxsoftc *, int, int);
+short flush_ctl(struct vxsoftc *, int, int);
+u_short vxtspeed(int);
+void read_chars(struct vxsoftc *, int);
+void ccode(struct vxsoftc *, int, char);
+void wzero(void *, size_t);
+int create_free_queue(struct vxsoftc *);
+void print_dump(struct vxsoftc *);
+struct envelope *get_cmd_tail(struct vxsoftc *);
 
 struct cfattach vx_ca = {       
 	sizeof(struct vxsoftc), vxmatch, vxattach
@@ -1312,8 +1312,8 @@ memcpy2(void *dest, const void *src, size_t size)
 {
 	int i;
 	short *d, *s;
-	d = (short*) dest;
-	s = (short*) src;
+	d = (short *) dest;
+	s = (short *) src;
 	for (i=0; i<(size/2); i++) {
 		*d = *s;
 		d++;
@@ -1326,7 +1326,7 @@ wzero(void *addr, size_t size)
 {
 	int i;
 	short *d;
-	d = (short*) addr;
+	d = (short *) addr;
 	for (i=0; i<(size/2); i++) {
 		*d = 0;
 		d++;
@@ -1395,7 +1395,7 @@ put_free_envelope(sc, ep)
 	sc->elist_tail = envp;
 }
 
-void* 
+void * 
 get_free_packet(sc)
 	struct vxsoftc *sc;
 {
@@ -1591,7 +1591,7 @@ get_packet(sc, thisenv)
 	 * offset to the board address 
 	 */
 	baseaddr |= thisenv->packet_ptr;
-	return ((void*)baseaddr);
+	return ((void *)baseaddr);
 }
 
 /*

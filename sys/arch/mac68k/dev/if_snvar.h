@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_snvar.h,v 1.8.12.1 2001/10/31 03:01:14 nate Exp $      */
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_snvar.h,v 1.8.12.2 2002/03/28 10:34:04 niklas Exp $      */
 /*    $NetBSD: if_snvar.h,v 1.8 1997/04/25 03:40:09 briggs Exp $      */
 
 /*
@@ -214,7 +214,7 @@ typedef struct sn_softc {
 #define	CDA_ENABLE	64	/* mask enabling CAM entries */
 #define	CDA_SIZE(sc)	((4*16 + 1) * ((sc->bitmode) ? 4 : 2))
 
-int	snsetup __P((struct sn_softc *sc, u_int8_t *));
-void	snintr __P((void *, int));
-void	sn_get_enaddr __P((bus_space_tag_t t, bus_space_handle_t h,
-	    vm_offset_t o, u_char *dst));
+int	snsetup(struct sn_softc *sc, u_int8_t *);
+void	snintr(void *, int);
+void	sn_get_enaddr(bus_space_tag_t t, bus_space_handle_t h,
+	    vm_offset_t o, u_char *dst);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.3 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.4 2002/03/28 10:36:03 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -96,11 +96,11 @@ extern struct user *proc0paddr;
  */
 #include <dev/cons.h>
 
-int  bootcnprobe __P((struct consdev *));
-int  bootcninit __P((struct consdev *));
-void bootcnputc __P((dev_t, char));
-int  bootcngetc __P((dev_t));
-extern void nullcnpollc __P((dev_t, int));
+int  bootcnprobe(struct consdev *);
+int  bootcninit(struct consdev *);
+void bootcnputc(dev_t, char);
+int  bootcngetc(dev_t);
+extern void nullcnpollc(dev_t, int);
 #define bootcnpollc nullcnpollc
 static struct consdev bootcons = {
 	(void (*))NULL, 
@@ -113,8 +113,8 @@ static struct consdev bootcons = {
    1
 };
 
-u_int32_t	ppc_get_msr __P((void));
-u_int32_t	ppc_set_msr __P((u_int32_t));
+u_int32_t	ppc_get_msr(void);
+u_int32_t	ppc_set_msr(u_int32_t);
 
 /* 
  * Declare these as initialized data so we can patch them.
@@ -157,7 +157,7 @@ char bootpathbuf[512];
 struct firmware *fw = NULL;
 extern struct firmware ppc1_firmware;
 
-caddr_t allocsys __P((caddr_t));
+caddr_t allocsys(caddr_t);
 
 /*
  * Extent maps to manage I/O. Allocate storage for 8 regions in each,
@@ -194,8 +194,8 @@ initppc(startkernel, endkernel, args)
 #if NIPKDB > 0
 	extern caddr_t ipkdblow, ipkdbsize;
 #endif
-	extern void consinit __P((void));
-	extern void callback __P((void *));
+	extern void consinit(void);
+	extern void callback(void *);
 	int exc, scratch;
 
 	proc0.p_addr = proc0paddr;
@@ -470,7 +470,7 @@ initppc(startkernel, endkernel, args)
 
 void
 install_extint(handler)
-	void (*handler) __P((void));
+	void (*handler)(void);
 {
 	extern caddr_t extint, extsize;
 	extern u_long extint_call;
@@ -669,7 +669,7 @@ setregs(p, pack, stack, retval)
 	pargs = -roundup(-stack + 8, 16);
 	newstack = (u_int32_t)(pargs - 32);
 
-	copyin ((void*)(VM_MAX_ADDRESS-0x10), &args, 0x10);
+	copyin ((void *)(VM_MAX_ADDRESS-0x10), &args, 0x10);
 	
 	bzero(tf, sizeof *tf);
 	tf->fixreg[1] = newstack;
@@ -984,9 +984,9 @@ systype(char *name)
  *
  */
 #include <dev/pci/pcivar.h>
-typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,
-            int, int, int (*func)(void *), void *, char *));
-typedef void     (intr_disestablish_t) __P((void *, void *));
+typedef void     *(intr_establish_t)(void *, pci_intr_handle_t,
+            int, int, int (*func)(void *), void *, char *);
+typedef void     (intr_disestablish_t)(void *, void *);
 
 int ppc_configed_intr_cnt = 0;
 struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
@@ -997,7 +997,7 @@ ppc_intr_establish(lcv, ih, type, level, func, arg, name)
 	pci_intr_handle_t ih;
 	int type;
 	int level;
-	int (*func) __P((void *));
+	int (*func)(void *);
 	void *arg;
 	char *name;
 {
@@ -1109,10 +1109,10 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	}
 	return 0;
 }
-bus_addr_t bus_space_unmap_p __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
-void bus_space_unmap __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
+bus_addr_t bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
+void bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
 bus_addr_t
 bus_space_unmap_p(t, bsh, size)
 	bus_space_tag_t t;
@@ -1234,7 +1234,7 @@ mapiodev(pa, len)
 		spa += NBPG;
 		vaddr += NBPG;
 	}
-	return (void*) (va+off);
+	return (void *) (va+off);
 }
 void 
 unmapiodev(kva, p_size)

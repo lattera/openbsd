@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/bug.h,v 1.4.6.3 2001/12/05 00:39:12 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/bug.h,v 1.4.6.4 2002/03/28 10:36:02 niklas Exp $ */
 
 #ifndef _MACHINE_BUG_H_
 #define _MACHINE_BUG_H_
@@ -8,7 +8,7 @@ struct bugenv {
 	int	dlun;
 	int	ipl;
 	int	ctlr;
-	int	(*entry) __P((void));
+	int	(*entry)(void);
 	int	cfgblk;
 	char	*argstart;
 	char	*argend;

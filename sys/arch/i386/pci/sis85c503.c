@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/sis85c503.c,v 1.5.2.1 2001/04/18 16:08:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/sis85c503.c,v 1.5.2.2 2002/03/28 10:31:05 niklas Exp $	*/
 /*	$NetBSD: sis85c503.c,v 1.2 2000/07/18 11:24:09 soda Exp $	*/
 
 /*-
@@ -82,9 +82,9 @@
 #include <i386/pci/sis85c503reg.h>
 #include <i386/pci/piixvar.h>
 
-int	sis85c503_getclink __P((pciintr_icu_handle_t, int, int *));
-int	sis85c503_get_intr __P((pciintr_icu_handle_t, int, int *));
-int	sis85c503_set_intr __P((pciintr_icu_handle_t, int, int));
+int	sis85c503_getclink(pciintr_icu_handle_t, int, int *);
+int	sis85c503_get_intr(pciintr_icu_handle_t, int, int *);
+int	sis85c503_set_intr(pciintr_icu_handle_t, int, int);
 
 const struct pciintr_icu sis85c503_pci_icu = {
 	sis85c503_getclink,

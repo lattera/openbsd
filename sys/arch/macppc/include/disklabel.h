@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/disklabel.h,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/disklabel.h,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Christopher G. Demetriou
@@ -84,7 +84,7 @@ struct dos_partition {
 #define	DPSECT(s)	((s) & 0x3f)
 #define	DPCYL(c, s)	((c) + (((s) & 0xc0) << 2))
 
-static __inline u_int32_t get_le __P((void *p));
+static __inline u_int32_t get_le(void *p);
 
 static __inline u_int32_t
 #ifdef __cplusplus

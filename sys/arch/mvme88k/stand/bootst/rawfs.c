@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/rawfs.c,v 1.1 1998/12/15 06:09:51 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootst/rawfs.c,v 1.1.6.1 2002/03/28 10:36:03 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Gordon W. Ross
@@ -55,7 +55,7 @@ struct cfile {
 };
 
 static int
-rawfs_get_block __P((struct open_file *));
+rawfs_get_block(struct open_file *);
 
 int	rawfs_open(path, f)
 	char *path;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootst/rawfs.h,v 1.1.16.1 2001/10/31 03:01:17 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootst/rawfs.h,v 1.1.16.2 2002/03/28 10:34:06 niklas Exp $	*/
 /*	$NetBSD: rawfs.h,v 1.1 1995/10/17 22:58:29 gwr Exp $	*/
 
 /*
@@ -6,11 +6,11 @@
  * No random access, only sequential read allowed.
  */
 
-int	rawfs_open __P((char *path, struct open_file *f));
-int	rawfs_close __P((struct open_file *f));
-int	rawfs_read __P((struct open_file *f, void *buf,
-		u_int size, u_int *resid));
-int	rawfs_write __P((struct open_file *f, void *buf,
-		u_int size, u_int *resid));
-off_t	rawfs_seek __P((struct open_file *f, off_t offset, int where));
-int	rawfs_stat __P((struct open_file *f, struct stat *sb));
+int	rawfs_open(char *path, struct open_file *f);
+int	rawfs_close(struct open_file *f);
+int	rawfs_read(struct open_file *f, void *buf,
+		u_int size, u_int *resid);
+int	rawfs_write(struct open_file *f, void *buf,
+		u_int size, u_int *resid);
+off_t	rawfs_seek(struct open_file *f, off_t offset, int where);
+int	rawfs_stat(struct open_file *f, struct stat *sb);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb.c,v 1.10.10.1 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/adb.c,v 1.10.10.2 2002/03/28 10:34:04 niklas Exp $	*/
 /*	$NetBSD: adb.c,v 1.13 1996/12/16 16:17:02 scottr Exp $	*/
 
 /*-
@@ -52,8 +52,8 @@ e*    notice, this list of conditions and the following disclaimer in the
 /*
  * Function declarations.
  */
-static int	adbmatch __P((struct device *, void *, void *));
-static void	adbattach __P((struct device *, struct device *, void *));
+static int	adbmatch(struct device *, void *, void *);
+static void	adbattach(struct device *, struct device *, void *);
 
 /*
  * Global variables.

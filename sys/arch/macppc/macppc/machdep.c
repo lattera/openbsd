@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.4 2002/03/06 01:06:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/machdep.c,v 1.9.4.5 2002/03/28 10:36:01 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -101,9 +101,7 @@ struct pmap *curpm;
 struct proc *fpuproc;
 
 extern struct user *proc0paddr;
-#ifdef PPC_VECTOR_SUPPORTED
 struct pool ppc_vecpl;
-#endif /* PPC_VECTOR_SUPPORTED */
 
 /*
  * Declare these as initialized data so we can patch them.
@@ -160,18 +158,18 @@ int allowaperture = 0;
 
 void ofw_dbg(char *str);
 
-caddr_t allocsys __P((caddr_t));
-void dumpsys __P((void));
-void systype __P((char *name));
-int lcsplx __P((int ipl));	/* called from LCore */
-int power4e_get_eth_addr __P((void));
-void nameinterrupt __P((int replace, char *newstr));
-void ppc_intr_setup __P((intr_establish_t *establish,
-    intr_disestablish_t *disestablish));
-void *ppc_intr_establish __P((void *lcv, pci_intr_handle_t ih, int type,
-    int level, int (*func) __P((void *)), void *arg, char *name));
-int bus_mem_add_mapping __P((bus_addr_t bpa, bus_size_t size, int cacheable,
-    bus_space_handle_t *bshp));
+caddr_t allocsys(caddr_t);
+void dumpsys(void);
+void systype(char *name);
+int lcsplx(int ipl);	/* called from LCore */
+int power4e_get_eth_addr(void);
+void nameinterrupt(int replace, char *newstr);
+void ppc_intr_setup(intr_establish_t *establish,
+    intr_disestablish_t *disestablish);
+void *ppc_intr_establish(void *lcv, pci_intr_handle_t ih, int type,
+    int level, int (*func)(void *), void *arg, char *name);
+int bus_mem_add_mapping(bus_addr_t bpa, bus_size_t size, int cacheable,
+    bus_space_handle_t *bshp);
 
 /*
  * Extent maps to manage I/O. Allocate storage for 8 regions in each,
@@ -208,18 +206,13 @@ initppc(startkernel, endkernel, args)
 #if NIPKDB > 0
 	extern ipkdblow, ipkdbsize;
 #endif
-	extern void consinit __P((void));
-	extern void callback __P((void *));
+	extern void consinit(void);
+	extern void callback(void *);
+	extern void *msgbuf_addr;
 	int exc, scratch;
 
 	proc0.p_addr = proc0paddr;
 	bzero(proc0.p_addr, sizeof *proc0.p_addr);
-
-	/*
-	 * XXX We use the page just above the interrupt vector as
-	 * message buffer
-	 */
-	initmsgbuf((void *)0x3000, MSGBUFSIZE);
 
 where = 3;
 	curpcb = &proc0paddr->u_pcb;
@@ -245,16 +238,6 @@ where = 3;
 	battable[0].batl = BATL(0x00000000, BAT_M);
 	battable[0].batu = BATU(0x00000000);
 
-#if 0
-	battable[0x8].batl = BATL(0x80000000, BAT_I);
-	battable[0x8].batu = BATU(0x80000000);
-	battable[0x9].batl = BATL(0x90000000, BAT_I);
-	battable[0x9].batu = BATU(0x90000000);
-	battable[0xa].batl = BATL(0xa0000000, BAT_I);
-	battable[0xa].batu = BATU(0xa0000000);
-	segment8_a_mapped = 1;
-#endif
-
 	/*
 	 * Now setup fixed bat registers
 	 *
@@ -268,11 +251,7 @@ where = 3;
 	__asm__ volatile ("mtdbatl 0,%0; mtdbatu 0,%1"
 		      :: "r"(battable[0].batl), "r"(battable[0].batu));
 
-#if 0
-	__asm__ volatile ("mtdbatl 1,%0; mtdbatu 1,%1"
-		      :: "r"(battable[1].batl), "r"(battable[1].batu));
-	__asm__ volatile ("sync;isync");
-#endif
+
 
 	/*
 	 * Set up trap vectors
@@ -287,7 +266,7 @@ where = 3;
 			 * This one is (potentially) installed during autoconf
 			 */
 			break;
-#if 1
+
 		case EXC_DSI:
 			bcopy(&dsitrap, (void *)EXC_DSI, (size_t)&dsisize);
 			break;
@@ -297,7 +276,6 @@ where = 3;
 		case EXC_ALI:
 			bcopy(&alitrap, (void *)EXC_ALI, (size_t)&alisize);
 			break;
-#endif
 		case EXC_DECR:
 			bcopy(&decrint, (void *)EXC_DECR, (size_t)&decrsize);
 			break;
@@ -326,6 +304,7 @@ where = 3;
 
 	/* Grr, ALTIVEC_UNAVAIL is a vector not ~0xff aligned: 0x0f20 */
 	bcopy(&trapcode, (void *)0xf20, (size_t)&trapsize);
+
 	/*
 	 * since trapsize is > 0x20, we just overwrote the EXC_PERF handler
 	 * since we do not use it, we will "share" it with the EXC_VEC,
@@ -345,6 +324,23 @@ where = 3;
 	 */
 	pmap_bootstrap(startkernel, endkernel);
 
+	/* use BATs to map 1GB memory, no pageable BATs now */
+	if (physmem > btoc(0x10000000)) {
+		__asm__ volatile ("mtdbatl 1,%0; mtdbatu 1,%1"
+			      :: "r"(BATL(0x10000000, BAT_M)),
+			      "r"(BATU(0x10000000)));
+	}
+	if (physmem > btoc(0x20000000)) {
+		__asm__ volatile ("mtdbatl 2,%0; mtdbatu 2,%1"
+			      :: "r"(BATL(0x20000000, BAT_M)),
+			      "r"(BATU(0x20000000)));
+	}
+	if (physmem > btoc(0x30000000)) {
+		__asm__ volatile ("mtdbatl 3,%0; mtdbatu 3,%1"
+			      :: "r"(BATL(0x30000000, BAT_M)),
+			      "r"(BATU(0x30000000)));
+	}
+#if 0
 	/* now that we know physmem size, map physical memory with BATs */
 	if (physmem > btoc(0x10000000)) {
 		battable[0x1].batl = BATL(0x10000000, BAT_M);
@@ -374,6 +370,7 @@ where = 3;
 		battable[0x7].batl = BATL(0x70000000, BAT_M);
 		battable[0x7].batu = BATU(0x70000000);
 	}
+#endif
 
 	/*
 	 * Now enable translation (and machine checks/recoverable interrupts).
@@ -382,6 +379,11 @@ where = 3;
 
 	__asm__ volatile ("eieio; mfmsr %0; ori %0,%0,%1; mtmsr %0; sync;isync"
 		      : "=r"(scratch) : "K"(PSL_IR|PSL_DR|PSL_ME|PSL_RI));
+
+	/*
+	 * use the memory provided by pmap_bootstrap for message buffer
+	 */
+	initmsgbuf(msgbuf_addr, MSGBUFSIZE);
 
 	/*
 	 * Look at arguments passed to us and compute boothowto.
@@ -493,9 +495,7 @@ where = 3;
 	 */
 	(void)power4e_get_eth_addr();
 
-#ifdef PPC_VECTOR_SUPPORTED
         pool_init(&ppc_vecpl, sizeof(struct vreg), 16, 0, 0, "ppcvec", NULL);
-#endif /* PPC_VECTOR_SUPPORTED */
 
 }
 void ofw_dbg(char *str)
@@ -507,10 +507,10 @@ void ofw_dbg(char *str)
 
 void
 install_extint(handler)
-	void (*handler) __P((void));
+	void (*handler)(void);
 {
-	void extint __P((void));
-	void extsize __P((void));
+	void extint(void);
+	void extsize(void);
 	extern u_long extint_call;
 	u_long offset = (u_long)handler - (u_long)&extint_call;
 	int omsr, msr;
@@ -706,7 +706,7 @@ setregs(p, pack, stack, retval)
 	pargs = -roundup(-stack + 8, 16);
 	newstack = (u_int32_t)(pargs - 32);
 
-	copyin ((void*)(VM_MAX_ADDRESS-0x10), &args, 0x10);
+	copyin ((void *)(VM_MAX_ADDRESS-0x10), &args, 0x10);
 
 	bzero(tf, sizeof *tf);
 	tf->fixreg[1] = newstack;
@@ -1054,7 +1054,7 @@ ppc_intr_establish(lcv, ih, type, level, func, arg, name)
 	pci_intr_handle_t ih;
 	int type;
 	int level;
-	int (*func) __P((void *));
+	int (*func)(void *);
 	void *arg;
 	char *name;
 {
@@ -1148,10 +1148,10 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	}
 	return 0;
 }
-bus_addr_t bus_space_unmap_p __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
-void bus_space_unmap __P((bus_space_tag_t t, bus_space_handle_t bsh,
-			  bus_size_t size));
+bus_addr_t bus_space_unmap_p(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
+void bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size);
 bus_addr_t
 bus_space_unmap_p(t, bsh, size)
 	bus_space_tag_t t;
@@ -1303,7 +1303,7 @@ mapiodev(pa, len)
 		spa += PAGE_SIZE;
 		vaddr += PAGE_SIZE;
 	}
-	return (void*) (va+off);
+	return (void *) (va+off);
 }
 void
 unmapiodev(kva, p_size)

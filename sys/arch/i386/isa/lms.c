@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/lms.c,v 1.13.2.2 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/lms.c,v 1.13.2.3 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: lms.c,v 1.38 2000/01/08 02:57:25 takemura Exp $	*/
 
 /*-
@@ -57,17 +57,17 @@ struct lms_softc {		/* driver status information */
 	struct device *sc_wsmousedev;
 };
 
-int lmsprobe __P((struct device *, void *, void *));
-void lmsattach __P((struct device *, struct device *, void *));
-int lmsintr __P((void *));
+int lmsprobe(struct device *, void *, void *);
+void lmsattach(struct device *, struct device *, void *);
+int lmsintr(void *);
 
 struct cfattach lms_ca = {
 	sizeof(struct lms_softc), lmsprobe, lmsattach
 };
 
-int	lms_enable __P((void *));
-int	lms_ioctl __P((void *, u_long, caddr_t, int, struct proc *));
-void	lms_disable __P((void *));
+int	lms_enable(void *);
+int	lms_ioctl(void *, u_long, caddr_t, int, struct proc *);
+void	lms_disable(void *);
 
 const struct wsmouse_accessops lms_accessops = {
 	lms_enable,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/isa/Attic/isa_machdep.c,v 1.1.2.2 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/isa/Attic/isa_machdep.c,v 1.1.2.3 2002/03/28 10:36:03 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -136,7 +136,7 @@
 #include <mvmeppc/isa/isa_machdep.h>
 
 void	*i8259_intr_establish( void * lcv, int irq, int type, int level,
-		int (*ih_fun) __P((void *)), void *ih_arg, char *name);
+		int (*ih_fun)(void *), void *ih_arg, char *name);
 
 int isa_has_been_seen = 0;
 
@@ -150,7 +150,7 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 	int irq;
 	int type;
 	int level;
-	int (*ih_fun) __P((void *));
+	int (*ih_fun)(void *);
 	void *ih_arg;
 	char *ih_what;
 {

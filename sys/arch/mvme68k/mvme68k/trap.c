@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.6 2002/03/06 01:07:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.7 2002/03/28 10:34:06 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -166,7 +166,7 @@ void (*sir_routines[NSIR])();
 void *sir_args[NSIR];
 u_char next_sir;
 
-int  writeback __P((struct frame *fp, int docachepush));
+int  writeback(struct frame *fp, int docachepush);
 
 /*
  * trap and syscall both need the following work done before returning

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootxx/bootxx.c,v 1.3.4.1 2001/04/18 16:11:47 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/bootxx/bootxx.c,v 1.3.4.2 2002/03/28 10:36:03 niklas Exp $ */
 
 /*
  * Copyright (c) 1994 Paul Kranenburg
@@ -84,7 +84,7 @@ main()
 		_rtt();
 	}
 
-	addr = (char*)STAGE2_RELOC;
+	addr = (char *)STAGE2_RELOC;
 	error = copyboot(&f, addr);
 	f.f_dev->dv_close(&f);
 	if (!error) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.2 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/mainbus.c,v 1.3.4.3 2002/03/28 10:36:02 niklas Exp $ */
 /*  Copyright (c) 1998 Steve Murphree, Jr. */
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -10,10 +10,10 @@
 #include <machine/cpu.h>
 #include <machine/autoconf.h>
 
-void mainbus_attach __P((struct device *, struct device *, void *));
-int  mainbus_match __P((struct device *, void *, void *));
-int mainbus_print __P((void *, const char *));
-int mainbus_scan __P((struct device *, void *, void *));
+void mainbus_attach(struct device *, struct device *, void *);
+int  mainbus_match(struct device *, void *, void *);
+int mainbus_print(void *, const char *);
+int mainbus_scan(struct device *, void *, void *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct device), mainbus_match, mainbus_attach

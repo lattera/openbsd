@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/raven.c,v 1.1.2.1 2001/11/13 21:04:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/raven.c,v 1.1.2.2 2002/03/28 10:36:03 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
@@ -49,8 +49,8 @@
 #include <mvmeppc/dev/ravenreg.h>
 #include <mvmeppc/dev/ravenvar.h>
 
-int	 raven_match __P((struct device *, void *, void *));
-void	 raven_attach __P((struct device *, struct device *, void *));
+int	 raven_match(struct device *, void *, void *);
+void	 raven_attach(struct device *, struct device *, void *);
 
 struct cfattach raven_ca = {
         sizeof(struct raven_softc), raven_match, raven_attach,

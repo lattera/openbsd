@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/mc.c,v 1.7.2.1 2001/04/18 16:10:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/mc.c,v 1.7.2.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -60,9 +60,9 @@ struct mcsoftc {
 	struct intrhand	sc_nmiih;
 };
 
-void mcattach __P((struct device *, struct device *, void *));
-int  mcmatch __P((struct device *, void *, void *));
-int  mcabort __P((struct frame *));
+void mcattach(struct device *, struct device *, void *);
+int  mcmatch(struct device *, void *, void *);
+int  mcabort(struct frame *);
 
 struct cfattach mc_ca = {
 	sizeof(struct mcsoftc), mcmatch, mcattach

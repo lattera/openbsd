@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/swapgeneric.c,v 1.10.4.1 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/swapgeneric.c,v 1.10.4.2 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.12 1996/05/03 19:42:28 christos Exp $	*/
 
 /*-
@@ -46,7 +46,7 @@
 #include <sys/param.h>
 #include <sys/conf.h>
 
-int (*mountroot) __P((void)) = NULL;
+int (*mountroot)(void) = NULL;
 
 dev_t	rootdev = NODEV;
 dev_t	dumpdev = NODEV;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vm_machdep.c,v 1.15.4.5 2002/03/06 01:05:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vm_machdep.c,v 1.15.4.6 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.29 1998/07/28 18:34:55 thorpej Exp $	*/
 
 /*
@@ -62,7 +62,7 @@
 #include <machine/pte.h>
 #include <machine/reg.h>
 
-void savectx __P((struct pcb *));
+void savectx(struct pcb *);
 
 /*
  * Finish a fork operation, with process p2 nearly set up.
@@ -115,7 +115,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 	pcb->pcb_regs[11] = (int)sf;		/* SSP */
 }
 
-void	switch_exit __P((struct proc *));
+void	switch_exit(struct proc *);
 
 /*
  * cpu_exit is called as the last action during exit.
@@ -281,7 +281,7 @@ physunaccess(vaddr, size)
 	TBIAS();
 }
 
-int	kvtop __P((caddr_t addr));
+int	kvtop(caddr_t addr);
 
 /*
  * Convert kernel VA to physical address

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.2 2001/11/13 21:00:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/macrom.c,v 1.20.6.3 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: macrom.c,v 1.31 1997/03/01 17:20:34 scottr Exp $	*/
 
 /*-
@@ -118,9 +118,9 @@ caddr_t ResHndls[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 caddr_t ResHndls[]={0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 #endif
 
-void	setup_egret __P((void));
-void	mrg_execute_deferred __P((void));
-void	mrg_DTInstall __P((void));
+void	setup_egret(void);
+void	mrg_execute_deferred(void);
+void	mrg_DTInstall(void);
 
 /*
  * Last straw functions; we didn't set them up, so freak out!
@@ -1096,7 +1096,7 @@ setup_egret(void)
 }
 
 #ifdef MRG_ADB
-static void     setup_pm __P((void));
+static void     setup_pm(void);
 
 static void
 setup_pm(void)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/fpu.c,v 1.10 1998/02/14 09:22:38 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/fpu.c,v 1.10.10.1 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: fpu.c,v 1.23 1998/01/12 19:22:22 thorpej Exp $	*/
 
 /*-
@@ -59,9 +59,9 @@ int     fputype;
 
 extern int *nofault;
 
-static int  fpu_match __P((struct device *, void *, void *));
-static void fpu_attach __P((struct device *, struct device *, void *));
-static int  fpu_probe __P((void));
+static int  fpu_match(struct device *, void *, void *);
+static void fpu_attach(struct device *, struct device *, void *);
+static int  fpu_probe(void);
 
 struct cfattach fpu_ca = {
 	sizeof(struct device), fpu_match, fpu_attach

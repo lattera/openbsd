@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.2 2001/10/31 03:01:19 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.3 2002/03/28 10:36:02 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -49,15 +49,15 @@
 int disksubr_debug = 0;
 #endif
 
-static void bsdtocpulabel __P((struct disklabel *lp,
-	struct cpu_disklabel *clp));
-static void cputobsdlabel __P((struct disklabel *lp,
-	struct cpu_disklabel *clp));
-int get_target __P((void));
+static void bsdtocpulabel(struct disklabel *lp,
+	struct cpu_disklabel *clp);
+static void cputobsdlabel(struct disklabel *lp,
+	struct cpu_disklabel *clp);
+int get_target(void);
 
 #ifdef DEBUG
-static void printlp __P((struct disklabel *lp, char *str));
-static void printclp __P((struct cpu_disklabel *clp, char *str));
+static void printlp(struct disklabel *lp, char *str);
+static void printclp(struct cpu_disklabel *clp, char *str);
 #endif
 
 /* 
@@ -134,7 +134,7 @@ dk_establish(dk, dev)
 char *
 readdisklabel(dev, strat, lp, clp, spoofonly)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	struct disklabel *lp;
 	struct cpu_disklabel *clp;
 	int spoofonly;
@@ -325,7 +325,7 @@ setdisklabel(olp, nlp, openmask, clp)
 int
 writedisklabel(dev, strat, lp, clp)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *clp;
 {

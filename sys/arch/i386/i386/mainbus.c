@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.5 2001/07/15 12:01:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mainbus.c,v 1.14.6.6 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: mainbus.c,v 1.21 1997/06/06 23:14:20 thorpej Exp $	*/
 
 /*
@@ -65,8 +65,8 @@
 #endif
 #endif
 
-int	mainbus_match __P((struct device *, void *, void *));
-void	mainbus_attach __P((struct device *, struct device *, void *));
+int	mainbus_match(struct device *, void *, void *);
+void	mainbus_attach(struct device *, struct device *, void *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct device), mainbus_match, mainbus_attach
@@ -76,7 +76,7 @@ struct cfdriver mainbus_cd = {
 	NULL, "mainbus", DV_DULL
 };
 
-int	mainbus_print __P((void *, const char *));
+int	mainbus_print(void *, const char *);
 
 union mainbus_attach_args {
 	const char *mba_busname;		/* first elem of all */

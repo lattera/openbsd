@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcib.c,v 1.5.2.1 2001/04/18 16:08:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pcib.c,v 1.5.2.2 2002/03/28 10:31:05 niklas Exp $	*/
 /*	$NetBSD: pcib.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*-
@@ -56,10 +56,10 @@
 #include <i386/pci/pcibiosvar.h>
 #endif
 
-int	pcibmatch __P((struct device *, void *, void *));
-void	pcibattach __P((struct device *, struct device *, void *));
-void	pcib_callback __P((struct device *));
-int	pcib_print __P((void *, const char *));
+int	pcibmatch(struct device *, void *, void *);
+void	pcibattach(struct device *, struct device *, void *);
+void	pcib_callback(struct device *);
+int	pcib_print(void *, const char *);
 
 struct cfattach pcib_ca = {
 	sizeof(struct device), pcibmatch, pcibattach

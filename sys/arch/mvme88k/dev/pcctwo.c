@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/pcctwo.c,v 1.7.4.2 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/pcctwo.c,v 1.7.4.3 2002/03/28 10:36:02 niklas Exp $ */
 /*
  * Copyright (c) 1995 Theo de Raadt
  * All rights reserved.
@@ -63,8 +63,8 @@ struct pcctwosoftc {
 	struct pcctworeg *sc_pcc2;	/* the actual registers */
 };
 
-void pcctwoattach __P((struct device *, struct device *, void *));
-int  pcctwomatch __P((struct device *, void *, void *));
+void pcctwoattach(struct device *, struct device *, void *);
+int  pcctwomatch(struct device *, void *, void *);
 
 struct cfattach pcctwo_ca = {
 	sizeof(struct pcctwosoftc), pcctwomatch, pcctwoattach
@@ -78,8 +78,8 @@ struct pcctworeg *sys_pcc2 = NULL;
 
 int pcc2bus;
 
-int pcctwo_print __P((void *args, const char *bus));
-int pcctwo_scan __P((struct device *parent, void *child, void *args));
+int pcctwo_print(void *args, const char *bus);
+int pcctwo_scan(struct device *parent, void *child, void *args);
 
 int
 pcctwomatch(parent, vcf, args)

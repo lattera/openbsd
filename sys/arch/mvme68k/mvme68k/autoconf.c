@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.3 2002/03/06 01:07:00 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.4 2002/03/28 10:34:06 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -96,8 +96,8 @@
 #include <machine/cpu.h>
 #include <machine/pte.h>
 
-struct	device *parsedisk __P((char *, int, int, dev_t *));
-void	setroot __P((void));
+struct	device *parsedisk(char *, int, int, dev_t *);
+void	setroot(void);
 
 /*
  * XXX some storage space must be allocated statically because of
@@ -108,8 +108,8 @@ char	extiospace[EXTENT_FIXED_STORAGE_SIZE(EIOMAPSIZE / 16)];
 struct	extent *extio;
 extern	void *extiobase;
 
-void mainbus_attach __P((struct device *, struct device *, void *));
-int  mainbus_match __P((struct device *, void *, void *));
+void mainbus_attach(struct device *, struct device *, void *);
+int  mainbus_match(struct device *, void *, void *);
 
 struct cfattach mainbus_ca = {
 	sizeof(struct device), mainbus_match, mainbus_attach

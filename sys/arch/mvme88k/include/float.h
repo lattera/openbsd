@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/float.h,v 1.3.6.2 2001/10/31 03:01:18 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/float.h,v 1.3.6.3 2002/03/28 10:36:02 niklas Exp $	*/
 
 /*
  * Copyright (c) 1989 Regents of the University of California.
@@ -41,7 +41,7 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int __flt_rounds __P((void));
+int __flt_rounds(void);
 __END_DECLS
 
 #define FLT_RADIX	2		/* b */

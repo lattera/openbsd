@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1.4.2 2001/10/31 03:01:13 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1.4.3 2002/03/28 10:31:05 niklas Exp $ */
 /*	$NetBSD: pcic_pci_machdep.c,v 1.1 1998/12/20 17:53:29 nathanw Exp $	*/
 
 /*
@@ -58,7 +58,7 @@ pcic_pci_machdep_intr_est(pc)
 void *
 pcic_pci_machdep_pcic_intr_establish(sc, fct)
 	struct pcic_softc *sc;
-	int (*fct) __P((void *));
+	int (*fct)(void *);
 {
 	if (isa_intr_alloc(NULL, PCIC_CSC_INTR_IRQ_VALIDMASK & 0xffff,
 			   IST_EDGE, &(sc->irq)))
@@ -73,7 +73,7 @@ pcic_pci_machdep_chip_intr_establish(pch, pf, ipl, fct, arg, xname)
 	pcmcia_chipset_handle_t pch;
 	struct pcmcia_function *pf;
 	int ipl;
-	int (*fct) __P((void *));
+	int (*fct)(void *);
 	void *arg;
 	char *xname;
 {

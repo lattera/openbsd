@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/intr.h,v 1.1.2.3 2001/12/05 00:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme68k/include/intr.h,v 1.1.2.4 2002/03/28 10:34:05 niklas Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.
@@ -42,7 +42,7 @@ extern unsigned char ssir;
 #define setsoftint(x)	ssir |= (x)
 #define setsoftnet()	ssir |= SIR_NET
 #define setsoftclock()	ssir |= SIR_CLOCK
-u_long	allocate_sir __P((void (*proc)(), void *arg));
+u_long	allocate_sir(void (*proc)(), void *arg);
 
 #define _spl(s) \
 ({ \
@@ -78,6 +78,6 @@ u_long	allocate_sir __P((void (*proc)(), void *arg));
 #define	splx(s)		(s & PSL_IPL ? _spl(s) : spl0())
 
 /* locore.s */
-int	spl0 __P((void));
+int	spl0(void);
 #endif /* _KERNEL */
 #endif /* _MVME68K_INTR_H_ */

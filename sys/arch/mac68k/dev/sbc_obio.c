@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/sbc_obio.c,v 1.5.8.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/sbc_obio.c,v 1.5.8.3 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: sbc_obio.c,v 1.1 1997/03/01 20:18:59 scottr Exp $	*/
 
 /*
@@ -72,12 +72,12 @@
 #define	SBC_DMA_OFS_DUO2	0x02000
 #define	SBC_HSK_OFS_DUO2	0x04000
 
-static int	sbc_obio_match __P((struct device *, void *, void *));
-static void	sbc_obio_attach __P((struct device *, struct device *, void *));
+static int	sbc_obio_match(struct device *, void *, void *);
+static void	sbc_obio_attach(struct device *, struct device *, void *);
 
-void	sbc_intr_enable __P((struct ncr5380_softc *));
-void	sbc_intr_disable __P((struct ncr5380_softc *));
-void	sbc_obio_clrintr __P((struct ncr5380_softc *));
+void	sbc_intr_enable(struct ncr5380_softc *);
+void	sbc_intr_disable(struct ncr5380_softc *);
+void	sbc_obio_clrintr(struct ncr5380_softc *);
 
 struct cfattach sbc_obio_ca = {
 	sizeof(struct sbc_softc), sbc_obio_match, sbc_obio_attach

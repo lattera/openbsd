@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/wscons_machdep.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/wscons_machdep.c,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell
@@ -48,11 +48,11 @@
 #endif
 #include <dev/wscons/wskbdvar.h>
 
-void wscnprobe __P((struct consdev *));
-void wscninit __P((struct consdev *));
-void wscnputc __P((dev_t, char));
-int wscngetc __P((dev_t));
-void wscnpollc __P((dev_t, int));
+void wscnprobe(struct consdev *);
+void wscninit(struct consdev *);
+void wscnputc(dev_t, char);
+int wscngetc(dev_t);
+void wscnpollc(dev_t, int);
 
 void
 wscnprobe(cp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/psl.h,v 1.10.14.1 2001/04/18 16:07:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/psl.h,v 1.10.14.2 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: psl.h,v 1.30 1996/05/13 01:28:05 mycroft Exp $	*/
 
 /*-
@@ -84,7 +84,7 @@
  */
 
 struct intrhand {
-	int	(*ih_fun) __P((void *));
+	int	(*ih_fun)(void *);
 	void	*ih_arg;
 	u_long	ih_count;
 	struct	intrhand *ih_next;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.4 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.5 2002/03/28 10:36:02 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -48,8 +48,8 @@
  * functions will decide how many address bits are relevant.
  */
 
-void vmelattach __P((struct device *, struct device *, void *));
-int  vmelmatch __P((struct device *, void *, void *));
+void vmelattach(struct device *, struct device *, void *);
+int  vmelmatch(struct device *, void *, void *);
 
 struct cfattach vmel_ca = {
         sizeof(struct vmelsoftc), vmelmatch, vmelattach
@@ -59,13 +59,13 @@ struct cfdriver vmel_cd = {
         NULL, "vmel", DV_DULL, 0
 };
 
-int vmelscan __P((struct device *, void *, void*));
-int vmelopen __P((dev_t, int, int));
-int vmelclose __P((dev_t, int, int));
-int vmelioctl __P((dev_t, int, caddr_t, int, struct proc *));
-int vmelread __P((dev_t, struct uio *, int));
-int vmelwrite __P((dev_t, struct uio *, int));
-paddr_t vmelmmap __P((dev_t, off_t, int));
+int vmelscan(struct device *, void *, void *);
+int vmelopen(dev_t, int, int);
+int vmelclose(dev_t, int, int);
+int vmelioctl(dev_t, int, caddr_t, int, struct proc *);
+int vmelread(dev_t, struct uio *, int);
+int vmelwrite(dev_t, struct uio *, int);
+paddr_t vmelmmap(dev_t, off_t, int);
 
 int
 vmelmatch(parent, cf, args)

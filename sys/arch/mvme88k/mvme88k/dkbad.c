@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.3.4.2 2001/10/31 03:01:19 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.3.4.3 2002/03/28 10:36:02 niklas Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
@@ -40,7 +40,7 @@
 #include <sys/buf.h>
 #include <sys/dkbad.h>
 
-int isbad __P((struct dkbad *, int, int, int));
+int isbad(struct dkbad *, int, int, int);
 
 /*
  * Search the bad sector table looking for

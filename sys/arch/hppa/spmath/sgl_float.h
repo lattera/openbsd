@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/spmath/sgl_float.h,v 1.4.2.1 2001/04/18 16:06:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/spmath/sgl_float.h,v 1.4.2.2 2002/03/28 10:31:03 niklas Exp $	*/
 
 /*
  * Copyright 1996 1995 by Open Software Foundation, Inc.
@@ -333,13 +333,13 @@
 		Sgl_setzero(opnd);					\
 	}
 
-sgl_floating_point sgl_setoverflow __P((unsigned int));
-int sgl_fadd __P((sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_fcmp __P((sgl_floating_point *, sgl_floating_point *, unsigned int, unsigned int *));
-int sgl_fdiv __P((sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_fmpy __P((sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_frem __P((sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_fsqrt __P((sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_fsub __P((sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *));
-int sgl_frnd __P((sgl_floating_point *, sgl_floating_point *, unsigned int *));
+sgl_floating_point sgl_setoverflow(unsigned int);
+int sgl_fadd(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_fcmp(sgl_floating_point *, sgl_floating_point *, unsigned int, unsigned int *);
+int sgl_fdiv(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_fmpy(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_frem(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_fsqrt(sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_fsub(sgl_floating_point *, sgl_floating_point *, sgl_floating_point *, unsigned int *);
+int sgl_frnd(sgl_floating_point *, sgl_floating_point *, unsigned int *);
 

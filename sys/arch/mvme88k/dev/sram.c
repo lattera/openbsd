@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.1.6.3 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/sram.c,v 1.1.6.4 2002/03/28 10:36:02 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -52,8 +52,8 @@ struct sramsoftc {
 	int		sc_len;
 };
 
-void sramattach __P((struct device *, struct device *, void *));
-int  srammatch __P((struct device *, void *, void *));
+void sramattach(struct device *, struct device *, void *);
+int  srammatch(struct device *, void *, void *);
 
 struct cfattach sram_ca = {
 	sizeof(struct sramsoftc), srammatch, sramattach

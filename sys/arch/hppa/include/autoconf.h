@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.3 2002/03/06 00:57:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa/include/autoconf.h,v 1.9.4.4 2002/03/28 10:27:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Michael Shalayeff
@@ -58,19 +58,20 @@ struct hppa_mod_info {
 	const char *mi_name;
 };
 
-extern void (*cold_hook) __P((int));
+extern void (*cold_hook)(int);
 #define	HPPA_COLD_COLD	0
 #define	HPPA_COLD_HOT	1   
 #define	HPPA_COLD_OFF	2
 
 struct device;
 
-const char *hppa_mod_info __P((int, int));
-void	pdc_scanbus __P((struct device *, struct confargs *, int bus, int));
-int	mbprint __P((void *, const char *));
-int	mbsubmatch __P((struct device *, void *, void *));
-void	*cpu_intr_establish __P((int pri, int, int (*handler) __P((void *)),
-				void *arg, struct device *name));
-int	clock_intr __P((void *));
+const char *hppa_mod_info(int, int);
+void	pdc_scanbus(struct device *, struct confargs *, int bus, int);
+int	mbprint(void *, const char *);
+int	mbsubmatch(struct device *, void *, void *);
+void	*cpu_intr_establish(int pri, int, int (*handler)(void *),
+	    void *arg, struct device *name);
+void	cpu_intr(struct trapframe *frame);
+int	clock_intr(void *);
 
-void	dumpconf	__P((void));
+void	dumpconf(void);

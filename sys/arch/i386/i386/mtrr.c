@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/mtrr.c,v 1.2.2.1 2001/10/31 03:01:12 nate Exp $ */
+/* $OpenBSD: src/sys/arch/i386/i386/mtrr.c,v 1.2.2.2 2002/03/28 10:31:04 niklas Exp $ */
 /*-
  * Copyright (c) 1999 Michael Smith <msmith@freebsd.org>
  * Copyright (c) 1999 Brian Fundakowski Feldman
@@ -41,7 +41,7 @@ extern char cpu_vendor[];
 extern struct mem_range_ops i686_mrops;
 extern struct mem_range_ops k6_mrops;
 
-void mtrrattach __P((int));
+void mtrrattach(int);
 
 void
 mtrrattach (num)

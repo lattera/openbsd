@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.5 2002/03/06 01:05:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/pmap_bootstrap.c,v 1.12.4.6 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: pmap_bootstrap.c,v 1.50 1999/04/07 06:14:33 scottr Exp $	*/
 
 /* 
@@ -100,8 +100,8 @@ extern caddr_t	ROMBase;
  */
 caddr_t		CADDR1, CADDR2, vmmap;
 
-void	pmap_bootstrap __P((paddr_t, paddr_t));
-void	bootstrap_mac68k __P((int));
+void	pmap_bootstrap(paddr_t, paddr_t);
+void	bootstrap_mac68k(int);
 
 /*
  * Bootstrap the VM system.
@@ -252,14 +252,14 @@ pmap_bootstrap(nextpa, firstpa)
 		 * Initialize the final level 1 descriptor to map the last
 		 * block of level 2 descriptors.
 		 */
-		ste = &(PA2VA(kstpa, u_int*))[SG4_LEV1SIZE-1];
-		pte = &(PA2VA(kstpa, u_int*))[kstsize*NPTEPG - SG4_LEV2SIZE];
+		ste = &(PA2VA(kstpa, u_int *))[SG4_LEV1SIZE-1];
+		pte = &(PA2VA(kstpa, u_int *))[kstsize*NPTEPG - SG4_LEV2SIZE];
 		*ste = (u_int)pte | SG_U | SG_RW | SG_V;
 		/*
 		 * Now initialize the final portion of that block of
 		 * descriptors to map the "last PT page".
 		 */
-		pte = &(PA2VA(kstpa, u_int*))
+		pte = &(PA2VA(kstpa, u_int *))
 				[kstsize*NPTEPG - NPTEPG/SG4_LEV3SIZE];
 		epte = &pte[NPTEPG/SG4_LEV3SIZE];
 		protoste = lkptpa | SG_U | SG_RW | SG_V;
@@ -295,8 +295,8 @@ pmap_bootstrap(nextpa, firstpa)
 		 * and the software Sysptmap.  Note that Sysptmap is also
 		 * considered a PT page hence the +1.
 		 */
-		ste = PA2VA(kstpa, u_int*);
-		pte = PA2VA(kptmpa, u_int*);
+		ste = PA2VA(kstpa, u_int *);
+		pte = PA2VA(kptmpa, u_int *);
 		epte = &pte[nptpages+1];
 		protoste = kptpa | SG_RW | SG_V;
 		protopte = kptpa | PG_RW | PG_CI | PG_V;
@@ -543,7 +543,7 @@ void
 bootstrap_mac68k(tc)
 	int	tc;
 {
-	extern void	zs_init __P((void));
+	extern void	zs_init(void);
 	extern caddr_t	esym;
 	paddr_t		nextpa;
 	caddr_t		oldROMBase;

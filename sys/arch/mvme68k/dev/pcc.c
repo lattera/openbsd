@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcc.c,v 1.5.14.1 2001/04/18 16:10:26 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/pcc.c,v 1.5.14.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -60,9 +60,9 @@ struct pccsoftc {
 	struct intrhand	sc_nmiih;
 };
 
-void pccattach __P((struct device *, struct device *, void *));
-int  pccmatch __P((struct device *, void *, void *));
-int  pccabort __P((struct frame *));
+void pccattach(struct device *, struct device *, void *);
+int  pccmatch(struct device *, void *, void *);
+int  pccabort(struct frame *);
 
 struct cfattach pcc_ca = {
 	sizeof(struct pccsoftc), pccmatch, pccattach

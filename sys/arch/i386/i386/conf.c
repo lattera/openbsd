@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.6 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.7 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -485,8 +485,8 @@ blktochr(dev)
  * disk driver name -> bdev major number table, which follows.
  * Note: floppies are not included as those are differentiated by the BIOS.
  */
-int findblkmajor __P((struct device *dv));
-dev_t dev_rawpart __P((struct device *));	/* XXX */
+int findblkmajor(struct device *dv);
+dev_t dev_rawpart(struct device *);	/* XXX */
 
 dev_t
 dev_rawpart(dv)

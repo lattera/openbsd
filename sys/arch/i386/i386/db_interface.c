@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.3 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_interface.c,v 1.7.2.4 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.22 1996/05/03 19:42:00 christos Exp $	*/
 
 /* 
@@ -56,7 +56,7 @@ extern int trap_types;
 
 int	db_active = 0;
 
-void kdbprinttrap __P((int, int));
+void kdbprinttrap(int, int);
 
 /*
  * Print trap reason.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.6.6.6 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/sys_machdep.c,v 1.6.6.7 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: sys_machdep.c,v 1.28 1996/05/03 19:42:29 christos Exp $	*/
 
 /*-
@@ -73,12 +73,12 @@
 extern struct vm_map *kernel_map;
 
 #ifdef USER_LDT
-int i386_get_ldt __P((struct proc *, void *, register_t *));
-int i386_set_ldt __P((struct proc *, void *, register_t *));
+int i386_get_ldt(struct proc *, void *, register_t *);
+int i386_set_ldt(struct proc *, void *, register_t *);
 #endif
-int i386_iopl __P((struct proc *, void *, register_t *));
-int i386_get_ioperm __P((struct proc *, void *, register_t *));
-int i386_set_ioperm __P((struct proc *, void *, register_t *));
+int i386_iopl(struct proc *, void *, register_t *);
+int i386_get_ioperm(struct proc *, void *, register_t *);
+int i386_set_ioperm(struct proc *, void *, register_t *);
 
 #ifdef USER_LDT
 /*

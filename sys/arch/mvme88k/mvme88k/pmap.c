@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.7 2002/03/06 02:04:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.8 2002/03/28 10:36:02 niklas Exp $	*/
 /*
  * Copyright (c) 2001, 2002 Miodrag Vallat
  * Copyright (c) 1998-2001 Steve Murphree, Jr.
@@ -248,17 +248,17 @@ extern vaddr_t obiova;
 /*
  * Internal routines
  */
-void flush_atc_entry __P((long, vaddr_t, boolean_t));
-pt_entry_t *pmap_expand_kmap __P((vaddr_t, vm_prot_t));
-void pmap_remove_range __P((pmap_t, vaddr_t, vaddr_t));
-void pmap_expand __P((pmap_t, vaddr_t));
-void pmap_release __P((pmap_t));
-vaddr_t pmap_map __P((vaddr_t, paddr_t, paddr_t, vm_prot_t, unsigned int));
-vaddr_t pmap_map_batc __P((vaddr_t, paddr_t, paddr_t, vm_prot_t, unsigned int));
-pt_entry_t *pmap_pte __P((pmap_t, vaddr_t));
-void pmap_remove_all __P((paddr_t));
-void pmap_changebit __P((paddr_t, int, int));
-boolean_t pmap_testbit __P((paddr_t, int));
+void flush_atc_entry(long, vaddr_t, boolean_t);
+pt_entry_t *pmap_expand_kmap(vaddr_t, vm_prot_t);
+void pmap_remove_range(pmap_t, vaddr_t, vaddr_t);
+void pmap_expand(pmap_t, vaddr_t);
+void pmap_release(pmap_t);
+vaddr_t pmap_map(vaddr_t, paddr_t, paddr_t, vm_prot_t, unsigned int);
+vaddr_t pmap_map_batc(vaddr_t, paddr_t, paddr_t, vm_prot_t, unsigned int);
+pt_entry_t *pmap_pte(pmap_t, vaddr_t);
+void pmap_remove_all(paddr_t);
+void pmap_changebit(paddr_t, int, int);
+boolean_t pmap_testbit(paddr_t, int);
 
 /*
  * quick PTE field checking macros
@@ -1328,7 +1328,7 @@ pmap_zero_page(phys)
 	    CACHE_GLOBAL | PG_V;
 	SPLX(spl);
 
-	bzero((void*)srcva, PAGE_SIZE);
+	bzero((void *)srcva, PAGE_SIZE);
 	/* force the data out */
 	cmmu_flush_remote_data_cache(cpu, phys, PAGE_SIZE);
 } /* pmap_zero_page() */
@@ -2882,7 +2882,7 @@ pmap_copy_page(src, dst)
 	*dstpte  = template | trunc_page(dst);
 	SPLX(spl);
 
-	bcopy((void*)srcva, (void*)dstva, PAGE_SIZE);
+	bcopy((void *)srcva, (void *)dstva, PAGE_SIZE);
 	/* flush source, dest out of cache? */
 	cmmu_flush_remote_data_cache(cpu, src, PAGE_SIZE);
 	cmmu_flush_remote_data_cache(cpu, dst, PAGE_SIZE);

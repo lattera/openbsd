@@ -1,8 +1,9 @@
-#	$OpenBSD: src/sys/arch/mvme68k/conf/Attic/MINIROOT,v 1.6.2.2 2001/07/04 10:19:19 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/conf/Attic/MINIROOT,v 1.6.2.3 2002/03/28 10:34:05 niklas Exp $
 
 machine		mvme68k m68k
 
 include "../../../conf/GENERIC"
+rmoption	PTRACE
 
 option		M68060		# support for 060
 option		M68040		# support for 040

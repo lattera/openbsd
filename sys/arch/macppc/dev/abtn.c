@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.4.2 2002/03/28 10:36:01 niklas Exp $	*/
 /*	$NetBSD: abtn.c,v 1.1 1999/07/12 17:48:26 tsubai Exp $	*/
 
 /*-
@@ -48,9 +48,9 @@ struct abtn_softc {
 	int volume;		/* speaker volume (not yet) */
 };
 
-static int abtn_match __P((struct device *, void *, void *));
-static void abtn_attach __P((struct device *, struct device *, void *));
-static void abtn_adbcomplete __P((caddr_t, caddr_t, int));
+static int abtn_match(struct device *, void *, void *);
+static void abtn_attach(struct device *, struct device *, void *);
+static void abtn_adbcomplete(caddr_t, caddr_t, int);
 
 struct cfattach abtn_ca = {
 	sizeof(struct abtn_softc), abtn_match, abtn_attach

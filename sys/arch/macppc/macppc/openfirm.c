@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/openfirm.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/openfirm.c,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*
@@ -39,8 +39,8 @@
 
 #include <dev/ofw/openfirm.h>
 
-extern void ofw_stack __P((void));
-extern void ofbcopy __P((const void *, void *, size_t));
+extern void ofw_stack(void);
+extern void ofbcopy(const void *, void *, size_t);
 
 int
 OF_peer(phandle)

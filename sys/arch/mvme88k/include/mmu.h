@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.4 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.5 2002/03/28 10:36:02 niklas Exp $ */
 /*
  * Ashura Project
  */
@@ -274,7 +274,7 @@ typedef	u_int32_t	pt_ind_entry_t;
 #define DMA_CACHE_SYNC_INVAL	0x2
 #define DMA_CACHE_INV		0x3
 
-void dma_cachectl __P((vm_offset_t, int, int));
+void dma_cachectl(vm_offset_t, int, int);
 
 /*
  * Alignment checks for pages (must lie on page boundaries).
@@ -285,7 +285,7 @@ void dma_cachectl __P((vm_offset_t, int, int));
     if (!PAGE_ALIGNED(ad))		\
     	printf("%s: addr  %x not page aligned.\n", who, ad)
 
-unsigned invalidate_pte __P((pt_entry_t *));
+unsigned invalidate_pte(pt_entry_t *);
 
 extern vm_offset_t kmapva;
 
@@ -293,7 +293,7 @@ extern vm_offset_t kmapva;
 	((pt_entry_t *)(PG_PFNUM(*((sdt_entry_t *)kmapva + \
 	    SDTIDX(va) + SDT_ENTRIES)) << PDT_SHIFT) + PDTIDX(va))
 
-u_int kvtop __P((vm_offset_t));
+u_int kvtop(vm_offset_t);
 
 #endif /* __MACHINE_MMU_H__ */
 

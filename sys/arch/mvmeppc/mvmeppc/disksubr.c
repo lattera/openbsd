@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/disksubr.c,v 1.1.2.2 2002/03/06 02:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/disksubr.c,v 1.1.2.3 2002/03/28 10:36:03 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -79,7 +79,7 @@ dk_establish(dk, dev)
 char *
 readdisklabel(dev, strat, lp, osdep, spoofonly)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *osdep;
 	int spoofonly;
@@ -395,7 +395,7 @@ setdisklabel(olp, nlp, openmask, osdep)
 int
 writedisklabel(dev, strat, lp, osdep)
 	dev_t dev;
-	void (*strat) __P((struct buf *));
+	void (*strat)(struct buf *);
 	register struct disklabel *lp;
 	struct cpu_disklabel *osdep;
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdvar.h,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdvar.h,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
 /*	$NetBSD: akbdvar.h,v 1.4 1999/02/17 14:56:56 tsubai Exp $	*/
 
 /*
@@ -56,7 +56,7 @@ struct akbd_softc {
 #define LED_CAPSLOCK	0x2
 #define LED_SCROLL_LOCK	0x4
 
-void kbd_adbcomplete __P((caddr_t buffer, caddr_t data_area, int adb_command));
+void kbd_adbcomplete(caddr_t buffer, caddr_t data_area, int adb_command);
 int akbd_cnattach(void);
 
 #endif /* _MACPPC_KBDVAR_H_ */

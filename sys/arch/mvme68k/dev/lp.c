@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.1 2001/04/18 16:10:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/lp.c,v 1.3.16.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -53,8 +53,8 @@ struct lpsoftc {
 	struct pccreg	*sc_pcc;
 };
 
-void lpattach __P((struct device *, struct device *, void *));
-int  lpmatch __P((struct device *, void *, void *));
+void lpattach(struct device *, struct device *, void *);
+int  lpmatch(struct device *, void *, void *);
 
 struct cfattach lp_ca = {
 	sizeof(struct lpsoftc), lpmatch, lpattach
@@ -64,7 +64,7 @@ struct cfdriver lp_cd = {
 	NULL, "lp", DV_DULL, 0
 };
 
-int lpintr __P((void *));
+int lpintr(void *);
 
 /*
  * a PCC chip always has an lp attached to it.

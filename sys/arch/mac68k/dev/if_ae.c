@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_ae.c,v 1.14.4.2 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/if_ae.c,v 1.14.4.3 2002/03/28 10:34:04 niklas Exp $	*/
 /*	$NetBSD: if_ae.c,v 1.62 1997/04/24 16:52:05 scottr Exp $	*/
 
 /*
@@ -54,9 +54,9 @@
 
 #define inline			/* XXX for debugging porpoises */
 
-static inline void ae_rint __P((struct ae_softc *));
-static inline void ae_xmit __P((struct ae_softc *));
-static inline int ae_ring_copy __P(( struct ae_softc *, int, caddr_t, int));
+static inline void ae_rint(struct ae_softc *);
+static inline void ae_xmit(struct ae_softc *);
+static inline int ae_ring_copy( struct ae_softc *, int, caddr_t, int);
 
 #define	ETHER_MIN_LEN	64
 #define ETHER_MAX_LEN	1518

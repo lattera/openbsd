@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.7 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/autoconf.c,v 1.30.4.8 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.20 1996/05/03 19:41:56 christos Exp $	*/
 
 /*-
@@ -71,13 +71,13 @@
 #include <machine/i82093var.h>
 #endif
 
-int findblkmajor __P((struct device *dv));
-char *findblkname __P((int));
+int findblkmajor(struct device *dv);
+char *findblkname(int);
 
-void rootconf __P((void));
-void swapconf __P((void));
-void setroot __P((void));
-void diskconf __P((void));
+void rootconf(void);
+void swapconf(void);
+void setroot(void);
+void diskconf(void);
 
 /*
  * The following several variables are related to

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.12 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.13 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -275,17 +275,18 @@ struct	extent *ioport_ex;
 struct	extent *iomem_ex;
 static	int ioport_malloc_safe;
 
-caddr_t	allocsys __P((caddr_t));
-void	setup_buffers __P((vm_offset_t *));
-void	dumpsys __P((void));
-int	cpu_dump __P((void));
-void	init386 __P((vm_offset_t));
-void	consinit __P((void));
+caddr_t	allocsys(caddr_t);
+void	setup_buffers(vm_offset_t *);
+void	dumpsys(void);
+int	cpu_dump(void);
+void	old_identifycpu(void);
+void	init386(vm_offset_t);
+void	consinit(void);
 
-int	bus_mem_add_mapping __P((bus_addr_t, bus_size_t,
-	    int, bus_space_handle_t *));
-int	_bus_dmamap_load_buffer __P((bus_dma_tag_t, bus_dmamap_t, void *,
-    bus_size_t, struct proc *, int, paddr_t *, int *, int));
+int	bus_mem_add_mapping(bus_addr_t, bus_size_t,
+	    int, bus_space_handle_t *);
+int	_bus_dmamap_load_buffer(bus_dma_tag_t, bus_dmamap_t, void *,
+    bus_size_t, struct proc *, int, paddr_t *, int *, int);
 
 #ifdef KGDB
 #ifndef KGDB_DEVNAME
@@ -310,7 +311,7 @@ int comkgdbrate = KGDBRATE;
 #endif
 int comkgdbmode = KGDBMODE;
 #endif /* NCOM  || NPCCOM */
-void kgdb_port_init __P((void));
+void kgdb_port_init(void);
 #endif /* KGDB */
 
 #ifdef APERTURE
@@ -321,13 +322,12 @@ int allowaperture = 0;
 #endif
 #endif
 
-void	winchip_cpu_setup __P((const char *, int, int));
-void	cyrix3_cpu_setup __P((const char *, int, int));
-void	cyrix6x86_cpu_setup __P((const char *, int, int));
-void	old_identifycpu __P((void));
-void	intel586_cpu_setup __P((const char *, int, int));
-void	intel686_cpu_setup __P((const char *, int, int));
-char *	intel686_cpu_name __P((int));
+void	winchip_cpu_setup(const char *, int, int);
+void	cyrix3_cpu_setup(const char *, int, int);
+void	cyrix6x86_cpu_setup(const char *, int, int);
+void	intel586_cpu_setup(const char *, int, int);
+void	intel686_cpu_setup(const char *, int, int);
+char *	intel686_cpu_name(int);
 
 #if defined(I486_CPU) || defined(I586_CPU) || defined(I686_CPU)
 static __inline u_char
@@ -637,7 +637,6 @@ setup_buffers(maxaddr)
  * Info for CTL_HW
  */
 char	cpu_model[120];
-extern	char version[];
 
 /*
  * Note: these are just the ones that may not have a cpuid instruction.
@@ -1389,7 +1388,7 @@ old_identifycpu()
 	int class = CPUCLASS_386, vendor, i, max;
 	int family, model, step, modif, cachesize;
 	const struct cpu_cpuid_nameclass *cpup = NULL;
-	void (*cpu_setup) __P((const char *, int, int));
+	void (*cpu_setup)(const char *, int, int);
 
 	if (cpuid_level == -1) {
 #ifdef DIAGNOSTIC
@@ -1439,6 +1438,8 @@ old_identifycpu()
 			if (family > CPU_MAXFAMILY)
 				family = CPU_MAXFAMILY;
 			class = family - 3;
+			if (class > CPUCLASS_686)
+				class = CPUCLASS_686;
 			modifier = "";
 			name = "";
 			token = "";
@@ -1461,8 +1462,11 @@ old_identifycpu()
 				name = intel686_cpu_name(model);
 			} else
 				name = cpup->cpu_family[i].cpu_models[model];
-			if (name == NULL)
+			if (name == NULL) {
 				name = cpup->cpu_family[i].cpu_models[CPU_DEFMODEL];
+				if (name == NULL)
+					name = "";
+			}
 			class = cpup->cpu_family[i].cpu_class;
 			cpu_setup = cpup->cpu_family[i].cpu_setup;
 		}
@@ -1597,7 +1601,7 @@ old_identifycpu()
 }
 
 #ifdef COMPAT_IBCS2
-void ibcs2_sendsig __P((sig_t, int, int, u_long, int, union sigval));
+void ibcs2_sendsig(sig_t, int, int, u_long, int, union sigval);
 
 void
 ibcs2_sendsig(catcher, sig, mask, code, type, val)
@@ -1679,8 +1683,8 @@ sendsig(catcher, sig, mask, code, type, val)
 	} else
 #endif
 	{
-		__asm("movl %%gs,%w0" : "=r" (frame.sf_sc.sc_gs));
-		__asm("movl %%fs,%w0" : "=r" (frame.sf_sc.sc_fs));
+		__asm("movw %%gs,%w0" : "=r" (frame.sf_sc.sc_gs));
+		__asm("movw %%fs,%w0" : "=r" (frame.sf_sc.sc_fs));
 		frame.sf_sc.sc_es = tf->tf_es;
 		frame.sf_sc.sc_ds = tf->tf_ds;
 		frame.sf_sc.sc_eflags = tf->tf_eflags;
@@ -1719,8 +1723,8 @@ sendsig(catcher, sig, mask, code, type, val)
 	/*
 	 * Build context to run handler in.
 	 */
-	__asm("movl %w0,%%gs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
-	__asm("movl %w0,%%fs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%gs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%fs" : : "r" (GSEL(GUDATA_SEL, SEL_UPL)));
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = (int)(((char *)PS_STRINGS) - (esigcode - sigcode));
@@ -1947,7 +1951,7 @@ dumpconf()
 int
 cpu_dump()
 {
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	long buf[dbtob(1) / sizeof (long)];
 	kcore_seg_t	*segp;
 
@@ -1986,7 +1990,7 @@ dumpsys()
 	register u_int i, j, npg;
 	register int maddr;
 	daddr_t blkno;
-	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int (*dump)(dev_t, daddr_t, caddr_t, size_t);
 	int error;
 	register char *str;
 	extern int msgbufmapped;
@@ -2118,8 +2122,8 @@ setregs(p, pack, stack, retval)
 	pcb->pcb_flags = 0;
 
 	tf = p->p_md.md_regs;
-	__asm("movl %w0,%%gs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
-	__asm("movl %w0,%%fs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%gs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
+	__asm("movw %w0,%%fs" : : "r" (LSEL(LUDATA_SEL, SEL_UPL)));
 	tf->tf_es = LSEL(LUDATA_SEL, SEL_UPL);
 	tf->tf_ds = LSEL(LUDATA_SEL, SEL_UPL);
 	tf->tf_ebp = 0;

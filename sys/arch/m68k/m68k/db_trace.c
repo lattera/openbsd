@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.9.10.4 2002/03/06 01:03:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_trace.c,v 1.9.10.5 2002/03/28 10:34:04 niklas Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.20 1997/02/05 05:10:25 scottr Exp $	*/
 
 /* 
@@ -44,7 +44,7 @@ extern label_t	*db_recover;
 /*
  * Register list
  */
-static int db_var_short __P((struct db_variable *, db_expr_t *, int));
+static int db_var_short(struct db_variable *, db_expr_t *, int);
 
 struct db_variable db_regs[] = {
 	/* D0-D7 */
@@ -78,9 +78,9 @@ db_var_short(varp, valp, op)
     int op;
 {
     if (op == DB_VAR_GET)
-	*valp = (db_expr_t) *((short*)varp->valuep);
+	*valp = (db_expr_t) *((short *)varp->valuep);
     else
-	*((short*)varp->valuep) = (short) *valp;
+	*((short *)varp->valuep) = (short) *valp;
     return(0);
 }
 
@@ -114,10 +114,10 @@ struct stackpos {
 	 int	k_regloc[NREGISTERS];
 };
 
-static void findentry __P((struct stackpos *));
-static void findregs __P((struct stackpos *, db_addr_t));
-static int  nextframe __P((struct stackpos *, int));
-static void stacktop __P((db_regs_t *, struct stackpos *));
+static void findentry(struct stackpos *);
+static void findregs(struct stackpos *, db_addr_t);
+static int  nextframe(struct stackpos *, int);
+static void stacktop(db_regs_t *, struct stackpos *);
 
 
 #define FR_SAVFP	0

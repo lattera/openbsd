@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.5 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.6 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: linux_machdep.c,v 1.29 1996/05/03 19:42:11 christos Exp $	*/
 
 /*
@@ -80,10 +80,10 @@
 
 #ifdef USER_LDT
 #include <machine/cpu.h>
-int linux_read_ldt __P((struct proc *, struct linux_sys_modify_ldt_args *,
-    register_t *));
-int linux_write_ldt __P((struct proc *, struct linux_sys_modify_ldt_args *,
-    register_t *));
+int linux_read_ldt(struct proc *, struct linux_sys_modify_ldt_args *,
+    register_t *);
+int linux_write_ldt(struct proc *, struct linux_sys_modify_ldt_args *,
+    register_t *);
 #endif
 
 /*
@@ -454,7 +454,7 @@ linux_machdepioctl(p, v, retval)
 	struct filedesc *fdp;
 	struct file *fp;
 	int fd;
-	int (*ioctlf) __P((struct file *, u_long, caddr_t, struct proc *));
+	int (*ioctlf)(struct file *, u_long, caddr_t, struct proc *);
 	struct ioctl_pt pt;
 
 	fd = SCARG(uap, fd);

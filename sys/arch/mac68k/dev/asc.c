@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.3 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/asc.c,v 1.9.4.4 2002/03/28 10:34:04 niklas Exp $	*/
 /*	$NetBSD: asc.c,v 1.20 1997/02/24 05:47:33 scottr Exp $	*/
 
 /*
@@ -93,11 +93,11 @@
 
 static u_int8_t		asc_wave_tab[0x800];
 
-static int	asc_ring_bell __P((void *, int, int, int));
-static void	asc_stop_bell __P((void *));
+static int	asc_ring_bell(void *, int, int, int);
+static void	asc_stop_bell(void *);
 
-static int	ascmatch __P((struct device *, void *, void *));
-static void	ascattach __P((struct device *, struct device *, void *));
+static int	ascmatch(struct device *, void *, void *);
+static void	ascattach(struct device *, struct device *, void *);
 
 struct cfattach asc_ca = {
 	sizeof(struct asc_softc), ascmatch, ascattach

@@ -1,8 +1,9 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/RAMDISK,v 1.3.4.4 2002/03/06 01:08:05 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/RAMDISK,v 1.3.4.5 2002/03/28 10:36:02 niklas Exp $
 
 machine		mvme88k 
 
 include "../../../conf/GENERIC"
+rmoption	PTRACE
 
 option		MVME187		# support for 187
 option		MVME188		# support for 188

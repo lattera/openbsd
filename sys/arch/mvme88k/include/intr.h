@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2.2.4 2002/03/06 02:04:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/intr.h,v 1.2.2.5 2002/03/28 10:36:02 niklas Exp $	*/
 /*
  * Copyright (C) 2000 Steve Murphree, Jr.
  * All rights reserved.
@@ -82,11 +82,11 @@ extern int intrcnt[M88K_NIRQ];
 
 #ifdef _KERNEL
 #ifndef _LOCORE
-unsigned setipl __P((unsigned level));
+unsigned setipl(unsigned level);
 #ifdef DDB
-unsigned db_setipl __P((unsigned level));
+unsigned db_setipl(unsigned level);
 #endif 
-int spl0 __P((void));
+int spl0(void);
 #endif /* _LOCORE */
 
 /* needs major cleanup - XXX nivas */

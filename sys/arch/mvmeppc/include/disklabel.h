@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/disklabel.h,v 1.1.2.1 2001/11/13 21:04:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/disklabel.h,v 1.1.2.2 2002/03/28 10:36:03 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Christopher G. Demetriou
@@ -90,7 +90,7 @@ struct cpu_disklabel {
 #define	DPSECT(s)	((s) & 0x3f)
 #define	DPCYL(c, s)	((c) + (((s) & 0xc0) << 2))
 
-static __inline u_int32_t get_le __P((void *p));
+static __inline u_int32_t get_le(void *p);
 
 static __inline u_int32_t
 #ifdef __cplusplus

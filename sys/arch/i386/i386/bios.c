@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.7 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.8 2002/03/28 10:31:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -69,9 +69,9 @@ struct bios_softc {
 	struct	device sc_dev;
 };
 
-int biosprobe __P((struct device *, void *, void *));
-void biosattach __P((struct device *, struct device *, void *));
-int bios_print __P((void *, const char *));
+int biosprobe(struct device *, void *, void *);
+void biosattach(struct device *, struct device *, void *);
+int bios_print(void *, const char *);
 
 struct cfattach bios_ca = {
 	sizeof(struct bios_softc), biosprobe, biosattach
@@ -97,7 +97,7 @@ struct bios32_entry bios32_entry;
 void	       *bios_smpinfo;
 #endif
 
-bios_diskinfo_t *bios_getdiskinfo __P((dev_t));
+bios_diskinfo_t *bios_getdiskinfo(dev_t);
 
 int
 biosprobe(parent, match, aux)
@@ -379,7 +379,7 @@ bios32_service(service, e, ei)
 	bios32_entry_info_t ei;
 {
 	extern union descriptor *dynamic_gdt;
-	extern int gdt_get_slot __P((void));
+	extern int gdt_get_slot(void);
 
 	u_long pa, endpa;
 	vaddr_t va, sva;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/db_interface.c,v 1.1.4.2 2002/03/28 10:36:01 niklas Exp $	*/
 /*      $NetBSD: db_interface.c,v 1.12 2001/07/22 11:29:46 wiz Exp $ */
 
 #include <sys/param.h>
@@ -8,7 +8,7 @@
 #include <machine/db_machdep.h>
 #include <ddb/db_extern.h>
 
-int ddb_trap_glue __P((struct trapframe *frame)); /* called from locore */
+int ddb_trap_glue(struct trapframe *frame); /* called from locore */
 
 void
 Debugger()

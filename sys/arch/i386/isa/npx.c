@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.6 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.7 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
@@ -105,19 +105,19 @@
 #define	clts()			__asm("clts")
 #define	stts()			lcr0(rcr0() | CR0_TS)
 
-int npxdna __P((struct cpu_info *));
-int npxintr __P((void *));
-static int npxprobe1 __P((struct isa_attach_args *));
-static void npxsave1 __P((struct cpu_info *, struct proc *));
-static void npxdrop1 __P((struct cpu_info *, struct proc *));
+int npxdna(struct cpu_info *);
+int npxintr(void *);
+static int npxprobe1(struct isa_attach_args *);
+static void npxsave1(struct cpu_info *, struct proc *);
+static void npxdrop1(struct cpu_info *, struct proc *);
 
 struct npx_softc {
 	struct device sc_dev;
 	void *sc_ih;
 };
 
-int npxprobe __P((struct device *, void *, void *));
-void npxattach __P((struct device *, struct device *, void *));
+int npxprobe(struct device *, void *, void *);
+void npxattach(struct device *, struct device *, void *);
 
 struct cfattach npx_ca = {
 	sizeof(struct npx_softc), npxprobe, npxattach
@@ -147,7 +147,7 @@ extern int i386_fpu_fdivbug;
  * interrupts.  We'll still need a special exception 16 handler.  The busy
  * latch stuff in probintr() can be moved to npxprobe().
  */
-void probeintr __P((void));
+void probeintr(void);
 asm (".text\n\t"
 "_probeintr:\n\t"
 	"ss\n\t"
@@ -161,7 +161,7 @@ asm (".text\n\t"
 	"popl	%eax\n\t"
 	"iret\n\t");
 
-void probetrap __P((void));
+void probetrap(void);
 asm (".text\n\t"
 "_probetrap:\n\t"
 	"ss\n\t"
@@ -302,7 +302,7 @@ npxprobe(parent, match, aux)
 	return (result);
 }
 
-int npx586bug1 __P((int, int));
+int npx586bug1(int, int);
 asm (".text\n\t"
 "_npx586bug1:\n\t"
 	"fildl	4(%esp)		# x\n\t"

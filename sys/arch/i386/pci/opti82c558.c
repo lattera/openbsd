@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/opti82c558.c,v 1.5.2.1 2001/04/18 16:08:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/opti82c558.c,v 1.5.2.2 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: opti82c558.c,v 1.2 2000/07/18 11:24:09 soda Exp $	*/
 
 /*-
@@ -82,11 +82,11 @@
 #include <i386/pci/pcibiosvar.h>
 #include <i386/pci/opti82c558reg.h>
 
-int	opti82c558_getclink __P((pciintr_icu_handle_t, int, int *));
-int	opti82c558_get_intr __P((pciintr_icu_handle_t, int, int *));
-int	opti82c558_set_intr __P((pciintr_icu_handle_t, int, int));
-int	opti82c558_get_trigger __P((pciintr_icu_handle_t, int, int *));
-int	opti82c558_set_trigger __P((pciintr_icu_handle_t, int, int));
+int	opti82c558_getclink(pciintr_icu_handle_t, int, int *);
+int	opti82c558_get_intr(pciintr_icu_handle_t, int, int *);
+int	opti82c558_set_intr(pciintr_icu_handle_t, int, int);
+int	opti82c558_get_trigger(pciintr_icu_handle_t, int, int *);
+int	opti82c558_set_trigger(pciintr_icu_handle_t, int, int);
 
 const struct pciintr_icu opti82c558_pci_icu = {
 	opti82c558_getclink,

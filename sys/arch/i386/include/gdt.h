@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/gdt.h,v 1.5.10.2 2001/07/04 10:16:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/gdt.h,v 1.5.10.3 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: gdt.h,v 1.3 1996/02/27 22:32:11 jtc Exp $	*/
 
 /*-
@@ -38,9 +38,9 @@
  */
 
 #ifdef _KERNEL
-void gdt_init __P((void));
-void tss_alloc __P((struct pcb *));
-void tss_free __P((struct pcb *));
-void ldt_alloc __P((struct pmap *, union descriptor *, size_t));
-void ldt_free __P((struct pmap *));
+void gdt_init(void);
+void tss_alloc(struct pcb *);
+void tss_free(struct pcb *);
+void ldt_alloc(struct pmap *, union descriptor *, size_t);
+void ldt_free(struct pmap *);
 #endif

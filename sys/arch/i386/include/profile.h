@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/profile.h,v 1.3.14.3 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/profile.h,v 1.3.14.4 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: profile.h,v 1.6 1995/03/28 18:17:08 jtc Exp $	*/
 
 /*
@@ -39,7 +39,7 @@
 #define	_MCOUNT_DECL static __inline void _mcount
 
 #define	MCOUNT \
-extern void mcount __P((void)) __asm("mcount");				\
+extern void mcount(void) __asm("mcount");				\
 void									\
 mcount()								\
 {									\

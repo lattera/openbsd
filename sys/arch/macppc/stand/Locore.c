@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/Locore.c,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/Locore.c,v 1.3.4.2 2002/03/28 10:36:02 niklas Exp $	*/
 /*	$NetBSD: Locore.c,v 1.1 1997/04/16 20:29:11 thorpej Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 
 static int (*openfirmware)(void *);
 
-static void setup __P((void));
+static void setup(void);
 
 #ifdef XCOFF_GLUE
 asm (".text; .globl _entry; _entry: .long _start,0,0");
@@ -507,16 +507,7 @@ OF_chain(virt, size, entry, arg, len)
 #endif
 
 int
-#ifdef	__STDC__
 OF_call_method(char *method, int ihandle, int nargs, int nreturns, ...)
-#else
-OF_call_method(method, ihandle, nargs, nreturns, va_alist)
-	char *method;
-	int ihandle;
-	int nargs;
-	int nreturns;
-	va_dcl
-#endif
 {
 	va_list ap;
 	static struct {

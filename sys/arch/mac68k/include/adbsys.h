@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/adbsys.h,v 1.6 1997/11/30 06:12:19 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/adbsys.h,v 1.6.10.1 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: adbsys.h,v 1.5 1996/05/05 14:34:07 briggs Exp $	*/
 
 /*-
@@ -124,6 +124,6 @@ typedef struct adb_listencmd_s {
 } adb_listencmd_t;
 #define ADBIOC_LISTENCMD	_IOW('A', 133, adb_listencmd_t)
 
-void	adb_init __P((void));
+void	adb_init(void);
 
 #endif /* _MAC68K_ADBSYS_H_ */

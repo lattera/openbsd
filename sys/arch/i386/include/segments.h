@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/segments.h,v 1.6.10.2 2001/07/14 10:02:41 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/segments.h,v 1.6.10.3 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: segments.h,v 1.23 1996/02/01 22:31:03 mycroft Exp $	*/
 
 /*-
@@ -132,16 +132,16 @@ extern union descriptor gdt[], ldt[];
 extern struct gate_descriptor idt_region[];
 extern struct gate_descriptor *idt;
 
-void setgate __P((struct gate_descriptor *, void *, int, int, int, int));
-void setregion __P((struct region_descriptor *, void *, size_t));
-void setsegment __P((struct segment_descriptor *, void *, size_t, int, int,
-    int, int));
-void unsetgate __P((struct gate_descriptor *));
-void cpu_init_idt __P((void));
+void setgate(struct gate_descriptor *, void *, int, int, int, int);
+void setregion(struct region_descriptor *, void *, size_t);
+void setsegment(struct segment_descriptor *, void *, size_t, int, int,
+    int, int);
+void unsetgate(struct gate_descriptor *);
+void cpu_init_idt(void);
 
-int idt_vec_alloc __P((int, int));
-void idt_vec_set __P((int, void (*)(void)));
-void idt_vec_free __P((int));
+int idt_vec_alloc(int, int);
+void idt_vec_set(int, void (*)(void));
+void idt_vec_free(int);
 
 #endif /* _KERNEL */
 

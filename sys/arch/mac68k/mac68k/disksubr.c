@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/disksubr.c,v 1.12.4.3 2002/03/06 01:05:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/disksubr.c,v 1.12.4.4 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.22 1997/11/26 04:18:20 briggs Exp $	*/
 
 /*
@@ -98,18 +98,17 @@
 #define HFS_PART 4
 #define SCRATCH_PART 5
 
-static int getFreeLabelEntry __P((struct disklabel *));
-static int whichType __P((struct partmapentry *));
-static void fixPartTable __P((struct partmapentry *, long, char *, int *));
-static void setRoot __P((struct partmapentry *, struct disklabel *, int));
-static void setSwap __P((struct partmapentry *, struct disklabel *, int));
-static void setUfs __P((struct partmapentry *, struct disklabel *, int));
-static void setHfs __P((struct partmapentry *, struct disklabel *, int));
-static void setScratch __P((struct partmapentry *, struct disklabel *, int));
-static int getNamedType
-__P((struct partmapentry *, int, struct disklabel *, int, int, int *));
-static char *read_mac_label __P((dev_t, void (*)(struct buf *),
-		register struct disklabel *, struct cpu_disklabel *));
+static int getFreeLabelEntry(struct disklabel *);
+static int whichType(struct partmapentry *);
+static void fixPartTable(struct partmapentry *, long, char *, int *);
+static void setRoot(struct partmapentry *, struct disklabel *, int);
+static void setSwap(struct partmapentry *, struct disklabel *, int);
+static void setUfs(struct partmapentry *, struct disklabel *, int);
+static void setHfs(struct partmapentry *, struct disklabel *, int);
+static void setScratch(struct partmapentry *, struct disklabel *, int);
+static int getNamedType(struct partmapentry *, int, struct disklabel *, int, int, int *);
+static char *read_mac_label(dev_t, void (*)(struct buf *),
+		register struct disklabel *, struct cpu_disklabel *);
 
 /*
  * Find an entry in the disk label that is unused and return it

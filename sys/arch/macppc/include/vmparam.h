@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.4 2002/03/06 01:06:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/vmparam.h,v 1.3.4.5 2002/03/28 10:36:01 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -87,21 +87,20 @@
 #define	VM_MIN_ADDRESS		((vm_offset_t)0)
 #define	VM_MAXUSER_ADDRESS	((vm_offset_t)0xfffff000)
 #define	VM_MAX_ADDRESS		VM_MAXUSER_ADDRESS
-#define	VM_MIN_KERNEL_ADDRESS	((vm_offset_t)(KERNEL_SR << ADDR_SR_SHFT))
+#define	VM_MIN_KERNEL_ADDRESS	((vm_offset_t)(KERNEL_SR << ADDR_SR_SHIFT))
 
-/* ppc_kvm_size is so that vm space can be stolen before vm is fully
+/* ppc_kvm_stolen is so that vm space can be stolen before vm is fully
  * initialized.
  */
-#define VM_KERN_ADDR_SIZE_DEF SEGMENT_LENGTH
+extern vm_offset_t ppc_kvm_stolen;
 #define VM_KERN_ADDRESS_SIZE  (SEGMENT_LENGTH - (32 * 1024 * 1024))
-#define	VM_MAX_KERNEL_ADDRESS	((vm_offset_t)((KERNEL_SR << ADDR_SR_SHFT) \
-						+ VM_KERN_ADDRESS_SIZE))
+#define	VM_MAX_KERNEL_ADDRESS	(VM_MIN_KERNEL_ADDRESS + VM_KERN_ADDRESS_SIZE)
 
 #define	VM_PHYS_SIZE		(USRIOSIZE * PAGE_SIZE)
 
 #define __HAVE_PMAP_PHYSSEG
 struct pmap_physseg {
-	struct pv_entry *pvent;
+	struct pted_pv_head *pvent;
 	char *attrs;
 	/* NULL ??? */
 };

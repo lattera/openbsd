@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.6 2002/03/06 02:04:44 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.7 2002/03/28 10:36:02 niklas Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -80,8 +80,8 @@ extern	caddr_t		vmmap;
 #define PMAP_ACTIVATE(proc)	pmap_activate(proc)
 #define PMAP_DEACTIVATE(proc)	pmap_deactivate(proc)
 
-void pmap_bootstrap __P((vaddr_t, paddr_t *, paddr_t *, vaddr_t *, vaddr_t *));
-void pmap_cache_ctrl __P((pmap_t, vaddr_t, vaddr_t, unsigned));
+void pmap_bootstrap(vaddr_t, paddr_t *, paddr_t *, vaddr_t *, vaddr_t *);
+void pmap_cache_ctrl(pmap_t, vaddr_t, vaddr_t, unsigned);
 
 #endif	/* _KERNEL */
 

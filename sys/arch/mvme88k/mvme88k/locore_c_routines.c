@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.6.4.5 2002/03/06 02:04:45 niklas Exp $	*/
+/* $OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/locore_c_routines.c,v 1.6.4.6 2002/03/28 10:36:02 niklas Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -102,9 +102,9 @@ static char *bytes[] =
 #define DAE_DEBUG(stuff)
 #endif
 
-void setlevel __P((int));
+void setlevel(int);
 #ifdef DDB
-void db_setlevel __P((int));
+void db_setlevel(int);
 #endif
 
 #ifdef M88100

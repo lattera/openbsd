@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/Attic/pccons.h,v 1.5.14.1 2001/04/18 16:07:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/Attic/pccons.h,v 1.5.14.2 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: pccons.h,v 1.4 1996/02/02 18:06:06 mycroft Exp $	*/
 
 /*
@@ -44,7 +44,7 @@ typedef struct {
 #define CONSOLE_SET_BLANK		_IOW('t',130,int)
 
 #ifdef _KERNEL
-int pccnattach	__P((void));
+int pccnattach(void);
 
 #if (NPCCONSKBD > 0)
 int pcconskbd_cnattach	_P((pckbc_tag_t, pckbc_slot_t));

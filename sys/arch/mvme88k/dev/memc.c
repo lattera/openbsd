@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.1 2001/04/18 16:10:56 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/memc.c,v 1.3.4.2 2002/03/28 10:36:02 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -63,8 +63,8 @@ struct memcsoftc {
 	struct intrhand	sc_ih;
 };
 
-void memcattach __P((struct device *, struct device *, void *));
-int  memcmatch __P((struct device *, void *, void *));
+void memcattach(struct device *, struct device *, void *);
+int  memcmatch(struct device *, void *, void *);
 
 struct cfattach memc_ca = {
 	sizeof(struct memcsoftc), memcmatch, memcattach
@@ -74,7 +74,7 @@ struct cfdriver memc_cd = {
 	NULL, "memc", DV_DULL, 0
 };
 
-/*int memcintr __P((struct frame *frame));*/
+/*int memcintr(struct frame *frame);*/
 
 int
 memcmatch(parent, vcf, args)

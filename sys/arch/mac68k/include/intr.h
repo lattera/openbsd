@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2.4.3 2001/12/05 00:39:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/intr.h,v 1.2.4.4 2002/03/28 10:34:05 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.8 1997/11/07 07:33:18 scottr Exp $	*/
 
 /*
@@ -139,7 +139,7 @@ extern volatile u_int8_t ssir;
 #define	setsoftadb()	siron(SIR_ADB)
 
 /* locore.s */
-int	spl0 __P((void));
+int	spl0(void);
 #endif /* _KERNEL */
 
 #endif /* _MAC68K_INTR_H_ */

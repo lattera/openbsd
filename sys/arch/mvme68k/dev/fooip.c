@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/fooip.c,v 1.3.16.1 2001/04/18 16:10:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/fooip.c,v 1.3.16.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -64,8 +64,8 @@ struct fooipsoftc {
 	struct fooipregs	*sc_regs;
 };
 
-void fooipattach __P((struct device *, struct device *, void *));
-int  fooipmatch __P((struct device *, void *, void *));
+void fooipattach(struct device *, struct device *, void *);
+int  fooipmatch(struct device *, void *, void *);
 
 struct cfattach fooip_ca = {
 	sizeof(struct fooipsoftc), fooipmatch, fooipattach
@@ -75,7 +75,7 @@ struct cfdriver fooip_cd = {
 	NULL, "fooip", DV_DULL, 0
 };
 
-int  fooipintr __P((void *));
+int  fooipintr(void *);
 
 int
 fooipmatch(parent, cf, args)

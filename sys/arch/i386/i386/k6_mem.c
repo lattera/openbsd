@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/k6_mem.c,v 1.3.2.1 2000/03/24 09:07:36 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/i386/i386/k6_mem.c,v 1.3.2.2 2002/03/28 10:31:04 niklas Exp $ */
 /*-
  * Copyright (c) 1999 Brian Fundakowski Feldman
  * All rights reserved.
@@ -67,9 +67,9 @@
 #define k6_reg_make(addr, mask, wc, uc) 				\
 		((addr) | ((mask) << 2) | ((wc) << 1) | uc)
 
-void k6_mrinit __P((struct mem_range_softc *sc));
-int k6_mrset __P((struct mem_range_softc *, struct mem_range_desc *, int *));
-__inline int k6_mrmake __P((struct mem_range_desc *, u_int32_t *));
+void k6_mrinit(struct mem_range_softc *sc);
+int k6_mrset(struct mem_range_softc *, struct mem_range_desc *, int *);
+__inline int k6_mrmake(struct mem_range_desc *, u_int32_t *);
 
 struct mem_range_ops k6_mrops = {
 	k6_mrinit,

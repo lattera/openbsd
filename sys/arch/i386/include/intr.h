@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.9 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/intr.h,v 1.4.4.10 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.5 1996/05/13 06:11:28 mycroft Exp $	*/
 
 /*
@@ -114,12 +114,12 @@ int iunmask[NIPL];	/* Bitmasks telling what interrupts are accepted. */
 #define IMASK(level) imask[IPL(level)]
 #define IUNMASK(level) iunmask[IPL(level)]
 
-extern void Xspllower __P((void));
+extern void Xspllower(void);
 
-static __inline int splraise __P((int));
-static __inline int spllower __P((int));
-#define SPLX_DECL void splx __P((int));
-static __inline void softintr __P((int, int));
+static __inline int splraise(int);
+static __inline int spllower(int);
+#define SPLX_DECL void splx(int);
+static __inline void softintr(int, int);
 
 /*
  * Raise current interrupt priority level, and return the old one.

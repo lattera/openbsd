@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.6.2.1 2001/04/18 16:10:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/ipic.c,v 1.6.2.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -48,8 +48,8 @@
 #include <mvme68k/dev/ipicreg.h>
 #include <mvme68k/dev/mcreg.h>
 
-void ipicattach __P((struct device *, struct device *, void *));
-int  ipicmatch __P((struct device *, void *, void *));
+void ipicattach(struct device *, struct device *, void *);
+int  ipicmatch(struct device *, void *, void *);
 
 struct cfattach ipic_ca = {
 	sizeof(struct ipicsoftc), ipicmatch, ipicattach

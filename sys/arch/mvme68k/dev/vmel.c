@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.5.14.1 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/vmel.c,v 1.5.14.2 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -48,8 +48,8 @@
  * functions will decide how many address bits are relevant.
  */
 
-void vmelattach __P((struct device *, struct device *, void *));
-int  vmelmatch __P((struct device *, void *, void *));
+void vmelattach(struct device *, struct device *, void *);
+int  vmelmatch(struct device *, void *, void *);
 
 struct cfattach vmel_ca = {
 	sizeof(struct vmelsoftc), vmelmatch, vmelattach

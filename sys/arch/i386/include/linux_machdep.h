@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/linux_machdep.h,v 1.6.10.1 2001/04/18 16:07:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/linux_machdep.h,v 1.6.10.2 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: linux_machdep.h,v 1.5 1996/05/03 19:26:28 christos Exp $	*/
 
 /*
@@ -78,8 +78,8 @@ struct linux_sigframe {
 };
 
 #ifdef _KERNEL
-void linux_sendsig __P((sig_t, int, int, u_long, int, union sigval));
-dev_t linux_fakedev __P((dev_t));
+void linux_sendsig(sig_t, int, int, u_long, int, union sigval);
+dev_t linux_fakedev(dev_t);
 #endif
 
 /*

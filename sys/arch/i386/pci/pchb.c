@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.6.10.2 2002/03/06 01:01:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pchb.c,v 1.6.10.3 2002/03/28 10:31:04 niklas Exp $	*/
 /*	$NetBSD: pchb.c,v 1.6 1997/06/06 23:29:16 thorpej Exp $	*/
 
 /*
@@ -115,10 +115,10 @@ struct pchb_softc {
 	struct timeout sc_tmo;
 };
 
-int	pchbmatch __P((struct device *, void *, void *));
-void	pchbattach __P((struct device *, struct device *, void *));
+int	pchbmatch(struct device *, void *, void *);
+void	pchbattach(struct device *, struct device *, void *);
 
-int	pchb_print __P((void *, const char *));
+int	pchb_print(void *, const char *);
 
 struct cfattach pchb_ca = {
 	sizeof(struct pchb_softc), pchbmatch, pchbattach
@@ -128,7 +128,7 @@ struct cfdriver pchb_cd = {
 	NULL, "pchb", DV_DULL
 };
 
-void pchb_rnd __P((void *v));
+void pchb_rnd(void *v);
 
 int
 pchbmatch(parent, match, aux)

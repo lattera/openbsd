@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.5.6.2 2001/11/13 21:04:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/nvram.c,v 1.5.6.3 2002/03/28 10:34:05 niklas Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -58,8 +58,8 @@ struct nvramsoftc {
 	struct clockreg *sc_regs;
 };
 
-void    nvramattach __P((struct device *, struct device *, void *));
-int     nvrammatch __P((struct device *, void *, void *));
+void    nvramattach(struct device *, struct device *, void *);
+int     nvrammatch(struct device *, void *, void *);
 
 struct cfattach nvram_ca = {
 	sizeof(struct nvramsoftc), nvrammatch, nvramattach

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.3 2002/03/06 01:06:10 niklas Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/GENERIC,v 1.5.4.4 2002/03/28 10:36:01 niklas Exp $
 #
 # PPC GENERIC config file
 #
@@ -16,7 +16,7 @@ option		PPC_MPC106_BUG
 option		PCIVERBOSE
 option		USBVERBOSE
 #option		MACOBIOVERBOSE
-#option		PPC_VECTOR_SUPPORTED
+option		ALTIVEC
 option		APERTURE	# in-kernel aperture driver for XFree86
 
 option		USER_PCICONF	# user-space PCI configuration

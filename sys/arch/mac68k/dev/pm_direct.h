@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.h,v 1.1.14.1 2001/10/31 03:01:14 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.h,v 1.1.14.2 2002/03/28 10:34:05 niklas Exp $	*/
 
 /*  pm_direct.h 1.0 01/02/97 Takashi Hamada */
 
@@ -47,9 +47,9 @@ typedef	struct	{
 
 int		pmgrop(PMData *);
 
-extern void pm_setup_adb __P((void));
-extern void pm_check_adb_devices __P((int));
-extern void pm_intr __P((void));
-extern int pm_adb_op __P((u_char *, void *, void *, int));
-extern void pm_init_adb_device __P((void));
+extern void pm_setup_adb(void);
+extern void pm_check_adb_devices(int);
+extern void pm_intr(void);
+extern int pm_adb_op(u_char *, void *, void *, int);
+extern void pm_init_adb_device(void);
 

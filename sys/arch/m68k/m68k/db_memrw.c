@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/db_memrw.c,v 1.1.16.2 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/db_memrw.c,v 1.1.16.3 2002/03/28 10:34:04 niklas Exp $	*/
 /*	$NetBSD: db_memrw.c,v 1.1 1996/02/22 23:23:35 gwr Exp $	*/
 
 /* 
@@ -56,15 +56,15 @@ db_read_bytes(addr, size, data)
 	register size_t	size;
 	register char	*data;
 {
-	register char	*src = (char*)addr;
+	register char	*src = (char *)addr;
 
 	if (size == 4) {
-		*((int*)data) = *((int*)src);
+		*((int *)data) = *((int *)src);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)data) = *((short*)src);
+		*((short *)data) = *((short *)src);
 		return;
 	}
 
@@ -86,12 +86,12 @@ db_write_bytes(addr, size, data)
 	register char	*dst = (char *)addr;
 
 	if (size == 4) {
-		*((int*)dst) = *((int*)data);
+		*((int *)dst) = *((int *)data);
 		return;
 	}
 
 	if (size == 2) {
-		*((short*)dst) = *((short*)data);
+		*((short *)dst) = *((short *)data);
 		return;
 	}
 
