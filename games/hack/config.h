@@ -1,3 +1,4 @@
+/* *	$OpenBSD: src/games/hack/config.h,v 1.5 2001/01/28 23:41:42 niklas Exp $*/
 /*
  * Copyright (c) Stichting Mathematisch Centrum, Amsterdam, 1985.
  *
