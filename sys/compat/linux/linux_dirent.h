@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/compat/linux/linux_dirent.h,v 1.2 1996/04/17 05:23:43 mickey Exp $	*/
 /*	$NetBSD: linux_dirent.h,v 1.3 1995/10/07 06:26:59 mycroft Exp $	*/
 
 /*
