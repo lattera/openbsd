@@ -1,4 +1,4 @@
-/*	$Id: timedc.c,v 1.4 2001/04/07 20:02:09 ho Exp $	*/
+/*	$Id: timedc.c,v 1.5 2001/11/23 03:45:51 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1985, 1993 The Regents of the University of California.
@@ -44,7 +44,7 @@ static char sccsid[] = "@(#)timedc.c	5.1 (Berkeley) 5/11/93";
 #endif /* not lint */
 
 #ifdef sgi
-#ident "$Revision: 1.4 $"
+#ident "$Revision: 1.5 $"
 #endif
 
 #include "timedc.h"
@@ -80,10 +80,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Could not get privileged resources\n");
 		exit(1);
 	}
-	/* revoke privs */
-
-	(void) seteuid(getuid());
-	(void) setuid(getuid());
+	/* privs revoked above */
 
 	if (--argc > 0) {
 		c = getcmd(*++argv);
