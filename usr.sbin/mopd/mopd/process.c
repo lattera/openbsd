@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.3 2000/02/20 17:45:34 bitblt Exp $ */
+/*	$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.3.2.1 2000/07/05 22:42:20 jason Exp $ */
 
 /*
  * Copyright (c) 1993-95 Mats O Jansson.  All rights reserved.
@@ -30,7 +30,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.3 2000/02/20 17:45:34 bitblt Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.sbin/mopd/mopd/process.c,v 1.3.2.1 2000/07/05 22:42:20 jason Exp $";
 #endif
 
 #include "os.h"
@@ -267,7 +267,7 @@ mopStartLoad(dst, src, dl_rpr, trans)
 	dllist[slot].a_lseek   = 0;
 
 	dllist[slot].count     = 0;
-	if (dllist[slot].dl_bsz >= 1492)
+	if ((dllist[slot].dl_bsz >= 1492) || (dllist[slot].dl_bsz == 0))
 		dllist[slot].dl_bsz = 1492;
 	if (dllist[slot].dl_bsz == 1030)	/* VS/uVAX 2000 needs this */
 		dllist[slot].dl_bsz = 1000;
@@ -353,7 +353,7 @@ mopNextLoad(dst, src, new_count, trans)
 		snprintf(line,sizeof(line),
 			"%x:%x:%x:%x:%x:%x Load completed",
 			dst[0],dst[1],dst[2],dst[3],dst[4],dst[5]);
-		syslog(LOG_INFO, line);
+		syslog(LOG_INFO, "%s", line);
 		return;
 	}
 
@@ -438,7 +438,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 {
 	u_char  tmpc;
 	u_short moplen;
-	u_char  pfile[17], mopcode;
+	u_char  pfile[129], mopcode;
 	char    filename[FILENAME_MAX];
 	char    line[100];
 	int     i,nfd,iindex;
@@ -487,6 +487,8 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 		rpr_pgty = mopGetChar(pkt,index);	/* Program Type */
 		
 		tmpc = mopGetChar(pkt,index);		/* Software ID Len */
+		if (tmpc > sizeof(pfile) - 1)
+			return;
 		for (i = 0; i < tmpc; i++) {
 			pfile[i] = mopGetChar(pkt,index);
 			pfile[i+1] = '\0';
@@ -529,7 +531,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 					src[0],src[1],src[2],
 					src[3],src[4],src[5],trans,pfile);
 			}
-			syslog(LOG_INFO, line);
+			syslog(LOG_INFO, "%s", line);
 		} else {
 			if ((mopCmpEAddr(dst,ii->eaddr) == 0)) {
 				dl_rpr->ldfd = open(filename, O_RDONLY, 0);
@@ -538,7 +540,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 					"%x:%x:%x:%x:%x:%x Send me %s",
 					src[0],src[1],src[2],
 					src[3],src[4],src[5],pfile);
-				syslog(LOG_INFO, line);
+				syslog(LOG_INFO, "%s", line);
 			}
 		}
 		
