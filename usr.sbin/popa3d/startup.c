@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/popa3d/Attic/startup.c,v 1.3 2004/06/20 20:46:27 itojun Exp $ */
+/* $OpenBSD: src/usr.sbin/popa3d/Attic/startup.c,v 1.4 2004/06/26 10:46:55 jmc Exp $ */
 
 /*
  * Command line option parsing.
@@ -36,7 +36,7 @@ int af = PF_UNSPEC;
 
 static void usage(void)
 {
-	fprintf(stderr, "Usage: %s [-D] [-V]\n", progname);
+	fprintf(stderr, "Usage: %s [-46DV]\n", progname);
 	exit(1);
 }
 
