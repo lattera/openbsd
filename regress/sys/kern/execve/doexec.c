@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/regress/sys/kern/execve/doexec.c,v 1.3 2001/01/29 02:05:55 niklas Exp $	*/
 /*	$NetBSD: doexec.c,v 1.3 1995/04/20 22:43:13 cgd Exp $	*/
 
 /*

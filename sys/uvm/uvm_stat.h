@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.6 2001/01/29 02:07:49 niklas Exp $	*/
 /*	$NetBSD: uvm_stat.h,v 1.14 1999/03/25 18:48:56 mrg Exp $	*/
 
 /*

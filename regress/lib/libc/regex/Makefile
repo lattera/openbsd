@@ -1,3 +1,4 @@
+#	$OpenBSD: src/regress/lib/libc/regex/Makefile,v 1.2 2001/01/29 02:05:43 niklas Exp $
 #	$NetBSD: Makefile,v 1.2 1995/02/16 19:38:45 cgd Exp $
 
 PROG=	re

@@ -1,4 +1,6 @@
 #!/bin/sh
+#	$OpenBSD: src/regress/lib/libssl/testdsa.sh,v 1.4 2001/01/29 02:05:48 niklas Exp $
+
 
 #Test DSA certificate generation of openssl
 

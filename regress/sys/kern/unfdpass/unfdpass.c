@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/regress/sys/kern/unfdpass/unfdpass.c,v 1.2 2001/01/29 02:05:57 niklas Exp $	*/
 /*	$NetBSD: unfdpass.c,v 1.3 1998/06/24 23:51:30 thorpej Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/regress/sys/arch/i386/ldt/testldt.c,v 1.3 2001/01/29 02:05:51 niklas Exp $	*/
 /*	$NetBSD: testldt.c,v 1.4 1995/04/20 22:42:38 cgd Exp $	*/
 
 #include <stdio.h>

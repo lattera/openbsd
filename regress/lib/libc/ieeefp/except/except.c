@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/regress/lib/libc/ieeefp/except/except.c,v 1.3 2001/01/29 02:05:42 niklas Exp $	*/
+
 #include <stdio.h>
 #include <signal.h>
 #include <assert.h>
