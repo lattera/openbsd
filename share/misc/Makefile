@@ -1,8 +1,8 @@
 #	from: @(#)Makefile	5.13 (Berkeley) 5/7/91
-#	$Id: Makefile,v 1.7 1994/03/26 03:24:50 cgd Exp $
+#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:44:43 deraadt Exp $
 
 FILES=	airport ascii birthtoken eqnchar getopt inter.phone man.template \
-	mdoc.template na.phone operator style zipcodes
+	mdoc.template na.phone operator scsi_modes style zipcodes
 NOOBJ=	noobj
 
 all clean cleandir depend lint tags:
