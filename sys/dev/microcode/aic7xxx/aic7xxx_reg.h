@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/dev/microcode/aic7xxx/aic7xxx_reg.h,v 1.3 1997/11/07 08:07:16 niklas Exp $*/
+
 /*
  * Aic7xxx register and scratch ram definitions.
  *
@@ -28,7 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: aic7xxx_reg.h,v 1.12 1996/06/09 17:29:12 gibbs Exp $
  */
 
 /*

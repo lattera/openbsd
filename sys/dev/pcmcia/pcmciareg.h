@@ -1,4 +1,4 @@
-/*	$Id: pcmciareg.h,v 1.7 1996/04/01 00:52:46 jtk Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmciareg.h,v 1.2 1997/11/07 08:07:35 niklas Exp $	*/
 /*
  * This file was apparently first written by Stefan Grefen, although it
  * contained no copyright notice at the time.

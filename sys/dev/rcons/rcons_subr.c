@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/rcons/Attic/rcons_subr.c,v 1.2 1997/11/07 08:07:40 niklas Exp $ */
 /*	$NetBSD: rcons_subr.c,v 1.2 1995/10/04 23:57:26 pk Exp $ */
 
 /*
