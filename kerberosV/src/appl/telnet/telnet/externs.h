@@ -33,7 +33,7 @@
  *	@(#)externs.h	8.3 (Berkeley) 5/30/95
  */
 
-/* $KTH: externs.h,v 1.21 2001/03/06 20:10:13 assar Exp $ */
+/* $KTH: externs.h,v 1.23 2001/08/29 00:45:20 assar Exp $ */
 
 #ifndef	BSD
 # define BSD 43
@@ -95,6 +95,8 @@ extern char
     dont[],
     will[],
     wont[],
+    do_dont_resp[],
+    will_wont_resp[],
     options[],		/* All the little options */
     *hostname;		/* Who are we connected to? */
 #if	defined(ENCRYPTION)
@@ -136,7 +138,7 @@ extern int (*decrypt_input) (int);
 #define	set_my_want_state_wont(opt)	{options[opt] &= ~MY_WANT_STATE_WILL;}
 
 /*
- * Make everything symetrical
+ * Make everything symmetrical
  */
 
 #define	HIS_STATE_WILL			MY_STATE_DO
@@ -433,3 +435,4 @@ extern int linemode;
 #ifdef KLUDGELINEMODE
 extern int kludgelinemode;
 #endif
+extern int want_status_response;
