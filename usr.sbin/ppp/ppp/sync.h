@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id:$
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/sync.h,v 1.2 2000/02/27 01:38:29 brian Exp $
  */
 
 extern struct layer synclayer;

@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: async.c,v 1.6 1999/06/02 15:58:40 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/async.c,v 1.8 2000/02/27 01:38:24 brian Exp $
  *
  */
 #include <sys/types.h>

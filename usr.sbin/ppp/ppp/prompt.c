@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: prompt.c,v 1.5 2000/01/07 03:26:55 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/prompt.c,v 1.7 2000/02/27 01:38:28 brian Exp $
  */
 
 #include <sys/param.h>

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: descriptor.h,v 1.3 1999/02/11 10:14:50 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/descriptor.h,v 1.5 2000/02/27 01:38:25 brian Exp $
  */
 
 #define PHYSICAL_DESCRIPTOR (1)

@@ -14,7 +14,7 @@
     
      <updated several times by original author and Eivind Eklund>
 
-    $Id$
+    $OpenBSD: src/usr.sbin/ppp/ppp/alias_local.h,v 1.5 2000/02/27 01:38:24 brian Exp $
 */
 #ifndef ALIAS_LOCAL_H
 #define ALIAS_LOCAL_H

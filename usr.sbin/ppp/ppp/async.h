@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: async.h,v 1.2 1999/02/06 03:22:31 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/async.h,v 1.4 2000/02/27 01:38:24 brian Exp $
  */
 
 #define HDLCSIZE	(MAX_MRU*2+6)

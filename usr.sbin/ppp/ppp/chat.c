@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: chat.c,v 1.11 2000/01/07 03:26:53 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/chat.c,v 1.13 2000/02/27 01:38:25 brian Exp $
  */
 
 #include <sys/param.h>

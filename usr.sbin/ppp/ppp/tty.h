@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: tty.h,v 1.3 1999/06/05 21:36:03 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/tty.h,v 1.5 2000/02/27 01:38:29 brian Exp $
  */
 
 struct physical;

@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: systems.c,v 1.9 1999/05/24 09:05:39 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/systems.c,v 1.11 2000/02/27 01:38:29 brian Exp $
  *
  *  TODO:
  */

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: defs.c,v 1.8 2000/02/27 00:21:07 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/defs.c,v 1.10 2000/02/27 01:38:25 brian Exp $
  */
 
 

@@ -19,7 +19,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: chap_ms.c,v 1.3 1999/02/18 00:50:45 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/chap_ms.c,v 1.5 2000/02/27 01:38:25 brian Exp $
  *
  */
 

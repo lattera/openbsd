@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: log.c,v 1.8 2000/01/07 03:26:54 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/log.c,v 1.10 2000/02/27 01:38:27 brian Exp $
  */
 
 #include <sys/types.h>

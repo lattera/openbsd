@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.12 2000/01/07 03:26:52 brian Exp $
+#	$OpenBSD: src/usr.sbin/ppp/ppp/Makefile,v 1.14 2000/02/27 01:38:24 brian Exp $
 
 PROG=	ppp
 SRCS=	alias.c alias_cuseeme.c alias_db.c alias_ftp.c alias_irc.c \

@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ccp.c,v 1.11 2000/01/07 03:26:53 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/ccp.c,v 1.13 2000/02/27 01:38:25 brian Exp $
  *
  *	TODO:
  *		o Support other compression protocols

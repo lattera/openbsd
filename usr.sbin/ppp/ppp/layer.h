@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: layer.h,v 1.1 1999/05/08 11:06:36 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/layer.h,v 1.3 2000/02/27 01:38:26 brian Exp $
  */
 
 #define	LAYER_ASYNC	2

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id$
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/i4b.c,v 1.2 2000/02/27 01:38:26 brian Exp $
  */
 
 #include <sys/param.h>

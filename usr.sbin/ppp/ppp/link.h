@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *  $Id: link.h,v 1.4 1999/05/15 02:25:23 brian Exp $
+ *  $OpenBSD: src/usr.sbin/ppp/ppp/link.h,v 1.6 2000/02/27 01:38:27 brian Exp $
  *
  */
 

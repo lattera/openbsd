@@ -35,7 +35,7 @@
 
     See HISTORY file for record of revisions.
 
-    $Id$
+    $OpenBSD: src/usr.sbin/ppp/ppp/alias_ftp.c,v 1.4 2000/02/27 01:38:24 brian Exp $
 */
 
 /* Includes */

@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: iplist.h,v 1.3 1998/06/27 23:48:47 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/iplist.h,v 1.3 2000/02/27 01:38:26 brian Exp $
  */
 
 struct iplist_cur {

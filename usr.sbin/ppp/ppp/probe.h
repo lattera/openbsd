@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: probe.h,v 1.1 1998/06/24 19:36:37 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/probe.h,v 1.3 2000/02/27 01:38:28 brian Exp $
  */
 
 struct probe {

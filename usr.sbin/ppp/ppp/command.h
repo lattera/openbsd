@@ -15,7 +15,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: command.h,v 1.4 1999/06/09 08:47:23 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/command.h,v 1.6 2000/02/27 01:38:25 brian Exp $
  *
  *	TODO:
  */

@@ -105,7 +105,7 @@
 
     See HISTORY file for additional revisions.
 
-    $Id$
+    $OpenBSD: src/usr.sbin/ppp/ppp/alias_db.c,v 1.6 2000/02/27 01:38:24 brian Exp $
 */
 
 

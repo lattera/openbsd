@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: server.c,v 1.4 1999/03/08 22:35:37 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/server.c,v 1.6 2000/02/27 01:38:28 brian Exp $
  */
 
 #include <sys/types.h>

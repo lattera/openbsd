@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: exec.h,v 1.3 1999/06/05 21:36:00 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/exec.h,v 1.5 2000/02/27 01:38:26 brian Exp $
  */
 
 struct physical;

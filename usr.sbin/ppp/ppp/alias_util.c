@@ -12,7 +12,7 @@
     Version 1.7:  January 9, 1997
          Added differential checksum update function.
 
-    $Id$
+    $OpenBSD: src/usr.sbin/ppp/ppp/alias_util.c,v 1.3 2000/02/27 01:38:24 brian Exp $
 */
 
 /*

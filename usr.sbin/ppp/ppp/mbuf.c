@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: mbuf.c,v 1.8 1999/08/26 06:39:19 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/mbuf.c,v 1.10 2000/02/27 01:38:27 brian Exp $
  *
  */
 #include <sys/types.h>

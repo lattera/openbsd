@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ipcp.c,v 1.19 2000/01/07 03:26:54 brian Exp $
+ * $OpenBSD: src/usr.sbin/ppp/ppp/ipcp.c,v 1.21 2000/02/27 01:38:26 brian Exp $
  *
  *	TODO:
  *		o Support IPADDRS properly

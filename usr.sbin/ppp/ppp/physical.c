@@ -16,7 +16,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- *  $Id: physical.c,v 1.18 2000/01/07 03:26:55 brian Exp $
+ *  $OpenBSD: src/usr.sbin/ppp/ppp/physical.c,v 1.20 2000/02/27 01:38:27 brian Exp $
  *
  */
 

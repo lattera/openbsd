@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: radius.h,v 1.1 1999/02/06 03:22:44 brian Exp $
+ *	$OpenBSD: src/usr.sbin/ppp/ppp/radius.h,v 1.3 2000/02/27 01:38:28 brian Exp $
  */
 
 struct radius {
