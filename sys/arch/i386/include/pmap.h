@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.14 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.15 2004/02/20 22:19:55 niklas Exp $	*/
 /*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
@@ -389,11 +389,7 @@ vaddr_t reserve_dumppages(vaddr_t); /* XXX: not a pmap fn */
 
 void	pmap_tlb_shootdown(pmap_t, vaddr_t, pt_entry_t, int32_t *);
 void	pmap_tlb_shootnow(int32_t);
-#ifdef notyet
 void	pmap_do_tlb_shootdown(struct cpu_info *);
-#else
-void	pmap_do_tlb_shootdown(void);
-#endif
 
 #define PMAP_GROWKERNEL		/* turn on pmap_growkernel interface */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.23 2004/02/19 10:48:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.24 2004/02/20 22:19:55 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -2877,8 +2877,11 @@ setregs(p, pack, stack, retval)
 	struct pmap *pmap = vm_map_pmap(&p->p_vmspace->vm_map);
 	struct trapframe *tf = p->p_md.md_regs;
 
+#if NNPX > 0
 	/* If we were using the FPU, forget about it. */
-	npxdrop(p);
+	if (pcb->pcb_fpcpu != NULL)
+		npxsave_proc(p, 0);
+#endif
 
 #ifdef USER_LDT
 	pmap_ldt_cleanup(p);

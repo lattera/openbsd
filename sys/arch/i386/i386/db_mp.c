@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/db_mp.c,v 1.1.2.2 2003/05/18 17:41:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/db_mp.c,v 1.1.2.3 2004/02/20 22:19:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Andreas Gunnarsson
@@ -155,31 +155,31 @@ db_movetocpu(int cpu)
 }
 
 void
-i386_ipi_db(void)
+i386_ipi_db(struct cpu_info *ci)
 {
 	int s;
 
 	s = splhigh();
 	SIMPLE_LOCK(&ddb_mp_slock);
 	db_printf("CPU %d received ddb IPI\n", cpu_number());
-	while (curcpu()->ci_ddb_paused == CI_DDB_SHOULDSTOP
-	    || curcpu()->ci_ddb_paused == CI_DDB_STOPPED) {
-		if (curcpu()->ci_ddb_paused == CI_DDB_SHOULDSTOP)
-			curcpu()->ci_ddb_paused = CI_DDB_STOPPED;
+	while (ci->ci_ddb_paused == CI_DDB_SHOULDSTOP
+	    || ci->ci_ddb_paused == CI_DDB_STOPPED) {
+		if (ci->ci_ddb_paused == CI_DDB_SHOULDSTOP)
+			ci->ci_ddb_paused = CI_DDB_STOPPED;
 		SIMPLE_UNLOCK(&ddb_mp_slock);
-		while (curcpu()->ci_ddb_paused == CI_DDB_STOPPED)
+		while (ci->ci_ddb_paused == CI_DDB_STOPPED)
 			;	/* Do nothing */
 		SIMPLE_LOCK(&ddb_mp_slock);
 	}
-	if (curcpu()->ci_ddb_paused == CI_DDB_ENTERDDB) {
+	if (ci->ci_ddb_paused == CI_DDB_ENTERDDB) {
 		ddb_state = DDB_STATE_RUNNING;
 		ddb_active_cpu = cpu_number();
-		curcpu()->ci_ddb_paused = CI_DDB_INDDB;
+		ci->ci_ddb_paused = CI_DDB_INDDB;
 		db_printf("CPU %d grabbing ddb\n", cpu_number());
 		SIMPLE_UNLOCK(&ddb_mp_slock);
 		Debugger();
 		SIMPLE_LOCK(&ddb_mp_slock);
-		curcpu()->ci_ddb_paused = CI_DDB_RUNNING;
+		ci->ci_ddb_paused = CI_DDB_RUNNING;
 	}
 	db_printf("CPU %d leaving ddb IPI handler\n", cpu_number());
 	SIMPLE_UNLOCK(&ddb_mp_slock);

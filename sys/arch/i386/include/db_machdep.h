@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.7 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.8 2004/02/20 22:19:55 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.9 1996/05/03 19:23:59 christos Exp $	*/
 
 /* 
@@ -125,7 +125,7 @@ void db_leave_ddb(void);
 void db_startcpu(int cpu);
 void db_stopcpu(int cpu);
 void db_movetocpu(int cpu);
-void i386_ipi_db(void);
+void i386_ipi_db(struct cpu_info *);
 
 extern struct SIMPLELOCK ddb_mp_slock;
 

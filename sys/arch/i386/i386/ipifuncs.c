@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.8 2003/05/17 16:07:37 andreas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.9 2004/02/20 22:19:55 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -61,29 +61,40 @@
 
 #include <uvm/uvm_extern.h>
 
-void i386_ipi_halt(void);
-void i386_ipi_fpsave(void);
+void i386_ipi_halt(struct cpu_info *);
 
-void (*ipifunc[I386_NIPI])(void) = 
+#if NNPX > 0
+void i386_ipi_synch_fpu(struct cpu_info *);
+void i386_ipi_flush_fpu(struct cpu_info *);
+#else
+#define i386_ipi_synch_fpu 0
+#define i386_ipi_flush_fpu 0
+#endif
+
+void (*ipifunc[I386_NIPI])(struct cpu_info *) = 
 {
 	i386_ipi_halt,
-	pmap_do_tlb_shootdown,
-#if NNPX > 0
-	i386_ipi_fpsave,
+#if 0 && (defined(I586_CPU) || defined(I686_CPU))
+	cc_microset,
 #else
 	0,
 #endif
+	i386_ipi_flush_fpu,
+	i386_ipi_synch_fpu,
+	pmap_do_tlb_shootdown,
+#if 0
+	i386_reload_mtrr,
+	gdt_reload_cpu,
+#else
 	0,
 	0,
-	0,
+#endif
 	i386_ipi_db,
 };
 
 void
-i386_ipi_halt(void)
+i386_ipi_halt(struct cpu_info *ci)
 {
-	struct cpu_info *ci = curcpu();
-
 	disable_intr();
 
 	printf("%s: shutting down\n", ci->ci_dev.dv_xname);
@@ -94,11 +105,15 @@ i386_ipi_halt(void)
 
 #if NNPX > 0
 void
-i386_ipi_fpsave(void)
+i386_ipi_flush_fpu(struct cpu_info *ci)
 {
-	struct cpu_info *ci = curcpu();
-	
-	npxsave_cpu(ci);
+	npxsave_cpu(ci, 0);
+}
+
+void
+i386_ipi_synch_fpu(struct cpu_info *ci)
+{
+	npxsave_cpu(ci, 1);
 }
 #endif
 
@@ -154,7 +169,7 @@ i386_ipi_handler(void)
 	for (bit = 0; bit < I386_NIPI && pending; bit++) {
 		if (pending & (1<<bit)) {
 			pending &= ~(1<<bit);
-			(*ipifunc[bit])();
+			(*ipifunc[bit])(ci);
 		}
 	}
 }

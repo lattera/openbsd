@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.17 2004/02/19 10:48:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.18 2004/02/20 22:19:55 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -363,8 +363,8 @@ int     p4tcc_setperf(void *, size_t *, void *, size_t);
 
 /* npx.c */
 void	npxdrop(struct proc *);
-void	npxsave_proc(struct proc *);
-void	npxsave_cpu(struct cpu_info *);
+void	npxsave_proc(struct proc *, int);
+void	npxsave_cpu(struct cpu_info *, int);
 
 #if defined(GPL_MATH_EMULATE)
 /* math_emulate.c */
