@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/tokeninit/Makefile,v 1.1 2000/12/20 02:08:09 millert Exp $
+#	$OpenBSD: src/usr.sbin/tokeninit/Makefile,v 1.2 2003/07/18 21:18:51 david Exp $
 
 PROG=	tokeninit
 SRCS=	tokeninit.c init.c token.c tokendb.c
@@ -19,7 +19,7 @@ BINMODE=500
 
 afterinstall:
 	for i in ${TOKENS} ; do \
-	    cd ${DESTDIR}/${BINDIR} && \
+	    cd ${DESTDIR}${BINDIR} && \
 	    rm -f $${i}init && \
 	    ln ${PROG} $${i}init ; \
 	done
