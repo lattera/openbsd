@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.19 2002/04/08 17:49:42 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/cgsix.c,v 1.20 2002/05/21 20:25:28 jason Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -247,7 +247,7 @@ struct wsdisplay_accessops cgsix_accessops = {
 	NULL,	/* load_font */
 	NULL,	/* scrollback */
 	NULL,	/* getchar */
-	NULL,	/* burner */
+	cgsix_burner,
 };
 
 int	cgsixmatch(struct device *, void *, void *);
