@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/prom.h,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/prom.h,v 1.1.2.2 2002/03/30 00:42:37 niklas Exp $ */
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
  * All rights reserved.
@@ -371,6 +371,6 @@ struct mvmeprom_args {
 #define MVMEPROM_REG_NBARGEND	"12"
 
 #ifndef RB_NOSYM
-#define RB_NOSYM 0x400
+#define RB_NOSYM 0x4000
 #endif
 #endif /* __MACHINE_PROM_H__ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/vmparam.h,v 1.2.2.3 2002/03/06 02:04:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/vmparam.h,v 1.2.2.4 2002/03/30 00:42:37 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -100,7 +100,8 @@ extern vm_offset_t ppc_kvm_size;
 
 #define	VM_PHYS_SIZE		(USRIOSIZE * PAGE_SIZE)
 
-struct pmap_physseg {
+#define __HAVE_PMAP_PHYSSEG
+struct pmap_physselg {
 	struct pv_entry *pvent;
 	char *attrs;
 	/* NULL ??? */
