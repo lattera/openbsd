@@ -23,7 +23,7 @@ require IO::Socket::UNIX if ($^O ne 'epoc');
 
 @ISA = qw(IO::Handle);
 
-$VERSION = "1.27";
+$VERSION = "1.28";
 
 @EXPORT_OK = qw(sockatmark);
 
@@ -219,7 +219,7 @@ sub send {
 	? send($sock, $_[1], $flags)
 	: send($sock, $_[1], $flags, $peer);
 
-    # remember who we send to, if it was sucessful
+    # remember who we send to, if it was successful
     ${*$sock}{'io_socket_peername'} = $peer
 	if(@_ == 4 && defined $r);
 
@@ -273,9 +273,9 @@ sub atmark {
 sub timeout {
     @_ == 1 || @_ == 2 or croak 'usage: $sock->timeout([VALUE])';
     my($sock,$val) = @_;
-    my $r = ${*$sock}{'io_socket_timeout'} || undef;
+    my $r = ${*$sock}{'io_socket_timeout'};
 
-    ${*$sock}{'io_socket_timeout'} = 0 + $val
+    ${*$sock}{'io_socket_timeout'} = defined $val ? 0 + $val : $val
 	if(@_ == 2);
 
     $r;
@@ -421,7 +421,7 @@ C<use> declaration will fail at compile time.
 
 =item connected
 
-If the socket is in a connected state the the peer address is returned.
+If the socket is in a connected state the peer address is returned.
 If the socket is not in a connected state then undef will be returned.
 
 =item protocol

@@ -6,7 +6,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(rearrange make_attributes unescape escape expires);
 
-$VERSION = '1.3';
+$VERSION = '1.31';
 
 $EBCDIC = "\t" ne "\011";
 if ($EBCDIC) {
@@ -167,7 +167,7 @@ sub utf8_chr ($) {
 
         } elsif ($c < 0x80000000) {
                 return sprintf("%c%c%c%c%c%c",
-                                           0xfe |  ($c >> 30),
+                                           0xfc |  ($c >> 30),
                                            0x80 | (($c >> 24) & 0x3f),
                                            0x80 | (($c >> 18) & 0x3f),
                                            0x80 | (($c >> 12) & 0x3f),
@@ -199,6 +199,8 @@ sub escape {
   shift() if @_ > 1 and ( ref($_[0]) || (defined $_[1] && $_[0] eq $CGI::DefaultClass));
   my $toencode = shift;
   return undef unless defined($toencode);
+  # force bytes while preserving backward compatibility -- dankogai
+  $toencode = pack("C*", unpack("C*", $toencode));
     if ($EBCDIC) {
       $toencode=~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",$E2A[ord($1)])/eg;
     } else {
