@@ -1,4 +1,4 @@
-/*	$Id: conf.c,v 1.2 1995/11/07 08:50:16 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.4 1996/02/21 12:53:48 mickey Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -197,11 +197,6 @@ cdev_decl(lkm);
 
 /* open, close, read, ioctl */
 cdev_decl(ipl);
-#define	cdev_gen_ipf(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
-	(dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) nullop, 0, (dev_type_select((*))) enodev, \
-	(dev_type_mmap((*))) enodev, 0 }
 #ifdef IPFILTER
 #define NIPF 1
 #else
