@@ -1,4 +1,4 @@
-/* $OpenBSD: src/lib/libkeynote/Attic/aux.c,v 1.7 1999/10/26 22:31:37 angelos Exp $ */
+/* $OpenBSD: src/lib/libkeynote/auxil.c,v 1.1 2000/01/25 09:08:11 angelos Exp $ */
 /*
  * The author of this code is Angelos D. Keromytis (angelos@dsl.cis.upenn.edu)
  *
