@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	5.7 (Berkeley) 4/1/91
-#	$OpenBSD: src/libexec/Makefile,v 1.26 2001/09/26 19:04:45 art Exp $
+#	$OpenBSD: src/libexec/Makefile,v 1.26.4.1 2002/09/27 18:27:57 jason Exp $
 
 .include <bsd.own.mk>
 
@@ -8,7 +8,8 @@ SUBDIR=	atrun comsat fingerd ftpd ftp-proxy getNAME getty identd lockspool \
 	rpc.rquotad rpc.rstatd rpc.rusersd rpc.rwalld rpc.sprayd \
 	talkd tcpd telnetd tftpd uucpd smtpd
 SUBDIR+=login_passwd login_skey login_krb4 login_krb4-or-pwd login_reject \
-	login_chpass login_lchpass login_token login_radius
+	login_chpass login_lchpass login_token
+# login_radius
 
 .if (${YP:L} == "yes")
 SUBDIR+=rpc.yppasswdd
