@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3 2001/02/11 06:34:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/if_le_vsbus.c,v 1.3.4.1 2001/05/14 21:39:19 niklas Exp $	*/
 /*	$NetBSD: if_le_vsbus.c,v 1.10 2000/06/29 07:14:18 mrg Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.4 2001/01/28 01:21:32 hugh Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/autoconf.c,v 1.4.4.1 2001/05/14 21:37:43 niklas Exp $ */
 /*	$NetBSD: autoconf.c,v 1.5 1999/08/23 19:09:27 ragge Exp $ */
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.

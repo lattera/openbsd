@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/sgec.c,v 1.2 2001/02/20 19:39:35 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/sgec.c,v 1.2.4.1 2001/05/14 21:37:56 niklas Exp $	*/
 /*      $NetBSD: sgec.c,v 1.1 1999/08/08 11:41:29 ragge Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/consio.c,v 1.2 2000/10/04 04:38:08 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/consio.c,v 1.2.6.1 2001/05/14 21:37:44 niklas Exp $ */
 /*	$NetBSD: consio.c,v 1.11 2000/07/19 00:58:24 matt Exp $ */
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.

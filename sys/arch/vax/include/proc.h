@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/proc.h,v 1.2 1997/05/29 00:04:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/proc.h,v 1.2.12.1 2001/05/14 21:38:03 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.2 1994/10/26 08:02:21 cgd Exp $	*/
 
 /*
@@ -37,7 +37,7 @@
  */
 
 /*
- * Machine-dependent part of the proc structure for hp300.
+ * Machine-dependent part of the proc structure for vax.
  */
 struct mdproc {
 	int	md_flags;		/* machine-dependent flags */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3 2001/04/01 19:17:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka48.c,v 1.3.4.1 2001/05/14 21:38:57 niklas Exp $	*/
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
  * All rights reserved.

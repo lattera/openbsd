@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/Makefile,v 1.2 2000/10/04 05:03:10 bjc Exp $
+#	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/Makefile,v 1.2.6.1 2001/05/14 21:37:43 niklas Exp $
 #	$NetBSD: Makefile,v 1.4 1999/05/23 21:58:19 ragge Exp $
 
 S!=	cd ${.CURDIR}/../../../../; pwd

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/conf/RAMDISK,v 1.5 2001/04/09 00:53:53 hugh Exp $
+#	$OpenBSD: src/sys/arch/vax/conf/RAMDISK,v 1.5.4.1 2001/05/14 21:37:53 niklas Exp $
 
 machine 	vax			# machine type
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/netio.c,v 1.2 2001/04/10 12:27:54 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/netio.c,v 1.2.4.1 2001/05/14 21:37:47 niklas Exp $ */
 /*	$NetBSD: netio.c,v 1.4 1999/06/30 18:38:03 ragge Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/Makefile,v 1.2 2000/10/04 04:54:38 bjc Exp $	
+#	$OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/Makefile,v 1.2.6.1 2001/05/14 21:37:50 niklas Exp $	
 #	$NetBSD: Makefile,v 1.2 1999/10/23 14:40:39 ragge Exp $
 
 S=${.CURDIR}/../../../../

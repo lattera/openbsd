@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sun3/sun3/Attic/genassym.cf,v 1.1 2001/01/04 22:41:22 miod Exp $
+#	$OpenBSD: src/sys/arch/sun3/sun3/Attic/genassym.cf,v 1.1.4.1 2001/05/14 21:37:34 niklas Exp $
 #	$NetBSD: genassym.c,v 1.32 1996/10/23 16:39:27 gwr Exp $
 
 #

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka660.c,v 1.1 2001/02/24 10:31:58 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka660.c,v 1.1.4.1 2001/05/14 21:39:00 niklas Exp $	*/
 /*	$NetBSD: ka660.c,v 1.3 2000/06/29 07:14:27 mrg Exp $	*/
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden.

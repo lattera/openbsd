@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/cons.c,v 1.6 1997/08/08 08:24:56 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/cons.c,v 1.6.12.1 2001/05/14 21:37:04 niklas Exp $	*/
 /*	$NetBSD: cons.c,v 1.30 1997/07/07 23:30:23 pk Exp $	*/
 
 /*
@@ -76,6 +76,7 @@
 #endif
 
 #include "zs.h"
+#include "kbd.h"
 
 struct	tty *constty = 0;	/* virtual console output device */
 struct	tty *fbconstty = 0;	/* tty structure for frame buffer console */
@@ -235,13 +236,14 @@ setup_console:
 		zsconsole(tp, 1, 0, NULL);
 		break;
 #endif
-
+#if	NKBD > 0
 	case PROMDEV_KBD:
 		/*
 		 * Tell the keyboard driver to direct ASCII input here.
 		 */
 		kbd_ascii(tp);
 		break;
+#endif
 
 	default:
 		rom_console_input = 1;
@@ -295,41 +297,43 @@ cnopen(dev, flag, mode, p)
 		/*
 		 * get the console struct winsize.
 		 */
-#ifdef RASTERCONSOLE
 		if (fbconstty) {
+#ifdef RASTERCONSOLE
 			rows = fbrcons_rows();
 			cols = fbrcons_cols();
-		}
+#else
+			if (CPU_ISSUN4COR4M) {
+				int i;
+				char *prop;
+
+				if (rows == 0 &&
+				    (prop = getpropstring(optionsnode,
+				    "screen-#rows"))) {
+					i = 0;
+					while (*prop != '\0')
+						i = i * 10 + *prop++ - '0';
+					rows = (unsigned short)i;
+				}
+				if (cols == 0 &&
+				    (prop = getpropstring(optionsnode,
+				    "screen-#columns"))) {
+					i = 0;
+					while (*prop != '\0')
+						i = i * 10 + *prop++ - '0';
+					cols = (unsigned short)i;
+				}
+			}
+			if (CPU_ISSUN4) {
+				struct eeprom *ep = (struct eeprom *)eeprom_va;
+
+				if (ep) {
+					if (rows == 0)
+						rows = (u_short)ep->eeTtyRows;
+					if (cols == 0)
+						cols = (u_short)ep->eeTtyCols;
+				}
+			}
 #endif
-
-		if (CPU_ISSUN4COR4M) {
-			int i;
-			char *prop;
-
-			if (rows == 0 &&
-			    (prop = getpropstring(optionsnode, "screen-#rows"))) {
-				i = 0;
-				while (*prop != '\0')
-					i = i * 10 + *prop++ - '0';
-				rows = (unsigned short)i;
-			}
-			if (cols == 0 &&
-			    (prop = getpropstring(optionsnode, "screen-#columns"))) {
-				i = 0;
-				while (*prop != '\0')
-					i = i * 10 + *prop++ - '0';
-				cols = (unsigned short)i;
-			}
-		}
-		if (CPU_ISSUN4) {
-			struct eeprom *ep = (struct eeprom *)eeprom_va;
-
-			if (ep) {
-				if (rows == 0)
-					rows = (u_short)ep->eeTtyRows;
-				if (cols == 0)
-					cols = (u_short)ep->eeTtyCols;
-			}
 		}
 		firstopen = 0;
 	}
@@ -434,6 +438,16 @@ cnselect(dev, which, p)
 	return (ttselect(makedev(major(dev), 0), which, p));
 }
 
+int
+cnkqfilter(dev, kn)
+	dev_t dev;
+	struct knote *kn;
+{
+	if (cdevsw[major(dev)].d_type & D_KQFILTER)
+		return ((*cdevsw[major(dev)].d_kqfilter)(makedev(major(dev), 0), kn));
+	return (1);
+}
+
 /*
  * The rest of this code is run only when we are using the ROM vectors.
  */
@@ -463,19 +477,21 @@ cnstart(tp)
 	} else
 		putc.v1 = promvec->pv_putchar;
 	while (tp->t_outq.c_cc) {
+		int ss;
+
 		c = getc(&tp->t_outq);
 		/*
 		 * *%&!*& ROM monitor console putchar is not reentrant!
 		 * splhigh/tty around it so as not to run so long with
 		 * clock interrupts blocked.
 		 */
-		(void) splhigh();
+		ss = splhigh();
 		if (v > 2) {
 			unsigned char c0 = c & 0177;
 			(*putc.v3)(fd, &c0, 1);
 		} else
 			(*putc.v1)(c & 0177);
-		(void) spltty();
+		splx(ss);
 	}
 	if (tp->t_state & TS_ASLEEP) {		/* can't happen? */
 		tp->t_state &= ~TS_ASLEEP;
@@ -523,8 +539,11 @@ cnfbstart(tp)
 	}
 	if (tp->t_outq.c_cc) {
 		tp->t_state |= TS_BUSY;
+		/*
+		 * XXX - this is just too ugly.
+		 */
 		if (s == 0) {
-			(void) splsoftclock();
+			(void) spllowersoftclock();
 			cnfbdma((void *)tp);
 		} else
 			timeout(cnfbdma, tp, 1);

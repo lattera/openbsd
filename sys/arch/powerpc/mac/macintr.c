@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1.2.1 2000/03/24 09:08:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/macintr.c,v 1.1.2.2 2001/05/14 21:36:49 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -46,6 +46,11 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
+#ifdef UVM
+#include <vm/vm.h>
+#include <vm/vm_kern.h>
+#include <uvm/uvm.h>
+#endif
 
 #include <machine/autoconf.h>
 #include <machine/intr.h>
@@ -111,16 +116,26 @@ macintr_match(parent, cf, aux)
 	void *cf;
 	void *aux;
 {
-	char type[40];
 	struct confargs *ca = aux;
+	char type[40];
 
-	bzero (type, sizeof(type));
-
+	/*
+	 * Match entry according to "present" openfirmware entry.
+	 */
 	if (strcmp(ca->ca_name, "interrupt-controller") == 0 ) {
 		OF_getprop(ca->ca_node, "device_type", type, sizeof(type));
 		if (strcmp(type,  "interrupt-controller") == 0) {
 			return 1;
 		}
+	}
+
+	/*
+	 * Check name for legacy interrupt controller, this is
+	 * faked to allow old firmware which does not have an entry
+	 * to attach to this device.
+	 */
+	if (strcmp(ca->ca_name, "legacy-interrupt-controller") == 0 ) {
+		return 1;
 	}
 	return 0;
 }
@@ -139,6 +154,7 @@ intr_establish_t macintr_establish;
 intr_disestablish_t macintr_disestablish;
 extern intr_establish_t *mac_intr_establish_func;
 extern intr_disestablish_t *mac_intr_disestablish_func;
+void macintr_collect_preconf_intr();
 
 void
 macintr_attach(parent, self, aux)
@@ -159,12 +175,35 @@ macintr_attach(parent, self, aux)
 	mac_intr_establish_func  = macintr_establish;
 	mac_intr_disestablish_func  = macintr_disestablish;
 
+	macintr_collect_preconf_intr();
 
 	mac_intr_establish(parent, 0x14, IST_LEVEL, IPL_HIGH,
 		prog_switch, (void *)0x14, "prog button");
 
 	printf("\n");
 }
+void
+macintr_collect_preconf_intr()
+{
+	int i;
+	for (i = 0; i < ppc_configed_intr_cnt; i++) {
+		printf("\n\t%s irq %d level %d fun %x arg %x",
+			ppc_configed_intr[i].ih_what,
+			ppc_configed_intr[i].ih_irq,
+			ppc_configed_intr[i].ih_level,
+			ppc_configed_intr[i].ih_fun,
+			ppc_configed_intr[i].ih_arg
+			);
+		macintr_establish(NULL,
+			ppc_configed_intr[i].ih_irq,
+			IST_LEVEL,
+			ppc_configed_intr[i].ih_level,
+			ppc_configed_intr[i].ih_fun,
+			ppc_configed_intr[i].ih_arg,
+			ppc_configed_intr[i].ih_what);
+	}
+}
+
 
 int
 prog_switch (void *arg)
@@ -184,6 +223,8 @@ fakeintr(arg)
 
 	return 0;
 }
+
+void nameinterrupt( int replace, char *newstr);
 
 /*
  * Register an interrupt handler.
@@ -209,7 +250,7 @@ macintr_establish(lcv, irq, type, level, ih_fun, ih_arg, name)
 printf("macintr_establish, hI %d L %d ", irq, type);
 printf("addr reg0 %x\n", INT_STATE_REG0);
 #endif
-
+	nameinterrupt(irq, name);
 	irq = mapirq(irq);
 #if 0
 printf("vI %d ", irq);
@@ -481,6 +522,7 @@ printf("mac_intr \n");
 
 start:
 	irq = 31 - cntlzw(int_state);
+	intrcnt[hwirq[irq]]++;
 
 	o_imen = imen;
 	r_imen = 1 << irq;

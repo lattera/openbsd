@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/findcpu.c,v 1.7 2001/03/12 11:45:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/findcpu.c,v 1.7.4.1 2001/05/14 21:38:50 niklas Exp $	*/
 /*	$NetBSD: findcpu.c,v 1.5 1999/08/23 19:10:43 ragge Exp $	*/
 /*
  * Copyright (c) 1994, 1998 Ludd, University of Lule}, Sweden.

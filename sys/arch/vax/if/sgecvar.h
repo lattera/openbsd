@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/sgecvar.h,v 1.1 2000/04/27 03:14:44 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/sgecvar.h,v 1.1.8.1 2001/05/14 21:37:56 niklas Exp $	*/
 /*      $NetBSD: sgecvar.h,v 1.1 1999/08/08 11:41:30 ragge Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.2 2000/03/24 09:08:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/machdep.c,v 1.32.2.3 2001/05/14 21:36:56 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -43,6 +43,7 @@
 #include <sys/mount.h>
 #include <sys/msgbuf.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/reboot.h>
 #include <sys/syscallargs.h>
 #include <sys/syslog.h>
@@ -71,6 +72,7 @@
 #include <machine/autoconf.h>
 #include <machine/bus.h>
 #include <machine/pio.h>
+#include "adb.h"
 
 /*
  * Global variables used here and there
@@ -137,7 +139,7 @@ struct extent *devio_ex;
 static int devio_malloc_safe = 0;
 
 /* HACK - XXX */
-int segment8_mapped = 0;
+int segment8_a_mapped = 0;
 
 extern int OF_stdout;
 extern int where;
@@ -196,19 +198,29 @@ where = 3;
 	battable[0].batl = BATL(0x00000000, BAT_M);
 	battable[0].batu = BATU(0x00000000);
 
-#if 1
-	battable[1].batl = BATL(0x80000000, BAT_I);
-	battable[1].batu = BATU(0x80000000);
-	segment8_mapped = 1;
-#if 0
-	if(system_type == POWER4e) {
-		/* Map ISA I/O */
-		addbatmap(MPC106_V_ISA_IO_SPACE, MPC106_P_ISA_IO_SPACE, BAT_I);
-		battable[1].batl = BATL(0xbfffe000, BAT_I);
-		battable[1].batu = BATU(0xbfffe000);
-	}
-#endif
-#endif
+	/* map all of possible physical memory, ick */
+	battable[0x1].batl = BATL(0x10000000, BAT_M);
+	battable[0x1].batu = BATU(0x10000000);
+	battable[0x2].batl = BATL(0x20000000, BAT_M);
+	battable[0x2].batu = BATU(0x20000000);
+	battable[0x3].batl = BATL(0x30000000, BAT_M);
+	battable[0x3].batu = BATU(0x30000000);
+	battable[0x4].batl = BATL(0x40000000, BAT_M);
+	battable[0x4].batu = BATU(0x40000000);
+	battable[0x5].batl = BATL(0x50000000, BAT_M);
+	battable[0x5].batu = BATU(0x50000000);
+	battable[0x6].batl = BATL(0x60000000, BAT_M);
+	battable[0x6].batu = BATU(0x60000000);
+	battable[0x7].batl = BATL(0x70000000, BAT_M);
+	battable[0x7].batu = BATU(0x70000000);
+
+	battable[0x8].batl = BATL(0x80000000, BAT_I);
+	battable[0x8].batu = BATU(0x80000000);
+	battable[0x9].batl = BATL(0x90000000, BAT_I);
+	battable[0x9].batu = BATU(0x90000000);
+	battable[0xa].batl = BATL(0xa0000000, BAT_I);
+	battable[0xa].batu = BATU(0xa0000000);
+	segment8_a_mapped = 1;
 
 	/*
 	 * Now setup fixed bat registers
@@ -223,7 +235,7 @@ where = 3;
 	__asm__ volatile ("mtdbatl 0,%0; mtdbatu 0,%1"
 		      :: "r"(battable[0].batl), "r"(battable[0].batu));
 
-#if 1
+#if 0
 	__asm__ volatile ("mtdbatl 1,%0; mtdbatu 1,%1"
 		      :: "r"(battable[1].batl), "r"(battable[1].batu));
 	__asm__ volatile ("sync;isync");
@@ -328,9 +340,15 @@ where = 3;
 			case 'd':
 				boothowto |= RB_KDB;
 				break;
+			case 'c':
+				boothowto |= RB_CONFIG;
+				break;
 			}
 		}
 	}			
+#if 0
+	ddb_init((int)(esym - (&_end)), &_end, esym);
+#endif
 
 	/*
 	 * Set up extents for pci mappings
@@ -354,16 +372,24 @@ where = 3;
 		(caddr_t)devio_ex_storage, sizeof(devio_ex_storage),
 		EX_NOCOALESCE|EX_NOWAIT);
 
-	ofwconprobe();
-
 	/*
 	 * Now we can set up the console as mapping is enabled.
          */
 	consinit();
-
-#if 0
-	dump_avail();
+	/* while using openfirmware, run userconfig */
+	if (boothowto & RB_CONFIG) {
+#ifdef BOOT_CONFIG
+		user_config();
+#else
+		printf("kernel does not support -c; continuing..\n");
 #endif
+	}
+	/*
+	 * Replace with real console.
+	 */
+	cninit();
+	ofwconprobe();
+
 #if NIPKDB > 0
 	/*
 	 * Now trap to IPKDB
@@ -446,17 +472,27 @@ cpu_startup()
 	if (allocsys(v) - v != sz)
 		panic("startup: table size inconsistency");
 
-#if !defined (UVM)
 	/*
 	 * Now allocate buffers proper.  They are different than the above
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	sz = MAXBSIZE * nbuf;
+#ifdef UVM
+	if (uvm_map(kernel_map, (vaddr_t *) &buffers, round_page(sz),
+		    NULL, UVM_UNKNOWN_OFFSET,
+		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
+				UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+		panic("cpu_startup: cannot allocate VM for buffers");
+	/*
+	addr = (vaddr_t)buffers;
+	*/
+#else
 	buffer_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr, sz, TRUE);
 	buffers = (char *)minaddr;
 	if (vm_map_find(buffer_map, vm_object_allocate(sz), (vm_offset_t)0,
 	   &minaddr, sz, FALSE) != KERN_SUCCESS)
 		panic("startup: cannot allocate buffers");
+#endif
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
 	if (base >= MAXBSIZE) {
@@ -467,14 +503,27 @@ cpu_startup()
 	for (i = 0; i < nbuf; i++) {
 		vm_size_t curbufsize;
 		vm_offset_t curbuf;
+		struct vm_page *pg;
 		
 		curbuf = (vm_offset_t)buffers + i * MAXBSIZE;
 		curbufsize = CLBYTES * (i < residual ? base + 1 : base);
+#ifdef UVM
+		while (curbufsize) {
+			pg = uvm_pagealloc(NULL, 0, NULL, 0);
+			if (pg == NULL)
+				panic("cpu_startup: not enough memory for"
+					" buffer cache");
+			pmap_kenter_pa(curbuf, VM_PAGE_TO_PHYS(pg),
+					VM_PROT_READ|VM_PROT_WRITE);
+			curbuf += PAGE_SIZE;
+			curbufsize -= PAGE_SIZE;
+		}
+#else
 		vm_map_pageable(buffer_map, curbuf, curbuf + curbufsize,
 		    FALSE);
 		vm_map_simplify(buffer_map, curbuf);
-	}
 #endif
+	}
 
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
@@ -585,7 +634,7 @@ allocsys(v)
 	 * Decide on buffer space to use.
 	 */
 	if (bufpages == 0)
-		bufpages = (physmem / ((100 / BUFCACHEPERCENT) / CLSIZE));
+		bufpages = physmem * BUFCACHEPERCENT / (100 * CLSIZE);
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -715,7 +764,7 @@ sendsig(catcher, sig, mask, code, type, val)
 	tf->lr = (int)catcher;
 	tf->fixreg[3] = (int)sig;
 	tf->fixreg[4] = (psp->ps_siginfo & sigmask(sig)) ? (int)&fp->sf_si : NULL;
-	tf->fixreg[5] = (int)&frame.sf_sc;
+	tf->fixreg[5] = (int)&fp->sf_sc;
 	tf->srr0 = (int)(((char *)PS_STRINGS)
 			 - (p->p_emul->e_esigcode - p->p_emul->e_sigcode));
 
@@ -783,6 +832,9 @@ dumpsys()
 {
 	printf("dumpsys: TBD\n");
 }
+
+volatile int cpl, ipending, astpending, tickspending;
+int imask[7];
 
 /*
  * Soft networking interrupts.
@@ -880,6 +932,14 @@ boot(howto)
 	splhigh();
 	if (howto & RB_HALT) {
 		doshutdownhooks();
+		if ((howto & RB_POWERDOWN) == RB_POWERDOWN) {
+#if NADB > 0
+			delay(1000000);
+			adb_poweroff();
+			printf("WARNING: powerdown failed!\n");
+#endif
+		}
+
 		printf("halted\n\n");
 		(fw->exit)();
 	}
@@ -887,25 +947,11 @@ boot(howto)
 		dumpsys();
 	doshutdownhooks();
 	printf("rebooting\n\n");
-#if 0
-	if (what && *what) {
-		if (strlen(what) > sizeof str - 5)
-			printf("boot string too large, ignored\n");
-		else {
-			strcpy(str, what);
-			ap1 = ap = str + strlen(str);
-			*ap++ = ' ';
-		}
-	}
-	*ap++ = '-';
-	if (howto & RB_SINGLE)
-		*ap++ = 's';
-	if (howto & RB_KDB)
-		*ap++ = 'd';
-	*ap++ = 0;
-	if (ap[-2] == '-')
-		*ap1 = 0;
+
+#if NADB > 0
+	adb_restart();  /* not return */
 #endif
+
 	OF_exit();
 	(fw->boot)(str);
 	printf("boot failed, spinning\n");
@@ -997,19 +1043,35 @@ systype(char *name)
  */
 #include <dev/pci/pcivar.h>
 typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,
-            int, int (*func)(void *), void *, char *));
+            int, int, int (*func)(void *), void *, char *));
 typedef void     (intr_disestablish_t) __P((void *, void *));
 
+int ppc_configed_intr_cnt = 0;
+struct intrhand ppc_configed_intr[MAX_PRECONF_INTR];
+
 void *
-ppc_intr_establish(lcv, ih, level, func, arg, name)
+ppc_intr_establish(lcv, ih, type, level, func, arg, name)
 	void *lcv;
 	pci_intr_handle_t ih;
+	int type;
 	int level;
 	int (*func) __P((void *));
 	void *arg;
 	char *name;
 {
-	panic("ppc_intr_establish called before interrupt controller configured: driver %s", name);
+	if (ppc_configed_intr_cnt < MAX_PRECONF_INTR) {
+		ppc_configed_intr[ppc_configed_intr_cnt].ih_fun = func;
+		ppc_configed_intr[ppc_configed_intr_cnt].ih_arg = arg;
+		ppc_configed_intr[ppc_configed_intr_cnt].ih_level = level;
+		ppc_configed_intr[ppc_configed_intr_cnt].ih_irq = ih;
+		ppc_configed_intr[ppc_configed_intr_cnt].ih_what = name;
+		ppc_configed_intr_cnt++;
+	} else {
+		panic("ppc_intr_establish called before interrupt controller"
+			" configured: driver %s too many interrupts\n", name);
+	}
+	/* disestablish is going to be tricky to supported for these :-) */
+	return (void *)ppc_configed_intr_cnt;
 }
 
 intr_establish_t *intr_establish_func = ppc_intr_establish;;
@@ -1029,21 +1091,24 @@ ppc_intr_setup(intr_establish_t *establish, intr_disestablish_t *disestablish)
  * so it is faster
  */
 void
-ppc_intr_enable(void)
+ppc_intr_enable(int enable)
 {
 	u_int32_t emsr, dmsr;
-	__asm__ volatile("mfmsr %0" : "=r"(emsr));
-	dmsr = emsr | PSL_EE;
-	__asm__ volatile("mtmsr %0" :: "r"(dmsr));
+	if (enable != 0)  {
+		__asm__ volatile("mfmsr %0" : "=r"(emsr));
+		dmsr = emsr | PSL_EE;
+		__asm__ volatile("mtmsr %0" :: "r"(dmsr));
+	}
 }
 
-void
+int
 ppc_intr_disable(void)
 {
 	u_int32_t emsr, dmsr;
 	__asm__ volatile("mfmsr %0" : "=r"(emsr));
 	dmsr = emsr & ~PSL_EE;
 	__asm__ volatile("mtmsr %0" :: "r"(dmsr));
+	return (emsr & PSL_EE);
 }
 
 /* BUS functions */
@@ -1067,6 +1132,12 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	{
 		return error;
 	}
+	if ((bpa >= 0x80000000) && ((bpa+size) < 0xb0000000)) {
+		if (segment8_a_mapped) {
+			*bshp = bpa;
+			return 0;
+		}
+	}
 	if (error  = bus_mem_add_mapping(bpa, size, cacheable, bshp)) {
 		if (extent_free(devio_ex, bpa, size, EX_NOWAIT | 
 			(ppc_malloc_ok ? EX_MALLOCOK : 0)))
@@ -1078,8 +1149,22 @@ bus_space_map(t, bpa, size, cacheable, bshp)
 	}
 	return 0;
 }
+bus_addr_t bus_space_unmap_p __P((bus_space_tag_t t, bus_space_handle_t bsh,
+			  bus_size_t size));
 void bus_space_unmap __P((bus_space_tag_t t, bus_space_handle_t bsh,
 			  bus_size_t size));
+bus_addr_t
+bus_space_unmap_p(t, bsh, size)
+	bus_space_tag_t t;
+	bus_space_handle_t bsh;
+	bus_size_t size;
+{
+	bus_addr_t paddr;
+
+	paddr = (bus_addr_t) pmap_extract(pmap_kernel(), bsh);
+	bus_space_unmap((t), (bsh), (size));
+	return paddr ;
+}
 void
 bus_space_unmap(t, bsh, size)
 	bus_space_tag_t t;
@@ -1088,6 +1173,7 @@ bus_space_unmap(t, bsh, size)
 {
 	bus_addr_t sva;
 	bus_size_t off, len;
+	bus_addr_t bpa;
 
 	/* should this verify that the proper size is freed? */
 	sva = trunc_page(bsh);
@@ -1099,15 +1185,17 @@ bus_space_unmap(t, bsh, size)
 #else
 	kmem_free_wakeup(phys_map, sva, len);
 #endif
-#ifdef DESTROY_MAPPINGS
-	for (; len > 0; len -= NBPG) {
-		pmap_enter(vm_map_pmap(phys_map), vaddr, sva,
-			VM_PROT_READ | VM_PROT_WRITE, TRUE);
-		sva += NBPG;
-		vaddr += NBPG;
+#if 0
+	bpa = pmap_extract(pmap_kernel(), sva);
+	if (extent_free(devio_ex, bpa, size, EX_NOWAIT | 
+		(ppc_malloc_ok ? EX_MALLOCOK : 0)))
+	{
+		printf("bus_space_map: pa 0x%x, size 0x%x\n",
+			bpa, size);
+		printf("bus_space_map: can't free region\n");
 	}
 #endif
-
+	pmap_remove(vm_map_pmap(phys_map), sva, sva+len);
 }
 
 int
@@ -1127,8 +1215,6 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 	off = bpa - spa;
 	len = size+off;
 
-printf("mem_add_mapping bpa %x size %x, spa %x epa %x\n",
-	bpa, size, spa, epa);
 #if 0
 	if (epa <= spa) {
 		panic("bus_mem_add_mapping: overflow");
@@ -1179,9 +1265,8 @@ mapiodev(pa, len)
 	spa = trunc_page(pa);
 	off = pa - spa;
 	size = round_page(off+len);
-	if ((pa >= 0x80000000) && ((pa+len) < 0x90000000)) {
-		extern int segment8_mapped;
-		if (segment8_mapped) {
+	if ((pa >= 0x80000000) && ((pa+len) < 0xb0000000)) {
+		if (segment8_a_mapped) {
 			return (void *)pa;
 		}
 	}
@@ -1206,6 +1291,36 @@ mapiodev(pa, len)
 	}
 	return (void*) (va+off);
 }
+void 
+unmapiodev(va, p_size)
+	void *va;
+	psize_t p_size;
+{
+	vaddr_t vaddr;
+	int size;
+
+	size = p_size;
+
+	vaddr = trunc_page(va);
+
+#ifdef UVM
+	uvm_km_free_wakeup(phys_map, vaddr, size);
+#else
+	kmem_free_wakeup(phys_map, vaddr, size);
+#endif
+
+	for (; size > 0; size -= NBPG) {
+#if 0
+		pmap_remove(vm_map_pmap(phys_map), vaddr, vaddr+NBPG-1);
+#else
+		pmap_remove(pmap_kernel(), vaddr,  vaddr+NBPG-1);
+#endif
+		vaddr += NBPG;
+	}
+	return;
+}
+
+
 
 /*
  * probably should be ppc_space_copy
@@ -1269,16 +1384,17 @@ __C(bus_space_read_raw_multi_,BYTES)(bst, h, o, dst, size)		\
 	bus_space_tag_t bst;						\
 	bus_space_handle_t h;						\
 	bus_addr_t o;							\
-	TYPE *dst;							\
+	u_int8_t *dst;							\
 	bus_size_t size;						\
 {									\
 	TYPE *src;							\
+	TYPE *rdst = (TYPE *)dst;					\
 	int i;								\
 	int count = size >> SHIFT;					\
 									\
 	src = (TYPE *)(h+o);						\
 	for (i = 0; i < count; i++) {					\
-		dst[i] = *src;						\
+		rdst[i] = *src;						\
 		__asm__("eieio");					\
 	}								\
 }
@@ -1292,16 +1408,17 @@ __C(bus_space_write_raw_multi_,BYTES)(bst, h, o, src, size)		\
 	bus_space_tag_t bst;						\
 	bus_space_handle_t h;						\
 	bus_addr_t o;							\
-	const TYPE *src;						\
+	const u_int8_t *src;						\
 	bus_size_t size;						\
 {									\
 	int i;								\
 	TYPE *dst;							\
+	TYPE *rsrc = (TYPE *)src;					\
 	int count = size >> SHIFT;					\
 									\
 	dst = (TYPE *)(h+o);						\
 	for (i = 0; i < count; i++) {					\
-		*dst = src[i];						\
+		*dst = rsrc[i];						\
 		__asm__("eieio");					\
 	}								\
 }
@@ -1364,4 +1481,35 @@ kcopy(from, to, size)
 	curproc->p_addr->u_pcb.pcb_onfault = oldh;
 
 	return 0;
+}
+void
+nameinterrupt(replace, newstr)
+	int replace;
+	char *newstr;
+{
+#define NENTRIES 66
+	char intrname[NENTRIES][30];
+	char *p, *src;
+	int i;
+	extern char intrnames[];
+	extern char eintrnames[];
+
+	if (replace > NENTRIES) {
+		return;
+	}
+	src = intrnames;
+
+	for (i = 0; i < NENTRIES; i++) {
+		src += strlcpy(intrname[i], src, 30);
+		src+=1; /* skip the NUL */
+	}
+
+	strcat(intrname[replace], "/");
+	strcat(intrname[replace], newstr);
+
+	p = intrnames;
+	for (i = 0; i < NENTRIES; i++) {
+		p += strlcpy(p, intrname[i], eintrnames - p);
+		p += 1; /* skip the NUL */
+	}
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dz.c,v 1.2 2001/01/28 01:19:59 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dz.c,v 1.2.4.1 2001/05/14 21:38:20 niklas Exp $	*/
 /*	$NetBSD: dz.c,v 1.19 2000/01/24 02:40:29 matt Exp $	*/
 /*
  * Copyright (c) 1996  Ken C. Wellsch.  All rights reserved.

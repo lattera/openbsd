@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3 2001/02/06 04:27:45 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/sgmap.c,v 1.3.4.1 2001/05/14 21:39:10 niklas Exp $	*/
 /* $NetBSD: sgmap.c,v 1.8 2000/06/29 07:14:34 mrg Exp $ */
 
 /*-

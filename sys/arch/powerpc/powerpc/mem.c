@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mem.c,v 1.5 2000/01/14 05:42:17 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mem.c,v 1.5.2.1 2001/05/14 21:36:56 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.1 1996/09/30 16:34:50 ws Exp $ */
 
 /*
@@ -160,8 +160,9 @@ mmmmap(dev, off, prot)
         dev_t dev;
         int off, prot;
 {
-	return EOPNOTSUPP;
+	return (-1);
 }
+
 /*ARGSUSED*/
 int
 mmioctl(dev, cmd, data, flags, p)

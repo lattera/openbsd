@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/xyvar.h,v 1.4 1997/08/08 08:25:41 downsj Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/xyvar.h,v 1.4.12.1 2001/05/14 21:37:11 niklas Exp $	*/
 /*	$NetBSD: xyvar.h,v 1.4 1996/03/31 22:39:04 pk Exp $	*/
 
 /*
@@ -160,6 +160,7 @@ struct xyc_softc {
   struct xy_iorq *xy_chain[XYC_MAXIOPB];
 				   /* current chain */
   int no_ols;			   /* disable overlap seek for stupid 450s */
+  struct timeout xyc_tick_tmo;	   /* for xyc_tick() */   
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/rom.c,v 1.2 2000/10/04 04:48:54 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/rom.c,v 1.2.6.1 2001/05/14 21:37:48 niklas Exp $ */
 /*	$NetBSD: rom.c,v 1.1 1996/08/02 11:22:21 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.

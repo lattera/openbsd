@@ -1,4 +1,4 @@
-/*  $OpenBSD: src/sys/arch/vax/boot/boot/Attic/devopen.c,v 1.2 2000/10/04 04:09:01 bjc Exp $ */
+/*  $OpenBSD: src/sys/arch/vax/boot/boot/Attic/devopen.c,v 1.2.6.1 2001/05/14 21:37:45 niklas Exp $ */
 /*	$NetBSD: devopen.c,v 1.2 1999/06/30 18:30:42 ragge Exp $ */
 /*
  * Copyright (c) 1997 Ludd, University of Lule}, Sweden.

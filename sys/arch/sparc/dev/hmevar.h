@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/hmevar.h,v 1.6 1999/02/23 23:44:49 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/hmevar.h,v 1.6.6.1 2001/05/14 21:37:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Jason L. Wright (jason@thought.net)
@@ -50,7 +50,6 @@ struct hme_softc {
 	struct	hme_cr *sc_cr;		/* configuration registers */
 	struct	hme_tcvr *sc_tcvr;	/* MIF registers */
 
-	struct	hme_swr sc_sw;		/* software copy registers */
 	int	sc_burst;		/* DMA burst size in effect */
 	int	sc_rev;			/* Card revision */
 

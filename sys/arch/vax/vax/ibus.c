@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ibus.c,v 1.3 2001/02/11 06:34:37 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ibus.c,v 1.3.4.1 2001/05/14 21:38:53 niklas Exp $	*/
 /*	$NetBSD: ibus.c,v 1.2 1999/08/14 18:42:46 ragge Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.1.2.1 2000/03/24 09:08:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/openpic.c,v 1.1.2.2 2001/05/14 21:36:50 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1995 Per Fogelstrom
@@ -46,6 +46,11 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
+#ifdef UVM
+#include <vm/vm.h>
+#include <vm/vm_kern.h>
+#include <uvm/uvm.h>
+#endif
 
 #include <machine/autoconf.h>
 #include <machine/intr.h>
@@ -53,16 +58,16 @@
 #include <machine/pio.h>
 #include <powerpc/mac/openpicreg.h>
 
-#define ICU_LEN 64
+#define ICU_LEN 128
 #define LEGAL_IRQ(x) ((x >= 0) && (x < ICU_LEN))
 
 static int intrtype[ICU_LEN], intrmask[ICU_LEN], intrlevel[ICU_LEN];
 static struct intrhand *intrhand[ICU_LEN] = { 0 };
-static int hwirq[ICU_LEN], virq[64];
+static int hwirq[ICU_LEN], virq[ICU_LEN];
 unsigned int imen /* = 0xffffffff */; /* XXX */
 static int virq_max = 0;
 
-struct evcnt evirq[ICU_LEN*2];
+struct evcnt evirq[ICU_LEN];
 
 static int fakeintr __P((void *));
 static char *intr_typename(int type);
@@ -80,7 +85,7 @@ extern u_int32_t *heathrow_FCR;
 
 static __inline u_int openpic_read __P((int));
 static __inline void openpic_write __P((int, u_int));
-void openpic_enable_irq __P((int));
+void openpic_enable_irq __P((int, int));
 void openpic_disable_irq __P((int));
 void openpic_init();
 void openpic_set_priority __P((int, int));
@@ -140,6 +145,7 @@ vaddr_t openpic_base;
 void * openpic_intr_establish( void * lcv, int irq, int type, int level,
 	int (*ih_fun) __P((void *)), void *ih_arg, char *name);
 void openpic_intr_disestablish( void *lcp, void *arg);
+void openpic_collect_preconf_intr();
 
 void
 openpic_attach(parent, self, aux)
@@ -156,7 +162,7 @@ openpic_attach(parent, self, aux)
 	openpic_base = (vaddr_t) mapiodev (ca->ca_baseaddr +
 			ca->ca_reg[0], 0x22000);
 
-	printf("version %x", openpic_read(OPENPIC_VENDOR_ID));
+	printf(": version 0x%x", openpic_read(OPENPIC_VENDOR_ID));
 
 	openpic_init();
 
@@ -166,13 +172,35 @@ openpic_attach(parent, self, aux)
 	mac_intr_establish_func  = openpic_intr_establish;
 	mac_intr_disestablish_func  = openpic_intr_disestablish;
 	install_extint(ext_intr_openpic);
+	
+#if 1
+	openpic_collect_preconf_intr();
+#endif
 
 #if 1
 	mac_intr_establish(parent, 0x37, IST_LEVEL,
 		IPL_HIGH, prog_switch, 0x37, "prog button");
 #endif
+	ppc_intr_enable(1);
 
 	printf("\n");
+}
+void
+openpic_collect_preconf_intr()
+{
+	int i;
+	for (i = 0; i < ppc_configed_intr_cnt; i++) {
+#ifdef DEBUG
+		printf("\n\t%s irq %d level %d fun %x arg %x",
+		    ppc_configed_intr[i].ih_what, ppc_configed_intr[i].ih_irq,
+		    ppc_configed_intr[i].ih_level, ppc_configed_intr[i].ih_fun,
+		    ppc_configed_intr[i].ih_arg);
+#endif
+		openpic_intr_establish(NULL, ppc_configed_intr[i].ih_irq,
+		    IST_LEVEL, ppc_configed_intr[i].ih_level,
+		    ppc_configed_intr[i].ih_fun, ppc_configed_intr[i].ih_arg,
+		    ppc_configed_intr[i].ih_what);
+	}
 }
 
 static int
@@ -193,6 +221,8 @@ fakeintr(arg)
 
 	return 0;
 }
+
+void nameinterrupt( int replace, char *newstr);
 
 /*
  * Register an interrupt handler.
@@ -218,6 +248,7 @@ openpic_intr_establish(lcv, irq, type, level, ih_fun, ih_arg, name)
 printf("mac_intr_establish, hI %d L %d ", irq, type);
 #endif
 
+	nameinterrupt(irq, name);
 	irq = mapirq(irq);
 #if 0
 printf("vI %d ", irq);
@@ -397,7 +428,7 @@ intr_calculatemasks()
 		for (irq = 0; irq < ICU_LEN; irq++) {
 			if (intrhand[irq]) {
 				irqs |= 1 << irq;
-				openpic_enable_irq(hwirq[irq]);
+				openpic_enable_irq(hwirq[irq], intrtype[irq]);
 			} else {
 				openpic_disable_irq(hwirq[irq]);
 			}
@@ -414,7 +445,7 @@ mapirq(irq)
 {
 	int v;
 
-	if (irq < 0 || irq >= 64)
+	if (irq < 0 || irq >= ICU_LEN)
 		panic("invalid irq");
 	virq_max++;
 	v = virq_max;
@@ -527,20 +558,26 @@ int irq_mask;
 	int irq;
 	for ( irq = 0; irq <= virq_max; irq++) {
 		if (irq_mask & (1 << irq)) {
-			openpic_enable_irq(hwirq[irq]);
+			openpic_enable_irq(hwirq[irq], intrtype[irq]);
 		} else {
 			openpic_disable_irq(hwirq[irq]);
 		}
 	}
 }
 void
-openpic_enable_irq(irq)
+openpic_enable_irq(irq, type)
 	int irq;
+	int type;
 {
 	u_int x;
 
 	x = openpic_read(OPENPIC_SRC_VECTOR(irq));
-	x &= ~OPENPIC_IMASK;
+	x &= ~(OPENPIC_IMASK|OPENPIC_SENSE_LEVEL|OPENPIC_SENSE_EDGE);
+	if (type == IST_LEVEL) {
+		x |= OPENPIC_SENSE_LEVEL;
+	} else {
+		x |= OPENPIC_SENSE_EDGE;
+	}
 	openpic_write(OPENPIC_SRC_VECTOR(irq), x);
 }
 
@@ -596,6 +633,7 @@ ext_intr_openpic()
 
 	while (realirq != 255) {
 		irq = virq[realirq];
+		intrcnt[realirq]++;
 
 		/* XXX check range */
 
@@ -632,7 +670,7 @@ openpic_init()
         u_int x;
 
         /* disable all interrupts */
-        for (irq = 0; irq < ICU_LEN; irq++)
+        for (irq = 0; irq < 255; irq++)
                 openpic_write(OPENPIC_SRC_VECTOR(irq), OPENPIC_IMASK);
         openpic_set_priority(0, 15);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/bus_mem.c,v 1.2 2000/10/18 21:37:35 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/bus_mem.c,v 1.2.6.1 2001/05/14 21:38:42 niklas Exp $	*/
 /*	$NetBSD: bus_mem.c,v 1.8 2000/06/29 07:14:23 mrg Exp $ */
 /*
  * Copyright (c) 1998 Matt Thomas

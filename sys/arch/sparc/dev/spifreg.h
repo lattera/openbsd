@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.5 1999/04/22 12:33:19 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/spifreg.h,v 1.5.4.1 2001/05/14 21:37:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -372,7 +372,7 @@ struct spifregs {
 #define SPIF_PORT(x)	(minor(x) & 0x07)
 #define STTY_DIALOUT(x) (minor(x) & 0x10)
 
-#define	STTY_RX_FIFO_THRESHOLD	6
+#define	STTY_RX_FIFO_THRESHOLD	4
 #define	STTY_RX_DTR_THRESHOLD	7
 #define	CD180_TX_FIFO_SIZE	8		/* 8 chars of fifo */
 

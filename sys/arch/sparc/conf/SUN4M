@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc/conf/SUN4M,v 1.34.2.1 2000/03/02 07:04:32 niklas Exp $
+#	$OpenBSD: src/sys/arch/sparc/conf/SUN4M,v 1.34.2.2 2001/05/14 21:37:02 niklas Exp $
 # 	$NetBSD: GENERIC,v 1.28.2.1 1996/07/02 23:55:22 jtc Exp $
 
 # Machine architecture; required by config(8)

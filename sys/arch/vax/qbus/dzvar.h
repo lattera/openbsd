@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dzvar.h,v 1.1 2000/04/27 03:14:47 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dzvar.h,v 1.1.8.1 2001/05/14 21:38:23 niklas Exp $	*/
 /*	$NetBSD: dzvar.h,v 1.6 2000/01/24 02:40:29 matt Exp $	*/
 /*
  * Copyright (c) 1996  Ken C. Wellsch.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.3 2000/03/02 07:04:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/vm_machdep.c,v 1.12.2.4 2001/05/14 21:37:20 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.30 1997/03/10 23:55:40 pk Exp $ */
 
 /*
@@ -52,6 +52,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
 #include <sys/core.h>
 #include <sys/malloc.h>
@@ -114,7 +115,7 @@ extern int has_iocache;
 #endif
 
 caddr_t
-dvma_malloc(len, kaddr, flags)
+dvma_malloc_space(len, kaddr, flags, space)
 	size_t	len;
 	void	*kaddr;
 	int	flags;
@@ -133,7 +134,7 @@ dvma_malloc(len, kaddr, flags)
 		kvm_uncache((caddr_t)kva, atop(len));
 
 	*(vaddr_t *)kaddr = kva;
-	dva = dvma_mapin(kernel_map, kva, len, (flags & M_NOWAIT) ? 0 : 1);
+	dva = dvma_mapin_space(kernel_map, kva, len, (flags & M_NOWAIT) ? 0 : 1, space);
 	if (dva == NULL) {
 		free((void *)kva, M_DEVBUF);
 		return (NULL);
@@ -171,10 +172,10 @@ u_long dvma_cachealign = 0;
  * to a kernel address in DVMA space.
  */
 vaddr_t
-dvma_mapin(map, va, len, canwait)
+dvma_mapin_space(map, va, len, canwait, space)
 	struct vm_map	*map;
 	vaddr_t	va;
-	int		len, canwait;
+	int		len, canwait, space;
 {
 	vaddr_t	kva, tva;
 	int npf, s;
@@ -196,9 +197,15 @@ dvma_mapin(map, va, len, canwait)
 	npf = btoc(len);
 
 	s = splhigh();
-	error = extent_alloc1(dvmamap_extent, len, dvma_cachealign, 
-			      va & (dvma_cachealign - 1), 0,
-			      canwait ? EX_WAITSPACE : 0, &tva);
+	if (space & M_SPACE_D24)
+		error = extent_alloc_subregion1(dvmamap_extent,
+		    DVMA_D24_BASE, DVMA_D24_END, len, dvma_cachealign,
+		    va & (dvma_cachealign - 1), 0,
+		    canwait ? EX_WAITSPACE : EX_WAITOK, &tva);
+	else
+		error = extent_alloc1(dvmamap_extent, len, dvma_cachealign, 
+		    va & (dvma_cachealign - 1), 0,
+		    canwait ? EX_WAITSPACE : EX_WAITOK, &tva);
 	splx(s);
 	if (error)
 		return NULL;
@@ -327,10 +334,19 @@ vmapbuf(bp, sz)
 			panic("vmapbuf: null page frame");
 
 		/*
+		 * Don't enter uncached if cache is mandatory.
+		 *
+		 * XXX - there are probably other cases where we don't need
+		 *       to uncache, but for now we're conservative.
+		 */
+		if (!(cpuinfo.flags & CPUFLG_CACHE_MANDATORY))
+			pa |= PMAP_NC;
+
+		/*
 		 * pmap_enter distributes this mapping to all
 		 * contexts... maybe we should avoid this extra work
 		 */
-		pmap_enter(pmap_kernel(), kva, pa | PMAP_NC,
+		pmap_enter(pmap_kernel(), kva, pa,
 			   VM_PROT_READ | VM_PROT_WRITE, 1, 0);
 
 		uva += PAGE_SIZE;
@@ -512,10 +528,11 @@ cpu_set_kpc(p, pc, arg)
 
 /*
  * cpu_exit is called as the last action during exit.
- * We release the address space and machine-dependent resources,
- * including the memory for the user structure and kernel stack.
- * Since the latter is also the interrupt stack, we release it
- * from assembly code after switching to a temporary pcb+stack.
+ *
+ * We clean up a little and then call switchexit() with the old proc
+ * as an argument.  switchexit() switches to the idle context, schedules
+ * the old vmspace and stack to be freed, then selects a new process to
+ * run.
  */
 void
 cpu_exit(p)
@@ -530,12 +547,8 @@ cpu_exit(p)
 		}
 		free((void *)fs, M_SUBPROC);
 	}
-#if defined(UVM)
-	uvmspace_free(p->p_vmspace);
-#else
-	vmspace_free(p->p_vmspace);
-#endif
-	switchexit(kernel_map, p->p_addr, USPACE);
+
+	switchexit(p);
 	/* NOTREACHED */
 }
 

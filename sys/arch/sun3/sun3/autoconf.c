@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8 1999/11/09 14:30:39 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/autoconf.c,v 1.8.2.1 2001/05/14 21:37:33 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.37 1996/11/20 18:57:22 gwr Exp $	*/
 
 /*-
@@ -82,6 +82,13 @@ configure()
 	swapgeneric();
 	swapconf();
 	dumpconf();
+	
+	/*
+	 * Now that device autoconfiguration is finished,
+	 * we can safely enable interrupts.
+	 */
+	printf("enabling interrupts\n");
+	(void)spl0();
 	cold = 0;
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/si_obio.c,v 1.8 1997/09/11 16:09:59 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/si_obio.c,v 1.8.12.1 2001/05/14 21:37:28 niklas Exp $	*/
 /*	$NetBSD: si_obio.c,v 1.7 1996/11/20 18:57:00 gwr Exp $	*/
 
 /*-
@@ -98,6 +98,10 @@
 #include <machine/autoconf.h>
 #include <machine/obio.h>
 #include <machine/dvma.h>
+
+#ifndef DDB
+#define Debugger()
+#endif
 
 #define DEBUG XXX
 
@@ -497,7 +501,7 @@ si_obio_dma_stop(ncr_sc)
 				(si->fifo_data & 0xff00) >> 8;
 			goto out;
 		}
-		/* UDC might not have transfered the last word. */
+		/* UDC might not have transferred the last word. */
 		udc_cnt = si_obio_udc_read(si, UDC_ADR_COUNT);
 		if (((udc_cnt * 2) - resid) == 2) {
 			NCR_TRACE("si_dma_stop: leftover 2 at 0x%x\n",

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/str.s,v 1.2 2000/05/01 00:12:02 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/str.s,v 1.2.8.1 2001/05/14 21:37:49 niklas Exp $ */
 /*	$NetBSD: str.s,v 1.1 1999/03/06 16:36:06 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.

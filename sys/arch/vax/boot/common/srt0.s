@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/srt0.s,v 1.2 2000/10/04 04:09:01 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/srt0.s,v 1.2.6.1 2001/05/14 21:37:49 niklas Exp $ */
 /*	$NetBSD: srt0.s,v 1.2 1999/05/23 21:58:19 ragge Exp $ */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.

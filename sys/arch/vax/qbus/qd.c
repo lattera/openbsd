@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qd.c,v 1.1 2000/04/27 03:14:48 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/Attic/qd.c,v 1.1.8.1 2001/05/14 21:38:24 niklas Exp $	*/
 /*	$NetBSD: qd.c,v 1.17 2000/01/24 02:40:29 matt Exp $	*/
 
 /*-

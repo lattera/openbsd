@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pcibrvar.h,v 1.4.2.1 2000/03/24 09:08:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pcibrvar.h,v 1.4.2.2 2001/05/14 21:36:52 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -41,6 +41,7 @@ struct pcibr_config {
 	int	config_type;
 	int	bus;
 	int	pci_init_done;
+	int     node;
 };
 
 struct pcibr_softc {
@@ -50,6 +51,19 @@ struct pcibr_softc {
 	struct ppc_bus_space sc_iobus_space;
 	struct powerpc_bus_dma_tag sc_dmatag;
 	struct pcibr_config	pcibr_config;
+	struct extent *extent_mem;
+	struct extent *extent_port;
+	u_int32_t mem_alloc_start;
+	u_int32_t port_alloc_start;
+	int nbogus;
 };
 
+struct pci_reserve_mem {
+	bus_addr_t start;
+	bus_size_t size;
+	char *name;
+};
+
+void pci_addr_fixup __P((struct pcibr_softc *, pci_chipset_tag_t, int,
+	struct pci_reserve_mem *));
 

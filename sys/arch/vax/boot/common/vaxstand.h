@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/vaxstand.h,v 1.1 2000/04/27 02:26:26 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/common/Attic/vaxstand.h,v 1.1.8.1 2001/05/14 21:37:49 niklas Exp $ */
 /*	$NetBSD: vaxstand.h,v 1.1 1999/03/06 16:36:05 ragge Exp $ */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.

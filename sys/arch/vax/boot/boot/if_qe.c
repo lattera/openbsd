@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_qe.c,v 1.1 2000/04/27 02:26:25 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_qe.c,v 1.1.8.1 2001/05/14 21:37:46 niklas Exp $	*/
 /*	$NetBSD: if_qe.c,v 1.2 1999/06/30 18:19:26 ragge Exp $ */
 
 /*

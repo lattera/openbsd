@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.1 2000/03/24 09:08:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/mem.c,v 1.11.2.2 2001/05/14 21:37:17 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.13 1996/03/30 21:12:16 christos Exp $ */
 
 /*
@@ -235,7 +235,7 @@ mmmmap(dev, off, prot)
         int off, prot;
 {
 
-	return (EOPNOTSUPP);
+	return (-1);
 }
 
 /*ARGSUSED*/

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.3 2000/03/24 09:08:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/param.h,v 1.12.2.4 2001/05/14 21:37:13 niklas Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1997/03/10 22:50:37 pk Exp $ */
 
 /*
@@ -180,8 +180,9 @@ extern vaddr_t		dvma_end;
 extern struct extent	*dvmamap_extent;
 
 extern caddr_t	kdvma_mapin __P((caddr_t, int, int));
-extern caddr_t	dvma_malloc __P((size_t, void *, int));
+extern caddr_t	dvma_malloc_space  __P((size_t, void *, int, int));
 extern void	dvma_free __P((caddr_t, size_t, void *));
+#define		dvma_malloc(len,kaddr,flags)	dvma_malloc_space(len,kaddr,flags,0)
 
 extern void	delay __P((unsigned int));
 #define	DELAY(n)	delay(n)

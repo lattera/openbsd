@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11 2000/01/16 22:52:22 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.1 2001/05/14 21:36:58 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*
@@ -35,6 +35,7 @@
 #include <sys/core.h>
 #include <sys/exec.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
 #include <sys/vnode.h>
 
@@ -68,11 +69,7 @@ cpu_fork(p1, p2, stack, stacksize)
 		save_fpu(p1);
 	*pcb = p1->p_addr->u_pcb;
 	
-#ifdef UVM
 	pcb->pcb_pm = p2->p_vmspace->vm_map.pmap;
-#else
-	pcb->pcb_pm = &p2->p_vmspace->vm_pmap;
-#endif
 
 	pcb->pcb_pmreal = (struct pmap *)pmap_extract(pmap_kernel(), (vm_offset_t)pcb->pcb_pm);
 	
@@ -180,13 +177,8 @@ cpu_exit(p)
 	if (p == fpuproc)	/* release the fpu */
 		fpuproc = 0;
 	
-#ifdef UVM
-	uvmspace_free(p->p_vmspace);
-#else
-	vmspace_free(p->p_vmspace);
-#endif
 	(void)splhigh();
-	switchexit(kernel_map, p->p_addr, USPACE);
+	switchexit(p);
 }
 
 /*

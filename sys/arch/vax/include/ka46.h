@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/ka46.h,v 1.1 2000/04/26 06:08:27 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/ka46.h,v 1.1.8.1 2001/05/14 21:38:00 niklas Exp $	*/
 /*	$NetBSD: ka46.h,v 1.2 1998/08/11 17:52:58 ragge Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.

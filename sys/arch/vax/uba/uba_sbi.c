@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba_sbi.c,v 1.1 2000/04/27 03:14:51 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba_sbi.c,v 1.1.8.1 2001/05/14 21:38:39 niklas Exp $	*/
 /*	$NetBSD: uba_sbi.c,v 1.1 1999/06/21 16:23:01 ragge Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.

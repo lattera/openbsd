@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.6 1998/05/11 21:35:31 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/swapgeneric.c,v 1.6.8.1 2001/05/14 21:39:11 niklas Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.13 1996/10/13 03:36:01 christos Exp $	*/
 
 /*-
@@ -73,7 +73,7 @@ struct	swdevt swdevt[] = {
 long	dumplo;
 int	dmmin, dmmax, dmtext;
 
-int (*mountroot) __P((void)) = dk_mountroot;
+int (*mountroot) __P((void)) = NULL;
 
 extern	struct cfdriver hp_cd;
 extern	struct cfdriver ra_cd;
@@ -102,98 +102,3 @@ struct	ngcconf {
 #endif
 	{ 0 },
 };
-
-void
-setconf()
-{
-	struct	ngcconf *nc;
-	register char *cp, *gp;
-	int unit, swaponroot = 0, i;
-	char name[128];
-
-	if (rootdev != NODEV)
-		goto doswap;
-	unit = 0;
-	/*
-	 * First try new config devices.
-	 */
-	if (boothowto & RB_ASKNAME) {
-nretry:
-		swaponroot = 0;
-		printf("root device? ");
-		gets(name);
-		if (name[strlen(name) - 1] == '*')
-			name[strlen(name) - 1] = swaponroot++;
-		for (nc = ngcconf; nc->ng_cf; nc++)
-			for (i = 0; i < nc->ng_cf->cd_ndevs; i++)
-				if (nc->ng_cf->cd_devs[i] &&
-				    strcmp(name, ((struct device *)
-				    (nc->ng_cf->cd_devs[i]))->dv_xname) == 0)
-					goto ngotit;
-
-		printf("Use one of ");
-		for (nc = ngcconf; nc->ng_cf; nc++)
-			printf("%s%%d ", nc->ng_cf->cd_name);
-		printf("\n");
-
-		goto nretry;
-ngotit:
-		rootdev = makedev(major(nc->ng_root), i * 8);
-		goto doswap;
-
-	} else {
-		for (nc = ngcconf; nc->ng_cf; nc++)
-			for (i = 0; i < nc->ng_cf->cd_ndevs; i++)
-				if (nc->ng_cf->cd_devs[i]) {
-					printf("root on %s%d\n",
-					    nc->ng_cf->cd_name, i);
-					rootdev = makedev(major(nc->ng_root),
-					    i * 8);
-					goto doswap;
-				}
-
-	}
-
-	printf("no suitable root\n");
-	asm("halt");
-
-doswap:
-	swdevt[0].sw_dev = argdev = dumpdev =
-	    makedev(major(rootdev), minor(rootdev)+1);
-	/* swap size and dumplo set during autoconfigure */
-	if (swaponroot)
-		rootdev = dumpdev;
-}
-
-void
-gets(cp)
-	char *cp;
-{
-	register char *lp;
-	register c;
-
-	lp = cp;
-	for (;;) {
-		cnputc(c = (cngetc()&0x7f));
-		switch (c) {
-		case '\n':
-		case '\r':
-			*lp++ = '\0';
-			return;
-		case '\b':
-		case '#':
-		case '\177':
-			lp--;
-			if (lp < cp)
-				lp = cp;
-			continue;
-		case '@':
-		case 'u'&037:
-			lp = cp;
-			cnputc('\n');
-			continue;
-		default:
-			*lp++ = c;
-		}
-	}
-}

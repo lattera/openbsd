@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/include/Attic/machdep.h,v 1.8.10.1 2000/03/24 09:08:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/include/Attic/machdep.h,v 1.8.10.2 2001/05/14 21:37:30 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994 Gordon W. Ross
@@ -48,11 +48,6 @@
 
 #define	FC_CONTROL	3	/* sun control space
 				   XXX HP uses FC_PURGE instead */
-
-#define	SPL1		(PSL_S | PSL_IPL1); /* used in locore.s
-					     * XXX mvme68k does this in
-					     * genassym.c
-					     */
 
 /* Prototypes... */
 
@@ -105,6 +100,9 @@ int 	fpu_emulate __P((struct frame *, struct fpframe *));
 int 	getdfc __P((void));
 int 	getsfc __P((void));
 
+/* Backward compatibility... */
+#define getsr	_getsr
+
 void**	getvbr __P((void));
 
 vm_offset_t high_segment_alloc __P((int npages));
@@ -118,8 +116,6 @@ void	isr_config __P((void));
 
 void	m68881_save __P((struct fpframe *));
 void	m68881_restore __P((struct fpframe *));
-
-void	netintr __P((void));
 
 void	proc_do_uret __P((void));
 void	proc_trampoline __P((void));

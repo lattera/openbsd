@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/if_bm.c,v 1.2.2.1 2000/03/24 09:08:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/if_bm.c,v 1.2.2.2 2001/05/14 21:36:48 niklas Exp $	*/
 /*	$NetBSD: if_bm.c,v 1.1 1999/01/01 01:27:52 tsubai Exp $	*/
 
 /*-
@@ -250,10 +250,6 @@ bmac_attach(parent, self, aux)
 
 	if_attach(ifp);
 	ether_ifattach(ifp);
-
-#if NBPFILTER > 0
-	bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
-#endif
 }
 
 /*

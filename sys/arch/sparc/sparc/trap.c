@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.1 2000/02/21 22:29:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/trap.c,v 1.21.2.2 2001/05/14 21:37:19 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.58 1997/09/12 08:55:01 pk Exp $ */
 
 /*
@@ -52,6 +52,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
@@ -86,8 +87,6 @@
 #include <sparc/fpu/fpu_extern.h>
 #include <sparc/sparc/memreg.h>
 #include <sparc/sparc/cpuvar.h>
-
-#define	offsetof(s, f) ((int)&((s *)0)->f)
 
 extern int cold;
 
@@ -216,7 +215,7 @@ userret(p, pc, oticks)
 	int pc;
 	u_quad_t oticks;
 {
-	int sig;
+	int sig, s;
 
 	/* take pending signals */
 	while ((sig = CURSIG(p)) != 0)
@@ -238,11 +237,11 @@ userret(p, pc, oticks)
 		 * but before we switched, we might not be on the queue
 		 * indicated by our priority.
 		 */
-		(void) splstatclock();
+		s = splstatclock();
 		setrunqueue(p);
 		p->p_stats->p_ru.ru_nivcsw++;
 		mi_switch();
-		(void) spl0();
+		splx(s);
 		while ((sig = CURSIG(p)) != 0)
 			postsig(sig);
 	}
@@ -1129,7 +1128,7 @@ syscall(code, tf, pc)
 			if (error) {
 #ifdef KTRACE
 				if (KTRPOINT(p, KTR_SYSCALL))
-					ktrsyscall(p->p_tracep, code,
+					ktrsyscall(p, code,
 					    callp->sy_argsize, args.i);
 #endif
 				goto bad;
@@ -1140,7 +1139,7 @@ syscall(code, tf, pc)
 	}
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSCALL))
-		ktrsyscall(p->p_tracep, code, callp->sy_argsize, args.i);
+		ktrsyscall(p, code, callp->sy_argsize, args.i);
 #endif
 	rval[0] = 0;
 	rval[1] = tf->tf_out[1];
@@ -1187,7 +1186,7 @@ syscall(code, tf, pc)
 	userret(p, pc, sticks);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p->p_tracep, code, error, rval[0]);
+		ktrsysret(p, code, error, rval[0]);
 #endif
 	share_fpu(p, tf);
 }
@@ -1206,7 +1205,7 @@ child_return(p)
 	userret(p, p->p_md.md_tf->tf_pc, 0);
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p->p_tracep,
+		ktrsysret(p,
 			  (p->p_flag & P_PPWAIT) ? SYS_vfork : SYS_fork, 0, 0);
 #endif
 }

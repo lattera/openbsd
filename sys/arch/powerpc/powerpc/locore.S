@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/locore.S,v 1.9 2000/01/14 05:42:17 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/locore.S,v 1.9.2.1 2001/05/14 21:36:56 niklas Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*
@@ -48,12 +48,15 @@
  * Globals
  */
 	.globl	_C_LABEL(esym),_C_LABEL(proc0paddr)
+	.type	_C_LABEL(esym),@object
+	.type	_C_LABEL(proc0paddr),@object
 	.data
 _C_LABEL(esym):		.long	0	/* end of symbol table */
 _C_LABEL(proc0paddr):	.long	0	/* proc0 p_addr */
 idle_u:			.long	0	/* fake uarea during idle after exit */
 
 	.globl _C_LABEL(where)
+	.type  _C_LABEL(where),@object
 _C_LABEL(where):	.long	0
 
 /*
@@ -70,6 +73,7 @@ _ENTRY(_ASM_LABEL(start))
  * r7 - length
  */
 	.globl	start
+	.type start,@function
 start:
 #ifdef SUPPORT_PPC1BUG
 	mr 	0,5
@@ -178,6 +182,12 @@ _C_LABEL(idle):
 	ori	3,3,PSL_EE		/* reenable ints again */
 	mtmsr	3
 	isync
+	sync
+	/* low power mode */
+	mfmsr	3
+	oris	3, 3, PSL_POW@h
+	mtmsr	3
+	isync
 	
 /* May do some power saving here? */
 
@@ -194,12 +204,16 @@ _ENTRY(_C_LABEL(switchexit))
 	lis	7,_C_LABEL(curpcb)@ha
 	stw	6,_C_LABEL(curpcb)@l(7)
 	addi	1,6,USPACE-16		/* 16 bytes are reserved at stack top */
-/* Now free the old user structure (args are already in r3, r4, r5) */
-#ifdef UVM
-	bl	_C_LABEL(uvm_km_free)
-#else
-	bl	_C_LABEL(kmem_free)
-#endif
+	/*
+	 * Schedule the vmspace and stack to be freed (the proc arg is
+	 * already in r3).
+	 */
+	bl      _C_LABEL(exit2)
+
+	/* Fall through to cpu_switch to actually select another proc */
+	li      3,0                     /* indicate exited process */
+
+	
 /* Fall through to cpu_switch to actually select another proc */
 
 /*
@@ -347,6 +361,7 @@ switch_return:
 	.data
 intstk:	.space	INTSTK			/* interrupt stack */
 	.global _C_LABEL(intr_depth)
+	.type  _C_LABEL(intr_depth),@object
 _C_LABEL(intr_depth):
 	.long	-1			/* in-use marker */
 #define	SPILLSTK 1024			/* 1K spill stack */
@@ -358,6 +373,8 @@ _C_LABEL(intr_depth):
  */
 	.text
 	.globl	_C_LABEL(trapcode),_C_LABEL(trapsize)
+	.type	_C_LABEL(trapcode),@function
+	.type	_C_LABEL(trapsize),@object
 _C_LABEL(trapcode):
 	mtsprg	1,1			/* save SP */
 	stmw	28,tempsave(0)		/* free r28-r31 */
@@ -380,6 +397,8 @@ _C_LABEL(trapsize) =	.-_C_LABEL(trapcode)
  * and standard pagetable spills
  */
 	.globl	_C_LABEL(dsitrap),_C_LABEL(dsisize)
+	.type	_C_LABEL(dsitrap),@function
+	.type	_C_LABEL(dsisize),@object
 _C_LABEL(dsitrap):
 	stmw	28,disisave(0)		/* free r28-r31 */
 	mfcr	29			/* save CR */
@@ -420,6 +439,8 @@ _C_LABEL(dsisize) =	.-_C_LABEL(dsitrap)
  * Similar to the above for ISI
  */
 	.globl	_C_LABEL(isitrap),_C_LABEL(isisize)
+	.type	_C_LABEL(isitrap),@function
+	.type	_C_LABEL(isisize),@object
 _C_LABEL(isitrap):
 	stmw	28,disisave(0)		/* free r28-r31 */
 	mflr	28			/* save LR */
@@ -447,6 +468,8 @@ _C_LABEL(isisize) =	.-_C_LABEL(isitrap)
  * This one for the external interrupt handler.
  */
 	.globl	_C_LABEL(extint),_C_LABEL(extsize)
+	.type	_C_LABEL(extint),@function
+	.type	_C_LABEL(extsize),@object
 _C_LABEL(extint):
 	mtsprg	1,1			/* save SP */
 	stmw	28,tempsave(0)		/* free r28-r31 */
@@ -468,6 +491,8 @@ _C_LABEL(extsize) =	.-_C_LABEL(extint)
  * And this one for the decrementer interrupt handler.
  */
 	.globl	_C_LABEL(decrint),_C_LABEL(decrsize)
+	.type	_C_LABEL(decrint),@function
+	.type	_C_LABEL(decrsize),@object
 _C_LABEL(decrint):
 	mtsprg	1,1			/* save SP */
 	stmw	28,tempsave(0)		/* free r28-r31 */
@@ -502,6 +527,8 @@ _C_LABEL(decrsize) =	.-_C_LABEL(decrint)
 #define	tlbld	.long	0x7c0007a4+0x800*
 
 	.globl	_C_LABEL(tlbimiss),_C_LABEL(tlbimsize)
+	.type	_C_LABEL(tlbimiss),@function
+	.type	_C_LABEL(tlbimsize),@object
 _C_LABEL(tlbimiss):
 	mfspr	2,HASH1			/* get first pointer */
 	li	1,8
@@ -558,6 +585,8 @@ _C_LABEL(tlbimiss):
 _C_LABEL(tlbimsize) =	.-_C_LABEL(tlbimiss)
 
 	.globl	_C_LABEL(tlbdlmiss),_C_LABEL(tlbdlmsize)
+	.type	_C_LABEL(tlbdlmiss),@function
+	.type	_C_LABEL(tlbdlmsize),@object
 _C_LABEL(tlbdlmiss):
 	mfspr	2,HASH1			/* get first pointer */
 	li	1,8
@@ -609,6 +638,8 @@ _C_LABEL(tlbdlmiss):
 _C_LABEL(tlbdlmsize) =	.-_C_LABEL(tlbdlmiss)
 
 	.globl	_C_LABEL(tlbdsmiss),_C_LABEL(tlbdsmsize)
+	.type	_C_LABEL(tlbdsmiss),@function
+	.type	_C_LABEL(tlbdsmsize),@object
 _C_LABEL(tlbdsmiss):
 	mfspr	2,HASH1			/* get first pointer */
 	li	1,8
@@ -690,6 +721,8 @@ _C_LABEL(tlbdsmsize) =	.-_C_LABEL(tlbdsmiss)
 .lcomm	ipkdbstk,INTSTK			/* ipkdb stack */
 
 	.globl	_C_LABEL(ipkdblow),_C_LABEL(ipkdbsize)
+	.type	_C_LABEL(ipkdblow),@function
+	.type	_C_LABEL(ipkdbsize),@object
 _C_LABEL(ipkdblow):
 	mtsprg	1,1			/* save SP */
 	stmw	28,ipkdbsave(0)		/* free r28-r31 */
@@ -850,6 +883,7 @@ trapexit:
  * Mostly similar to the above.
  */
 	.globl	_C_LABEL(fork_trampoline)
+	.type	_C_LABEL(fork_trampoline),@function
 _C_LABEL(fork_trampoline):
 	xor	3,3,3
 	bl	_C_LABEL(lcsplx)
@@ -979,6 +1013,7 @@ s_isitrap:
 	isync
 
 	.globl	_C_LABEL(extint_call)
+	.type	_C_LABEL(extint_call),@function
 extintr:
 	INTRENTER
 _C_LABEL(extint_call):
@@ -1065,6 +1100,7 @@ decrintr:
  * Deliberate entry to ipkdbtrap
  */
 	.globl	_C_LABEL(ipkdb_trap)
+	.type	_C_LABEL(ipkdb_trap),@function
 _C_LABEL(ipkdb_trap):
 	
 	mtsprg	2,2
@@ -1118,6 +1154,7 @@ _C_LABEL(ipkdbfault):
  * int ipkdbfbyte(unsigned char *p)
  */
 	.globl	_C_LABEL(ipkdbfbyte)
+	.type	_C_LABEL(ipkdbfbyte),@function
 _C_LABEL(ipkdbfbyte):
 	li	9,EXC_DSI		/* establish new fault routine */
 	lwz	5,0(9)
@@ -1144,6 +1181,7 @@ _C_LABEL(ipkdbfbyte):
  * int ipkdbsbyte(unsigned char *p, int c)
  */
 	.globl	_C_LABEL(ipkdbsbyte)
+	.type	_C_LABEL(ipkdbsbyte),@function
 _C_LABEL(ipkdbsbyte):
 	li	9,EXC_DSI		/* establish new fault routine */
 	lwz	5,0(9)
@@ -1181,6 +1219,7 @@ _C_LABEL(ipkdbsbyte):
  * registers.
  */
 	.globl	_C_LABEL(setfault)
+	.type	_C_LABEL(setfault),@function
 _C_LABEL(setfault):
 	mflr	0
 	mfcr	12
@@ -1203,6 +1242,8 @@ _C_LABEL(setfault):
  * All other registers are unchanged.
  */
 	.globl	_C_LABEL(sigcode),_C_LABEL(esigcode)
+	.type	_C_LABEL(sigcode),@function
+	.type	_C_LABEL(esigcode),@function
 _C_LABEL(sigcode):
 	addi	1,1,-16			/* reserved space for callee */
 	blrl
@@ -1215,10 +1256,52 @@ _C_LABEL(esigcode):
 
 
 
+	.data
+	.globl   _C_LABEL(intrnames)
+	.type   _C_LABEL(intrnames),@object
+	.globl   _C_LABEL(eintrnames)
+	.type   _C_LABEL(eintrnames),@object
 _C_LABEL(intrnames):
-	.string "none"
+	.string "irq0" "irq1" "irq2" "irq3"
+	.string "irq4" "irq5" "irq6" "irq7"
+	.string "irq8" "irq9" "irq10" "irq11"
+	.string "irq12" "irq13" "irq14" "irq15"
+	.string "irq16" "irq17" "irq18" "irq19"
+	.string "irq20" "irq21" "irq22" "irq23"
+	.string "irq24" "irq25" "irq26" "irq27"
+	.string "irq28" "irq29" "irq30" "irq31"
+	.string "irq32" "irq33" "irq34" "irq35"
+	.string "irq36" "irq37" "irq38" "irq39"
+	.string "irq40" "irq41" "irq42" "irq43"
+	.string "irq44" "irq45" "irq46" "irq47"
+	.string "irq48" "irq49" "irq50" "irq51"
+	.string "irq52" "irq53" "irq54" "irq55"
+	.string "irq56" "irq57" "irq58" "irq59"
+	.string "irq60" "irq61" "irq62" "irq63"
+	.string "clock" 
+	.space 512
 _C_LABEL(eintrnames):
 	.align 4
+	.globl   _C_LABEL(intrcnt)
+	.type   _C_LABEL(intrcnt),@object
+	.globl   _C_LABEL(eintrcnt)
+	.type   _C_LABEL(eintrcnt),@object
 _C_LABEL(intrcnt):
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
+	.long 0,0,0,0
 	.long 0
 _C_LABEL(eintrcnt):

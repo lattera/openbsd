@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.4 2000/03/24 09:08:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/machdep.c,v 1.43.2.5 2001/05/14 21:37:17 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.85 1997/09/12 08:55:02 pk Exp $ */
 
 /*
@@ -141,6 +141,7 @@ int	physmem;
 
 /* sysctl settable */
 int	sparc_led_blink = 0;
+int	sparc_vsyncblank = 0;
 
 /*
  * safepri is a safe priority for sleep to set for a spin-wait
@@ -431,7 +432,7 @@ allocsys(v)
 	 * Allocate 1/2 as many swap buffer headers as file i/o buffers.
 	 */
 	if (bufpages == 0)
-		bufpages = (physmem / ((100/BUFCACHEPERCENT) / CLSIZE));
+		bufpages = physmem * BUFCACHEPERCENT / (100 * CLSIZE);
 	if (nbuf == 0) {
 		nbuf = bufpages;
 		if (nbuf < 16)
@@ -545,14 +546,19 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	struct proc *p;
 {
 #if (NAUXREG > 0) || (NLED > 0)
-	int ret, oldval;
+	int oldval;
 #endif
+	int ret;
 
 	/* all sysctl names are this level are terminal */
 	if (namelen != 1)
 		return (ENOTDIR);	/* overloaded */
 
 	switch (name[0]) {
+	case CPU_VSYNCBLANK:
+		ret = sysctl_int(oldp, oldlenp, newp, newlen,
+		    &sparc_vsyncblank);
+		return (ret);
 	case CPU_LED_BLINK:
 #if (NLED > 0) || (NAUXREG > 0) || (NSCF > 0)
 		oldval = sparc_led_blink;
@@ -819,18 +825,16 @@ boot(howto)
 		if (howto & RB_POWERDOWN) {
 #if NPOWER > 0 || NTCTRL >0
 			printf("attempting to power down...\n");
-#endif
 #if NPOWER > 0
 			powerdown();
 #endif
 #if NTCTRL > 0
 			tadpole_powerdown();
 #endif
-#if NPOWER > 0 || NTCTRL >0
 			printf("WARNING: powerdown failed!\n");
-#endif
+#endif /* NPOWER || MTCTRL */
 		}
-#endif
+#endif /* SUN4M */
 		printf("halted\n\n");
 		romhalt();
 	}

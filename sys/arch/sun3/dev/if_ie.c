@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11 1999/05/13 15:44:49 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/dev/Attic/if_ie.c,v 1.11.4.1 2001/05/14 21:37:26 niklas Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.15 1996/10/30 00:24:33 gwr Exp $ */
 
 /*-
@@ -147,9 +147,9 @@
 #include <machine/cpu.h>
 #include <machine/pmap.h>
 
-#include "i82586.h"
-#include "if_iereg.h"
-#include "if_ievar.h"
+#include <sparc/dev/i82586.h>
+#include <sun3/dev/if_iereg.h>
+#include <sun3/dev/if_ievar.h>
 
 static struct mbuf *last_not_for_us;
 
@@ -325,9 +325,6 @@ ie_attach(sc)
 	/* Attach the interface. */
 	if_attach(ifp);
 	ether_ifattach(ifp);
-#if NBPFILTER > 0
-	bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
-#endif
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mainbus.c,v 1.2.8.1 2000/03/24 09:08:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mainbus.c,v 1.2.8.2 2001/05/14 21:36:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.
@@ -45,7 +45,7 @@ static void	mbattach __P((struct device *, struct device *, void *));
 static int	mbprint __P((void *, const char *));
 
 struct cfattach mainbus_ca = {
-	sizeof(struct device), mbmatch, mbattach
+	sizeof(struct mainbus_softc), mbmatch, mbattach
 };
 struct cfdriver mainbus_cd = {
 	NULL, "mainbus", DV_DULL, NULL, 0
@@ -119,10 +119,11 @@ mbattach(parent, self, aux)
 		int node;
 		for (node = OF_child(OF_peer(0)); node; node= OF_peer(node)) {
 			bzero (name, sizeof(name));
-			if (OF_getprop(node, "name", name, sizeof(name)) <= 0)
+			if (OF_getprop(node, "device_type", name, sizeof(name)) <= 0)
 			{
-				printf ("name not found on node %x\n");
-				continue;
+				if (OF_getprop(node, "name", name, sizeof(name)) <= 0)
+					printf ("name not found on node %x\n");
+					continue;
 			}
 			if (strcmp(name, "pci") == 0) {
 				nca.ca_name = "mpcpcibr";

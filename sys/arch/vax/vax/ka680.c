@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka680.c,v 1.4 2001/04/01 16:51:40 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka680.c,v 1.4.4.1 2001/05/14 21:39:01 niklas Exp $	*/
 /*	$NetBSD: ka680.c,v 1.3 2001/01/28 21:01:53 ragge Exp $	*/
 /*
  * Copyright (c) 2000 Ludd, University of Lule}, Sweden.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dlreg.h,v 1.1 2000/04/27 03:14:47 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dlreg.h,v 1.1.8.1 2001/05/14 21:38:19 niklas Exp $	*/
 /*	$NetBSD: dlreg.h,v 1.3 1999/05/27 16:02:04 ragge Exp $	*/
 /*
  * Copyright (c) 1997  Ben Harris.  All rights reserved.

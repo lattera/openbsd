@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1 2000/04/27 03:14:49 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/uba.c,v 1.1.8.1 2001/05/14 21:38:29 niklas Exp $	*/
 /*	$NetBSD: uba.c,v 1.49 2000/01/24 02:40:30 matt Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/asc_vsbus.c,v 1.3 2001/02/11 06:34:37 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/asc_vsbus.c,v 1.3.4.1 2001/05/14 21:39:15 niklas Exp $	*/
 /*	$NetBSD: asc_vsbus.c,v 1.20 2000/07/26 21:50:48 matt Exp $	*/
 
 /*-

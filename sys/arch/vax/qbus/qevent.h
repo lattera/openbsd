@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/qevent.h,v 1.1 2000/04/27 03:14:48 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/qevent.h,v 1.1.8.1 2001/05/14 21:38:27 niklas Exp $	*/
 /*	$NetBSD: qevent.h,v 1.1 1998/03/21 10:02:39 ragge Exp $	*/
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.

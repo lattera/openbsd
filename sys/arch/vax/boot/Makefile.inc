@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/vax/boot/Attic/Makefile.inc,v 1.2 2000/10/04 04:03:10 bjc Exp $
+#	$OpenBSD: src/sys/arch/vax/boot/Attic/Makefile.inc,v 1.2.6.1 2001/05/14 21:37:39 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.2 1999/07/18 05:55:45 abs Exp $
 
 XXRPB=0x354240

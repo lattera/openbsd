@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vsa/vsbus_dma.c,v 1.2 2001/02/06 04:27:46 hugh Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vsa/vsbus_dma.c,v 1.2.4.1 2001/05/14 21:39:23 niklas Exp $ */
 /* $NetBSD: vsbus_dma.c,v 1.7 2000/07/26 21:50:49 matt Exp $ */
 
 /*-

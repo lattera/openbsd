@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ctu.c,v 1.1 2000/04/27 02:26:25 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ctu.c,v 1.1.8.1 2001/05/14 21:37:44 niklas Exp $ */
 /*	$NetBSD: ctu.c,v 1.1 1996/02/17 18:23:20 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/ka670.c,v 1.1 2000/04/27 01:10:10 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/ka670.c,v 1.1.8.1 2001/05/14 21:39:01 niklas Exp $	*/
 /*	$NetBSD: ka670.c,v 1.4 2000/03/13 23:52:35 soren Exp $	*/
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.

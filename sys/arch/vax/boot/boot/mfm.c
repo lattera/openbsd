@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/mfm.c,v 1.1 2000/04/27 02:26:25 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/mfm.c,v 1.1.8.1 2001/05/14 21:37:47 niklas Exp $	*/
 /*	$NetBSD: mfm.c,v 1.2 1997/03/15 13:04:28 ragge Exp $	*/
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.

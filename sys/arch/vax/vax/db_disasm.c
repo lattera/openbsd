@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7 1997/05/29 00:05:15 niklas Exp $ */
-/*	$NetBSD: db_disasm.c,v 1.9 1996/10/13 03:35:38 christos Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/db_disasm.c,v 1.7.12.1 2001/05/14 21:38:48 niklas Exp $ */
+/*	$NetBSD: db_disasm.c,v 1.10 1998/04/13 12:10:27 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
  * All rights reserved.
@@ -38,10 +38,13 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/reboot.h>
+#include <sys/systm.h>
 
 #include <machine/db_machdep.h>
 #include <ddb/db_sym.h>
 #include <ddb/db_variables.h>
+#include <ddb/db_interface.h>
+#include <ddb/db_output.h>
 
 #include <vax/vax/db_disasm.h>
 
@@ -342,7 +345,7 @@ get_operand(ib, size)
 		add_str(ib, my_db_regs[reg].name);
 		add_char(ib, ')');
 		if (reg == 0x0F) {	/* pc is not allowed in this mode */
-			err_print("autodecrement not allowd for PC.\n");
+			err_print("autodecrement not allowed for PC.\n");
 		}
 		break;
 
@@ -481,7 +484,7 @@ add_str(ib, s)
 	inst_buffer    *ib;
 	char	       *s;
 {
-	while (*ib->curp++ = *s++);
+	while ((*ib->curp++ = *s++));
 	*--ib->curp = '\0';
 }
 

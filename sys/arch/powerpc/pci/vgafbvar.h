@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafbvar.h,v 1.2 2000/09/19 05:32:22 rahnds Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafbvar.h,v 1.2.6.1 2001/05/14 21:36:53 niklas Exp $	*/
 /*	$NetBSD: vgavar.h,v 1.2 1996/11/23 06:06:43 cgd Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/clock.c,v 1.5.2.1 2000/03/24 09:08:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/clock.c,v 1.5.2.2 2001/05/14 21:36:54 niklas Exp $	*/
 /*	$NetBSD: clock.c,v 1.1 1996/09/30 16:34:40 ws Exp $	*/
 
 /*
@@ -36,6 +36,7 @@
 #include <sys/kernel.h>
 
 #include <machine/pio.h>
+#include <machine/intr.h>
 
 #if 0
 #include <powerpc/pci/mpc106reg.h>
@@ -116,7 +117,13 @@ inittodr(base)
 		if (!badbase)
 			resettodr();
 	} else {
-		int deltat = time.tv_sec - base;
+		int deltat;
+
+		time.tv_sec += tz.tz_minuteswest * 60;
+		if (tz.tz_dsttime)
+			time.tv_sec -= 3600;
+
+		deltat = time.tv_sec - base;
 
 		if (deltat < 0)
 			deltat = -deltat;
@@ -185,6 +192,8 @@ decr_intr(frame)
 	 */
 	if (!ticks_per_intr)
 		return;
+
+	intrcnt[PPC_CLK_IRQ]++;
 
 	/*
 	 * Based on the actual time delay since the last decrementer reload,
@@ -302,7 +311,7 @@ microtime(tvp)
 	asm volatile ("mtmsr %0" :: "r"(msr));
 	ticks /= 1000;
 	tvp->tv_usec += ticks;
-	while (tvp->tv_usec > 1000000) {
+	while (tvp->tv_usec >= 1000000) {
 		tvp->tv_usec -= 1000000;
 		tvp->tv_sec++;
 	}

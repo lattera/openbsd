@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.10.12.1 2000/03/24 09:08:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/sun3_startup.c,v 1.10.12.2 2001/05/14 21:37:36 niklas Exp $	*/
 /*	$NetBSD: sun3_startup.c,v 1.55 1996/11/20 18:57:38 gwr Exp $	*/
 
 /*-
@@ -61,12 +61,16 @@
 #include "vector.h"
 #include "interreg.h"
 
+#include "ksyms.h"
+
 /* This is defined in locore.s */
 extern char kernel_text[];
 
 /* These are defined by the linker */
 extern char etext[], edata[], end[];
-char *esym;	/* DDB */
+#if (defined(DDB) || NKSYMS > 0) && !defined(SYMTAB_SPACE)
+char *esym;
+#endif
 
 /*
  * Globals shared with the pmap code.
@@ -109,7 +113,9 @@ static void sun3_mode_normal __P((void));
 static void sun3_mon_init __P((vm_offset_t sva, vm_offset_t eva, int keep));
 static void sun3_monitor_hooks __P((void));
 static void sun3_context_equiv __P((void));
+#if (defined(DDB) || NKSYMS > 0) && !defined(SYMTAB_SPACE)
 static void sun3_save_symtab __P((struct exec *kehp));
+#endif
 static void sun3_verify_hardware __P((void));
 static void sun3_vm_init __P((struct exec *kehp));
 static void tracedump __P((int));
@@ -281,7 +287,7 @@ int keep;	/* true: steal, false: clear */
 	}
 }
 
-#if defined(DDB) && !defined(SYMTAB_SPACE)
+#if (defined(DDB) || NKSYMS > 0) && !defined(SYMTAB_SPACE)
 /*
  * Preserve DDB symbols and strings by setting esym.
  */
@@ -372,12 +378,14 @@ sun3_vm_init(kehp)
 	 * This is just page-aligned for now, so we can allocate
 	 * some special-purpose pages before rounding to a segment.
 	 */
+#if (defined(DDB) || NKSYMS > 0) && !defined(SYMTAB_SPACE)
 	esym = end;
-#if defined(DDB) && !defined(SYMTAB_SPACE)
 	/* This will advance esym past the symbols. */
 	sun3_save_symtab(kehp);
-#endif
 	virtual_avail = m68k_round_page(esym);
+#else
+	virtual_avail = m68k_round_page(end);
+#endif
 	virtual_end = VM_MAX_KERNEL_ADDRESS;
 
 	/*
@@ -413,7 +421,7 @@ sun3_vm_init(kehp)
 	pte |= PG_NC;
 	set_pte(va, pte);
 	/* offset by half a page to avoid PROM scribbles */
-	msgbufp = (struct msgbuf *)(va + 0x1000);
+	msgbufp = (struct msgbuf *)(va + (NBPG >> 1));
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -821,6 +829,12 @@ sun3_monitor_hooks()
 			switch (*p) {
 			case 'a':
 				boothowto |= RB_ASKNAME;
+				break;
+			case 'b':
+				boothowto |= RB_HALT;
+				break;
+			case 'c':
+				boothowto |= RB_CONFIG;
 				break;
 			case 's':
 				boothowto |= RB_SINGLE;

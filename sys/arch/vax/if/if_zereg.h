@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/Attic/if_zereg.h,v 1.1 2000/04/27 03:14:43 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/Attic/if_zereg.h,v 1.1.8.1 2001/05/14 21:37:55 niklas Exp $	*/
 /*	$NetBSD: if_zereg.h,v 1.1 1998/07/01 10:52:10 ragge Exp $	*/
 /*
  * Copyright (c) 1988 Regents of the University of California.

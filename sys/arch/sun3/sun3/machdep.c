@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.1 2000/03/24 09:08:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/machdep.c,v 1.24.2.2 2001/05/14 21:37:35 niklas Exp $	*/
 /*	$NetBSD: machdep.c,v 1.77 1996/10/13 03:47:51 christos Exp $	*/
 
 /*
@@ -187,7 +187,7 @@ allocsys(v)
 #ifdef REAL_CLISTS
 	valloc(cfree, struct cblock, nclist);
 #endif
-	valloc(timeouts, struct timeoutout, ntimeout);
+	valloc(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -218,8 +218,8 @@ allocsys(v)
 	 */
 	if (bufpages == 0) {
 		/* We always have more than 2MB of memory. */
-		bufpages = (btoc(2 * 1024 * 1024) + physmem) /
-			((100/BUFCACHEPERCENT) * CLSIZE);
+		bufpages = (btoc(2 * 1024 * 1024) + physmem) *
+		    BUFCACHEPERCENT / (100 * CLSIZE);
 	}
 	if (nbuf == 0) {
 		nbuf = bufpages;

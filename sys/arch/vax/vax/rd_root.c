@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/wgrisc/include/Attic/kcore.h,v 1.1.1.1 1997/02/06 16:02:44 pefo Exp $	*/
-/*	$NetBSD: kcore.h,v 1.1 1996/03/10 21:55:18 leo Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/rd_root.c,v 1.2.2.1 2001/05/14 21:39:08 niklas Exp $	*/
+/*	$NetBSD: rd_root.c,v 1.2 1996/03/27 16:38:33 perry Exp $	*/
 
 /*
- * Copyright (c) 1996 Leo Weppelman.
+ * Copyright (c) 1995 Gordon W. Ross
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,11 +13,8 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Leo Weppelman.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -31,15 +28,50 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MIPS_KCORE_H_
-#define	_MIPS_KCORE_H_
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/reboot.h>
 
-#define	NPHYS_RAM_SEGS	8
+#include <dev/ramdisk.h>
 
-typedef struct cpu_kcore_hdr {
-	vm_offset_t	kernel_pa;	/* Phys. address of kernel VA 0	*/
-	int		mmutype;
-	phys_ram_seg_t  ram_segs[NPHYS_RAM_SEGS];
-} cpu_kcore_hdr_t;
+extern int boothowto;
 
-#endif /* _MIPS_KCORE_H_ */
+#ifndef MINIROOTSIZE
+#define MINIROOTSIZE 4096
+#endif
+
+#define ROOTBYTES (MINIROOTSIZE << DEV_BSHIFT)
+
+/*
+ * This array will be patched to contain a file-system image.
+ * See the program:  src/distrib/sun3/common/rdsetroot.c
+ */
+int rd_root_size = ROOTBYTES;
+char rd_root_image[ROOTBYTES] = "|This is the root ramdisk!\n";
+
+/*
+ * This is called during autoconfig.
+ */
+void
+rd_attach_hook(unit, rd)
+	int unit;
+	struct rd_conf *rd;
+{
+	if (unit == 0) {
+		/* Setup root ramdisk */
+		rd->rd_addr = (caddr_t) rd_root_image;
+		rd->rd_size = (size_t)  rd_root_size;
+		rd->rd_type = RD_KMEM_FIXED;
+		printf("rd%d: fixed, %d blocks\n", unit, MINIROOTSIZE);
+	}
+}
+
+/*
+ * This is called during open (i.e. mountroot)
+ */
+void
+rd_open_hook(unit, rd)
+	int unit;
+	struct rd_conf *rd;
+{
+}

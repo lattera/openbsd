@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb.c,v 1.9 2001/02/28 19:12:40 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/vgafb.c,v 1.9.4.1 2001/05/14 21:36:52 niklas Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*

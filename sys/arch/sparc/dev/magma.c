@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sparc/dev/magma.c,v 1.4.4.1 2001/05/14 21:37:07 niklas Exp $	*/
 /*
  * magma.c
  *
@@ -1408,6 +1409,9 @@ int port;
 			mp->mp_cd1190 = &sc->ms_cd1190[port];
 		else
 			mp->mp_cd1400 = &sc->ms_cd1400[0];
+
+		timeout_set(&mp->mp_timeout_tmo, mbpp_timeout, mp);
+		timeout_set(&mp->mp_start_tmo, mbpp_start, mp);
 	}
 
 	ms->ms_nports = port;
@@ -1597,7 +1601,7 @@ int gotdata = 0;
 	 */
 	if( mp->mp_timeout > 0 ) {
 		SET(mp->mp_flags, MBPPF_TIMEOUT);
-		timeout(mbpp_timeout, mp, mp->mp_timeout);
+		timeout_add(&mp->mp_timeout_tmo, mp->mp_timeout);
 	}
 
 	len = cnt = 0;
@@ -1641,9 +1645,9 @@ again:		/* goto bad */
 		 * poll delay?
 		 */
 		if( mp->mp_delay > 0 ) {
-			s = splsoftclock();
+			s = spltty();	/* XXX */
 			SET(mp->mp_flags, MBPPF_DELAY);
-			timeout(mbpp_start, mp, mp->mp_delay);
+			timeout_add(&mp->mp_start_tmo, mp->mp_delay);
 			error = tsleep(mp, PCATCH | PZERO, "mbppdelay", 0);
 			splx(s);
 			if( error ) break;
@@ -1663,13 +1667,13 @@ again:		/* goto bad */
 	/*
 	 * clear timeouts
 	 */
-	s = splsoftclock();
+	s = spltty();	/* XXX */
 	if( ISSET(mp->mp_flags, MBPPF_TIMEOUT) ) {
-		untimeout(mbpp_timeout, mp);
+		timeout_del(&mp->mp_timeout_tmo);
 		CLR(mp->mp_flags, MBPPF_TIMEOUT);
 	}
 	if( ISSET(mp->mp_flags, MBPPF_DELAY) ) {
-		untimeout(mbpp_start, mp);
+		timeout_del(&mp->mp_start_tmo);
 		CLR(mp->mp_flags, MBPPF_DELAY);
 	}
 	splx(s);

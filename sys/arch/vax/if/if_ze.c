@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/if/if_ze.c,v 1.1 2000/04/27 03:14:43 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/if/if_ze.c,v 1.1.8.1 2001/05/14 21:37:55 niklas Exp $	*/
 /*      $NetBSD: if_ze.c,v 1.3 2000/01/24 02:54:03 matt Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden. All rights reserved.

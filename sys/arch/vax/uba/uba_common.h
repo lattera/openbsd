@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/uba_common.h,v 1.1 2000/04/27 03:14:51 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/uba_common.h,v 1.1.8.1 2001/05/14 21:38:37 niklas Exp $	*/
 /*	$NetBSD: uba_common.h,v 1.2 1999/06/21 16:23:01 ragge Exp $ */
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.

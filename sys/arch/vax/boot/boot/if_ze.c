@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_ze.c,v 1.2 2001/04/01 17:19:48 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_ze.c,v 1.2.4.1 2001/05/14 21:37:46 niklas Exp $	*/
 /*	$NetBSD: if_ze.c,v 1.5 1999/08/23 19:09:27 ragge Exp $	*/
 /*
  * Copyright (c) 1998 James R. Maynard III.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.1 2000/03/02 07:04:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/autoconf.c,v 1.33.2.2 2001/05/14 21:37:14 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.73 1997/07/29 09:41:53 fair Exp $ */
 
 /*
@@ -457,6 +457,10 @@ bootpath_build()
 			boothowto |= RB_DFLTROOT;
 			break;
 
+		case 'c':
+			boothowto |= RB_CONFIG;
+			break;
+
 		case 'd':	/* kgdb - always on zs	XXX */
 #ifdef KGDB
 			boothowto |= RB_KDB;	/* XXX unused */
@@ -793,6 +797,14 @@ configure()
 
 	/* build the bootpath */
 	bootpath_build();
+
+	if (boothowto & RB_CONFIG) {
+#ifdef BOOT_CONFIG
+		user_config();
+#else
+		printf("kernel does not support -c; continuing..\n");
+#endif
+	}
 
 #if defined(SUN4)
 	if (CPU_ISSUN4) {
@@ -1305,23 +1317,21 @@ findzs(zs)
 
 #if defined(SUN4C) || defined(SUN4M)
 	if (CPU_ISSUN4COR4M) {
-		register int node, addr;
+		register int node;
 
 		node = firstchild(findroot());
 		if (CPU_ISSUN4M) { /* zs is in "obio" tree on Sun4M */
 			node = findnode(node, "obio");
 			if (!node)
-			    panic("findzs: no obio node");
+				panic("findzs: no obio node");
 			node = firstchild(node);
 		}
 		while ((node = findnode(node, "zs")) != 0) {
-			if (getpropint(node, "slave", -1) == zs) {
-				if ((addr = getpropint(node, "address", 0)) == 0)
-					panic("findzs: zs%d not mapped by PROM", zs);
-				return ((void *)addr);
-			}
+			if (getpropint(node, "slave", -1) == zs)
+				return ((void *)getpropint(node, "address", 0));
 			node = nextsibling(node);
 		}
+		return (NULL);
 	}
 #endif
 	panic("findzs: cannot find zs%d", zs);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba_cmi.c,v 1.1 2000/04/27 03:14:51 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/uba_cmi.c,v 1.1.8.1 2001/05/14 21:38:37 niklas Exp $	*/
 /*	$NetBSD: uba_cmi.c,v 1.2 1999/08/14 11:31:48 ragge Exp $	   */
 /*
  * Copyright (c) 1996 Jonathan Stone.

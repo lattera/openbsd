@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15 1999/02/28 19:12:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/dev/esp.c,v 1.15.6.1 2001/05/14 21:37:04 niklas Exp $	*/
 /*	$NetBSD: esp.c,v 1.69 1997/08/27 11:24:18 bouyer Exp $	*/
 
 /*
@@ -134,10 +134,6 @@ int	espmatch	__P((struct device *, void *, void *));
 /* Linkup to the rest of the kernel */
 struct cfattach esp_ca = {
 	sizeof(struct esp_softc), espmatch, espattach
-};
-
-struct cfdriver esp_cd = {
-	NULL, "esp", DV_DULL
 };
 
 struct scsi_adapter esp_switch = {

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/bootxx.c,v 1.2 2000/10/04 04:16:40 bjc Exp $ */
+/* $OpenBSD: src/sys/arch/vax/boot/xxboot/Attic/bootxx.c,v 1.2.6.1 2001/05/14 21:37:50 niklas Exp $ */
 /* $NetBSD: bootxx.c,v 1.2 1999/10/23 14:40:38 ragge Exp $ */
 /*-
  * Copyright (c) 1982, 1986 The Regents of the University of California.

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/trap.h,v 1.1.1.1.14.1 2001/05/14 21:36:41 niklas Exp $	*/
 /*	$NetBSD: trap.h,v 1.1 1996/09/30 16:34:35 ws Exp $	*/
 
 /*

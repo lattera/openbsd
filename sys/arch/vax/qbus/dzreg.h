@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dzreg.h,v 1.1 2000/04/27 03:14:47 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dzreg.h,v 1.1.8.1 2001/05/14 21:38:22 niklas Exp $	*/
 /*	$NetBSD: dzreg.h,v 1.4 1999/05/27 16:03:13 ragge Exp $ */
 /*
  * Copyright (c) 1996  Ken C. Wellsch.  All rights reserved.

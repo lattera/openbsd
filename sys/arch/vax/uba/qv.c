@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.2 1997/05/29 00:05:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/uba/Attic/qv.c,v 1.2.12.1 2001/05/14 21:38:35 niklas Exp $	*/
 /*	$NetBSD: qv.c,v 1.2 1996/09/02 06:44:28 mycroft Exp $	*/
 
 /*-
@@ -220,7 +220,7 @@ struct qv_info qv_scn_defaults[] = {
  * Screen controller initialization parameters. The definations and use
  * of these parameters can be found in the Motorola 68045 crtc specs. In
  * essence they set the display parameters for the chip. The first set is
- * for the 15" screen and the second is for the 19" seperate sync. There
+ * for the 15" screen and the second is for the 19" separate sync. There
  * is also a third set for a 19" composite sync monitor which we have not
  * tested and which is not supported.
  */
@@ -269,7 +269,7 @@ int	qv_ipl_lo = 1;			/* IPL low flag			*/
 int	mouseon = 0;			/* mouse channel is enabled when 1*/
 struct proc *qvrsel;			/* process waiting for select */
 
-int	qvstart(), qvputc(),  ttrstrt();
+int	qvstart(), qvputc();
 
 /*
  * Keyboard translation and font tables

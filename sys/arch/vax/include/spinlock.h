@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/spinlock.h,v 1.1 2000/04/26 06:08:27 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/spinlock.h,v 1.1.8.1 2001/05/14 21:38:06 niklas Exp $	*/
 
 #ifndef _MACHINE_SPINLOCK_H_
 #define _MACHINE_SPINLOCK_H_

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ra.c,v 1.1 2000/04/27 02:26:25 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/ra.c,v 1.1.8.1 2001/05/14 21:37:47 niklas Exp $ */
 /*	$NetBSD: ra.c,v 1.4 1999/08/07 11:19:04 ragge Exp $ */
 /*
  * Copyright (c) 1995 Ludd, University of Lule}, Sweden.

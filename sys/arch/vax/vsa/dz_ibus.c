@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4 2001/02/11 06:34:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/dz_ibus.c,v 1.4.4.1 2001/05/14 21:39:17 niklas Exp $	*/
 /*	$NetBSD: dz_ibus.c,v 1.15 1999/08/27 17:50:42 ragge Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.

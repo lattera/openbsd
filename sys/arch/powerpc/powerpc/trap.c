@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.1 2000/03/24 09:08:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.2 2001/05/14 21:36:58 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -33,6 +33,7 @@
  */
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/reboot.h>
 #include <sys/syscall.h>
 #include <sys/systm.h>
@@ -180,7 +181,9 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 			{
 				break;
 			}
+#if 0
 printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
+#endif
 /*
  * keep this for later in case we want it later.
 */
@@ -206,7 +209,9 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 				break;
 			}
 		}
+#if 0
 printf("isi iar %x\n", frame->srr0);
+#endif
 	case EXC_MCHK|EXC_USER:
 /* XXX Likely that returning from this trap is bogus... */
 /* XXX Have to make sure that sigreturn does the right thing. */
@@ -270,7 +275,7 @@ printf("isi iar %x\n", frame->srr0);
 #ifdef	KTRACE
 					/* Can't get all the arguments! */
 					if (KTRPOINT(p, KTR_SYSCALL))
-						ktrsyscall(p->p_tracep, code,
+						ktrsyscall(p, code,
 							   argsize, args);
 #endif
 					goto syscall_bad;
@@ -279,7 +284,7 @@ printf("isi iar %x\n", frame->srr0);
 			}
 #ifdef	KTRACE
 			if (KTRPOINT(p, KTR_SYSCALL))
-				ktrsyscall(p->p_tracep, code, argsize, params);
+				ktrsyscall(p, code, argsize, params);
 #endif
 			rval[0] = 0;
 			rval[1] = frame->fixreg[FIRSTARG + 1];
@@ -311,6 +316,7 @@ syscall_bad:
 					error = p->p_emul->e_errno[error];
 				frame->fixreg[0] = error;
 				frame->fixreg[FIRSTARG] = error;
+				frame->fixreg[FIRSTARG + 1] = rval[1];
 				frame->cr |= 0x10000000;
 				break;
 			}
@@ -319,7 +325,7 @@ syscall_bad:
 #endif  
 #ifdef	KTRACE
 			if (KTRPOINT(p, KTR_SYSRET))
-				ktrsysret(p->p_tracep, code, error, rval[0]);
+				ktrsysret(p, code, error, rval[0]);
 #endif
 		}
 		break;
@@ -331,11 +337,14 @@ syscall_bad:
 		enable_fpu(p);
 		break;
 
+	case EXC_ALI|EXC_USER:
+		/* alignment exception, kill process */
+		trapsignal(p, SIGSEGV, VM_PROT_EXECUTE, SEGV_MAPERR, sv);
+		break;
+
 	default:
 	
 brain_damage:
-		printf("trap type %x at %x lr %x\n",
-			type, frame->srr0, frame->lr);
 /*
 mpc_print_pci_stat();
 */
@@ -344,7 +353,8 @@ mpc_print_pci_stat();
 		/* set up registers */
 		db_save_regs(frame);
 #endif
-		panic("trap");
+		panic ("trap type %x at %x lr %x\n",
+			type, frame->srr0, frame->lr);
 
 
 	case EXC_PGM|EXC_USER:
@@ -384,10 +394,12 @@ mpc_print_pci_stat();
 			errstr[errnum] = "previous address";
 			errnum++;
 		}
+#if 0
 printf("pgm iar %x srr1 %x\n", frame->srr0, frame->srr1);
 for (i = 0; i < errnum; i++) {
 	printf("\t[%s]\n", errstr[i]);
 }
+#endif
 		sv.sival_int = frame->srr0;
 		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
 		break;
@@ -397,7 +409,7 @@ for (i = 0; i < errnum; i++) {
 		db_save_regs(frame);
 		db_trap(T_BREAKPOINT);
 #else
-		panic("trap");
+		panic("trap EXC_PGM");
 #endif
 		break;
 
@@ -479,7 +491,7 @@ child_return(p)
 	tf->srr1 &= ~PSL_FP;	/* Disable FPU, as we can't be fpuproc */
 #ifdef	KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
-		ktrsysret(p->p_tracep, SYS_fork, 0, 0);
+		ktrsysret(p, SYS_fork, 0, 0);
 #endif
 	/* Profiling?							XXX */
 	curpriority = p->p_priority;

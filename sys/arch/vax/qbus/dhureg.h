@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/qbus/dhureg.h,v 1.1 2000/04/27 03:14:47 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/qbus/dhureg.h,v 1.1.8.1 2001/05/14 21:38:17 niklas Exp $	*/
 /*	$NetBSD: dhureg.h,v 1.4 1999/05/28 20:17:29 ragge Exp $	*/
 /*
  * Copyright (c) 1996  Ken C. Wellsch.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cmi.c,v 1.1 2000/04/27 01:10:10 bjc Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/cmi.c,v 1.1.8.1 2001/05/14 21:38:44 niklas Exp $	*/
 /*	$NetBSD: cmi.c,v 1.2 1999/08/14 11:30:48 ragge Exp $ */
 /*
  * Copyright (c) 1999 Ludd, University of Lule}, Sweden.

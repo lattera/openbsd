@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/smg.c,v 1.2 2001/02/11 06:34:38 hugh Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vsa/smg.c,v 1.2.4.1 2001/05/14 21:39:22 niklas Exp $	*/
 /*	$NetBSD: smg.c,v 1.21 2000/03/23 06:46:44 thorpej Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.

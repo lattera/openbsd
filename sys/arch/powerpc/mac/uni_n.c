@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/uni_n.c,v 1.2 2001/03/14 03:24:54 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/uni_n.c,v 1.2.4.1 2001/05/14 21:36:50 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Dale Rahn. All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.5 1997/01/16 04:04:13 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/arch/sun3/sun3/Attic/cache.c,v 1.5.14.1 2001/05/14 21:37:33 niklas Exp $	*/
 /*	$NetBSD: cache.c,v 1.5 1996/11/20 18:57:24 gwr Exp $	*/
 
 /*-
@@ -57,7 +57,6 @@
 #include <machine/pte.h>
 #include <machine/control.h>
 #include <machine/machdep.h>
-#include <machine/vmparam.h>
 
 #define	CACHE_LINE	16	/* bytes */
 #define	VAC_FLUSH_INCR	512	/* bytes */

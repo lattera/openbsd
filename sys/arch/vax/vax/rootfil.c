@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/rootfil.c,v 1.7 1997/09/27 17:04:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/rootfil.c,v 1.7.12.1 2001/05/14 21:39:09 niklas Exp $	*/
 /*	$NetBSD: rootfil.c,v 1.14 1996/10/13 03:35:58 christos Exp $	*/
 
 /*
@@ -56,20 +56,22 @@
 #include <machine/macros.h>
 #include <machine/nexus.h>
 #include <machine/sid.h>
+#include <machine/disklabel.h>
 #include <machine/pte.h>
 #include <machine/cpu.h>
+#include <machine/rpb.h>
 
 #include "hp.h"
 #include "ra.h"
+#include "sd.h"
+#include "asc.h"
 
-#define DOSWAP                  /* Change swdevt, argdev, and dumpdev too */
-#ifdef MAJA
-u_long  bootdev;                /* should be dev_t, but not until 32 bits */
-#endif
 extern dev_t rootdev, dumpdev;
 
-#define PARTITIONMASK   0x7
-#define PARTITIONSHIFT  3
+struct  ngcconf {
+        struct  cfdriver *ng_cf;
+        dev_t   ng_root;
+};
 
 /*
  * Attempt to find the device from which we were booted.
@@ -79,17 +81,29 @@ extern dev_t rootdev, dumpdev;
 void
 setroot()
 {
-        int  majdev, mindev, unit, part, controller, adaptor;
-        dev_t temp = 0, orootdev;
-        struct swdevt *swp;
+	int  majdev, mindev, unit, part, controller, adaptor;
+	dev_t temp = 0, orootdev;
+	struct ngcconf *nc;
+	extern struct ngcconf ngcconf[];
 	extern int boothowto;
+	char name[128];
 	char *uname;
 
-        if (boothowto & RB_DFLTROOT ||
-            (bootdev & B_MAGICMASK) != (u_long)B_DEVMAGIC)
-                return;
-        majdev = B_TYPE(bootdev);
-        if (majdev >= nblkdev)
+	if ((bootdev & B_MAGICMASK) != (u_long)B_DEVMAGIC) {
+		printf("RPB data looks bogus, prompting user\n");
+		boothowto |= RB_ASKNAME;
+	}
+
+	if (((boothowto & RB_DFLTROOT) || (rootdev != NODEV))
+	    && !(boothowto & RB_ASKNAME))
+		return;
+
+	if (boothowto & RB_ASKNAME) {
+		printf("root device selection is not currently supported\n");
+	}
+
+        majdev = bdevtomaj(B_TYPE(bootdev));
+        if (majdev >= nblkdev || majdev == -1)
                 return;
         adaptor = B_ADAPTOR(bootdev);
         controller = B_CONTROLLER(bootdev);
@@ -111,43 +125,32 @@ setroot()
 			return;
 		break;
 
+	case 20:	/* SCSI disk */
+#if NASC || NSD
+		if((mindev = sd_getdev(adaptor, controller, part, unit, &uname)) < 0)
+#endif
+			return;
+		break;
+
 	default:
 		return;
 	}
 
-        mindev = (mindev << PARTITIONSHIFT) + part;
+	mindev *= MAXPARTITIONS;
+	mindev += part;
         orootdev = rootdev;
         rootdev = makedev(majdev, mindev);
+
+	swdevt[0].sw_dev = dumpdev = makedev(major(rootdev), 1);
+
         /*
          * If the original rootdev is the same as the one
          * just calculated, don't need to adjust the swap configuration.
          */
         if (rootdev == orootdev)
-                return;
-
-        printf("Changing root device to %s%c\n", uname, part + 'a');
-
-#ifdef DOSWAP
-        mindev &= ~PARTITIONMASK;
-        for (swp = swdevt; swp->sw_dev; swp++) {
-                if (majdev == major(swp->sw_dev) &&
-                    mindev == (minor(swp->sw_dev) & ~PARTITIONMASK)) {
-                        temp = swdevt[0].sw_dev;
-                        swdevt[0].sw_dev = swp->sw_dev;
-                        swp->sw_dev = temp;
-                        break;
-                }
-        }
-        if (swp->sw_dev == 0)
-                return;
-
-        /*
-         * If argdev and dumpdev were the same as the old primary swap
-         * device, move them to the new primary swap device.
-         */
-        if (temp == dumpdev)
-                dumpdev = swdevt[0].sw_dev;
-#endif
+		printf("Setting root device to %s%c\n", uname, part + 'a');
+	else
+		printf("Changing root device to %s%c\n", uname, part + 'a');
 }
 
 /*

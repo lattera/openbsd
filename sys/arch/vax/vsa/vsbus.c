@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3 1997/09/10 12:08:37 maja Exp $ */
-/*	$NetBSD: vsbus.c,v 1.6 1997/03/22 23:05:31 ragge Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vsa/vsbus.c,v 1.3.12.1 2001/05/14 21:39:22 niklas Exp $ */
+/*	$NetBSD: vsbus.c,v 1.29 2000/06/29 07:14:37 mrg Exp $ */
 /*
- * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
+ * Copyright (c) 1996, 1999 Ludd, University of Lule}, Sweden.
  * All rights reserved.
  *
  * This code is derived from software contributed to Ludd by Bertram Barth.
@@ -48,6 +48,11 @@
 #include <sys/syslog.h>
 #include <sys/stat.h>
 
+#include <vm/vm.h>
+#include <vm/vm_kern.h>
+
+#define _VAX_BUS_DMA_PRIVATE
+#include <machine/bus.h>
 #include <machine/pte.h>
 #include <machine/sid.h>
 #include <machine/scb.h>
@@ -57,616 +62,351 @@
 
 #include <machine/uvax.h>
 #include <machine/ka410.h>
+#include <machine/ka420.h>
 #include <machine/ka43.h>
 
 #include <machine/vsbus.h>
 
-#define trace(x)
-#define debug(x)
-
-int	vsbus_match	__P((struct device *, void *, void *));
+int	vsbus_match	__P((struct device *, struct cfdata *, void *));
 void	vsbus_attach	__P((struct device *, struct device *, void *));
 int	vsbus_print	__P((void *, const char *));
+int	vsbus_search	__P((struct device *, void *, void *));
 
 void	ka410_attach	__P((struct device *, struct device *, void *));
 void	ka43_attach	__P((struct device *, struct device *, void *));
 
-struct	cfdriver vsbus_cd = { 
-	NULL, "vsbus", DV_DULL 
+static struct vax_bus_dma_tag vsbus_bus_dma_tag = {
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	_bus_dmamap_create,
+	_bus_dmamap_destroy,
+	_bus_dmamap_load,
+	_bus_dmamap_load_mbuf,
+	_bus_dmamap_load_uio,
+	_bus_dmamap_load_raw,
+	_bus_dmamap_unload,
+	_bus_dmamap_sync,
+	_bus_dmamem_alloc,
+	_bus_dmamem_free,
+	_bus_dmamem_map,
+	_bus_dmamem_unmap,
+	_bus_dmamem_mmap,
 };
+
+extern struct vax_bus_space vax_mem_bus_space;
+static SIMPLEQ_HEAD(, vsbus_dma) vsbus_dma;
+
 struct	cfattach vsbus_ca = { 
-	sizeof(struct device), vsbus_match, vsbus_attach
+	sizeof(struct vsbus_softc), (cfmatch_t)vsbus_match, vsbus_attach
 };
 
-/*
-void	vsbus_intr_register __P((struct confargs *ca, int (*)(void*), void*));
-void	vsbus_intr_unregister __P((struct confargs *));
-*/
-
-void	vsbus_intr_dispatch __P((int i));
-
-#define VSBUS_MAXDEVS	8
-#define VSBUS_MAXINTR	8
-
-struct confargs *vsbus_devs = NULL;
-
-#ifdef VAX410
-struct confargs ka410_devs[] = {
-	/* name		intslot intpri intvec	intbit	ioaddr	*/
-	{ "dc",		7,	7,	0x2C0,	(1<<7), KA410_SER_BASE, 
-			6,	6,	0x2C4,	(1<<6), 0x01,		},
-	{ "dc (xmit)",	6,	6,	0x2C4,	(1<<6), KA410_SER_BASE, },
-	{ "le",		5,	5,	0x250,	(1<<5), KA410_LAN_BASE, 
-			KA410_NWA_BASE, 0x00,				},
-	{ "ncr",	1,	1,	0x3F8,	(1<<1), KA410_SCS_BASE,
-			KA410_SCS_DADR, KA410_SCS_DCNT, KA410_SCS_DDIR,
-			KA410_DMA_BASE, KA410_DMA_SIZE, 0x00,	0x07,	},
-	{ "hdc",	0,	0,	0x3FC,	(1<<0), KA410_DKC_BASE, 
-			0, 0, 0, 
-			KA410_DMA_BASE, KA410_DMA_SIZE, 0x00,		},
-#if 0
-	{ "dc (recv)",	7,	7,	0x2C0,	(1<<7), KA410_SER_BASE, },
-	{ "dc (xmit)",	6,	6,	0x2C4,	(1<<6), KA410_SER_BASE, },
-	{ "hdc9224",	0,	0,	0x3FC,	(1<<0), KA410_DKC_BASE, },
-	{ "ncr5380",	1,	1,	0x3F8,	(1<<1), KA410_SCS_BASE, },
-	{ "am7990",	5,	5,	0x250,	(1<<5), KA410_LAN_BASE, },
-	{ "NETOPT",	4,	4,	0x254,	(1<<4), KA410_LAN_BASE, },
-#endif
-	{ "" },
+struct  cfdriver vsbus_cd = {
+	    NULL, "vsbus", DV_DULL
 };
 
-/*
- * It would be better if we could use the (provided) system config
- * information for each CPU instead of this.
- */
-struct confargs ka420_devs[] = {
-	{ "le",		5,	5,	0x250,	(1<<5),	KA410_LAN_BASE,
-		KA410_NWA_BASE,	0x00,					},
-	{ "ncr",	1,	1,	0x3F8,	(1<<1),	KA410_SCS_BASE,
-			KA410_SCS_DADR,	KA410_SCS_DCNT,	KA410_SCS_DDIR,
-			KA410_DMA_BASE,	KA410_DMA_SIZE,	0x00,	0x07,	},
-	{ "ncr",	0,	0,	0x3FC,	(1<<0),	0x200C0180,
-			0x200C01A0,	0x200C01C0,	0x200C01C4,
-			KA410_DMA_BASE,	KA410_DMA_SIZE,	0x00,	0x07,	},
-	{ "" },
-};
-#endif
-
-#ifdef VAX43
-struct confargs ka43_devs[] = {
-	/* name		intslot intpri intvec	intbit	ioaddr	*/
-	{ "dc",		7,	7,	0x2C0,	(1<<7), KA43_SER_BASE,	
-			6,	6,	0x2C4,	(1<<6), 0x01,		},
-	{ "dc (xmit)",	6,	6,	0x2C4,	(1<<6), KA43_SER_BASE,	},
-	{ "le",		5,	5,	0x250,	(1<<5), KA43_LAN_BASE,	
-			KA43_NWA_BASE,	0x00,				},
-	{ "ncr",	1,	1,	0x3F8,	(1<<1), KA43_SC1_BASE,
-			KA43_SC1_DADR,	KA43_SC1_DCNT,	KA43_SC1_DDIR,	
-			KA43_DMA_BASE,	KA43_DMA_SIZE,	0x01,	0x06,	},
-	{ "ncr",	0,	0,	0x3FC,	(1<<0), KA43_SC2_BASE,
-			KA43_SC2_DADR,	KA43_SC2_DCNT,	KA43_SC2_DDIR,
-			KA43_DMA_BASE,	KA43_DMA_SIZE,	0x01,	0x06,	},
-#if 0
-	{ "le (2nd)",	4,	4,	0x254,	(1<<4), 0x???,		},
-	{ "NETOPT",	4,	4,	0x254,	(1<<4), 0x???,		},
-#endif
-	{ "" },
-};
-#endif
+/* dummy interrupt handler for use during autoconf */
+void
+vsbus_intr(arg)
+	void *arg;
+{
+	return;
+}
 
 int
 vsbus_print(aux, name)
 	void *aux;
 	const char *name;
 {
-	struct confargs *ca = aux;
+	struct vsbus_attach_args *va = aux;
 
-	trace(("vsbus_print(%x, %s)\n", ca->ca_name, name));
-
-	if (name) {
-		printf ("device %s at %s", ca->ca_name, name);
-		return (UNSUPP);
-	}
-	return (UNCONF); 
+	printf(" csr 0x%lx vec 0x%x ipl %x maskbit %d", va->va_paddr,
+	    va->va_cvec & 511, va->va_br, va->va_maskno - 1);
+	return(UNCONF); 
 }
 
 int
 vsbus_match(parent, cf, aux)
 	struct	device	*parent;
-	void	*cf;
+	struct	cfdata	*cf;
 	void	*aux;
 {
-	struct bp_conf *bp = aux;
-	
-	trace(("vsbus_match: bp->type = \"%s\"\n", bp->type));
-
-	if (strcmp(bp->type, "vsbus"))
-		return 0;
-	/*
-	 * on machines which can have it, the vsbus is always there
-	 */
-	if ((vax_bustype & VAX_VSBUS) == 0)
-		return (0);
-
-	return (1);
-}
-
-#if 1	/*------------------------------------------------------------*/
-#if 1
-#define REG(name)	short name; short X##name##X;
-#else
-#define REG(name)	int name;
+#if VAX53
+	/* Kludge: VAX53 is... special */
+	if (vax_boardtype == VAX_BTYP_1303 && (int)aux == 1)
+		return 1; /* Hack */
 #endif
-static volatile struct {/* base address of DZ-controller: 0x200A0000 */
-  REG(csr);		/* 00 Csr: control/status register */
-  REG(rbuf);		/* 04 Rbuf/Lpr: receive buffer/line param reg. */
-  REG(tcr);		/* 08 Tcr: transmit console register */
-  REG(tdr);		/* 0C Msr/Tdr: modem status reg/transmit data reg */
-  REG(lpr0);		/* 10 Lpr0: */
-  REG(lpr1);		/* 14 Lpr0: */
-  REG(lpr2);		/* 18 Lpr0: */
-  REG(lpr3);		/* 1C Lpr0: */
-} *dz = (void*)0x200A0000; 
-extern int dzcnrint();
-extern int dzcntint();
-int hardclock_count = 0;
-int
-ka410_consintr_enable()
-{
-	vsbus_intr_enable(&ka410_devs[0]);
-	vsbus_intr_enable(&ka410_devs[1]);
+	if (vax_bustype == VAX_VSBUS)
+		return 1;
+	return 0;
 }
-
-int
-ka410_consRecv_intr(p)
-	void *p;
-{
-  /* printf("ka410_consRecv_intr: hc-count=%d\n", hardclock_count); */
-  dzcnrint();
-  /* printf("gencnrint() returned.\n"); */
-  return(0);
-}
-
-int
-ka410_consXmit_intr(p)
-	void *p;
-{
-  /* printf("ka410_consXmit_intr: hc-count=%d\n", hardclock_count); */
-  dzcntint();
-  /* printf("gencntint() returned.\n"); */
-  return(0);
-}
-#endif	/*------------------------------------------------------------*/
 
 void
 vsbus_attach(parent, self, aux)
 	struct	device	*parent, *self;
 	void	*aux;
 {
-	struct confargs *ca;
-	int i;
+	struct	vsbus_softc *sc = (void *)self;
+	int dbase, dsize;
 
 	printf("\n");
-	trace (("vsbus_attach()\n"));
+
+	sc->sc_dmatag = vsbus_bus_dma_tag;
 
 	switch (vax_boardtype) {
-	case VAX_BTYP_420:
-		vsbus_devs = ka420_devs;
-		break;
-
-	case VAX_BTYP_410:
-		vsbus_devs = ka410_devs;
-		break;
-
-	case VAX_BTYP_43:
-	case VAX_BTYP_46:
+#if VAX49 || VAX53
+	case VAX_BTYP_1303:
 	case VAX_BTYP_49:
-#ifdef VAX43
-		vsbus_devs = ka43_devs;
-#endif
+		sc->sc_vsregs = vax_map_physmem(0x25c00000, 1);
+		sc->sc_intreq = (char *)sc->sc_vsregs + 12;
+		sc->sc_intclr = (char *)sc->sc_vsregs + 12;
+		sc->sc_intmsk = (char *)sc->sc_vsregs + 8;
+		vsbus_dma_init(sc, 8192);
 		break;
+#endif
+
+#if VAX46 || VAX48
+	case VAX_BTYP_48:
+	case VAX_BTYP_46:
+		sc->sc_vsregs = vax_map_physmem(VS_REGS, 1);
+		sc->sc_intreq = (char *)sc->sc_vsregs + 15;
+		sc->sc_intclr = (char *)sc->sc_vsregs + 15;
+		sc->sc_intmsk = (char *)sc->sc_vsregs + 12;
+		vsbus_dma_init(sc, 32768);
+#endif
 
 	default:
-		printf ("unsupported boardtype 0x%x in vsbus_attach()\n",
-			vax_boardtype);
-		return;
+		sc->sc_vsregs = vax_map_physmem(VS_REGS, 1);
+		sc->sc_intreq = (char *)sc->sc_vsregs + 15;
+		sc->sc_intclr = (char *)sc->sc_vsregs + 15;
+		sc->sc_intmsk = (char *)sc->sc_vsregs + 12;
+		if (vax_boardtype == VAX_BTYP_410) {
+			dbase = KA410_DMA_BASE;
+			dsize = KA410_DMA_SIZE;
+		} else {
+			dbase = KA420_DMA_BASE;
+			dsize = KA420_DMA_SIZE;
+			*(char *)(sc->sc_vsregs + 0xe0) = 1; /* Big DMA */
+		}
+		sc->sc_dmasize = dsize;
+		sc->sc_dmaaddr = uvm_km_valloc(kernel_map, dsize);
+		ioaccess(sc->sc_dmaaddr, dbase, dsize/VAX_NBPG);
+		break;
 	}
 
+	SIMPLEQ_INIT(&vsbus_dma);
 	/*
-	 * first setup interrupt-table, so that devices can register
-	 * their interrupt-routines...
+	 * First: find which interrupts we won't care about.
+	 * There are interrupts that interrupt on a periodic basic
+	 * that we don't want to interfere with the rest of the 
+	 * interrupt probing.
 	 */
-	vsbus_intr_setup();	
-
+	*sc->sc_intmsk = 0;
+	*sc->sc_intclr = 0xff;
+	DELAY(1000000); /* Wait a second */
+	sc->sc_mask = *sc->sc_intreq;
+	printf("%s: interrupt mask %x\n", self->dv_xname, sc->sc_mask);
 	/*
 	 * now check for all possible devices on this "bus"
 	 */
-	for (i=0; i<VSBUS_MAXDEVS; i++) {
-		ca = &vsbus_devs[i];
-		if (*ca->ca_name == '\0')
-			break;
-		config_found(self, (void*)ca, vsbus_print);
-	}
+	config_search(vsbus_search, self, NULL);
 
-	/*
-	 * as long as there's no working DZ-driver, we use this dummy
-	 */
-	vsbus_intr_register(&ka410_devs[0], ka410_consRecv_intr, NULL);
-	vsbus_intr_register(&ka410_devs[1], ka410_consXmit_intr, NULL);
-}
-
-#define VSBUS_MAX_INTR	8	/* 64? */
-/*
- * interrupt service routines are given an int as argument, which is
- * pushed onto stack as LITERAL. Thus the value is between 0-63.
- * This array of 64 might be oversized for now, but it's all which 
- * ever will be possible.
- */
-struct vsbus_ivec {
-	struct ivec_dsp intr_vec;		/* this is referenced in SCB */
-	int		intr_count;		/* keep track of interrupts */
-	int		intr_flags;		/* valid, etc. */
-	void		(*enab)(int);		/* enable interrupt */
-	void		(*disab)(int);		/* disable interrupt */
-	void		(*prep)(int);		/* need pre-processing? */
-	int		(*handler)(void*);	/* isr-routine to call */
-	void		*hndlarg;		/* args to this routine */
-	void		(*postp)(int);		/* need post-processing? */
-} vsbus_ivtab[VSBUS_MAX_INTR];
-
-/*
- * 
- */
-int
-vsbus_intr_setup()
-{
-	int i;
-	struct vsbus_ivec *ip;
-	extern struct ivec_dsp idsptch;		/* subr.s */
-
-	for (i=0; i<VSBUS_MAX_INTR; i++) {
-		ip = &vsbus_ivtab[i];
-		bcopy(&idsptch, &ip->intr_vec, sizeof(struct ivec_dsp));
-		ip->intr_vec.pushlarg = i;
-		ip->intr_vec.hoppaddr = vsbus_intr_dispatch;
-		ip->intr_count = 0;
-		ip->intr_flags = 0;
-		ip->enab = NULL;
-		ip->disab = NULL;
-		ip->postp = NULL;
-	}
-	switch (vax_boardtype) {
-	case VAX_BTYP_410:
-	case VAX_BTYP_420:
-	case VAX_BTYP_43:
-	case VAX_BTYP_46:
-	case VAX_BTYP_49:
-		ka410_intr_setup();
-		return(0);
-	default:
-		printf("unsupported board-type 0x%x in vsbus_intr_setup()\n",
-			vax_boardtype);
-		return(1);
-	}
+	/* Autoconfig finished, enable interrupts */
+	*sc->sc_intmsk = ~sc->sc_mask;
 }
 
 int
-vsbus_intr_register(ca, handler, arg)
-	struct confargs *ca;
-	int (*handler)(void*);
-	void *arg;
-{
-	/* struct device *dev = arg; */
-	int i = ca->ca_intslot;
-	struct vsbus_ivec *ip = &vsbus_ivtab[i];
-
-	trace (("vsbus_intr_register(%s/%d)\n", ca->ca_name, ca->ca_intslot));
-
-	ip->handler = handler;
-	ip->hndlarg = arg;
-}
-
-int
-vsbus_intr_enable(ca)
-	struct confargs *ca;
-{
-	int i = ca->ca_intslot;
-	struct vsbus_ivec *ip = &vsbus_ivtab[i];
-
-	trace (("vsbus_intr_enable(%s/%d)\n", ca->ca_name, ca->ca_intslot));
-
-	/* XXX check for valid handler etc. !!! */
-	if (ip->handler == NULL) {
-		printf("interrupts for \"%s\"(%d) not enabled: null-handler\n",
-		      ca->ca_name, ca->ca_intslot);
-		return;
-	}
-
-	ip->enab(i);
-}
-
-int
-vsbus_intr_disable(ca)
-	struct confargs *ca;
-{
-	int i = ca->ca_intslot;
-	struct vsbus_ivec *ip = &vsbus_ivtab[i];
-
-	trace (("vsbus_intr_disable(%s/%d)\n", ca->ca_name, i));
-
-	ip->disab(i);
-}
-
-int 
-vsbus_intr_unregister(ca)
-	struct confargs *ca;
-{
-	int i = ca->ca_intslot;
-	struct vsbus_ivec *ip = &vsbus_ivtab[i];
-
-	trace (("vsbus_intr_unregister(%s/%d)\n", ca->ca_name, i));
-
-	ip->handler = NULL;
-	ip->hndlarg = NULL;
-}
-
-void
-vsbus_intr_dispatch(i)
-	register int i;
-{
-	register struct vsbus_ivec *ip = &vsbus_ivtab[i];
-
-	trace (("vsbus_intr_dispatch(%d)", i));
-	
-	if (i < VSBUS_MAX_INTR && ip->handler != NULL) {
-		ip->intr_count++;
-		debug (("intr-count[%d] = %d\n", i, ip->intr_count));
-		(ip->handler)(ip->hndlarg);
-		if (ip->postp)
-			(ip->postp)(i);
-		return;
-	}
-
-	if (i < 0 || i >= VSBUS_MAX_INTR) {
-		printf ("stray interrupt %d on vsbus.\n", i);
-		return;
-	}
-
-	if (!ip->handler) {
-		printf ("unhandled interrupt %d on vsbus.\n", i);
-		return;
-	}
-}
-
-/*
- * These addresses are invalid and will be updated/corrected by
- * ka410_intr_setup(), but having them this way helps debugging
- */
-static volatile u_char *ka410_intmsk = (void*)KA410_INTMSK;
-static volatile u_char *ka410_intreq = (void*)KA410_INTREQ;
-static volatile u_char *ka410_intclr = (void*)KA410_INTCLR;
-
-static void
-ka410_intr_enable(i)
-	int i;
-{
-	trace (("ka410_intr_enable(%d)\n", i));
-	*ka410_intmsk |= (1<<i);
-}
-
-static void
-ka410_intr_disable(i)
-	int i;
-{
-	trace (("ka410_intr_disable(%d)\n", i));
-	*ka410_intmsk &= ~(1<<i);
-}
-
-static void
-ka410_intr_clear(i)
-	int i;
-{
-	trace (("ka410_intr_clear(%d)\n", i));
-	*ka410_intclr = (1<<i);
-}
-
-ka410_intr_setup()
-{
-	int i;
-	struct vsbus_ivec *ip;
-	void **scbP = (void*)scb;
-
-	trace (("ka410_intr_setup()\n"));
-
-	ka410_intmsk = (void*)uvax_phys2virt(KA410_INTMSK);
-	ka410_intreq = (void*)uvax_phys2virt(KA410_INTREQ);
-	ka410_intclr = (void*)uvax_phys2virt(KA410_INTCLR);
-
-	*ka410_intmsk = 0;		/* disable all interrupts */
-	*ka410_intclr = 0xFF;		/* clear all old interrupts */
-
-	/*
-	 * insert the VS2000-specific routines into ivec-table...
-	 */
-	for (i=0; i<8; i++) {
-		ip = &vsbus_ivtab[i];
-		ip->enab  = ka410_intr_enable;
-		ip->disab = ka410_intr_disable;
-		/* ip->postp = ka410_intr_clear; bertram XXX */
-	}
-	/*
-	 * ...and register the interrupt-vectors in SCB
-	 */
-	scbP[IVEC_DC/4] = &vsbus_ivtab[0].intr_vec;
-	scbP[IVEC_SC/4] = &vsbus_ivtab[1].intr_vec;
-	scbP[IVEC_VS/4] = &vsbus_ivtab[2].intr_vec;
-	scbP[IVEC_VF/4] = &vsbus_ivtab[3].intr_vec;
-	scbP[IVEC_NS/4] = &vsbus_ivtab[4].intr_vec;
-	scbP[IVEC_NP/4] = &vsbus_ivtab[5].intr_vec;
-	scbP[IVEC_ST/4] = &vsbus_ivtab[6].intr_vec;
-	scbP[IVEC_SR/4] = &vsbus_ivtab[7].intr_vec;
-}
-
-/*
- *
- *
- */
-
-static volatile struct dma_lock {
-	int	dl_locked;
-	int	dl_wanted;
-	void	*dl_owner;
-	int	dl_count;
-} dmalock = { 0, 0, NULL, 0 };
-
-int
-vsbus_lockDMA(ca)
-	struct confargs *ca;
-{
-	while (dmalock.dl_locked) {
-		dmalock.dl_wanted++;
-		sleep((caddr_t)&dmalock, PRIBIO);	/* PLOCK or PRIBIO ? */
-		dmalock.dl_wanted--;
-	}
-	dmalock.dl_locked++;
-	dmalock.dl_owner = ca;
-
-	/*
-	 * no checks yet, no timeouts, nothing...
-	 */
-
-#ifdef DEBUG
-	if ((++dmalock.dl_count % 1000) == 0)
-		printf("%d locks, owner: %s\n", dmalock.dl_count, ca->ca_name);
-#endif
-	return (0);
-}
-
-int 
-vsbus_unlockDMA(ca)
-	struct confargs *ca;
-{
-	if (dmalock.dl_locked != 1 || dmalock.dl_owner != ca) {
-		printf("locking-problem: %d, %s\n", dmalock.dl_locked,
-		       (dmalock.dl_owner ? dmalock.dl_owner : "null"));
-		dmalock.dl_locked = 0;
-		return (-1);
-	}
-	dmalock.dl_owner = NULL;
-	dmalock.dl_locked = 0;
-	if (dmalock.dl_wanted) {
-		wakeup((caddr_t)&dmalock);
-	}
-	return (0);
-}
-
-/*----------------------------------------------------------------------*/
-#if 0
-/*
- * small set of routines needed for mapping when doing pseudo-DMA,
- * quasi-DMA or virtual-DMA (choose whatever name you like).
- *
- * Once I know how VS3100 is doing real DMA (I hope it does), this
- * should be rewritten to present a general interface...
- *
- */
-
-extern u_long uVAX_physmap;
-
-u_long
-vsdma_mapin(bp, len)
-	struct buf *bp;
-	int len;
-{
-	pt_entry_t *pte;	/* pointer to Page-Table-Entry */
-	struct pcb *pcb;	/* pointer to Process-Controll-Block */
-	pt_entry_t *xpte;
-	caddr_t addr;
-	int pgoff;		/* offset into 1st page */
-	int pgcnt;		/* number of pages needed */
-	int pfnum;
-	int i;
-
-	trace(("mapin(bp=%x, bp->data=%x)\n", bp, bp->b_data));
-
-	addr = bp->b_data;
-	pgoff = (int)bp->b_data & PGOFSET;	/* get starting offset */
-	pgcnt = btoc(bp->b_bcount + pgoff) + 1; /* one more than needed */
-	
-	/*
-	 * Get a pointer to the pte pointing out the first virtual address.
-	 * Use different ways in kernel and user space.
-	 */
-	if ((bp->b_flags & B_PHYS) == 0) {
-		pte = kvtopte(addr);
-	} else {
-		pcb = bp->b_proc->p_vmspace->vm_pmap.pm_pcb;
-		pte = uvtopte(addr, pcb);
-	}
-
-	/*
-	 * When we are doing DMA to user space, be sure that all pages
-	 * we want to transfer to are mapped. WHY DO WE NEED THIS???
-	 * SHOULDN'T THEY ALWAYS BE MAPPED WHEN DOING THIS???
-	 */
-	for (i=0; i<(pgcnt-1); i++) {
-		if ((pte + i)->pg_pfn == 0) {
-			int rv;
-			rv = vm_fault(&bp->b_proc->p_vmspace->vm_map,
-				      (unsigned)addr + i * NBPG,
-				      VM_PROT_READ|VM_PROT_WRITE, FALSE);
-			if (rv)
-				panic("vs-DMA to nonexistent page, %d", rv);
-		}
-	}
-
-	/*
-	 * now insert new mappings for this memory area into kernel's
-	 * mapping-table
-	 */
-	xpte = kvtopte(uVAX_physmap);
-	while (--pgcnt > 0) {
-		pfnum = pte->pg_pfn;
-		if (pfnum == 0)
-			panic("vsbus: zero entry");
-		*(int *)xpte++ = *(int *)pte++;
-	}
-	*(int *)xpte = 0;	/* mark last mapped page as invalid! */
-
-	debug(("uVAX: 0x%x\n", uVAX_physmap + pgoff));
-
-	return (uVAX_physmap + pgoff);	/* ??? */
-}
-#endif
-/*----------------------------------------------------------------------*/
-/*
- * Here follows some currently(?) unused stuff. Someday this should be removed
- */
-
-#if 0
-/*
- * Configure devices on VS2000/KA410 directly attached to vsbus
- */
-void
-ka410_attach(parent, self, aux)
+vsbus_search(parent, cfd, aux)
 	struct device *parent;
-	struct device *self;
+	void *cfd;
 	void *aux;
 {
-	struct confargs *ca;
-	int i;
+	struct	vsbus_softc *sc = (void *)parent;
+	struct	vsbus_attach_args va;
+	struct	cfdata *cf = cfd;
+	int i, vec, br;
+	u_char c;
 
-	for (i=0; i<KA410_MAXDEVS; i++) {
-		ca = &ka410_devs[i];
-		if (*ca->ca_name == '\0')
-			break;
-		config_found(self, (void*)ca, vsbus_print);
-	}
-	/*
-	 * as long as there's no real DZ-driver, we used this dummy
-	 */
-	vsbus_intr_register(&ka410_devs[0], ka410_consRecv_intr, NULL);
-	vsbus_intr_register(&ka410_devs[1], ka410_consXmit_intr, NULL);
+	va.va_paddr = cf->cf_loc[0];
+	va.va_addr = vax_map_physmem(va.va_paddr, 1);
+	va.va_dmat = &sc->sc_dmatag;
+	va.va_iot = &vax_mem_bus_space;
+
+	*sc->sc_intmsk = 0;
+	*sc->sc_intclr = 0xff;
+	scb_vecref(0, 0); /* Clear vector ref */
+
+	i = (*cf->cf_attach->ca_match) (parent, cf, &va);
+	vax_unmap_physmem(va.va_addr, 1);
+	c = *sc->sc_intreq & ~sc->sc_mask;
+
+	if (i == 0)
+		goto forgetit;
+	if (i > 10)
+		c = sc->sc_mask; /* Fooling interrupt */
+	else if (c == 0)
+		goto forgetit;
+
+	*sc->sc_intmsk = c;
+	DELAY(1000);
+	*sc->sc_intmsk = 0;
+	va.va_maskno = ffs((u_int)c);
+	i = scb_vecref(&vec, &br);
+	if (i == 0)
+		goto fail;
+	if (vec == 0)
+		goto fail;
+
+	va.va_br = br;
+	va.va_cvec = vec;
+	va.va_dmaaddr = sc->sc_dmaaddr;
+	va.va_dmasize = sc->sc_dmasize;
+	*sc->sc_intmsk = c; /* Allow interrupts during attach */
+	config_attach(parent, cf, &va, vsbus_print);
+	*sc->sc_intmsk = 0;
+	return 0;
+
+fail:
+	printf("%s%d at %s csr 0x%x %s\n",
+	    cf->cf_driver->cd_name, cf->cf_unit, parent->dv_xname,
+	    cf->cf_loc[0], (i ? "zero vector" : "didn't interrupt"));
+forgetit:
+	return 0;
 }
 
-#endif
+/*
+ * Sets a new interrupt mask. Returns the old one.
+ * Works like spl functions.
+ */
+unsigned char
+vsbus_setmask(mask)
+	unsigned char mask;
+{
+	struct vsbus_softc *sc;
+	unsigned char ch;
+
+	if (vsbus_cd.cd_ndevs == 0)
+		return 0;
+	sc = vsbus_cd.cd_devs[0];
+
+	ch = *sc->sc_intmsk;
+	*sc->sc_intmsk = mask;
+	return ch;
+}
+
+/*
+ * Clears the interrupts in mask.
+ */
+void
+vsbus_clrintr(mask)
+	unsigned char mask;
+{
+	struct vsbus_softc *sc;
+
+	if (vsbus_cd.cd_ndevs == 0)
+		return;
+	sc = vsbus_cd.cd_devs[0];
+
+	*sc->sc_intclr = mask;
+}
+
+/*
+ * Copy data from/to a user process' space from the DMA area.
+ * Use the physical memory directly.
+ */
+void
+vsbus_copytoproc(struct proc *p, caddr_t from, caddr_t to, int len)
+{
+	struct pte *pte;
+	paddr_t pa;
+
+	if ((vaddr_t)to & KERNBASE) { /* In kernel space */
+		bcopy(from, to, len);
+		return;
+	}
+	pte = uvtopte(TRUNC_PAGE(to), (&p->p_addr->u_pcb));
+	if ((vaddr_t)to & PGOFSET) {
+		int cz = ROUND_PAGE(to) - (vaddr_t)to;
+
+		pa = (pte->pg_pfn << VAX_PGSHIFT) | (NBPG - cz) | KERNBASE;
+		bcopy(from, (caddr_t)pa, min(cz, len));
+		from += cz;
+		to += cz;
+		len -= cz;
+		pte += 8; /* XXX */
+	}
+	while (len > 0) {
+		pa = (pte->pg_pfn << VAX_PGSHIFT) | KERNBASE;
+		bcopy(from, (caddr_t)pa, min(NBPG, len));
+		from += NBPG;
+		to += NBPG;
+		len -= NBPG;
+		pte += 8; /* XXX */
+	}
+}
+
+void
+vsbus_copyfromproc(struct proc *p, caddr_t from, caddr_t to, int len)
+{
+	struct pte *pte;
+	paddr_t pa;
+
+	if ((vaddr_t)from & KERNBASE) { /* In kernel space */
+		bcopy(from, to, len);
+		return;
+	}
+	pte = uvtopte(TRUNC_PAGE(from), (&p->p_addr->u_pcb));
+	if ((vaddr_t)from & PGOFSET) {
+		int cz = ROUND_PAGE(from) - (vaddr_t)from;
+
+		pa = (pte->pg_pfn << VAX_PGSHIFT) | (NBPG - cz) | KERNBASE;
+		bcopy((caddr_t)pa, to, min(cz, len));
+		from += cz;
+		to += cz;
+		len -= cz;
+		pte += 8; /* XXX */
+	}
+	while (len > 0) {
+		pa = (pte->pg_pfn << VAX_PGSHIFT) | KERNBASE;
+		bcopy((caddr_t)pa, to, min(NBPG, len));
+		from += NBPG;
+		to += NBPG;
+		len -= NBPG;
+		pte += 8; /* XXX */
+	}
+}
+
+/* 
+ * There can only be one user of the DMA area on VS2k/VS3100 at one
+ * time, so keep track of it here.
+ */ 
+static int vsbus_active = 0;
+
+void
+vsbus_dma_start(struct vsbus_dma *vd)
+{
+ 
+	SIMPLEQ_INSERT_TAIL(&vsbus_dma, vd, vd_q);
+
+	if (vsbus_active == 0)
+		vsbus_dma_intr();
+}
+ 
+void
+vsbus_dma_intr(void)
+{	
+	struct vsbus_dma *vd;
+	
+	vd = SIMPLEQ_FIRST(&vsbus_dma); 
+	if (vd == NULL) {
+		vsbus_active = 0;
+		return;
+	}
+	vsbus_active = 1;
+	SIMPLEQ_REMOVE_HEAD(&vsbus_dma, vd, vd_q);
+	(*vd->vd_go)(vd->vd_arg);
+}
+

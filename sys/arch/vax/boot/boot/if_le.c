@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_le.c,v 1.1 2000/04/27 02:26:25 bjc Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/boot/boot/Attic/if_le.c,v 1.1.8.1 2001/05/14 21:37:46 niklas Exp $ */
 /*	$NetBSD: if_le.c,v 1.4 1999/08/14 19:41:14 ragge Exp $ */
 /*
  * Copyright (c) 1997, 1999 Ludd, University of Lule}, Sweden.

@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/vax/include/profile.h,v 1.5 1997/05/29 00:04:47 niklas Exp $ */
+/*      $OpenBSD: src/sys/arch/vax/include/profile.h,v 1.5.12.1 2001/05/14 21:38:03 niklas Exp $ */
 /*      $NetBSD: profile.h,v 1.5 1995/12/31 12:15:58 ragge Exp $ */
 /*
  * Copyright (c) 1992 The Regents of the University of California.
@@ -47,7 +47,7 @@
  * to __mcount, so that our return address won't get popped from stack.
  */
 #define MCOUNT \
-asm(".text; .globl mcount; mcount: pushl 16(fp); calls $1,__mcount; rsb");
+__asm__(".text; .globl mcount; mcount: pushl 16(fp); calls $1,__mcount; rsb");
 
 #ifdef _KERNEL
 /*
