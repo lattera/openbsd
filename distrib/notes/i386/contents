@@ -1,0 +1,55 @@
+TopPart
+
+OpenBSDfloppy
+
+		floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+				this one features all the drivers not available
+				in floppy{:--:}OSrev.fs, such as SCSI, RAID, gigabit
+				ethernet, and such; see below.
+
+		floppyC{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+				this one features most of the cardbus and
+				pcmcia drivers; see below.
+
+OpenBSDcdrom
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+As well you may be interested in
+
+.../OSREV/tools/
+		miscellaneous MACHINE installation utilities like
+		rawrite.exe, ntrw.exe, gzip.exe, and pfdisk.exe;
+		see installation section, below.
+
+
+OpenBSDfloppydesc(three,Each,s)
+
+In addition, the "tools/" directory contains some utilities that might be
+useful for the installation.
+
+DistributionDescription(ten)
+
+OpenBSDbase(23.9,69.1,shared)
+
+OpenBSDcomp(16.4,48.8,shared)
+
+OpenBSDetc(1.2,3.9)
+
+OpenBSDgame(2.8,6.5)
+
+OpenBSDman(5.5,19.9)
+
+OpenBSDmisc(1.7,5.6)
+
+OpenBSDxbase(8.7,24.0)
+
+OpenBSDxfont(31.4,34.6)
+
+OpenBSDxserv(19.8,49.1)
+
+OpenBSDxshare(1.9,9.4)
