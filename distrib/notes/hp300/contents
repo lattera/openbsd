@@ -1,0 +1,39 @@
+dnl	$OpenBSD: src/distrib/notes/hp300/contents,v 1.29 2003/03/25 19:57:31 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+		bsd.dl		A GENERIC kernel without any support for
+				disk devices.
+
+OpenBSDrd
+
+		SYS_UBOOT	Unified boot file, used for booting from
+				disk or from the network.
+
+		SYS_CDBOOT	Raw boot file, used for booting from
+				CD-ROM.
+
+DistributionDescription(ten)
+
+OpenBSDbase(29.3,86.2,shared)
+
+OpenBSDcomp(15.4,46.7,shared)
+
+OpenBSDetc(1.5,5.5)
+
+OpenBSDgame(2.7,6.4)
+
+OpenBSDman(6.0,21.6)
+
+OpenBSDmisc(1.9,6.2)
+
+OpenBSDxbase(15.6,86.5)
+
+OpenBSDxfont(13.8,58.0)
+
+OpenBSDxserv(0.5,1.1)
+
+OpenBSDxshare(1.9,9.4)

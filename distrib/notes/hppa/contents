@@ -1,0 +1,38 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/contents,v 1.3 2003/03/25 19:57:31 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+		lif{:--:}OSrev.fs	A LIF bootable miniroot image, suitable for
+				network boot
+dnl
+dnl		installboot	The OpenBSD/MACHINE boot loader installation
+dnl				program
+
+		xxboot		The OpenBSD/MACHINE LIF boot block
+
+DistributionDescription(eight)
+
+OpenBSDbase(81.5,202.1)
+
+OpenBSDcomp(22.0,69.8)
+
+OpenBSDetc(1.5,5.6,noupgrade)
+
+OpenBSDgame(7.3,16.1)
+
+OpenBSDman(6.3,22.5)
+
+OpenBSDmisc(1.9,6.2)
+
+OpenBSDxbase(82.2,163.3)
+dnl
+dnl OpenBSDxfont
+dnl
+dnl OpenBSDxserv
+
+OpenBSDxshare(1.6,7.9)
