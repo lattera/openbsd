@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ntfs/ntfs_vnops.c,v 1.4 2003/06/02 23:28:20 millert Exp $	*/
+/*	$OpenBSD: src/sys/ntfs/ntfs_vnops.c,v 1.4.2.1 2003/06/07 10:47:03 ho Exp $	*/
 /*	$NetBSD: ntfs_vnops.c,v 1.6 2003/04/10 21:57:26 jdolecek Exp $	*/
 
 /*

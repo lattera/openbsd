@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ntfs/ntfs_vfsops.h,v 1.2 2003/05/20 03:23:12 mickey Exp $	*/
+/*	$OpenBSD: src/sys/ntfs/ntfs_vfsops.h,v 1.2.2.1 2003/06/07 10:47:03 ho Exp $	*/
 /*	$NetBSD: ntfs_vfsops.h,v 1.1 2002/12/23 17:38:34 jdolecek Exp $	*/
 
 /*-

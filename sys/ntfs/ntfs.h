@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ntfs/ntfs.h,v 1.3 2003/05/20 03:36:42 tedu Exp $	*/
+/*	$OpenBSD: src/sys/ntfs/ntfs.h,v 1.3.2.1 2003/06/07 10:47:03 ho Exp $	*/
 /*	$NetBSD: ntfs.h,v 1.5 2003/04/24 07:50:19 christos Exp $	*/
 
 /*-
