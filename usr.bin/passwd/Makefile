@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	5.11 (Berkeley) 2/19/91
-#	$Id: Makefile,v 1.11 1995/03/31 05:49:37 hpeyerl Exp $
+#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:45:53 deraadt Exp $
 
 PROG=	passwd
 SRCS=	local_passwd.c yp_passwd.c passwd.c pw_copy.c pw_util.c getpwent.c
@@ -16,7 +16,7 @@ DPADD+=	${LIBKRB5} ${LIBCRYPTO}
 LDADD+=	-lkrb5 -lcrypto
 .elif defined(KERBEROS)
 SRCS+= krb_passwd.c des_rw.c
-CFLAGS+= -DKERBEROS -DCRYPT
+CFLAGS+= -DKERBEROS
 DPADD+=	${LIBKRB} ${LIBDES}
 LDADD+=	-lkrb -ldes
 .endif
