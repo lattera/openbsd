@@ -1,7 +1,7 @@
-.\"	$OpenBSD: src/sbin/newlfs/Attic/newlfs.8,v 1.8 1999/06/04 02:45:19 aaron Exp $
-.\"	$NetBSD: newlfs.8,v 1.2 1995/03/18 14:58:54 cgd Exp $
+.\"	$OpenBSD: src/sbin/swapon/Attic/swapon.8,v 1.10 1999/06/04 02:45:24 aaron Exp $
+.\"	$NetBSD: swapon.8,v 1.8 1995/08/18 14:51:35 pk Exp $
 .\"
-.\" Copyright (c) 1993
+.\" Copyright (c) 1980, 1991, 1993
 .\"	The Regents of the University of California.  All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -20,7 +20,7 @@
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
-.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS `AS IS'' AND
 .\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 .\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 .\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
@@ -32,71 +32,64 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\"     @(#)newlfs.8	8.1 (Berkeley) 6/19/93
+.\"     @(#)swapon.8	8.1 (Berkeley) 6/5/93
 .\"
-.Dd June 19, 1993
-.Dt NEWLFS 8
+.Dd June 5, 1993
+.Dt SWAPON 8
 .Os
 .Sh NAME
-.Nm newlfs
-.Nd construct a new LFS file system
+.Nm swapon
+.Nd "specify additional device for paging and swapping"
 .Sh SYNOPSIS
-.Nm newlfs
-.Fl L
-.Op Fl B Ar segsize
-.Op Fl b Ar blocksize
-.Op Fl m Ar freespace\&%
-.Op Fl s Ar size
-.Ar special
+.Nm swapon
+.Fl a
+.Nm swapon
+.Ar special_file ...
 .Sh DESCRIPTION
 .Nm
-builds a log-structured file system on the specified
-.Ar special
-device, basing its defaults on the information in the disk label.
-(Before running
+is used to specify additional devices on which paging and swapping
+are to take place.
+The system begins by swapping and paging on only a single device
+so that only one disk is required at bootstrap time.
+Calls to
 .Nm
-the disk must be labeled using
-.Xr disklabel 8 . )
+normally occur in the system multi-user initialization file
+.Pa /etc/rc
+making all swap devices available, so that the paging and swapping
+activity is interleaved across several devices.
 .Pp
-The following options define the general layout policies:
-.Bl -tag -width Fl
-.It Fl B Ar segsize
-The logical segment size of the file system in bytes.
-.It Fl b Ar blocksize
-The block size of the file system in bytes.
-.It Fl L
-Create a log-structured file system (LFS).
-This flag is currently required.
-.It Fl m Ar freespace\&%
-The percentage of space reserved from normal users; the minimum
-free space threshold.  The default value used is 10%.
-See
-.Xr tunefs 8
-for more details on how to set this option.
-.It Fl s Ar size
-The size of the file system in sectors.
+Normally, the first form is used:
+.Bl -tag -width Ds
+.It Fl a
+All devices marked as
+.Dq sw
+swap devices in
+.Pa /etc/fstab
+are made available.
+.El
+.Pp
+The second form gives individual block devices as given
+in the system swap configuration table.  The call makes only this space
+available to the system for swap allocation.
+.Sh FILES
+.Bl -tag -width /dev/[ru][pk]?b -compact
+.It Pa /dev/[ru][pk]?b
+standard paging devices
+.It Pa /etc/fstab
+ASCII filesystem description table
 .El
 .Sh SEE ALSO
-.Xr disktab 5 ,
-.Xr fs 5 ,
-.Xr disklabel 8 ,
-.Xr diskpart 8 ,
-.Xr dumplfs 8 ,
-.Xr tunefs 8
-.Rs
-.%A M. McKusick
-.%A W. Joy
-.%A S. Leffler
-.%A R. Fabry
-.%T A Fast File System for UNIX ,
-.%J ACM Transactions on Computer Systems 2
-.%V 3
-.%P pp 181-197
-.%D August 1984
-.%O (reprinted in the BSD System Manager's Manual)
-.Re
+.Xr swapon 2 ,
+.Xr fstab 5 ,
+.Xr init 8 ,
+.Xr rc 8 ,
+.Xr vnconfig 8
+.Sh BUGS
+There is no way to stop paging and swapping on a device.
+It is therefore not possible to make use of devices which may be
+dismounted during system operation.
 .Sh HISTORY
 The
 .Nm
 command appeared in
-.Bx 4.4 .
+.Bx 4.0 .
