@@ -1,4 +1,4 @@
-$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.14 2004/06/05 23:13:25 niklas Exp $
+$OpenBSD: src/sys/Attic/README.SMP,v 1.1.2.15 2004/06/13 08:16:45 niklas Exp $
 
 The SMP branch is irregularly updated from the trunk.  To do this
 you mainly need to carry out the following procedure:
@@ -34,7 +34,7 @@ you mainly need to carry out the following procedure:
   last synchronization.  Say you have a clean standard trunk checkout in $STD
   and your clean SMP checkout is in $SMP:
 
-  $ cd $STD/src/sys
+  $ cd $STD/src/sys
   $ find . -type d \! -name CVS \! -path "*/compile/*" |sort>/tmp/stddirs
   $ cd $SMP/src/sys
   $ find . -type d \! -name CVS \! -path "*/compile/*" |sort>/tmp/smpdirs
