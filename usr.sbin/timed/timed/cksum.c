@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/timed/timed/Attic/cksum.c,v 1.3 2002/03/14 16:44:25 mpech Exp $	*/
+/*	$OpenBSD: src/usr.sbin/timed/timed/Attic/cksum.c,v 1.4 2002/06/18 00:40:30 ericj Exp $	*/
 
 /*-
  * Copyright (c) 1985, 1993 The Regents of the University of California.
@@ -36,10 +36,6 @@
 #ifndef lint
 static char sccsid[] = "@(#)cksum.c	5.2 (Berkeley) 5/11/93";
 #endif /* not lint */
-
-#ifdef sgi
-#ident "$Revision: 1.2 $"
-#endif
 
 #include <sys/types.h>
 
