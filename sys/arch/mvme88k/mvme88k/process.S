@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process.S,v 1.29 2004/01/17 22:35:41 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/process.S,v 1.29.2.1 2004/08/01 18:38:43 brad Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -328,5 +328,6 @@ ASENTRY(__savectx)
 	fldcr	r2,  fcr62
 	fldcr	r3,  fcr63
 	st	r2,  r14, PCB_FCR62
+	st	r3,  r14, PCB_FCR63
 	jmp.n	r1
-	 st	r3,  r14, PCB_FCR63
+	 ld 	r14, r14, PCB_R14	/* preserve r14 */
