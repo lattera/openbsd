@@ -1,4 +1,4 @@
-/*	$Id: if_iwi.c,v 1.3 2004/10/27 21:33:52 damien Exp $  */
+/*	$Id: if_iwi.c,v 1.4 2004/10/28 22:12:00 jcs Exp $  */
 
 /*-
  * Copyright (c) 2004
@@ -29,7 +29,7 @@
 
 /*-
  * Intel(R) PRO/Wireless 2200BG/2915ABG driver
- * http://www.intel.com/products/mobiletechnology/prowireless.htm
+ * http://www.intel.com/network/connectivity/products/wireless/prowireless_mobile.htm
  */
 
 #include "bpfilter.h"

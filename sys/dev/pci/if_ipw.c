@@ -1,4 +1,4 @@
-/*	$Id: if_ipw.c,v 1.16 2004/10/27 21:24:49 damien Exp $  */
+/*	$Id: if_ipw.c,v 1.17 2004/10/28 17:05:41 jcs Exp $  */
 
 /*-
  * Copyright (c) 2004
@@ -29,7 +29,7 @@
 
 /*-
  * Intel(R) PRO/Wireless 2100 MiniPCI driver
- * www.intel.com/network/connectivity/products/wireless/prowireless_mobile.htm
+ * http://www.intel.com/network/connectivity/products/wireless/prowireless_mobile.htm
  */
 
 #include "bpfilter.h"
