@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1 2001/07/05 12:08:52 jjbg Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1.4.1 2001/10/31 03:29:03 nate Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Jacques Bernard-Gundol (jj@wabbitt.org)

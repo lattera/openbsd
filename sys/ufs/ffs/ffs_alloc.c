@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.18.2.2 2001/07/04 11:00:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.18.2.3 2001/10/31 03:32:13 nate Exp $	*/
 /*	$NetBSD: ffs_alloc.c,v 1.11 1996/05/11 18:27:09 mycroft Exp $	*/
 
 /*
@@ -408,7 +408,8 @@ ffs_reallocblks(v)
 		ssize = len;
 	} else {
 #ifdef DIAGNOSTIC
-		if (start_ap[start_lvl-1].in_lbn == idp->in_lbn)
+		if (start_lvl > 1 &&
+		    start_ap[start_lvl-1].in_lbn == idp->in_lbn)
 			panic("ffs_reallocblk: start == end");
 #endif
 		ssize = len - (idp->in_off + 1);

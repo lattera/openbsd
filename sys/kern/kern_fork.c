@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.4 2001/07/04 10:48:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.5 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -62,8 +62,6 @@
 #include <sys/syscallargs.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_map.h>
 
@@ -153,6 +151,13 @@ fork1(p1, exitsig, flags, stack, stacksize, retval)
 	int s;
 	extern void endtsleep __P((void *));
 	extern void realitexpire __P((void *));
+
+#ifndef RFORK_FDSHARE
+	/* XXX - Too dangerous right now. */
+	if (flags & FORK_SHAREFILES) {
+		return (EOPNOTSUPP);
+	}
+#endif
 
 	/*
 	 * Although process entries are dynamically created, we still keep

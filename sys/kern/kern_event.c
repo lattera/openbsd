@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8.2.2 2001/07/04 10:48:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8.2.3 2001/10/31 03:26:29 nate Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon <jlemon@FreeBSD.org>
@@ -41,6 +41,7 @@
 #include <sys/queue.h>
 #include <sys/event.h>
 #include <sys/eventvar.h>
+#include <sys/pool.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
@@ -79,6 +80,7 @@ void	knote_attach(struct knote *kn, struct filedesc *fdp);
 void	knote_drop(struct knote *kn, struct proc *p);
 void	knote_enqueue(struct knote *kn);
 void	knote_dequeue(struct knote *kn);
+void	knote_init(void);
 struct	knote *knote_alloc(void);
 void	knote_free(struct knote *kn);
 
@@ -95,6 +97,8 @@ struct filterops proc_filtops =
 	{ 0, filt_procattach, filt_procdetach, filt_proc };
 struct filterops file_filtops =
 	{ 1, filt_fileattach, NULL, NULL };
+
+struct	pool knote_pool;
 
 #define KNOTE_ACTIVATE(kn) do {						\
 	kn->kn_status |= KN_ACTIVE;					\
@@ -290,7 +294,8 @@ sys_kqueue(struct proc *p, void *v, register_t *retval)
 	if (fdp->fd_knlistsize < 0)
 		fdp->fd_knlistsize = 0;		/* this process has a kq */
 	kq->kq_fdp = fdp;
-	return (error);
+	FILE_SET_MATURE(fp);
+	return (0);
 }
 
 int
@@ -311,8 +316,7 @@ sys_kevent(struct proc *p, void *v, register_t *retval)
 	struct timespec ts;
 	int i, n, nerrors, error;
 
-	if (((u_int)SCARG(uap, fd)) >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[SCARG(uap, fd)]) == NULL ||
+	if ((fp = fd_getfile(fdp, SCARG(uap, fd))) == NULL ||
 	    (fp->f_type != DTYPE_KQUEUE))
 		return (EBADF);
 
@@ -399,8 +403,7 @@ kqueue_register(struct kqueue *kq, struct kevent *kev, struct proc *p)
 
 	if (fops->f_isfd) {
 		/* validate descriptor */
-		if ((u_int)kev->ident >= fdp->fd_nfiles ||
-		    (fp = fdp->fd_ofiles[kev->ident]) == NULL)
+		if ((fp = fd_getfile(fdp, kev->ident)) == NULL)
 			return (EBADF);
 		fp->f_count++;
 
@@ -883,14 +886,28 @@ knote_dequeue(struct knote *kn)
 	splx(s);
 }
 
+void
+knote_init(void)
+{
+	pool_init(&knote_pool, sizeof(struct knote), 0, 0, 0, "knotepl",
+	    0, pool_page_alloc_nointr, pool_page_free_nointr, M_KNOTE);
+}
+
 struct knote *
 knote_alloc(void)
 {
-	return (malloc(sizeof (struct knote), M_KNOTE, M_NOWAIT));
+	static int knote_pool_initialised;
+
+	if (!knote_pool_initialised) { 
+		knote_init();
+		knote_pool_initialised++;
+	}
+
+	return (pool_get(&knote_pool, PR_WAITOK));
 }
 
 void
 knote_free(struct knote *kn)
 {
-	free(kn, M_KNOTE);
+	pool_put(&knote_pool, kn);
 }

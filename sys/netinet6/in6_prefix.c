@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.2 2001/07/04 10:55:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/Attic/in6_prefix.c,v 1.5.2.3 2001/10/31 03:29:04 nate Exp $	*/
 /*	$KAME: in6_prefix.c,v 1.47 2001/03/25 08:41:39 itojun Exp $	*/
 
 /*
@@ -621,7 +621,7 @@ add_each_addr(struct socket *so, struct rr_prefix *rpp, struct rp_addr *rap)
 		 *      Or, completely duplicated prefixes?
 		 * log it and return.
 		 */
-		log(LOG_ERR, "in6_prefix.c: add_each_addr: addition of an addr"
+		log(LOG_ERR, "in6_prefix.c: add_each_addr: addition of an addr "
 		    "%s/%d failed because there is already another addr %s/%d\n",
 		    ip6_sprintf(&ifra.ifra_addr.sin6_addr), rpp->rp_plen,
 		    ip6_sprintf(IA6_IN6(ia6)),

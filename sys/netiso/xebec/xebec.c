@@ -1,11 +1,11 @@
-/*	$OpenBSD: src/sys/netiso/xebec/Attic/xebec.c,v 1.2 1996/03/04 10:37:30 mickey Exp $	*/
+/*	$OpenBSD: src/sys/netiso/xebec/Attic/xebec.c,v 1.2.16.1 2001/10/31 03:29:04 nate Exp $	*/
 /*	$NetBSD: xebec.c,v 1.4 1994/06/29 06:41:23 cgd Exp $	*/
 
 #include "xebec.h"
 #include "llparse.h"
 #ifndef	E_TABLE
 #define	E_TABLE "xebec.e"
-#endif	E_TABLE
+#endif /* E_TABLE */
 
 #include "main.h"
 #include "sets.h"

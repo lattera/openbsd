@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/net/Attic/if_faith.c,v 1.3.2.3 2001/10/31 03:29:02 nate Exp $	*/
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.

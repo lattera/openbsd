@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.7 2001/10/27 10:00:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.8 2001/10/31 03:26:28 nate Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -60,9 +60,6 @@
 #include <sys/tty.h>
 #include <sys/conf.h>
 #include <sys/buf.h>
-#ifdef REAL_CLISTS
-#include <sys/clist.h>
-#endif
 #include <sys/device.h>
 #include <sys/protosw.h>
 #include <sys/reboot.h>
@@ -137,6 +134,7 @@ int	main __P((void *));
 void	check_console __P((struct proc *));
 void	start_init __P((void *));
 void	start_pagedaemon __P((void *));
+void	start_cleaner __P((void *));
 void	start_update __P((void *));
 void	start_reaper __P((void *));
 void    start_crypto __P((void *));
@@ -216,6 +214,11 @@ main(framep)
 	 * allocate mbufs or mbuf clusters during autoconfiguration.
 	 */
 	mbinit();
+
+	/*
+	 * Initialize timeouts.
+	 */
+	timeout_startup();
 
 	cpu_configure();
 
@@ -323,11 +326,6 @@ main(framep)
 	/* Start real time and statistics clocks. */
 	initclocks();
 
-#ifdef REAL_CLISTS
-	/* Initialize clists. */
-	clist_init();
-#endif
-
 #ifdef SYSVSHM
 	/* Initialize System V style shared memory. */
 	shminit();
@@ -370,6 +368,13 @@ main(framep)
 	/* Start the scheduler */
 	scheduler_start();
 
+	/* Initialize signal state for process 0. */
+	signal_init();
+	p->p_sigacts = &sigacts0;
+	siginit(p);
+
+	dostartuphooks();
+
 	/* Configure root/swap devices */
 	if (md_diskconf)
 		(*md_diskconf)();
@@ -397,15 +402,11 @@ main(framep)
 	p->p_stats->p_start = runtime = mono_time = boottime = time;
 	p->p_rtime.tv_sec = p->p_rtime.tv_usec = 0;
 
-	/* Initialize signal state for process 0. */
-	signal_init();
-	p->p_sigacts = &sigacts0;
-	siginit(p);
-
 	/* Create process 1 (init(8)). */
 	if (fork1(p, SIGCHLD, FORK_FORK, NULL, 0, rval))
 		panic("fork init");
-	cpu_set_kpc(pfind(rval[0]), start_init, pfind(rval[0]));
+	initproc = pfind(rval[0]);
+	cpu_set_kpc(initproc, start_init, initproc);
 
 	/* Create process 2, the pageout daemon kernel thread. */
 	if (kthread_create(start_pagedaemon, NULL, NULL, "pagedaemon"))
@@ -415,15 +416,16 @@ main(framep)
 	if (kthread_create(start_reaper, NULL, NULL, "reaper"))
 		panic("fork reaper");
 
-	/* Create process 4, the update daemon kernel thread. */
-	if (kthread_create(start_update, NULL, NULL, "update")) {
-#ifdef DIAGNOSTIC
+	/* Create process 4, the cleaner daemon kernel thread. */
+	if (kthread_create(start_cleaner, NULL, NULL, "cleaner"))
+		panic("fork cleaner");
+
+	/* Create process 5, the update daemon kernel thread. */
+	if (kthread_create(start_update, NULL, NULL, "update"))
 		panic("fork update");
-#endif
-	}
 
 #ifdef CRYPTO
-	/* Create process 5, the crypto kernel thread. */
+	/* Create process 6, the crypto kernel thread. */
 	if (kthread_create(start_crypto, NULL, NULL, "crypto"))
 		panic("crypto thread");
 #endif /* CRYPTO */
@@ -497,8 +499,6 @@ start_init(arg)
 	/*
 	 * Now in process 1.
 	 */
-	initproc = p;
-
 	check_console(p);
 
 	/*
@@ -624,6 +624,14 @@ start_update(arg)
 	void *arg;
 {
 	sched_sync(curproc);
+	/* NOTREACHED */
+}
+
+void
+start_cleaner(arg)
+	void *arg;
+{
+	buf_daemon(curproc);
 	/* NOTREACHED */
 }
 

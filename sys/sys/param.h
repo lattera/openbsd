@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/param.h,v 1.27.2.2 2001/07/04 11:00:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/param.h,v 1.27.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: param.h,v 1.23 1996/03/17 01:02:29 thorpej Exp $	*/
 
 /*-
@@ -45,8 +45,8 @@
 #define BSD4_3	1
 #define BSD4_4	1
 
-#define OpenBSD	200105		/* OpenBSD version (year & month). */
-#define OpenBSD2_9 1		/* OpenBSD 2.9 */
+#define OpenBSD	200111		/* OpenBSD version (year & month). */
+#define OpenBSD3_0 1		/* OpenBSD 3.0 */
 
 #ifndef NULL
 #ifdef 	__GNUG__
@@ -115,8 +115,10 @@
 #define	PUSER	50
 #define	MAXPRI	127		/* Priorities range from 0 through MAXPRI. */
 
-#define	PRIMASK	0x0ff
-#define	PCATCH	0x100		/* OR'd with pri for tsleep to check signals */
+#define	PRIMASK		0x0ff
+#define	PCATCH		0x100	/* OR'd with pri for tsleep to check signals */
+#define PNORELOCK	0x200	/* OR'd with pri for ltsleep to not relock
+				   the interlock */
 
 #define	NBPW	sizeof(int)	/* number of bytes per word (integer) */
 

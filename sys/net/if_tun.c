@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.3 2001/07/04 10:54:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_tun.c,v 1.28.2.4 2001/10/31 03:29:02 nate Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -312,6 +312,29 @@ tun_ioctl(ifp, cmd, data)
 	case SIOCSIFMTU:
 		ifp->if_mtu = ((struct ifreq *)data)->ifr_mtu;
 		break;
+	case SIOCADDMULTI:
+	case SIOCDELMULTI: {
+		struct ifreq *ifr = (struct ifreq *)data;
+		if (ifr == 0) {
+			error = EAFNOSUPPORT;	   /* XXX */
+			break;
+		}
+		switch (ifr->ifr_addr.sa_family) {
+#ifdef INET
+		case AF_INET:
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+			break;
+#endif
+		default:
+			error = EAFNOSUPPORT;
+			break;
+		}
+		break;
+	}
+
 	case SIOCSIFFLAGS:
 		break;
 	default:
@@ -535,9 +558,8 @@ tunread(dev, uio, ioflag)
 
 	while (m0 && uio->uio_resid > 0 && error == 0) {
 		len = min(uio->uio_resid, m0->m_len);
-		if (len == 0)
-			break;
-		error = uiomove(mtod(m0, caddr_t), len, uio);
+		if (len != 0)
+			error = uiomove(mtod(m0, caddr_t), len, uio);
 		MFREE(m0, m);
 		m0 = m;
 	}

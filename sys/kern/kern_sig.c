@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.3 2001/07/04 10:48:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.4 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -387,8 +387,11 @@ void
 execsigs(p)
 	register struct proc *p;
 {
-	register struct sigacts *ps = p->p_sigacts;
+	register struct sigacts *ps;
 	register int nc, mask;
+
+	sigactsunshare(p);
+	ps = p->p_sigacts;
 
 	/*
 	 * Reset caught signals.  Held signals remain held
@@ -526,7 +529,7 @@ sys_sigaltstack(p, v, retval)
 	if (SCARG(uap, oss) && (error = copyout((caddr_t)&psp->ps_sigstk,
 	    (caddr_t)SCARG(uap, oss), sizeof (struct sigaltstack))))
 		return (error);
-	if (SCARG(uap, nss) == 0)
+	if (SCARG(uap, nss) == NULL)
 		return (0);
 	error = copyin((caddr_t)SCARG(uap, nss), (caddr_t)&ss, sizeof (ss));
 	if (error)
@@ -541,7 +544,7 @@ sys_sigaltstack(p, v, retval)
 	if (ss.ss_size < MINSIGSTKSZ)
 		return (ENOMEM);
 	psp->ps_flags |= SAS_ALTSTACK;
-	psp->ps_sigstk= ss;
+	psp->ps_sigstk = ss;
 	return (0);
 }
 

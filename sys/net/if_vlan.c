@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.2 2001/07/04 10:54:12 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/if_vlan.c,v 1.16.4.3 2001/10/31 03:29:02 nate Exp $ */
 /*
  * Copyright 1998 Massachusetts Institute of Technology
  *
@@ -41,22 +41,15 @@
  * if_start(), rewrite them for use by the real outgoing interface,
  * and ask it to send them.
  *
- *
- * XXX It's incorrect to assume that we must always kludge up
- * headers on the physical device's behalf: some devices support
- * VLAN tag insersion and extraction in firmware. For these cases,
- * one can change the behavior of the vlan interface by setting
- * the LINK0 flag on it (that is setting the vlan interface's LINK0
- * flag, _not_ the parent's LINK0 flag; we try to leave the parent
- * alone). If the interface has the LINK0 flag set, then it will
- * not modify the ethernet header on output because the parent
- * can do that for itself. On input, the parent can call vlan_input_tag()
+ * Some devices support 802.1Q tag insertion and extraction in firmware.
+ * The vlan interface behavior changes when the IFCAP_VLAN_HWTAGGING
+ * capability is set on the parent.  In this case, vlan_start() will not
+ * modify the ethernet header.  On input, the parent can call vlan_input_tag()
  * directly in order to supply us with an incoming mbuf and the vlan
  * tag value that goes with it.
  */
 
 #include "vlan.h"
-#if NVLAN > 0
 
 #include <sys/param.h>
 #include <sys/kernel.h>
@@ -87,7 +80,8 @@
 
 struct	ifaddr	**ifnet_addrs;
 
-struct ifvlan ifv_softc[NVLAN];
+struct ifvlan *ifv_softc;
+int nifvlan;
 
 extern int ifqmaxlen;
 
@@ -96,7 +90,7 @@ int	vlan_ioctl (struct ifnet *ifp, u_long cmd, caddr_t addr);
 int	vlan_setmulti (struct ifnet *ifp);
 int	vlan_unconfig (struct ifnet *ifp);
 int	vlan_config (struct ifvlan *ifv, struct ifnet *p);
-void	vlanattach (void *dummy);
+void	vlanattach (int count);
 int	vlan_set_promisc (struct ifnet *ifp);
 
 /*
@@ -148,14 +142,19 @@ int vlan_setmulti(struct ifnet *ifp)
 }
 
 void
-vlanattach(void *dummy)
+vlanattach(int count)
 {
 	struct ifnet *ifp;
 	int i;
 
-	bzero(ifv_softc, sizeof(ifv_softc));
+	MALLOC(ifv_softc, struct ifvlan *, count * sizeof(struct ifvlan),
+	    M_DEVBUF, M_NOWAIT);
+	if (ifv_softc == NULL)
+		panic("vlanattach: MALLOC failed");
+	nifvlan = count;
+	bzero(ifv_softc, nifvlan * sizeof(struct ifvlan));
 
-	for (i = 0; i < NVLAN; i++) {
+	for (i = 0; i < nifvlan; i++) {
 		ifp = &ifv_softc[i].ifv_if;
 		ifp->if_softc = &ifv_softc[i];
 		sprintf(ifp->if_xname, "vlan%d", i);
@@ -230,9 +229,9 @@ vlan_start(struct ifnet *ifp)
 #endif
 
 		/*
-		 * If the LINK0 flag is set, it means the underlying interface
-		 * can do VLAN tag insertion itself and doesn't require us to
-	 	 * create a special header for it. In this case, we just pass
+		 * If the IFCAP_VLAN_HWTAGGING capability is set on the parent,
+		 * it can do VLAN tag insertion itself and doesn't require us
+	 	 * to create a special header for it. In this case, we just pass
 		 * the packet along. However, we need some way to tell the
 		 * interface where the packet came from so that it knows how
 		 * to find the VLAN tag to use, so we set the rcvif in the
@@ -247,7 +246,7 @@ vlan_start(struct ifnet *ifp)
 		 * following potentially bogus rcvif pointers off into
 		 * never-never land.
 		 */
-		if (ifp->if_flags & IFF_LINK0) {
+		if (p->if_capabilities & IFCAP_VLAN_HWTAGGING) {
 			m->m_pkthdr.rcvif = ifp;
 			m->m_flags |= M_PROTO1;
 		} else {
@@ -320,13 +319,13 @@ vlan_input_tag(struct mbuf *m, u_int16_t t)
 	struct ifvlan *ifv;
 	struct ether_vlan_header vh;
 
-	for (i = 0; i < NVLAN; i++) {
+	for (i = 0; i < nifvlan; i++) {
 		ifv = &ifv_softc[i];
 		if (m->m_pkthdr.rcvif == ifv->ifv_p && t == ifv->ifv_tag)
 			break;
 	}
 
-	if (i >= NVLAN) {
+	if (i >= nifvlan) {
 		if (m->m_pkthdr.len < sizeof(struct ether_header))
 			return (-1);
 		m_copydata(m, 0, sizeof(struct ether_header), (caddr_t)&vh);
@@ -387,13 +386,13 @@ vlan_input(eh, m)
 
 	tag = EVL_VLANOFTAG(ntohs(*mtod(m, u_int16_t *)));
 
-	for (i = 0; i < NVLAN; i++) {
+	for (i = 0; i < nifvlan; i++) {
 		ifv = &ifv_softc[i];
 		if (m->m_pkthdr.rcvif == ifv->ifv_p && tag == ifv->ifv_tag)
 			break;
 	}
 
-	if (i >= NVLAN || (ifv->ifv_if.if_flags & (IFF_UP|IFF_RUNNING)) !=
+	if (i >= nifvlan || (ifv->ifv_if.if_flags & (IFF_UP|IFF_RUNNING)) !=
 	    (IFF_UP|IFF_RUNNING)) {
 		m_freem(m);
 		return -1;	/* so ether_input can take note */
@@ -444,7 +443,22 @@ vlan_config(struct ifvlan *ifv, struct ifnet *p)
 	if (ifv->ifv_p)
 		return EBUSY;
 	ifv->ifv_p = p;
-	ifv->ifv_if.if_mtu = p->if_data.ifi_mtu;
+
+	if (p->if_capabilities & IFCAP_VLAN_MTU)
+		ifv->ifv_if.if_mtu = p->if_mtu;
+	else {
+		/*
+		 * This will be incompatible with strict
+		 * 802.1Q implementations
+		 */
+		ifv->ifv_if.if_mtu = p->if_mtu - EVL_ENCAPLEN;
+#ifdef DIAGNOSTIC
+		printf("%s: initialized with non-standard mtu %d (parent %s)\n",
+		    ifv->ifv_if.if_xname, ifv->ifv_if.if_mtu,
+		    ifv->ifv_p->if_xname);
+#endif
+	}
+
 	ifv->ifv_if.if_flags = p->if_flags &
 	    (IFF_UP | IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST);
 
@@ -453,6 +467,29 @@ vlan_config(struct ifvlan *ifv, struct ifnet *p)
 	 * participate in bridges of that type.
 	 */
 	ifv->ifv_if.if_type = p->if_type;
+
+	/*
+	 * Inherit baudrate from the parent.  An SNMP agent would use this
+	 * information.
+	 */
+	ifv->ifv_if.if_baudrate = p->if_baudrate;
+
+	/*
+	 * If the parent interface can do hardware-assisted
+	 * VLAN encapsulation, then propagate its hardware-
+	 * assisted checksumming flags.
+	 *
+	 * If the card cannot handle hardware tagging, it cannot
+	 * possibly compute the correct checksums for tagged packets.
+	 *
+	 * This brings up another possibility, do cards exist which
+	 * have all of these capabilities but cannot utilize them together?
+	 */
+	if (p->if_capabilities & IFCAP_VLAN_HWTAGGING)
+		ifv->ifv_if.if_capabilities = p->if_capabilities &
+		    (IFCAP_CSUM_IPv4|IFCAP_CSUM_TCPv4|
+		    IFCAP_CSUM_UDPv4);
+		/* (IFCAP_CSUM_TCPv6|IFCAP_CSUM_UDPv6); */
 
 	/*
 	 * Set up our ``Ethernet address'' to reflect the underlying
@@ -549,7 +586,7 @@ vlan_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 	struct ifreq *ifr;
 	struct ifvlan *ifv;
 	struct vlanreq vlr;
-	int error = 0;
+	int error = 0, p_mtu = 0;
 
 	ifr = (struct ifreq *)data;
 	ifa = (struct ifaddr *)data;
@@ -585,17 +622,19 @@ vlan_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 		break;
 
 	case SIOCSIFMTU:
-		/*
-		 * XXX Set the interface MTU.
-		 * This is bogus. The underlying interface might support
-	 	 * jumbo frames.  It would be nice to replace ETHERMTU
-		 * with the parent interface's MTU in the following statement.
-		 */
-		if (ifr->ifr_mtu > ETHERMTU || ifr->ifr_mtu < ETHERMIN) {
+		if (ifv->ifv_p != NULL) {
+			if (ifv->ifv_p->if_capabilities & IFCAP_VLAN_MTU)
+				p_mtu = ifv->ifv_p->if_mtu;
+			else
+				p_mtu = ifv->ifv_p->if_mtu - EVL_ENCAPLEN;
+			
+			if (ifr->ifr_mtu > p_mtu || ifr->ifr_mtu < ETHERMIN)
+				error = EINVAL;
+			else
+				ifp->if_mtu = ifr->ifr_mtu;
+		} else
 			error = EINVAL;
-		} else {
-			ifp->if_mtu = ifr->ifr_mtu;
-		}
+
 		break;
 
 	case SIOCSETVLAN:
@@ -659,5 +698,3 @@ vlan_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 	}
 	return error;
 }
-
-#endif /* NVLAN > 0 */

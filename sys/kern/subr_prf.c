@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.4 2001/07/04 10:48:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.5 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -203,6 +203,7 @@ panic(fmt, va_alist)
 		vsprintf(panicbuf, fmt, ap);
 		panicstr = panicbuf;
 	}
+	va_end(ap);
 
 	printf("panic: ");
 	va_start(ap, fmt);
@@ -252,8 +253,8 @@ log(level, fmt, va_alist)
 	logpri(level);		/* log the level first */
 	va_start(ap, fmt);
 	kprintf(fmt, TOLOG, NULL, NULL, ap);
-	splx(s);
 	va_end(ap);
+	splx(s);
 	if (!log_open) {
 		va_start(ap, fmt);
 		kprintf(fmt, TOCONS, NULL, NULL, ap);
@@ -299,8 +300,8 @@ addlog(fmt, va_alist)
 	s = splhigh();
 	va_start(ap, fmt);
 	kprintf(fmt, TOLOG, NULL, NULL, ap);
-	splx(s);
 	va_end(ap);
+	splx(s);
 	if (!log_open) {
 		va_start(ap, fmt);
 		kprintf(fmt, TOCONS, NULL, NULL, ap);
@@ -822,11 +823,11 @@ reswitch:	switch (ch) {
 			_uquad = va_arg(ap, u_int);
 			b = va_arg(ap, char *);
 			if (*b == 8)
-				sprintf(buf, "%qo", _uquad);
+				sprintf(buf, "%llo", _uquad);
 			else if (*b == 10)
-				sprintf(buf, "%qd", _uquad);
+				sprintf(buf, "%lld", _uquad);
 			else if (*b == 16)
-				sprintf(buf, "%qx", _uquad);
+				sprintf(buf, "%llx", _uquad);
 			else
 				break;
 			b++;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.2 2001/05/14 22:40:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.3 2001/10/31 03:29:04 nate Exp $	*/
 /*	$KAME: in6_var.h,v 1.55 2001/02/16 12:49:45 itojun Exp $	*/
 
 /*
@@ -567,6 +567,7 @@ void	in6_purgeaddr __P((struct ifaddr *, struct ifnet *));
 void	in6_savemkludge __P((struct in6_ifaddr *));
 void	in6_setmaxmtu   __P((void));
 void	in6_restoremkludge __P((struct in6_ifaddr *, struct ifnet *));
+void	in6_createmkludge __P((struct ifnet *));
 void	in6_purgemkludge __P((struct ifnet *));
 struct in6_ifaddr *in6ifa_ifpforlinklocal __P((struct ifnet *, int));
 struct in6_ifaddr *in6ifa_ifpwithaddr __P((struct ifnet *,

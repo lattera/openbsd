@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/buf.h,v 1.15.6.2 2001/07/04 11:00:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/buf.h,v 1.15.6.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
@@ -77,7 +77,7 @@ struct buf {
 	LIST_ENTRY(buf) b_hash;		/* Hash chain. */
 	LIST_ENTRY(buf) b_vnbufs;	/* Buffer's associated vnode. */
 	TAILQ_ENTRY(buf) b_freelist;	/* Free list position if not active. */
-	TAILQ_ENTRY(buf) b_synclist;	/* List of diry buffers to be written out */
+	TAILQ_ENTRY(buf) b_synclist;	/* List of dirty buffers to be written out */
 	long b_synctime;		/* Time this buffer should be flushed */
 	struct	buf *b_actf, **b_actb;	/* Device driver queue when active. */
 	struct  proc *b_proc;		/* Associated proc; NULL if kernel. */
@@ -148,7 +148,7 @@ struct buf {
 #define	B_WRITE		0x00000000	/* Write buffer (pseudo flag). */
 #define	B_WRITEINPROG	0x01000000	/* Write in progress. */
 #define	B_XXX		0x02000000	/* Debugging flag. */
-#define	B_VFLUSH	0x04000000	/* Buffer is being synced. */
+#define	B_DEFERRED	0x04000000	/* Skipped over for cleaning */
 #define	B_SCANNED	0x08000000	/* Block already pushed during sync */
 
 /*
@@ -215,7 +215,6 @@ void    buf_undirty __P((struct buf *));
 int	bwrite __P((struct buf *));
 struct buf *getblk __P((struct vnode *, daddr_t, int, int, int));
 struct buf *geteblk __P((int));
-struct buf *getnewbuf __P((int slpflag, int slptimeo));
 struct buf *incore __P((struct vnode *, daddr_t));
 
 void	minphys __P((struct buf *bp));
@@ -226,6 +225,7 @@ void  reassignbuf __P((struct buf *));
 void  bgetvp __P((struct vnode *, struct buf *));
 
 void  buf_replacevnode __P((struct buf *, struct vnode *));
+void  buf_daemon __P((struct proc *));
 
 static __inline void
 buf_start(struct buf *bp)

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/vm/Attic/vm_param.h,v 1.18.2.3 2001/07/04 11:01:28 niklas Exp $	*/
-/*	$NetBSD: vm_param.h,v 1.12 1995/03/26 20:39:16 jtc Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/vm_param.h,v 1.18.2.4 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: vm_param.h,v 1.25 2000/03/26 20:42:45 kleink Exp $	*/
 
 /* 
  * Copyright (c) 1991, 1993
@@ -119,7 +119,8 @@ typedef	int	boolean_t;
 #define	VM_PSSTRINGS	3		/* PSSTRINGS */
 #define VM_UVMEXP	4		/* struct uvmexp */
 #define VM_SWAPENCRYPT	5		/* int */
-#define	VM_MAXID	6		/* number of valid vm ids */
+#define VM_NKMEMPAGES	6		/* int - # kmem_map pages */
+#define	VM_MAXID	7		/* number of valid vm ids */
 
 #define	CTL_VM_NAMES { \
 	{ 0, 0 }, \
@@ -128,6 +129,7 @@ typedef	int	boolean_t;
 	{ "psstrings", CTLTYPE_STRUCT }, \
 	{ "uvmexp", CTLTYPE_STRUCT }, \
 	{ "swapencrypt", CTLTYPE_NODE }, \
+	{ "nkmempages", CTLTYPE_INT }, \
 }
 
 struct _ps_strings {
@@ -163,11 +165,8 @@ struct _ps_strings {
  * Round off or truncate to the nearest page.  These will work
  * for either addresses or counts (i.e., 1 byte rounds to 1 page).
  */
-#define	round_page(x) \
-	(((x) + PAGE_MASK) & ~PAGE_MASK)
-#define	trunc_page(x) \
-	((x) & ~PAGE_MASK)
-
+#define	round_page(x) (((x) + PAGE_MASK) & ~PAGE_MASK)
+#define	trunc_page(x) ((x) & ~PAGE_MASK)
 #else
 /* out-of-kernel versions of round_page and trunc_page */
 #define	round_page(x) \

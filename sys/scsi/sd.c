@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.2 2001/07/04 11:00:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/sd.c,v 1.41.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
@@ -688,6 +688,7 @@ sdstart(v)
 		 *  fit in a "small" cdb, use it.
 		 */
 		if (!(sc_link->flags & SDEV_ATAPI) &&
+		    !(sc_link->quirks & SDEV_NOCDB6) && 
 		    ((blkno & 0x1fffff) == blkno) &&
 		    ((nblks & 0xff) == nblks)) {
 			/*
@@ -1165,7 +1166,6 @@ sdsize(dev)
 	return size;
 }
 
-#ifndef __BDEVSW_DUMP_OLD_TYPE
 /* #define SD_DUMP_NOT_TRUSTED if you just want to watch */
 static struct scsi_xfer sx;
 static int sddoingadump;
@@ -1255,7 +1255,7 @@ sddump(dev, blkno, va, size)
 		 * to wait for an xs.
 		 */
 		bzero(xs, sizeof(sx));
-		xs->flags |= SCSI_AUTOCONF | INUSE | SCSI_DATA_OUT;
+		xs->flags |= SCSI_AUTOCONF | SCSI_DATA_OUT;
 		xs->sc_link = sd->sc_link;
 		xs->retries = SDRETRIES;
 		xs->timeout = 10000;	/* 10000 millisecs for a disk ! */
@@ -1287,19 +1287,6 @@ sddump(dev, blkno, va, size)
 	sddoingadump = 0;
 	return 0;
 }
-#else	/* __BDEVSW_DUMP_OLD_TYPE */
-int
-sddump(dev, blkno, va, size)
-	dev_t dev;
-	daddr_t blkno;
-	caddr_t va;
-	size_t size;
-{
-
-	/* Not implemented. */
-	return ENXIO;
-}
-#endif	/* __BDEVSW_DUMP_OLD_TYPE */
 
 /*
  * Copy up to len chars from src to dst, ignoring non-printables.

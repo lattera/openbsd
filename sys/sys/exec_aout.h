@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/exec_aout.h,v 1.9.8.1 2001/07/04 11:00:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/exec_aout.h,v 1.9.8.2 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: exec_aout.h,v 1.15 1996/05/18 17:20:54 christos Exp $	*/
 
 /*
@@ -76,8 +76,9 @@ struct exec {
 #define	MID_ALPHA	141	/* Alpha BSD binary */
 #define	MID_MIPS	142	/* big-endian MIPS */
 #define	MID_ARM6	143	/* ARM6 */
-#define MID_ROMP	149	/* IBM RT */
-#define MID_M88K	151	/* m88k BSD binary */ 
+#define MID_POWERPC	149	/* big-endian PowerPC */
+#define MID_SPARC64	151	/* LP64 sparc */
+#define MID_M88K	153	/* m88k BSD binary */ 
 #define	MID_HP200	200	/* hp200 (68010) BSD binary */
 #define	MID_HP300	300	/* hp300 (68020+68881) BSD binary */
 #define	MID_HPUX	0x20C	/* hp200/300 HP-UX binary */

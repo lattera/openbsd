@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/lib/libkern/arch/sparc64/Attic/Makefile.inc,v 1.3 2001/08/20 20:15:29 jason Exp $
+#	$OpenBSD: src/sys/lib/libkern/arch/sparc64/Attic/Makefile.inc,v 1.3.4.1 2001/10/31 03:26:30 nate Exp $
 #	$NetBSD: Makefile.inc,v 1.4 2000/11/01 19:37:20 thorpej Exp $
 
 SRCS+=  __main.c \

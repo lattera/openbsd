@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
-/*	$NetBSD: uvm_amap.c,v 1.21 1999/07/06 02:15:53 cgd Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.3 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: uvm_amap.c,v 1.22 1999/09/12 01:17:33 chs Exp $	*/
 
 /*
  *
@@ -52,7 +52,6 @@
 
 #include <vm/vm.h>
 #include <vm/vm_page.h>
-#include <vm/vm_kern.h>
 
 #define UVM_AMAP_C		/* ensure disabled inlines are in */
 #include <uvm/uvm.h>
@@ -478,9 +477,8 @@ amap_share_protect(entry, prot)
 			if (amap->am_anon[lcv] == NULL)
 				continue;
 			if (amap->am_anon[lcv]->u.an_page != NULL)
-				pmap_page_protect(
-				    PMAP_PGARG(amap->am_anon[lcv]->u.an_page),
-				prot);
+				pmap_page_protect(amap->am_anon[lcv]->u.an_page,
+						  prot);
 		}
 		return;
 	}
@@ -491,8 +489,7 @@ amap_share_protect(entry, prot)
 		if (slot < entry->aref.ar_pageoff || slot >= stop)
 			continue;
 		if (amap->am_anon[slot]->u.an_page != NULL)
-			pmap_page_protect(
-			    PMAP_PGARG(amap->am_anon[slot]->u.an_page), prot);
+			pmap_page_protect(amap->am_anon[slot]->u.an_page, prot);
 	}
 	return;
 }

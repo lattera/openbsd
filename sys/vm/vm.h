@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/vm/Attic/vm.h,v 1.8.4.3 2001/07/04 11:01:16 niklas Exp $	*/
-/*	$NetBSD: vm.h,v 1.13 1994/06/29 06:47:52 cgd Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/vm.h,v 1.8.4.4 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: vm.h,v 1.22 2000/03/26 20:54:48 kleink Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993
@@ -39,7 +39,8 @@
 #ifndef VM_H
 #define VM_H
 
-typedef int vm_inherit_t;		/* XXX: inheritance codes */
+typedef int		vm_inherit_t;	/* XXX: inheritance codes */
+typedef off_t           voff_t;		/* XXX: offset within a uvm_object */
 
 union vm_map_object;
 typedef union vm_map_object vm_map_object_t;
@@ -53,18 +54,15 @@ typedef struct vm_map *vm_map_t;
 struct vm_page;
 typedef struct vm_page  *vm_page_t;
 
+#include <sys/types.h>
 #include <sys/vmmeter.h>
 #include <sys/queue.h>
 #include <vm/vm_param.h>
 #include <sys/lock.h>
-#include <vm/vm_prot.h>
-#include <vm/vm_inherit.h>
-#include <vm/vm_map.h>
+#include <uvm/uvm_extern.h>
 #include <vm/vm_page.h>
-#include <vm/vm_pager.h>
 #include <vm/pmap.h>
-#include <vm/vm_object.h>
-#include <vm/vm_extern.h>
+#include <uvm/uvm_map.h>
 
 /*
  * Shareable process virtual address space.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.4 2001/07/04 10:48:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_extent.c,v 1.7.6.5 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: subr_extent.c,v 1.7 1996/11/21 18:46:34 cgd Exp $	*/
 
 /*-
@@ -49,6 +49,7 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 #include <sys/queue.h>
+#include <sys/pool.h>
 #include <ddb/db_output.h>
 #else
 /*
@@ -102,6 +103,20 @@ extent_register(ex)
 
 	/* Insert into list */
 	LIST_INSERT_HEAD(ext_listp, ex, ex_link);
+}
+
+struct pool ex_region_pl;
+
+static void
+extent_pool_init(void)
+{
+	static int inited;
+
+	if (!inited) {
+		pool_init(&ex_region_pl, sizeof(struct extent_region), 0, 0, 0,
+		    "extentpl", 0, 0, 0, 0);
+		inited = 1;
+	}
 }
 
 /*
@@ -175,6 +190,8 @@ extent_create(name, start, end, mtype, storage, storagesize, flags)
 		panic("extent_create: storage provided for non-fixed");
 #endif
 
+	extent_pool_init();
+
 	/* Allocate extent descriptor. */
 	if (fixed_extent) {
 		struct extent_fixed *fex;
@@ -247,6 +264,9 @@ extent_destroy(ex)
 		LIST_REMOVE(orp, er_link);
 		extent_free_region_descriptor(ex, orp);
 	}
+
+	/* Remove from the list of all extents. */
+	LIST_REMOVE(ex, ex_link);
 
 	/* If we're not a fixed extent, free the extent descriptor itself. */
 	if ((ex->ex_flags & EXF_FIXED) == 0)
@@ -506,7 +526,7 @@ extent_alloc_region(ex, start, size, flags)
  * a power of 2.
  */
 int
-extent_alloc_subregion1(ex, substart, subend, size, alignment, skew, boundary,
+extent_alloc_subregion(ex, substart, subend, size, alignment, skew, boundary,
     flags, result)
 	struct extent *ex;
 	u_long substart, subend, size, alignment, skew, boundary;
@@ -999,6 +1019,7 @@ extent_alloc_region_descriptor(ex, flags)
 	int flags;
 {
 	struct extent_region *rp;
+	int s;
 
 	if (ex->ex_flags & EXF_FIXED) {
 		struct extent_fixed *fex = (struct extent_fixed *)ex;
@@ -1029,10 +1050,9 @@ extent_alloc_region_descriptor(ex, flags)
 	}
 
  alloc:
-	rp = (struct extent_region *)
-	    malloc(sizeof(struct extent_region), ex->ex_mtype,
-	    (flags & EX_WAITOK) ? M_WAITOK : M_NOWAIT);
-
+	s = splimp();
+	rp = pool_get(&ex_region_pl, (flags & EX_WAITOK) ? PR_WAITOK : 0);
+	splx(s);
 	if (rp != NULL)
 		rp->er_flags = ER_ALLOC;
 
@@ -1044,6 +1064,7 @@ extent_free_region_descriptor(ex, rp)
 	struct extent *ex;
 	struct extent_region *rp;
 {
+	int s;
 
 	if (ex->ex_flags & EXF_FIXED) {
 		struct extent_fixed *fex = (struct extent_fixed *)ex;
@@ -1061,7 +1082,9 @@ extent_free_region_descriptor(ex, rp)
 				    er_link);
 				goto wake_em_up;
 			} else {
-				free(rp, ex->ex_mtype);
+				s = splimp();
+				pool_put(&ex_region_pl, rp);
+				splx(s);
 			}
 		} else {
 			/* Clear all flags. */
@@ -1080,7 +1103,9 @@ extent_free_region_descriptor(ex, rp)
 	/*
 	 * We know it's dynamically allocated if we get here.
 	 */
-	free(rp, ex->ex_mtype);
+	s = splimp();
+	pool_put(&ex_region_pl, rp);
+	splx(s);
 }
 
 #ifndef DDB

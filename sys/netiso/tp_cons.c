@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_cons.c,v 1.2.16.1 2001/07/04 10:55:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_cons.c,v 1.2.16.2 2001/10/31 03:29:04 nate Exp $	*/
 /*	$NetBSD: tp_cons.c,v 1.8 1996/02/14 21:32:37 christos Exp $	*/
 
 /*-
@@ -239,7 +239,7 @@ tpcons_input(m, va_alist)
 	faddr = va_arg(ap, struct sockaddr *);
 	laddr = va_arg(ap, struct sockaddr *);
 	channel = va_arg(ap, caddr_t);
-
+	va_end(ap);
 
 	m = (struct mbuf *) tp_inputprep(m);
 

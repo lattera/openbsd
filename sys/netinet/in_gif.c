@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8.2.2 2001/07/04 10:54:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8.2.3 2001/10/31 03:29:03 nate Exp $	*/
 /*	$KAME: in_gif.c,v 1.50 2001/01/22 07:27:16 itojun Exp $	*/
 
 /*
@@ -197,7 +197,7 @@ in_gif_input(m, va_alist)
 
 	/* this code will be soon improved. */
 #define	satosin(sa)	((struct sockaddr_in *)(sa))	
-	for (i = 0, sc = gif; i < ngif; i++, sc++) {
+	for (i = 0, sc = gif_softc; i < ngif; i++, sc++) {
 		if (sc->gif_psrc == NULL
 		 || sc->gif_pdst == NULL
 		 || sc->gif_psrc->sa_family != AF_INET
@@ -229,7 +229,7 @@ in_gif_input(m, va_alist)
 		m->m_pkthdr.rcvif = gifp;
 		gifp->if_ipackets++;
 		gifp->if_ibytes += m->m_pkthdr.len;
-		ipip_input(m, off); /* We have a configured GIF */
+		ipip_input(m, off, gifp); /* We have a configured GIF */
 		return;
 	}
 

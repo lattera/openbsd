@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.64.2.3 2001/07/04 10:54:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.64.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*	$NetBSD: ip_output.c,v 1.28 1996/02/13 23:43:07 christos Exp $	*/
 
 /*
@@ -51,10 +51,6 @@
 #include <net/if_enc.h>
 #include <net/route.h>
 
-#if NPF > 0
-#include <net/pfvar.h>
-#endif
-
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
@@ -67,6 +63,10 @@
 #include <netinet/tcp_timer.h>
 #include <netinet/tcp_var.h>
 #include <netinet/udp_var.h>
+
+#if NPF > 0
+#include <net/pfvar.h>
+#endif
 
 #ifdef vax
 #include <machine/mtpr.h>
@@ -84,6 +84,7 @@ extern u_int8_t get_sa_require  __P((struct inpcb *));
 extern int ipsec_auth_default_level;
 extern int ipsec_esp_trans_default_level;
 extern int ipsec_esp_network_default_level;
+extern int ipsec_ipcomp_default_level;
 #endif /* IPSEC */
 
 static struct mbuf *ip_insertoptions __P((struct mbuf *, struct mbuf *, int *));
@@ -286,23 +287,6 @@ ip_output(m0, va_alist)
 			goto done;
 		}
 	} else {
-		/*
-		 * If the socket has set the bypass flags and SA
-		 * destination matches the IP destination, skip
-		 * IPsec. This allows IKE packets to travel through
-		 * IPsec tunnels.
-		 */
-		if ((inp != NULL) &&
-		    (inp->inp_seclevel[SL_AUTH] == IPSEC_LEVEL_BYPASS) &&
-		    (inp->inp_seclevel[SL_ESP_TRANS] == IPSEC_LEVEL_BYPASS) &&
-		    (inp->inp_seclevel[SL_ESP_NETWORK] == IPSEC_LEVEL_BYPASS)
-		    && (sdst.sa.sa_family == AF_INET) &&
-		    (sdst.sin.sin_addr.s_addr == ip->ip_dst.s_addr)) {
-			splx(s);
-			sproto = 0; /* mark as no-IPsec-needed */
-			goto done_spd;
-		}
-
 		/* Loop detection */
 		for (mtag = m_tag_first(m); mtag != NULL;
 		    mtag = m_tag_next(m, mtag)) {
@@ -582,7 +566,7 @@ sendit:
 		if ((ip->ip_off & IP_DF) && tdb->tdb_mtu &&
 		    (u_int16_t)ip->ip_len > tdb->tdb_mtu &&
 		    tdb->tdb_mtutimeout > time.tv_sec) {
-			struct rtentry *rt;
+			struct rtentry *rt = NULL;
 			
 			icmp_mtu = tdb->tdb_mtu;
 			splx(s);
@@ -1037,6 +1021,7 @@ ip_ctloutput(op, so, level, optname, mp)
 		case IP_AUTH_LEVEL:
 		case IP_ESP_TRANS_LEVEL:
 		case IP_ESP_NETWORK_LEVEL:
+		case IP_IPCOMP_LEVEL:
 #ifndef IPSEC
 			error = EOPNOTSUPP;
 #else
@@ -1093,6 +1078,14 @@ ip_ctloutput(op, so, level, optname, mp)
 					break;
 				}
 				inp->inp_seclevel[SL_ESP_NETWORK] = optval;
+				break;
+			case IP_IPCOMP_LEVEL:
+			        if (optval < ipsec_ipcomp_default_level &&
+				    suser(p->p_ucred, &p->p_acflag)) {
+				        error = EACCES;
+					break;
+				}
+				inp->inp_seclevel[SL_IPCOMP] = optval;
 				break;
 			}
 			if (!error)
@@ -1318,6 +1311,7 @@ ip_ctloutput(op, so, level, optname, mp)
 		case IP_AUTH_LEVEL:
 		case IP_ESP_TRANS_LEVEL:
 		case IP_ESP_NETWORK_LEVEL:
+		case IP_IPCOMP_LEVEL:
 #ifndef IPSEC
 			m->m_len = sizeof(int);
 			*mtod(m, int *) = IPSEC_LEVEL_NONE;
@@ -1334,6 +1328,9 @@ ip_ctloutput(op, so, level, optname, mp)
 
 			case IP_ESP_NETWORK_LEVEL:
 				optval = inp->inp_seclevel[SL_ESP_NETWORK];
+				break;
+			case IP_IPCOMP_LEVEL:
+			        optval = inp->inp_seclevel[SL_IPCOMP];
 				break;
 			}
 			*mtod(m, int *) = optval;

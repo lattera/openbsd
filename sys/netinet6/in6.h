@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.3 2001/05/14 22:40:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.4 2001/10/31 03:29:04 nate Exp $	*/
 /*	$KAME: in6.h,v 1.83 2001/03/29 02:55:07 jinmei Exp $	*/
 
 /*
@@ -409,12 +409,13 @@ struct route_in6 {
 #endif
 #define IPV6_FAITH		29 /* bool; accept FAITH'ed connections */
 
-/* 30-52: reserved */
+/* 30-52, 57-59: reserved */
 #define IPV6_AUTH_LEVEL		53   /* int; authentication used */
 #define IPV6_ESP_TRANS_LEVEL	54   /* int; transport encryption */
 #define IPV6_ESP_NETWORK_LEVEL	55   /* int; full-packet encryption */
-
 #define IPSEC6_OUTSA		56   /* set the outbound SA for a socket */
+#define IPV6_IPCOMP_LEVEL	60   /* int; compression */
+
 /* to define items, should talk with KAME guys first, for *BSD compatibility */
 
 #define IPV6_RTHDR_LOOSE     0 /* this hop need not be a neighbor. XXX old spec */

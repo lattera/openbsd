@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.2 2001/07/04 10:55:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.4.2.3 2001/10/31 03:29:04 nate Exp $	*/
 /*	$KAME: ip6_output.c,v 1.172 2001/03/25 09:55:56 itojun Exp $	*/
 
 /*
@@ -65,6 +65,8 @@
  *	@(#)ip_output.c	8.3 (Berkeley) 1/21/94
  */
 
+#include "pf.h"
+
 #include <sys/param.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
@@ -89,6 +91,10 @@
 #include <netinet6/ip6_var.h>
 #include <netinet6/nd6.h>
 
+#if NPF > 0
+#include <net/pfvar.h>
+#endif
+
 #ifdef IPSEC
 #include <netinet/ip_ah.h>
 #include <netinet/ip_esp.h>
@@ -101,6 +107,7 @@ extern u_int8_t get_sa_require  __P((struct inpcb *));
 extern int ipsec_auth_default_level;
 extern int ipsec_esp_trans_default_level;
 extern int ipsec_esp_network_default_level;
+extern int ipsec_ipcomp_default_level;
 #endif /* IPSEC */
 
 struct ip6_exthdrs {
@@ -249,22 +256,6 @@ ip6_output(m0, opt, ro, flags, im6o, ifpp)
 			goto freehdrs;
 		}
 	} else {
-		/*
-		 * If the socket has set the bypass flags and SA destination
-		 * matches the IP destination, skip IPsec. This allows
-		 * IKE packets to travel through IPsec tunnels.
-		 */
-		if (inp != NULL && 
-		    inp->inp_seclevel[SL_AUTH] == IPSEC_LEVEL_BYPASS &&
-		    inp->inp_seclevel[SL_ESP_TRANS] == IPSEC_LEVEL_BYPASS &&
-		    inp->inp_seclevel[SL_ESP_NETWORK] == IPSEC_LEVEL_BYPASS &&
-		    sdst.sa.sa_family == AF_INET6 &&
-		    IN6_ARE_ADDR_EQUAL(&sdst.sin6.sin6_addr, &ip6->ip6_dst)) {
-			splx(s);
-		        sproto = 0; /* mark as no-IPsec-needed */
-			goto done_spd;
-		}
-
 		/* Loop detection */
 		for (mtag = m_tag_first(m); mtag != NULL;
 		    mtag = m_tag_next(m, mtag)) {
@@ -889,6 +880,15 @@ skip_ipsec2:;
 		m->m_pkthdr.rcvif = NULL;
 	}
 
+#if NPF > 0 
+        if (pf_test6(PF_OUT, ifp, &m) != PF_PASS) {
+                error = EHOSTUNREACH;
+		m_freem(m);
+                goto done;
+        }
+	ip6 = mtod(m, struct ip6_hdr *);
+#endif 
+
 	/*
 	 * Send the packet to the outgoing interface.
 	 * If necessary, do IPv6 fragmentation before sending.
@@ -1425,6 +1425,7 @@ ip6_ctloutput(op, so, level, optname, mp)
 			case IPV6_AUTH_LEVEL:
 			case IPV6_ESP_TRANS_LEVEL:
 			case IPV6_ESP_NETWORK_LEVEL:
+			case IPV6_IPCOMP_LEVEL:
 #ifndef IPSEC
 				error = EINVAL;
 #else
@@ -1441,7 +1442,7 @@ ip6_ctloutput(op, so, level, optname, mp)
 				}
 					
 				switch (optname) {
-				case IP_AUTH_LEVEL:
+				case IPV6_AUTH_LEVEL:
 				        if (optval < ipsec_auth_default_level &&
 					    suser(p->p_ucred, &p->p_acflag)) {
 						error = EACCES;
@@ -1450,7 +1451,7 @@ ip6_ctloutput(op, so, level, optname, mp)
 					inp->inp_seclevel[SL_AUTH] = optval;
 					break;
 
-				case IP_ESP_TRANS_LEVEL:
+				case IPV6_ESP_TRANS_LEVEL:
 				        if (optval < ipsec_esp_trans_default_level &&
 					    suser(p->p_ucred, &p->p_acflag)) {
 						error = EACCES;
@@ -1459,13 +1460,22 @@ ip6_ctloutput(op, so, level, optname, mp)
 					inp->inp_seclevel[SL_ESP_TRANS] = optval;
 					break;
 
-				case IP_ESP_NETWORK_LEVEL:
+				case IPV6_ESP_NETWORK_LEVEL:
 				        if (optval < ipsec_esp_network_default_level &&
 					    suser(p->p_ucred, &p->p_acflag)) {
 						error = EACCES;
 						break;
 					}
 					inp->inp_seclevel[SL_ESP_NETWORK] = optval;
+					break;
+
+				case IPV6_IPCOMP_LEVEL:
+				        if (optval < ipsec_ipcomp_default_level &&
+					    suser(p->p_ucred, &p->p_acflag)) {
+						error = EACCES;
+						break;
+					}
+					inp->inp_seclevel[SL_IPCOMP] = optval;
 					break;
 				}
 				if (!error)
@@ -1642,6 +1652,7 @@ ip6_ctloutput(op, so, level, optname, mp)
 			case IPV6_AUTH_LEVEL:
 			case IPV6_ESP_TRANS_LEVEL:
 			case IPV6_ESP_NETWORK_LEVEL:
+			case IPV6_IPCOMP_LEVEL:
 #ifndef IPSEC
 				m->m_len = sizeof(int);
 				*mtod(m, int *) = IPSEC_LEVEL_NONE;
@@ -1660,6 +1671,10 @@ ip6_ctloutput(op, so, level, optname, mp)
 				case IP_ESP_NETWORK_LEVEL:
 					optval =
 					    inp->inp_seclevel[SL_ESP_NETWORK];
+					break;
+
+				case IP_IPCOMP_LEVEL:
+					optval = inp->inp_seclevel[SL_IPCOMP];
 					break;
 				}
 				*mtod(m, int *) = optval;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.5 2001/07/04 10:53:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.25.2.6 2001/10/31 03:29:02 nate Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -52,10 +52,6 @@
 #include <net/route.h>
 #include <net/netisr.h>
 
-#if NPF > 0
-#include <net/pfvar.h>
-#endif
-
 #ifdef INET
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
@@ -65,6 +61,15 @@
 #include <netinet/ip_ipsp.h>
 
 #include <net/if_enc.h>
+#endif
+
+#if NPF > 0
+#include <net/pfvar.h>
+#define	BRIDGE_IN	PF_IN
+#define	BRIDGE_OUT	PF_OUT
+#else
+#define	BRIDGE_IN	0
+#define	BRIDGE_OUT	1
 #endif
 
 #if NBPFILTER > 0
@@ -134,6 +139,10 @@ int		bridge_addrule __P((struct bridge_iflist *,
 int		bridge_flushrule __P((struct bridge_iflist *));
 int	bridge_brlconf __P((struct bridge_softc *, struct ifbrlconf *));
 u_int8_t bridge_filterrule __P((struct brl_head *, struct ether_header *));
+#if NPF > 0
+struct mbuf *bridge_filter __P((struct bridge_softc *, int, struct ifnet *,
+    struct ether_header *, struct mbuf *m));
+#endif
 
 #define	ETHERADDR_IS_IP_MCAST(a) \
 	/* struct etheraddr *a;	*/				\
@@ -141,14 +150,6 @@ u_int8_t bridge_filterrule __P((struct brl_head *, struct ether_header *));
 	 (a)->ether_addr_octet[1] == 0x00 &&			\
 	 (a)->ether_addr_octet[2] == 0x5e)
 
-
-#if NPF > 0
-/*
- * Filter hooks
- */
-struct mbuf *bridge_filter __P((struct bridge_softc *, struct ifnet *,
-    struct ether_header *, struct mbuf *m));
-#endif
 
 void
 bridgeattach(n)
@@ -1042,13 +1043,11 @@ bridgeintr_frame(sc, m)
 		m_freem(m);
 		return;
 	}
-
 #if NPF > 0
-	m = bridge_filter(sc, src_if, &eh, m);
+	m = bridge_filter(sc, BRIDGE_IN, src_if, &eh, m);
 	if (m == NULL)
 		return;
 #endif
-
 	/*
 	 * If the packet is a multicast or broadcast OR if we don't
 	 * know any better, forward it to all interfaces.
@@ -1087,6 +1086,12 @@ bridgeintr_frame(sc, m)
 		m_freem(m);
 		return;
 	}
+#if NPF > 0
+	m = bridge_filter(sc, BRIDGE_OUT, dst_if, &eh, m);
+	if (m == NULL)
+		return;
+#endif
+
 #ifdef ALTQ
 	if (ALTQ_IS_ENABLED(&dst_if->if_snd))
 		altq_etherclassify(&dst_if->if_snd, m, &pktattr);
@@ -1322,6 +1327,12 @@ bridge_broadcast(sc, ifp, eh, m)
 				continue;
 			}
 		}
+
+#if NPF > 0
+		mc = bridge_filter(sc, BRIDGE_OUT, dst_if, eh, mc);
+		if (mc == NULL)
+			continue;
+#endif
 
 #ifdef ALTQ
 		if (ALTQ_IS_ENABLED(&dst_if->if_snd))
@@ -1894,7 +1905,7 @@ bridge_flushrule(bif)
 	}
 	while (!SIMPLEQ_EMPTY(&bif->bif_brlout)) {
 		p = SIMPLEQ_FIRST(&bif->bif_brlout);
-		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlin, p, brl_next);
+		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlout, p, brl_next);
 		free(p, M_DEVBUF);
 	}
 	return (0);
@@ -1908,12 +1919,16 @@ bridge_flushrule(bif)
  * who've read net/if_ethersubr.c and netinet/ip_input.c
  */
 struct mbuf *
-bridge_filter(sc, ifp, eh, m)
+bridge_filter(sc, dir, ifp, eh, m)
 	struct bridge_softc *sc;
+	int dir;
 	struct ifnet *ifp;
 	struct ether_header *eh;
 	struct mbuf *m;
 {
+#if NPF == 0
+	return (m);
+#else
 	struct llc llc;
 	int hassnap = 0;
 	struct ip *ip;
@@ -1984,7 +1999,8 @@ bridge_filter(sc, ifp, eh, m)
 	}
 
 	/* Finally, we get to filter the packet! */
-	if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
+	m->m_pkthdr.rcvif = ifp;
+	if (pf_test(dir, ifp, &m) != PF_PASS)
 		goto dropit;
 
 	/* Rebuild the IP header */
@@ -2019,5 +2035,6 @@ dropit:
 	if (m != NULL)
 		m_freem(m);
 	return (NULL);
+#endif /* NPF == 0 */
 }
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.4 2001/07/04 10:48:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exit.c,v 1.20.4.5 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_exit.c,v 1.39 1996/04/22 01:38:25 christos Exp $	*/
 
 /*
@@ -78,7 +78,6 @@
 #include <machine/cpu.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -110,11 +109,11 @@ sys_exit(p, v, retval)
  */
 void
 exit1(p, rv)
-	register struct proc *p;
+	struct proc *p;
 	int rv;
 {
-	register struct proc *q, *nq;
-	register struct vmspace *vm;
+	struct proc *q, *nq;
+	struct vmspace *vm;
 
 	if (p->p_pid == 1)
 		panic("init died (signal %d, exit %d)",

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.1 2001/07/04 11:00:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/shm.h,v 1.8.4.2 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: shm.h,v 1.20 1996/04/09 20:55:35 cgd Exp $	*/
 
 /*
@@ -83,7 +83,7 @@ struct oshmid_ds {
 #define	SHM_UNLOCK	4	/* Unlock a segment locked by SHM_LOCK. */
 
 /*
- * System 5 style catch-all structure for shared memory constants that
+ * System V style catch-all structure for shared memory constants that
  * might be of interest to user programs.  Do we really want/need this?
  */
 struct shminfo {
@@ -93,8 +93,14 @@ struct shminfo {
 	int	shmseg;		/* max shared memory segments per process */
 	int	shmall;		/* max amount of shared memory (pages) */
 };
-struct shminfo shminfo;
-struct shmid_ds *shmsegs;
+
+struct shm_sysctl_info {
+	struct	shminfo shminfo;
+	struct	shmid_ds shmids[1];
+};
+
+extern struct shminfo shminfo;
+extern struct shmid_ds *shmsegs;
 
 struct vmspace;
 

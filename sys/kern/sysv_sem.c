@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.3.8.2 2001/07/04 10:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.3.8.3 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: sysv_sem.c,v 1.26 1996/02/09 19:00:25 christos Exp $	*/
 
 /*
@@ -20,6 +20,10 @@
 #include <sys/syscallargs.h>
 
 int	semtot = 0;
+struct	semid_ds *sema;		/* semaphore id pool */
+struct	sem *sem;		/* semaphore pool */
+struct	sem_undo *semu_list;	/* list of active undo structures */
+int	*semu;			/* undo structure pool */
 
 struct sem_undo *semu_alloc __P((struct proc *));
 int semundo_adjust __P((struct proc *, struct sem_undo **, int, int, int));
@@ -50,7 +54,6 @@ seminit()
  * Allocate a new sem_undo structure for a process
  * (returns ptr to structure or NULL if no more room)
  */
-
 struct sem_undo *
 semu_alloc(p)
 	struct proc *p;
@@ -120,7 +123,6 @@ semu_alloc(p)
 /*
  * Adjust a particular entry for a particular proc
  */
-
 int
 semundo_adjust(p, supptr, semid, semnum, adjval)
 	register struct proc *p;
@@ -154,8 +156,8 @@ semundo_adjust(p, supptr, semid, semnum, adjval)
 	}
 
 	/*
-	 * Look for the requested entry and adjust it (delete if adjval becomes
-	 * 0).
+	 * Look for the requested entry and adjust it
+	 * (delete if adjval becomes 0).
 	 */
 	sunptr = &suptr->un_ent[0];
 	for (i = 0; i < suptr->un_cnt; i++, sunptr++) {
@@ -518,7 +520,7 @@ sys_semop(p, v, retval)
 		syscallarg(u_int) nsops;
 	} */ *uap = v;
 	int semid = SCARG(uap, semid);
-	int nsops = SCARG(uap, nsops);
+	u_int nsops = SCARG(uap, nsops);
 	struct sembuf sops[MAX_SOPS];
 	register struct semid_ds *semaptr;
 	register struct sembuf *sopptr = NULL;

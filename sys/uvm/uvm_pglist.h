@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.h,v 1.1 2001/08/12 17:55:56 mickey Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.h,v 1.1.4.1 2001/10/31 03:32:14 nate Exp $	*/
 /*	$NetBSD: uvm_pglist.h,v 1.3 2001/05/02 01:22:20 thorpej Exp $	*/
 
 /*-

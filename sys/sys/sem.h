@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sem.h,v 1.7.8.1 2001/05/14 22:45:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sem.h,v 1.7.8.2 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: sem.h,v 1.8 1996/02/09 18:25:29 christos Exp $	*/
 
 /*
@@ -112,8 +112,7 @@ struct sem_undo {
  * semaphore info struct
  */
 struct seminfo {
-	int	semmap,		/* # of entries in semaphore map */
-		semmni,		/* # of semaphore identifiers */
+	int	semmni,		/* # of semaphore identifiers */
 		semmns,		/* # of semaphores in system */
 		semmnu,		/* # of undo structures in system */
 		semmsl,		/* max # of semaphores per id */
@@ -123,7 +122,13 @@ struct seminfo {
 		semvmx,		/* semaphore maximum value */
 		semaem;		/* adjust on exit max value */
 };
-struct seminfo	seminfo;
+
+struct sem_sysctl_info {
+	struct	seminfo seminfo;
+	struct	semid_ds semids[1];
+};
+
+extern struct seminfo	seminfo;
 
 /* internal "mode" bits */
 #define	SEM_ALLOC	01000	/* semaphore is allocated */
@@ -146,9 +151,6 @@ struct seminfo	seminfo;
 #endif
 
 /* shouldn't need tuning */
-#ifndef SEMMAP
-#define SEMMAP	30		/* # of entries in semaphore map */
-#endif
 #ifndef SEMMSL
 #define SEMMSL	SEMMNS		/* max # of semaphores per id */
 #endif
@@ -160,13 +162,12 @@ struct seminfo	seminfo;
 #define SEMUSZ	(sizeof(struct sem_undo)+sizeof(struct undo)*SEMUME)
 
 /*
- * Structures allocated in machdep.c
+ * Structures allocated in machdep.c, defined/initialized in sysv_sem.c
  */
-struct	semid_ds *sema;		/* semaphore id pool */
-struct	sem *sem;		/* semaphore pool */
-struct	map *semmap;		/* semaphore allocation map */
-struct	sem_undo *semu_list;	/* list of active undo structures */
-int	*semu;			/* undo structure pool */
+extern struct	semid_ds *sema;		/* semaphore id pool */
+extern struct	sem *sem;		/* semaphore pool */
+extern struct	sem_undo *semu_list;	/* list of active undo structures */
+extern int	*semu;			/* undo structure pool */
 
 /*
  * Macro to find a particular sem_undo vector

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.3 2001/07/04 10:54:36 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*	$KAME: ip6.h,v 1.14 2000/10/09 01:04:09 itojun Exp $	*/
 
 /*
@@ -280,8 +280,8 @@ do {									\
 #define IP6_EXTHDR_GET0(val, typ, m, off, len) \
 do {									\
 	struct mbuf *t;							\
-	if ((off) == 0)							\
-		(val) = (typ)mtod(m, caddr_t);				\
+	if ((off) == 0 && (m)->m_len >= len)				\
+		(val) = (typ)mtod((m), caddr_t);			\
 	else {								\
 		t = m_pulldown((m), (off), (len), NULL);		\
 		if (t) {						\

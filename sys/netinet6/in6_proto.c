@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.3 2001/07/04 10:55:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.4 2001/10/31 03:29:04 nate Exp $	*/
 /*	$KAME: in6_proto.c,v 1.66 2000/10/10 15:35:47 itojun Exp $	*/
 
 /*
@@ -175,14 +175,12 @@ struct ip6protosw inet6sw[] = {
   0,		0,		0,		0,
   esp_sysctl,
 },
-#if 0
 { SOCK_RAW,	&inet6domain,	IPPROTO_IPCOMP,	PR_ATOMIC|PR_ADDR,
   ipcomp6_input, 0,	 	0,		0,
   0,	  
   0,		0,		0,		0,
-  ipsec6_sysctl,
+  ipcomp_sysctl,
 },
-#endif /* 0 */
 #endif /* IPSEC */
 #if NGIF > 0
 { SOCK_RAW,	&inet6domain,	IPPROTO_IPV6,	PR_ATOMIC|PR_ADDR,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27.2.2 2001/07/04 11:00:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: malloc.h,v 1.39 1998/07/12 19:52:01 augustss Exp $	*/
 
 /*
@@ -68,7 +68,7 @@
 #define	M_SOCKET	3	/* socket structure */
 #define	M_PCB		4	/* protocol control block */
 #define	M_RTABLE	5	/* routing tables */
-#define	M_HTABLE	6	/* IMP host tables */
+/* 6 - free */
 #define	M_FTABLE	7	/* fragment reassembly header */
 #define	M_ZOMBIE	8	/* zombie proc status */
 #define	M_IFADDR	9	/* interface address */
@@ -93,13 +93,10 @@
 #define	M_UFSMNT	28	/* UFS mount structure */
 #define	M_SHM		29	/* SVID compatible shared memory segments */
 #define	M_VMMAP		30	/* VM map structures */
-#define	M_VMMAPENT	31	/* VM map entry structures */
-#define	M_VMOBJ		32	/* VM object structure */
-#define	M_VMOBJHASH	33	/* VM object hash structure */
+/* 31-33 - free */
 #define	M_VMPMAP	34	/* VM pmap */
 #define	M_VMPVENT	35	/* VM phys-virt mapping entry */
-#define	M_VMPAGER	36	/* XXX: VM pager struct */
-#define	M_VMPGDATA	37	/* XXX: VM pager private data */
+/* 36-37 - free */
 #define	M_FILE		38	/* Open file structure */
 #define	M_FILEDESC	39	/* Open file descriptor table */
 #define	M_LOCKF		40	/* Byte-range locking structures */
@@ -157,15 +154,15 @@
 #define M_VMSWAP	92	/* VM swap structures */
 
 #define	M_RAIDFRAME	97	/* Raidframe data */
-#define M_UVMAMAP	98	/* UVM amap and realted */
-#define M_UVMAOBJ	99	/* UVM aobj and realted */
+#define M_UVMAMAP	98	/* UVM amap and related */
+#define M_UVMAOBJ	99	/* UVM aobj and related */
 #define M_POOL		100	/* Pool memory */
 #define	M_USB		101	/* USB general */
 #define	M_USBDEV	102	/* USB device driver */
 #define	M_USBHC		103	/* USB host controller */
 #define M_PIPE		104	/* Pipe structures */
 #define M_MEMDESC	105	/* Memory range */
-#define M_DEBUG		106	/* MALLOC_DEBUG structures */
+/* 106 - free */
 #define M_KNOTE		107	/* kernel event queue */  
 #define M_CRYPTO_DATA   108	/* Crypto framework data buffers (keys etc.) */
 #define M_IPSEC_POLICY  109	/* IPsec SPD structures */
@@ -189,7 +186,7 @@
 	"socket",	/* 3 M_SOCKET */ \
 	"pcb",		/* 4 M_PCB */ \
 	"routetbl",	/* 5 M_RTABLE */ \
-	"hosttbl",	/* 6 M_HTABLE */ \
+	NULL,		/* 6 */ \
 	"fragtbl",	/* 7 M_FTABLE */ \
 	"zombie",	/* 8 M_ZOMBIE */ \
 	"ifaddr",	/* 9 M_IFADDR */ \
@@ -214,13 +211,13 @@
 	"UFS mount",	/* 28 M_UFSMNT */ \
 	"shm",		/* 29 M_SHM */ \
 	"VM map",	/* 30 M_VMMAP */ \
-	"VM mapent",	/* 31 M_VMMAPENT */ \
-	"VM object",	/* 32 M_VMOBJ */ \
-	"VM objhash",	/* 33 M_VMOBJHASH */ \
+	NULL,	/* 31 */ \
+	NULL,	/* 32 */ \
+	NULL,	/* 33 */ \
 	"VM pmap",	/* 34 M_VMPMAP */ \
 	"VM pvmap",	/* 35 M_VMPVENT */ \
-	"VM pager",	/* 36 M_VMPAGER */ \
-	"VM pgdata",	/* 37 M_VMPGDATA */ \
+	NULL,	/* 36 */ \
+	NULL,	/* 37 */ \
 	"file",		/* 38 M_FILE */ \
 	"file desc",	/* 39 M_FILEDESC */ \
 	"lockf",	/* 40 M_LOCKF */ \
@@ -286,7 +283,7 @@
 	"USB HC",	/* 103 M_USBHC */ \
 	"pipe", 	/* 104 M_PIPE */ \
 	"memdesc",	/* 105 M_MEMDESC */ \
-	"malloc debug",	/* 106 M_DEBUG */ \
+	NULL,	/* 106 */ \
 	"knote",	/* 107 M_KNOTE */ \
 	"crypto data",	/* 108 M_CRYPTO_DATA */ \
 	"SPD info",	/* 109 M_IPSEC_POLICY */ \
@@ -433,5 +430,14 @@ extern void *malloc __P((unsigned long size, int type, int flags));
 extern void free __P((void *addr, int type));
 extern int sysctl_malloc __P((int *, u_int, void *, size_t *, void *, size_t,
 			      struct proc *));
+
+#ifdef MALLOC_DEBUG
+int	debug_malloc(unsigned long, int, int, void **);
+int	debug_free(void *, int);
+void	debug_malloc_init(void);
+
+void	debug_malloc_print(void);
+void	debug_malloc_printit(int (*)(const char *, ...), vaddr_t);
+#endif /* MALLOC_DEBUG */
 #endif /* _KERNEL */
 #endif /* !_SYS_MALLOC_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.2 2001/07/04 10:48:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.43.2.3 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -621,7 +621,7 @@ loop:
 	 * This means we found a block device that was created
 	 * using bdevvp.
 	 * An example of such a vnode is the root partition device vnode
-	 * craeted in ffs_mountroot.
+	 * created in ffs_mountroot.
 	 *
 	 * The vnodes created by bdevvp should not be aliased (why?).
 	 */
@@ -763,8 +763,8 @@ vput(vp)
 
 #ifdef DIAGNOSTIC
 	if (vp->v_usecount == 0) {
-		vprint("vrele: bad ref count", vp);
-		panic("vrele: ref cnt");
+		vprint("vput: bad ref count", vp);
+		panic("vput: ref cnt");
 	}
 #endif
 	vp->v_usecount--;
@@ -776,8 +776,8 @@ vput(vp)
 
 #ifdef DIAGNOSTIC
 	if (vp->v_writecount != 0) {
-		vprint("vrele: bad writecount", vp);
-		panic("vrele: v_writecount != 0");
+		vprint("vput: bad writecount", vp);
+		panic("vput: v_writecount != 0");
 	}
 #endif
 	vputonfreelist(vp);
@@ -1513,6 +1513,8 @@ vfs_hang_addrlist(mp, nep, argp)
 		mp->mnt_flag |= MNT_DEFEXPORTED;
 		return (0);
 	}
+	if (argp->ex_addrlen > MLEN)
+		return (EINVAL);
 	i = sizeof(struct netcred) + argp->ex_addrlen + argp->ex_masklen;
 	np = (struct netcred *)malloc(i, M_NETADDR, M_WAITOK);
 	bzero((caddr_t)np, i);
@@ -1531,6 +1533,10 @@ vfs_hang_addrlist(mp, nep, argp)
 			smask->sa_len = argp->ex_masklen;
 	}
 	i = saddr->sa_family;
+	if (i < 0 || i > AF_MAX) {
+		error = EINVAL;
+		goto out;
+	}
 	if ((rnh = nep->ne_rtable[i]) == 0) {
 		/*
 		 * Seems silly to initialize every AF when most are not
@@ -1972,7 +1978,8 @@ loop:
 				}
 				break;
 			}
-			bp->b_flags |= B_BUSY | B_VFLUSH;
+			bremfree(bp);
+			bp->b_flags |= B_BUSY;
 			/*
 			 * XXX Since there are no node locks for NFS, I believe
 			 * there is a slight chance that a delayed write will
@@ -2010,7 +2017,8 @@ loop:
 			continue;
 		if ((bp->b_flags & B_DELWRI) == 0)
 			panic("vflushbuf: not dirty");
-		bp->b_flags |= B_BUSY | B_VFLUSH;
+		bremfree(bp);
+		bp->b_flags |= B_BUSY;
 		splx(s);
 		/*
 		 * Wait for I/O associated with indirect blocks to complete,

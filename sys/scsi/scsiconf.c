@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.3 2001/07/04 11:00:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.4 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: scsiconf.c,v 1.57 1996/05/02 01:09:01 neil Exp $	*/
 
 /*
@@ -166,6 +166,9 @@ scsibusattach(parent, self, aux)
 		sb->adapter_link->luns = 8;
 
 	printf(": %d targets\n", sb->sc_buswidth);
+
+	/* Initialize shared data. */
+	scsi_init();
 
 	nbytes = sb->sc_buswidth * sizeof(struct scsi_link **);
 	sb->sc_link = (struct scsi_link ***)malloc(nbytes, M_DEVBUF, M_NOWAIT);
@@ -478,6 +481,8 @@ struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
 	 "MST     ", "SnapLink        ", ""},     SDEV_NOLUNS},
 	{{T_DIRECT, T_FIXED,
 	 "NEC     ", "D3847           ", "0307"}, SDEV_NOLUNS},
+	{{T_DIRECT, T_REMOV,
+	 "OLYMPUS ", "C-", ""}, SDEV_NOCDB6|SDEV_NOSYNCCACHE},
 	{{T_DIRECT, T_FIXED,
 	 "QUANTUM ", "ELS85S          ", ""},	  SDEV_AUTOSAVE},
 	{{T_DIRECT, T_FIXED,
@@ -517,6 +522,10 @@ struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
 	 "TEAC", "FC-1",                 ""},     SDEV_NOSTARTUNIT},
 	{{T_DIRECT, T_FIXED,
 	 "NEC ", "SD120S-200      ",	 "0001"}, SDEV_NOLUNS},
+        {{T_DIRECT, T_FIXED,
+         "MICROP", "4421-07",		 ""},     SDEV_NOTAGS},
+        {{T_DIRECT, T_FIXED,
+         "SEAGATE", "ST150176LW",        "0002"}, SDEV_NOTAGS},
 
 	/* XXX: QIC-36 tape behind Emulex adapter.  Very broken. */
 	{{T_SEQUENTIAL, T_REMOV,
@@ -746,6 +755,7 @@ scsi_probedev(scsi, target, lun)
 	sc_link->lun = lun;
 	sc_link->device = &probe_switch;
 	sc_link->inquiry_flags = 0;
+	sc_link->inquiry_flags2 = 0;
 
 	/*
 	 * Ask the device what it is
@@ -821,6 +831,7 @@ scsi_probedev(scsi, target, lun)
 	 * Save INQUIRY "flags" (SID_Linked, etc.) for low-level drivers.
 	 */
 	sc_link->inquiry_flags = inqbuf.flags;
+	sc_link->inquiry_flags2 = inqbuf.flags2;
 
 	/*
 	 * note what BASIC type of device it is

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.2 2001/07/04 10:54:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_icmp.c,v 1.20.2.3 2001/10/31 03:29:03 nate Exp $	*/
 /*	$NetBSD: ip_icmp.c,v 1.19 1996/02/13 23:42:22 christos Exp $	*/
 
 /*
@@ -508,8 +508,9 @@ icmp_input(m, va_alist)
 			icmpdst.sin_addr = ip->ip_src;
 		else
 			icmpdst.sin_addr = ip->ip_dst;
-		ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
-		    m->m_pkthdr.rcvif));
+		if (m->m_pkthdr.rcvif != NULL)
+			ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
+			    m->m_pkthdr.rcvif));
 		if (ia == 0)
 			break;
 		icp->icmp_type = ICMP_MASKREPLY;
@@ -577,6 +578,14 @@ reflect:
 	case ICMP_TSTAMPREPLY:
 	case ICMP_IREQREPLY:
 	case ICMP_MASKREPLY:
+	case ICMP_TRACEROUTE:
+	case ICMP_DATACONVERR:
+	case ICMP_MOBILE_REDIRECT:
+	case ICMP_IPV6_WHEREAREYOU:
+	case ICMP_IPV6_IAMHERE:
+	case ICMP_MOBILE_REGREQUEST:
+	case ICMP_MOBILE_REGREPLY:
+	case ICMP_PHOTURIS:
 	default:
 		break;
 	}
@@ -624,7 +633,7 @@ icmp_reflect(m)
 			break;
 	}
 	icmpdst.sin_addr = t;
-	if (ia == (struct in_ifaddr *)0)
+	if ((ia == (struct in_ifaddr *)0) && (m->m_pkthdr.rcvif != NULL))
 		ia = ifatoia(ifaof_ifpforaddr(sintosa(&icmpdst),
 					      m->m_pkthdr.rcvif));
 	/*

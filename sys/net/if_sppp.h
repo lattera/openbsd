@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/net/if_sppp.h,v 1.1.4.3 2001/10/31 03:29:02 nate Exp $	*/
 /*	$NetBSD: if_sppp.h,v 1.2.2.1 1999/04/04 06:57:39 explorer Exp $	*/
 
 /*

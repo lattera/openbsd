@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.3 2001/07/04 10:48:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.18.2.4 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*
@@ -45,12 +45,12 @@
 #include <sys/sysctl.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-
 #include <uvm/uvm_extern.h>
 
 static struct vm_map_intrsafe kmem_map_store;
 vm_map_t kmem_map = NULL;
+
+int nkmempages;
 
 struct kmembuckets bucket[MINBUCKET + 16];
 struct kmemstats kmemstats[M_LAST];
@@ -62,12 +62,6 @@ int buckstring_init = 0;
 char *memname[] = INITKMEMNAMES;
 char *memall = NULL;
 extern struct lock sysctl_kmemlock;
-#endif
-
-#ifdef MALLOC_DEBUG
-extern int debug_malloc __P((unsigned long, int, int, void **));
-extern int debug_free __P((void *, int));
-extern void debug_malloc_init __P((void));
 #endif
 
 #ifdef DIAGNOSTIC
@@ -243,7 +237,7 @@ malloc(size, type, flags)
 		vm_map_unlock(kmem_map);
 
 		if (!rv)  {
-		printf("%s %d of object %p size %ld %s %s (invalid addr %p)\n",
+		printf("%s %d of object %p size 0x%lx %s %s (invalid addr %p)\n",
 			"Data modified on freelist: word", 
 			(int32_t *)&kbp->kb_next - (int32_t *)kbp, va, size,
 			"previous type", savedtype, kbp->kb_next);
@@ -268,7 +262,7 @@ malloc(size, type, flags)
 	for (lp = (int32_t *)va; lp < end; lp++) {
 		if (*lp == WEIRD_ADDR)
 			continue;
-		printf("%s %d of object %p size %ld %s %s (0x%x != 0x%x)\n",
+		printf("%s %d of object %p size 0x%lx %s %s (0x%x != 0x%x)\n",
 			"Data modified on freelist: word", lp - (int32_t *)va,
 			va, size, "previous type", savedtype, *lp, WEIRD_ADDR);
 		break;
@@ -451,6 +445,8 @@ kmeminit()
 #ifdef MALLOC_DEBUG
 	debug_malloc_init();
 #endif
+
+	nkmempages = npg;
 }
 
 /*

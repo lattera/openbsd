@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.2 2001/07/04 10:54:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.3 2001/10/31 03:29:02 nate Exp $	*/
 /*	$KAME: if_gif.c,v 1.43 2001/02/20 08:51:07 itojun Exp $	*/
 
 /*
@@ -69,7 +69,7 @@ void gifattach __P((int));
 /*
  * gif global variable definitions
  */
-struct gif_softc *gif = 0;
+struct gif_softc *gif_softc = 0;
 
 void
 gifattach(n)
@@ -79,7 +79,8 @@ gifattach(n)
 	register int i;
 
 	ngif = n;
-	gif = sc = malloc (ngif * sizeof(struct gif_softc), M_DEVBUF, M_WAIT);
+	gif_softc = sc = malloc (ngif * sizeof(struct gif_softc),
+	    M_DEVBUF, M_WAIT);
 	bzero(sc, ngif * sizeof(struct gif_softc));
 	for (i = 0; i < ngif; sc++, i++) {
 		sprintf(sc->gif_if.if_xname, "gif%d", i);
@@ -354,7 +355,7 @@ gif_ioctl(ifp, cmd, data)
 		}
 
 		for (i = 0; i < ngif; i++) {
-			sc2 = gif + i;
+			sc2 = gif_softc + i;
 			if (sc2 == sc)
 				continue;
 			if (!sc2->gif_pdst || !sc2->gif_psrc)

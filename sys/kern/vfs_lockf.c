@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_lockf.c,v 1.2.16.1 2001/07/04 10:48:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_lockf.c,v 1.2.16.2 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: vfs_lockf.c,v 1.7 1996/02/04 02:18:21 christos Exp $	*/
 
 /*
@@ -91,15 +91,6 @@ lf_advlock(head, size, id, op, fl, flags)
 	int error;
 
 	/*
-	 * Avoid the common case of unlocking when inode has no locks.
-	 */
-	if (*head == NULL) {
-		if (op != F_SETLK) {
-			fl->l_type = F_UNLCK;
-			return (0);
-		}
-	}
-	/*
 	 * Convert the flock structure into a start and end.
 	 */
 	switch (fl->l_whence) {
@@ -124,8 +115,21 @@ lf_advlock(head, size, id, op, fl, flags)
 		return (EINVAL);
 	if (fl->l_len == 0)
 		end = -1;
-	else
+	else {
 		end = start + fl->l_len - 1;
+		if (end < start)
+			return (EINVAL);
+	}
+
+	/*
+	 * Avoid the common case of unlocking when inode has no locks.
+	 */
+	if (*head == NULL) {
+		if (op != F_SETLK) {
+			fl->l_type = F_UNLCK;
+			return (0);
+		}
+	}
 
 	/*
 	 * Create the lockf structure.
@@ -708,7 +712,7 @@ lf_print(tag, lock)
 		printf("proc %d", ((struct proc *)(lock->lf_id))->p_pid);
 	else
 		printf("id %p", lock->lf_id);
-	printf(" %s, start %qx, end %qx",
+	printf(" %s, start %llx, end %llx",
 		lock->lf_type == F_RDLCK ? "shared" :
 		lock->lf_type == F_WRLCK ? "exclusive" :
 		lock->lf_type == F_UNLCK ? "unlock" :
@@ -736,7 +740,7 @@ lf_printlist(tag, lock)
 			printf("proc %d", ((struct proc*)(lf->lf_id))->p_pid);
 		else
 			printf("id %p", lf->lf_id);
-		printf(" %s, start %qx, end %qx",
+		printf(" %s, start %llx, end %llx",
 			lf->lf_type == F_RDLCK ? "shared" :
 			lf->lf_type == F_WRLCK ? "exclusive" :
 			lf->lf_type == F_UNLCK ? "unlock" :

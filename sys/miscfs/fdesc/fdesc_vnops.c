@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.1 2001/07/04 10:49:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fdesc/Attic/fdesc_vnops.c,v 1.16.4.2 2001/10/31 03:26:30 nate Exp $	*/
 /*	$NetBSD: fdesc_vnops.c,v 1.32 1996/04/11 11:24:29 mrg Exp $	*/
 
 /*
@@ -480,7 +480,7 @@ fdesc_getattr(v)
 	case Fdesc:
 		fd = VTOFDESC(vp)->fd_fd;
 		fdp = ap->a_p->p_fd;
-		if (fd >= fdp->fd_nfiles || (fp = fdp->fd_ofiles[fd]) == NULL)
+		if ((fp = fd_getfile(fdp, fd)) == NULL)
 			return (EBADF);
 		memset(&stb, 0, sizeof(stb));
 		error = (*fp->f_ops->fo_stat)(fp, &stb, ap->a_p);

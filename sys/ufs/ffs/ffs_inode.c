@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.15.2.2 2001/07/04 11:00:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.15.2.3 2001/10/31 03:32:13 nate Exp $	*/
 /*	$NetBSD: ffs_inode.c,v 1.10 1996/05/11 18:27:19 mycroft Exp $	*/
 
 /*
@@ -165,6 +165,12 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	if (length < 0)
 		return (EINVAL);
 	ovp = ITOV(oip);
+
+	if (ovp->v_type != VREG &&
+	    ovp->v_type != VDIR &&
+	    ovp->v_type != VLNK)
+		return (0);
+
 	if (oip->i_ffs_size == length)
 		return (0);
 	if (ovp->v_type == VLNK &&

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/ktrace.h,v 1.2.16.1 2001/05/14 22:45:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/ktrace.h,v 1.2.16.2 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: ktrace.h,v 1.12 1996/02/04 02:12:29 christos Exp $	*/
 
 /*

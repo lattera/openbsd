@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/Attic/clist.h,v 1.2 1996/03/03 12:11:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/Attic/clist.h,v 1.2.16.1 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: clist.h,v 1.7 1995/03/26 20:23:57 jtc Exp $	*/
 
 /*-
@@ -41,8 +41,3 @@ struct cblock {
 	char c_quote[CBQSIZE];		/* quoted characters */
 	char c_info[CBSIZE];		/* characters */
 };
-
-#ifdef _KERNEL
-extern	struct cblock *cfree, *cfreelist;
-extern	int cfreecount, nclist;
-#endif

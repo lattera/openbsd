@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.3 2001/07/04 10:54:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.48.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -51,10 +51,6 @@
 #include <net/if_dl.h>
 #include <net/route.h>
 
-#if NPF > 0
-#include <net/pfvar.h>
-#endif
-
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/if_ether.h>
@@ -63,6 +59,14 @@
 #include <netinet/in_var.h>
 #include <netinet/ip_var.h>
 #include <netinet/ip_icmp.h>
+
+#if NPF > 0
+#include <net/pfvar.h>
+#endif
+
+#ifdef IPSEC
+#include <netinet/ip_ipsp.h>
+#endif /* IPSEC */
 
 #ifndef	IPFORWARDING
 #ifdef GATEWAY
@@ -96,6 +100,7 @@ int ipsec_exp_first_use = IPSEC_DEFAULT_EXP_FIRST_USE;
 int ipsec_expire_acquire = IPSEC_DEFAULT_EXPIRE_ACQUIRE;
 char ipsec_def_enc[20];
 char ipsec_def_auth[20];
+char ipsec_def_comp[20];
 
 /*
  * Note: DIRECTED_BROADCAST is handled this way so that previous
@@ -124,6 +129,7 @@ struct rttimer_queue *ip_mtudisc_timeout_q = NULL;
 int	ipsec_auth_default_level = IPSEC_AUTH_LEVEL_DEFAULT;
 int	ipsec_esp_trans_default_level = IPSEC_ESP_TRANS_LEVEL_DEFAULT;
 int	ipsec_esp_network_default_level = IPSEC_ESP_NETWORK_LEVEL_DEFAULT;
+int	ipsec_ipcomp_default_level = IPSEC_IPCOMP_LEVEL_DEFAULT;
 
 /* Keep track of memory used for reassembly */
 int	ip_maxqueue = 300;
@@ -247,6 +253,7 @@ ip_init()
 
 	strncpy(ipsec_def_enc, IPSEC_DEFAULT_DEF_ENC, sizeof(ipsec_def_enc));
 	strncpy(ipsec_def_auth, IPSEC_DEFAULT_DEF_AUTH, sizeof(ipsec_def_auth));
+	strncpy(ipsec_def_comp, IPSEC_DEFAULT_DEF_COMP, sizeof(ipsec_def_comp));
 }
 
 struct	sockaddr_in ipaddr = { sizeof(ipaddr), AF_INET };
@@ -354,12 +361,6 @@ ipv4_input(m)
 		ipstat.ips_inhwcsum++;
 	}
 
-#ifdef ALTQ
-	if (altq_input != NULL && (*altq_input)(m, AF_INET) == 0)
-		/* packet is dropped by traffic conditioner */
-		return;
-#endif
-
 	/*
 	 * Convert fields to host representation.
 	 */
@@ -388,18 +389,23 @@ ipv4_input(m)
 			m_adj(m, ip->ip_len - m->m_pkthdr.len);
 	}
 
+#if NPF > 0
 	/*
 	 * Packet filter
 	 */
-#if NPF > 0
-	{
-		if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
-			goto bad;
+	if (pf_test(PF_IN, m->m_pkthdr.rcvif, &m) != PF_PASS)
+		goto bad;
 
-		ip = mtod(m, struct ip *);
-		hlen = ip->ip_hl << 2;
-	}
+	ip = mtod(m, struct ip *);
+	hlen = ip->ip_hl << 2;
 #endif
+
+#ifdef ALTQ
+	if (altq_input != NULL && (*altq_input)(m, AF_INET) == 0)
+		/* packet is dropped by traffic conditioner */
+		return;
+#endif
+
 	/*
 	 * Process options and, if not destined for us,
 	 * ship it on.  ip_dooptions returns 1 when an
@@ -608,7 +614,8 @@ found:
          * While this is not the most paranoid setting, it allows
          * some flexibility in handling of nested tunnels etc.
          */
-        if ((ip->ip_p == IPPROTO_ESP) || (ip->ip_p == IPPROTO_AH))
+        if ((ip->ip_p == IPPROTO_ESP) || (ip->ip_p == IPPROTO_AH) ||
+	    (ip->ip_p == IPPROTO_IPCOMP))
           goto skipipsec;
 
 	/*
@@ -1583,6 +1590,7 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 			    rt_timer_queue_create(ip_mtudisc_timeout);
 		} else if (ip_mtudisc == 0 && ip_mtudisc_timeout_q != NULL) {
 			rt_timer_queue_destroy(ip_mtudisc_timeout_q, TRUE);
+			Free(ip_mtudisc_timeout_q);
 			ip_mtudisc_timeout_q = NULL;
 		}
 		return error;
@@ -1650,6 +1658,10 @@ ip_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 	case IPCTL_IPSEC_EXPIRE_ACQUIRE:
 	        return (sysctl_int(oldp, oldlenp, newp, newlen,
 				   &ipsec_expire_acquire));
+	case IPCTL_IPSEC_IPCOMP_ALGORITHM:
+	        return (sysctl_tstring(oldp, oldlenp, newp, newlen,
+				       ipsec_def_comp, 
+				       sizeof(ipsec_def_comp)));
 	default:
 		return (EOPNOTSUPP);
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8 2000/01/17 00:34:00 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_usrreq.c,v 1.8.2.1 2001/10/31 03:29:04 nate Exp $	*/
 
 /*-
  *
@@ -401,7 +401,7 @@ ipx_usrreq(so, req, m, nam, control)
 	int error = 0;
 
 	if (req == PRU_CONTROL)
-                return (ipx_control(so, (int)m, (caddr_t)nam,
+                return (ipx_control(so, (long)m, (caddr_t)nam,
 			(struct ifnet *)control));
 	if (control && control->m_len) {
 		error = EINVAL;

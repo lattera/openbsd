@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.3 2001/07/04 11:00:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.4 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: filedesc.h,v 1.14 1996/04/09 20:55:28 cgd Exp $	*/
 
 /*
@@ -36,6 +36,7 @@
  *	@(#)filedesc.h	8.1 (Berkeley) 6/2/93
  */
 
+#include <sys/lock.h>
 /*
  * This structure is used for the management of descriptors.  It may be
  * shared by multiple processes.
@@ -71,6 +72,7 @@ struct filedesc {
 	int	fd_freefile;		/* approx. next free file */
 	u_short	fd_cmask;		/* mask for file creation */
 	u_short	fd_refcnt;		/* reference count */
+	struct lock fd_lock;		/* lock for growing the structure */
 
 	int	fd_knlistsize;		/* size of knlist */
 	struct	klist *fd_knlist;	/* list of attached knotes */
@@ -102,7 +104,6 @@ struct filedesc0 {
  * Per-process open flags.
  */
 #define	UF_EXCLOSE 	0x01		/* auto-close on exec */
-#define	UF_MAPPED 	0x02		/* mapped from device */
 
 /*
  * Storage required per open file descriptor.
@@ -117,7 +118,7 @@ void	filedesc_init __P((void));
 int	dupfdopen __P((struct filedesc *fdp, int indx, int dfd, int mode,
 	    int error));
 int	fdalloc __P((struct proc *p, int want, int *result));
-int	fdavail __P((struct proc *p, int n));
+void	fdexpand __P((struct proc *));
 int	falloc __P((struct proc *p, struct file **resultfp, int *resultfd));
 void	ffree __P((struct file *));
 struct	filedesc *fdinit __P((struct proc *p));
@@ -127,6 +128,7 @@ void	fdfree __P((struct proc *p));
 int	fdrelease __P((struct proc *p, int));
 void	fdremove __P((struct filedesc *, int));
 void	fdcloseexec __P((struct proc *));
+struct file *fd_getfile __P((struct filedesc *, int fd));
 
 int	closef __P((struct file *, struct proc *));
 int	getsock __P((struct filedesc *, int, struct file **));

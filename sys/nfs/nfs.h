@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs.h,v 1.7.8.2 2001/07/04 10:55:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs.h,v 1.7.8.3 2001/10/31 03:30:29 nate Exp $	*/
 /*	$NetBSD: nfs.h,v 1.10.4.1 1996/05/27 11:23:56 fvdl Exp $	*/
 
 /*
@@ -136,20 +136,6 @@
 #endif
 
 /*
- * Expected allocation sizes for major data structures. If the actual size
- * of the structure exceeds these sizes, then malloc() will be allocating
- * almost twice the memory required. This is used in nfs_init() to warn
- * the sysadmin that the size of a structure should be reduced.
- * (These sizes are always a power of 2. If the kernel malloc() changes
- *  to one that does not allocate space in powers of 2 size, then this all
- *  becomes bunk!)
- */
-#define NFS_NODEALLOC	256
-#define NFS_MNTALLOC	512
-#define NFS_SVCALLOC	256
-#define NFS_UIDALLOC	128
-
-/*
  * Structures for the nfssvc(2) syscall. Not that anyone but nfsd and mount_nfs
  * should ever try and use it.
  */
@@ -177,9 +163,9 @@ struct nfsd_cargs {
 	char		*ncd_dirp;	/* Mount dir path */
 	uid_t		ncd_authuid;	/* Effective uid */
 	int		ncd_authtype;	/* Type of authenticator */
-	int		ncd_authlen;	/* Length of authenticator string */
+	u_int		ncd_authlen;	/* Length of authenticator string */
 	u_char		*ncd_authstr;	/* Authenticator string */
-	int		ncd_verflen;	/* and the verifier */
+	u_int		ncd_verflen;	/* and the verifier */
 	u_char		*ncd_verfstr;
 	NFSKERBKEY_T	ncd_key;	/* Session key */
 };

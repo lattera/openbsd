@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_norm.c,v 1.14 2001/10/17 22:21:42 markus Exp $ */
+/*	$OpenBSD: src/sys/net/pf_norm.c,v 1.14.4.1 2001/10/31 03:29:02 nate Exp $ */
 
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/xebec/Attic/malloc.c,v 1.2.16.1 2001/05/14 22:40:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netiso/xebec/Attic/malloc.c,v 1.2.16.2 2001/10/31 03:29:04 nate Exp $	*/
 /*	$NetBSD: malloc.c,v 1.4 1994/06/29 06:41:10 cgd Exp $	*/
 
 /*
@@ -28,13 +28,13 @@ init_alloc()
 #ifdef LINT
 	hiwat = 0;
 	highend = 0;
-#else LINT
+#else /* LINT */
 	extern char *sbrk();
 
 	hiwat = (char *) sbrk(0);
 	hiwat = (char *)((unsigned)(hiwat + 3) & ~0x3);
 	highend = hiwat;
-#endif LINT
+#endif /* LINT */
 }
 
 HIWAT(s)

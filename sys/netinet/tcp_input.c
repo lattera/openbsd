@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.3 2001/07/04 10:55:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.56.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -2677,7 +2677,7 @@ tcp_sack_partialack(tp, th)
 	}
 	return 0;
 }
-#endif TCP_SACK
+#endif /* TCP_SACK */
 
 /*
  * Pull out of band byte out of a segment so
@@ -2913,7 +2913,7 @@ tcp_mss(tp, offer)
 	 * If we compute a larger value, return it for use in sending
 	 * a max seg size option, but don't store it for use
 	 * unless we received an offer at least that large from peer.
-	 * However, do not accept offers under 32 bytes.
+	 * However, do not accept offers under 64 bytes.
 	 */
 	if (offer > 0)
 		tp->t_peermss = offer;

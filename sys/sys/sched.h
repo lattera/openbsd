@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.1 2001/07/14 10:02:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/sched.h,v 1.1.4.2 2001/10/31 03:30:30 nate Exp $	*/
 /* $NetBSD: sched.h,v 1.2 1999/02/28 18:14:58 ross Exp $ */
 
 /*-
@@ -90,7 +90,7 @@
 #define NICE_WEIGHT 2			/* priorities per nice level */
 #define	ESTCPULIM(e) min((e), NICE_WEIGHT * PRIO_MAX - PPQ)
 
-/* int	schedhz;			* ideally: 16 */
+extern int	schedhz;			/* ideally: 16 */
 
 #ifdef	_SYS_PROC_H_
 void schedclock __P((struct proc *p));

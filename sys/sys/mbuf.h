@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.3 2001/07/04 11:00:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.4 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -142,6 +142,7 @@ struct mbuf {
 #define	M_MCAST		0x0200	/* send/received as link-level multicast */
 #define M_CONF		0x0400  /* packet was encrypted (ESP-transport) */
 #define M_AUTH		0x0800  /* packet was authenticated (AH) */
+#define M_COMP		0x1000  /* packet was compressed (IPCOMP) */
 
 /* Checksumming flags */
 #define	M_IPV4_CSUM_OUT		0x0001	/* IPv4 checksum needed */
@@ -157,19 +158,10 @@ struct mbuf {
 /* KAME IPv6 */
 #define M_ANYCAST6	0x4000	/* received as IPv6 anycast */
 
-#if 0 /*KAME IPSEC*/
-#define M_AUTHIPHDR	0x0010	/* data origin authentication for IP header */
-#define M_DECRYPTED	0x0020	/* confidentiality */
-#endif
-
 #define M_LOOP		0x0040	/* for Mbuf statistics */
 
-#if 0 /*KAME IPSEC*/
-#define M_AUTHIPDGM	0x0080  /* data origin authentication */
-#endif
-
 /* flags copied when copying m_pkthdr */
-#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_PROTO1|M_BCAST|M_MCAST|M_CONF|M_AUTH|M_ANYCAST6|M_LOOP)
+#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_PROTO1|M_BCAST|M_MCAST|M_CONF|M_AUTH|M_COMP|M_ANYCAST6|M_LOOP)
 
 /* mbuf types */
 #define	MT_FREE		0	/* should be on free list */
@@ -462,22 +454,37 @@ void _sk_mclget(struct mbuf *, int);
 	{ (m)->m_data += (MHLEN - (len)) &~ (sizeof(long) - 1); }
 
 /*
+ * Determine if an mbuf's data area is read-only. This is true for
+ * non-cluster external storage and for clusters that are being
+ * referenced by more than one mbuf.
+ */
+#define	M_READONLY(m) \
+	(((m)->m_flags & M_EXT) != 0 &&	\
+	  (((m)->m_flags & M_CLUSTER) == 0 || MCLISREFERENCED(m)))
+
+/*
  * Compute the amount of space available
  * before the current start of data in an mbuf.
  */
-#define	M_LEADINGSPACE(m) \
-	((m)->m_flags & M_EXT ? /* (m)->m_data - (m)->m_ext.ext_buf */ 0 : \
-	    (m)->m_flags & M_PKTHDR ? (m)->m_data - (m)->m_pktdat : \
-	    (m)->m_data - (m)->m_dat)
+#define	_M_LEADINGSPACE(m) \
+	((m)->m_flags & M_EXT ? (m)->m_data - (m)->m_ext.ext_buf : \
+	 (m)->m_flags & M_PKTHDR ? (m)->m_data - (m)->m_pktdat : \
+	 (m)->m_data - (m)->m_dat)
+
+#define	M_LEADINGSPACE(m)	\
+	(M_READONLY((m)) ? 0 : _M_LEADINGSPACE((m)))
 
 /*
  * Compute the amount of space available
  * after the end of data in an mbuf.
  */
-#define	M_TRAILINGSPACE(m) \
+#define	_M_TRAILINGSPACE(m) \
 	((m)->m_flags & M_EXT ? (m)->m_ext.ext_buf + (m)->m_ext.ext_size - \
 	    ((m)->m_data + (m)->m_len) : \
 	    &(m)->m_dat[MLEN] - ((m)->m_data + (m)->m_len))
+
+#define	M_TRAILINGSPACE(m)	\
+	(M_READONLY((m)) ? 0 : _M_TRAILINGSPACE((m)))
 
 /*
  * Arrange to prepend space of size plen to mbuf m.
@@ -524,7 +531,6 @@ struct mbstat {
 };
 
 #ifdef	_KERNEL
-extern	struct mbuf *mbutl;		/* virtual address of mclusters */
 struct	mbstat mbstat;
 extern	int nmbclusters;		/* limit on the # of clusters */
 extern	int mblowat;			/* mbuf low water mark */

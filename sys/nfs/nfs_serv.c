@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.2 2001/07/04 10:55:47 niklas Exp $	*/
-/*	$NetBSD: nfs_serv.c,v 1.25 1996/03/02 15:55:52 jtk Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_serv.c,v 1.20.6.3 2001/10/31 03:30:29 nate Exp $	*/
+/*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
  * Copyright (c) 1989, 1993
@@ -1202,6 +1202,19 @@ nfsrvw_coalesce(owp, nfsd)
             owp->nd_stable == NFSV3WRITE_UNSTABLE)
             owp->nd_stable = NFSV3WRITE_DATASYNC;
         LIST_INSERT_HEAD(&owp->nd_coalesce, nfsd, nd_tq);
+
+	/*
+	 * nfsd might hold coalesce elements! Move them to owp.
+	 * Otherwise, requests may be lost and clients will be stuck.
+	 */
+	if (LIST_FIRST(&nfsd->nd_coalesce) != NULL) {
+		struct nfsrv_descript *m;
+
+		while ((m = LIST_FIRST(&nfsd->nd_coalesce)) != NULL) {
+			LIST_REMOVE(m, nd_tq);
+			LIST_INSERT_HEAD(&owp->nd_coalesce, m, nd_tq);
+		}
+	}
 }
 
 /*

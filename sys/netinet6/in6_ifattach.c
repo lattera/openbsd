@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.3 2001/07/04 10:55:20 niklas Exp $	*/
-/*	$KAME: in6_ifattach.c,v 1.112 2001/02/10 15:44:59 jinmei Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.4 2001/10/31 03:29:04 nate Exp $	*/
+/*	$KAME: in6_ifattach.c,v 1.124 2001/07/18 08:32:51 jinmei Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -580,6 +580,7 @@ in6_ifattach(ifp, altifp)
 	switch (ifp->if_type) {
 	case IFT_BRIDGE:
 	case IFT_ENC:
+	case IFT_PFLOG:
 		return;
 	case IFT_PROPVIRTUAL:
 		if (strncmp("bridge", ifp->if_xname, sizeof("bridge")) == 0 &&
@@ -630,6 +631,9 @@ in6_ifattach(ifp, altifp)
 		icmp6_ifstatmax = if_indexlim;
 	}
 
+	/* create a multicast kludge storage (if we have not had one) */
+	in6_createmkludge(ifp);
+
 	/*
 	 * quirks based on interface type
 	 */
@@ -637,8 +641,10 @@ in6_ifattach(ifp, altifp)
 #ifdef IFT_STF
 	case IFT_STF:
 		/*
-		 * 6to4 interface is a very speical kind of beast.
-		 * no multicast, no linklocal (based on 03 draft).
+		 * 6to4 interface is a very special kind of beast.
+		 * no multicast, no linklocal.  RFC2529 specifies how to make
+		 * linklocals for 6to4 interface, but there's no use and
+		 * it is rather harmful to have one.
 		 */
 		goto statinit;
 #endif
@@ -650,7 +656,8 @@ in6_ifattach(ifp, altifp)
 	 * usually, we require multicast capability to the interface
 	 */
 	if ((ifp->if_flags & IFF_MULTICAST) == 0) {
-		printf("%s: not multicast capable, IPv6 not enabled\n",
+		log(LOG_INFO, "in6_ifattach: "
+		    "%s is not multicast capable, IPv6 not enabled\n",
 		    ifp->if_xname);
 		return;
 	}

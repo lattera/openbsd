@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/vnode.h,v 1.22.2.2 2001/07/04 11:00:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/vnode.h,v 1.22.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: vnode.h,v 1.38 1996/02/29 20:59:05 cgd Exp $	*/
 
 /*
@@ -36,14 +36,17 @@
  *	@(#)vnode.h	8.11 (Berkeley) 11/21/94
  */
 
+#include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/lock.h>
 #include <sys/select.h>
 
 /* XXX: clean up includes later */
-#include <vm/pglist.h>		/* XXX */
-#include <vm/vm_param.h>	/* XXX */
+#include <uvm/uvm_pglist.h>	/* XXX */
 #include <sys/lock.h>		/* XXX */
+#include <vm/vm.h>		/* XXX */
+#include <uvm/uvm.h>		/* XXX */
+#include <uvm/uvm_extern.h>	/* XXX */
 #include <uvm/uvm_object.h>	/* XXX */
 #include <uvm/uvm_vnode.h>	/* XXX */
 
@@ -108,7 +111,6 @@ struct vnode {
 	union {
 		struct mount	*vu_mountedhere;/* ptr to mounted vfs (VDIR) */
 		struct socket	*vu_socket;	/* unix ipc (VSOCK) */
-		caddr_t		vu_vmdata;	/* private data for vm (VREG) */
 		struct specinfo	*vu_specinfo;	/* device (VCHR, VBLK) */
 		struct fifoinfo	*vu_fifoinfo;	/* fifo (VFIFO) */
 	} v_un;
@@ -124,7 +126,6 @@ struct vnode {
 };
 #define	v_mountedhere	v_un.vu_mountedhere
 #define	v_socket	v_un.vu_socket
-#define	v_vmdata	v_un.vu_vmdata
 #define	v_specinfo	v_un.vu_specinfo
 #define	v_fifoinfo	v_un.vu_fifoinfo
 

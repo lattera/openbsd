@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.2 2001/07/04 10:49:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.3 2001/10/31 03:26:30 nate Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -54,7 +54,6 @@
 #include <sys/vnode.h>
 #include <miscfs/procfs/procfs.h>
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
 #include <uvm/uvm_extern.h>
@@ -84,10 +83,8 @@ procfs_domem(curp, p, pfs, uio)
 	/* XXXCDC: how should locking work here? */
 	if ((p->p_flag & P_WEXIT) || (p->p_vmspace->vm_refcnt < 1)) 
 		return(EFAULT);
-	PHOLD(p);
 	p->p_vmspace->vm_refcnt++;  /* XXX */
 	error = uvm_io(&p->p_vmspace->vm_map, uio);
-	PRELE(p);
 	uvmspace_free(p->p_vmspace);
 
 	return error;

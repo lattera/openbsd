@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_syscalls.c,v 1.30.2.2 2001/07/04 10:48:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_syscalls.c,v 1.30.2.3 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: uipc_syscalls.c,v 1.19 1996/02/09 19:00:48 christos Exp $	*/
 
 /*
@@ -91,6 +91,7 @@ sys_socket(p, v, retval)
 		ffree(fp);
 	} else {
 		fp->f_data = (caddr_t)so;
+		FILE_SET_MATURE(fp);
 		*retval = fd;
 	}
 	return (error);
@@ -223,13 +224,14 @@ sys_accept(p, v, retval)
 			    (caddr_t)SCARG(uap, anamelen),
 			    sizeof (*SCARG(uap, anamelen)));
 	}
-	/* if an error occured, free the file descriptor */
+	/* if an error occurred, free the file descriptor */
 	if (error) {
 		fdremove(p->p_fd, tmpfd);
 		ffree(fp);
 	}
 	m_freem(nam);
 	splx(s);
+	FILE_SET_MATURE(fp);
 	return (error);
 }
 
@@ -336,6 +338,8 @@ sys_socketpair(p, v, retval)
 	}
 	error = copyout((caddr_t)sv, (caddr_t)SCARG(uap, rsv),
 	    2 * sizeof (int));
+	FILE_SET_MATURE(fp1);
+	FILE_SET_MATURE(fp2);
 	if (error == 0)
 		return (error);
 free4:
@@ -669,27 +673,29 @@ recvit(p, s, mp, namelenp, retsize)
 		goto out;
 	*retsize = len - auio.uio_resid;
 	if (mp->msg_name) {
-		len = mp->msg_namelen;
-		if (len <= 0 || from == 0)
-			len = 0;
+		socklen_t alen;
+
+		if (from == 0)
+			alen = 0;
 		else {
 			/* save sa_len before it is destroyed by MSG_COMPAT */
-			if (len > from->m_len)
-				len = from->m_len;
-			/* else if len < from->m_len ??? */
+			alen = mp->msg_namelen;
+			if (alen > from->m_len)
+				alen = from->m_len;
+			/* else if alen < from->m_len ??? */
 #ifdef COMPAT_OLDSOCK
 			if (mp->msg_flags & MSG_COMPAT)
 				mtod(from, struct osockaddr *)->sa_family =
 				    mtod(from, struct sockaddr *)->sa_family;
 #endif
 			error = copyout(mtod(from, caddr_t),
-			    (caddr_t)mp->msg_name, (unsigned)len);
+			    (caddr_t)mp->msg_name, alen);
 			if (error)
 				goto out;
 		}
-		mp->msg_namelen = len;
+		mp->msg_namelen = alen;
 		if (namelenp &&
-		    (error = copyout((caddr_t)&len, namelenp, sizeof (int)))) {
+		    (error = copyout((caddr_t)&alen, namelenp, sizeof(alen)))) {
 #ifdef COMPAT_OLDSOCK
 			if (mp->msg_flags & MSG_COMPAT)
 				error = 0;	/* old recvfrom didn't check */
@@ -1073,8 +1079,7 @@ getsock(fdp, fdes, fpp)
 {
 	register struct file *fp;
 
-	if ((unsigned)fdes >= fdp->fd_nfiles ||
-	    (fp = fdp->fd_ofiles[fdes]) == NULL)
+	if ((fp = fd_getfile(fdp, fdes)) == NULL)
 		return (EBADF);
 	if (fp->f_type != DTYPE_SOCKET)
 		return (ENOTSOCK);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_subr.c,v 1.3 1996/04/21 22:29:18 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_subr.c,v 1.3.16.1 2001/10/31 03:29:04 nate Exp $	*/
 /*	$NetBSD: clnp_subr.c,v 1.8 1996/04/13 01:34:35 cgd Exp $	*/
 
 /*-
@@ -665,8 +665,8 @@ int
 clnp_badmtu(ifp, rt, line, file)
 	struct ifnet   *ifp;	/* outgoing interface */
 	struct rtentry *rt;	/* dst route */
-	int             line;	/* where the dirty deed occured */
-	char           *file;	/* where the dirty deed occured */
+	int             line;	/* where the dirty deed occurred */
+	char           *file;	/* where the dirty deed occurred */
 {
 	printf("sending on route %p with no mtu, line %d of file %s\n",
 	       rt, line, file);

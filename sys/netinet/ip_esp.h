@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.3 2001/07/04 10:54:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_esp.h,v 1.31.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and 
@@ -78,4 +78,4 @@ struct espstat
 extern int esp_enable;
 struct espstat espstat;
 #endif /* _KERNEL */
-#endif _NETINET_IP_ESP_H_
+#endif /* _NETINET_IP_ESP_H_ */

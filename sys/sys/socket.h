@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.4 2001/07/04 11:00:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/socket.h,v 1.30.2.5 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: socket.h,v 1.14 1996/02/09 18:25:36 christos Exp $	*/
 
 /*
@@ -360,7 +360,14 @@ struct cmsghdr {
 	    (struct cmsghdr *)NULL : \
 	    (struct cmsghdr *)((caddr_t)(cmsg) + __CMSG_ALIGN((cmsg)->cmsg_len)))
 
-#define	CMSG_FIRSTHDR(mhdr)	((struct cmsghdr *)(mhdr)->msg_control)
+/*
+ * RFC 2292 requires to check msg_controllen, in case that the kernel returns
+ * an empty list for some reasons.
+ */
+#define	CMSG_FIRSTHDR(mhdr) \
+	((mhdr)->msg_controllen >= sizeof(struct cmsghdr) ? \
+	 (struct cmsghdr *)(mhdr)->msg_control : \
+	 (struct cmsghdr *)NULL)
 
 /* Round len up to next alignment boundary */
 #define	__CMSG_ALIGN(len)	ALIGN(len)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.2 2001/07/04 11:00:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.h,v 1.21.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: scsiconf.h,v 1.35 1997/04/02 02:29:38 mycroft Exp $	*/
 
 /*
@@ -185,7 +185,9 @@ struct scsi_link {
 #define	ADEV_NOCAPACITY		0x0800
 #define	ADEV_NOTUR		0x1000
 #define	ADEV_NODOORLOCK		0x2000
+#define SDEV_NOCDB6		0x4000  /* does not support 6 byte CDB */
 	u_int8_t inquiry_flags;		/* copy of flags from probe INQUIRY */
+	u_int8_t inquiry_flags2;	/* copy of flags2 from probe INQUIRY */
 	struct	scsi_device *device;	/* device entry points etc. */
 	void	*device_softc;		/* needed for call to foo_start */
 	struct	scsi_adapter *adapter;	/* adapter entry points etc. */
@@ -273,7 +275,6 @@ struct scsi_xfer {
 #define	SCSI_AUTOCONF	0x00003	/* shorthand for SCSI_POLL | SCSI_NOSLEEP */
 #define	SCSI_USER	0x00004	/* Is a user cmd, call scsi_user_done	*/
 #define	ITSDONE		0x00008	/* the transfer is as done as it gets	*/
-#define	INUSE		0x00010	/* The scsi_xfer block is in use	*/
 #define	SCSI_SILENT	0x00020	/* don't announce NOT READY or MEDIA CHANGE */
 #define	SCSI_IGNORE_NOT_READY		0x00040	/* ignore NOT READY */
 #define	SCSI_IGNORE_MEDIA_CHANGE	0x00080	/* ignore MEDIA CHANGE */
@@ -309,34 +310,36 @@ struct scsi_xfer {
 #define XS_RESET	8	/* bus was reset; possible retry command  */
 
 caddr_t scsi_inqmatch __P((struct scsi_inquiry_data *, caddr_t, int,
-	int, int *));
+	    int, int *));
 
-struct scsi_xfer *scsi_get_xs __P((struct scsi_link *, int));
-void scsi_free_xs __P((struct scsi_xfer *, int));
-int scsi_execute_xs __P((struct scsi_xfer *));
-u_long scsi_size __P((struct scsi_link *, int));
-int scsi_test_unit_ready __P((struct scsi_link *, int));
-int scsi_change_def __P((struct scsi_link *, int));
-int scsi_inquire __P((struct scsi_link *, struct scsi_inquiry_data *, int));
-int scsi_prevent __P((struct scsi_link *, int, int));
-int scsi_start __P((struct scsi_link *, int, int));
-void scsi_done __P((struct scsi_xfer *));
-void scsi_user_done __P((struct scsi_xfer *));
-int scsi_scsi_cmd __P((struct scsi_link *, struct scsi_generic *,
-	int cmdlen, u_char *data_addr, int datalen, int retries,
-	int timeout, struct buf *bp, int flags));
-int scsi_do_ioctl __P((struct scsi_link *, dev_t, u_long, caddr_t,
-	int, struct proc *));
-int scsi_do_safeioctl __P((struct scsi_link *, dev_t, u_long, caddr_t,
-	int, struct proc *));
-void sc_print_addr __P((struct scsi_link *));
+void	scsi_init __P((void));
+struct scsi_xfer *
+	scsi_get_xs __P((struct scsi_link *, int));
+void	scsi_free_xs __P((struct scsi_xfer *, int));
+int	scsi_execute_xs __P((struct scsi_xfer *));
+u_long	scsi_size __P((struct scsi_link *, int));
+int	scsi_test_unit_ready __P((struct scsi_link *, int));
+int	scsi_change_def __P((struct scsi_link *, int));
+int	scsi_inquire __P((struct scsi_link *, struct scsi_inquiry_data *, int));
+int	scsi_prevent __P((struct scsi_link *, int, int));
+int	scsi_start __P((struct scsi_link *, int, int));
+void	scsi_done __P((struct scsi_xfer *));
+void	scsi_user_done __P((struct scsi_xfer *));
+int	scsi_scsi_cmd __P((struct scsi_link *, struct scsi_generic *,
+	    int cmdlen, u_char *data_addr, int datalen, int retries,
+	    int timeout, struct buf *bp, int flags));
+int	scsi_do_ioctl __P((struct scsi_link *, dev_t, u_long, caddr_t,
+	    int, struct proc *));
+int	scsi_do_safeioctl __P((struct scsi_link *, dev_t, u_long, caddr_t,
+	    int, struct proc *));
+void	sc_print_addr __P((struct scsi_link *));
 
-void show_scsi_xs __P((struct scsi_xfer *));
-void scsi_print_sense __P((struct scsi_xfer *, int));
-void show_scsi_cmd __P((struct scsi_xfer *));
-void show_mem __P((u_char *, int));
-int scsi_probe_busses __P((int, int, int));
-void scsi_strvis __P((u_char *, u_char *, int));
+void	show_scsi_xs __P((struct scsi_xfer *));
+void	scsi_print_sense __P((struct scsi_xfer *, int));
+void	show_scsi_cmd __P((struct scsi_xfer *));
+void	show_mem __P((u_char *, int));
+int	scsi_probe_busses __P((int, int, int));
+void	scsi_strvis __P((u_char *, u_char *, int));
 
 static __inline void _lto2b __P((u_int32_t val, u_int8_t *bytes));
 static __inline void _lto3b __P((u_int32_t val, u_int8_t *bytes));

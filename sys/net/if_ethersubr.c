@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.2 2001/07/04 10:53:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.34.2.3 2001/10/31 03:29:02 nate Exp $	*/
 /*	$NetBSD: if_ethersubr.c,v 1.19 1996/05/07 02:40:30 thorpej Exp $	*/
 
 /*
@@ -382,11 +382,12 @@ ether_output(ifp, m0, dst, rt0)
 		 * passed to us by value, we m_copy() the first mbuf,
 		 * and use it for our llc header.
 		 */
-		if ( aa->aa_flags & AFA_PHASE2 ) {
+		if (aa->aa_flags & AFA_PHASE2) {
 			struct llc llc;
 
-			/* XXX Really this should use netisr too */
-			M_PREPEND(m, AT_LLC_SIZE, M_WAIT);
+			M_PREPEND(m, AT_LLC_SIZE, M_DONTWAIT);
+			if (m == NULL)
+				return (0);
 			/*
 			 * FreeBSD doesn't count the LLC len in
 			 * ifp->obytes, so they increment a length
@@ -715,7 +716,7 @@ ether_input(ifp, eh, m)
 	u_int16_t etype;
 	int s, llcfound = 0;
 	register struct llc *l;
-	struct arpcom *ac = (struct arpcom *)ifp;
+	struct arpcom *ac;
 
 	if ((ifp->if_flags & IFF_UP) == 0) {
 		m_freem(m);
@@ -782,6 +783,8 @@ ether_input(ifp, eh, m)
 		return;
        }
 #endif /* NVLAN > 0 */
+
+	ac = (struct arpcom *)ifp;
 
 	/*
 	 * If packet is unicast and we're in promiscuous mode, make sure it
@@ -1044,7 +1047,12 @@ ether_ifattach(ifp)
 		((struct arpcom *)ifp)->ac_enaddr[2] = 0xe1;
 		((struct arpcom *)ifp)->ac_enaddr[3] = 0xba;
 		((struct arpcom *)ifp)->ac_enaddr[4] = 0xd0;
-		((struct arpcom *)ifp)->ac_enaddr[5] = (u_char)arc4random();
+		/*
+		 * XXX use of random() by anything except the scheduler is
+		 * normally invalid, but this is boot time, so pre-scheduler,
+		 * and the random subsystem is not alive yet
+		 */
+		((struct arpcom *)ifp)->ac_enaddr[5] = (u_char)random() & 0xff;
 	}
 		
 	ifp->if_type = IFT_ETHER;
@@ -1052,8 +1060,7 @@ ether_ifattach(ifp)
 	ifp->if_hdrlen = 14;
 	ifp->if_mtu = ETHERMTU;
 	ifp->if_output = ether_output;
-	for (ifa = ifp->if_addrlist.tqh_first; ifa != 0;
-	    ifa = ifa->ifa_list.tqe_next)
+	TAILQ_FOREACH(ifa, &ifp->if_addrlist, ifa_list) {
 		if ((sdl = (struct sockaddr_dl *)ifa->ifa_addr) &&
 		    sdl->sdl_family == AF_LINK) {
 			sdl->sdl_type = IFT_ETHER;
@@ -1062,6 +1069,7 @@ ether_ifattach(ifp)
 			    LLADDR(sdl), ifp->if_addrlen);
 			break;
 		}
+	}
 	LIST_INIT(&((struct arpcom *)ifp)->ac_multiaddrs);
 #if NBPFILTER > 0
 	bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
@@ -1075,7 +1083,8 @@ ether_ifdetach(ifp)
 	struct arpcom *ac = (struct arpcom *)ifp;
 	struct ether_multi *enm;
 
-	for (enm = LIST_FIRST(&ac->ac_multiaddrs); enm;
+	for (enm = LIST_FIRST(&ac->ac_multiaddrs);
+	    enm != LIST_END(&ac->ac_multiaddrs);
 	    enm = LIST_FIRST(&ac->ac_multiaddrs)) {
 		LIST_REMOVE(enm, enm_list);
 		free(enm, M_IFMADDR);
@@ -1100,7 +1109,9 @@ ether_addmulti(ifr, ac)
 	register struct arpcom *ac;
 {
 	register struct ether_multi *enm;
+#ifdef INET
 	struct sockaddr_in *sin;
+#endif
 #ifdef INET6
 	struct sockaddr_in6 *sin6;
 #endif /* INET6 */
@@ -1208,7 +1219,9 @@ ether_delmulti(ifr, ac)
 	register struct arpcom *ac;
 {
 	register struct ether_multi *enm;
+#ifdef INET
 	struct sockaddr_in *sin;
+#endif
 #ifdef INET6
 	struct sockaddr_in6 *sin6;
 #endif /* INET6 */

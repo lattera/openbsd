@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/timeout.h,v 1.6.2.2 2001/05/14 22:45:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/timeout.h,v 1.6.2.3 2001/10/31 03:30:30 nate Exp $	*/
 /*
  * Copyright (c) 2000 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
@@ -54,10 +54,6 @@
  *      a timeout that has already happened.
  *
  * These functions may be called in interrupt context (anything below splhigh).
- *
- * XXX - the old timeout()/untimeout() API is kept for compatibility, you may
- *       not use the new API if there is a risk that the same function/argument
- *       pairs are mixed in the new and old API.
  */
 
 struct timeout {
@@ -71,7 +67,6 @@ struct timeout {
 /*
  * flags in the to_flags field.
  */
-#define TIMEOUT_STATIC		1	/* allocated from static pool */
 #define TIMEOUT_ONQUEUE		2	/* timeout is on the todo queue */
 #define TIMEOUT_INITIALIZED	4	/* timeout is initialized */
 #define TIMEOUT_TRIGGERED       8       /* timeout is running or ran */
@@ -89,11 +84,7 @@ void timeout_del __P((struct timeout *));
 #define timeout_initialized(to) ((to)->to_flags & TIMEOUT_INITIALIZED)
 #define timeout_triggered(to) ((to)->to_flags & TIMEOUT_TRIGGERED)
 
-/*
- * timeout_init - called by the machine dependent code to initialize a static
- *                list of preallocated timeout structures.
- */
-void timeout_init __P((void));
+void timeout_startup __P((void));
 
 /*
  * called once every hardclock. returns non-zero if we need to schedule a
@@ -101,9 +92,4 @@ void timeout_init __P((void));
  */
 int timeout_hardclock_update __P((void));
 
-/*
- * XXX - this should go away.
- */
-extern int ntimeout;
-extern struct timeout *timeouts;
 #endif	/* _SYS_TIMEOUT_H_ */

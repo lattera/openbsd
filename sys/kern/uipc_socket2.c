@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.4 2001/07/04 10:48:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_socket2.c,v 1.12.2.5 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: uipc_socket2.c,v 1.11 1996/02/04 02:17:55 christos Exp $	*/
 
 /*
@@ -149,16 +149,13 @@ soisdisconnected(so)
  * then we allocate a new structure, properly linked into the
  * data structure of the original socket, and return this.
  * Connstatus may be 0, or SS_ISCONFIRMING, or SS_ISCONNECTED.
- *
- * Currently, sonewconn() is defined as sonewconn1() in socketvar.h
- * to catch calls that are missing the (new) second parameter.
  */
 struct socket *
-sonewconn1(head, connstatus)
-	register struct socket *head;
+sonewconn(head, connstatus)
+	struct socket *head;
 	int connstatus;
 {
-	register struct socket *so;
+	struct socket *so;
 	int soqueue = connstatus ? 1 : 0;
 
 	if (head->so_qlen + head->so_q0len > head->so_qlimit * 3)
@@ -176,6 +173,8 @@ sonewconn1(head, connstatus)
 	so->so_pgid = head->so_pgid;
 	so->so_euid = head->so_euid;
 	so->so_ruid = head->so_ruid;
+	so->so_siguid = head->so_siguid;
+	so->so_sigeuid = head->so_sigeuid;
 	(void) soreserve(so, head->so_snd.sb_hiwat, head->so_rcv.sb_hiwat);
 	soqinsque(head, so, soqueue);
 	if ((*so->so_proto->pr_usrreq)(so, PRU_ATTACH,

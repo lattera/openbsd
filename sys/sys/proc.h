@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.5 2001/10/27 09:47:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.6 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -196,9 +196,8 @@ struct	proc {
 	struct 	pgrp *p_pgrp;	/* Pointer to process group. */
 
 /* End area that is copied on creation. */
-#define	p_endcopy	p_thread
+#define	p_endcopy	p_addr
 
-	void	*p_thread;	/* Id for this "thread"; Mach glue. XXX */
 	struct	user *p_addr;	/* Kernel virtual addr of u-area (PROC ONLY). */
 	struct	mdproc p_md;	/* Any machine-dependent fields. */
 
@@ -352,6 +351,8 @@ struct	prochd {
 	struct	proc *ph_rlink;
 } qs[NQS];
 
+struct simplelock;
+
 struct proc *pfind __P((pid_t));	/* Find process by id. */
 struct pgrp *pgfind __P((pid_t));	/* Find process group by id. */
 
@@ -371,7 +372,9 @@ void	setrunnable __P((struct proc *));
 void	setrunqueue __P((struct proc *));
 void	sleep __P((void *chan, int pri));
 void	uvm_swapin __P((struct proc *));  /* XXX: uvm_extern.h? */
-int	tsleep __P((void *chan, int pri, char *wmesg, int timo));
+int	ltsleep __P((void *chan, int pri, char *wmesg, int timo,
+	    volatile struct simplelock *));
+#define tsleep(chan, pri, wmesg, timo) ltsleep(chan, pri, wmesg, timo, NULL)
 void	unsleep __P((struct proc *));
 void    wakeup_n __P((void *chan, int));
 void    wakeup __P((void *chan));
@@ -380,7 +383,6 @@ void	reaper __P((void));
 void	exit1 __P((struct proc *, int));
 void	exit2 __P((struct proc *));
 int	fork1 __P((struct proc *, int, int, void *, size_t, register_t *));
-void	kmeminit __P((void));
 void	rqinit __P((void));
 int	groupmember __P((gid_t, struct ucred *));
 void	cpu_switch __P((struct proc *));
@@ -388,5 +390,6 @@ void	cpu_wait __P((struct proc *));
 void	cpu_exit __P((struct proc *));
 
 int	proc_cansugid __P((struct proc *));
+void	proc_zap __P((struct proc *));
 #endif	/* _KERNEL */
 #endif	/* !_SYS_PROC_H_ */

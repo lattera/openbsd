@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_aobj.h,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
-/*	$NetBSD: uvm_aobj.h,v 1.9 1999/06/21 17:25:11 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.h,v 1.3.4.3 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: uvm_aobj.h,v 1.10 2000/01/11 06:57:49 chs Exp $	*/
 
 /*
  * Copyright (c) 1998 Chuck Silvers, Charles D. Cranor and
@@ -65,8 +65,10 @@
  * prototypes
  */
 
+void uao_init __P((void));
 int uao_set_swslot __P((struct uvm_object *, int, int));
 void uao_dropswap __P((struct uvm_object *, int));
+int uao_swap_off __P((int, int));
 
 /*
  * globals

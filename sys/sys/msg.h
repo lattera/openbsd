@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/msg.h,v 1.5 1998/06/11 19:21:28 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/msg.h,v 1.5.8.1 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: msg.h,v 1.9 1996/02/09 18:25:18 christos Exp $	*/
 
 /*
@@ -114,7 +114,12 @@ struct msginfo {
 		msgssz,		/* size of a message segment (see notes above) */
 		msgseg;		/* number of message segments */
 };
-struct msginfo	msginfo;
+struct msginfo	msginfo;	/* XXX */
+
+struct msg_sysctl_info {
+	struct msginfo msginfo;
+	struct msqid_ds msgids[1];
+};
 
 #ifndef MSGSSZ
 #define MSGSSZ	8		/* Each segment must be 2^N long */
@@ -158,10 +163,10 @@ struct msgmap {
     				/* 0..(MSGSEG-1) -> index of next segment */
 };
 
-char *msgpool;			/* MSGMAX byte long msg buffer pool */
-struct msgmap *msgmaps;		/* MSGSEG msgmap structures */
-struct msg *msghdrs;		/* MSGTQL msg headers */
-struct msqid_ds *msqids;	/* MSGMNI msqid_ds struct's */
+extern char *msgpool;		/* MSGMAX byte long msg buffer pool */
+extern struct msgmap *msgmaps;	/* MSGSEG msgmap structures */
+extern struct msg *msghdrs;	/* MSGTQL msg headers */
+extern struct msqid_ds *msqids;	/* MSGMNI msqid_ds struct's */
 
 #define MSG_LOCKED	01000	/* Is this msqid_ds locked? */
 

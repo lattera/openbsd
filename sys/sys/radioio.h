@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/radioio.h,v 1.1 2001/10/04 19:17:59 gluk Exp $	*/
+/*	$OpenBSD: src/sys/sys/radioio.h,v 1.1.4.1 2001/10/31 03:30:30 nate Exp $	*/
 /* $RuOBSD: radioio.h,v 1.3 2001/09/29 17:10:16 pva Exp $ */
 
 /*

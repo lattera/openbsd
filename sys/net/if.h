@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.3 2001/07/04 10:53:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if.h,v 1.15.2.4 2001/10/31 03:29:02 nate Exp $	*/
 /*	$NetBSD: if.h,v 1.23 1996/05/07 02:40:27 thorpej Exp $	*/
 
 /*
@@ -229,6 +229,7 @@ struct ifnet {				/* and the entries */
 #define	IFCAP_IPSEC		0x00000008	/* can do IPsec */
 #define	IFCAP_VLAN_MTU		0x00000010	/* VLAN-compatible MTU */
 #define	IFCAP_VLAN_HWTAGGING	0x00000020	/* hardware VLAN tag support */
+#define	IFCAP_IPCOMP		0x00000040	/* can do IPcomp */
 
 /*
  * Output queues (ifp->if_snd) and internetwork datagram level (pup level 1)

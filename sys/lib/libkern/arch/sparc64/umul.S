@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/sparc64/Attic/umul.S,v 1.2 2001/08/20 20:15:29 jason Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/sparc64/Attic/umul.S,v 1.2.4.1 2001/10/31 03:26:30 nate Exp $	*/
 /*	$NetBSD: umul.S,v 1.1.1.1 1998/06/20 05:18:14 eeh Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.79.2.3 2001/07/04 10:54:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.c,v 1.79.2.4 2001/10/31 03:29:03 nate Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -91,6 +91,7 @@ void		tdb_soft_firstuse __P((void *v));
 extern int	ipsec_auth_default_level;
 extern int	ipsec_esp_trans_default_level;
 extern int	ipsec_esp_network_default_level;
+extern int	ipsec_ipcomp_default_level;
 
 extern int encdebug;
 int ipsec_in_use = 0;
@@ -117,6 +118,9 @@ struct xformsw xformsw[] = {
 	{ XF_ESP,	 XFT_CONF|XFT_AUTH, "IPsec ESP",
 	  esp_attach,	esp_init,  esp_zeroize,
 	  esp_input,	esp_output, },
+	{ XF_IPCOMP,	XFT_COMP, "IPcomp",
+	  ipcomp_attach,    ipcomp_init, ipcomp_zeroize,
+	  ipcomp_input,     ipcomp_output, },
 #ifdef TCP_SIGNATURE
 	{ XF_TCPSIGNATURE,	 XFT_AUTH, "TCP MD5 Signature Option, RFC 2385",
 	  tcp_signature_tdb_attach, 	tcp_signature_tdb_init,
@@ -187,7 +191,14 @@ reserve_spi(u_int32_t sspi, u_int32_t tspi, union sockaddr_union *src,
 	int nums, s;
 
 	/* Don't accept ranges only encompassing reserved SPIs. */
-	if (tspi < sspi || tspi <= SPI_RESERVED_MAX) {
+	if (sproto != IPPROTO_IPCOMP && 
+	    (tspi < sspi || tspi <= SPI_RESERVED_MAX)) {
+		(*errval) = EINVAL;
+		return 0;
+	}
+	if (sproto == IPPROTO_IPCOMP && (tspi < sspi ||
+	    tspi <= CPI_RESERVED_MAX ||
+	    tspi >= CPI_PRIVATE_MIN)) {
 		(*errval) = EINVAL;
 		return 0;
 	}
@@ -195,6 +206,19 @@ reserve_spi(u_int32_t sspi, u_int32_t tspi, union sockaddr_union *src,
 	/* Limit the range to not include reserved areas. */
 	if (sspi <= SPI_RESERVED_MAX)
 		sspi = SPI_RESERVED_MAX + 1;
+
+	/* For IPCOMP the CPI is only 16 bits long, what a good idea.... */
+
+	if (sproto == IPPROTO_IPCOMP) {
+		u_int32_t t;
+		if (sspi >= 0x10000)
+			sspi = 0xffff;
+		if (tspi >= 0x10000)
+			tspi = 0xffff;
+		if (sspi > tspi) {
+			t = sspi; sspi = tspi; tspi = t;
+		}
+	}
 
 	if (sspi == tspi)   /* Asking for a specific SPI. */
 		nums = 1;
@@ -306,8 +330,7 @@ gettdbbyaddr(union sockaddr_union *dst, struct ipsec_policy *ipo,
 					tdbp->tdb_srcid))
 					continue;
 				/* Otherwise, this is fine. */
-			} else if (ipo->ipo_srcid != NULL)
-				continue;
+			}
 
 			if (tdbp->tdb_dstid != NULL) {
 				if (ipo->ipo_dstid != NULL &&
@@ -315,8 +338,7 @@ gettdbbyaddr(union sockaddr_union *dst, struct ipsec_policy *ipo,
 					tdbp->tdb_dstid))
 					continue;
 				/* Otherwise, this is fine. */
-			} else if (ipo->ipo_dstid != NULL)
-				continue;
+			}
 
 			/* Check for credential matches. */
 			if (tdbp->tdb_local_cred != NULL) {
@@ -373,8 +395,7 @@ gettdbbysrc(union sockaddr_union *src, struct ipsec_policy *ipo,
 					tdbp->tdb_srcid))
 					continue;
 				/* Otherwise, this is fine. */
-			} else if (ipo->ipo_dstid != NULL)
-				continue;
+			}
 
 			if (tdbp->tdb_dstid != NULL) {
 				if (ipo->ipo_srcid != NULL &&
@@ -382,8 +403,7 @@ gettdbbysrc(union sockaddr_union *src, struct ipsec_policy *ipo,
 					tdbp->tdb_dstid))
 					continue;
 				/* Otherwise, this is fine. */
-			} else if (ipo->ipo_srcid != NULL)
-				continue;
+			}
 
 			/* XXX Check for filter matches. */
 			break;
@@ -856,7 +876,7 @@ ipsp_print_tdb(struct tdb *tdb, char *buffer)
 		l += sprintf(buffer + l, "\n");
 
 	if (tdb->tdb_mtu && tdb->tdb_mtutimeout > time.tv_sec)
-		l += sprintf(buffer + l, "\tMTU: %d, expires in %qu seconds\n",
+		l += sprintf(buffer + l, "\tMTU: %d, expires in %llu seconds\n",
 		    tdb->tdb_mtu, tdb->tdb_mtutimeout - time.tv_sec);
 
 	if (tdb->tdb_local_cred)
@@ -897,7 +917,7 @@ ipsp_print_tdb(struct tdb *tdb, char *buffer)
 		l += sprintf(buffer + l, ">\n");
 	}
 
-	l += sprintf(buffer + l, "\tCrypto ID: %qu\n", tdb->tdb_cryptoid);
+	l += sprintf(buffer + l, "\tCrypto ID: %llu\n", tdb->tdb_cryptoid);
 
 	if (tdb->tdb_xform)
 		l += sprintf(buffer + l, "\txform = <%s>\n",
@@ -925,39 +945,39 @@ ipsp_print_tdb(struct tdb *tdb, char *buffer)
 		    ipsp_address(tdb->tdb_inext->tdb_dst),
 		    tdb->tdb_inext->tdb_sproto);
 
-	l += sprintf(buffer + l, "\t%qu bytes processed by this SA\n",
+	l += sprintf(buffer + l, "\t%llu bytes processed by this SA\n",
 	    tdb->tdb_cur_bytes);
 
 	if (tdb->tdb_last_used)
-		l += sprintf(buffer + l, "\tLast used %qu seconds ago\n",
+		l += sprintf(buffer + l, "\tLast used %llu seconds ago\n",
 		    time.tv_sec - tdb->tdb_last_used);
 
 	if (tdb->tdb_last_marked)
 		l += sprintf(buffer + l,
-		    "\tLast marked/unmarked %qu seconds ago\n",
+		    "\tLast marked/unmarked %llu seconds ago\n",
 		    time.tv_sec - tdb->tdb_last_marked);
 
 	l += sprintf(buffer + l, "\tExpirations:\n");
 
 	if (tdb->tdb_flags & TDBF_TIMER)
 		l += sprintf(buffer + l,
-		    "\t\tHard expiration(1) in %qu seconds\n",
+		    "\t\tHard expiration(1) in %llu seconds\n",
 		    tdb->tdb_established + tdb->tdb_exp_timeout - time.tv_sec);
 
 	if (tdb->tdb_flags & TDBF_SOFT_TIMER)
 		l += sprintf(buffer + l,
-		    "\t\tSoft expiration(1) in %qu seconds\n",
+		    "\t\tSoft expiration(1) in %llu seconds\n",
 		    tdb->tdb_established + tdb->tdb_soft_timeout -
 		    time.tv_sec);
 
 	if (tdb->tdb_flags & TDBF_BYTES)
 		l += sprintf(buffer + l,
-		    "\t\tHard expiration after %qu bytes\n",
+		    "\t\tHard expiration after %llu bytes\n",
 		    tdb->tdb_exp_bytes);
 
 	if (tdb->tdb_flags & TDBF_SOFT_BYTES)
 		l += sprintf(buffer + l,
-		    "\t\tSoft expiration after %qu bytes\n",
+		    "\t\tSoft expiration after %llu bytes\n",
 		    tdb->tdb_soft_bytes);
 
 	if (tdb->tdb_flags & TDBF_ALLOCATIONS)
@@ -973,12 +993,12 @@ ipsp_print_tdb(struct tdb *tdb, char *buffer)
 	if (tdb->tdb_flags & TDBF_FIRSTUSE) {
 		if (tdb->tdb_first_use)
 			l += sprintf(buffer + l,
-			    "\t\tHard expiration(2) in %qu seconds\n",
+			    "\t\tHard expiration(2) in %llu seconds\n",
 			    (tdb->tdb_first_use + tdb->tdb_exp_first_use) -
 			    time.tv_sec);
 		else
 			l += sprintf(buffer + l,
-			    "\t\tHard expiration in %qu seconds "
+			    "\t\tHard expiration in %llu seconds "
 			    "after first use\n",
 			    tdb->tdb_exp_first_use);
 	}
@@ -986,12 +1006,12 @@ ipsp_print_tdb(struct tdb *tdb, char *buffer)
 	if (tdb->tdb_flags & TDBF_SOFT_FIRSTUSE) {
 		if (tdb->tdb_first_use)
 			l += sprintf(buffer + l,
-			    "\t\tSoft expiration(2) in %qu seconds\n",
+			    "\t\tSoft expiration(2) in %llu seconds\n",
 			    (tdb->tdb_first_use + tdb->tdb_soft_first_use) -
 			    time.tv_sec);
 		else
 			l += sprintf(buffer + l,
-			    "\t\tSoft expiration in %qu seconds "
+			    "\t\tSoft expiration in %llu seconds "
 			    "after first use\n", tdb->tdb_soft_first_use);
 	}
 

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.3 2001/07/04 11:01:05 niklas Exp $	*/
-/*	$NetBSD: uvm_map.c,v 1.68 1999/08/21 02:19:05 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.3.4.4 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: uvm_map.c,v 1.77 2000/06/13 04:10:47 chs Exp $	*/
 
 /* 
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -84,7 +84,6 @@
 
 #include <vm/vm.h>
 #include <vm/vm_page.h>
-#include <vm/vm_kern.h>
 
 #define UVM_MAP
 #include <uvm/uvm.h>
@@ -469,7 +468,7 @@ uvm_map(map, startp, size, uobj, uoffset, flags)
 	vaddr_t *startp;	/* IN/OUT */
 	vsize_t size;
 	struct uvm_object *uobj;
-	vaddr_t uoffset;
+	voff_t uoffset;
 	uvm_flag_t flags;
 {
 	vm_map_entry_t prev_entry, new_entry;
@@ -667,6 +666,7 @@ step3:
 		new_entry->aref.ar_pageoff = 0;
 		new_entry->aref.ar_amap = amap;
 	} else {
+		new_entry->aref.ar_pageoff = 0;
 		new_entry->aref.ar_amap = NULL;
 	}
 
@@ -798,7 +798,7 @@ uvm_map_findspace(map, hint, length, result, uobj, uoffset, fixed)
 	vsize_t length;
 	vaddr_t *result; /* OUT */
 	struct uvm_object *uobj;
-	vaddr_t uoffset;
+	voff_t uoffset;
 	boolean_t fixed;
 {
 	vm_map_entry_t entry, next, tmp;
@@ -1021,12 +1021,7 @@ uvm_unmap_remove(map, start, end, entry_list)
 			 * to vm_map_min(kernel_map).
 			 */
 			if (UVM_OBJ_IS_INTRSAFE_OBJECT(entry->object.uvm_obj)) {
-#if defined(PMAP_NEW)
 				pmap_kremove(entry->start, len);
-#else
-				pmap_remove(pmap_kernel(), entry->start,
-				    entry->start + len);
-#endif
 				uvm_km_pgremove_intrsafe(entry->object.uvm_obj,
 				    entry->start - vm_map_min(kernel_map),
 				    entry->end - vm_map_min(kernel_map));
@@ -1057,6 +1052,14 @@ uvm_unmap_remove(map, start, end, entry_list)
 		 * that we've nuked.  then go do next entry.
 		 */
 		UVMHIST_LOG(maphist, "  removed map entry 0x%x", entry, 0, 0,0);
+
+		/* critical! prevents stale hint */
+		/* XXX: need SAVE_HINT with three parms */
+		simple_lock(&map->hint_lock);
+		if (map->hint == entry)
+		    map->hint = entry->prev;
+		simple_unlock(&map->hint_lock);
+
 		uvm_map_entry_unlink(map, entry);
 		map->size -= len;
 		entry->next = first_entry;
@@ -1160,7 +1163,7 @@ uvm_map_reserve(map, size, offset, raddr)
 	vm_map_t map;
 	vsize_t size;
 	vaddr_t offset;    /* hint for pmap_prefer */
-	vaddr_t *raddr;	/* OUT: reserved VA */
+	vaddr_t *raddr;	/* IN:hint, OUT: reserved VA */
 {
 	UVMHIST_FUNC("uvm_map_reserve"); UVMHIST_CALLED(maphist); 
  
@@ -1560,13 +1563,15 @@ uvm_map_extract(srcmap, start, len, dstmap, dstaddrp, flags)
 		while (entry->start < end && entry != &srcmap->header) {
 
 			if (copy_ok) {
-	oldoffset = (entry->start + fudge) - start;
-	elen = min(end, entry->end) - (entry->start + fudge);
-	pmap_copy(dstmap->pmap, srcmap->pmap, dstaddr + oldoffset, 
-		  elen, entry->start + fudge);
+				oldoffset = (entry->start + fudge) - start;
+				elen = min(end, entry->end) -
+				    (entry->start + fudge);
+				pmap_copy(dstmap->pmap, srcmap->pmap,
+				    dstaddr + oldoffset, elen,
+				    entry->start + fudge);
 			}
 
-      /* we advance "entry" in the following if statement */
+			/* we advance "entry" in the following if statement */
 			if (flags & UVM_EXTRACT_REMOVE) {
 				pmap_remove(srcmap->pmap, entry->start, 
 						entry->end);
@@ -2563,8 +2568,7 @@ uvm_map_clean(map, start, end, flags)
 #endif
 
 				/* zap all mappings for the page. */
-				pmap_page_protect(PMAP_PGARG(pg),
-				    VM_PROT_NONE);
+				pmap_page_protect(pg, VM_PROT_NONE);
 
 				/* ...and deactivate the page. */
 				uvm_pagedeactivate(pg);
@@ -2722,11 +2726,7 @@ uvmspace_init(vm, pmap, min, max, pageable)
 	if (pmap)
 		pmap_reference(pmap);
 	else
-#if defined(PMAP_NEW)
 		pmap = pmap_create();
-#else
-		pmap = pmap_create(0);
-#endif
 	vm->vm_map.pmap = pmap;
 
 	vm->vm_refcnt = 1;
@@ -2759,7 +2759,6 @@ uvmspace_unshare(p)
 	struct proc *p; 
 {
 	struct vmspace *nvm, *ovm = p->p_vmspace;
-	int s;
  
 	if (ovm->vm_refcnt == 1)
 		/* nothing to do: vmspace isn't shared in the first place */
@@ -2768,11 +2767,9 @@ uvmspace_unshare(p)
 	/* make a new vmspace, still holding old one */
 	nvm = uvmspace_fork(ovm);
 
-	s = splhigh();			/* make this `atomic' */
 	pmap_deactivate(p);		/* unbind old vmspace */
 	p->p_vmspace = nvm; 
 	pmap_activate(p);		/* switch to new vmspace */
-	splx(s);			/* end of critical section */
 
 	uvmspace_free(ovm);		/* drop reference to old vmspace */
 }
@@ -2789,9 +2786,8 @@ uvmspace_exec(p)
 {
 	struct vmspace *nvm, *ovm = p->p_vmspace;
 	vm_map_t map = &ovm->vm_map;
-	int s;
 
-#ifdef sparc
+#ifdef __sparc__
 	/* XXX cgd 960926: the sparc #ifdef should be a MD hook */
 	kill_user_windows(p);   /* before stack addresses go away */
 #endif
@@ -2842,11 +2838,9 @@ uvmspace_exec(p)
 		 * install new vmspace and drop our ref to the old one.
 		 */
 
-		s = splhigh();
 		pmap_deactivate(p);
 		p->p_vmspace = nvm;
 		pmap_activate(p);
-		splx(s);
 
 		uvmspace_free(ovm);
 	}
@@ -3237,9 +3231,9 @@ uvm_map_printit(map, full, pr)
 		return;
 	for (entry = map->header.next; entry != &map->header;
 	    entry = entry->next) {
-		(*pr)(" - %p: 0x%lx->0x%lx: obj=%p/0x%x, amap=%p/%d\n",
+		(*pr)(" - %p: 0x%lx->0x%lx: obj=%p/0x%llx, amap=%p/%d\n",
 		    entry, entry->start, entry->end, entry->object.uvm_obj,
-		    entry->offset, entry->aref.ar_amap, entry->aref.ar_pageoff);
+		    (long long)entry->offset, entry->aref.ar_amap, entry->aref.ar_pageoff);
 		(*pr)(
 "\tsubmap=%c, cow=%c, nc=%c, prot(max)=%d/%d, inh=%d, wc=%d, adv=%d\n",
 		    (entry->etype & UVM_ET_SUBMAP) ? 'T' : 'F',
@@ -3276,21 +3270,35 @@ uvm_object_printit(uobj, full, pr)
 	struct vm_page *pg;
 	int cnt = 0;
 
-	(*pr)("OBJECT %p: pgops=%p, npages=%d, ", uobj, uobj->pgops,
-	    uobj->uo_npages);
+	(*pr)("OBJECT %p: locked=%d, pgops=%p, npages=%d, ",
+	    uobj, uobj->vmobjlock.lock_data, uobj->pgops, uobj->uo_npages);
 	if (UVM_OBJ_IS_KERN_OBJECT(uobj))
 		(*pr)("refs=<SYSTEM>\n");
 	else
 		(*pr)("refs=%d\n", uobj->uo_refs);
 
-	if (!full) return;
-	(*pr)("  PAGES <pg,offset>:\n  ");
-	for (pg = uobj->memq.tqh_first ; pg ; pg = pg->listq.tqe_next, cnt++) {
-		(*pr)("<%p,0x%lx> ", pg, pg->offset);
-		if ((cnt % 3) == 2) (*pr)("\n  ");
+	if (!full) {
+		return;
 	}
-	if ((cnt % 3) != 2) (*pr)("\n");
+	(*pr)("  PAGES <pg,offset>:\n  ");
+	for (pg = TAILQ_FIRST(&uobj->memq);
+	     pg != NULL;
+	     pg = TAILQ_NEXT(pg, listq), cnt++) {
+		(*pr)("<%p,0x%lx> ", pg, pg->offset);
+		if ((cnt % 3) == 2) {
+			(*pr)("\n  ");
+		}
+	}
+	if ((cnt % 3) != 2) {
+		(*pr)("\n");
+	}
 } 
+
+const char page_flagbits[] =
+	"\20\4CLEAN\5BUSY\6WANTED\7TABLED\12FAKE\13FILLED\14DIRTY\15RELEASED"
+	"\16FAULTING\17CLEANCHK";
+const char page_pqflagbits[] =
+	"\20\1FREE\2INACTIVE\3ACTIVE\4LAUNDRY\5ANON\6AOBJ";
 
 /*
  * uvm_page_print: print out a page
@@ -3318,12 +3326,16 @@ uvm_page_printit(pg, full, pr)
 	struct vm_page *lcv;
 	struct uvm_object *uobj;
 	struct pglist *pgl;
+	char pgbuf[128];
+	char pqbuf[128];
 
 	(*pr)("PAGE %p:\n", pg);
-	(*pr)("  flags=0x%x, pqflags=0x%x, vers=%d, wire_count=%d, pa=0x%lx\n", 
-	pg->flags, pg->pqflags, pg->version, pg->wire_count, (long)pg->phys_addr);
+	snprintf(pgbuf, sizeof(pgbuf), "%b", pg->flags, page_flagbits);
+	snprintf(pqbuf, sizeof(pqbuf), "%b", pg->pqflags, page_pqflagbits);
+	(*pr)("  flags=%s, pqflags=%s, vers=%d, wire_count=%d, pa=0x%lx\n",
+	    pgbuf, pqbuf, pg->version, pg->wire_count, (long)pg->phys_addr);
 	(*pr)("  uobject=%p, uanon=%p, offset=0x%lx loan_count=%d\n", 
-	pg->uobject, pg->uanon, pg->offset, pg->loan_count);
+	    pg->uobject, pg->uanon, pg->offset, pg->loan_count);
 #if defined(UVM_PAGE_TRKOWN)
 	if (pg->flags & PG_BUSY)
 		(*pr)("  owning process = %d, tag=%s\n",
@@ -3362,8 +3374,11 @@ uvm_page_printit(pg, full, pr)
 	}
 
 	/* cross-verify page queue */
-	if (pg->pqflags & PQ_FREE)
-		pgl = &uvm.page_free[uvm_page_lookup_freelist(pg)];
+	if (pg->pqflags & PQ_FREE) {
+		int fl = uvm_page_lookup_freelist(pg);
+		pgl = &uvm.page_free[fl].pgfl_queues[((pg)->flags & PG_ZERO) ?
+		    PGFL_ZEROS : PGFL_UNKNOWN];
+	}
 	else if (pg->pqflags & PQ_INACTIVE)
 		pgl = (pg->pqflags & PQ_SWAPBACKED) ? 
 		    &uvm.page_inactive_swp : &uvm.page_inactive_obj;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.2 2001/07/04 11:00:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/device.h,v 1.17.4.3 2001/10/31 03:30:30 nate Exp $	*/
 /*	$NetBSD: device.h,v 1.15 1996/04/09 20:55:24 cgd Exp $	*/
 
 /*
@@ -213,6 +213,10 @@ void evcnt_attach __P((struct device *, const char *, struct evcnt *));
 struct device *device_lookup __P((struct cfdriver *, int unit));
 void device_ref __P((struct device *));
 void device_unref __P((struct device *));
+
+#ifdef __HAVE_DEVICE_REGISTER
+void device_register(struct device *, void *);
+#endif
 
 /* compatibility definitions */
 #define config_found(d, a, p)	config_found_sm((d), (a), (p), NULL)

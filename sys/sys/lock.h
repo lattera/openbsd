@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.3 2001/07/15 13:34:19 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.4 2001/10/31 03:30:30 nate Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -148,7 +148,7 @@ struct lock {
  * unless one of the following is true:
  *	LK_FORCEUPGRADE is requested and some other process has already
  *	    requested a lock upgrade (returns EBUSY).
- *	LK_WAIT is set and a sleep would be required (returns EBUSY).
+ *	LK_NOWAIT is set and a sleep would be required (returns EBUSY).
  *	LK_SLEEPFAIL is set and a sleep was done (returns ENOLCK).
  *	PCATCH is set in lock priority and a signal arrives (returns
  *	    either EINTR or ERESTART if system calls is to be restarted).

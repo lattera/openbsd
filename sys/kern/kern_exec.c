@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.3 2001/07/04 10:48:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.4 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -59,12 +59,19 @@
 #include <sys/syscallargs.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/reg.h>
+
+#include <dev/rndvar.h>
+
+/*
+ * stackgap_random specifies if the stackgap should have a random size added
+ * to it. Must be a n^2. If non-zero, the stack gap will be calculated as:
+ * (arc4random() * ALIGNBYTES) & (stackgap_random - 1) + STACKGAPLEN.
+ */
+int stackgap_random;
 
 /*
  * check exec:
@@ -219,7 +226,7 @@ sys_execve(p, v, retval)
 	void *v;
 	register_t *retval;
 {
-	register struct sys_execve_args /* {
+	struct sys_execve_args /* {
 		syscallarg(char *) path;
 		syscallarg(char * *) argp;
 		syscallarg(char * *) envp;
@@ -232,7 +239,7 @@ sys_execve(p, v, retval)
 	char *argp;
 	char * const *cpp, *dp, *sp;
 	long argc, envc;
-	size_t len;
+	size_t len, sgap;
 #ifdef MACHINE_STACK_GROWS_UP
 	size_t slen;
 #endif
@@ -355,9 +362,12 @@ sys_execve(p, v, retval)
 
 	szsigcode = pack.ep_emul->e_esigcode - pack.ep_emul->e_sigcode;
 
+	sgap = STACKGAPLEN;
+	if (stackgap_random != 0)
+		sgap += (arc4random() * ALIGNBYTES) & (stackgap_random - 1);
 	/* Now check if args & environ fit into new stack */
 	len = ((argc + envc + 2 + pack.ep_emul->e_arglen) * sizeof(char *) +
-	    sizeof(long) + dp + STACKGAPLEN + szsigcode +
+	    sizeof(long) + dp + sgap + szsigcode +
 	    sizeof(struct ps_strings)) - argp;
 
 	len = ALIGN(len);	/* make the stack "safely" aligned */
@@ -496,9 +506,12 @@ sys_execve(p, v, retval)
 		for (i = 0; i < 3; i++) {
 			struct file *fp = NULL;
 
-			if (i < p->p_fd->fd_nfiles)
-				fp = p->p_fd->fd_ofiles[i];
-
+			/*
+			 * NOTE - This will never return NULL because of
+			 * unmature fds. The file descriptor table is not
+			 * shared because we're suid.
+			 */
+			fp = fd_getfile(p->p_fd, i);
 #ifdef PROCFS
 			/*
 			 * Close descriptors that are writing to procfs.
@@ -548,6 +561,7 @@ sys_execve(p, v, retval)
 				fp->f_type = DTYPE_VNODE;
 				fp->f_ops = &vnops;
 				fp->f_data = (caddr_t)vp;
+				FILE_SET_MATURE(fp);
 			}
 		}
 	} else
@@ -657,7 +671,7 @@ copyargs(pack, arginfo, stack, argp)
 	char *dp, *sp;
 	size_t len;
 	void *nullp = NULL;
-	int argc = arginfo->ps_nargvstr;
+	long argc = arginfo->ps_nargvstr;
 	int envc = arginfo->ps_nenvstr;
 
 	if (copyout(&argc, cpp++, sizeof(argc)))

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/sparc64/SYS.h,v 1.2 2001/08/20 20:15:29 jason Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/sparc64/SYS.h,v 1.2.4.1 2001/10/31 03:26:30 nate Exp $	*/
 /*	$NetBSD: SYS.h,v 1.2 1999/02/15 04:54:36 hubertf Exp $	*/
 /*-
  * Copyright (c) 1992, 1993
@@ -39,7 +39,7 @@
  *	@(#)SYS.h	8.1 (Berkeley) 6/4/93
  *
  *	from: Header: SYS.h,v 1.2 92/07/03 18:57:00 torek Exp
- *	$Id: SYS.h,v 1.1 2001/08/19 05:14:35 jason Exp $
+ *	$Id$
  */
 
 #include <machine/asm.h>

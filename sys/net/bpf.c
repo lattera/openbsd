@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.4 2001/07/04 10:53:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.c,v 1.18.4.5 2001/10/31 03:29:02 nate Exp $	*/
 /*	$NetBSD: bpf.c,v 1.33 1997/02/21 23:59:35 thorpej Exp $	*/
 
 /*
@@ -64,7 +64,7 @@
 
 #define BPF_BUFSIZE 8192	/* 4096 too small for FDDI frames */
 
-#define PRINET  6			/* interruptible */
+#define PRINET  26			/* interruptible */
 
 /*
  * The default read buffer size is patchable.
@@ -1069,6 +1069,8 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 	register struct bpf_hdr *hp;
 	register int totlen, curlen;
 	register int hdrlen = d->bd_bif->bif_hdrlen;
+	struct timeval tv;
+
 	/*
 	 * Figure out how many bytes to move.  If the packet is
 	 * greater or equal to the snapshot length, transfer that
@@ -1113,7 +1115,9 @@ bpf_catchpacket(d, pkt, pktlen, snaplen, cpfn)
 	 * Append the bpf header.
 	 */
 	hp = (struct bpf_hdr *)(d->bd_sbuf + curlen);
-	microtime(&hp->bh_tstamp);
+	microtime(&tv);
+	hp->bh_tstamp.tv_sec = tv.tv_sec;
+	hp->bh_tstamp.tv_usec = tv.tv_usec;
 	hp->bh_datalen = pktlen;
 	hp->bh_hdrlen = hdrlen;
 	/*

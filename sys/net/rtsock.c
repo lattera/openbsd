@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.4 2001/07/04 10:54:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.9.2.5 2001/10/31 03:29:03 nate Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -234,7 +234,9 @@ route_output(m, va_alist)
 	if (genmask) {
 		struct radix_node *t;
 		t = rn_addmask((caddr_t)genmask, 0, 1);
-		if (t && Bcmp(genmask, t->rn_key, *(u_char *)genmask) == 0)
+		if (t && genmask->sa_len >= ((struct sockaddr *)t->rn_key)->sa_len &&
+		    Bcmp((caddr_t *)genmask + 1, (caddr_t *)t->rn_key + 1,
+		    ((struct sockaddr *)t->rn_key)->sa_len) - 1)
 			genmask = (struct sockaddr *)(t->rn_key);
 		else
 			senderr(ENOBUFS);
@@ -643,7 +645,7 @@ again:
 
 /*
  * This routine is called to generate a message from the routing
- * socket indicating that a redirect has occured, a routing lookup
+ * socket indicating that a redirect has occurred, a routing lookup
  * has failed, or that a protocol has detected timeouts to a particular
  * destination.
  */

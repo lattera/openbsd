@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.3 2001/07/04 10:48:27 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.4 2001/10/31 03:26:29 nate Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -336,17 +336,24 @@ int safepri;
  * signal needs to be delivered, ERESTART is returned if the current system
  * call should be restarted if possible, and EINTR is returned if the system
  * call should be interrupted by the signal (return EINTR).
+ *
+ * The interlock is held until the scheduler_slock (XXX) is held.  The
+ * interlock will be locked before returning back to the caller
+ * unless the PNORELOCK flag is specified, in which case the
+ * interlock will always be unlocked upon return.
  */
 int
-tsleep(ident, priority, wmesg, timo)
+ltsleep(ident, priority, wmesg, timo, interlock)
 	void *ident;
 	int priority, timo;
 	char *wmesg;
+	volatile struct simplelock *interlock;
 {
-	register struct proc *p = curproc;
-	register struct slpque *qp;
-	register int s;
-	int sig, catch = priority & PCATCH;
+	struct proc *p = curproc;
+	struct slpque *qp;
+	int s, sig;
+	int catch = priority & PCATCH;
+	int relock = (priority & PNORELOCK) == 0;
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
@@ -362,6 +369,8 @@ tsleep(ident, priority, wmesg, timo)
 		 */
 		splx(safepri);
 		splx(s);
+		if (interlock != NULL && relock == 0)
+			simple_unlock(interlock);
 		return (0);
 	}
 #ifdef DIAGNOSTIC
@@ -380,6 +389,18 @@ tsleep(ident, priority, wmesg, timo)
 	*(qp->sq_tailp = &p->p_forw) = 0;
 	if (timo)
 		timeout_add(&p->p_sleep_to, timo);
+	/*
+	 * We can now release the interlock; the scheduler_slock
+	 * is held, so a thread can't get in to do wakeup() before
+	 * we do the switch.
+	 *
+	 * XXX We leave the code block here, after inserting ourselves
+	 * on the sleep queue, because we might want a more clever
+	 * data structure for the sleep queues at some point.
+	 */
+	if (interlock != NULL)
+		simple_unlock(interlock);
+
 	/*
 	 * We put ourselves on the sleep queue and start our timeout
 	 * before calling CURSIG, as we could stop there, and a wakeup
@@ -421,6 +442,8 @@ resume:
 			if (KTRPOINT(p, KTR_CSW))
 				ktrcsw(p, 0, 0);
 #endif
+			if (interlock != NULL && relock)
+				simple_lock(interlock);
 			return (EWOULDBLOCK);
 		}
 	} else if (timo)
@@ -430,6 +453,8 @@ resume:
 		if (KTRPOINT(p, KTR_CSW))
 			ktrcsw(p, 0, 0);
 #endif
+		if (interlock != NULL && relock)
+			simple_lock(interlock);
 		if (p->p_sigacts->ps_sigintr & sigmask(sig))
 			return (EINTR);
 		return (ERESTART);
@@ -438,6 +463,8 @@ resume:
 	if (KTRPOINT(p, KTR_CSW))
 		ktrcsw(p, 0, 0);
 #endif
+	if (interlock != NULL && relock)
+		simple_lock(interlock);
 	return (0);
 }
 
@@ -666,7 +693,6 @@ preempt(newp)
 
 
 /*
- * The machine independent parts of mi_switch().
  * Must be called at splstatclock() or higher.
  */
 void

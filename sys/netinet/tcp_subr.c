@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.4 2001/07/04 10:55:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.5 2001/10/31 03:29:04 nate Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -259,13 +259,13 @@ tcp_template(tp)
 			ipv6->ip6_flow = htonl(0x60000000) |
 			    (inp->inp_ipv6.ip6_flow & htonl(0x0fffffff));  
 						  
-
 			ipv6->ip6_nxt = IPPROTO_TCP;
 			ipv6->ip6_plen = htons(sizeof(struct tcphdr)); /*XXX*/
 			ipv6->ip6_hlim = in6_selecthlim(inp, NULL);	/*XXX*/
 
 			th = (struct tcphdr *)(mtod(m, caddr_t) +
 				sizeof(struct ip6_hdr));
+			th->th_sum = 0;
 		}
 		break;
 #endif /* INET6 */
@@ -369,13 +369,13 @@ tcp_respond(tp, template, m, ack, seq, flags)
 			xchg(((struct ip6_hdr *)ti)->ip6_dst,\
 			    ((struct ip6_hdr *)ti)->ip6_src,\
 			    struct in6_addr);
-			th = (void *)(ti + sizeof(struct ip6_hdr));
+			th = (void *)((caddr_t)ti + sizeof(struct ip6_hdr));
 		} else
 #endif /* INET6 */
 		{
 			m->m_len = sizeof (struct tcpiphdr);
 			xchg(ti->ti_dst.s_addr, ti->ti_src.s_addr, u_int32_t);
-			th = (void *)(ti + sizeof(struct ip));
+			th = (void *)((caddr_t)ti + sizeof(struct ip));
 		}
 		xchg(th->th_dport, th->th_sport, u_int16_t);
 #undef xchg
@@ -431,6 +431,7 @@ tcp_respond(tp, template, m, ack, seq, flags)
 		 * here, as we only send a minimal TCP packet whose checksum
 		 * we need to compute in any case.
 		 */
+		th->th_sum = 0;
 		th->th_sum = in_cksum(m, tlen);
 		((struct ip *)ti)->ip_len = tlen;
 		((struct ip *)ti)->ip_ttl = ip_defttl;

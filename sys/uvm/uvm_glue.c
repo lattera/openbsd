@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.4 2001/07/04 11:01:03 niklas Exp $	*/
-/*	$NetBSD: uvm_glue.c,v 1.29 1999/07/25 06:30:36 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.5.4.5 2001/10/31 03:32:14 nate Exp $	*/
+/*	$NetBSD: uvm_glue.c,v 1.36 2000/06/18 05:20:27 simonb Exp $	*/
 
 /* 
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -83,7 +83,6 @@
 
 #include <vm/vm.h>
 #include <vm/vm_page.h>
-#include <vm/vm_kern.h>
 
 #include <uvm/uvm.h>
 
@@ -105,31 +104,6 @@ unsigned maxsmap = MAXSSIZ;	/* kern_resource.c: RLIMIT_STACK max */
 int readbuffers = 0;		/* allow KGDB to read kern buffer pool */
 				/* XXX: see uvm_kernacc */
 
-
-/*
- * uvm_sleep: atomic unlock and sleep for UVM_UNLOCK_AND_WAIT().
- */
-
-void
-uvm_sleep(event, slock, canintr, msg, timo)
-	void *event;
-	struct simplelock *slock;
-	boolean_t canintr;
-	const char *msg;
-	int timo;
-{
-	int s, pri;
-
-	pri = PVM;
-	if (canintr)
-		pri |= PCATCH;
-
-	s = splhigh();
-	if (slock != NULL)
-		simple_unlock(slock);
-	(void) tsleep(event, pri, (char *)msg, timo);
-	splx(s);
-}
 
 /*
  * uvm_kernacc: can the kernel access a region of memory
@@ -189,7 +163,7 @@ uvm_useracc(addr, len, rw)
 
 	vm_map_lock_read(map);
 	rv = uvm_map_checkprot(map, trunc_page((vaddr_t)addr),
-		round_page((vaddr_t)addr+len), prot);
+	    round_page((vaddr_t)addr+len), prot);
 	vm_map_unlock_read(map);
 
 	return(rv);
@@ -210,7 +184,7 @@ uvm_useracc(addr, len, rw)
  */
 void
 uvm_chgkprot(addr, len, rw)
-	register caddr_t addr;
+	caddr_t addr;
 	size_t len;
 	int rw;
 {
@@ -229,7 +203,7 @@ uvm_chgkprot(addr, len, rw)
 		 */
 		if (pmap_extract(pmap_kernel(), sva, &pa) == FALSE)
 			panic("chgkprot: invalid page");
-		pmap_enter(pmap_kernel(), sva, pa, prot, TRUE, 0);
+		pmap_enter(pmap_kernel(), sva, pa, prot, PMAP_WIRED);
 	}
 }
 #endif
@@ -433,8 +407,8 @@ uvm_swapin(p)
 void
 uvm_scheduler()
 {
-	register struct proc *p;
-	register int pri;
+	struct proc *p;
+	int pri;
 	struct proc *pp;
 	int ppri;
 	UVMHIST_FUNC("uvm_scheduler"); UVMHIST_CALLED(maphist);
@@ -525,7 +499,7 @@ loop:
 void
 uvm_swapout_threads()
 {
-	register struct proc *p;
+	struct proc *p;
 	struct proc *outp, *outp2;
 	int outpri, outpri2;
 	int didswap = 0;
@@ -595,7 +569,7 @@ uvm_swapout_threads()
 
 static void
 uvm_swapout(p)
-	register struct proc *p;
+	struct proc *p;
 {
 	vaddr_t addr;
 	int s;
