@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.3 2001/07/14 10:02:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.4 2001/07/16 21:41:13 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -228,8 +228,8 @@ isa_defaultirq()
 
 	/* icu vectors */
 	for (i = 0; i < ICU_LEN; i++)
-		setgate(&idt[ICU_OFFSET + i], IDTVEC(intr)[i], 0, SDT_SYS386IGT,
-		    SEL_KPL, GICODE_SEL);
+		setgate(&idt[ICU_OFFSET + i], IDTVEC(intr)[i], 0,
+		    SDT_SYS386IGT, SEL_KPL, GICODE_SEL);
   
 	/* initialize 8259's */
 	outb(IO_ICU1, 0x11);		/* reset; program device, four bytes */
@@ -258,6 +258,16 @@ isa_defaultirq()
 	outb(IO_ICU2+1, 0xff);		/* leave interrupts masked */
 	outb(IO_ICU2, 0x68);		/* special mask mode (if available) */
 	outb(IO_ICU2, 0x0a);		/* Read IRR by default. */
+}
+
+void
+isa_nodefaultirq()
+{
+	int i;
+
+	/* icu vectors */
+	for (i = 0; i < ICU_LEN; i++)
+		unsetgate(&idt[ICU_OFFSET + i]);
 }
 
 /*
@@ -370,7 +380,6 @@ int
 fakeintr(arg)
 	void *arg;
 {
-
 	return 0;
 }
 
@@ -508,7 +517,7 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
  		int airq;
 
  		for (mip = mp_busses[bus].mb_intrs; mip != NULL; 
- 		     mip=mip->next) {
+ 		    mip = mip->next) {
  			if (mip->bus_pin == mpspec_pin) {
  				airq = mip->ioapic_ih | irq;
  				break;
@@ -517,8 +526,8 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
  		if (mip == NULL)
 			printf("isa_intr_establish: no MP mapping found\n");
  		else
-			return apic_intr_establish (airq, type, level, ih_fun,
- 						    ih_arg);
+			return (apic_intr_establish(airq, type, level, ih_fun,
+			    ih_arg, ih_what));
  	}
 #endif
 	/* no point in sleeping unless someone can free memory. */
@@ -526,12 +535,12 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 	if (ih == NULL) {
 		printf("%s: isa_intr_establish: can't malloc handler info\n",
 		    ih_what);
-		return NULL;
+		return (NULL);
 	}
 
 	if (!LEGAL_IRQ(irq) || type == IST_NONE) {
 		printf("%s: intr_establish: bogus irq or type\n", ih_what);
-		return NULL;
+		return (NULL);
 	}
 	switch (intrtype[irq]) {
 	case IST_NONE:
@@ -546,7 +555,7 @@ isa_intr_establish(ic, irq, type, level, ih_fun, ih_arg, ih_what)
 			/*printf("%s: intr_establish: can't share %s with %s, irq %d\n",
 			    ih_what, isa_intr_typename(intrtype[irq]),
 			    isa_intr_typename(type), irq);*/
-			return NULL;
+			return (NULL);
 		}
 		break;
 	}
@@ -596,8 +605,15 @@ isa_intr_disestablish(ic, arg)
 	int irq = ih->ih_irq;
 	struct intrhand **p, *q;
 
+#if NIOAPIC > 0
+	if (irq & APIC_INT_VIA_APIC) {
+		apic_intr_disestablish(arg);
+		return;
+	}
+#endif
+
 	if (!LEGAL_IRQ(irq))
-		panic("intr_disestablish: bogus irq");
+		panic("intr_disestablish: bogus irq %d", irq);
 
 	/*
 	 * Remove the handler from the chain.
