@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.4 2003/04/04 15:02:03 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ipifuncs.c,v 1.1.2.5 2003/04/06 14:03:58 niklas Exp $	*/
 /* $NetBSD: ipifuncs.c,v 1.1.2.3 2000/06/26 02:04:06 sommerfeld Exp $ */
 
 /*-
@@ -128,11 +128,26 @@ i386_spurious(void)
 	printf("spurious intr\n");
 }
 
-void
+int
 i386_send_ipi(struct cpu_info *ci, int ipimask)
 {
+	int ret;
+
 	i386_atomic_setbits_l(&ci->ci_ipis, ipimask);
-	i386_ipi(LAPIC_IPI_VECTOR, ci->ci_cpuid, LAPIC_DLMODE_FIXED);
+
+	/* Don't send IPI to cpu which isn't (yet) running. */
+	if (!(ci->ci_flags & CPUF_RUNNING))
+		return ENOENT;
+
+printf("send ipi %x from %s to %s\n", ipimask, curcpu()->ci_dev.dv_xname,
+    ci->ci_dev.dv_xname);
+	ret = i386_ipi(LAPIC_IPI_VECTOR, ci->ci_cpuid, LAPIC_DLMODE_FIXED);
+	if (ret != 0) {
+		printf("ipi of %x from %s to %s failed\n",
+		    ipimask, curcpu()->ci_dev.dv_xname, ci->ci_dev.dv_xname);
+	}
+
+	return ret;
 }
 
 void
