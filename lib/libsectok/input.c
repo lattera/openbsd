@@ -1,4 +1,4 @@
-/* $Id: input.c,v 1.7 2001/06/08 14:51:12 rees Exp $ */
+/* $Id: input.c,v 1.3 2001/06/08 15:04:03 rees Exp $ */
 
 /*
 copyright 2001
@@ -132,4 +132,14 @@ parse_input(char *ibuf, unsigned char *obuf, int olen)
     }
 
     return (up - obuf);
+}
+
+void
+sectok_parse_fname(char *buf, unsigned char *fid)
+{
+    if (buf[0] == '/' || parse_input(buf, fid, 2) < 2) {
+	/* root */
+	fid[0] = 0x3f;
+	fid[1] = 0;
+    }
 }
