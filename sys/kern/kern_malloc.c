@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.44.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc.c,v 1.44.2.2 2002/02/02 03:28:25 art Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*
@@ -180,7 +180,7 @@ malloc(size, type, flags)
 		else
 			allocsize = 1 << indx;
 		npg = btoc(allocsize);
-		va = (caddr_t) uvm_km_kmemalloc(kmem_map, uvmexp.kmem_object,
+		va = (caddr_t) uvm_km_kmemalloc(kmem_map, NULL,
 				(vsize_t)ctob(npg), 
 				(flags & M_NOWAIT) ? UVM_KMF_NOWAIT : 0);
 		if (va == NULL) {
@@ -597,4 +597,16 @@ sysctl_malloc(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (EOPNOTSUPP);
 	}
 	/* NOTREACHED */
+}
+
+/*
+ * Round up a size to how much malloc would actually allocate.
+ */
+size_t
+malloc_roundup(size_t sz)
+{
+	if (sz > MAXALLOCSAVE)
+		return round_page(sz);
+
+	return (1 << BUCKETINDX(sz));
 }

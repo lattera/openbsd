@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.28.2.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_inode.c,v 1.28.2.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ffs_inode.c,v 1.10 1996/05/11 18:27:19 mycroft Exp $	*/
 
 /*
@@ -204,6 +204,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	if (osize < length) {
 		ufs_balloc_range(ovp, length - 1, 1, cred,
 		    flags & IO_SYNC ? B_SYNC : 0);
+		uvm_vnp_setsize(ovp, length);
 		oip->i_flag |= IN_CHANGE | IN_UPDATE;
 		return (UFS_UPDATE(oip, 1));
 	}
@@ -230,9 +231,11 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 		uvm_vnp_zerorange(ovp, length, eoz - length);
 		uobj = &ovp->v_uobj;
 		simple_lock(&uobj->vmobjlock);
-		uobj->pgops->pgo_flush(uobj, length, eoz,
-		    PGO_CLEANIT|PGO_DEACTIVATE|PGO_SYNCIO);
-		simple_unlock(&uobj->vmobjlock);
+		error = (uobj->pgops->pgo_put)(uobj, trunc_page(length),
+		    round_page(eoz), PGO_CLEANIT|PGO_DEACTIVATE|PGO_SYNCIO);
+		if (error) {
+			return (error);
+		}
 	}
 
 	lockmgr(&gp->g_glock, LK_EXCLUSIVE, NULL, p);

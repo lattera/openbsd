@@ -213,7 +213,6 @@ ext2fs_write(v)
 	vsize_t bytelen;
 	void *win;
 	off_t oldoff;
-	boolean_t rv;
 
 	ioflag = ap->a_ioflag;
 	uio = ap->a_uio;
@@ -278,11 +277,6 @@ ext2fs_write(v)
 			bytelen = MIN(fs->e2fs_bsize - blkoffset,
 			    uio->uio_resid);
 
-			/*
-			 * XXXUBC if file is mapped and this is the last block,
-			 * process one page at a time.
-			 */
-
 			error = ext2fs_balloc_range(vp, uio->uio_offset,
 			    bytelen, ap->a_cred, 0);
 			if (error) {
@@ -303,11 +297,15 @@ ext2fs_write(v)
 
 			if (oldoff >> 16 != uio->uio_offset >> 16) {
 				simple_lock(&vp->v_uobj.vmobjlock);
-				rv = vp->v_uobj.pgops->pgo_flush(
+				error = vp->v_uobj.pgops->pgo_put(
 				    &vp->v_uobj, (oldoff >> 16) << 16,
 				    (uio->uio_offset >> 16) << 16, PGO_CLEANIT);
-				simple_unlock(&vp->v_uobj.vmobjlock);
 			}
+		}
+		if (error == 0 && ioflag & IO_SYNC) {
+			simple_lock(&vp->v_uobj.vmobjlock);
+			error = vp->v_uobj.pgops->pgo_put(&vp->v_uobj, oldoff,
+			    oldoff + bytelen, PGO_CLEANIT|PGO_SYNCIO);
 		}
 		goto out;
 	}
@@ -351,12 +349,9 @@ out:
 	if (resid > uio->uio_resid && ap->a_cred && ap->a_cred->cr_uid != 0)
 		ip->i_e2fs_mode &= ~(ISUID | ISGID);
 	if (error) {
-		if (ioflag & IO_UNIT) {
-			(void)ext2fs_truncate(ip, osize,
-				ioflag & IO_SYNC, ap->a_cred);
-			uio->uio_offset -= resid - uio->uio_resid;
-			uio->uio_resid = resid;
-		}
+		(void)ext2fs_truncate(ip, osize, ioflag & IO_SYNC, ap->a_cred);
+		uio->uio_offset -= resid - uio->uio_resid;
+		uio->uio_resid = resid;
 	} else if (resid > uio->uio_resid && (ioflag & IO_SYNC) == IO_SYNC)
 		error = ext2fs_update(ip, NULL, NULL, 1);
 	return (error);

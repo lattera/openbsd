@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.1 2002/01/31 22:55:49 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.2 2002/02/02 03:28:26 art Exp $	*/
 
 /*
  * Copyright 1998, 2000 Marshall Kirk McKusick. All Rights Reserved.
@@ -4509,14 +4509,16 @@ flush_inodedep_deps(fs, ino)
 		 */
 		FREE_LOCK(&lk);
 		simple_lock(&uobj->vmobjlock);
-		(uobj->pgops->pgo_flush)(uobj, 0, 0,
+		error = (uobj->pgops->pgo_put)(uobj, 0, 0,
 		    PGO_ALLPAGES|PGO_CLEANIT|
 		    (waitfor == MNT_NOWAIT ? 0: PGO_SYNCIO));
-		simple_unlock(&uobj->vmobjlock);
 		if (waitfor == MNT_WAIT) {
 			drain_output(vp, 0);
 		}
 		ACQUIRE_LOCK(&lk);
+		if (error) {
+			return error;
+		}
 
 		TAILQ_FOREACH(adp, &inodedep->id_inoupdt, ad_next) {
 			if (adp->ad_state & DEPCOMPLETE)

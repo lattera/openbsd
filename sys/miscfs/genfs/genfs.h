@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1 2001/12/10 04:45:31 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1.2.1 2002/02/02 03:28:25 art Exp $	*/
 /* $NetBSD: genfs_node.h,v 1.2 2001/09/15 22:38:40 chs Exp $ */
 
 /*
@@ -39,19 +39,16 @@ struct vm_page;
 struct genfs_ops {
 	void	(*gop_size)(struct vnode *, off_t, off_t *);
 	int	(*gop_alloc)(struct vnode *, off_t, off_t, int, struct ucred *);
-#ifdef notyet
 	int	(*gop_write)(struct vnode *, struct vm_page **, int, int);
-#endif
 };
 
 #define GOP_SIZE(vp, size, eobp) \
 	(*VTOG(vp)->g_op->gop_size)((vp), (size), (eobp))
 #define GOP_ALLOC(vp, off, len, flags, cred) \
 	(*VTOG(vp)->g_op->gop_alloc)((vp), (off), (len), (flags), (cred))
-#ifdef notyet
 #define GOP_WRITE(vp, pgs, npages, flags) \
 	(*VTOG(vp)->g_op->gop_write)((vp), (pgs), (npages), (flags))
-#endif
+
 struct genfs_node {
 	struct genfs_ops	*g_op;		/* ops vector */
 	struct lock		g_glock;	/* getpages lock */
@@ -61,9 +58,7 @@ struct genfs_node {
 
 void	genfs_size(struct vnode *, off_t, off_t *);
 void	genfs_node_init(struct vnode *, struct genfs_ops *);
-#ifdef notyet
 int	genfs_gop_write(struct vnode *, struct vm_page **, int, int);
-#endif
 
 int	genfs_getpages __P((void *));
 int	genfs_putpages __P((void *));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.22 2001/12/10 04:45:31 art Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_denode.c,v 1.22.2.1 2002/02/02 03:28:25 art Exp $	*/
 /*	$NetBSD: msdosfs_denode.c,v 1.23 1997/10/17 11:23:58 ws Exp $	*/
 
 /*-
@@ -77,6 +77,7 @@ extern int prtactive;
 struct genfs_ops msdosfs_genfsops = {
 	genfs_size,
 	msdosfs_gop_alloc,
+	genfs_gop_write
 };
 
 static struct denode *msdosfs_hashget __P((dev_t, u_long, u_long));

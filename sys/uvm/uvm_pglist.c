@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.c,v 1.11 2001/11/28 19:28:15 art Exp $	*/
-/*	$NetBSD: uvm_pglist.c,v 1.17 2001/06/27 21:18:34 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_pglist.c,v 1.11.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$NetBSD: uvm_pglist.c,v 1.19 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1997 The NetBSD Foundation, Inc.
@@ -91,9 +91,8 @@ uvm_pglistalloc(size, low, high, alignment, boundary, rlist, nsegs, waitok)
 {
 	paddr_t try, idxpa, lastidxpa;
 	int psi;
-	struct vm_page *pgs;
+	struct vm_page *pgs, *pg;
 	int s, tryidx, idx, pgflidx, end, error, free_list, color;
-	struct vm_page *m;
 	u_long pagemask;
 #ifdef DEBUG
 	struct vm_page *tp;
@@ -106,15 +105,13 @@ uvm_pglistalloc(size, low, high, alignment, boundary, rlist, nsegs, waitok)
 	 * Our allocations are always page granularity, so our alignment
 	 * must be, too.
 	 */
+
 	if (alignment < PAGE_SIZE)
 		alignment = PAGE_SIZE;
-
 	size = round_page(size);
 	try = roundup(low, alignment);
-
 	if (boundary != 0 && boundary < size)
 		return (EINVAL);
-
 	pagemask = ~(boundary - 1);
 
 	/* Default to "lose". */
@@ -123,6 +120,7 @@ uvm_pglistalloc(size, low, high, alignment, boundary, rlist, nsegs, waitok)
 	/*
 	 * Block all memory allocation and lock the free list.
 	 */
+
 	s = uvm_lock_fpageq();
 
 	/* Are there even any free pages? */
@@ -147,7 +145,6 @@ uvm_pglistalloc(size, low, high, alignment, boundary, rlist, nsegs, waitok)
 			continue; /* managed? */
 		if (vm_physseg_find(atop(try + size), NULL) != psi)
 			continue; /* end must be in this segment */
-
 		tryidx = idx;
 		end = idx + (size / PAGE_SIZE);
 		pgs = vm_physmem[psi].pgs;
@@ -196,32 +193,31 @@ uvm_pglistalloc(size, low, high, alignment, boundary, rlist, nsegs, waitok)
 	 */
 	idx = tryidx;
 	while (idx < end) {
-		m = &pgs[idx];
-		free_list = uvm_page_lookup_freelist(m);
-		color = VM_PGCOLOR_BUCKET(m);
-		pgflidx = (m->flags & PG_ZERO) ? PGFL_ZEROS : PGFL_UNKNOWN;
+		pg = &pgs[idx];
+		free_list = uvm_page_lookup_freelist(pg);
+		color = VM_PGCOLOR_BUCKET(pg);
+		pgflidx = (pg->flags & PG_ZERO) ? PGFL_ZEROS : PGFL_UNKNOWN;
 #ifdef DEBUG
 		for (tp = TAILQ_FIRST(&uvm.page_free[
 			free_list].pgfl_buckets[color].pgfl_queues[pgflidx]);
 		     tp != NULL;
 		     tp = TAILQ_NEXT(tp, pageq)) {
-			if (tp == m)
+			if (tp == pg)
 				break;
 		}
 		if (tp == NULL)
 			panic("uvm_pglistalloc: page not on freelist");
 #endif
 		TAILQ_REMOVE(&uvm.page_free[free_list].pgfl_buckets[
-		    color].pgfl_queues[pgflidx], m, pageq);
+		    color].pgfl_queues[pgflidx], pg, pageq);
 		uvmexp.free--;
-		if (m->flags & PG_ZERO)
+		if (pg->flags & PG_ZERO)
 			uvmexp.zeropages--;
-		m->flags = PG_CLEAN;
-		m->pqflags = 0;
-		m->uobject = NULL;
-		m->uanon = NULL;
-		m->version++;
-		TAILQ_INSERT_TAIL(rlist, m, pageq);
+		pg->flags = PG_CLEAN;
+		pg->pqflags = 0;
+		pg->uobject = NULL;
+		pg->uanon = NULL;
+		TAILQ_INSERT_TAIL(rlist, pg, pageq);
 		idx++;
 		STAT_INCR(uvm_pglistalloc_npages);
 	}
@@ -234,9 +230,7 @@ out:
 	 */
 
 	UVM_KICK_PDAEMON();
-
 	uvm_unlock_fpageq(s);
-
 	return (error);
 }
 
@@ -250,26 +244,25 @@ void
 uvm_pglistfree(list)
 	struct pglist *list;
 {
-	struct vm_page *m;
+	struct vm_page *pg;
 	int s;
 
 	/*
-	 * Block all memory allocation and lock the free list.
+	 * Lock the free list and free each page.
 	 */
-	s = uvm_lock_fpageq();
 
-	while ((m = TAILQ_FIRST(list)) != NULL) {
-		KASSERT((m->pqflags & (PQ_ACTIVE|PQ_INACTIVE)) == 0);
-		TAILQ_REMOVE(list, m, pageq);
-		m->pqflags = PQ_FREE;
-		TAILQ_INSERT_TAIL(&uvm.page_free[
-		    uvm_page_lookup_freelist(m)].pgfl_buckets[
-		    VM_PGCOLOR_BUCKET(m)].pgfl_queues[PGFL_UNKNOWN], m, pageq);
+	s = uvm_lock_fpageq();
+	while ((pg = TAILQ_FIRST(list)) != NULL) {
+		KASSERT((pg->pqflags & (PQ_ACTIVE|PQ_INACTIVE)) == 0);
+		TAILQ_REMOVE(list, pg, pageq);
+		pg->pqflags = PQ_FREE;
+		TAILQ_INSERT_TAIL(&uvm.page_free[uvm_page_lookup_freelist(pg)].
+		    pgfl_buckets[VM_PGCOLOR_BUCKET(pg)].
+		    pgfl_queues[PGFL_UNKNOWN], pg, pageq);
 		uvmexp.free++;
 		if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
 			uvm.page_idle_zero = vm_page_zero_enable;
 		STAT_DECR(uvm_pglistalloc_npages);
 	}
-
 	uvm_unlock_fpageq(s);
 }

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32 2001/12/10 02:19:34 art Exp $	*/
-/*	$NetBSD: uvm_mmap.c,v 1.55 2001/08/17 05:52:46 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$NetBSD: uvm_mmap.c,v 1.61 2001/11/25 06:42:47 chs Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -131,7 +131,7 @@ sys_mincore(p, v, retval)
 		syscallarg(size_t) len;
 		syscallarg(char *) vec;
 	} */ *uap = v;
-	struct vm_page *m;
+	struct vm_page *pg;
 	char *vec, pgi;
 	struct uvm_object *uobj;
 	struct vm_amap *amap;
@@ -196,8 +196,7 @@ sys_mincore(p, v, retval)
 
 		if (UVM_ET_ISOBJ(entry)) {
 			KASSERT(!UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj));
-			if (entry->object.uvm_obj->pgops->pgo_releasepg
-			    == NULL) {
+			if (!UVM_OBJ_IS_VNODE(entry->object.uvm_obj)) {
 				for (/* nothing */; start < lim;
 				     start += PAGE_SIZE, vec++)
 					subyte(vec, 1);
@@ -232,9 +231,9 @@ sys_mincore(p, v, retval)
 			}
 			if (uobj != NULL && pgi == 0) {
 				/* Check the bottom layer. */
-				m = uvm_pagelookup(uobj,
+				pg = uvm_pagelookup(uobj,
 				    entry->offset + (start - entry->start));
-				if (m != NULL) {
+				if (pg != NULL) {
 
 					/*
 					 * Object has the page for this entry
@@ -363,7 +362,7 @@ sys_mmap(p, v, retval)
 	if ((flags & MAP_ANON) == 0) {
 
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
-			return(EBADF);
+			return (EBADF);
 
 		if (fp->f_type != DTYPE_VNODE)
 			return (ENODEV);		/* only mmap vnodes! */
@@ -373,7 +372,10 @@ sys_mmap(p, v, retval)
 		    vp->v_type != VBLK)
 			return (ENODEV);  /* only REG/CHR/BLK support mmap */
 
-		if (vp->v_type == VREG && (pos + size) < pos)
+		if (vp->v_type != VCHR && pos < 0)
+			return (EINVAL);
+
+		if (vp->v_type != VCHR && (pos + size) < pos)
 			return (EINVAL);		/* no offset wrapping */
 
 		/* special case: catch SunOS style /dev/zero */
@@ -996,9 +998,8 @@ sys_munlockall(p, v, retval)
 /*
  * uvm_mmap: internal version of mmap
  *
- * - used by sys_mmap, exec, and sysv shm
- * - handle is a vnode pointer or NULL for MAP_ANON (XXX: not true,
- *	sysv shm uses "named anonymous memory")
+ * - used by sys_mmap and various framebuffers
+ * - handle is a vnode pointer or NULL for MAP_ANON
  * - caller must page-align the file offset
  */
 
@@ -1036,12 +1037,12 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 	 */
 
 	if ((flags & MAP_FIXED) == 0) {
-		*addr = round_page(*addr);	/* round */
+		*addr = round_page(*addr);
 	} else {
 		if (*addr & PAGE_MASK)
 			return(EINVAL);
 		uvmflag |= UVM_FLAG_FIXED;
-		(void) uvm_unmap(map, *addr, *addr + size);	/* zap! */
+		(void) uvm_unmap(map, *addr, *addr + size);
 	}
 
 	/*
@@ -1061,6 +1062,15 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 
 	} else {
 		vp = (struct vnode *)handle;
+
+		/*
+		 * Don't allow mmap for EXEC if the file system
+		 * is mounted NOEXEC.
+		 */
+		if ((prot & PROT_EXEC) != 0 &&
+		    (vp->v_mount->mnt_flag & MNT_NOEXEC) != 0)
+			return (EACCES);
+
 		if (vp->v_type != VCHR) {
 			error = VOP_MMAP(vp, 0, curproc->p_ucred, curproc);
 			if (error) {
@@ -1072,6 +1082,15 @@ uvm_mmap(map, addr, size, prot, maxprot, flags, handle, foff, locklimit)
 
 			/* XXX for now, attach doesn't gain a ref */
 			VREF(vp);
+
+#ifdef notyet	/* XXXART */
+			/*
+			 * If the vnode is being mapped with PROT_EXEC,
+			 * then mark it as text.
+			 */
+			if (prot & PROT_EXEC)
+				vn_markexec(vp);
+#endif
 		} else {
 			uobj = udv_attach((void *) &vp->v_rdev,
 			    (flags & MAP_SHARED) ? maxprot :

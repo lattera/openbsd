@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_inode.c,v 1.15 2001/12/10 04:45:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_inode.c,v 1.15.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ufs_inode.c,v 1.7 1996/05/11 18:27:52 mycroft Exp $	*/
 
 /*
@@ -275,8 +275,9 @@ ufs_balloc_range(vp, off, len, cred, flags)
 out:
 	simple_lock(&uobj->vmobjlock);
 	if (error) {
-		(void) (uobj->pgops->pgo_flush)(uobj, round_page(oldeob), 0,
+		(void) (uobj->pgops->pgo_put)(uobj, round_page(oldeob), 0,
 		    PGO_FREE);
+		simple_lock(&uobj->vmobjlock);
 	}
 	if (pgs1[0] != NULL) {
 		for (i = 0; i < npages1; i++) {
@@ -289,10 +290,12 @@ out:
 		 * We need to flush pages to the new disk locations.
 		 */
 
-		if ((flags & B_SYNC) == 0)
-			(*uobj->pgops->pgo_flush)(uobj, oldeof & ~(bsize - 1),
-			    MIN((oldeof + bsize) & ~(bsize - 1), neweof),
-			    PGO_CLEANIT | PGO_SYNCIO);
+		if (flags & B_SYNC) {
+			(*uobj->pgops->pgo_put)(uobj, oldeof & ~(bsize - 1),
+			    MIN((oldeof + bsize) & ~(bsize - 1),
+				round_page(neweob)), PGO_CLEANIT | PGO_SYNCIO);
+			simple_lock(&uobj->vmobjlock);
+		}
 	}
 	if (pgs2[0] != NULL) {
 		for (i = 0; i < npages2; i++) {

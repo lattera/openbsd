@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.44.2.1 2002/01/31 22:55:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vnops.c,v 1.44.2.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: nfs_vnops.c,v 1.62.4.1 1996/07/08 20:26:52 jtc Exp $	*/
 
 /*
@@ -126,8 +126,8 @@ struct vnodeopv_entry_desc nfsv2_vnodeop_entries[] = {
 	{ &vop_advlock_desc, nfs_advlock },	/* advlock */
 	{ &vop_reallocblks_desc, nfs_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, nfs_bwrite },
-	{ &vop_getpages_desc, nfs_getpages },		/* getpages */
-	{ &vop_putpages_desc, nfs_putpages },		/* putpages */
+	{ &vop_getpages_desc, nfs_getpages },
+	{ &vop_putpages_desc, genfs_putpages },
 	{ &vop_mmap_desc, vop_generic_mmap },
 	{ NULL, NULL }
 };
@@ -586,18 +586,20 @@ nfs_setattr(v)
 			 */
 			if (vp->v_mount->mnt_flag & MNT_RDONLY)
 				return (EROFS);
+			uvm_vnp_setsize(vp, vap->va_size);
  			if (vap->va_size == 0)
  				error = nfs_vinvalbuf(vp, 0,
  				     ap->a_cred, ap->a_p, 1);
 			else
 				error = nfs_vinvalbuf(vp, V_SAVE,
  				     ap->a_cred, ap->a_p, 1);
-			if (error)
+			if (error) {
+				uvm_vnp_setsize(vp, np->n_size);
 				return (error);
+			}
  			tsize = np->n_size;
  			np->n_size = np->n_vattr.va_size = vap->va_size;
-			uvm_vnp_setsize(vp, np->n_size);
-  		};
+  		}
   	} else if ((vap->va_mtime.tv_sec != VNOVAL ||
 		vap->va_atime.tv_sec != VNOVAL) &&
 		vp->v_type == VREG &&
@@ -699,11 +701,13 @@ nfs_lookup(v)
 	int v3 = NFS_ISV3(dvp);
 
 	*vpp = NULLVP;
+	newvp = NULLVP;
 	if ((flags & ISLASTCN) && (dvp->v_mount->mnt_flag & MNT_RDONLY) &&
 	    (cnp->cn_nameiop == DELETE || cnp->cn_nameiop == RENAME))
 		return (EROFS);
 	if (dvp->v_type != VDIR)
 		return (ENOTDIR);
+
 	lockparent = flags & LOCKPARENT;
 	wantparent = flags & (LOCKPARENT|WANTPARENT);
 	nmp = VFSTONFS(dvp->v_mount);
@@ -2594,7 +2598,9 @@ nfs_bmap(v)
 	if (ap->a_vpp != NULL)
 		*ap->a_vpp = vp;
 	if (ap->a_bnp != NULL)
-		*ap->a_bnp = ap->a_bn * btodb(vp->v_mount->mnt_stat.f_iosize);
+		*ap->a_bnp = ap->a_bn;
+	if (ap->a_runp != NULL)
+		*ap->a_runp = 1024 * 1024; /* XXX */
 	return (0);
 }
 
@@ -2663,16 +2669,9 @@ nfs_flush(vp, cred, waitfor, p, commit)
 	struct nfsnode *np = VTONFS(vp);
 	int error;
 	int flushflags = PGO_ALLPAGES|PGO_CLEANIT|PGO_SYNCIO;
-	int rv;
-
-	error = 0;
 
 	simple_lock(&uobj->vmobjlock);
-	rv = (uobj->pgops->pgo_flush)(uobj, 0, 0, flushflags);
-	simple_unlock(&uobj->vmobjlock);
-	if (!rv) {
-		error = EIO;
-	}
+	error = (uobj->pgops->pgo_put)(uobj, 0, 0, flushflags);
 	if (np->n_flag & NWRITEERR) {
 		error = np->n_error;
 		np->n_flag &= ~NWRITEERR;

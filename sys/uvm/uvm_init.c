@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_init.c,v 1.10 2001/11/06 01:35:04 art Exp $	*/
-/*	$NetBSD: uvm_init.c,v 1.14 2000/06/27 17:29:23 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_init.c,v 1.10.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$NetBSD: uvm_init.c,v 1.15 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
  *

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.17 2001/12/10 04:45:31 art Exp $
+#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.17.2.1 2002/02/02 03:28:25 art Exp $
 #	$NetBSD: vnode_if.src,v 1.10 1996/05/11 18:26:27 mycroft Exp $
 #
 # Copyright (c) 1992, 1993
@@ -487,10 +487,9 @@ vop_getpages {
 #
 vop_putpages {
 	IN struct vnode *vp;
-	IN struct vm_page **m;
-	IN int count;
+	IN voff_t offlo;
+	IN voff_t offhi;
 	IN int flags;
-	IN int *rtvals;
 };
 
 #

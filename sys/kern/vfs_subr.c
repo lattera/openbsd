@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.1 2002/01/31 22:55:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.2 2002/02/02 03:28:25 art Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -2023,17 +2023,17 @@ vinvalbuf(vp, flags, cred, p, slpflag, slptimeo)
 	struct uvm_object *uobj = &vp->v_uobj;
 	struct buf *bp;
 	struct buf *nbp, *blist;
-	int s, error, rv;
+	int s, error;
 	int flushflags = PGO_ALLPAGES|PGO_FREE|PGO_SYNCIO|
 	    (flags & V_SAVE ? PGO_CLEANIT : 0);
 
 	/* XXXUBC this doesn't look at flags or slp* */
-	if (vp->v_type == VREG) {
+	if (TAILQ_FIRST(&uobj->memq)) {
 		simple_lock(&uobj->vmobjlock);
-		rv = (uobj->pgops->pgo_flush)(uobj, 0, 0, flushflags);
+		error = (uobj->pgops->pgo_put)(uobj, 0, 0, flushflags);
 		simple_unlock(&uobj->vmobjlock);
-		if (!rv) {
-			return EIO;
+		if (error) {
+			return error;
 		}
 	}
 
@@ -2112,12 +2112,11 @@ vflushbuf(vp, sync)
 	struct buf *bp, *nbp;
 	int s;
 
-	if (vp->v_type == VREG) {
+	if (TAILQ_FIRST(&uobj->memq)) {
 		int flags = PGO_CLEANIT|PGO_ALLPAGES| (sync ? PGO_SYNCIO : 0);
 
 		simple_lock(&uobj->vmobjlock);
-		(uobj->pgops->pgo_flush)(uobj, 0, 0, flags);
-		simple_unlock(&uobj->vmobjlock);
+		(uobj->pgops->pgo_put)(uobj, 0, 0, flags);
 	}
 
 loop:

@@ -442,8 +442,9 @@ ext2fs_balloc_range(vp, off, len, cred, flags)
 errout:
 	simple_lock(&uobj->vmobjlock);
 	if (error) {
-		(void) (uobj->pgops->pgo_flush)(uobj, oldeof, pagestart + ppb,
+		(void) (uobj->pgops->pgo_put)(uobj, oldeof, pagestart + ppb,
 		    PGO_FREE);
+		simple_lock(&uobj->vmobjlock);
 	}
 	if (pgs[0] != NULL) {
 		uvm_page_unbusy(pgs, npages);

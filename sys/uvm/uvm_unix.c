@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19 2001/11/28 19:28:15 art Exp $	*/
-/*	$NetBSD: uvm_unix.c,v 1.24 2001/06/06 21:28:51 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_unix.c,v 1.19.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$NetBSD: uvm_unix.c,v 1.26 2001/12/08 00:35:34 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -108,8 +108,7 @@ sys_obreak(p, v, retval)
 		uvm_deallocate(&vm->vm_map, new, old - new);
 		vm->vm_dsize -= atop(old - new);
 	}
-
-	return (0);
+	return 0;
 }
 
 /*
@@ -254,11 +253,10 @@ uvm_coredump(p, vp, cred, chdr)
 		    IO_NODELOCKED|IO_UNIT, cred, NULL, p);
 		if (error)
 			break;
-		
+
 		offset += cseg.c_size;
 		chdr->c_nseg++;
 	}
 
 	return (error);
 }
-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.47.2.1 2002/01/31 22:55:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vfsops.c,v 1.47.2.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ffs_vfsops.c,v 1.19 1996/02/09 22:22:26 christos Exp $	*/
 
 /*
@@ -99,6 +99,7 @@ struct inode_vtbl ffs_vtbl = {
 struct genfs_ops ffs_genfsops = {
 	ffs_gop_size,
 	ffs_gop_alloc,
+	genfs_gop_write
 };
 
 extern u_long nextgennumber;

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_object.h,v 1.7 2001/11/28 19:28:15 art Exp $	*/
-/*	$NetBSD: uvm_object.h,v 1.12 2001/05/26 16:32:47 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_object.h,v 1.7.2.1 2002/02/02 03:28:27 art Exp $	*/
+/*	$NetBSD: uvm_object.h,v 1.14 2001/10/30 15:32:05 thorpej Exp $	*/
 
 /*
  *
@@ -65,23 +65,11 @@ struct uvm_object {
  * for kernel objects... when a kernel object is unmapped we always want
  * to free the resources associated with the mapping.   UVM_OBJ_KERN
  * allows us to decide which type of unmapping we want to do.
- *
- * in addition, we have kernel objects which may be used in an
- * interrupt context.  these objects get their mappings entered
- * with pmap_kenter*() and removed with pmap_kremove(), which
- * are safe to call in interrupt context, and must be used ONLY
- * for wired kernel mappings in these objects and their associated
- * maps.
  */
 #define UVM_OBJ_KERN		(-2)
-#define	UVM_OBJ_KERN_INTRSAFE	(-3)
 
 #define	UVM_OBJ_IS_KERN_OBJECT(uobj)					\
-	((uobj)->uo_refs == UVM_OBJ_KERN ||				\
-	 (uobj)->uo_refs == UVM_OBJ_KERN_INTRSAFE)
-
-#define	UVM_OBJ_IS_INTRSAFE_OBJECT(uobj)				\
-	((uobj)->uo_refs == UVM_OBJ_KERN_INTRSAFE)
+	((uobj)->uo_refs == UVM_OBJ_KERN)
 
 #ifdef _KERNEL
 
@@ -90,9 +78,15 @@ extern struct uvm_pagerops uvm_vnodeops;
 #define	UVM_OBJ_IS_VNODE(uobj)						\
 	((uobj)->pgops == &uvm_vnodeops)
 
+#ifdef notyet	/* XXXART */
+#define	UVM_OBJ_IS_VTEXT(uobj)						\
+	((uobj)->pgops == &uvm_vnodeops &&				\
+	 ((struct vnode *)uobj)->v_flag & VEXECMAP)
+#else
 #define	UVM_OBJ_IS_VTEXT(uobj)						\
 	((uobj)->pgops == &uvm_vnodeops &&				\
 	 ((struct vnode *)uobj)->v_flag & VTEXT)
+#endif
 
 
 #endif /* _KERNEL */

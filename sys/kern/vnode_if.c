@@ -1285,20 +1285,18 @@ struct vnodeop_desc vop_putpages_desc = {
 	NULL,
 };
 
-int VOP_PUTPAGES(vp, m, count, flags, rtvals)
+int VOP_PUTPAGES(vp, offlo, offhi, flags)
 	struct vnode *vp;
-	struct vm_page **m;
-	int count;
+	voff_t offlo;
+	voff_t offhi;
 	int flags;
-	int *rtvals;
 {
 	struct vop_putpages_args a;
 	a.a_desc = VDESC(vop_putpages);
 	a.a_vp = vp;
-	a.a_m = m;
-	a.a_count = count;
+	a.a_offlo = offlo;
+	a.a_offhi = offhi;
 	a.a_flags = flags;
-	a.a_rtvals = rtvals;
 	return (VCALL(vp, VOFFSET(vop_putpages), &a));
 }
 

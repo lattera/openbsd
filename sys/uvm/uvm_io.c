@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_io.c,v 1.12 2001/11/28 19:28:14 art Exp $	*/
-/*	$NetBSD: uvm_io.c,v 1.15 2001/06/02 18:09:26 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_io.c,v 1.12.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$NetBSD: uvm_io.c,v 1.17 2001/11/10 07:37:00 lukem Exp $	*/
 
 /*
  *
@@ -92,7 +92,7 @@ uvm_io(map, uio)
 		togo = togo - (endva - VM_MAXUSER_ADDRESS + 1);
 	pageoffset = baseva & PAGE_MASK;
 	baseva = trunc_page(baseva);
-	chunksz = min(round_page(togo + pageoffset), MAXBSIZE);
+	chunksz = MIN(round_page(togo + pageoffset), MAXBSIZE);
 	error = 0;
 
 	/*

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20 2001/12/04 23:22:42 art Exp $	*/
-/*	$NetBSD: uvm_device.c,v 1.37 2001/09/10 21:19:42 chris Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$NetBSD: uvm_device.c,v 1.39 2001/11/10 07:36:59 lukem Exp $	*/
 
 /*
  *
@@ -63,14 +63,11 @@ static struct simplelock udv_lock;
  * functions
  */
 
-static void		udv_init __P((void));
-static void             udv_reference __P((struct uvm_object *));
-static void             udv_detach __P((struct uvm_object *));
-static int		udv_fault __P((struct uvm_faultinfo *, vaddr_t,
-				       struct vm_page **, int, int, vm_fault_t,
-				       vm_prot_t, int));
-static boolean_t        udv_flush __P((struct uvm_object *, voff_t, voff_t,
-				       int));
+static void	udv_init __P((void));
+static void	udv_reference __P((struct uvm_object *));
+static void	udv_detach __P((struct uvm_object *));
+static int	udv_fault __P((struct uvm_faultinfo *, vaddr_t,
+    struct vm_page **, int, int, vm_fault_t, vm_prot_t, int));
 
 /*
  * master pager structure
@@ -81,7 +78,6 @@ struct uvm_pagerops uvm_deviceops = {
 	udv_reference,
 	udv_detach,
 	udv_fault,
-	udv_flush,
 };
 
 /*
@@ -94,10 +90,9 @@ struct uvm_pagerops uvm_deviceops = {
  * init pager private data structures.
  */
 
-void
-udv_init()
+static void
+udv_init(void)
 {
-
 	LIST_INIT(&udv_list);
 	simple_lock_init(&udv_lock);
 }
@@ -111,6 +106,7 @@ udv_init()
  * => caller must _not_ already be holding the lock on the uvm_object.
  * => in fact, nothing should be locked so that we can sleep here.
  */
+
 struct uvm_object *
 udv_attach(arg, accessprot, off, size)
 	void *arg;
@@ -310,7 +306,6 @@ again:
 			  uobj,uobj->uo_refs,0,0);
 		return;
 	}
-	KASSERT(uobj->uo_npages == 0 && TAILQ_EMPTY(&uobj->memq));
 
 	/*
 	 * is it being held?   if so, wait until others are done.
@@ -335,23 +330,6 @@ again:
 	simple_unlock(&uobj->vmobjlock);
 	FREE(udv, M_TEMP);
 	UVMHIST_LOG(maphist," <- done, freed uobj=0x%x", uobj,0,0,0);
-}
-
-
-/*
- * udv_flush
- *
- * flush pages out of a uvm object.   a no-op for devices.
- */
-
-static boolean_t
-udv_flush(uobj, start, stop, flags)
-	struct uvm_object *uobj;
-	voff_t start, stop;
-	int flags;
-{
-
-	return(TRUE);
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.21 2001/12/10 04:45:31 art Exp $	*/
+/*	$OpenBSD: src/sys/adosfs/Attic/advnops.c,v 1.21.2.1 2002/02/02 03:28:25 art Exp $	*/
 /*	$NetBSD: advnops.c,v 1.32 1996/10/13 02:52:09 christos Exp $	*/
 
 /*
@@ -132,6 +132,7 @@ struct vnodeopv_entry_desc adosfs_vnodeop_entries[] = {
 	{ &vop_advlock_desc, adosfs_advlock },		/* advlock */
 	{ &vop_bwrite_desc, adosfs_bwrite },		/* bwrite */
 	{ &vop_getpages_desc, genfs_getpages },
+	{ &vop_putpages_desc, genfs_putpages },
 	{ &vop_mmap_desc, vop_generic_mmap },
 	{ NULL, NULL }
 };

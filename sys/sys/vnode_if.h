@@ -415,13 +415,12 @@ int VOP_GETPAGES __P((struct vnode *, voff_t, struct vm_page **, int *, int,
 struct vop_putpages_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
-	struct vm_page **a_m;
-	int a_count;
+	voff_t a_offlo;
+	voff_t a_offhi;
 	int a_flags;
-	int *a_rtvals;
 };
 extern struct vnodeop_desc vop_putpages_desc;
-int VOP_PUTPAGES __P((struct vnode *, struct vm_page **, int, int, int *));
+int VOP_PUTPAGES __P((struct vnode *, voff_t, voff_t, int));
 
 struct vop_mmap_args {
 	struct vnodeop_desc *a_desc;

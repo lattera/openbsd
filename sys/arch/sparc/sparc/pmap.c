@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.1 2002/01/31 22:55:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/pmap.c,v 1.116.2.2 2002/02/02 03:28:25 art Exp $	*/
 /*	$NetBSD: pmap.c,v 1.118 1998/05/19 19:00:18 thorpej Exp $ */
 
 /*
@@ -1869,12 +1869,9 @@ pv_changepte4_4c(pv0, bis, bic)
 			/* in hardware: fix hardware copy */
 			if (CTX_USABLE(pm,rp)) {
 				/*
-				 * Bizarreness:  we never clear PG_W on
-				 * pager pages, nor PG_NC on DVMA pages.
+				 * Bizarreness:  we never clear PG_NC on
+				 * DVMA pages.
 				 */
-				if (bic == PG_W &&
-				    va >= uvm.pager_sva && va < uvm.pager_eva)
-					continue;
 				if (bic == PG_NC &&
 				    va >= DVMA_BASE && va < DVMA_END)
 					continue;
@@ -2175,12 +2172,8 @@ pv_changepte4m(struct pvlist *pv0, int bis, int bic)
 
 		if (pm->pm_ctx) {
 			/*
-			 * Bizarreness:  we never clear PG_W on
-			 * pager pages, nor set PG_C on DVMA pages.
+			 * Bizarreness:  we never set PG_C on DVMA pages.
 			 */
-			if ((bic & PPROT_WRITE) &&
-			    va >= uvm.pager_sva && va < uvm.pager_eva)
-				continue;
 			if ((bis & SRMMU_PG_C) &&
 			    va >= DVMA_BASE && va < DVMA_END)
 				continue;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.18.2.1 2002/01/31 22:55:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_node.c,v 1.18.2.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: nfs_node.c,v 1.16 1996/02/18 11:53:42 fvdl Exp $	*/
 
 /*
@@ -67,6 +67,15 @@ extern int prtactive;
 
 #define TRUE	1
 #define	FALSE	0
+
+void nfs_gop_size(struct vnode *, off_t, off_t *);
+int nfs_gop_alloc(struct vnode *, off_t, off_t, int, struct ucred *);
+
+struct genfs_ops nfs_genfsops = {
+	nfs_gop_size,
+	nfs_gop_alloc,
+	nfs_gop_write,
+};
 
 /*
  * Initialize hash links for nfsnodes
@@ -148,6 +157,7 @@ loop:
 	lockinit(&np->n_commitlock, PINOD, "nfsclock", 0, 0);
 	vp->v_data = np;
 	np->n_vnode = vp;
+	genfs_node_init(vp, &nfs_genfsops);
 
 	/* 
 	 * Are we getting the root? If so, make sure the vnode flags
@@ -171,19 +181,15 @@ loop:
 	bcopy((caddr_t)fhp, (caddr_t)np->n_fhp, fhsize);
 	np->n_fhsize = fhsize;
 
-	/*
-	 * XXXUBC doing this while holding the nfs_hashlock is bad,
-	 * but there's no alternative at the moment.
-	 */
-	error = VOP_GETATTR(vp, &np->n_vattr, curproc->p_ucred, curproc);
+	lockmgr(&nfs_hashlock, LK_RELEASE, 0, p);
+
+	error = VOP_GETATTR(vp, &np->n_vattr, curproc->p_ucred, p);
 	if (error) {
-		lockmgr(&nfs_hashlock, LK_RELEASE, 0, p);
 		vrele(vp);
 		return error;
 	}
 	uvm_vnp_setsize(vp, np->n_vattr.va_size);
 
-	lockmgr(&nfs_hashlock, LK_RELEASE, 0, p);
 	*npp = np;
 	return (0);
 }
@@ -198,7 +204,7 @@ nfs_inactive(v)
 	} */ *ap = v;
 	struct nfsnode *np;
 	struct sillyrename *sp;
-	struct proc *p = curproc;	/* XXX */
+	struct proc *p = ap->a_p;
 	struct vnode *vp = ap->a_vp;
 
 	np = VTONFS(vp);
@@ -208,20 +214,24 @@ nfs_inactive(v)
 		sp = np->n_sillyrename;
 		np->n_sillyrename = (struct sillyrename *)0;
 	} else
-		sp = (struct sillyrename *)0;
-	if (sp) {
+		sp = NULL;
+	if (sp != NULL)
+		nfs_vinvalbuf(vp, 0, sp->s_cred, p, 1);
+
+	np->n_flag &= (NMODIFIED | NFLUSHINPROG | NFLUSHWANT);
+	VOP_UNLOCK(vp, 0, p);
+	if (sp != NULL) {
+
 		/*
 		 * Remove the silly file that was rename'd earlier
 		 */
-		(void) nfs_vinvalbuf(vp, 0, sp->s_cred, p, 1);
+		
+		vn_lock(sp->s_dvp, LK_EXCLUSIVE | LK_RETRY, p);
 		nfs_removeit(sp);
 		crfree(sp->s_cred);
-		vrele(sp->s_dvp);
+		vput(sp->s_dvp);
 		FREE((caddr_t)sp, M_NFSREQ);
 	}
-	np->n_flag &= (NMODIFIED | NFLUSHINPROG | NFLUSHWANT);
-
-	VOP_UNLOCK(vp, 0, ap->a_p);
 	return (0);
 }
 
@@ -262,13 +272,27 @@ nfs_reclaim(v)
 		free(np->n_fhp, M_NFSBIGFH);
 	}
 
-	if (np->n_rcred)
+	if (np->n_rcred) {
 		crfree(np->n_rcred);
-	if (np->n_wcred)
+	}
+	if (np->n_wcred) {
 		crfree(np->n_wcred);	
+	}
 	cache_purge(vp);
 	pool_put(&nfs_node_pool, vp->v_data);
 	vp->v_data = NULL;
 	return (0);
 }
 
+void
+nfs_gop_size(struct vnode *vp, off_t size, off_t *eobp)
+{
+	*eobp = MAX(size, vp->v_size);
+}
+
+int
+nfs_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
+    struct ucred *cred)
+{
+	return 0;
+}

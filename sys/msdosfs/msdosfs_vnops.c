@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.34 2001/12/10 04:45:31 art Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.34.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -288,7 +288,7 @@ msdosfs_getattr(v)
 	vap->va_gid = dep->de_pmp->pm_gid;
 	vap->va_uid = dep->de_pmp->pm_uid;
 	vap->va_rdev = 0;
-	vap->va_size = dep->de_FileSize;
+	vap->va_size = ap->a_vp->v_size;
 	dos2unixtime(dep->de_MDate, dep->de_MTime, 0, &vap->va_mtime);
 	if (dep->de_pmp->pm_flags & MSDOSFSMNT_LONGNAME) {
 		dos2unixtime(dep->de_ADate, 0, 0, &vap->va_atime);
@@ -509,7 +509,6 @@ msdosfs_write(v)
 	void *win;
 	vsize_t bytelen;
 	off_t oldoff;
-	boolean_t rv;
 	struct uio *uio = ap->a_uio;
 	struct proc *p = uio->uio_procp;
 	struct vnode *vp = ap->a_vp;
@@ -589,19 +588,8 @@ msdosfs_write(v)
 
 	do {
 		oldoff = uio->uio_offset;
-		if (de_cluster(pmp, oldoff) > lastcn) {
-			error = ENOSPC;
-			break;
-		}
-		bytelen = MIN(dep->de_FileSize - oldoff, uio->uio_resid);
+		bytelen = uio->uio_resid;
 
-		/*
-		 * XXXUBC if file is mapped and this is the last block,
-		 * process one page at a time.
-		 */
-
-		if (bytelen == 0)
-			break;
 		win = ubc_alloc(&vp->v_uobj, oldoff, &bytelen, UBC_WRITE);
 		error = uiomove(win, bytelen, uio);
 		ubc_release(win, 0);
@@ -612,21 +600,18 @@ msdosfs_write(v)
 		 * flush what we just wrote if necessary.
 		 * XXXUBC simplistic async flushing.
 		 */
-		if (ioflag & IO_SYNC) {
-			
+		if (oldoff >> 16 != uio->uio_offset >> 16) {
 			simple_lock(&vp->v_uobj.vmobjlock);
-			rv = vp->v_uobj.pgops->pgo_flush(
-			    &vp->v_uobj, oldoff,
-			    oldoff + bytelen, PGO_CLEANIT|PGO_SYNCIO);
-			simple_unlock(&vp->v_uobj.vmobjlock);
-		} else if (oldoff >> 16 != uio->uio_offset >> 16) {
-			simple_lock(&vp->v_uobj.vmobjlock);
-			rv = vp->v_uobj.pgops->pgo_flush(
+			error = vp->v_uobj.pgops->pgo_put(
 			    &vp->v_uobj, (oldoff >> 16) << 16,
 			    (uio->uio_offset >> 16) << 16, PGO_CLEANIT);
-			simple_unlock(&vp->v_uobj.vmobjlock);
 		}
 	} while (error == 0 && uio->uio_resid > 0);
+	if (error == 0 && ioflag & IO_SYNC) {
+		simple_lock(&vp->v_uobj.vmobjlock);
+		error = vp->v_uobj.pgops->pgo_put(&vp->v_uobj, oldoff,
+		    oldoff + bytelen, PGO_CLEANIT|PGO_SYNCIO);
+	}
 	dep->de_flag |= DE_UPDATE;
 
 	/*
@@ -635,16 +620,9 @@ msdosfs_write(v)
 	 */
 errexit:
 	if (error) {
-		if (ioflag & IO_UNIT) {
-			detrunc(dep, osize, ioflag & IO_SYNC, NOCRED, NULL);
-			uio->uio_offset -= resid - uio->uio_resid;
-			uio->uio_resid = resid;
-		} else {
-			detrunc(dep, dep->de_FileSize, ioflag & IO_SYNC, NOCRED,
-			    NULL);
-			if (uio->uio_resid != resid)
-				error = 0;
-		}
+		detrunc(dep, osize, ioflag & IO_SYNC, NOCRED, NULL);
+		uio->uio_offset -= resid - uio->uio_resid;
+		uio->uio_resid = resid;
 	} else if (ioflag & IO_SYNC)
 		error = deupdat(dep, 1);
 	return (error);

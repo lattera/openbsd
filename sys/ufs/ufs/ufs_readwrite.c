@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_readwrite.c,v 1.22.2.1 2002/01/31 22:55:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/Attic/ufs_readwrite.c,v 1.22.2.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ufs_readwrite.c,v 1.9 1996/05/11 18:27:57 mycroft Exp $	*/
 
 /*-
@@ -197,22 +197,27 @@ WRITE(v)
 	struct vnode *vp;
 	struct uio *uio;
 	struct inode *ip;
+	struct genfs_node *gp;
 	FS *fs;
 	struct buf *bp;
 	struct proc *p;
+	struct ucred *cred;
 	daddr_t lbn;
-	off_t osize;
+	off_t osize, origoff, oldoff, preallocoff, endallocoff, nsize;
 	int blkoffset, error, extended, flags, ioflag, resid, size, xfersize;
+	int bsize, aflag;
+	int ubc_alloc_flags;
 	void *win;
 	vsize_t bytelen;
-	off_t oldoff;
-	boolean_t rv;
+	boolean_t alloced;
 
+	cred = ap->a_cred;
 	extended = 0;
 	ioflag = ap->a_ioflag;
 	uio = ap->a_uio;
 	vp = ap->a_vp;
 	ip = VTOI(vp);
+	gp = VTOG(vp);
 
 #ifdef DIAGNOSTIC
 	if (uio->uio_rw != UIO_WRITE)
@@ -261,11 +266,35 @@ WRITE(v)
 
 	resid = uio->uio_resid;
 	osize = ip->i_ffs_size;
+	bsize = fs->fs_bsize;
 	error = 0;
 
 	if (vp->v_type != VREG)
 		goto bcache;
 
+	preallocoff = round_page(blkroundup(fs, MAX(osize, uio->uio_offset)));
+	aflag = ioflag & IO_SYNC ? B_SYNC : 0;
+	nsize = MAX(osize, uio->uio_offset + uio->uio_resid);
+	endallocoff = nsize - blkoff(fs, nsize);
+
+	/*
+	 * if we're increasing the file size, deal with expanding
+	 * the fragment if there is one.
+	 */
+
+	if (nsize > osize && lblkno(fs, osize) < NDADDR &&
+	    lblkno(fs, osize) != lblkno(fs, nsize) &&
+	    blkroundup(fs, osize) != osize) {
+		error = ufs_balloc_range(vp, osize, blkroundup(fs, osize) -
+		    osize, cred, aflag);
+		if (error) {
+			goto out;
+		}
+	}
+
+	alloced = FALSE;
+	ubc_alloc_flags = UBC_WRITE;
+	origoff = uio->uio_offset;
 	while (uio->uio_resid > 0) {
 		struct uvm_object *uobj = &vp->v_uobj;
 		oldoff = uio->uio_offset;
@@ -273,58 +302,75 @@ WRITE(v)
 		bytelen = min(fs->fs_bsize - blkoffset, uio->uio_resid);
  
 		/*
-		 * XXXUBC if file is mapped and this is the last block,
-		 * process one page at a time.
+		 * if we're filling in a hole, allocate the blocks now and
+		 * initialize the pages first.  if we're extending the file,
+		 * we can safely allocate blocks without initializing pages
+		 * since the new blocks will be inaccessible until the write
+		 * is complete.
 		 */
 
-		error = ufs_balloc_range(vp, uio->uio_offset, bytelen,
-		    ap->a_cred, ioflag & IO_SYNC ? B_SYNC : 0);
-		if (error) {
-			return error;
+		if (uio->uio_offset < preallocoff ||
+		    uio->uio_offset >= endallocoff) {
+			error = ufs_balloc_range(vp, uio->uio_offset, bytelen,
+			    cred, aflag);
+			if (error) {
+				break;
+			}
+			ubc_alloc_flags &= ~UBC_FAULTBUSY;
+		} else if (!alloced) {
+			lockmgr(&gp->g_glock, LK_EXCLUSIVE, NULL, p);
+			error = GOP_ALLOC(vp, uio->uio_offset, uio->uio_resid,
+			    aflag, cred);
+			lockmgr(&gp->g_glock, LK_RELEASE, NULL, p);
+			if (error) {
+				(void)UFS_TRUNCATE(ip, preallocoff,
+				    ioflag & IO_SYNC, ap->a_cred);
+				break;
+			}
+			alloced = TRUE;
+			ubc_alloc_flags |= UBC_FAULTBUSY;
 		}
 
-		win = ubc_alloc(uobj, uio->uio_offset, &bytelen, UBC_WRITE);
+		/*
+		 * copy the data
+		 */
+
+		win = ubc_alloc(uobj, uio->uio_offset, &bytelen,
+		    ubc_alloc_flags);
 		error = uiomove(win, bytelen, uio);
 		ubc_release(win, 0);
+		if (error) {
+			break;
+		}
+
+		/*
+		 * update UVM's notion of the size now that we've
+		 * copied the data into the vnode's pages.
+		 */
+
+		if (vp->v_size < uio->uio_offset) {
+			uvm_vnp_setsize(vp, uio->uio_offset);
+		}
 
 		/*
 		 * flush what we just wrote if necessary.
 		 * XXXUBC simplistic async flushing.
 		 */
-
-		if (ioflag & IO_SYNC) {
-			simple_lock(&uobj->vmobjlock);
-#if 1
-			/*
-			 * XXX 
-			 * flush whole blocks in case there are deps.
-			 * otherwise we can dirty and flush part of
-			 * a block multiple times and the softdep code
-			 * will get confused.  fixing this the right way
-			 * is complicated so we'll work around it for now.
-			 */
-                      
-			rv = uobj->pgops->pgo_flush(
-			    uobj, oldoff & ~(fs->fs_bsize - 1),
-			    (oldoff + bytelen + fs->fs_bsize - 1) &
-			    ~(fs->fs_bsize - 1),
-			    PGO_CLEANIT|PGO_SYNCIO);
-#else
-			rv = uobj->pgops->pgo_flush(
-			    uobj, oldoff, oldoff + bytelen,
-			    PGO_CLEANIT|PGO_SYNCIO);
-#endif
-			simple_unlock(uobj->vmobjlock);
-		} else if (oldoff >> 16 != uio->uio_offset >> 16) {
-			simple_lock(&uobj->vmobjlock);
-			rv = uobj->pgops->pgo_flush(uobj,
-			    (oldoff >> 16) << 16,
-			    (uio->uio_offset >> 16) << 16, PGO_CLEANIT);
-			simple_unlock(&uobj->vmobjlock);
+		if (oldoff >> 16 != uio->uio_offset >> 16) {
+			simple_lock(&vp->v_uobj.vmobjlock);
+			error = (vp->v_uobj.pgops->pgo_put)(&vp->v_uobj,
+			    (oldoff >> 16) << 16, (uio->uio_offset >> 16) << 16,
+			    PGO_CLEANIT);
+			if (error) {
+				break;
+			}
 		}
-		if (error) {
-			break;
-		}
+	}
+	if (error == 0 && ioflag & IO_SYNC) {
+		simple_lock(&vp->v_uobj.vmobjlock);
+		error = (vp->v_uobj.pgops->pgo_put)(&vp->v_uobj,
+		    origoff & ~(bsize - 1), blkroundup(fs, uio->uio_offset),
+		    PGO_CLEANIT|PGO_SYNCIO);
 	}
 	goto out;
 
@@ -383,12 +429,9 @@ out:
 	if (resid > uio->uio_resid)
 		VN_KNOTE(vp, NOTE_WRITE | (extended ? NOTE_EXTEND : 0));
 	if (error) {
-		if (ioflag & IO_UNIT) {
-			(void)UFS_TRUNCATE(ip, osize,
-			    ioflag & IO_SYNC, ap->a_cred);
-			uio->uio_offset -= resid - uio->uio_resid;
-			uio->uio_resid = resid;
-		}
+		(void)UFS_TRUNCATE(ip, osize, ioflag & IO_SYNC, ap->a_cred);
+		uio->uio_offset -= resid - uio->uio_resid;
+		uio->uio_resid = resid;
 	} else if (resid > uio->uio_resid && (ioflag & IO_SYNC)) {
 		error = UFS_UPDATE(ip, MNT_WAIT);
 	}

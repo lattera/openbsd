@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.21 2001/12/10 04:45:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.21.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ffs_balloc.c,v 1.3 1996/02/09 22:22:21 christos Exp $	*/
 
 /*
@@ -434,9 +434,6 @@ ffs_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
 
 		if (ip->i_ffs_size < off + bsize) {
 			ip->i_ffs_size = off + bsize;
-			if (vp->v_size < ip->i_ffs_size) {
-				uvm_vnp_setsize(vp, ip->i_ffs_size);
-			}
 		}
 
 		off += bsize;

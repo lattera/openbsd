@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.1 2002/01/31 22:55:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.22.4.2 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: nfs_socket.c,v 1.27 1996/04/15 20:20:00 thorpej Exp $	*/
 
 /*
@@ -902,7 +902,7 @@ tryagain:
 	 * Chain request into list of outstanding requests. Be sure
 	 * to put it LAST so timer finds oldest requests first.
 	 */
-	s = splsoftclock();
+	s = splsoftnet();
 	TAILQ_INSERT_TAIL(&nfs_reqq, rep, r_chain);
 
 	/* Get send time for nqnfs */
@@ -944,7 +944,7 @@ tryagain:
 	/*
 	 * RPC done, unlink the request.
 	 */
-	s = splsoftclock();
+	s = splsoftnet();
 	TAILQ_REMOVE(&nfs_reqq, rep, r_chain);
 	splx(s);
 

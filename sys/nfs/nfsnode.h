@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.12 2001/11/27 05:27:12 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.12.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: nfsnode.h,v 1.16 1996/02/18 11:54:04 fvdl Exp $	*/
 
 /*
@@ -46,6 +46,7 @@
 #ifndef _NFS_NFS_H_
 #include <nfs/nfs.h>
 #endif
+#include <miscfs/genfs/genfs.h>
 
 /*
  * Silly rename structure that hangs off the nfsnode until the name
@@ -88,6 +89,7 @@ struct nfsdmap {
  *     be well aligned and, therefore, tightly packed.
  */
 struct nfsnode {
+	struct genfs_node	n_gnode;
 	LIST_ENTRY(nfsnode)	n_hash;		/* Hash chain */
 	CIRCLEQ_ENTRY(nfsnode)	n_timer;	/* Nqnfs timer chain */
 	u_quad_t		n_size;		/* Current size of file */
@@ -219,6 +221,7 @@ int	nfs_removeit __P((struct sillyrename *));
 int	nfs_nget __P((struct mount *,nfsfh_t *,int,struct nfsnode **));
 int	nfs_lookitup __P((struct vnode *,char *,int,struct ucred *,struct proc *,struct nfsnode **));
 int	nfs_sillyrename __P((struct vnode *,struct vnode *,struct componentname *));
+int	nfs_gop_write(struct vnode *, struct vm_page **, int, int);
 
 extern int (**nfsv2_vnodeop_p) __P((void *));
 

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.1 2002/01/31 22:55:51 niklas Exp $	*/
-/*	$NetBSD: uvm_swap.c,v 1.53 2001/08/26 00:43:53 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.2 2002/02/02 03:28:27 art Exp $	*/
+/*	$NetBSD: uvm_swap.c,v 1.57 2001/11/10 07:37:01 lukem Exp $	*/
 
 /*
  * Copyright (c) 1995, 1996, 1997 Matthew R. Green
@@ -190,8 +190,8 @@ struct vndbuf {
 /*
  * We keep a of pool vndbuf's and vndxfer structures.
  */
-struct pool vndxfer_pool;
-struct pool vndbuf_pool;
+static struct pool vndxfer_pool;
+static struct pool vndbuf_pool;
 
 #define	getvndxfer(vnx)	do {						\
 	int s = splbio();						\
@@ -300,11 +300,11 @@ uvm_swap_init()
 	 */
 
 
-	pool_init(&vndxfer_pool, sizeof(struct vndxfer), 0, 0, 0, "swp vnx",
-	    NULL);
+	pool_init(&vndxfer_pool, sizeof(struct vndxfer), 0, 0, 0,
+	    "swp vnx", NULL);
 
-	pool_init(&vndbuf_pool, sizeof(struct vndbuf), 0, 0, 0, "swp vnd",
-	    NULL);
+	pool_init(&vndbuf_pool, sizeof(struct vndbuf), 0, 0, 0,
+	    "swp vnd", NULL);
 
 	/*
 	 * Setup the initial swap partition
@@ -468,8 +468,8 @@ swaplist_insert(sdp, newspp, priority)
 	/*
 	 * find entry at or after which to insert the new device.
 	 */
-	for (pspp = NULL, spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri)) {
+	pspp = NULL;
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
 		if (priority <= spp->spi_priority)
 			break;
 		pspp = spp;
@@ -522,11 +522,9 @@ swaplist_find(vp, remove)
 	/*
 	 * search the lists for the requested vp
 	 */
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri)) {
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp, swd_next))
+
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		CIRCLEQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (sdp->swd_vp == vp) {
 				if (remove) {
 					CIRCLEQ_REMOVE(&spp->spi_swapdev,
@@ -535,6 +533,7 @@ swaplist_find(vp, remove)
 				}
 				return(sdp);
 			}
+		}
 	}
 	return (NULL);
 }
@@ -575,11 +574,8 @@ swapdrum_getsdp(pgno)
 	struct swapdev *sdp;
 	struct swappri *spp;
 
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri))
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp, swd_next)) {
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		CIRCLEQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (sdp->swd_flags & SWF_FAKE)
 				continue;
 			if (pgno >= sdp->swd_drumoffset &&
@@ -587,6 +583,7 @@ swapdrum_getsdp(pgno)
 				return sdp;
 			}
 		}
+	}
 	return NULL;
 }
 
@@ -654,8 +651,7 @@ sys_swapctl(p, v, retval)
 		sep = (struct swapent *)SCARG(uap, arg);
 		count = 0;
 
-		for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-		    spp = LIST_NEXT(spp, spi_swappri)) {
+		LIST_FOREACH(spp, &swap_priority, spi_swappri) {
 			for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
 			     sdp != (void *)&spp->spi_swapdev && misc-- > 0;
 			     sdp = CIRCLEQ_NEXT(sdp, swd_next)) {
@@ -1046,15 +1042,19 @@ swap_on(p, sdp)
 		printf("leaving %d pages of swap\n", size);
 	}
 
+ 	/*
+	 * try to add anons to reflect the new swap space.
+	 */
+
+	error = uvm_anon_add(size);
+	if (error) {
+		goto bad;
+	}
+
 	/*
 	 * add a ref to vp to reflect usage as a swap device.
 	 */
 	vref(vp);
-
-  	/*
-	 * add anons to reflect the new swap space
-	 */
-	uvm_anon_add(size);
 
 #ifdef UVM_SWAP_ENCRYPT
 	if (uvm_doswapencrypt)
@@ -1077,12 +1077,17 @@ swap_on(p, sdp)
 	simple_unlock(&uvm.swap_data_lock);
 	return (0);
 
-bad:
 	/*
-	 * failure: close device if necessary and return error.
+	 * failure: clean up and return error.
 	 */
-	if (vp != rootvp)
+
+bad:
+	if (sdp->swd_ex) {
+		extent_destroy(sdp->swd_ex);
+	}
+	if (vp != rootvp) {
 		(void)VOP_CLOSE(vp, FREAD|FWRITE, p->p_ucred, p);
+	}
 	return (error);
 }
 
@@ -1566,11 +1571,8 @@ uvm_swap_alloc(nslots, lessok)
 	simple_lock(&uvm.swap_data_lock);
 
 ReTry:	/* XXXMRG */
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri)) {
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp,swd_next)) {
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		CIRCLEQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			/* if it's not enabled, then we can't swap from it */
 			if ((sdp->swd_flags & SWF_ENABLE) == 0)
 				continue;
@@ -1594,7 +1596,7 @@ ReTry:	/* XXXMRG */
 			UVMHIST_LOG(pdhist,
 			    "success!  returning %d slots starting at %d",
 			    *nslots, result + sdp->swd_drumoffset, 0, 0);
-			return(result + sdp->swd_drumoffset);
+			return (result + sdp->swd_drumoffset);
 		}
 	}
 
@@ -1606,7 +1608,7 @@ ReTry:	/* XXXMRG */
 	/* XXXMRG: END HACK */
 
 	simple_unlock(&uvm.swap_data_lock);
-	return 0;		/* failed */
+	return 0;
 }
 
 /*
@@ -1702,65 +1704,54 @@ uvm_swap_free(startslot, nslots)
  * uvm_swap_put: put any number of pages into a contig place on swap
  *
  * => can be sync or async
- * => XXXMRG: consider making it an inline or macro
  */
+
 int
 uvm_swap_put(swslot, ppsp, npages, flags)
 	int swslot;
 	struct vm_page **ppsp;
-	int	npages;
-	int	flags;
+	int npages;
+	int flags;
 {
-	int	result;
+	int error;
 
-	result = uvm_swap_io(ppsp, swslot, npages, B_WRITE |
+	error = uvm_swap_io(ppsp, swslot, npages, B_WRITE |
 	    ((flags & PGO_SYNCIO) ? 0 : B_ASYNC));
-
-	return (result);
+	return error;
 }
 
 /*
  * uvm_swap_get: get a single page from swap
  *
  * => usually a sync op (from fault)
- * => XXXMRG: consider making it an inline or macro
  */
+
 int
 uvm_swap_get(page, swslot, flags)
 	struct vm_page *page;
 	int swslot, flags;
 {
-	int	result;
+	int error;
 
 	uvmexp.nswget++;
 	KASSERT(flags & PGO_SYNCIO);
 	if (swslot == SWSLOT_BAD) {
 		return EIO;
 	}
-
-	/*
-	 * this page is (about to be) no longer only in swap.
-	 */
-
-	simple_lock(&uvm.swap_data_lock);
-	uvmexp.swpgonly--;
-	simple_unlock(&uvm.swap_data_lock);
-
-	result = uvm_swap_io(&page, swslot, 1, B_READ |
+	error = uvm_swap_io(&page, swslot, 1, B_READ |
 	    ((flags & PGO_SYNCIO) ? 0 : B_ASYNC));
-
-	if (result != 0) {
+	if (error == 0) {
 
 		/*
-		 * oops, the read failed so it really is still only in swap.
+		 * this page is no longer only in swap.
 		 */
 
 		simple_lock(&uvm.swap_data_lock);
-		uvmexp.swpgonly++;
+		KASSERT(uvmexp.swpgonly > 0);
+		uvmexp.swpgonly--;
 		simple_unlock(&uvm.swap_data_lock);
 	}
-
-	return (result);
+	return error;
 }
 
 /*
@@ -1775,7 +1766,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	daddr_t startblk;
 	struct	buf *bp;
 	vaddr_t kva;
-	int	error, s, mapinflags, pflag;
+	int	error, s, mapinflags;
 	boolean_t write, async;
 #ifdef UVM_SWAP_ENCRYPT
 	vaddr_t dstkva;
@@ -1794,46 +1785,19 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/*
 	 * convert starting drum slot to block number
 	 */
+
 	startblk = btodb((u_int64_t)startslot << PAGE_SHIFT);
 
 	/*
-	 * first, map the pages into the kernel (XXX: currently required
-	 * by buffer system).
+	 * first, map the pages into the kernel.
 	 */
-	mapinflags = !write ? UVMPAGER_MAPIN_READ : UVMPAGER_MAPIN_WRITE;
-	if (!async)
-		mapinflags |= UVMPAGER_MAPIN_WAITOK;
+
+	mapinflags = !write ?
+		UVMPAGER_MAPIN_WAITOK|UVMPAGER_MAPIN_READ :
+		UVMPAGER_MAPIN_WAITOK|UVMPAGER_MAPIN_WRITE;
 	kva = uvm_pagermapin(pps, npages, mapinflags);
-	if (kva == 0)
-		return (EAGAIN);
 
 #ifdef UVM_SWAP_ENCRYPT
-	if (write) {
-		/*
-		 * Check if we need to do swap encryption on old pages.
-		 * Later we need a different scheme, that swap encrypts
-		 * all pages of a process that had at least one page swap
-		 * encrypted.  Then we might not need to copy all pages
-		 * in the cluster, and avoid the memory overheard in 
-		 * swapping.
-		 */
-		if (uvm_doswapencrypt)
-			encrypt = 1;
-	}
-
-	if (swap_encrypt_initalized  || encrypt) { 
-		/*
-		 * we need to know the swap device that we are swapping to/from
-		 * to see if the pages need to be marked for decryption or
-		 * actually need to be decrypted.
-		 * XXX - does this information stay the same over the whole 
-		 * execution of this function?
-		 */
-		simple_lock(&uvm.swap_data_lock);
-		sdp = swapdrum_getsdp(startslot);
-		simple_unlock(&uvm.swap_data_lock);
-	}
-
 	/* 
 	 * encrypt to swap
 	 */
@@ -1880,78 +1844,56 @@ uvm_swap_io(pps, startslot, npages, flags)
 
 		/* dispose of pages we dont use anymore */
 		opages = npages;
+#ifdef XXXART
 		uvm_pager_dropcluster(NULL, NULL, pps, &opages, 
 				      PGO_PDFREECLUST);
-
+#endif
 		kva = dstkva;
 	}
 #endif /* UVM_SWAP_ENCRYPT */
 
 	/*
 	 * now allocate a buf for the i/o.
-	 * [make sure we don't put the pagedaemon to sleep...]
 	 */
+
 	s = splbio();
-	pflag = (async || curproc == uvm.pagedaemon_proc) ? 0 : PR_WAITOK;
-	bp = pool_get(&bufpool, pflag);
+	bp = pool_get(&bufpool, PR_WAITOK);
 	splx(s);
 
-	/*
-	 * if we failed to get a swapbuf, return "try again"
-	 */
-	if (bp == NULL) {
-#ifdef UVM_SWAP_ENCRYPT
-		if (write && encrypt) {
-			int i;
-
-			/* swap encrypt needs cleanup */
-			for (i = 0; i < npages; i++)
-				SWAP_KEY_PUT(sdp, SWD_KEY(sdp, startslot + i));
-
-			uvm_pagermapout(kva, npages);
-			uvm_swap_freepages(tpps, npages);
-		}
-#endif
-		return (EAGAIN);
-	}
-	
 #ifdef UVM_SWAP_ENCRYPT
 	/* 
-	 * prevent ASYNC reads.
+	 * ASYNC reads and swap encryption don't work together.
 	 * uvm_swap_io is only called from uvm_swap_get, uvm_swap_get
-	 * assumes that all gets are SYNCIO.  Just make sure here.
-	 * XXXARTUBC - might not be true anymore.
+	 * assumes that all gets are SYNCIO. Just make sure here.
+	 * XXX - We can't really remove the async flag, so just panic and
+	 * hopefully this will be catched before being comitted.
 	 */
-	if (!write) {
-		flags &= ~B_ASYNC;
-		async = 0;
+	if (!write && (flags & B_ASYNC) != 0) {
+		panic("uvm_swap_io: async read");
 	}
 #endif
 	/*
-	 * fill in the bp.   we currently route our i/o through
+	 * fill in the bp/sbp.   we currently route our i/o through
 	 * /dev/drum's vnode [swapdev_vp].
 	 */
+
 	bp->b_flags = B_BUSY | B_NOCACHE | (flags & (B_READ|B_ASYNC));
 	bp->b_proc = &proc0;	/* XXX */
 	bp->b_vnbufs.le_next = NOLIST;
 	bp->b_data = (caddr_t)kva;
 	bp->b_blkno = startblk;
+	bp->b_bufsize = bp->b_bcount = npages << PAGE_SHIFT;
 	LIST_INIT(&bp->b_dep);
 	s = splbio();
 	bp->b_vp = NULL;
 	buf_replacevnode(bp, swapdev_vp);
 	splx(s);
-	bp->b_bufsize = bp->b_bcount = npages << PAGE_SHIFT;
 
 	/*
 	 * bump v_numoutput (counter of number of active outputs).
 	 */
+
 	if (write) {
-#ifdef UVM_SWAP_ENCRYPT
-		/* mark the pages in the drum for decryption */
-		if (swap_encrypt_initalized)
-			uvm_swap_markdecrypt(sdp, startslot, npages, encrypt);
-#endif
 		s = splbio();
 		swapdev_vp->v_numoutput++;
 		splx(s);
@@ -1960,9 +1902,9 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/*
 	 * for async ops we must set up the iodone handler.
 	 */
+
 	if (async) {
-		bp->b_flags |= B_CALL | (curproc == uvm.pagedaemon_proc ?
-					 B_PDAEMON : 0);
+		bp->b_flags |= B_CALL;
 		bp->b_iodone = uvm_aio_biodone;
 		UVMHIST_LOG(pdhist, "doing async!", 0, 0, 0, 0);
 	}
@@ -1973,6 +1915,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/*
 	 * now we start the I/O, and if async, return.
 	 */
+
 	VOP_STRATEGY(bp);
 	if (async)
 		return 0;
@@ -1980,6 +1923,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/*
 	 * must be sync i/o.   wait for it to finish
 	 */
+
 	error = biowait(bp);
 
 #ifdef UVM_SWAP_ENCRYPT
@@ -2008,6 +1952,7 @@ uvm_swap_io(pps, startslot, npages, flags)
 	/*
 	 * kill the pager mapping
 	 */
+
 	uvm_pagermapout(kva, npages);
 
 #ifdef UVM_SWAP_ENCRYPT
@@ -2018,19 +1963,16 @@ uvm_swap_io(pps, startslot, npages, flags)
 		uvm_swap_freepages(tpps, npages);
 #endif
 	/*
-	 * now dispose of the buf
+	 * now dispose of the buf and we're done.
 	 */
+
 	s = splbio();
 	if (write && bp->b_vp)
 		vwakeup(bp->b_vp);
-
 	(void) buf_cleanout(bp);
 	pool_put(&bufpool, bp);
 	splx(s);
 
-	/*
-	 * finally return.
-	 */
 	UVMHIST_LOG(pdhist, "<- done (sync)  error=%d", error, 0, 0, 0);
 	return (error);
 }

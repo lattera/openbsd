@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.10.2.1 2002/01/31 22:55:51 niklas Exp $	 */
-/*	$NetBSD: uvm_stat.c,v 1.19 2001/05/25 04:06:17 chs Exp $	 */
+/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.10.2.2 2002/02/02 03:28:27 art Exp $	 */
+/*	$NetBSD: uvm_stat.c,v 1.21 2001/11/10 07:37:01 lukem Exp $	 */
 
 /*
  *
@@ -158,8 +158,6 @@ restart:
 		if (cur[hi] == hists[hi]->f)
 			cur[hi] = -1;
 	}
-
-	/* done! */
 	splx(s);
 }
 
@@ -255,9 +253,5 @@ uvmexp_print(int (*pr) __P((const char *, ...)))
 	    uvmexp.nfreeanon);
 	(*pr)("    swpages=%d, swpginuse=%d, swpgonly=%d paging=%d\n",
 	    uvmexp.swpages, uvmexp.swpginuse, uvmexp.swpgonly, uvmexp.paging);
-
-	(*pr)("  kernel pointers:\n");
-	(*pr)("    objs(kern/kmem/mb)=%p/%p/%p\n", uvm.kernel_object,
-	    uvmexp.kmem_object, uvmexp.mb_object);
 }
 #endif

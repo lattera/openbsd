@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24 2001/12/10 04:45:32 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -252,9 +252,12 @@ ffs_fsync(v)
 	if (vp->v_type == VREG) {
 		uobj = &vp->v_uobj;
 		simple_lock(&uobj->vmobjlock);
-		(uobj->pgops->pgo_flush)(uobj, 0, 0, PGO_ALLPAGES|PGO_CLEANIT|
+		error = (uobj->pgops->pgo_put)(uobj, 0, 0,
+		    PGO_ALLPAGES|PGO_CLEANIT|
 		    ((ap->a_waitfor == MNT_WAIT) ? PGO_SYNCIO : 0));
-		simple_unlock(&uobj->vmobjlock);
+		if (error) {
+			return (error);
+		}
 	}
 
 loop:
@@ -368,6 +371,41 @@ ffs_reclaim(v)
 	pool_put(&ffs_ino_pool, vp->v_data);
 	vp->v_data = NULL;
 	return (0);
+}
+
+int
+ffs_getpages(void *v)
+{
+	struct vop_getpages_args /* {
+		struct vnode *a_vp;
+		voff_t a_offset;
+		struct vm_page **a_m;
+		int *a_count;
+		int a_centeridx;
+		vm_prot_t a_access_type;
+		int a_advice;
+		int a_flags;
+	} */ *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct inode *ip = VTOI(vp);
+	struct fs *fs = ip->i_fs;
+       
+	/*
+	 * don't allow a softdep write to create pages for only part of a block.
+	 * the dependency tracking requires that all pages be in memory for
+	 * a block involved in a dependency.
+	 */
+
+	if (ap->a_flags & PGO_OVERWRITE &&
+	    (blkoff(fs, ap->a_offset) != 0 ||
+	     blkoff(fs, *ap->a_count << PAGE_SHIFT) != 0) &&
+	    DOINGSOFTDEP(ap->a_vp)) {
+		if ((ap->a_flags & PGO_LOCKED) == 0) {
+			simple_unlock(&vp->v_uobj.vmobjlock);
+		}
+		return EINVAL;
+	}
+	return genfs_getpages(v);
 }
 
 /*

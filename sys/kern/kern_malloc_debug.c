@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.15.2.1 2002/01/31 22:55:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_malloc_debug.c,v 1.15.2.2 2002/02/02 03:28:25 art Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Artur Grabowski <art@openbsd.org>
@@ -235,7 +235,7 @@ debug_malloc_allocate_free(int wait)
 	if (md == NULL)
 		return;
 
-	va = uvm_km_kmemalloc(kmem_map, uvmexp.kmem_object, PAGE_SIZE * 2,
+	va = uvm_km_kmemalloc(kmem_map, NULL, PAGE_SIZE * 2,
 	    UVM_KMF_VALLOC | (wait ? UVM_KMF_NOWAIT : 0));
 	if (va == 0) {
 		pool_put(&debug_malloc_pool, md);
@@ -244,13 +244,11 @@ debug_malloc_allocate_free(int wait)
 
 	offset = va - vm_map_min(kernel_map);
 	for (;;) {
-		simple_lock(&uvmexp.kmem_object->vmobjlock);
-		pg = uvm_pagealloc(uvmexp.kmem_object, offset, NULL, 0);
+		pg = uvm_pagealloc(NULL, offset, NULL, 0);
 		if (pg) {
 			pg->flags &= ~PG_BUSY;  /* new page */
 			UVM_PAGE_OWN(pg, NULL);
 		}
-		simple_unlock(&uvmexp.kmem_object->vmobjlock);
 
 		if (pg)
 			break;

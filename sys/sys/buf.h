@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/buf.h,v 1.36 2001/11/30 05:45:33 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/sys/buf.h,v 1.36.2.1 2002/02/02 03:28:26 art Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
@@ -144,7 +144,6 @@ struct buf {
 #define	B_XXX		0x02000000	/* Debugging flag. */
 #define	B_DEFERRED	0x04000000	/* Skipped over for cleaning */
 #define	B_SCANNED	0x08000000	/* Block already pushed during sync */
-#define B_PDAEMON	0x10000000	/* I/O started by pagedaemon */
 
 /*
  * This structure describes a clustered I/O.  It is stored in the b_saveaddr
