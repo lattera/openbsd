@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.14 2001/05/14 13:28:22 art Exp $	*/
+/*	$OpenBSD: src/sys/compat/common/Attic/vfs_syscalls_43.c,v 1.14.2.1 2002/10/13 20:56:34 miod Exp $	*/
 /*	$NetBSD: vfs_syscalls_43.c,v 1.4 1996/03/14 19:31:52 christos Exp $	*/
 
 /*
@@ -340,7 +340,7 @@ compat_43_sys_getdirentries(p, v, retval)
 	register struct compat_43_sys_getdirentries_args /* {
 		syscallarg(int) fd;
 		syscallarg(char *) buf;
-		syscallarg(u_int) count;
+		syscallarg(int) count;
 		syscallarg(long *) basep;
 	} */ *uap = v;
 	struct vnode *vp;
@@ -352,6 +352,8 @@ compat_43_sys_getdirentries(p, v, retval)
 	int error, eofflag, readcnt;
 	long loff;
 
+	if (SCARG(uap, count) < 0)
+		return EINVAL;
 	if ((error = getvnode(p->p_fd, SCARG(uap, fd), &fp)) != 0)
 		return (error);
 	if ((fp->f_flag & FREAD) == 0)
