@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/kern/Attic/kern_conf.h,v 1.2 1996/04/19 16:08:52 niklas Exp $	*/
-/*	$NetBSD: kern_conf.h,v 1.2 1996/03/14 19:01:08 christos Exp $	*/
+/*	$NetBSD: rd_root.c,v 1.2 1996/03/27 16:38:33 perry Exp $	*/
 
 /*
- * Copyright (c) 1995 Christos Zoulas.  All rights reserved.
+ * Copyright (c) 1995 Gordon W. Ross
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,10 +12,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by Christos Zoulas.
- * 4. The name of the author may not be used to endorse or promote products
+ * 3. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
@@ -30,26 +27,53 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/conf.h>
+#include <sys/param.h>
+#include <sys/reboot.h>
 
-cdev_decl(filedesc);
+#include <dev/ramdisk.h>
 
-cdev_decl(log);
+extern int boothowto;
 
-#ifndef LKM
-# define	NLKM	0
-# define	lkmenodev	enodev
-#else
-# define	NLKM	1
+#ifndef MINIROOTSIZE
+#define MINIROOTSIZE 512
 #endif
-cdev_decl(lkm);
 
-#include "pty.h"
-#define	ptstty		ptytty
-#define	ptsioctl	ptyioctl
-cdev_decl(pts);
-#define	ptctty		ptytty
-#define	ptcioctl	ptyioctl
-cdev_decl(ptc);
+#define ROOTBYTES (MINIROOTSIZE << DEV_BSHIFT)
 
-cdev_decl(ctty);
+/*
+ * This array will be patched to contain a file-system image.
+ * See the program:  src/distrib/sun3/common/rdsetroot.c
+ */
+int rd_root_size = ROOTBYTES;
+char rd_root_image[ROOTBYTES] = "|This is the root ramdisk!\n";
+
+/*
+ * This is called during autoconfig.
+ */
+void
+rd_attach_hook(unit, rd)
+	int unit;
+	struct rd_conf *rd;
+{
+	if (unit == 0) {
+		/* Setup root ramdisk */
+		rd->rd_addr = (caddr_t) rd_root_image;
+		rd->rd_size = (size_t)  rd_root_size;
+		rd->rd_type = RD_KMEM_FIXED;
+		printf(" fixed, %d blocks", MINIROOTSIZE);
+	}
+}
+
+/*
+ * This is called during open (i.e. mountroot)
+ */
+void
+rd_open_hook(unit, rd)
+	int unit;
+	struct rd_conf *rd;
+{
+	if (unit == 0) {
+		/* The root ramdisk only works single-user. */
+		boothowto |= RB_SINGLE;
+	}
+}
