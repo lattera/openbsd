@@ -15,7 +15,7 @@ with the other side.  This same code is used both on client and server side.
 */
 
 #include "includes.h"
-RCSID("$Id: packet.c,v 1.6 1999/09/30 05:53:04 deraadt Exp $");
+RCSID("$Id: packet.c,v 1.7 1999/10/01 18:18:40 deraadt Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -137,7 +137,7 @@ packet_close()
   initialized = 0;
   if (connection_in == connection_out)
     {
-      shutdown(connection_out, 2);
+      shutdown(connection_out, SHUT_RDWR);
       close(connection_out);
     }
   else
