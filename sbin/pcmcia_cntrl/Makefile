@@ -1,4 +1,4 @@
-# $OpenBSD: src/sbin/pcmcia_cntrl/Attic/Makefile,v 1.3 1996/08/21 06:04:14 tholo Exp $
+#	$OpenBSD: src/sbin/pcmcia_cntrl/Attic/Makefile,v 1.4 1997/09/21 11:37:52 deraadt Exp $
 
 SRCS=	pcmcia_cntrl.c
 PROG=	pcmcia_cntrl

@@ -1,5 +1,4 @@
-#	$OpenBSD: src/sbin/mount_ados/Attic/Makefile,v 1.2 1996/06/23 14:31:13 deraadt Exp $
-#	$NetBSD: Makefile,v 1.4 1995/03/18 14:57:08 cgd Exp $
+#	$OpenBSD: src/sbin/mount_ados/Attic/Makefile,v 1.3 1997/09/21 11:37:06 deraadt Exp $
 
 PROG=	mount_ados
 SRCS=	mount_ados.c getmntopts.c
