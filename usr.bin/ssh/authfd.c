@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: authfd.c,v 1.15 1999/12/06 20:15:26 deraadt Exp $");
+RCSID("$Id: authfd.c,v 1.16 1999/12/15 19:43:10 markus Exp $");
 
 #include "ssh.h"
 #include "rsa.h"
@@ -24,7 +24,7 @@ RCSID("$Id: authfd.c,v 1.15 1999/12/06 20:15:26 deraadt Exp $");
 #include "xmalloc.h"
 #include "getput.h"
 
-#include <ssl/rsa.h>
+#include <openssl/rsa.h>
 
 /* Returns the number of the authentication fd, or -1 if there is none. */
 

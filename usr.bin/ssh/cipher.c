@@ -12,13 +12,13 @@
  */
 
 #include "includes.h"
-RCSID("$Id: cipher.c,v 1.23 2000/04/12 00:18:20 deraadt Exp $");
+RCSID("$Id: cipher.c,v 1.24 2000/04/12 07:45:43 markus Exp $");
 
 #include "ssh.h"
 #include "cipher.h"
 #include "xmalloc.h"
 
-#include <ssl/md5.h>
+#include <openssl/md5.h>
 
 /*
  * This is used by SSH1:

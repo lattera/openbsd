@@ -17,10 +17,10 @@
  */
 
 #include "includes.h"
-RCSID("$Id: bufaux.c,v 1.9 2000/03/22 13:40:45 markus Exp $");
+RCSID("$Id: bufaux.c,v 1.9 2000/03/28 20:24:18 markus Exp $");
 
 #include "ssh.h"
-#include <ssl/bn.h>
+#include <openssl/bn.h>
 #include "bufaux.h"
 #include "xmalloc.h"
 #include "getput.h"

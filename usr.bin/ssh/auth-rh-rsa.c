@@ -15,7 +15,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: auth-rh-rsa.c,v 1.5 2000/02/17 17:24:08 markus Exp $");
+RCSID("$Id: auth-rh-rsa.c,v 1.11 2000/03/23 22:15:33 markus Exp $");
 
 #include "packet.h"
 #include "ssh.h"
@@ -23,8 +23,8 @@ RCSID("$Id: auth-rh-rsa.c,v 1.5 2000/02/17 17:24:08 markus Exp $");
 #include "uidswap.h"
 #include "servconf.h"
 
-#include <ssl/rsa.h>
-#include <ssl/dsa.h>
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
 #include "key.h"
 #include "hostfile.h"
 
