@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-udp.c,v 1.6 1997/07/23 02:59:02 denny Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-udp.c,v 1.7 1997/07/31 09:49:13 tqbf Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -371,6 +371,9 @@ udp_print(register const u_char *bp, u_int length, register const u_char *bp2)
 				udpport_string(dport));
 			while (cp < ep)
 				cp = rtcp_print(cp, ep);
+			break;
+		case PT_CNFP:
+			cnfp_print(cp, length, ip);
 			break;
 		}
 		return;
