@@ -22,7 +22,66 @@ and this permission notice may be included in translations approved by
 the Free Software Foundation instead of in the original English.
 
 
-File: cvs.info,  Node: Sticky tags,  Prev: Creating a branch,  Up: Branches
+File: cvs.info,  Node: Creating a branch,  Next: Sticky tags,  Prev: Branches motivation,  Up: Revisions and branches
+
+Creating a branch
+=================
+
+   The `rtag' command can be used to create a branch.  The `rtag'
+command is much like `tag', but it does not require that you have a
+working copy of the module.  *Note rtag::.  (You can also use the `tag'
+command; *note tag::.).
+
+     $ cvs rtag -b -r release-1-0 release-1-0-patches tc
+
+   The `-b' flag makes `rtag' create a branch (rather than just a
+symbolic revision name).  `-r release-1-0' says that this branch should
+be rooted at the node (in the revision tree) that corresponds to the tag
+`release-1-0'.  Note that the numeric revision number that matches
+`release-1-0' will probably be different from file to file.  The name
+of the new branch is `release-1-0-patches', and the module affected is
+`tc'.
+
+   To fix the problem in release 1.0, you need a working copy of the
+branch you just created.
+
+     $ cvs checkout -r release-1-0-patches tc
+     $ cvs status -v driver.c backend.c
+     ===================================================================
+     File: driver.c          Status: Up-to-date
+     
+         Version:            1.7     Sat Dec  5 18:25:54 1992
+         RCS Version:        1.7     /usr/local/cvsroot/yoyodyne/tc/driver.c,v
+         Sticky Tag:         release-1-0-patches (branch: 1.7.2)
+         Sticky Date:        (none)
+         Sticky Options:     (none)
+     
+         Existing Tags:
+             release-1-0-patches             (branch: 1.7.2)
+             release-1-0                     (revision: 1.7)
+     
+     ===================================================================
+     File: backend.c         Status: Up-to-date
+     
+         Version:            1.4     Tue Dec  1 14:39:01 1992
+         RCS Version:        1.4     /usr/local/cvsroot/yoyodyne/tc/backend.c,v
+         Sticky Tag:         release-1-0-patches (branch: 1.4.2)
+         Sticky Date:        (none)
+         Sticky Options:     (none)
+     
+         Existing Tags:
+             release-1-0-patches             (branch: 1.4.2)
+             release-1-0                     (revision: 1.4)
+             release-0-4                     (revision: 1.4)
+
+   As the output from the `status' command shows the branch number is
+created by adding a digit at the tail of the revision number it is
+based on.  (If `release-1-0' corresponds to revision 1.4, the branch's
+revision number will be 1.4.2.  For obscure reasons CVS always gives
+branches even numbers, starting at 2.  *Note Revision numbers::.).
+
+
+File: cvs.info,  Node: Sticky tags,  Prev: Creating a branch,  Up: Revisions and branches
 
 Sticky tags
 ===========
@@ -97,7 +156,7 @@ contents it had previously.  Here is how to do it:
      $
 
 
-File: cvs.info,  Node: Merging,  Next: Recursive behavior,  Prev: Branches,  Up: Top
+File: cvs.info,  Node: Merging,  Next: Recursive behavior,  Prev: Revisions and branches,  Up: Top
 
 Merging
 *******
@@ -374,8 +433,9 @@ repository:
      $ cvs commit -m "Early version. Not yet compilable." backend.c
 
    When you add a file it is added only on the branch which you are
-working on (*note Branches::.).  You can later merge the additions to
-another branch if you want (*note Merging adds and removals::.).
+working on (*note Revisions and branches::.).  You can later merge the
+additions to another branch if you want (*note Merging adds and
+removals::.).
 
 
 File: cvs.info,  Node: Removing files,  Next: Removing directories,  Prev: Adding files,  Up: Top
@@ -454,8 +514,9 @@ can use `update' to resurrect the file:
      U oj.c
 
    When you remove a file it is removed only on the branch which you
-are working on (*note Branches::.).  You can later merge the removals
-to another branch if you want (*note Merging adds and removals::.).
+are working on (*note Revisions and branches::.).  You can later merge
+the removals to another branch if you want (*note Merging adds and
+removals::.).
 
 
 File: cvs.info,  Node: Removing directories,  Next: Tracking sources,  Prev: Removing files,  Up: Top
@@ -1204,69 +1265,4 @@ found in many operating systems, or the `VPATH' feature found in many
 versions of `make'.  One build tool which is designed to help with this
 kind of thing is Odin (see
 `ftp://ftp.cs.colorado.edu/pub/distribs/odin').
-
-
-File: cvs.info,  Node: Compatibility,  Next: Revision management,  Prev: Builds,  Up: Top
-
-Compatibility between CVS Versions
-**********************************
-
-   The repository format is compatible going back to CVS 1.3.  But see
-*Note Watches Compatibility::, if you have copies of CVS 1.6 or older
-and you want to use the optional developer communication features.
-
-   The working directory format is compatible going back to CVS 1.5.
-It did change between CVS 1.3 and CVS 1.5.  If you run CVS 1.5 or newer
-on a working directory checked out with CVS 1.3, CVS will convert it,
-but to go back to CVS 1.3 you need to check out a new working directory
-with CVS 1.3.
-
-   The remote protocol is interoperable going back to CVS 1.5, but no
-further (1.5 was the first official release with the remote protocol,
-but some older versions might still be floating around).  In many cases
-you need to upgrade both the client and the server to take advantage of
-new features and bugfixes, however.
-
-
-File: cvs.info,  Node: Revision management,  Next: CVS commands,  Prev: Compatibility,  Up: Top
-
-Revision management
-*******************
-
-   If you have read this far, you probably have a pretty good grasp on
-what CVS can do for you.  This chapter talks a little about things that
-you still have to decide.
-
-   If you are doing development on your own using CVS you could
-probably skip this chapter.  The questions this chapter takes up become
-more important when more than one person is working in a repository.
-
-* Menu:
-
-* When to commit::              Some discussion on the subject
-
-
-File: cvs.info,  Node: When to commit,  Up: Revision management
-
-When to commit?
-===============
-
-   Your group should decide which policy to use regarding commits.
-Several policies are possible, and as your experience with CVS grows
-you will probably find out what works for you.
-
-   If you commit files too quickly you might commit files that do not
-even compile.  If your partner updates his working sources to include
-your buggy file, he will be unable to compile the code.  On the other
-hand, other persons will not be able to benefit from the improvements
-you make to the code if you commit very seldom, and conflicts will
-probably be more common.
-
-   It is common to only commit files after making sure that they can be
-compiled.  Some sites require that the files pass a test suite.
-Policies like this can be enforced using the commitinfo file (*note
-commitinfo::.), but you should think twice before you enforce such a
-convention.  By making the development environment too controlled it
-might become too regimented and thus counter-productive to the real
-goal, which is to get software written.
 
