@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: vjcomp.c,v 1.4 1999/03/31 14:22:11 brian Exp $
+ * $Id: vjcomp.c,v 1.5 1999/05/08 11:06:40 brian Exp $
  *
  *  TODO:
  */
@@ -99,7 +99,7 @@ vj_LayerPush(struct bundle *bundle, struct link *l, struct mbuf *bp, int pri,
 }
 
 static struct mbuf *
-VjUncompressTcp(struct ipcp *ipcp, struct mbuf * bp, u_char type)
+VjUncompressTcp(struct ipcp *ipcp, struct mbuf *bp, u_char type)
 {
   u_char *bufp;
   int len, olen, rlen;

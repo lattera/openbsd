@@ -17,7 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ccp.c,v 1.6 1999/05/02 14:34:02 brian Exp $
+ * $Id: ccp.c,v 1.7 1999/05/08 11:06:34 brian Exp $
  *
  *	TODO:
  *		o Support other compression protocols
@@ -363,9 +363,7 @@ CcpLayerFinish(struct fsm *fp)
   log_Printf(LogCCP, "%s: LayerFinish.\n", fp->link->name);
 }
 
-/*
- *  Called when CCP has reached the OPEN state
- */
+/*  Called when CCP has reached the OPEN state */
 static int
 CcpLayerUp(struct fsm *fp)
 {
