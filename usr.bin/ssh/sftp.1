@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/ssh/sftp.1,v 1.36 2002/09/11 22:41:50 djm Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sftp.1,v 1.36.2.1 2003/04/01 00:12:14 margarida Exp $
 .\"
 .\" Copyright (c) 2001 Damien Miller.  All rights reserved.
 .\"
@@ -77,9 +77,16 @@ non-interactive authentication.
 will abort if any of the following
 commands fail:
 .Ic get , put , rename , ln ,
-.Ic rm , mkdir , chdir , lchdir
+.Ic rm , mkdir , chdir , ls , 
+.Ic lchdir , chmod , chown , chgrp , lpwd
 and
 .Ic lmkdir .
+Termination on error can be suppressed on a command by command basis by 
+prefixing the command with a 
+.Ic '-' 
+character (For example,
+.Ic -rm /tmp/blah*
+).
 .It Fl o Ar ssh_option
 Can be used to pass options to
 .Nm ssh
@@ -221,10 +228,12 @@ Set local umask to
 .It Ic mkdir Ar path
 Create remote directory specified by
 .Ar path .
+.It Ic progress
+Toggle display of progress meter.
 .It Xo Ic put
 .Op Ar flags
 .Ar local-path
-.Op Ar local-path
+.Op Ar remote-path
 .Xc
 Upload
 .Ar local-path
@@ -253,6 +262,10 @@ Create a symbolic link from
 .Ar oldpath
 to
 .Ar newpath .
+.It Ic version
+Display the
+.Nm
+protocol version.
 .It Ic ! Ar command
 Execute
 .Ar command

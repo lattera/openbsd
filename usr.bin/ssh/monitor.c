@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.29 2002/09/26 11:38:43 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.29.2.1 2003/04/01 00:12:13 margarida Exp $");
 
 #include <openssl/dh.h>
 
@@ -615,20 +615,20 @@ mm_answer_bsdauthquery(int socket, Buffer *m)
 	u_int numprompts;
 	u_int *echo_on;
 	char **prompts;
-	int res;
+	u_int success;
 
-	res = bsdauth_query(authctxt, &name, &infotxt, &numprompts,
-	    &prompts, &echo_on);
+	success = bsdauth_query(authctxt, &name, &infotxt, &numprompts,
+	    &prompts, &echo_on) < 0 ? 0 : 1;
 
 	buffer_clear(m);
-	buffer_put_int(m, res);
-	if (res != -1)
+	buffer_put_int(m, success);
+	if (success)
 		buffer_put_cstring(m, prompts[0]);
 
-	debug3("%s: sending challenge res: %d", __func__, res);
+	debug3("%s: sending challenge success: %u", __func__, success);
 	mm_request_send(socket, MONITOR_ANS_BSDAUTHQUERY, m);
 
-	if (res != -1) {
+	if (success) {
 		xfree(name);
 		xfree(infotxt);
 		xfree(prompts);
@@ -672,16 +672,16 @@ mm_answer_skeyquery(int socket, Buffer *m)
 {
 	struct skey skey;
 	char challenge[1024];
-	int res;
+	u_int success;
 
-	res = skeychallenge(&skey, authctxt->user, challenge);
+	success = skeychallenge(&skey, authctxt->user, challenge) < 0 ? 0 : 1;
 
 	buffer_clear(m);
-	buffer_put_int(m, res);
-	if (res != -1)
+	buffer_put_int(m, success);
+	if (success)
 		buffer_put_cstring(m, challenge);
 
-	debug3("%s: sending challenge res: %d", __func__, res);
+	debug3("%s: sending challenge success: %u", __func__, success);
 	mm_request_send(socket, MONITOR_ANS_SKEYQUERY, m);
 
 	return (0);
@@ -771,8 +771,9 @@ mm_answer_keyallowed(int socket, Buffer *m)
 			fatal("%s: unknown key type %d", __func__, type);
 			break;
 		}
-		key_free(key);
 	}
+	if (key != NULL)
+		key_free(key);
 
 	/* clear temporarily storage (used by verify) */
 	monitor_reset_key_state();
@@ -791,6 +792,7 @@ mm_answer_keyallowed(int socket, Buffer *m)
 
 	buffer_clear(m);
 	buffer_put_int(m, allowed);
+	buffer_put_int(m, forced_command != NULL);
 
 	mm_append_debug(m);
 
@@ -1153,6 +1155,7 @@ mm_answer_rsa_keyallowed(int socket, Buffer *m)
 	}
 	buffer_clear(m);
 	buffer_put_int(m, allowed);
+	buffer_put_int(m, forced_command != NULL);
 
 	/* clear temporarily storage (used by generate challenge) */
 	monitor_reset_key_state();
@@ -1167,8 +1170,9 @@ mm_answer_rsa_keyallowed(int socket, Buffer *m)
 		key_blob = blob;
 		key_bloblen = blen;
 		key_blobtype = MM_RSAUSERKEY;
-		key_free(key);
 	}
+	if (key != NULL)
+		key_free(key);
 
 	mm_append_debug(m);
 
@@ -1209,6 +1213,9 @@ mm_answer_rsa_challenge(int socket, Buffer *m)
 	mm_request_send(socket, MONITOR_ANS_RSACHALLENGE, m);
 
 	monitor_permit(mon_dispatch, MONITOR_REQ_RSARESPONSE, 1);
+
+	xfree(blob);
+	key_free(key);
 	return (0);
 }
 
@@ -1239,6 +1246,7 @@ mm_answer_rsa_response(int socket, Buffer *m)
 		fatal("%s: received bad response to challenge", __func__);
 	success = auth_rsa_verify_response(key, ssh1_challenge, response);
 
+	xfree(blob);
 	key_free(key);
 	xfree(response);
 
@@ -1516,7 +1524,7 @@ mm_get_keystate(struct monitor *pmonitor)
 void *
 mm_zalloc(struct mm_master *mm, u_int ncount, u_int size)
 {
-	size_t len = size * ncount;
+	size_t len = (size_t) size * ncount;
 	void *address;
 
 	if (len == 0 || ncount > SIZE_T_MAX / size)

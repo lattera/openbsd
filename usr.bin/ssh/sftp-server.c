@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.38 2002/09/11 22:41:50 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.38.2.1 2003/04/01 00:12:14 margarida Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
@@ -152,7 +152,7 @@ handle_new(int use, char *name, int fd, DIR *dirp)
 			handles[i].use = use;
 			handles[i].dirp = dirp;
 			handles[i].fd = fd;
-			handles[i].name = name;
+			handles[i].name = xstrdup(name);
 			return i;
 		}
 	}
@@ -224,9 +224,11 @@ handle_close(int handle)
 	if (handle_is_ok(handle, HANDLE_FILE)) {
 		ret = close(handles[handle].fd);
 		handles[handle].use = HANDLE_UNUSED;
+		xfree(handles[handle].name);
 	} else if (handle_is_ok(handle, HANDLE_DIR)) {
 		ret = closedir(handles[handle].dirp);
 		handles[handle].use = HANDLE_UNUSED;
+		xfree(handles[handle].name);
 	} else {
 		errno = ENOENT;
 	}
@@ -390,7 +392,7 @@ process_open(void)
 	if (fd < 0) {
 		status = errno_to_portable(errno);
 	} else {
-		handle = handle_new(HANDLE_FILE, xstrdup(name), fd, NULL);
+		handle = handle_new(HANDLE_FILE, name, fd, NULL);
 		if (handle < 0) {
 			close(fd);
 		} else {
@@ -661,7 +663,7 @@ process_opendir(void)
 	if (dirp == NULL) {
 		status = errno_to_portable(errno);
 	} else {
-		handle = handle_new(HANDLE_DIR, xstrdup(path), 0, dirp);
+		handle = handle_new(HANDLE_DIR, path, 0, dirp);
 		if (handle < 0) {
 			closedir(dirp);
 		} else {
@@ -812,19 +814,22 @@ static void
 process_rename(void)
 {
 	u_int32_t id;
-	struct stat st;
 	char *oldpath, *newpath;
-	int ret, status = SSH2_FX_FAILURE;
+	int status;
 
 	id = get_int();
 	oldpath = get_string(NULL);
 	newpath = get_string(NULL);
 	TRACE("rename id %u old %s new %s", id, oldpath, newpath);
 	/* fail if 'newpath' exists */
-	if (stat(newpath, &st) == -1) {
-		ret = rename(oldpath, newpath);
-		status = (ret == -1) ? errno_to_portable(errno) : SSH2_FX_OK;
-	}
+	if (link(oldpath, newpath) == -1)
+		status = errno_to_portable(errno);
+	else if (unlink(oldpath) == -1) {
+		status = errno_to_portable(errno);
+		/* clean spare link */
+		unlink(newpath);
+	} else
+		status = SSH2_FX_OK;
 	send_status(id, status);
 	xfree(oldpath);
 	xfree(newpath);
@@ -858,19 +863,16 @@ static void
 process_symlink(void)
 {
 	u_int32_t id;
-	struct stat st;
 	char *oldpath, *newpath;
-	int ret, status = SSH2_FX_FAILURE;
+	int ret, status;
 
 	id = get_int();
 	oldpath = get_string(NULL);
 	newpath = get_string(NULL);
 	TRACE("symlink id %u old %s new %s", id, oldpath, newpath);
-	/* fail if 'newpath' exists */
-	if (stat(newpath, &st) == -1) {
-		ret = symlink(oldpath, newpath);
-		status = (ret == -1) ? errno_to_portable(errno) : SSH2_FX_OK;
-	}
+	/* this will fail if 'newpath' exists */
+	ret = symlink(oldpath, newpath);
+	status = (ret == -1) ? errno_to_portable(errno) : SSH2_FX_OK;
 	send_status(id, status);
 	xfree(oldpath);
 	xfree(newpath);

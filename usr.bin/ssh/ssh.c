@@ -40,7 +40,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.186 2002/09/19 01:58:18 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.186.2.1 2003/04/01 00:12:14 margarida Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -482,9 +482,9 @@ again:
 	av += optind;
 
 	if (ac > 0 && !host && **av != '-') {
-		if (strchr(*av, '@')) {
+		if (strrchr(*av, '@')) {
 			p = xstrdup(*av);
-			cp = strchr(p, '@');
+			cp = strrchr(p, '@');
 			if (cp == NULL || cp == p)
 				usage();
 			options.user = p;
@@ -492,12 +492,11 @@ again:
 			host = ++cp;
 		} else
 			host = *av;
-		ac--, av++;
-		if (ac > 0) {
-			optind = 0;
-			optreset = 1;
+		if (ac > 1) {
+			optind = optreset = 1;
 			goto again;
 		}
+		ac--, av++;
 	}
 
 	/* Check that we got a host name. */
@@ -586,6 +585,10 @@ again:
 
 	if (options.hostname != NULL)
 		host = options.hostname;
+
+	if (options.proxy_command != NULL &&
+	    strcmp(options.proxy_command, "none") == 0)
+		options.proxy_command = NULL;
 
 	/* Disable rhosts authentication if not running as root. */
 	if (original_effective_uid != 0 || !options.use_privileged_port) {
@@ -1002,7 +1005,7 @@ ssh_session2_setup(int id, void *arg)
 	int interactive = 0;
 	struct termios tio;
 
-	debug("ssh_session2_setup: id %d", id);
+	debug2("ssh_session2_setup: id %d", id);
 
 	if (tty_flag) {
 		struct winsize ws;

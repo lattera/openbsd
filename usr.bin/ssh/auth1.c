@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.44 2002/09/26 11:38:43 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.44.2.1 2003/04/01 00:12:13 margarida Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -150,7 +150,7 @@ do_authloop(Authctxt *authctxt)
 						snprintf(info, sizeof(info),
 						    " tktuser %.100s",
 						    client_user);
- 
+
  						/* Send response to client */
  						packet_start(
 						    SSH_SMSG_AUTH_KERBEROS_RESPONSE);
@@ -288,7 +288,6 @@ do_authloop(Authctxt *authctxt)
 			debug("rcvd SSH_CMSG_AUTH_TIS_RESPONSE");
 			if (options.challenge_response_authentication == 1) {
 				char *response = packet_get_string(&dlen);
-				debug("got response '%s'", response);
 				packet_check_eom();
 				authenticated = verify_response(authctxt, response);
 				memset(response, 'r', dlen);
@@ -315,8 +314,7 @@ do_authloop(Authctxt *authctxt)
 			    authctxt->user);
 
 		/* Special handling for root */
-		if (!use_privsep &&
-		    authenticated && authctxt->pw->pw_uid == 0 &&
+		if (authenticated && authctxt->pw->pw_uid == 0 &&
 		    !auth_root_allowed(get_authname(type)))
 			authenticated = 0;
 

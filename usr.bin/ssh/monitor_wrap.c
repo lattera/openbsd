@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.19 2002/09/26 11:38:43 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.19.2.1 2003/04/01 00:12:13 margarida Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/dh.h>
@@ -34,6 +34,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/monitor_wrap.c,v 1.19 2002/09/26 11:38:43 marku
 #include "dh.h"
 #include "kex.h"
 #include "auth.h"
+#include "auth-options.h"
 #include "buffer.h"
 #include "bufaux.h"
 #include "packet.h"
@@ -310,7 +311,7 @@ mm_key_allowed(enum mm_keytype type, char *user, char *host, Key *key)
 	Buffer m;
 	u_char *blob;
 	u_int len;
-	int allowed = 0;
+	int allowed = 0, have_forced = 0;
 
 	debug3("%s entering", __func__);
 
@@ -331,6 +332,11 @@ mm_key_allowed(enum mm_keytype type, char *user, char *host, Key *key)
 	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_KEYALLOWED, &m);
 
 	allowed = buffer_get_int(&m);
+
+	/* fake forced command */
+	auth_clear_options();
+	have_forced = buffer_get_int(&m);
+	forced_command = have_forced ? xstrdup("true") : NULL;
 
 	/* Send potential debug messages */
 	mm_send_debug(&m);
@@ -695,7 +701,7 @@ mm_bsdauth_query(void *ctx, char **name, char **infotxt,
    u_int *numprompts, char ***prompts, u_int **echo_on)
 {
 	Buffer m;
-	int res;
+	u_int success;
 	char *challenge;
 
 	debug3("%s: entering", __func__);
@@ -705,8 +711,8 @@ mm_bsdauth_query(void *ctx, char **name, char **infotxt,
 
 	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_BSDAUTHQUERY,
 	    &m);
-	res = buffer_get_int(&m);
-	if (res == -1) {
+	success = buffer_get_int(&m);
+	if (success == 0) {
 		debug3("%s: no challenge", __func__);
 		buffer_free(&m);
 		return (-1);
@@ -752,7 +758,8 @@ mm_skey_query(void *ctx, char **name, char **infotxt,
    u_int *numprompts, char ***prompts, u_int **echo_on)
 {
 	Buffer m;
-	int len, res;
+	int len;
+	u_int success;
 	char *p, *challenge;
 
 	debug3("%s: entering", __func__);
@@ -762,8 +769,8 @@ mm_skey_query(void *ctx, char **name, char **infotxt,
 
 	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_SKEYQUERY,
 	    &m);
-	res = buffer_get_int(&m);
-	if (res == -1) {
+	success = buffer_get_int(&m);
+	if (success == 0) {
 		debug3("%s: no challenge", __func__);
 		buffer_free(&m);
 		return (-1);
@@ -833,7 +840,7 @@ mm_auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 	Key *key;
 	u_char *blob;
 	u_int blen;
-	int allowed = 0;
+	int allowed = 0, have_forced = 0;
 
 	debug3("%s entering", __func__);
 
@@ -844,6 +851,11 @@ mm_auth_rsa_key_allowed(struct passwd *pw, BIGNUM *client_n, Key **rkey)
 	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_RSAKEYALLOWED, &m);
 
 	allowed = buffer_get_int(&m);
+
+	/* fake forced command */
+	auth_clear_options();
+	have_forced = buffer_get_int(&m);
+	forced_command = have_forced ? xstrdup("true") : NULL;
 
 	if (allowed && rkey != NULL) {
 		blob = buffer_get_string(&m, &blen);
@@ -950,7 +962,7 @@ mm_auth_krb4(Authctxt *authctxt, void *_auth, char **client, void *_reply)
 		xfree(p);
 	}
 	buffer_free(&m);
-	return (success); 
+	return (success);
 }
 #endif
 

@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.95 2002/08/22 21:33:58 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.95.2.1 2003/04/01 00:12:13 margarida Exp $");
 
 #include "ssh2.h"
 #include "xmalloc.h"
@@ -195,8 +195,7 @@ userauth_finish(Authctxt *authctxt, int authenticated, char *method)
 		    authctxt->user);
 
 	/* Special handling for root */
-	if (!use_privsep &&
-	    authenticated && authctxt->pw->pw_uid == 0 &&
+	if (authenticated && authctxt->pw->pw_uid == 0 &&
 	    !auth_root_allowed(method))
 		authenticated = 0;
 

@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keysign.c,v 1.7 2002/07/03 14:21:05 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keysign.c,v 1.7.2.1 2003/04/01 00:12:14 margarida Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -158,8 +158,8 @@ main(int argc, char **argv)
 	initialize_options(&options);
 	(void)read_config_file(_PATH_HOST_CONFIG_FILE, "", &options);
 	fill_default_options(&options);
-	if (options.hostbased_authentication != 1)
-		fatal("Hostbased authentication not enabled in %s",
+	if (options.enable_ssh_keysign != 1)
+		fatal("ssh-keysign not enabled in %s",
 		    _PATH_HOST_CONFIG_FILE);
 
 	if (key_fd[0] == -1 && key_fd[1] == -1)
@@ -182,13 +182,6 @@ main(int argc, char **argv)
 		keys[i] = key_load_private_pem(key_fd[i], KEY_UNSPEC,
 		    NULL, NULL);
 		close(key_fd[i]);
-		if (keys[i] != NULL && keys[i]->type == KEY_RSA) {
-			if (RSA_blinding_on(keys[i]->rsa, NULL) != 1) {
-				error("RSA_blinding_on failed");
-				key_free(keys[i]);
-				keys[i] = NULL;
-			}
-		}
 		if (keys[i] != NULL)
 			found = 1;
 	}
@@ -196,8 +189,8 @@ main(int argc, char **argv)
 		fatal("no hostkey found");
 
 	buffer_init(&b);
-	if (msg_recv(STDIN_FILENO, &b) < 0)
-		fatal("msg_recv failed");
+	if (ssh_msg_recv(STDIN_FILENO, &b) < 0)
+		fatal("ssh_msg_recv failed");
 	if (buffer_get_char(&b) != version)
 		fatal("bad version");
 	fd = buffer_get_int(&b);
@@ -229,7 +222,7 @@ main(int argc, char **argv)
 	/* send reply */
 	buffer_clear(&b);
 	buffer_put_string(&b, signature, slen);
-	msg_send(STDOUT_FILENO, version, &b);
+	ssh_msg_send(STDOUT_FILENO, version, &b);
 
 	return (0);
 }
