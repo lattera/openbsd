@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/lex/main.c,v 1.6 2002/05/30 10:53:44 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/lex/main.c,v 1.7 2002/05/31 00:56:21 deraadt Exp $	*/
 
 /* flex - tool to generate fast lexical analyzers */
 
@@ -286,8 +286,8 @@ void check_options()
 			else
 				suffix = "c";
 
-			snprintf( outfile_path, sizeof outfile_path,
-				outfile_template, prefix, suffix );
+			sprintf( outfile_path, outfile_template,
+				prefix, suffix );
 
 			outfilename = outfile_path;
 			}
@@ -1135,7 +1135,7 @@ _( "%s [-bcdfhilnpstvwBFILTV78+? -C[aefFmr] -ooutput -Pprefix -Sskeleton]\n" ),
 
 	if ( ! did_outfilename )
 		{
-		snprintf( outfile_path, sizeof outfile_path, outfile_template,
+		sprintf( outfile_path, outfile_template,
 			prefix, C_plus_plus ? "cc" : "c" );
 		outfilename = outfile_path;
 		}
