@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.20 2004/03/14 22:08:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.21 2004/03/18 02:09:28 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -69,11 +69,6 @@
  */
 #define clockframe intrframe
 
-/* XXX Needs to be before lock.h inclusion. */
-#ifdef MULTIPROCESSOR
-#define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
-#endif
-
 #include <sys/device.h>
 #include <sys/lock.h>                  /* will also get LOCKDEBUG */
 #ifdef _KERNEL
@@ -82,9 +77,12 @@
 #include <sys/proc.h>
 #include <sys/sched.h>
 
+struct intrsource;
+
 /* XXX stuff to move to cpuvar.h later */
 struct cpu_info {
 	struct device ci_dev;		/* our device */
+	struct cpu_info *ci_self;	/* pointer to this structure */
 	struct schedstate_percpu ci_schedstate; /* scheduler state */
 	struct cpu_info *ci_next;	/* next cpu */
 	
@@ -111,6 +109,13 @@ struct cpu_info {
 	struct pcb *ci_curpcb;		/* VA of current HW PCB */
 	struct pcb *ci_idle_pcb;	/* VA of current PCB */
 	int ci_idle_tss_sel;		/* TSS selector of idle PCB */
+
+	struct intrsource *ci_isources[MAX_INTR_SOURCES];
+	u_int32_t	ci_ipending;
+	int		ci_ilevel;
+	int		ci_idepth;
+	u_int32_t	ci_imask[NIPL];
+	u_int32_t	ci_iunmask[NIPL];
 
 	paddr_t ci_idle_pcb_paddr;	/* PA of idle PCB */
 	u_long ci_flags;		/* flags; see below */
@@ -170,10 +175,17 @@ extern struct cpu_info *cpu_info_list;
 
 #ifdef MULTIPROCESSOR
 
-#define I386_MAXPROCS		0x10
+#define I386_MAXPROCS		32	/* because we use a bitmask */
+
 #define CPU_STARTUP(_ci)	((_ci)->ci_func->start(_ci))
 #define CPU_STOP(_ci)		((_ci)->ci_func->stop(_ci))
+#define CPU_START_CLEANUP(_ci)	((_ci)->ci_func->cleanup(_ci))
 
+#ifdef MULTIPROCESSOR
+#define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
+#else
+#define cpu_number()		0
+#endif
 #define curcpu()		(cpu_info[cpu_number()])
 #define curpcb			curcpu()->ci_curpcb
 
@@ -444,5 +456,13 @@ void	setconf(void);
 	{ "sse2", CTLTYPE_INT }, \
 	{ "xcrypt", CTLTYPE_INT }, \
 }
+
+/*
+ * This needs to be included late since it relies on definitions higher
+ * up in this file.
+ */
+#if defined(MULTIPROCESSOR) && defined(_KERNEL)
+#include <sys/mplock.h>
+#endif
 
 #endif /* !_I386_CPU_H_ */
