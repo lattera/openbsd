@@ -31,7 +31,7 @@ divert(-1)
 #
 
 include(`../m4/cf.m4')                                                  
-VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/corpse.mc,v 1.1 1997/12/16 04:20:37 mickey Exp $')dnl
+VERSIONID(`$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/corpse.mc,v 1.1.1.1 1998/07/12 17:11:50 millert Exp $')dnl
 
 OSTYPE(bsd4.4)dnl
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/sendmail/smrsh/Attic/Makefile,v 1.1 1996/12/14 21:16:54 downsj Exp $
+#	$OpenBSD: src/usr.sbin/sendmail/smrsh/Attic/Makefile,v 1.1.1.1 1998/07/12 17:09:43 millert Exp $
 #	@(#)Makefile	8.1 (Berkeley) 7/2/95
 
 PROG=	smrsh
