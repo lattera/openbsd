@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ftpd/ftpd.c,v 1.79.2.1 2000/12/10 02:48:22 jason Exp $	*/
+/*	$OpenBSD: src/libexec/ftpd/ftpd.c,v 1.79.2.2 2001/04/23 21:13:53 jason Exp $	*/
 /*	$NetBSD: ftpd.c,v 1.15 1995/06/03 22:46:47 mycroft Exp $	*/
 
 /*
@@ -2392,11 +2392,11 @@ send_file_list(whichf)
 	glob_t gl;
 
 	if (strpbrk(whichf, "~{[*?") != NULL) {
-		int flags = GLOB_BRACE|GLOB_NOCHECK|GLOB_QUOTE|GLOB_TILDE;
-
 		memset(&gl, 0, sizeof(gl));
 		freeglob = 1;
-		if (glob(whichf, flags, 0, &gl)) {
+		if (glob(whichf,
+		    GLOB_BRACE|GLOB_NOCHECK|GLOB_QUOTE|GLOB_TILDE|GLOB_LIMIT,
+		    0, &gl)) {
 			reply(550, "not found");
 			goto out;
 		} else if (gl.gl_pathc == 0) {
