@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: cbcp.c,v 1.5 1999/02/06 03:22:31 brian Exp $
+ *	$Id: cbcp.c,v 1.6 1999/02/26 21:28:19 brian Exp $
  */
 
 #include <sys/param.h>
@@ -608,6 +608,7 @@ cbcp_Input(struct physical *p, struct mbuf *bp)
   struct cbcp *cbcp = &p->dl->cbcp;
   int len;
 
+  bp = mbuf_Contiguous(bp);
   len = mbuf_Length(bp);
   if (len < sizeof(struct cbcp_header)) {
     mbuf_Free(bp);
