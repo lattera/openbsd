@@ -1,5 +1,5 @@
 #
-#	$OpenBSD: src/distrib/alpha/inst-common/Makefile.inc,v 1.4 2002/04/25 22:10:27 deraadt Exp $
+#	$OpenBSD: src/distrib/alpha/inst-common/Makefile.inc,v 1.5 2002/04/28 18:28:33 deraadt Exp $
 #
 
 # TOP is assumed to be defined by Makefile including this one.
@@ -12,7 +12,7 @@ MOUNT_POINT?=	${TOP}/${BASE}/fs
 
 LISTS=		${COMMONDIR}/list ${.CURDIR}/list ${.CURDIR}/../common/list
 CRUNCHCONF?=	${COMMONDIR}/${CBIN}.conf
-MTREE=		${COMMONDIR}/mtree.conf
+MTREE=		${UTILS}/mtree.conf
 
 ${CBIN}.mk ${CBIN}.cache ${CBIN}.c: ${CRUNCHCONF}
 	crunchgen -E -D ${BSDSRCDIR} -L ${DESTDIR}/usr/lib ${CRUNCHCONF}

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/sparc64/common/Makefile.inc,v 1.4 2002/04/25 22:10:28 deraadt Exp $
+#	$OpenBSD: src/distrib/sparc64/common/Makefile.inc,v 1.5 2002/04/28 18:28:34 deraadt Exp $
 
 TOP=		${.CURDIR}/..
 
@@ -10,7 +10,7 @@ LISTS?=		${.CURDIR}/list
 UTILS?=		${.CURDIR}/../../miniroot
 
 MOUNT_POINT=	/mnt
-MTREE=		${.CURDIR}/../common/mtree.conf
+MTREE=		${UTILS}/mtree.conf
 
 XNAME?=		floppy
 FS?=		${XNAME}${REV}.fs
