@@ -33,7 +33,7 @@
 
 #ifndef lint
 static char RCSid[] = 
-"$Id: common.c,v 6.80 1995/12/13 01:59:45 mcooper Exp $";
+"$Id: common.c,v 6.81 1996/01/30 02:29:43 mcooper Exp $";
 
 static char sccsid[] = "@(#)common.c";
 
@@ -71,6 +71,7 @@ int 			contimedout = FALSE;	/* Connection timed out */
 int			proto_version = -1;	/* Protocol version */
 int			rtimeout = RTIMEOUT;	/* Response time out */
 jmp_buf			finish_jmpbuf;		/* Finish() jmp buffer */
+int			setjmp_ok = FALSE;	/* setjmp()/longjmp() status */
 char		      **realargv;		/* Real main() argv */
 int			realargc;		/* Real main() argc */
 opt_t			options = 0;		/* Global install options */
@@ -186,6 +187,16 @@ extern void finish()
 	 * There's no valid finish_jmpbuf for the rdist master parent.
 	 */
 	if (!do_fork || amchild || isserver) {
+
+		if (!setjmp_ok) {
+#ifdef DEBUG_SETJMP
+			error("attemping longjmp() without target");
+			abort();
+#else
+			exit(1);
+#endif
+		}
+
 		longjmp(finish_jmpbuf, 1);
 		/*NOTREACHED*/
 		error("Unexpected failure of longjmp() in finish()");

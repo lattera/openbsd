@@ -65,7 +65,7 @@
  * don't have the old rdist, then uncomment the "#undef" line.
  */
 #ifndef _PATH_OLDRDIST
-#define _PATH_OLDRDIST	"/usr/bin/oldrdist"	/* Enable compat */
+#define _PATH_OLDRDIST	"/usr/ucb/oldrdist"	/* Enable compat */
 #endif
 /*#undef  _PATH_OLDRDIST*/				/* Disable compat */
 

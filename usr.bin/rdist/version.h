@@ -32,7 +32,7 @@
  */
 
 /*
- * $Id: version.h,v 6.26 1996/01/17 21:04:13 mcooper Exp $
+ * $Id: version.h,v 6.28 1996/02/15 20:35:46 mcooper Exp $
  */
 
 /*
@@ -50,7 +50,7 @@
 /*
  * Patch level
  */
-#define PATCHLEVEL 		1
+#define PATCHLEVEL 		2
 
 /*
  * Distribution status

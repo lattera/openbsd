@@ -34,7 +34,7 @@
  */
 
 /*
- * $Id: defs.h,v 6.80 1995/12/13 01:59:22 mcooper Exp $
+ * $Id: defs.h,v 6.81 1996/01/30 02:16:37 mcooper Exp $
  * @(#)defs.h      5.2 (Berkeley) 3/20/86
  */
 
@@ -328,6 +328,7 @@ extern int 		realargc;	/* Real argc */
 extern int		rem_r;		/* Remote file descriptor, reading */
 extern int 		rem_w;		/* Remote file descriptor, writing */
 extern int 		rtimeout;	/* Response time out in seconds */
+extern int		setjmp_ok;	/* setjmp/longjmp flag */
 extern UID_T 		userid;		/* User ID of rdist user */
 extern jmp_buf 		finish_jmpbuf;	/* Setjmp buffer for finish() */
 extern struct group    *gr;	/* pointer to static area used by getgrent */
