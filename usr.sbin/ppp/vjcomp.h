@@ -23,10 +23,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id$
+ *	$Id: vjcomp.h,v 1.3 1997/12/21 14:27:21 brian Exp $
  */
 
 extern void VjInit(int);
 extern void SendPppFrame(struct mbuf *);
 extern struct mbuf *VjCompInput(struct mbuf *, int);
-extern const char *vj2asc(u_long);
+extern const char *vj2asc(u_int32_t);
