@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.3 1999/07/20 03:23:06 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/dkbad.c,v 1.4 2001/03/08 00:03:30 miod Exp $	*/
 
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
@@ -46,6 +46,7 @@
  * Return -1 if not found.
  */
 
+int
 isbad(bt, cyl, trk, sec)
 	register struct dkbad *bt;
 	int cyl, trk, sec;
