@@ -8,7 +8,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.9 2001/01/13 18:12:47 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.10 2001/01/19 15:55:11 markus Exp $");
 
 #include <sys/queue.h>
 #include <errno.h>
@@ -19,6 +19,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.9 2001/01/13 18:12:47 markus 
 
 #include "xmalloc.h"
 #include "ssh.h"
+#include "ssh1.h"
 #include "key.h"
 #include "buffer.h"
 #include "bufaux.h"
