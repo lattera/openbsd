@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/pica/include/Attic/float.h,v 1.2 1996/06/06 23:06:40 deraadt Exp $	*/
 /*	$NetBSD: float.h,v 1.7 1995/06/20 20:45:50 jtc Exp $	*/
 
 /*

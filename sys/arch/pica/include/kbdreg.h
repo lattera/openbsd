@@ -1,7 +1,8 @@
+/*	$OpenBSD: src/sys/arch/pica/include/Attic/kbdreg.h,v 1.2 1996/06/06 23:06:42 deraadt Exp $	*/
+
 /*
  * Keyboard definitions
  *
- *	$Id: kbdreg.h,v 1.4 1994/03/02 04:38:28 mycroft Exp $
  */
 
 #define	KBSTATP		(PICA_SYS_KBD + 0x61)	/* controller status port (I) */

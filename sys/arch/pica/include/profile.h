@@ -1,3 +1,5 @@
+/*      $OpenBSD: src/sys/arch/pica/include/Attic/profile.h,v 1.4 1996/06/06 23:07:01 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -34,7 +36,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)profile.h	8.1 (Berkeley) 6/10/93
- *      $Id: profile.h,v 1.2 1996/03/24 16:52:37 tholo Exp $
  */
 
 #define	_MCOUNT_DECL static void ___mcount

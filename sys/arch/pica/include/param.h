@@ -1,3 +1,5 @@
+/*      $OpenBSD: src/sys/arch/pica/include/Attic/param.h,v 1.4 1996/06/06 23:06:53 deraadt Exp $ */
+
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -35,11 +37,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * from: Utah Hdr: machparam.h 1.11 89/08/14
- *
- *
+ *	from: Utah Hdr: machparam.h 1.11 89/08/14
  *	from: @(#)param.h	8.1 (Berkeley) 6/10/93
- *      $Id: param.h,v 1.2 1995/10/22 06:26:07 deraadt Exp $
  */
 
 /*

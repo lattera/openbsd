@@ -1,7 +1,8 @@
+/*	$OpenBSD: src/sys/arch/pica/include/Attic/pccons.h,v 1.3 1996/06/06 23:06:56 deraadt Exp $	*/
+
 /*
  * pccons.h -- pccons ioctl definitions
  *
- *	$Id: pccons.h,v 1.1.1.1 1995/10/18 10:39:15 deraadt Exp $
  */
 
 #ifndef _PCCONS_H_

@@ -1,3 +1,5 @@
+/*      $OpenBSD: src/sys/arch/pica/include/Attic/pmap.h,v 1.3 1996/06/06 23:06:59 deraadt Exp $ */
+
 /* 
  * Copyright (c) 1987 Carnegie-Mellon University
  * Copyright (c) 1992, 1993
@@ -35,7 +37,6 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pmap.h	8.1 (Berkeley) 6/10/93
- *      $Id: pmap.h,v 1.1.1.1 1995/10/18 10:39:13 deraadt Exp $
  */
 
 #ifndef	_PMAP_MACHINE_

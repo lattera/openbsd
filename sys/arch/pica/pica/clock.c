@@ -38,7 +38,7 @@
  * from: Utah Hdr: clock.c 1.18 91/01/21
  *
  *	from: @(#)clock.c	8.1 (Berkeley) 6/10/93
- *      $Id: clock.c,v 1.3 1996/05/02 07:59:42 pefo Exp $
+ *      $Id: clock.c,v 1.4 1996/05/15 07:09:10 pefo Exp $
  */
 
 #include <sys/param.h>
@@ -47,7 +47,7 @@
 #include <sys/device.h>
 
 #include <machine/autoconf.h>
-#include <machine/machConst.h>
+#include <machine/cpu.h>
 #include <pica/pica/clockvar.h>
 #include <pica/pica/picatype.h>
 

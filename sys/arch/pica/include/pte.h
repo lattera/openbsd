@@ -1,3 +1,5 @@
+/*      $OpenBSD: src/sys/arch/pica/include/Attic/pte.h,v 1.3 1996/06/06 23:07:04 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
@@ -35,10 +37,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * from: Utah Hdr: pte.h 1.11 89/09/03
- *
+ *	from: Utah Hdr: pte.h 1.11 89/09/03
  *	from: @(#)pte.h	8.1 (Berkeley) 6/10/93
- *      $Id: pte.h,v 1.1.1.1 1995/10/18 10:39:13 deraadt Exp $
  */
 
 /*

@@ -1,7 +1,8 @@
+/*	$OpenBSD: src/sys/arch/pica/include/Attic/display.h,v 1.2 1996/06/06 23:06:36 deraadt Exp $	*/
+
 /*
  * IBM PC display definitions
  *
- *	$Id: display.h,v 1.3 1993/12/20 05:26:02 mycroft Exp $
  */
 
 /* Color attributes for foreground text */

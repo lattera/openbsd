@@ -1,3 +1,5 @@
+/*      $OpenBSD: src/sys/arch/pica/include/Attic/asm.h,v 1.2 1996/06/06 23:06:30 deraadt Exp $	*/
+
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,15 +35,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)machAsmDefs.h	8.1 (Berkeley) 6/10/93
- *      $Id: machAsmDefs.h,v 1.1.1.1 1995/10/18 10:39:12 deraadt Exp $
- */
-
-/*
- * machAsmDefs.h --
- *
- *	Macros used when writing assembler programs.
- *
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
@@ -49,10 +42,6 @@
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
- *
- * from: Header: /sprite/src/kernel/mach/ds3100.md/RCS/machAsmDefs.h,
- *	v 1.2 89/08/15 18:28:24 rab Exp  SPRITE (DECWRL)
- * $Id: machAsmDefs.h,v 1.1.1.1 1995/10/18 10:39:12 deraadt Exp $
  */
 
 #ifndef _MACHASMDEFS
