@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/pf_key_v2.c,v 1.34 2000/10/30 16:04:00 angelos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/pf_key_v2.c,v 1.34.2.1 2000/11/29 03:44:16 jason Exp $	*/
 /*	$EOM: pf_key_v2.c,v 1.59 2000/10/16 18:16:59 provos Exp $	*/
 
 /*
@@ -1184,6 +1184,7 @@ pf_key_v2_flow (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
 
 #ifdef SADB_X_EXT_FLOW_TYPE
   /* Setup the flow type extension.  */
+  bzero (&flowtype, sizeof flowtype);
   flowtype.sadb_protocol_exttype = SADB_X_EXT_FLOW_TYPE;
   flowtype.sadb_protocol_len = sizeof flowtype / PF_KEY_V2_CHUNK;
   flowtype.sadb_protocol_direction
@@ -1221,7 +1222,11 @@ pf_key_v2_flow (in_addr_t laddr, in_addr_t lmask, in_addr_t raddr,
    * XXX Addresses have to be thought through.  Assumes IPv4.
    */
   len = sizeof *addr + PF_KEY_V2_ROUND (sizeof (struct sockaddr_in));
+#ifndef SADB_X_EXT_FLOW_TYPE
   if (!delete || ingress)
+#else
+  if (!delete)
+#endif /* SADB_X_EXT_FLOW_TYPE */
     {
       addr = malloc (len);
       if (!addr)
