@@ -13,7 +13,7 @@
 #define	STREQ(a, b)	(*(a) == *(b) && strcmp((a), (b)) == 0)
 
 #ifndef lint
-static char RCSid[] = "$Header: /cvs/libg++/libio/dbz/fake.c,v 1.1.1.1 1996/03/15 07:50:20 etheisen Exp $";
+static char RCSid[] = "$Header: /cvs/cvsfiles/egcs/libio/dbz/fake.c,v 1.1.1.1 1997/08/21 22:58:23 jason Exp $";
 #endif
 
 int midonly = 0;		/* just message ids, rest not realistic */
@@ -33,6 +33,7 @@ void seed();
 /*
  - main - parse arguments and handle options
  */
+int
 main(argc, argv)
 int argc;
 char *argv[];

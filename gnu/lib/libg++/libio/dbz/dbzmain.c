@@ -19,7 +19,7 @@
 #define	STREQ(a, b)	(*(a) == *(b) && strcmp((a), (b)) == 0)
 
 #ifndef lint
-static char RCSid[] = "$Header: /cvs/libg++/libio/dbz/dbzmain.c,v 1.1.1.1 1996/03/15 07:50:20 etheisen Exp $";
+static char RCSid[] = "$Header: /cvs/cvsfiles/egcs/libio/dbz/dbzmain.c,v 1.1.1.1 1997/08/21 22:58:23 jason Exp $";
 #endif
 
 char *progname;
@@ -83,6 +83,7 @@ extern char *malloc();
 /*
  - main - parse arguments and handle options
  */
+int
 main(argc, argv)
 int argc;
 char *argv[];
