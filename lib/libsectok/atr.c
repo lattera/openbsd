@@ -1,4 +1,4 @@
-/* $Id: atr.c,v 1.8 2001/06/12 20:53:23 rees Exp $ */
+/* $Id: atr.c,v 1.9 2001/06/25 03:29:28 rees Exp $ */
 
 /*
 copyright 1997, 1999, 2000, 2001
@@ -249,7 +249,7 @@ parse_atr(int ttyn, int flags, unsigned char *atr, int len, struct scparam *para
     /* got enough bytes? */
 
     if (ap - atr != len && (flags & SCRV))
-	printf("expected %d proto bytes + %d historical bytes, got %d\n", ap - atr - nhb, nhb, len);
+	printf("expected %d proto bytes + %d historical bytes, got %d\n", (int) (ap - atr) - nhb, nhb, len);
     if (ap - atr > len) {
 	if (flags & SCRV)
 	    printf("atr underrun\n");
