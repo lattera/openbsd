@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)mail.local.c	5.6 (Berkeley) 6/19/91";*/
-static char rcsid[] = "$Id: mail.local.c,v 1.11 1997/01/17 07:12:03 millert Exp $";
+static char rcsid[] = "$Id: mail.local.c,v 1.12 1997/02/12 15:12:27 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -112,7 +112,7 @@ main(argc, argv)
 	argc -= optind;
 	argv += optind;
 
-	if (!*argv)
+	if (!*argv && !holdme)
 		usage();
 
 	if (holdme)
