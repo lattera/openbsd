@@ -75,7 +75,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.43.2.1 2001/02/16 20:13:12 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/scp.c,v 1.43.2.2 2001/02/19 17:19:17 jason Exp $");
 
 #include "xmalloc.h"
 #include "atomicio.h"
@@ -785,16 +785,16 @@ sink(argc, argv)
 			}
 			vect[0] = xstrdup(np);
 			sink(1, vect);
-			if (vect[0])
-				xfree(vect[0]);
 			if (setimes) {
 				setimes = 0;
-				if (utimes(np, tv) < 0)
+				if (utimes(vect[0], tv) < 0)
 					run_err("%s: set times: %s",
-						np, strerror(errno));
+					    vect[0], strerror(errno));
 			}
 			if (mod_flag)
-				(void) chmod(np, mode);
+				(void) chmod(vect[0], mode);
+			if (vect[0])
+				xfree(vect[0]);
 			continue;
 		}
 		omode = mode;

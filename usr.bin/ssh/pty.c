@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.c,v 1.16.2.1 2001/02/16 20:13:09 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/pty.c,v 1.16.2.2 2001/02/19 17:19:11 jason Exp $");
 
 #include <util.h>
 #include "pty.h"

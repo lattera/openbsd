@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-chall.c,v 1.4.2.1 2001/02/16 20:12:51 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-chall.c,v 1.4.2.2 2001/02/19 17:18:32 jason Exp $");
 
 #include "auth.h"
 

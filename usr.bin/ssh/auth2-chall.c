@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-chall.c,v 1.2.2.1 2001/02/16 20:12:53 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-chall.c,v 1.2.2.2 2001/02/19 17:18:38 jason Exp $");
 
 #include "ssh2.h"
 #include "auth.h"

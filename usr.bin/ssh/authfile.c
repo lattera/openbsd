@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.20.2.1 2001/02/16 20:12:54 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.20.2.2 2001/02/19 17:18:40 jason Exp $");
 
 #include <openssl/err.h>
 #include <openssl/evp.h>

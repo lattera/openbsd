@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.1 2001/02/16 20:13:17 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.2 2001/02/19 17:19:27 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.1 2001/02/16 20:13:17 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.37.2.2 2001/02/19 17:19:27 jason Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/md5.h>

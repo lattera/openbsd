@@ -10,7 +10,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.8.2.1 2001/02/16 20:12:55 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.8.2.2 2001/02/19 17:18:42 jason Exp $"); */
 
 #ifndef BUFAUX_H
 #define BUFAUX_H

@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $OpenBSD: src/usr.bin/ssh/auth.h,v 1.7.2.1 2001/02/16 20:12:53 jason Exp $
+ * $OpenBSD: src/usr.bin/ssh/auth.h,v 1.7.2.2 2001/02/19 17:18:37 jason Exp $
  */
 #ifndef AUTH_H
 #define AUTH_H

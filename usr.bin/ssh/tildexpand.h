@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.h,v 1.2.2.1 2001/02/16 20:13:24 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/tildexpand.h,v 1.2.2.2 2001/02/19 17:19:41 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

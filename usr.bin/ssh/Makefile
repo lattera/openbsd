@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.6.2.1 2001/02/16 20:12:50 jason Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile,v 1.6.2.2 2001/02/19 17:18:30 jason Exp $
 
 .include <bsd.own.mk>
 

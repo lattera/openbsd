@@ -39,7 +39,7 @@
 
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/crc32.c,v 1.7.2.1 2001/02/16 20:13:00 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/crc32.c,v 1.7.2.2 2001/02/19 17:18:51 jason Exp $");
 
 #include "crc32.h"
 

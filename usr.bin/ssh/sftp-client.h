@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp-client.h,v 1.1.2.1 2001/02/16 20:13:14 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp-client.h,v 1.1.2.2 2001/02/19 17:19:22 jason Exp $ */
 
 /*
  * Copyright (c) 2001 Damien Miller.  All rights reserved.

@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/login.c,v 1.15.2.1 2001/02/16 20:13:05 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/login.c,v 1.15.2.2 2001/02/19 17:19:03 jason Exp $");
 
 #include <util.h>
 #include <utmp.h>

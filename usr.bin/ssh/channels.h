@@ -32,7 +32,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.1 2001/02/16 20:12:57 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/channels.h,v 1.22.2.2 2001/02/19 17:18:46 jason Exp $"); */
 
 #ifndef CHANNELS_H
 #define CHANNELS_H

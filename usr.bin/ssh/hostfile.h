@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/hostfile.h,v 1.4.2.1 2001/02/16 20:13:03 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/hostfile.h,v 1.4.2.2 2001/02/19 17:18:58 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

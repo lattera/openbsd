@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.27.2.1 2001/02/16 20:12:59 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.27.2.2 2001/02/19 17:18:49 jason Exp $");
 
 #include <regex.h>
 
@@ -78,6 +78,8 @@ compat_datafellows(const char *version)
 		{ "^2\\.4$",		SSH_OLD_SESSIONID}, /* Van Dyke */
 		{ "^3\\.0 SecureCRT",	SSH_OLD_SESSIONID},
 		{ "^1\\.7 SecureFX",	SSH_OLD_SESSIONID},
+		{ "^1\\.2\\.1[89]",	SSH_BUG_IGNOREMSG},
+		{ "^1\\.2\\.2[012]",	SSH_BUG_IGNOREMSG},
 		{ NULL,			0 }
 	};
 	/* process table, return first match */

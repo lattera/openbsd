@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.1 2001/02/16 20:12:58 jason Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/cli.h,v 1.2.2.2 2001/02/19 17:18:48 jason Exp $ */
 
 #ifndef CLI_H
 #define CLI_H

@@ -12,7 +12,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.8.2.1 2001/02/16 20:13:08 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.8.2.2 2001/02/19 17:19:08 jason Exp $"); */
 
 #ifndef MPAUX_H
 #define MPAUX_H

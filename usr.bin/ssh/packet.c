@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.38.2.1 2001/02/16 20:13:08 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/packet.c,v 1.38.2.2 2001/02/19 17:19:09 jason Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"

@@ -28,7 +28,7 @@
 /* XXX: recursive operations */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.22.2.1 2001/02/16 20:13:15 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/sftp-int.c,v 1.22.2.2 2001/02/19 17:19:23 jason Exp $");
 
 #include "buffer.h"
 #include "xmalloc.h"

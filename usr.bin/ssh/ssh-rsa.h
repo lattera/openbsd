@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-rsa.h,v 1.3.2.1 2001/02/16 20:13:19 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/ssh-rsa.h,v 1.3.2.2 2001/02/19 17:19:32 jason Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.8.2.1 2001/02/16 20:13:00 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/crc32.h,v 1.8.2.2 2001/02/19 17:18:52 jason Exp $"); */
 
 #ifndef CRC32_H
 #define CRC32_H

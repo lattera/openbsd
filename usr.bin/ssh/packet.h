@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/packet.h,v 1.17.2.1 2001/02/16 20:13:09 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/packet.h,v 1.17.2.2 2001/02/19 17:19:10 jason Exp $"); */
 
 #ifndef PACKET_H
 #define PACKET_H
