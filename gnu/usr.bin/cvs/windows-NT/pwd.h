@@ -11,7 +11,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    $Header: /u/src/master/ccvs/windows-NT/pwd.h,v 1.4 1997/01/02 19:02:57 kingdon Exp $
+    $Header: /home2/cvsroot/ccvs/windows-NT/pwd.h,v 1.4 1997/01/02 19:02:57 kingdon Exp $
 */
 
 /* This 'implementation' is conjectured from the use of this functions in

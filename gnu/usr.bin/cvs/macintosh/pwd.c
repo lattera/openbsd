@@ -11,7 +11,6 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    $Header: /u/src/master/ccvs/macintosh/pwd.c,v 1.5 1997/01/02 19:30:36 kingdon Exp $
 */
 
 /* This 'implementation' is conjectured from the use of this functions in
