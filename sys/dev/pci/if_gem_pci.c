@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.5 2001/12/14 02:43:56 drahn Exp $	*/
 /*	$NetBSD: if_gem_pci.c,v 1.1 2001/09/16 00:11:42 eeh Exp $ */
 
 /*
