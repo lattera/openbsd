@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/include/db.h,v 1.3 1997/09/21 10:45:29 niklas Exp $	*/
 /*	$NetBSD: db.h,v 1.13 1994/10/26 00:55:48 cgd Exp $	*/
 
 /*-

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/include/rpc/xdr.h,v 1.2 1997/09/21 10:46:18 niklas Exp $	*/
 /*	$NetBSD: xdr.h,v 1.7 1995/04/29 05:28:06 cgd Exp $	*/
 
 /*
