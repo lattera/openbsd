@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.9 2002/04/27 23:21:05 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.10 2002/04/28 14:47:50 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -93,7 +93,9 @@ sramattach(parent, self, args)
 {
 	struct confargs *ca = args;
 	struct sramsoftc *sc = (struct sramsoftc *)self;
+#ifdef MVME162
 	struct mcreg *mc;
+#endif
 
 	switch (cputyp) {
 #ifdef MVME162
