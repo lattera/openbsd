@@ -1,12 +1,10 @@
-#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.9 2004/06/05 23:10:43 niklas Exp $
+#	$OpenBSD: src/sys/arch/alpha/conf/GENERIC,v 1.47.2.10 2004/06/06 21:43:51 deraadt Exp $
 #	$NetBSD: GENERIC,v 1.31 1996/12/03 17:25:29 cgd Exp $
 
 machine	alpha
 
 include "../../../conf/GENERIC"
 maxusers	32
-
-option		MULTIPROCESSOR	# Multiple processor support
 
 # CPU Support
 option		DEC_3000_500	# Flamingo etc:	3000/[4-9]00*
