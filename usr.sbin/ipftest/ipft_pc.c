@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.12 1999/02/05 05:58:46 deraadt Exp $     */
+/* $OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.13 1999/12/15 05:20:26 kjell Exp $ */
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
  *
@@ -27,18 +27,14 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <net/if.h>
-#if defined(__OpenBSD__)
-# include <netinet/ip_fil_compat.h>
-#else
-# include <netinet/ip_compat.h>
-#endif
+#include <netinet/ip_fil_compat.h>
 #include <netinet/tcpip.h>
 #include "ipf.h"
-#include "ipt.h"
 #include "pcap.h"
+#include "ipt.h"
 
 #if !defined(lint)
-static const char rcsid[] = "@(#)$Id: ipft_pc.c,v 1.11 1998/09/15 10:05:50 pattonme Exp $";
+static const char rcsid[] = "@(#)$Id: ipft_pc.c,v 2.1 1999/08/04 17:30:03 darrenr Exp $";
 #endif
 
 struct	llc	{

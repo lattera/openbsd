@@ -1,11 +1,11 @@
-/*    $OpenBSD: src/sbin/ipfstat/Attic/kmem.h,v 1.8 1999/07/08 00:02:26 deraadt Exp $    */
+/* $OpenBSD: src/sbin/ipfstat/Attic/kmem.h,v 1.9 1999/12/15 05:20:25 kjell Exp $ */
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
  *
  * Redistribution and use in source and binary forms are permitted
  * provided that this notice is preserved and due credit is given
  * to the original author and the contributors.
- * $Id: kmem.h,v 1.7 1999/02/05 05:58:44 deraadt Exp $
+ * $Id: kmem.h,v 2.1 1999/08/04 17:30:10 darrenr Exp $
  */
 
 #ifndef	__KMEM_H__
@@ -20,6 +20,7 @@
 #endif
 extern	int	openkmem __P((char *, char *));
 extern	int	kmemcpy __P((char *, long, int));
+extern	int	kstrncpy __P((char *, long, int));
 
 #if defined(__NetBSD__) || defined(__OpenBSD)
 # include <paths.h>
