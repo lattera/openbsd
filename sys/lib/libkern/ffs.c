@@ -33,10 +33,14 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)ffs.c	5.4 (Berkeley) 5/17/90";*/
-static char *rcsid = "$Id: ffs.c,v 1.5 1995/10/07 09:26:25 mycroft Exp $";
+static char *rcsid = "$Id: ffs.c,v 1.1.1.1 1995/10/18 08:52:49 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
+#ifndef _KERNEL
 #include <string.h>
+#else
+#include <lib/libkern/libkern.h>
+#endif
 
 /*
  * ffs -- vax ffs instruction

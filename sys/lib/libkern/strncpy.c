@@ -36,10 +36,14 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)strncpy.c	5.6 (Berkeley) 1/26/91";*/
-static char *rcsid = "$Id: strncpy.c,v 1.5 1995/10/07 09:26:51 mycroft Exp $";
+static char *rcsid = "$Id: strncpy.c,v 1.1.1.1 1995/10/18 08:52:50 deraadt Exp $";
 #endif /* LIBC_SCCS and not lint */
 
+#ifndef _KERNEL
 #include <string.h>
+#else
+#include <lib/libkern/libkern.h>
+#endif
 
 /*
  * Copy src to dst, truncating or null-padding to always copy n bytes.
