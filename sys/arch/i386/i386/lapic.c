@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.2 2001/07/15 15:10:55 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.3 2001/07/16 21:39:43 niklas Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-
@@ -67,14 +67,14 @@
 
 #include <i386/isa/timerreg.h>	/* XXX for TIMER_FREQ */
 
-void		lapic_delay __P((int));
-void		lapic_microtime __P((struct timeval *));
-static u_int32_t lapic_gettick __P((void));
-void		lapic_clockintr __P((void *));
-void		lapic_initclocks __P((void));
-static void 	lapic_map __P((paddr_t));
+void	lapic_delay __P((int));
+void	lapic_microtime __P((struct timeval *));
+static __inline u_int32_t lapic_gettick __P((void));
+void	lapic_clockintr __P((void *));
+void	lapic_initclocks __P((void));
+void 	lapic_map __P((paddr_t));
 
-static void
+void
 lapic_map(lapic_base)
 	paddr_t lapic_base;
 {
@@ -118,15 +118,15 @@ lapic_enable()
 extern struct mp_intr_map *lapic_ints[]; /* XXX header file? */
 
 void
-lapic_set_lvt ()
+lapic_set_lvt()
 {
 #ifdef MULTIPROCESSOR
 	struct cpu_info *ci = curcpu();
 	
 	if (mp_verbose) {
-		apic_format_redir (ci->ci_dev.dv_xname, "prelint", 0, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "prelint", 0, 0,
 		    i82489_readreg(LAPIC_LVINT0));
-		apic_format_redir (ci->ci_dev.dv_xname, "prelint", 1, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "prelint", 1, 0,
 		    i82489_readreg(LAPIC_LVINT1));
 	}
 #endif
@@ -137,15 +137,15 @@ lapic_set_lvt ()
 
 #ifdef MULTIPROCESSOR
 	if (mp_verbose) {
-		apic_format_redir (ci->ci_dev.dv_xname, "timer", 0, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "timer", 0, 0,
 		    i82489_readreg(LAPIC_LVTT));
-		apic_format_redir (ci->ci_dev.dv_xname, "pcint", 0, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "pcint", 0, 0,
 		    i82489_readreg(LAPIC_PCINT));
-		apic_format_redir (ci->ci_dev.dv_xname, "lint", 0, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "lint", 0, 0,
 		    i82489_readreg(LAPIC_LVINT0));
-		apic_format_redir (ci->ci_dev.dv_xname, "lint", 1, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "lint", 1, 0,
 		    i82489_readreg(LAPIC_LVINT1));
-		apic_format_redir (ci->ci_dev.dv_xname, "err", 0, 0,
+		apic_format_redir(ci->ci_dev.dv_xname, "err", 0, 0,
 		    i82489_readreg(LAPIC_LVERR));
 	}
 #endif
@@ -172,9 +172,10 @@ lapic_boot_init(lapic_base)
 
 }
 
-static inline u_int32_t lapic_gettick()
+static __inline u_int32_t
+lapic_gettick()
 {
-	return i82489_readreg(LAPIC_CCR_TIMER);
+	return (i82489_readreg(LAPIC_CCR_TIMER));
 }
 
 #include <sys/kernel.h>		/* for hz */
@@ -333,17 +334,17 @@ lapic_calibrate_timer(ci)
 		 * in lapic_delay and lapic_microtime.
 		 */
 
-		tmp = (1000000 * (u_int64_t)1<<32) / lapic_per_second;
+		tmp = (1000000 * (u_int64_t)1 << 32) / lapic_per_second;
 		lapic_frac_usec_per_cycle = tmp;
 		
-		tmp = (lapic_per_second * (u_int64_t)1<<32) / 1000000;
+		tmp = (lapic_per_second * (u_int64_t)1 << 32) / 1000000;
 		
 		lapic_frac_cycle_per_usec = tmp;
 	
 		/*
 		 * Compute delay in cycles for likely short delays in usec.
 		 */
-		for (i=0; i<26; i++)
+		for (i = 0; i < 26; i++)
 			lapic_delaytab[i] = (lapic_frac_cycle_per_usec * i) >>
 			    32;
 
