@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/lib/libtelnet/Attic/encrypt.c,v 1.7 2002/03/22 13:49:28 hin Exp $     */
+/*     $OpenBSD: src/libexec/telnetd/Attic/encrypt.c,v 1.1 2003/05/14 01:46:51 hin Exp $     */
 
 /*-
  * Copyright (c) 1991, 1993

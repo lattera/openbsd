@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/lib/libtelnet/Attic/kerberos5.c,v 1.6 2003/05/11 04:17:42 hin Exp $       */
+/*     $OpenBSD: src/libexec/telnetd/Attic/kerberos5.c,v 1.1 2003/05/14 01:46:51 hin Exp $       */
 
 /*-
  * Copyright (c) 1991, 1993

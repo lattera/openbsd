@@ -30,9 +30,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *     from: @(#)auth-proto.h  8.1 (Berkeley) 6/4/93
- *     $OpenBSD: src/lib/libtelnet/Attic/auth-proto.h,v 1.4 2001/05/25 10:23:05 hin Exp $
- *     $NetBSD: auth-proto.h,v 1.5 1996/02/24 01:15:16 jtk Exp $
+ *     from: @(#)auth.h        8.1 (Berkeley) 6/4/93
+ *     $OpenBSD: src/libexec/telnetd/Attic/auth.h,v 1.1 2003/05/14 01:46:51 hin Exp $
+ *     $NetBSD: auth.h,v 1.5 1996/02/24 01:15:18 jtk Exp $
  */
 
 /*
@@ -54,7 +54,7 @@
  * to require a specific license from the United States Government.
  * It is the responsibility of any person or organization contemplating
  * export to obtain such a license before exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -67,71 +67,29 @@
  * or implied warranty.
  */
 
-#include <sys/cdefs.h>
-/* $KTH: auth-proto.h,v 1.10 2000/01/18 03:08:55 assar Exp $ */
+/* $KTH: auth.h,v 1.4 1998/06/09 19:24:41 joda Exp $ */
 
-#if	defined(AUTHENTICATION)
-Authenticator *findauthenticator (int, int);
+#ifndef	__AUTH__
+#define	__AUTH__
 
-int auth_wait (char *, size_t);
-void auth_disable_name (char *);
-void auth_finished (Authenticator *, int);
-void auth_gen_printsub (unsigned char *, int, unsigned char *, int);
-void auth_init (const char *, int);
-void auth_is (unsigned char *, int);
-void auth_name (unsigned char*, int);
-void auth_reply (unsigned char *, int);
-void auth_request (void);
-void auth_send (unsigned char *, int);
-void auth_send_retry (void);
-void auth_printsub (unsigned char*, int, unsigned char*, int);
-int getauthmask (char *type, int *maskp);
-int auth_enable (char *type);
-int auth_disable (char *type);
-int auth_onoff (char *type, int on);
-int auth_togdebug (int on);
-int auth_status (void);
-int auth_sendname (unsigned char *cp, int len);
-void auth_debug (int mode);
-void auth_gen_printsub (unsigned char *data, int cnt,
-		       unsigned char *buf, int buflen);
+#define	AUTH_REJECT	0	/* Rejected */
+#define	AUTH_UNKNOWN	1	/* We don't know who he is, but he's okay */
+#define	AUTH_OTHER	2	/* We know him, but not his name */
+#define	AUTH_USER	3	/* We know he name */
+#define	AUTH_VALID	4	/* We know him, and he needs no password */
 
-#ifdef UNSAFE
-int unsafe_init (Authenticator *, int);
-int unsafe_send (Authenticator *);
-void unsafe_is (Authenticator *, unsigned char *, int);
-void unsafe_reply (Authenticator *, unsigned char *, int);
-int unsafe_status (Authenticator *, char *, int);
-void unsafe_printsub (unsigned char *, int, unsigned char *, int);
-#endif
+typedef struct XauthP {
+	int	type;
+	int	way;
+	int	(*init) (struct XauthP *, int);
+	int	(*send) (struct XauthP *);
+	void	(*is) (struct XauthP *, unsigned char *, int);
+	void	(*reply) (struct XauthP *, unsigned char *, int);
+	int	(*status) (struct XauthP *, char *, size_t, int);
+	void	(*printsub) (unsigned char *, int, unsigned char *, int);
+} Authenticator;
 
-#ifdef SRA
-int sra_init (Authenticator *, int);
-int sra_send (Authenticator *);
-void sra_is (Authenticator *, unsigned char *, int);
-void sra_reply (Authenticator *, unsigned char *, int);
-int sra_status (Authenticator *, char *, int);
-void sra_printsub (unsigned char *, int, unsigned char *, int);
-#endif
+#include "auth-proto.h"
 
-#ifdef	KRB4
-int kerberos4_init (Authenticator *, int);
-int kerberos4_send_mutual (Authenticator *);
-int kerberos4_send_oneway (Authenticator *);
-void kerberos4_is (Authenticator *, unsigned char *, int);
-void kerberos4_reply (Authenticator *, unsigned char *, int);
-int kerberos4_status (Authenticator *, char *, size_t, int);
-void kerberos4_printsub (unsigned char *, int, unsigned char *, int);
-int kerberos4_forward (Authenticator *ap, void *);
-#endif
-
-#ifdef	KRB5
-int kerberos5_init (Authenticator *, int);
-int kerberos5_send_mutual (Authenticator *);
-int kerberos5_send_oneway (Authenticator *);
-void kerberos5_is (Authenticator *, unsigned char *, int);
-void kerberos5_reply (Authenticator *, unsigned char *, int);
-int kerberos5_status (Authenticator *, char *, size_t, int);
-void kerberos5_printsub (unsigned char *, int, unsigned char *, int);
-#endif
+extern int auth_debug_mode;
 #endif

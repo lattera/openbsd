@@ -29,16 +29,78 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *     from: @(#)misc.h        8.1 (Berkeley) 6/4/93
- *     $OpenBSD: src/lib/libtelnet/Attic/misc.h,v 1.3 2001/05/25 10:23:07 hin Exp $
- *     $NetBSD: misc.h,v 1.4 1996/02/24 01:15:27 jtk Exp $
  */
 
-extern char *UserNameRequested;
-extern const char *LocalHostName;
-extern const char *RemoteHostName;
-extern int ConnectedCount;
-extern int ReservedPort;
+#ifndef lint
+/* from: static char sccsid[] = "@(#)misc.c    8.1 (Berkeley) 6/4/93"; */
+/* from: static char rcsid[] = "$NetBSD: misc.c,v 1.5 1996/02/24 01:15:25 jtk Exp $"; */
+static char rcsid[] = "$OpenBSD: src/libexec/telnetd/Attic/misc.c,v 1.1 2003/05/14 01:46:51 hin Exp $";
+#endif /* not lint */
 
-#include "misc-proto.h"
+/* $KTH: misc.c,v 1.15 2000/01/25 23:24:58 assar Exp $ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <err.h>
+#include "misc.h"
+#include "auth.h"
+#include "encrypt.h"
+
+
+const char *RemoteHostName;
+const char *LocalHostName;
+char *UserNameRequested = 0;
+int ConnectedCount = 0;
+
+void
+auth_encrypt_init(const char *local, const char *remote, const char *name,
+		  int server)
+{
+    RemoteHostName = remote;
+    LocalHostName = local;
+#ifdef AUTHENTICATION
+    auth_init(name, server);
+#endif
+#ifdef ENCRYPTION
+    encrypt_init(name, server);
+#endif
+    if (UserNameRequested) {
+	free(UserNameRequested);
+	UserNameRequested = 0;
+    }
+}
+
+void
+auth_encrypt_user(const char *name)
+{
+    if (UserNameRequested)
+	free(UserNameRequested);
+    UserNameRequested = name ? strdup(name) : 0;
+}
+
+void
+auth_encrypt_connect(int cnt)
+{
+}
+
+void
+printd(const unsigned char *data, int cnt)
+{
+    if (cnt > 16)
+	cnt = 16;
+    while (cnt-- > 0) {
+	printf(" %02x", *data);
+	++data;
+    }
+}
+
+/* This is stolen from libroken; it's the only thing actually needed from
+ * libroken.
+ */
+void
+esetenv(const char *var, const char *val, int rewrite)
+{
+    if (setenv ((char *)var, (char *)val, rewrite))
+        errx (1, "failed setting environment variable %s", var);
+}

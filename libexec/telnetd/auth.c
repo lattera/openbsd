@@ -1,4 +1,4 @@
-/*     $OpenBSD: src/lib/libtelnet/Attic/auth.c,v 1.5 2002/03/22 13:49:27 hin Exp $    */
+/*     $OpenBSD: src/libexec/telnetd/Attic/auth.c,v 1.1 2003/05/14 01:46:51 hin Exp $    */
 
 /*-
  * Copyright (c) 1991, 1993

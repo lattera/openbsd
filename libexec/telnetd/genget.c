@@ -1,3 +1,5 @@
+/*     $OpenBSD: src/libexec/telnetd/Attic/genget.c,v 1.1 2003/05/14 01:46:51 hin Exp $  */
+
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,75 +34,75 @@
  */
 
 #ifndef lint
-/* from: static char sccsid[] = "@(#)misc.c    8.1 (Berkeley) 6/4/93"; */
-/* from: static char rcsid[] = "$NetBSD: misc.c,v 1.5 1996/02/24 01:15:25 jtk Exp $"; */
-static char rcsid[] = "$OpenBSD: src/lib/libtelnet/Attic/misc.c,v 1.5 2001/06/29 21:21:46 millert Exp $";
+/* from: static char sccsid[] = "@(#)genget.c  8.2 (Berkeley) 5/30/95"; */
+/* from: static char *rcsid = "$NetBSD: genget.c,v 1.5 1996/02/24 01:15:21 jtk Exp $"; */
+static char *rcsid = "$OpenBSD: src/libexec/telnetd/Attic/genget.c,v 1.1 2003/05/14 01:46:51 hin Exp $";
 #endif /* not lint */
 
-/* $KTH: misc.c,v 1.15 2000/01/25 23:24:58 assar Exp $ */
+/* $KTH: genget.c,v 1.6 1997/05/04 09:01:34 assar Exp $ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <err.h>
-#include "misc.h"
-#include "auth.h"
-#include "encrypt.h"
+#include <ctype.h>
+#include "misc-proto.h"
 
-
-const char *RemoteHostName;
-const char *LocalHostName;
-char *UserNameRequested = 0;
-int ConnectedCount = 0;
-
-void
-auth_encrypt_init(const char *local, const char *remote, const char *name,
-		  int server)
-{
-    RemoteHostName = remote;
-    LocalHostName = local;
-#ifdef AUTHENTICATION
-    auth_init(name, server);
-#endif
-#ifdef ENCRYPTION
-    encrypt_init(name, server);
-#endif
-    if (UserNameRequested) {
-	free(UserNameRequested);
-	UserNameRequested = 0;
-    }
-}
-
-void
-auth_encrypt_user(const char *name)
-{
-    if (UserNameRequested)
-	free(UserNameRequested);
-    UserNameRequested = name ? strdup(name) : 0;
-}
-
-void
-auth_encrypt_connect(int cnt)
-{
-}
-
-void
-printd(const unsigned char *data, int cnt)
-{
-    if (cnt > 16)
-	cnt = 16;
-    while (cnt-- > 0) {
-	printf(" %02x", *data);
-	++data;
-    }
-}
-
-/* This is stolen from libroken; it's the only thing actually needed from
- * libroken.
+#define	LOWER(x) (isupper((int)x) ? tolower((int)x) : (x))
+/*
+ * The prefix function returns 0 if *s1 is not a prefix
+ * of *s2.  If *s1 exactly matches *s2, the negative of
+ * the length is returned.  If *s1 is a prefix of *s2,
+ * the length of *s1 is returned.
  */
-void
-esetenv(const char *var, const char *val, int rewrite)
+int
+isprefix(char *s1, char *s2)
 {
-    if (setenv ((char *)var, (char *)val, rewrite))
-        errx (1, "failed setting environment variable %s", var);
+    char *os1;
+    char c1, c2;
+
+    if (*s1 == '\0')
+	return(-1);
+    os1 = s1;
+    c1 = *s1;
+    c2 = *s2;
+    while (LOWER(c1) == LOWER(c2)) {
+	if (c1 == '\0')
+	    break;
+	c1 = *++s1;
+	c2 = *++s2;
+    }
+    return(*s1 ? 0 : (*s2 ? (s1 - os1) : (os1 - s1)));
+}
+
+static char *ambiguous;		/* special return value for command routines */
+
+char **
+genget(char *name, char **table, int stlen)
+     /* name to match */
+     /* name entry in table */
+	   	      
+{
+    char **c, **found;
+    int n;
+
+    if (name == 0)
+	return 0;
+
+    found = 0;
+    for (c = table; *c != 0; c = (char **)((char *)c + stlen)) {
+	if ((n = isprefix(name, *c)) == 0)
+	    continue;
+	if (n < 0)		/* exact match */
+	    return(c);
+	if (found)
+	    return(&ambiguous);
+	found = c;
+    }
+    return(found);
+}
+
+/*
+ * Function call version of Ambiguous()
+ */
+int
+Ambiguous(void *s)
+{
+    return((char **)s == &ambiguous);
 }
