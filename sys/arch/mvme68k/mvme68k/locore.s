@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.26 2001/06/27 04:19:17 art Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.27 2001/08/13 00:01:47 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -1721,12 +1721,6 @@ LmotommuB:
 #endif
 	movl	#DC_CLEAR,d0
 	movc	d0,cacr			| invalidate on-chip d-cache
-	rts
-
-ENTRY(ecacheon)
-	rts
-
-ENTRY(ecacheoff)
 	rts
 
 ENTRY(getsfc)
