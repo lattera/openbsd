@@ -43,7 +43,7 @@
  * multiple commands on the command line to run several tests at the
  * same time.
  * 
- * $Id: testlwp.c,v 1.5 2000/04/20 15:57:12 lha Exp $
+ * $Id: testlwp.c,v 1.3 2000/09/11 14:41:10 art Exp $
  *
  */
 
@@ -198,7 +198,7 @@ startSelectPC (char *progname)
 	if (dup2(pipa[1], 0) == -1)
 	    err(1, "dup2");
 	close(pipa[1]);
-	execl(progname, "testlwp", "selectproducer", NULL);
+	execl(progname, "testlwp", "selectproducer", (char *)NULL);
 	err(1, "execl");
     default:
 	break;
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 	    yaEndlessLoop();	 
 	} else if (strcasecmp("version", argv[1]) == 0) {
 	    printf("Version: "
-		   "$Id: testlwp.c,v 1.5 2000/04/20 15:57:12 lha Exp $\n");
+		   "$Id: testlwp.c,v 1.3 2000/09/11 14:41:10 art Exp $\n");
 	    exit (0);
 	} else {
 	    printf("unknown command %s\n", argv[1]);
