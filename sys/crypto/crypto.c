@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.23 2001/06/25 17:52:36 angelos Exp $	*/
-
+/*	$OpenBSD: src/sys/crypto/crypto.c,v 1.24 2001/06/26 19:29:25 angelos Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
