@@ -10,14 +10,13 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.55 2003/11/08 16:02:40 jakob Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.55.2.1 2004/08/19 04:13:26 brad Exp $");
 
 #include "xmalloc.h"
 #include "rsa.h"
 #include "ssh1.h"
 #include "packet.h"
 #include "buffer.h"
-#include "mpaux.h"
 #include "log.h"
 #include "servconf.h"
 #include "compat.h"
@@ -72,7 +71,7 @@ do_authloop(Authctxt *authctxt)
 	int type = 0;
 
 	debug("Attempting authentication for %s%.100s.",
-	    authctxt->valid ? "" : "illegal user ", authctxt->user);
+	    authctxt->valid ? "" : "invalid user ", authctxt->user);
 
 	/* If the user has no password, accept authentication immediately. */
 	if (options.password_authentication &&
@@ -221,7 +220,7 @@ do_authloop(Authctxt *authctxt)
 		if (authenticated)
 			return;
 
-		if (authctxt->failures++ > AUTH_FAIL_MAX)
+		if (authctxt->failures++ > options.max_authtries)
 			packet_disconnect(AUTH_FAIL_MSG, authctxt->user);
 
 		packet_start(SSH_SMSG_FAILURE);
@@ -257,11 +256,11 @@ do_authentication(Authctxt *authctxt)
 	if ((authctxt->pw = PRIVSEP(getpwnamallow(user))) != NULL)
 		authctxt->valid = 1;
 	else {
-		debug("do_authentication: illegal user %s", user);
+		debug("do_authentication: invalid user %s", user);
 		authctxt->pw = fakepw();
 	}
 
-	setproctitle("%s%s", authctxt->pw ? user : "unknown",
+	setproctitle("%s%s", authctxt->valid ? user : "unknown",
 	    use_privsep ? " [net]" : "");
 
 	/*

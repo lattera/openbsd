@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.156 2004/01/25 03:49:09 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.156.2.1 2004/08/19 04:13:27 brad Exp $");
 
 #include <openssl/bn.h>
 
@@ -31,7 +31,6 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.156 2004/01/25 03:49:09 djm Ex
 #include "readconf.h"
 #include "atomicio.h"
 #include "misc.h"
-#include "readpass.h"
 
 #include "dns.h"
 
@@ -760,19 +759,19 @@ check_host_key(char *host, struct sockaddr *hostaddr, Key *host_key,
 		break;
 	case HOST_CHANGED:
 		if (options.check_host_ip && host_ip_differ) {
-			char *msg;
+			char *key_msg;
 			if (ip_status == HOST_NEW)
-				msg = "is unknown";
+				key_msg = "is unknown";
 			else if (ip_status == HOST_OK)
-				msg = "is unchanged";
+				key_msg = "is unchanged";
 			else
-				msg = "has a different value";
+				key_msg = "has a different value";
 			error("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 			error("@       WARNING: POSSIBLE DNS SPOOFING DETECTED!          @");
 			error("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 			error("The %s host key for %s has changed,", type, host);
 			error("and the key for the according IP address %s", ip);
-			error("%s. This could either mean that", msg);
+			error("%s. This could either mean that", key_msg);
 			error("DNS SPOOFING is happening or the IP address for the host");
 			error("and its host key have changed at the same time.");
 			if (ip_status != HOST_NEW)

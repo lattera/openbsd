@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.4 2002/06/26 14:50:04 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.4.8.1 2004/08/19 04:13:26 brad Exp $");
 
 #include <sys/uio.h>
 
@@ -32,7 +32,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.4 2002/06/26 14:50:04 dera
 #include "monitor_fdpass.h"
 
 void
-mm_send_fd(int socket, int fd)
+mm_send_fd(int sock, int fd)
 {
 	struct msghdr msg;
 	char tmp[CMSG_SPACE(sizeof(int))];
@@ -55,7 +55,7 @@ mm_send_fd(int socket, int fd)
 	msg.msg_iov = &vec;
 	msg.msg_iovlen = 1;
 
-	if ((n = sendmsg(socket, &msg, 0)) == -1)
+	if ((n = sendmsg(sock, &msg, 0)) == -1)
 		fatal("%s: sendmsg(%d): %s", __func__, fd,
 		    strerror(errno));
 	if (n != 1)
@@ -64,7 +64,7 @@ mm_send_fd(int socket, int fd)
 }
 
 int
-mm_receive_fd(int socket)
+mm_receive_fd(int sock)
 {
 	struct msghdr msg;
 	char tmp[CMSG_SPACE(sizeof(int))];
@@ -82,13 +82,15 @@ mm_receive_fd(int socket)
 	msg.msg_control = tmp;
 	msg.msg_controllen = sizeof(tmp);
 
-	if ((n = recvmsg(socket, &msg, 0)) == -1)
+	if ((n = recvmsg(sock, &msg, 0)) == -1)
 		fatal("%s: recvmsg: %s", __func__, strerror(errno));
 	if (n != 1)
 		fatal("%s: recvmsg: expected received 1 got %ld",
 		    __func__, (long)n);
 
 	cmsg = CMSG_FIRSTHDR(&msg);
+	if (cmsg == NULL)
+		fatal("%s: no message header", __func__);
 	if (cmsg->cmsg_type != SCM_RIGHTS)
 		fatal("%s: expected type %d got %d", __func__,
 		    SCM_RIGHTS, cmsg->cmsg_type);

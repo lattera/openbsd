@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.17 2002/01/26 16:44:22 stevesk Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.17.10.1 2004/08/19 04:13:26 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -38,6 +38,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include <stddef.h>
 #include <netgroup.h>
 #include <stdio.h>
 #include <ctype.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/clientloop.h,v 1.8 2003/12/16 15:49:51 markus Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/clientloop.h,v 1.8.2.1 2004/08/19 04:13:26 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -38,3 +38,5 @@
 /* Client side main loop for the interactive session. */
 int	 client_loop(int, int, int);
 void	 client_global_request_reply_fwd(int, u_int32_t, void *);
+void	 client_session2_setup(int, int, int, const char *, struct termios *,
+	    int, Buffer *, char **, dispatch_fn *);

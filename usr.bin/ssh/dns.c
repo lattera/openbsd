@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dns.c,v 1.9 2003/11/21 11:57:03 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/dns.c,v 1.9.2.1 2004/08/19 04:13:26 brad Exp $	*/
 
 /*
  * Copyright (c) 2003 Wesley Griffin. All rights reserved.
@@ -43,7 +43,7 @@
 #include "uuencode.h"
 
 extern char *__progname;
-RCSID("$OpenBSD: src/usr.bin/ssh/dns.c,v 1.9 2003/11/21 11:57:03 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/dns.c,v 1.9.2.1 2004/08/19 04:13:26 brad Exp $");
 
 #ifndef LWRES
 static const char *errset_text[] = {
@@ -56,9 +56,9 @@ static const char *errset_text[] = {
 };
 
 static const char *
-dns_result_totext(unsigned int error)
+dns_result_totext(unsigned int res)
 {
-	switch (error) {
+	switch (res) {
 	case ERRSET_SUCCESS:
 		return errset_text[ERRSET_SUCCESS];
 	case ERRSET_NOMEMORY:

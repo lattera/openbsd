@@ -33,7 +33,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.172 2004/01/30 09:48:57 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.172.2.1 2004/08/19 04:13:27 brad Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -42,7 +42,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.172 2004/01/30 09:48:57 markus Ex
 #include "sshpty.h"
 #include "packet.h"
 #include "buffer.h"
-#include "mpaux.h"
+#include "match.h"
 #include "uidswap.h"
 #include "compat.h"
 #include "channels.h"
@@ -94,6 +94,7 @@ extern int debug_flag;
 extern u_int utmp_len;
 extern int startup_pipe;
 extern void destroy_sensitive_data(void);
+extern Buffer loginmsg;
 
 /* original command from peer. */
 const char *original_command = NULL;
@@ -189,6 +190,15 @@ auth_input_request_forwarding(struct passwd * pw)
 	return 1;
 }
 
+static void
+display_loginmsg(void)
+{
+        if (buffer_len(&loginmsg) > 0) {
+                buffer_append(&loginmsg, "\0", 1);
+                printf("%s", (char *)buffer_ptr(&loginmsg));
+                buffer_clear(&loginmsg);
+        }
+}
 
 void
 do_authenticated(Authctxt *authctxt)
@@ -251,7 +261,7 @@ do_authenticated1(Authctxt *authctxt)
 			compression_level = packet_get_int();
 			packet_check_eom();
 			if (compression_level < 1 || compression_level > 9) {
-				packet_send_debug("Received illegal compression level %d.",
+				packet_send_debug("Received invalid compression level %d.",
 				    compression_level);
 				break;
 			}
@@ -451,7 +461,11 @@ do_exec_no_pty(Session *s, const char *command)
 	close(perr[1]);
 
 	if (compat20) {
-		session_set_fds(s, pin[1], pout[0], s->is_subsystem ? -1 : perr[0]);
+		if (s->is_subsystem) {
+			close(perr[0]);
+			perr[0] = -1;
+		}
+		session_set_fds(s, pin[1], pout[0], perr[0]);
 	} else {
 		/* Enter the interactive session. */
 		server_loop(pid, pin[1], pout[0], perr[0]);
@@ -582,6 +596,13 @@ do_exec(Session *s, const char *command)
 		do_exec_no_pty(s, command);
 
 	original_command = NULL;
+
+	/*
+	 * Clear loginmsg: it's the child's responsibility to display
+	 * it to the user, otherwise multiple sessions may accumulate
+	 * multiple copies of the login messages.
+	 */
+	buffer_clear(&loginmsg);
 }
 
 
@@ -589,7 +610,6 @@ do_exec(Session *s, const char *command)
 void
 do_login(Session *s, const char *command)
 {
-	char *time_string;
 	socklen_t fromlen;
 	struct sockaddr_storage from;
 	struct passwd * pw = s->pw;
@@ -619,16 +639,7 @@ do_login(Session *s, const char *command)
 	if (check_quietlogin(s, command))
 		return;
 
-	if (options.print_lastlog && s->last_login_time != 0) {
-		time_string = ctime(&s->last_login_time);
-		if (strchr(time_string, '\n'))
-			*strchr(time_string, '\n') = 0;
-		if (strcmp(s->hostname, "") == 0)
-			printf("Last login: %s\r\n", time_string);
-		else
-			printf("Last login: %s from %s\r\n", time_string,
-			    s->hostname);
-	}
+	display_loginmsg();
 
 	do_motd();
 }
@@ -793,6 +804,10 @@ do_setup_env(Session *s, const char *shell)
 
 	if (!options.use_login) {
 		/* Set basic environment. */
+		for (i = 0; i < s->num_env; i++)
+			child_set_env(&env, &envsize, s->env[i].name,
+			    s->env[i].val);
+
 		child_set_env(&env, &envsize, "USER", pw->pw_name);
 		child_set_env(&env, &envsize, "LOGNAME", pw->pw_name);
 		child_set_env(&env, &envsize, "HOME", pw->pw_dir);
@@ -1009,9 +1024,10 @@ do_setusercontext(struct passwd *pw)
 static void
 do_pwchange(Session *s)
 {
+	fflush(NULL);
 	fprintf(stderr, "WARNING: Your password has expired.\n");
 	if (s->ttyfd != -1) {
-	    	fprintf(stderr,
+		fprintf(stderr,
 		    "You must change your password now and login again!\n");
 		execl(_PATH_PASSWD_PROG, "passwd", (char *)NULL);
 		perror("passwd");
@@ -1370,12 +1386,6 @@ session_pty_req(Session *s)
 		packet_disconnect("Protocol error: you already have a pty.");
 		return 0;
 	}
-	/* Get the time and hostname when the user last logged in. */
-	if (options.print_lastlog) {
-		s->hostname[0] = '\0';
-		s->last_login_time = get_last_login_time(s->pw->pw_uid,
-		    s->pw->pw_name, s->hostname, sizeof(s->hostname));
-	}
 
 	s->term = packet_get_string(&len);
 
@@ -1502,15 +1512,49 @@ session_exec_req(Session *s)
 static int
 session_break_req(Session *s)
 {
-	u_int break_length;
 
-	break_length = packet_get_int();	/* ignored */
+	packet_get_int();	/* ignored */
 	packet_check_eom();
 
 	if (s->ttyfd == -1 ||
 	    tcsendbreak(s->ttyfd, 0) < 0)
 		return 0;
 	return 1;
+}
+
+static int
+session_env_req(Session *s)
+{
+	char *name, *val;
+	u_int name_len, val_len, i;
+
+	name = packet_get_string(&name_len);
+	val = packet_get_string(&val_len);
+	packet_check_eom();
+
+	/* Don't set too many environment variables */
+	if (s->num_env > 128) {
+		debug2("Ignoring env request %s: too many env vars", name);
+		goto fail;
+	}
+
+	for (i = 0; i < options.num_accept_env; i++) {
+		if (match_pattern(name, options.accept_env[i])) {
+			debug2("Setting env %d: %s=%s", s->num_env, name, val);
+			s->env = xrealloc(s->env, sizeof(*s->env) *
+			    (s->num_env + 1));
+			s->env[s->num_env].name = name;
+			s->env[s->num_env].val = val;
+			s->num_env++;
+			return (1);
+		}
+	}
+	debug2("Ignoring env request %s: disallowed name", name);
+
+ fail:
+	xfree(name);
+	xfree(val);
+	return (0);
 }
 
 static int
@@ -1560,13 +1604,16 @@ session_input_channel_req(Channel *c, const char *rtype)
 			success = session_auth_agent_req(s);
 		} else if (strcmp(rtype, "subsystem") == 0) {
 			success = session_subsystem_req(s);
-		} else if (strcmp(rtype, "break") == 0) {
-			success = session_break_req(s);
+		} else if (strcmp(rtype, "env") == 0) {
+			success = session_env_req(s);
 		}
 	}
 	if (strcmp(rtype, "window-change") == 0) {
 		success = session_window_change_req(s);
+	} else if (strcmp(rtype, "break") == 0) {
+		success = session_break_req(s);
 	}
+
 	return success;
 }
 
@@ -1695,6 +1742,8 @@ session_exit_message(Session *s, int status)
 void
 session_close(Session *s)
 {
+	int i;
+
 	debug("session_close: session %d pid %ld", s->self, (long)s->pid);
 	if (s->ttyfd != -1)
 		session_pty_cleanup(s);
@@ -1709,6 +1758,12 @@ session_close(Session *s)
 	if (s->auth_proto)
 		xfree(s->auth_proto);
 	s->used = 0;
+	for (i = 0; i < s->num_env; i++) {
+		xfree(s->env[i].name);
+		xfree(s->env[i].val);
+	}
+	if (s->env != NULL)
+		xfree(s->env);
 	session_proctitle(s);
 }
 

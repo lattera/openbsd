@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.27 2003/10/14 19:42:10 jakob Exp $
+#	$OpenBSD: src/usr.bin/ssh/Makefile.inc,v 1.27.2.1 2004/08/19 04:13:25 brad Exp $
 
 CFLAGS+=	-I${.CURDIR}/..
 
@@ -11,6 +11,7 @@ CDIAGFLAGS+=	-Wmissing-prototypes
 CDIAGFLAGS+=	-Wunused
 #CDIAGFLAGS+=	-Wsign-compare
 CDIAGFLAGS+=	-Wbounded
+#CDIAGFLAGS+=	-Wshadow
 
 #DEBUG=-g
 

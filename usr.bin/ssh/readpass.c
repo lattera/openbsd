@@ -23,12 +23,12 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.28 2003/01/23 13:50:27 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.28.6.1 2004/08/19 04:13:27 brad Exp $");
 
 #include <readpassphrase.h>
 
 #include "xmalloc.h"
-#include "readpass.h"
+#include "misc.h"
 #include "pathnames.h"
 #include "log.h"
 #include "ssh.h"
@@ -105,7 +105,9 @@ read_passphrase(const char *prompt, int flags)
 	int rppflags, use_askpass = 0, ttyfd;
 
 	rppflags = (flags & RP_ECHO) ? RPP_ECHO_ON : RPP_ECHO_OFF;
-	if (flags & RP_ALLOW_STDIN) {
+	if (flags & RP_USE_ASKPASS)
+		use_askpass = 1;
+	else if (flags & RP_ALLOW_STDIN) {
 		if (!isatty(STDIN_FILENO))
 			use_askpass = 1;
 	} else {
@@ -116,6 +118,9 @@ read_passphrase(const char *prompt, int flags)
 		else
 			use_askpass = 1;
 	}
+
+	if ((flags & RP_USE_ASKPASS) && getenv("DISPLAY") == NULL)
+		return (flags & RP_ALLOW_EOF) ? NULL : xstrdup("");
 
 	if (use_askpass && getenv("DISPLAY")) {
 		if (getenv(SSH_ASKPASS_ENV))

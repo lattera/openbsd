@@ -39,12 +39,17 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.7 2003/06/12 07:57:38 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.7.4.1 2004/08/19 04:13:28 brad Exp $");
 
 #include <util.h>
 #include <utmp.h>
 #include "sshlogin.h"
 #include "log.h"
+#include "buffer.h"
+#include "servconf.h"
+
+extern Buffer loginmsg;
+extern ServerOptions options;
 
 /*
  * Returns the time when the user last logged in.  Returns 0 if the
@@ -58,6 +63,7 @@ get_last_login_time(uid_t uid, const char *logname,
 	struct lastlog ll;
 	char *lastlog;
 	int fd;
+	off_t pos, r;
 
 	lastlog = _PATH_LASTLOG;
 	buf[0] = '\0';
@@ -65,7 +71,17 @@ get_last_login_time(uid_t uid, const char *logname,
 	fd = open(lastlog, O_RDONLY);
 	if (fd < 0)
 		return 0;
-	lseek(fd, (off_t) ((long) uid * sizeof(ll)), SEEK_SET);
+
+	pos = (long) uid * sizeof(ll);
+	r = lseek(fd, pos, SEEK_SET);
+	if (r == -1) {
+		error("%s: lseek: %s", __func__, strerror(errno));
+		return (0);
+	}
+	if (r != pos) {
+		debug("%s: truncated lastlog", __func__);
+		return (0);
+	}
 	if (read(fd, &ll, sizeof(ll)) != sizeof(ll)) {
 		close(fd);
 		return 0;
@@ -74,8 +90,38 @@ get_last_login_time(uid_t uid, const char *logname,
 	if (bufsize > sizeof(ll.ll_host) + 1)
 		bufsize = sizeof(ll.ll_host) + 1;
 	strncpy(buf, ll.ll_host, bufsize - 1);
-	buf[bufsize - 1] = 0;
+	buf[bufsize - 1] = '\0';
 	return ll.ll_time;
+}
+
+/*
+ * Generate and store last login message.  This must be done before
+ * login_login() is called and lastlog is updated.
+ */
+static void
+store_lastlog_message(const char *user, uid_t uid)
+{
+	char *time_string, hostname[MAXHOSTNAMELEN] = "", buf[512];
+	time_t last_login_time;
+
+	if (!options.print_lastlog)
+		return;
+
+	last_login_time = get_last_login_time(uid, user, hostname,
+	    sizeof(hostname));
+
+	if (last_login_time != 0) {
+		time_string = ctime(&last_login_time);
+		if (strchr(time_string, '\n'))
+		    *strchr(time_string, '\n') = '\0';
+		if (strcmp(hostname, "") == 0)
+			snprintf(buf, sizeof(buf), "Last login: %s\r\n",
+			    time_string);
+		else
+			snprintf(buf, sizeof(buf), "Last login: %s from %s\r\n",
+			    time_string, hostname);
+		buffer_append(&loginmsg, buf, strlen(buf));
+	}
 }
 
 /*
@@ -83,7 +129,7 @@ get_last_login_time(uid_t uid, const char *logname,
  * systems were more standardized.
  */
 void
-record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
+record_login(pid_t pid, const char *tty, const char *user, uid_t uid,
     const char *host, struct sockaddr * addr, socklen_t addrlen)
 {
 	int fd;
@@ -91,9 +137,12 @@ record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
 	char *lastlog;
 	struct utmp u;
 
+	/* save previous login details before writing new */
+	store_lastlog_message(user, uid);
+
 	/* Construct an utmp/wtmp entry. */
 	memset(&u, 0, sizeof(u));
-	strncpy(u.ut_line, ttyname + 5, sizeof(u.ut_line));
+	strncpy(u.ut_line, tty + 5, sizeof(u.ut_line));
 	u.ut_time = time(NULL);
 	strncpy(u.ut_name, user, sizeof(u.ut_name));
 	strncpy(u.ut_host, host, sizeof(u.ut_host));
@@ -111,7 +160,7 @@ record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
 
 		/* Update lastlog. */
 		ll.ll_time = time(NULL);
-		strncpy(ll.ll_line, ttyname + 5, sizeof(ll.ll_line));
+		strncpy(ll.ll_line, tty + 5, sizeof(ll.ll_line));
 		strncpy(ll.ll_host, host, sizeof(ll.ll_host));
 		fd = open(lastlog, O_RDWR);
 		if (fd >= 0) {
@@ -125,9 +174,9 @@ record_login(pid_t pid, const char *ttyname, const char *user, uid_t uid,
 
 /* Records that the user has logged out. */
 void
-record_logout(pid_t pid, const char *ttyname)
+record_logout(pid_t pid, const char *tty)
 {
-	const char *line = ttyname + 5;	/* /dev/ttyq8 -> ttyq8 */
+	const char *line = tty + 5;	/* /dev/ttyq8 -> ttyq8 */
 	if (logout(line))
 		logwtmp(line, "", "");
 }
