@@ -1,4 +1,4 @@
-/*	$Id: if_iwivar.h,v 1.2 2004/11/22 21:34:35 damien Exp $ */
+/*	$Id: if_iwivar.h,v 1.3 2004/12/04 17:24:06 damien Exp $ */
 
 /*-
  * Copyright (c) 2004
@@ -101,11 +101,14 @@ struct iwi_softc {
 	bus_space_handle_t	sc_sh;
 	void 			*sc_ih;
 	pci_chipset_tag_t	sc_pct;
+	pcitag_t		sc_pcitag;
 	bus_size_t		sc_sz;
 
 	int			authmode;
 
 	int			sc_tx_timer;
+
+	void			*powerhook;
 
 #if NBPFILTER > 0
 	caddr_t			sc_drvbpf;
