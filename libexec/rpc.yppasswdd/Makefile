@@ -1,5 +1,5 @@
+#	$OpenBSD: src/libexec/rpc.yppasswdd/Makefile,v 1.7 1997/08/19 07:00:50 niklas Exp $
 #	from: @(#)Makefile	5.8 (Berkeley) 7/28/90
-#	$Id: Makefile,v 1.5 1996/06/26 22:11:24 maja Exp $
 
 PROG=	rpc.yppasswdd
 SRCS=	rpc.yppasswdd.c yppasswdd_xdr.c yppasswdd_proc.c yppasswdd_mkpw.c

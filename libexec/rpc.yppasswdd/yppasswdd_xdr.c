@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/rpc.yppasswdd/Attic/yppasswdd_xdr.c,v 1.4 1997/08/19 07:00:52 niklas Exp $	*/
+
 /*
  * Copyright (c) 1994 Mats O Jansson <moj@stacken.kth.se>
  * All rights reserved.
@@ -30,7 +32,7 @@
  */
 
 #ifndef LINT
-static char rcsid[] = "$Id: yppasswdd_xdr.c,v 1.2 1995/11/01 17:40:37 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/libexec/rpc.yppasswdd/Attic/yppasswdd_xdr.c,v 1.4 1997/08/19 07:00:52 niklas Exp $";
 #endif
 
 #include <rpc/rpc.h>

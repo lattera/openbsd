@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/libexec/rpc.yppasswdd/yppasswd.h,v 1.4 1997/08/19 07:00:51 niklas Exp $*/
+
 /*
  * Copyright (c) 1995 Mats O Jansson <moj@stacken.kth.se>
  * All rights reserved.
@@ -28,7 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: yppasswd.h,v 1.2 1996/06/26 22:11:26 maja Exp $
  */
 
 #ifndef _YPPASSWD_H_RPCGEN
