@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/ieee.h,v 1.2 1996/12/28 06:25:11 rahnds Exp $	*/
 /*	$NetBSD: ieee.h,v 1.1 1996/09/30 16:34:25 ws Exp $ */
 
 /*

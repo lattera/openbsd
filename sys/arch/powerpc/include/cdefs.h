@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/cdefs.h,v 1.2 1996/12/28 06:25:01 rahnds Exp $	*/
 /*	$NetBSD: cdefs.h,v 1.1 1996/09/30 16:34:21 ws Exp $	*/
 
 /*

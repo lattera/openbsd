@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/include/Attic/powerpc.h,v 1.2 1996/12/28 06:25:21 rahnds Exp $	*/
 /*	$NetBSD: powerpc.h,v 1.1 1996/09/30 16:34:30 ws Exp $	*/
 
 /*
