@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.17 2003/05/15 18:48:58 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.18 2003/05/18 17:16:42 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1603,7 +1603,7 @@ ENTRY(idle_exit)
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)	
 	call	_C_LABEL(sched_lock_idle)
 #endif
-#if 1
+#if 0
 	GET_CPUINFO(%ebx)
 	leal	CPU_INFO_NAME(%ebx),%ebx
 	pushl	%ebx
@@ -1809,7 +1809,7 @@ switch_restored:
 	sti
 
 switch_return:
-#if 1
+#if 0
 	pushl	%edi
 	GET_CPUINFO(%ebx)
 	leal	CPU_INFO_NAME(%ebx),%ebx
