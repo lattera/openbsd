@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/kauaiata.c,v 1.3 2003/06/05 22:40:48 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/kauaiata.c,v 1.3.2.1 2003/06/07 10:07:08 ho Exp $ */
 
 /*
  * Copyright (c) 2003 Dale Rahn
