@@ -1,0 +1,10 @@
+# $ISC: version,v 1.26.2.22 2003/10/09 07:00:55 marka Exp $
+#
+# This file must follow /bin/sh rules.  It is imported directly via
+# configure.
+#
+MAJORVER=9
+MINORVER=2
+PATCHVER=3
+RELEASETYPE=
+RELEASEVER=
