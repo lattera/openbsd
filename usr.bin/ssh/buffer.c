@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.16.4.1 2003/09/16 20:50:42 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.16.4.2 2003/09/16 21:30:49 brad Exp $");
 
 #include "xmalloc.h"
 #include "buffer.h"
@@ -23,8 +23,11 @@ RCSID("$OpenBSD: src/usr.bin/ssh/buffer.c,v 1.16.4.1 2003/09/16 20:50:42 brad Ex
 void
 buffer_init(Buffer *buffer)
 {
-	buffer->alloc = 4096;
-	buffer->buf = xmalloc(buffer->alloc);
+	const u_int len = 4096;
+
+	buffer->alloc = 0;
+	buffer->buf = xmalloc(len);
+	buffer->alloc = len;
 	buffer->offset = 0;
 	buffer->end = 0;
 }
@@ -34,8 +37,10 @@ buffer_init(Buffer *buffer)
 void
 buffer_free(Buffer *buffer)
 {
-	memset(buffer->buf, 0, buffer->alloc);
-	xfree(buffer->buf);
+	if (buffer->alloc > 0) {
+		memset(buffer->buf, 0, buffer->alloc);
+		xfree(buffer->buf);
+	}
 }
 
 /*
