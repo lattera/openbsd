@@ -35,7 +35,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: server.c,v 1.2 1997/07/22 11:18:25 provos Exp $";
+static char rcsid[] = "$Id: server.c,v 1.3 1998/03/04 11:43:52 provos Exp $";
 #endif
 
 #define _SERVER_C_
@@ -193,6 +193,9 @@ init_server(void)
 	       crit_error(1, "socket() in init_server()"); 
 	  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *)&on, 
 		     sizeof(on)); 
+#ifdef IPSEC
+	  kernel_set_socket_policy(sock);
+#endif	  
 	  sockets[i] = sock;
 
 #ifdef DEBUG 

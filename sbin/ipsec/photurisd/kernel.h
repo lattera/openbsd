@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: kernel.h,v 1.3 1997/07/26 20:55:16 provos Exp $ */
+/* $Id: kernel.h,v 1.4 1998/03/04 11:43:33 provos Exp $ */
 /*
  * kernel.h: 
  * security paramter index creation.
@@ -81,5 +81,6 @@ EXTERN int kernel_insert_spi(struct spiob *SPI);
 EXTERN int kernel_unlink_spi(struct spiob *ospi);
 EXTERN int init_kernel(void);
 EXTERN int kernel_get_socket(void);
+EXTERN void kernel_set_socket_policy(int sd);
 
 #endif /* _KERNEL_H */
