@@ -1,4 +1,4 @@
-# $OpenBSD: src/kerberosV/usr.bin/klist/Attic/Makefile,v 1.1 2001/05/25 08:20:34 hin Exp $
+# $OpenBSD: src/kerberosV/usr.bin/klist/Attic/Makefile,v 1.2 2001/06/22 16:12:19 hin Exp $
 
 KRBDEPTH=../..
 .include <${.CURDIR}/../../Makefile.inc>
@@ -10,6 +10,6 @@ SRCS=	klist.c
 .PATH:	${KRB5SRC}/kuser
 
 CFLAGS+=-I${KRB5SRC}/lib/roken
-LDADD+=	-lkrb5 -ldes -lkafs -lkrb ${LIBROKEN} 
+LDADD+=	-lkrb5 -ldes -lkafs -lkrb ${LIBROKEN} -lasn1 -lcrypto
 
 .include <bsd.prog.mk>
