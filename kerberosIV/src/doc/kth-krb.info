@@ -1,5 +1,5 @@
-This is kth-krb.info, produced by makeinfo version 4.0 from
-kth-krb.texi.
+This is Info file kth-krb.info, produced by Makeinfo version 1.68 from
+the input file kth-krb.texi.
 
 INFO-DIR-SECTION Kerberos
 START-INFO-DIR-ENTRY
@@ -23,7 +23,7 @@ KTH-krb
 * Acknowledgments::
 * Index::
 
- --- The Detailed Node Listing ---
+ -- The Detailed Node Listing --
 
 Installing programs
 
@@ -102,7 +102,7 @@ In addition, some part compile and work on:
 It should work on anything that is almost POSIX, has an ANSI C
 compiler, a dbm library (for the server side), and BSD Sockets.
 
-A web-page is available at <http://www.pdc.kth.se/kth-krb/>.
+A web-page is available at `http://www.pdc.kth.se/kth-krb/'.
 
 Bug reports
 ===========
@@ -168,7 +168,6 @@ The reply to A consists of the ticket (T<AB>), B's name, the current
 time, the lifetime of the ticket, and the session key, all encrypted in
 A's secret key ({B, T<ISSUE>, LIFE, K<AB>, T<AB>}K<A>). A decrypts the
 reply and retains it for later use.
-
 
 Before sending a message to B, A creates an authenticator consisting of
 A's name, A's address, the current time, and a "checksum" chosen by A,
@@ -289,13 +288,13 @@ following options:
 
 `--with-ld-flags='FLAGS
      This allows you to specify which extra flags to pass to `ld'. Since
-     this _overrides_ any choices made by configure, you should only use
+     this *overrides* any choices made by configure, you should only use
      this if you know what you are doing.
 
 `--with-cracklib='DIR
      Use cracklib for password quality control in `kadmind'. This
      option requires cracklib with the patch from
-     <ftp://ftp.pdc.kth.se/pub/krb/src/cracklib.patch>.
+     `ftp://ftp.pdc.kth.se/pub/krb/src/cracklib.patch'.
 
 `--with-dictpath='DICTPATH
      This is the dictionary that cracklib should use.
@@ -304,7 +303,7 @@ following options:
      If you have to traverse a firewall and it uses the SocksV5 protocol
      (`RFC 1928'), you can build with socks-support.  Point DIR to the
      directory where you have socks5 installed.  For more information
-     about socks see <http://www.socks.nec.com/>.
+     about socks see `http://www.socks.nec.com/'.
 
 `--with-readline='DIR
      To enable history/line editing in `ftp' and `kadmin', any present
@@ -367,7 +366,7 @@ following options:
      any AFS tokens.
 
 `--disable-otp'
-     Do not build the OTP (*note One-Time Passwords::) library and
+     Do not build the OTP (*note One-Time Passwords::.) library and
      programs, and do not include OTP support in the application
      programs.
 
@@ -437,7 +436,7 @@ kerberised `login'.  However some systems assume that login performs
 some serious amount of magic that our login might not do (although
 we've tried to do our best). So before replacing it on every machine,
 try and see what happens.  Another thing to try is to use one of the
-authentication modules (*note Authentication modules::) supplied.
+authentication modules (*note Authentication modules::.) supplied.
 
 The `login' program that we use was in an earlier life the standard
 login program from NetBSD. In order to use it with a lot of weird
@@ -480,8 +479,8 @@ determines what principals can login as that user.  It is similar to the
 `~user/.rhosts' except that it does not use IP and privileged-port
 based authentication.  If this file does not exist, the user herself
 `user@LOCALREALM' will be allowed to login.  Supplementary local realms
-(*note Install the configuration files::) also apply here.  If the file
-exists, it should contain the additional principals that are to be
+(*note Install the configuration files::.) also apply here.  If the
+file exists, it should contain the additional principals that are to be
 allowed to login as the local user USER.
 
 This file is consulted by most of the daemons (`rlogind', `rshd',
@@ -583,7 +582,7 @@ following.
      the default entry `/usr/tcb/bin/edauth -dd default', and add a
      `d_accept_alternate_vouching' capability, if not already present.
 
-   * For each user that does _not_ have a local C2 password, you should
+   * For each user that does *not* have a local C2 password, you should
      set the password expiration field to zero. You can do this for each
      user, or in the `default' table. To do this use `edauth' to set
      (or change) the `u_exp' capability to `u_exp#0'.
@@ -602,7 +601,7 @@ Also, kerberised ftp will not work with C2 passwords. You can solve this
 by using both Digital's ftpd and our on different ports.
 
 *Remember*, if you do these changes you will get a system that most
-certainly does _not_ fulfill the requirements of a C2 system. If C2 is
+certainly does *not* fulfill the requirements of a C2 system. If C2 is
 what you want, for instance if someone else is forcing you to use it,
 you're out of luck.  If you use enhanced security because you want a
 system that is more secure than it would otherwise be, you probably got
@@ -660,7 +659,7 @@ kpasswd instead.
 
 See also Derrick J Brashear's `<shadow@dementia.org>' Kerberos PAM
 module at
-<ftp://ftp.dementia.org/pub/pam>. It has a lot more features, and it is
+`ftp://ftp.dementia.org/pub/pam'. It has a lot more features, and it is
 also more in line with other PAM modules.
 
 
@@ -737,7 +736,7 @@ the console.
 
 This machine has also to be reliable.  If it is down, you will not be
 able to use any kerberised services unless you have also configured a
-slave server (*note Install a slave kerberos server::).
+slave server (*note Install a slave kerberos server::.).
 
 Running the kerberos server requires very little CPU power and a small
 amount of disk. An old PC with some hundreds of megabytes of free disk
@@ -912,7 +911,7 @@ Install the kerberos server
 
 You should have already chosen the machine where you want to run the
 kerberos server and the realm name.  The machine should also be as
-secure as possible (*note Choose a kerberos server::) before installing
+secure as possible (*note Choose a kerberos server::.) before installing
 the kerberos server.  In this example, we will install a kerberos server
 for the realm `FOO.SE' on a machine called `hemlig.foo.se'.
 
@@ -999,7 +998,7 @@ edit the kerberos database directly on the server.
 
 `kdb_edit' is intended as a bootstrapping and fall-back mechanism for
 editing the database.  For normal purposes, use the `kadmin' program
-(*note Add users to the database::).
+(*note Add users to the database::.).
 
 The following example shows the adding of the principal `nisse.admin'
 into the kerberos database.  This principal is used by `nisse' when
@@ -1161,8 +1160,8 @@ Install the client programs
 
 Making a machine a kerberos client only requires a few steps.  First you
 might need to change the configuration files as with the kerberos
-server.  (*note Install the configuration files:: and *note Install the
-/etc/services::.) Also you need to make the programs in
+server.  (*note Install the configuration files::. and *note Install
+the /etc/services::..) Also you need to make the programs in
 `/usr/athena/bin' available.  This can be done by adding the
 `/usr/athena/bin' directory to the users' paths, by making symbolic
 links, or even by copying the programs.
@@ -1171,7 +1170,7 @@ You should also verify that the local time on the client is synchronised
 with the time on the kerberos server by some means. The maximum allowed
 time difference between the participating servers and a client is 5
 minutes.  One good way to synchronize the time is NTP (Network Time
-Protocol), see <http://www.eecis.udel.edu/~ntp/>.
+Protocol), see `http://www.eecis.udel.edu/~ntp/'.
 
 If you need to run the client programs on a machine where you do not
 have root-access, you can hopefully just use the binaries and no
@@ -1237,7 +1236,7 @@ option "-a user" that only allows kerberised and authenticated
 connections.  If this is not included, it falls back to using clear text
 passwords.  For obvious reasons, we recommend that you enable this
 option.  If you want to use one-time passwords (*note One-Time
-Passwords::) you can use the "-a otp" option which will allow OTPs or
+Passwords::.) you can use the "-a otp" option which will allow OTPs or
 kerberised connections.
 
 ftp
@@ -1248,7 +1247,7 @@ default only kerberos authenticated connections are allowed.  You can
 specify additional levels that are thus allowed with these options:
 
 `-a otp'
-     Allow one-time passwords (*note One-Time Passwords::).
+     Allow one-time passwords (*note One-Time Passwords::.).
 
 `-a ftp'
      Allow anonymous login (as user "ftp" or "anonymous").
@@ -1387,7 +1386,8 @@ It is desirable to have at least one backup (slave) server in case the
 master server fails. It is possible to have any number of such slave
 servers but more than three usually doesn't buy much more redundancy.
 
-First select a good server machine.  (*note Choose a kerberos server::).
+First select a good server machine.  (*note Choose a kerberos
+server::.).
 
 On the master, add a `rcmd.kerberos' (note, it should be literally
 "kerberos") principal (using `ksrvutil get'). The `kprop' program,
@@ -1425,7 +1425,7 @@ for instance once an hour.
 
 Since the master and slave servers will use copies of the same
 database, they need to use the same master key.  Add the master key on
-the slave with `kstash'. (*note Set up the server::)
+the slave with `kstash'. (*note Set up the server::.)
 
 To start the kerberos server on slaves, you first have to copy the
 master key from the master server. You can do this either by remembering
@@ -1738,7 +1738,7 @@ Another problem that you might encounter if you run AFS is that Transarc
 apparently doesn't support the 64-bit ABI, and because of this you can't
 get tokens with a 64 bit application. If you really need to do this,
 there is a kernel module that provides this functionality at
-<ftp://ftp.pdc.kth.se/home/joda/irix-afs64.tar.gz>.
+`ftp://ftp.pdc.kth.se/home/joda/irix-afs64.tar.gz'.
 
 AIX problems
 ------------
@@ -2097,8 +2097,7 @@ Index
 * firewall <1>:                          Problems with firewalls.
 * firewall:                              Installing from source.
 * firewall_address:                      Install the configuration files.
-* ftp <1>:                               Install the kerberised services.
-* ftp <2>:                               Finishing the installation.
+* ftp <1>:                               Finishing the installation.
 * ftp:                                   Install the kerberised services.
 * ftpd:                                  .klogin.
 * GCC:                                   Problems compiling Kerberos.
@@ -2110,23 +2109,23 @@ Index
 * IRIX:                                  Problems compiling Kerberos.
 * kadmin <1>:                            Add users to the database.
 * kadmin:                                Finishing the installation.
-* kadmind <1>:                           Installing from source.
-* kadmind <2>:                           Create initial ACL for the admin server.
+* kadmind <1>:                           Create initial ACL for the admin server.
+* kadmind <2>:                           Installing from source.
 * kadmind:                               Start the admin server.
-* kauth <1>:                             Finishing the installation.
-* kauth:                                 Install the kerberised services.
+* kauth <1>:                             Install the kerberised services.
+* kauth:                                 Finishing the installation.
 * kauthd:                                .klogin.
 * kdb_edit:                              Add a few important principals.
 * kdb_init:                              Set up the server.
 * kdc_timeout:                           Install the configuration files.
 * kdc_timesync:                          Install the configuration files.
 * kdestroy:                              Finishing the installation.
-* kerberos <1>:                          Choose a kerberos server.
-* kerberos:                              Start the server.
-* kinit <1>:                             Try to get tickets.
-* kinit:                                 Finishing the installation.
-* klist <1>:                             Finishing the installation.
-* klist:                                 Try to get tickets.
+* kerberos <1>:                          Start the server.
+* kerberos:                              Choose a kerberos server.
+* kinit <1>:                             Finishing the installation.
+* kinit:                                 Try to get tickets.
+* klist <1>:                             Try to get tickets.
+* klist:                                 Finishing the installation.
 * kpasswd:                               Finishing the installation.
 * kprop:                                 Install a slave kerberos server.
 * kpropd:                                Install a slave kerberos server.
@@ -2139,15 +2138,15 @@ Index
 * krb_default_keyfile:                   Install the configuration files.
 * krb_default_tkt_root:                  Install the configuration files.
 * KRBCONFDIR:                            Install the client programs.
-* ksrvutil <1>:                          Install the kerberised services.
-* ksrvutil:                              Finishing the installation.
+* ksrvutil <1>:                          Finishing the installation.
+* ksrvutil:                              Install the kerberised services.
 * kstash:                                Set up the server.
 * kx:                                    Install the kerberised services.
-* kxd <1>:                               Install the kerberised services.
-* kxd:                                   .klogin.
+* kxd <1>:                               .klogin.
+* kxd:                                   Install the kerberised services.
 * Linux:                                 Problems compiling Kerberos.
-* login <1>:                             Installing from source.
-* login:                                 Finishing the installation.
+* login <1>:                             Finishing the installation.
+* login:                                 Installing from source.
 * login.access:                          Finishing the installation.
 * logindevperm:                          Finishing the installation.
 * master server:                         Install the configuration files.
@@ -2156,13 +2155,13 @@ Index
 * Network Address Translator:            Install the configuration files.
 * NTP.:                                  Install the client programs.
 * One time passwords:                    One-Time Passwords.
-* OTP:                                   One-Time Passwords.
 * otp:                                   Configuring OTPs.
+* OTP:                                   One-Time Passwords.
 * otpprint:                              Configuring OTPs.
 * pagsh:                                 Finishing the installation.
-* popper <1>:                            Installing from source.
-* popper <2>:                            Install the kerberised services.
-* popper:                                .klogin.
+* popper <1>:                            .klogin.
+* popper <2>:                            Installing from source.
+* popper:                                Install the kerberised services.
 * push:                                  Installing from source.
 * rc:                                    Automate the startup of the servers.
 * rcp <1>:                               Install the kerberised services.
@@ -2171,15 +2170,12 @@ Index
 * realm:                                 Choose a realm name.
 * replay cache:                          What is Kerberos?.
 * reverse_lsb_test:                      Install the configuration files.
-* rlogin <1>:                            Finishing the installation.
-* rlogin <2>:                            Install the kerberised services.
-* rlogin <3>:                            Finishing the installation.
-* rlogin:                                Install the kerberised services.
+* rlogin <1>:                            Install the kerberised services.
+* rlogin:                                Finishing the installation.
 * rlogind <1>:                           .klogin.
 * rlogind:                               Finishing the installation.
 * rsh <1>:                               Install the kerberised services.
-* rsh <2>:                               Finishing the installation.
-* rsh:                                   Install the kerberised services.
+* rsh:                                   Finishing the installation.
 * rshd:                                  .klogin.
 * rxtelnet <1>:                          Finishing the installation.
 * rxtelnet:                              Install the kerberised services.
@@ -2196,9 +2192,9 @@ Index
 * telnet <1>:                            Install the kerberised services.
 * telnet <2>:                            Finishing the installation.
 * telnet:                                Install the kerberised services.
-* telnetd <1>:                           .klogin.
-* telnetd <2>:                           Finishing the installation.
-* telnetd:                               Install the kerberised services.
+* telnetd <1>:                           Finishing the installation.
+* telnetd <2>:                           Install the kerberised services.
+* telnetd:                               .klogin.
 * tenletxr:                              Finishing the installation.
 * xnlock:                                Finishing the installation.
 * Year 2000:                             Is Kerberos year 2000 safe?.
@@ -2206,48 +2202,47 @@ Index
 
 
 Tag Table:
-Node: Top212
-Node: Introduction1673
-Node: What is Kerberos?3278
-Node: Installing programs8218
-Node: Installing from source8876
-Node: Installing a binary distribution14070
-Node: Finishing the installation14498
-Node: .klogin17649
-Node: Authentication modules19059
-Node: Digital SIA19667
-Node: IRIX23714
-Node: PAM24738
-Node: How to set up a realm25573
-Node: How to set up the kerberos server26157
-Node: Choose a realm name26787
-Ref: Choose a realm name-Footnote-127316
-Node: Choose a kerberos server27447
-Node: Install the configuration files28439
-Node: Install the /etc/services34598
-Node: Install the kerberos server35172
-Node: Set up the server35729
-Node: Add a few important principals38284
-Node: Start the server40146
-Node: Try to get tickets40640
-Node: Create initial ACL for the admin server41486
-Node: Start the admin server42447
-Node: Add users to the database42928
-Node: Automate the startup of the servers44005
-Node: Install the client programs44346
-Node: Install the kerberised services46197
-Node: Install a slave kerberos server51959
-Node: Cross-realm functionality55030
-Node: One-Time Passwords57167
-Node: What are one time passwords?57581
-Node: When to use one time passwords?58212
-Node: Configuring OTPs59567
-Node: Resolving frequent problems61720
-Node: Problems compiling Kerberos62024
-Node: Problems with firewalls67407
-Node: Common error messages70070
-Node: Is Kerberos year 2000 safe?73564
-Node: Acknowledgments74534
-Node: Index77697
+Node: Top238
+Node: Introduction1697
+Node: What is Kerberos?3302
+Node: Installing programs8241
+Node: Installing from source8899
+Node: Installing a binary distribution14094
+Node: Finishing the installation14522
+Node: .klogin17674
+Node: Authentication modules19085
+Node: Digital SIA19693
+Node: IRIX23740
+Node: PAM24764
+Node: How to set up a realm25599
+Node: How to set up the kerberos server26183
+Node: Choose a realm name26813
+Node: Choose a kerberos server27473
+Node: Install the configuration files28466
+Node: Install the /etc/services34625
+Node: Install the kerberos server35199
+Node: Set up the server35757
+Node: Add a few important principals38312
+Node: Start the server40175
+Node: Try to get tickets40669
+Node: Create initial ACL for the admin server41515
+Node: Start the admin server42476
+Node: Add users to the database42957
+Node: Automate the startup of the servers44034
+Node: Install the client programs44375
+Node: Install the kerberised services46228
+Node: Install a slave kerberos server51992
+Node: Cross-realm functionality55065
+Node: One-Time Passwords57202
+Node: What are one time passwords?57616
+Node: When to use one time passwords?58247
+Node: Configuring OTPs59602
+Node: Resolving frequent problems61755
+Node: Problems compiling Kerberos62059
+Node: Problems with firewalls67442
+Node: Common error messages70105
+Node: Is Kerberos year 2000 safe?73599
+Node: Acknowledgments74569
+Node: Index77732
 
 End Tag Table
