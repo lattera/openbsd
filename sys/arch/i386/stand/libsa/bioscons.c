@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/bioscons.c,v 1.17 1999/08/25 00:54:19 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/bioscons.c,v 1.17.6.1 2000/10/20 16:36:26 jason Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -225,7 +225,16 @@ com_putc(dev, c)
 {
 	register int rv;
 
+	dev = minor(dev) & 0x7f;
+
+	/* check online (DSR) */
 	__asm __volatile(DOINT(0x14) : "=a" (rv) :
-	    "d" (minor(dev)), "0" (c | 0x100) : "%ecx", "cc" );
+	    "0" (0x300), "d" (dev) : "%ecx", "cc" );
+	if ( !(rv & 0x20) )
+		return;
+
+	/* send character */
+	__asm __volatile(DOINT(0x14) : "=a" (rv) :
+	    "0" (c | 0x100), "d" (dev) : "%ecx", "cc" );
 }
 
