@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/telnet/commands.c,v 1.46 2003/12/28 21:53:01 otto Exp $	*/
+/*	$OpenBSD: src/usr.bin/telnet/commands.c,v 1.46.4.1 2005/03/29 19:49:10 brad Exp $	*/
 /*	$NetBSD: commands.c,v 1.14 1996/03/24 22:03:48 jtk Exp $	*/
 
 /*
@@ -1821,12 +1821,13 @@ env_default(init, welldefined)
 }
 
 	unsigned char *
-env_getvalue(var)
+env_getvalue(var, exported_only)
 	unsigned char *var;
+	int exported_only;
 {
 	struct env_lst *ep;
 
-	if ((ep = env_find(var)))
+	if ((ep = env_find(var)) && (!exported_only || ep->export))
 		return(ep->value);
 	return(NULL);
 }
