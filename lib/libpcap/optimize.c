@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/optimize.c,v 1.8 2002/07/09 17:03:00 provos Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/optimize.c,v 1.9 2002/08/12 00:42:56 aaron Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1993, 1994, 1995, 1996
@@ -24,7 +24,7 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/optimize.c,v 1.7 2000/04/26 21:25:53 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/lib/libpcap/optimize.c,v 1.8 2002/07/09 17:03:00 provos Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -1926,7 +1926,7 @@ convert_code_r(p)
 
 	/* generate offset[] for convenience  */
 	if (slen) {
-		offset = (struct slist **)calloc(sizeof(struct slist *), slen);
+		offset = (struct slist **)calloc(slen, sizeof(struct slist *));
 		if (!offset) {
 			bpf_error("not enough core");
 			/*NOTREACHED*/
