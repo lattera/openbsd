@@ -1,0 +1,92 @@
+dnl	$OpenBSD: src/distrib/notes/alpha/install,v 1.22 2003/03/24 11:33:56 miod Exp $
+OpenBSDInstallPrelude
+
+dnl XXX document mopbooting from the SRM console.
+dnl XXX check if recent SRM console still can netboot, and if so, if they
+dnl XXX still use mop or a more recent protocol.
+There are several ways to install OpenBSD onto a disk.  The easiest way is
+to boot from the bootable CD-ROM mini image, then install from your favorite
+source. You can also use one of the OpenBSD installation floppies, if your
+machine has a floppy drive.
+
+Booting from Floppy Disk installation media:
+
+	At the SRM console prompt, enter
+		boot dva0
+	You should see info about the primary and secondary boot
+	and then the kernel should start to load.  It will take a
+	while to load the kernel from the floppy, most likely more
+	than a minute.  If some action doesn't eventually happen,
+	or the spinning cursor has stopped and nothing further has
+	happened, or the machine spontaneously reboots, then either
+	either you have a bad boot floppy (in which case you should
+	try another) or your alpha is not currently supported by OpenBSD.
+
+Booting from CD-ROM installation media:
+
+	At the SRM console prompt, enter
+		show device
+	to find the device ID of your CD-ROM drive (the device ID is
+	usually in the second column (``bootdev'') and should start
+	with DKA for a SCSI CD-ROM drive).  If your drive shows up with
+	a drive number with trailing zeros, you will want to ignore them
+	(unless it is DKA0).  For example, if your CD-ROM drive is listed
+	as DKA600, you want to use dka6 (device ID's are case
+	insensitive).
+
+	On all MACHINE computers but the TURBOchannel DEC 3000 series,
+	insert the OpenBSD/MACHINE CD-ROM and enter
+		boot -fi OSREV/MACHINE/bsd.rd DEVICE
+	where DEVICE is the dka device name.
+
+	On the DEC 3000 series, insert the OpenBSD/MACHINE CD-ROM and enter
+		boot -fi ALPHA DEVICE
+	where DEVICE is the dka device name.
+	
+	Note that, in both cases, the argument order is important.
+
+	You should see info about the primary and secondary boot
+	and then the kernel should start to load.  If the kernel
+	fails to load or the spinning cursor has stopped and nothing
+	further has happened, you either have a hardware problem or
+	your MACHINE is not currently supported by OpenBSD; try booting
+	from a floppy instead if possible.
+
+
+Installing using the Floppy or CD-ROM procedure:
+
+OpenBSDInstallPart2
+
+	Boot your machine from the installation media as described above.
+
+OpenBSDBootMsgs
+
+	You will next be asked for your terminal type.  If you are
+	installing from a non-serial console, the default of "vt220"
+	is correct.  If you are installing from a serial console
+	you should choose the terminal type from amongst those listed.
+	(If your terminal type is xterm, just use vt220).
+
+OpenBSDInstallPart3({:- or "wd0" for IDE drives-:})
+
+OpenBSDInstallPart4
+
+OpenBSDInstallPart5(sd0)
+
+OpenBSDInstallNet({:-CD-ROM, -:},nofloppy)
+
+OpenBSDFTPInstall
+
+OpenBSDHTTPInstall
+
+OpenBSDTAPEInstall
+
+OpenBSDCDROMInstall
+
+OpenBSDDISKInstall({:-"wdN" or -:},{:-only -:})
+
+OpenBSDCommonFS
+
+OpenBSDCommonURL
+
+OpenBSDCongratulations
