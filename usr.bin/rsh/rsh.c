@@ -39,12 +39,12 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)rsh.c	5.24 (Berkeley) 7/1/91";*/
-static char rcsid[] = "$Id: rsh.c,v 1.1.1.1 1995/10/18 08:46:03 deraadt Exp $";
+static char rcsid[] = "$Id: rsh.c,v 1.2 1995/12/16 22:20:36 tholo Exp $";
 #endif /* not lint */
 
 /*
  * $Source: /cvs/src/usr.bin/rsh/rsh.c,v $
- * $Header: /cvs/src/usr.bin/rsh/rsh.c,v 1.1.1.1 1995/10/18 08:46:03 deraadt Exp $
+ * $Header: /cvs/src/usr.bin/rsh/rsh.c,v 1.2 1995/12/16 22:20:36 tholo Exp $
  */
 
 #include <sys/types.h>
@@ -149,7 +149,7 @@ main(argc, argv)
 #ifdef KERBEROS
 		case 'x':
 			doencrypt = 1;
-			des_set_key(&cred.session, schedule);
+			desrw_set_key(&cred.session, schedule);
 			break;
 #endif
 		case '?':
