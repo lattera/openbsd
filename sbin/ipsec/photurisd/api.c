@@ -37,7 +37,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: api.c,v 1.2 1997/07/22 11:18:19 provos Exp $";
+static char rcsid[] = "$Id: api.c,v 1.3 1997/09/14 10:37:48 deraadt Exp $";
 #endif
 
 #define _API_C_
@@ -95,6 +95,7 @@ process_api(int fd, int sendsock)
 
 	startup_parse(st, buffer);
 
+#ifndef DEBUG
 	if (addresses != (char **) NULL && strlen(st->address))
 	     for (i = 0; i<num_ifs; i++) {
 		  if (addresses[i] == (char *)NULL)
@@ -107,6 +108,7 @@ process_api(int fd, int sendsock)
 		       return;
 		  }
 	     }
+#endif
 
 	startup_end(st);
 

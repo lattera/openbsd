@@ -34,7 +34,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: photuris_value_request.c,v 1.1 1997/05/22 17:19:20 provos Exp $";
+static char rcsid[] = "$Id: photuris_value_request.c,v 1.1.1.1 1997/07/18 22:48:49 provos Exp $";
 #endif
 
 #include <stdio.h>
@@ -79,6 +79,8 @@ photuris_value_request(struct stateob *st, u_char *buffer, int *size)
 
 	header->counter = st->counter;
 	bcopy(st->scheme, header->scheme, 2 );        /* Only scheme */
+
+	bcopy(&header->counter, st->oSPITBV, 3);
 
 	*size = asize;
 	return 0;
