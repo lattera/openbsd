@@ -1,0 +1,443 @@
+#!/bin/sh -
+#
+# THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
+# generated from:
+#
+#	OpenBSD: etc.hp300/MAKEDEV.md,v 1.19 2004/02/20 19:13:08 miod Exp 
+#	OpenBSD: MAKEDEV.common,v 1.4 2004/03/12 04:54:04 deraadt Exp 
+#	OpenBSD: MAKEDEV.mi,v 1.72 2004/02/16 18:58:53 miod Exp 
+#	OpenBSD: MAKEDEV.sub,v 1.12 2004/02/20 19:13:01 miod Exp 
+#
+#
+# Copyright (c) 2001-2004 Todd T. Fries <todd@OpenBSD.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+# Device "make" file.  Valid arguments:
+#	all	makes all known devices, including local devices.
+#		Tries to make the ``standard'' number of each type.
+#	ramdisk	Ramdisk kernel devices
+#	std	Standard devices
+#	local	Configuration specific devices
+# Disks:
+#	ccd*	Concatenated disk devices
+#	hd*	HP300 HP-IB disks
+#	rd*	"rd" pseudo-disks
+#	sd*	SCSI disks, including flopticals
+#	vnd*	"file" pseudo-disk devices
+# Tapes:
+#	ct*	HP300 HP-IB cartridge tape drives
+#	mt*	(Magnetic) 9-track reel tape drives
+#	st*	Exabyte tape
+# Terminal ports:
+#	apci*	HP400 4 port serial mux interface
+#	dca*	HP200/300 single port serial interface
+#	dcm*	HP200/300 4 port serial mux interface
+# Pseudo terminals:
+#	ptm	pty master device
+#	pty*	Set of 16 master pseudo terminals
+#	tty*	Set of 16 slave pseudo terminals
+# Console ports:
+#	grf*	Raw interface to HP300 graphics devices
+#	ite*	Terminal emulator interface to HP300 graphics devices
+# Printers:
+#	ppi*	HP-IB plotters
+# Special purpose devices:
+#	bpf*	Berkeley Packet Filter
+#	fd	fd/* nodes for fdescfs
+#	hil	HP-HIL input devices
+#	lkm	Loadable kernel modules interface
+#	pf*	Packet Filter
+#	*random	In-kernel random data source
+#	tun*	Network tunnel driver
+#	systrace*	System call tracing device
+#	xfs*	XFS filesystem node
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+T=$0
+
+# set this to echo for Echo-Only debugging
+[ "$eo" ] || eo=
+
+hex()
+{
+	case $1 in
+	[0-9]) echo -n $1;;
+	10) echo -n a;;
+	11) echo -n b;;
+	12) echo -n c;;
+	13) echo -n d;;
+	14) echo -n e;;
+	15) echo -n f;;
+	esac
+}
+
+alph2d()
+{
+	local t="$1"  
+	local p="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	local sub=${p%${t}*}
+	echo ${#sub}
+}
+
+h2d()
+{
+	local s="$1"
+	local f=${s%*[0-9a-f]} n=${s#[0-9a-f]*}
+
+	echo $(($(_h2d $f)*16+ $(_h2d $n) ))
+}
+
+_h2d()
+{
+	case $1 in
+	[0-9]) echo -n $1;;
+	a) echo -n 10;;
+	b) echo -n 11;;
+	c) echo -n 12;;
+	d) echo -n 13;;
+	e) echo -n 14;;
+	f) echo -n 15;;
+	esac
+}
+
+unt()
+{
+	# XXX pdksh can't seem to deal with locally scoped variables
+	# in ${foo#$bar} expansions
+	arg="$1"
+	tmp="${arg#[a-zA-Z]*}"
+	tmp="${tmp%*[a-zA-Z]}"
+	while [ "$tmp" != "$arg" ]
+	do
+		arg=$tmp
+		tmp="${arg#[a-zA-Z]*}"
+		tmp="${tmp%*[a-zA-Z]}"
+	done
+	echo $arg
+}
+
+dodisk()
+{
+	[ "$DEBUG" ] && set -x
+	n=$(($((${5}*${7:-16}))+${6})) count=0
+	RMlist="$RMlist $1$2? r$1$2?"
+	[ 0$7 -ne 8 ] && l="i j k l m n o p"
+	for d in a b c d e f g h $l
+	do
+		M $1$2$d	b $3 $(($n+$count)) 640
+		M r$1$2$d	c $4 $(($n+$count)) 640
+		let count=count+1
+	done
+	MKlist="$MKlist;chown root:operator $1$2? r$1$2?"
+}
+
+dodisk2()
+{
+	n=$(($(($5*${7:-16}))+$6))
+	M $1$2a b $3 $n 640 operator
+	M r$1$2a c $4 $n 640 operator
+	n=$(($n+2))
+	M $1$2c b $3 $n 640 operator
+	M r$1$2c c $4 $n 640 operator
+}
+
+# M name b/c major minor [mode] [group]
+RMlist="rm -f"
+MKlist=":"
+
+mkl() {
+	[ "${mklist[$1]}" ] && {
+		mklist[$1]="${mklist[$1]};mknod -m $1 $2 $3 $4 $5"
+	} || {
+		mklist[$1]="mknod -m $1 $2 $3 $4 $5"
+		modes="$modes $1"
+	}
+}
+
+M() {
+	RMlist="$RMlist $1"
+	mkl ${5-666} $1 $2 $3 $4
+	mklist="$mklist $1"
+	G=${6:-wheel}
+	[ "$7" ] && {
+		MKlist="$MKlist;chown $7:$G $1"
+	} || {
+		case $G in
+		wheel)g=0;;kmem)g=2;;operator)g=5;;tty)g=4;;dialer)g=117;;_lkm)g=61;;
+		esac
+		[ "${grplist[$g]}" ] && {
+			grplist[$g]="${grplist[$g]} $1"
+		} || {
+			groups="$groups $g"
+			grplist[$g]="chgrp $G $1"
+		}
+	}
+	return 0
+}
+
+R() {
+[ "$DEBUG" ] && set -x
+for i in "$@"
+do
+U=`unt $i`
+[ "$U" ] || U=0
+
+case $i in
+ramdisk)
+	R std ct0 ct1 st0 st1 hd0 hd1 hd2 hd3 hd4
+	R sd0 sd1 sd2 sd3 sd4 rd0 pty0
+	R hil grf0 apci0 ite0 dca0 dcm0 dcm1
+	R bpf0 bpf1 tun0 tun1 lkm random
+	;;
+
+std)
+	M console	c 0 0 600
+	M tty		c 1 0
+	M mem		c 2 0 640 kmem
+	M kmem		c 2 1 640 kmem
+	M null		c 2 2
+	M zero		c 2 12
+	M stdin		c 21 0
+	M stdout	c 21 1
+	M stderr	c 21 2
+	M ksyms		c 36 0 640 kmem
+	M drum		c 3 0 640 kmem
+	M klog		c 6 0 600
+	;;
+
+dca*)
+	case $U in
+	0|1|2|3)
+		M tty$U c 12 $U 660 dialer uucp
+		M cua$U c 12 $(($U+128)) 660 dialer uucp
+		;;
+	*)
+		echo bad unit for dca in: $i
+		;;
+	esac
+	;;
+
+dcm*)
+	case $U in
+	0|1|2|3)
+		u="$(( $U * 4 ))"
+		i=0
+		while [ $i -lt 4 ]
+		do
+			n="$(( $u + $i ))"
+			ext=`hex $n`
+
+			M tty0${ext} c 15 ${n} 660 dialer uucp
+			M cua0${ext} c 15 "$(( $n + 128 ))" 660 dialer uucp
+
+			i="$(( $i + 1 ))"
+		done
+		;;
+	*)
+		echo bad unit for dcm in: $i
+		;;
+	esac
+	;;
+
+apci*)
+	# There exists only one Frodo ASIC per HP9000/400 SPU.
+	case $U in
+	0)
+		for i in 0 1 2 3; do
+			M ttya${i} c 35 ${i} 660 dialer uucp
+			M cuaa${i} c 35 $(($i+128)) 660 dialer uucp
+		done
+		;;
+	*)
+		echo bad unit for apci in: $i
+		;;
+	esac
+	;;
+
+ppi*)
+	case $U in
+	0|1|2|3)
+		M ppi$U c 11 $U 600
+		;;
+	*)
+		echo bad unit for ppi in: $i
+		;;
+	esac
+	;;
+
+ite*)
+	case $U in
+	0|1|2|3)
+		M ttye$U c 13 $U 600
+		;;
+	*)
+		echo bad unit for ite in: $i
+		;;
+	esac
+	;;
+
+grf*)
+	case $U in
+	0|1|2|3)
+		M grf$U c 10 $U 600
+		;;
+	*)
+		echo bad unit for grf in: $i
+		;;
+	esac
+	;;
+
+hil)
+	for U in 0 1 2 3 4 5 6 7
+	do
+		M hil$U c 14 $U 600
+	done
+	MKlist="$MKlist;ln hil1 keyboard"
+	MKlist="$MKlist;ln hil3 locator"
+	RMlist="$RMlist keyboard locator"
+	;;
+
+xfs*)
+	M xfs$U c 51 $U 600
+	;;
+
+systrace)
+	M systrace c 50 0 644
+	;;
+
+tun*)
+	M tun$U c 23 $U 600
+	;;
+
+*random)
+	n=0
+	for pre in " " s u p a
+	do
+		M ${pre}random c 32 $n 644
+		n=$(($n+1))
+	done
+	;;
+
+pf*)
+	M pf c 33 0 600
+	;;
+
+lkm)
+	M lkm c 24 0 640 _lkm
+	;;
+
+fd)
+	RMlist="mkdir -p fd;$RMlist" n=0
+	while [ $n -lt 64 ];do M fd/$n c 21 $n;n=$(($n+1));done
+	MKlist="$MKlist;chmod 555 fd"
+	;;
+
+bpf*)
+	M bpf$U c 22 $U 600
+	;;
+
+pty*)
+	if [ $U -gt 15 ]; then
+		echo bad unit for pty in: $i
+		continue
+	fi
+	set -A tbl p q r s t u v w x y z P Q R S T
+	name=${tbl[$U]}
+	n=0
+	while [ $n -lt 16 ]
+	do
+		nam=$name$(hex $n)
+		off=$(($U*16))
+		M tty$nam c 4 $(($off+$n))
+		M pty$nam c 5 $(($off+$n))
+		n=$(($n+1))
+	done
+	;;
+
+ptm)
+	M ptm c 52 0 666
+	;;
+
+ct*|mt*|st*)
+	case $i in
+	ct*) name=ct blk=0 chr=7;;
+	mt*) name=mt blk=1 chr=16;;
+	st*) name=st blk=7 chr=20;;
+	esac
+	case $U in
+	[0-7])
+		four=$(($U+4)) eight=$(($U+8))
+		twelve=$(($U+12)) twenty=$(($U+20))
+		M r$name$U	c $chr $U 660 operator
+		M r$name$four	c $chr $four 660 operator
+		M r$name$eight	c $chr $eight 660 operator
+		M r$name$twelve	c $chr $twelve 660 operator
+		MKlist="$MKlist;ln r$name$four nr$name$U";: sanity w/pdp11 v7
+		MKlist="$MKlist;ln r$name$twelve nr$name$eight";: ditto
+		RMlist="$RMlist nr$name$U nr$name$eight"
+		;;
+	*)
+		echo bad unit for tape in: 
+		;;
+	esac
+	;;
+
+vnd*)
+	dodisk vnd $U 6 19 $U 0
+	dodisk svnd $U 6 19 $U 2048
+	;;
+
+rd*)
+	dodisk2 rd $U 8 34 $U 0
+	;;
+
+local)
+	test -s $T.local && sh $T.local
+	;;
+
+all)
+	R ite0 ct0 ct1 hd0 hd1 hd2 dcm0 dcm1 dcm2 dcm3 dca0 dca1 st0
+	R st1 hil grf0 ccd0 ccd1 ccd2 ccd3 vnd0 vnd1 vnd2 vnd3 sd0 sd1
+	R sd2 sd3 sd4 rd0 tun0 tun1 tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4
+	R bpf5 bpf6 bpf7 bpf8 bpf9 pty0 pty1 pty2 xfs0 ptm local ppi0
+	R apci0 random lkm pf systrace std fd
+	;;
+
+sd*|hd*|ccd*)
+	case $i in
+	sd*) dodisk sd $U 4 8 $U 0;;
+	hd*) dodisk hd $U 2 9 $U 0;;
+	ccd*) dodisk ccd $U 5 17 $U 0;;
+	esac
+	;;
+
+*)
+	echo $i: unknown device
+	;;
+esac
+done
+}
+R "$@"
+list="$RMlist"
+for mode in $modes; do
+	list="$list;${mklist[$mode]}"
+done
+for group in $groups; do
+	list="$list;${grplist[$group]}"
+done
+list="$list;$MKlist"
+if [ "$eo" = "echo" ]; then
+	$eo "$list"
+else
+	echo "$list" | sh
+fi
