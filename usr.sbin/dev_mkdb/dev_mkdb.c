@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/dev_mkdb/dev_mkdb.c,v 1.7 2002/03/14 16:44:24 mpech Exp $	*/
+/*	$OpenBSD: src/usr.sbin/dev_mkdb/dev_mkdb.c,v 1.8 2002/07/14 04:13:54 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -41,7 +41,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)dev_mkdb.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$Id: dev_mkdb.c,v 1.6 2002/02/16 21:28:01 millert Exp $";
+static char rcsid[] = "$Id: dev_mkdb.c,v 1.7 2002/03/14 16:44:24 mpech Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -63,9 +63,7 @@ static char rcsid[] = "$Id: dev_mkdb.c,v 1.6 2002/02/16 21:28:01 millert Exp $";
 void	usage(void);
 
 int
-main(argc, argv)
-	int argc;
-	char *argv[];
+main(int argc, char *argv[])
 {
 	DIR *dirp;
 	struct dirent *dp;
@@ -150,7 +148,7 @@ main(argc, argv)
 }
 
 void
-usage()
+usage(void)
 {
 
 	(void)fprintf(stderr, "usage: dev_mkdb\n");
