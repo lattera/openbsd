@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/sab.c,v 1.1.2.3 2002/03/28 11:23:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/sab.c,v 1.1.2.4 2003/03/27 23:42:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 /*
@@ -209,8 +214,12 @@ sab_match(parent, match, aux)
 	void *match, *aux;
 {
 	struct ebus_attach_args *ea = aux;
+	char *compat;
 
 	if (strcmp(ea->ea_name, "se") == 0)
+		return (1);
+	compat = getpropstring(ea->ea_node, "compatible");
+	if (compat != NULL && !strcmp(compat, "sab82532"))
 		return (1);
 	return (0);
 }
@@ -226,20 +235,26 @@ sab_attach(parent, self, aux)
 	u_int8_t r;
 	u_int i;
 
-	sc->sc_bt = ea->ea_bustag;
+	sc->sc_bt = ea->ea_memtag;
 	sc->sc_node = ea->ea_node;
 
 	/* Use prom mapping, if available. */
-	if (ea->ea_nvaddrs)
-		sc->sc_bh = (bus_space_handle_t)ea->ea_vaddrs[0];
-	else if (ebus_bus_map(sc->sc_bt, 0,
+	if (ea->ea_nvaddrs) {
+		if (bus_space_map(sc->sc_bt, ea->ea_vaddrs[0],
+		    0, BUS_SPACE_MAP_PROMADDRESS, &sc->sc_bh) != 0) {
+			printf(": can't map register space\n");
+			return;
+		}
+	} else if (ebus_bus_map(sc->sc_bt, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_bh) != 0) {
 		printf(": can't map register space\n");
 		return;
 	}
 
-	sc->sc_ih = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[0],
+	BUS_SPACE_SET_FLAGS(sc->sc_bt, sc->sc_bh, BSHDB_NO_ACCESS);
+
+	sc->sc_ih = bus_intr_establish(sc->sc_bt, ea->ea_intrs[0],
 	    IPL_TTY, 0, sab_intr, sc);
 	if (sc->sc_ih == NULL) {
 		printf(": can't map interrupt\n");
@@ -1286,21 +1301,21 @@ sabtty_console_flags(sc)
 	struct sabtty_softc *sc;
 {
 	int node, channel, cookie;
-	u_int chosen;
+	u_int options;
 	char buf[255];
 
 	node = sc->sc_parent->sc_node;
 	channel = sc->sc_portno;
 
-	chosen = OF_finddevice("/chosen");
+	options = OF_finddevice("/options");
 
 	/* Default to channel 0 if there are no explicit prom args */
 	cookie = 0;
 
 	if (node == OF_instance_to_package(OF_stdin())) {
-		if (OF_getprop(chosen, "input-device", buf,
+		if (OF_getprop(options, "input-device", buf,
 		    sizeof(buf)) != -1) {
-			if (strcmp("ttyb", buf) == 0)
+			if (strncmp("ttyb", buf, strlen("ttyb")) == 0)
 				cookie = 1;
 		}
 
@@ -1311,9 +1326,9 @@ sabtty_console_flags(sc)
 	/* Default to same channel if there are no explicit prom args */
 
 	if (node == OF_instance_to_package(OF_stdout())) {
-		if (OF_getprop(chosen, "output-device", buf,
+		if (OF_getprop(options, "output-device", buf,
 		    sizeof(buf)) != -1) {
-			if (strcmp("ttyb", buf) == 0)
+			if (strncmp("ttyb", buf, strlen("ttyb")) == 0)
 				cookie = 1;
 		}
 

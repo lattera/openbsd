@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/openfirm.h,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/openfirm.h,v 1.2.4.3 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: openfirm.h,v 1.8 2001/07/20 00:07:14 eeh Exp $	*/
 
 /*
@@ -39,13 +39,8 @@
 
 /* All cells are 8 byte slots */
 typedef u_int64_t cell_t;
-#ifdef __arch64__
 #define HDL2CELL(x)	(cell_t)(u_int)(int)(x)
 #define ADR2CELL(x)	(cell_t)(x)
-#else
-#define HDL2CELL(x)	(cell_t)(u_int)(int)(x)
-#define ADR2CELL(x)	(cell_t)(u_int)(int)(x)
-#endif
 
 int OF_test (char *service);
 int OF_test_method (int handle, char *method);

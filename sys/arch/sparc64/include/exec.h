@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/exec.h,v 1.5.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/exec.h,v 1.5.4.2 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: elf_machdep.h,v 1.7 2001/02/11 00:18:49 eeh Exp $	*/
 
 #define ELF32_MACHDEP_ENDIANNESS	ELFDATA2MSB
@@ -17,15 +17,9 @@
 #define _KERN_DO_ELF64
 #define _NLIST_DO_ELF
 
-#ifdef __arch64__
 #define ARCH_ELFSIZE		64	/* MD native binary size */
 #define ELF_TARG_CLASS		ELFCLASS64
 #define ELF_TARG_MACH		EM_SPARCV9
-#else
-#define ARCH_ELFSIZE		32	/* MD native binary size */
-#define ELF_TARG_CLASS		ELFCLASS32
-#define ELF_TARG_MACH		EM_SPARC
-#endif
 
 #define ELF_TARG_DATA		ELFDATA2MSB
 

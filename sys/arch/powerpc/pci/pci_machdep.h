@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pci_machdep.h,v 1.5.2.4 2002/03/29 19:46:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/pci/Attic/pci_machdep.h,v 1.5.2.5 2003/03/27 23:42:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Carnegie-Mellon University.
@@ -63,6 +63,8 @@ struct ppc_pci_chipset {
 	void		(*pc_intr_disestablish)(void *, void *);
 	int		(*pc_ether_hw_addr)(struct ppc_pci_chipset *, u_int8_t *);
 };
+
+int		pci_intr_line(pci_intr_handle_t ih);
 
 /*
  * Functions provided to machine-independent PCI code.

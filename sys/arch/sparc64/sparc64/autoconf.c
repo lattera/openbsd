@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.4 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/autoconf.c,v 1.13.4.5 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.51 2001/07/24 19:32:11 eeh Exp $ */
 
 /*
@@ -106,12 +106,10 @@ extern	int kgdb_debug_panic;
 #endif
 
 static	int rootnode;
-char platform_type[32];
+char platform_type[64];
 
 static	char *str2hex(char *, int *);
 static	int mbprint(void *, const char *);
-static	void crazymap(char *, int *);
-int	st_crazymap(int);
 void	sync_crash(void);
 int	mainbus_match(struct device *, void *, void *);
 static	void mainbus_attach(struct device *, struct device *, void *);
@@ -227,11 +225,6 @@ bootstrap(nctx)
 	int nctx;
 {
 	extern int end;	/* End of kernel */
-#ifndef	__arch64__
-	/* Assembly glue for the PROM */
-	extern void OF_sym2val32(void *);
-	extern void OF_val2sym32(void *);
-#endif
 
 	/* 
 	 * Initialize ddb first and register OBP callbacks.
@@ -251,14 +244,8 @@ bootstrap(nctx)
 #ifdef DDB
 	db_machine_init();
 	ddb_init();
-#ifdef __arch64__
 	/* This can only be installed on an 64-bit system cause otherwise our stack is screwed */
 	OF_set_symbol_lookup(OF_sym2val, OF_val2sym);
-#else
-#if 1
-	OF_set_symbol_lookup(OF_sym2val32, OF_val2sym32);
-#endif
-#endif
 #endif
 
 	pmap_bootstrap(KERNBASE, (u_long)&end, nctx);
@@ -466,56 +453,6 @@ bootpath_store(storep, bp)
 }
 
 /*
- * Set up the sd target mappings for non SUN4 PROMs.
- * Find out about the real SCSI target, given the PROM's idea of the
- * target of the (boot) device (i.e., the value in bp->v0val[0]).
- */
-static void
-crazymap(prop, map)
-	char *prop;
-	int *map;
-{
-	int i;
-
-	/*
-	 * Set up the identity mapping for old sun4 monitors
-	 * and v[2-] OpenPROMs. Note: dkestablish() does the
-	 * SCSI-target juggling for sun4 monitors.
-	 */
-	for (i = 0; i < 8; ++i)
-		map[i] = i;
-}
-
-int
-sd_crazymap(n)
-	int	n;
-{
-	static int prom_sd_crazymap[8]; /* static: compute only once! */
-	static int init = 0;
-
-	if (init == 0) {
-		crazymap("sd-targets", prom_sd_crazymap);
-		init = 1;
-	}
-	return prom_sd_crazymap[n];
-}
-
-int
-st_crazymap(n)
-	int	n;
-{
-	static int prom_st_crazymap[8]; /* static: compute only once! */
-	static int init = 0;
-
-	if (init == 0) {
-		crazymap("st-targets", prom_st_crazymap);
-		init = 1;
-	}
-	return prom_st_crazymap[n];
-}
-
-
-/*
  * Determine mass storage and memory configuration for a machine.
  * We get the PROM's root device and make sure we understand it, then
  * attach it as `mainbus0'.  We also set up to handle the PROM `sync'
@@ -663,6 +600,8 @@ setroot()
 					goto gotswap;
 				}
 			}
+			if (len == 4 && strncmp(buf, "exit", 4) == 0)
+				OF_exit();
 			dv = getdisk(buf, len, bp?bp->val[2]:0, &nrootdev);
 			if (dv != NULL) {
 				bootdv = dv;
@@ -702,6 +641,8 @@ setroot()
 				}
 				break;
 			}
+			if (len == 4 && strncmp(buf, "exit", 4) == 0)
+				OF_exit();
 			dv = getdisk(buf, len, 1, &nswapdev);
 			if (dv) {
 				if (dv->dv_class == DV_IFNET)
@@ -747,6 +688,9 @@ gotswap:
 		 * `root DEV swap DEV': honour rootdev/swdevt.
 		 * rootdev/swdevt/mountroot already properly set.
 		 */
+		if (bootdv->dv_class == DV_DISK)
+			printf("root on %s%c\n", bootdv->dv_xname,
+			    part + 'a');
 		majdev = major(rootdev);
 		unit = DISKUNIT(rootdev);
 		part = DISKPART(rootdev);
@@ -841,7 +785,7 @@ getdisk(str, len, defpart, devp)
 	struct device *dv;
 
 	if ((dv = parsedisk(str, len, defpart, devp)) == NULL) {
-		printf("use one of:");
+		printf("use one of: exit");
 #ifdef RAMDISK_HOOKS
 		printf(" %s[a-p]", fakerdrootdev.dv_xname);
 #endif
@@ -1061,7 +1005,7 @@ mainbus_attach(parent, dev, aux)
 	void *aux;
 {
 extern struct sparc_bus_dma_tag mainbus_dma_tag;
-extern struct sparc_bus_space_tag mainbus_space_tag;
+extern bus_space_tag_t mainbus_space_tag;
 
 	struct mainbus_attach_args ma;
 	char buf[32];
@@ -1084,7 +1028,10 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 		NULL
 	};
 
-	OF_getprop(findroot(), "name", platform_type, sizeof(platform_type));
+	if (OF_getprop(findroot(), "banner-name", platform_type,
+	    sizeof(platform_type)) <= 0)
+		OF_getprop(findroot(), "name", platform_type,
+		    sizeof(platform_type));
 	printf(": %s\n", platform_type);
 
 
@@ -1114,7 +1061,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 				continue;
 			if (strcmp(buf, "cpu") == 0) {
 				bzero(&ma, sizeof(ma));
-				ma.ma_bustag = &mainbus_space_tag;
+				ma.ma_bustag = mainbus_space_tag;
 				ma.ma_dmatag = &mainbus_dma_tag;
 				ma.ma_node = node;
 				ma.ma_name = "cpu";
@@ -1123,7 +1070,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 			}
 		}
 		if (node == 0)
-			panic("None of the CPUs found\n");
+			panic("None of the CPUs found");
 	}
 
 
@@ -1156,7 +1103,7 @@ extern struct sparc_bus_space_tag mainbus_space_tag;
 			continue; /* an "early" device already configured */
 
 		bzero(&ma, sizeof ma);
-		ma.ma_bustag = &mainbus_space_tag;
+		ma.ma_bustag = mainbus_space_tag;
 		ma.ma_dmatag = &mainbus_dma_tag;
 		ma.ma_name = buf;
 		ma.ma_node = node;
@@ -1468,6 +1415,7 @@ static struct {
 	{ "disk",	BUSCLASS_NONE,		"wd" },
 	{ "cmdk",	BUSCLASS_NONE,		"wd" },
 	{ "pci108e,1101.1", BUSCLASS_NONE,	"gem" },
+	{ "dc",		BUSCLASS_NONE,		"dc" },
 	{ "network",	BUSCLASS_NONE,		"hme" },
 	{ "ethernet",	BUSCLASS_NONE,		"dc" },
 	{ "SUNW,fas",	BUSCLASS_NONE,		"esp" },
@@ -1628,10 +1576,13 @@ device_register(dev, aux)
 			if (strcmp(bp->name, "ide") == 0 &&
 			    strcmp((bp + 1)->name, "ata") == 0 &&
 			    strcmp((bp + 2)->name, "cmdk") == 0) {
-				if (((bp + 2)->val[0] == (bp + 1)->val[0]) &&
-				    ((bp + 1)->val[1] == 0)) {
+				if ((bp + 2)->val[1] == 0 &&
+				    (bp + 1)->val[1] == 0) {
 					(bp + 1)->dev = dev;
 					bootpath_store(1, bp + 2);
+					(bp + 2)->val[0] +=
+					    2 * ((bp + 1)->val[0]);
+					(bp + 2)->val[1] = 0;
 				}
 			}
 			return;
@@ -1686,7 +1637,8 @@ device_register(dev, aux)
 		/* IDE disks. */
 		struct ata_atapi_attach *aa = aux;
 
-		if (aa->aa_channel == bp->val[0]) {
+		if ((bp->val[0] / 2) == aa->aa_channel &&
+		    (bp->val[0] % 2) == aa->aa_drv_data->drive) {
 			nail_bootdev(dev, bp);
 			DPRINTF(ACDB_BOOTDEV, ("\t-- found wd disk %s\n",
 			    dev->dv_xname));

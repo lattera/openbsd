@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.11.4.5 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/trap.c,v 1.11.4.6 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.73 2001/08/09 01:03:01 eeh Exp $ */
 
 /*
@@ -66,6 +66,9 @@
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
+
+#include "systrace.h"
+#include <dev/systrace.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -368,8 +371,11 @@ userret(p, pc, oticks)
 	/*
 	 * If profiling, charge recent system time to the trapped pc.
 	 */
-	if (p->p_flag & P_PROFIL)
-		addupc_task(p, pc, (int)(p->p_sticks - oticks));
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
+	}
 
 #ifdef notyet
 	curcpu()->ci_schedstate.spc_curpriority = p->p_priority;
@@ -884,7 +890,7 @@ kfault:
 			return;
 		}
 		if (rv == ENOMEM) {
-			printf("UVM: pid %d (%s), uid %d killed: out of swap\n",
+			printf("UVM: pid %d (%s), uid %u killed: out of swap\n",
 			       p->p_pid, p->p_comm,
 			       p->p_cred && p->p_ucred ?
 			       p->p_ucred->cr_uid : -1);
@@ -922,8 +928,6 @@ data_access_error(tf, type, afva, afsr, sfva, sfsr)
 	u_quad_t sticks;
 	union sigval sv;
 
-	sv.sival_ptr = (void *)pc;
-
 	uvmexp.traps++;
 	if ((p = curproc) == NULL)	/* safety check */
 		p = &proc0;
@@ -931,6 +935,8 @@ data_access_error(tf, type, afva, afsr, sfva, sfsr)
 
 	pc = tf->tf_pc;
 	tstate = tf->tf_tstate;
+
+	sv.sival_ptr = (void *)pc;
 
 	onfault = p->p_addr ? (long)p->p_addr->u_pcb.pcb_onfault : 0;
 	printf("data error type %x sfsr=%lx sfva=%lx afsr=%lx afva=%lx tf=%p\n",
@@ -1000,7 +1006,7 @@ text_access_fault(tf, type, pc, sfsr)
 
 	uvmexp.traps++;
 	if ((p = curproc) == NULL)	/* safety check */
-		panic("text_access_fault: no curproc\n");
+		panic("text_access_fault: no curproc");
 	sticks = p->p_sticks;
 
 	tstate = tf->tf_tstate;
@@ -1009,7 +1015,7 @@ text_access_fault(tf, type, pc, sfsr)
 
 	/* Now munch on protections... */
 
-	access_type = /* VM_PROT_EXECUTE| */VM_PROT_READ;
+	access_type = VM_PROT_EXECUTE;
 	if (tstate & (PSTATE_PRIV<<TSTATE_PSTATE_SHIFT)) {
 		extern int trap_trace_dis;
 		trap_trace_dis = 1; /* Disable traptrace for printf */
@@ -1116,7 +1122,7 @@ text_access_error(tf, type, pc, sfsr, afva, afsr)
 	va = trunc_page(pc);
 
 	/* Now munch on protections... */
-	access_type = /* VM_PROT_EXECUTE| */ VM_PROT_READ;
+	access_type = VM_PROT_EXECUTE;
 	if (tstate & (PSTATE_PRIV<<TSTATE_PSTATE_SHIFT)) {
 		extern int trap_trace_dis;
 		trap_trace_dis = 1; /* Disable traptrace for printf */
@@ -1302,7 +1308,7 @@ syscall(tf, code, pc)
 		if (error)
 			goto bad;
 	} else {
-#if defined(__arch64__) && !defined(COMPAT_NETBSD32)
+#if !defined(COMPAT_NETBSD32)
 		error = EFAULT;
 		goto bad;
 #else
@@ -1331,7 +1337,6 @@ syscall(tf, code, pc)
 				*argp++ = *ap++;
 #ifdef KTRACE
 		if (KTRPOINT(p, KTR_SYSCALL)) {
-#if defined(__arch64__)
 			register_t temp[8];
 			
 			/* Need to xlate 32-bit->64-bit */
@@ -1341,23 +1346,24 @@ syscall(tf, code, pc)
 				temp[j] = args.i[j];
 			ktrsyscall(p, code,
 				   i * sizeof(register_t), (register_t *)temp);
-#else
-			ktrsyscall(p, code,
-				   callp->sy_argsize, (register_t *)args.i);
-#endif
 		}
 #endif
 		if (error) {
 			goto bad;
 		}
-#endif	/* __arch64__ && !COMPAT_NETBSD32 */
+#endif	/* !COMPAT_NETBSD32 */
 	}
 #ifdef SYSCALL_DEBUG
 	scdebug_call(p, code, (register_t *)&args);
 #endif
 	rval[0] = 0;
 	rval[1] = tf->tf_out[1];
-	error = (*callp->sy_call)(p, &args, rval);
+#if NSYSTRACE > 0
+	if (ISSET(p->p_flag, P_SYSTRACE))
+		error = systrace_redirect(code, p, &args, rval);
+	else
+#endif
+		error = (*callp->sy_call)(p, &args, rval);
 
 	switch (error) {
 		vaddr_t dest;

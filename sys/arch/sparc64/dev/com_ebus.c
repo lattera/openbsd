@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.3 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/com_ebus.c,v 1.1.4.4 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: com_ebus.c,v 1.6 2001/07/24 19:27:10 eeh Exp $	*/
 
 /*
@@ -106,10 +106,9 @@ com_ebus_attach(parent, self, aux)
 	struct ebus_attach_args *ea = aux;
 	int i, com_is_input, com_is_output;
 
-	sc->sc_iot = ea->ea_bustag;
 	sc->sc_iobase = EBUS_PADDR_FROM_REG(&ea->ea_regs[0]);
 	/*
-	 * Addresses that shoud be supplied by the prom:
+	 * Addresses that should be supplied by the prom:
 	 *	- normal com registers
 	 *	- ns873xx configuration registers
 	 *	- DMA space
@@ -119,22 +118,31 @@ com_ebus_attach(parent, self, aux)
 	 *
 	 * Use the prom address if there.
 	 */
-	if (ea->ea_nvaddrs)
-		sc->sc_ioh = (bus_space_handle_t)ea->ea_vaddrs[0];
-	else if (ebus_bus_map(sc->sc_iot, 0,
-			      EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
-			      ea->ea_regs[0].size,
-			      BUS_SPACE_MAP_LINEAR,
-			      0, &sc->sc_ioh) != 0) {
+	if (ea->ea_nvaddrs) {
+		if (bus_space_map(ea->ea_memtag, ea->ea_vaddrs[0], 0,
+		    BUS_SPACE_MAP_PROMADDRESS, &sc->sc_ioh) == 0) {
+			printf(": can't map register space\n");
+			return;
+		}
+		sc->sc_iot = ea->ea_memtag;
+	} else if (ebus_bus_map(ea->ea_memtag, 0,
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
+	    ea->ea_regs[0].size, 0, 0, &sc->sc_ioh) == 0) {
+		sc->sc_iot = ea->ea_memtag;
+	} else if (ebus_bus_map(ea->ea_iotag, 0,
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
+	    ea->ea_regs[0].size, 0, 0, &sc->sc_ioh) == 0) {
+		sc->sc_iot = ea->ea_iotag;
+	} else {
 		printf(": can't map register space\n");
-                return;
+               	return;
 	}
 	sc->sc_hwflags = 0;
 	sc->sc_swflags = 0;
 	sc->sc_frequency = BAUD_BASE;
 
 	for (i = 0; i < ea->ea_nintrs; i++)
-		bus_intr_establish(ea->ea_bustag, ea->ea_intrs[i],
+		bus_intr_establish(sc->sc_iot, ea->ea_intrs[i],
 		    IPL_TTY, 0, comintr, sc);
 
 	/* Figure out if we're the console. */
@@ -163,7 +171,12 @@ com_ebus_attach(parent, self, aux)
 		if (com_is_output)
 			cn_tab->cn_putc = comcnputc;
 	}
+
+        if (OF_getproplen(ea->ea_node, "keyboard") == 0)
+		printf(", keyboard");
+	else if (OF_getproplen(ea->ea_node, "mouse") == 0)
+		printf(", mouse");
+
 	/* Now attach the driver */
 	com_attach_subr(sc);
 }
-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/comkbd_ebus.c,v 1.4.2.1 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/comkbd_ebus.c,v 1.4.2.2 2003/03/27 23:42:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -29,6 +29,11 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/param.h>
@@ -192,7 +197,7 @@ comkbd_attach(parent, self, aux)
 
 	timeout_set(&sc->sc_bellto, comkbd_bellstop, sc);
 
-	sc->sc_iot = ea->ea_bustag;
+	sc->sc_iot = ea->ea_memtag;
 
 	sc->sc_rxget = sc->sc_rxput = sc->sc_rxbeg = sc->sc_rxbuf;
 	sc->sc_rxend = sc->sc_rxbuf + COMK_RX_RING;
@@ -210,23 +215,28 @@ comkbd_attach(parent, self, aux)
 		return;
 	}
 
-	sc->sc_ih = bus_intr_establish(ea->ea_bustag,
+	/* Use prom address if available, otherwise map it. */
+	if (ea->ea_nvaddrs && bus_space_map(ea->ea_memtag, ea->ea_vaddrs[0], 0,
+	    BUS_SPACE_MAP_PROMADDRESS, &sc->sc_ioh) == 0) {
+		sc->sc_iot = ea->ea_memtag;
+	} else if (ebus_bus_map(ea->ea_memtag, 0,
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
+	    ea->ea_regs[0].size, 0, 0, &sc->sc_ioh) == 0) {
+		sc->sc_iot = ea->ea_memtag;
+	} else if (ebus_bus_map(ea->ea_iotag, 0,
+	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
+	    ea->ea_regs[0].size, 0, 0, &sc->sc_ioh) == 0) {
+		sc->sc_iot = ea->ea_iotag;
+	} else {
+		printf(": can't map register space\n");
+                return;
+	}
+
+	sc->sc_ih = bus_intr_establish(sc->sc_iot,
 	    ea->ea_intrs[0], IPL_TTY, 0, comkbd_intr, sc);
 	if (sc->sc_ih == NULL) {
 		printf(": can't get hard intr\n");
 		return;
-	}
-
-	/* Use prom address if available, otherwise map it. */
-	if (ea->ea_nvaddrs)
-		sc->sc_ioh = (bus_space_handle_t)ea->ea_vaddrs[0];
-	else if (ebus_bus_map(sc->sc_iot, 0,
-			      EBUS_PADDR_FROM_REG(&ea->ea_regs[0]),
-			      ea->ea_regs[0].size,
-			      BUS_SPACE_MAP_LINEAR,
-			      0, &sc->sc_ioh) != 0) {
-		printf(": can't map register space\n");
-                return;
 	}
 
 	if (console) {
@@ -234,7 +244,13 @@ comkbd_attach(parent, self, aux)
 		cn_tab->cn_dev = makedev(77, sc->sc_dv.dv_unit); /* XXX */
 		cn_tab->cn_pollc = wskbd_cnpollc;
 		cn_tab->cn_getc = wskbd_cngetc;
-		wskbd_cnattach(&comkbd_consops, sc, &sunkbd_keymapdata);
+		if (ISTYPE5(sc->sc_layout)) {
+			wskbd_cnattach(&comkbd_consops, sc,
+			    &sunkbd5_keymapdata);
+		} else {
+			wskbd_cnattach(&comkbd_consops, sc,
+			    &sunkbd_keymapdata);
+		}
 		sc->sc_ier = IER_ETXRDY | IER_ERXRDY;
 		COM_WRITE(sc, com_ier, sc->sc_ier);
 		COM_READ(sc, com_iir);
@@ -242,9 +258,24 @@ comkbd_attach(parent, self, aux)
 	} else
 		printf("\n");
 
-
 	a.console = console;
-	a.keymap = &sunkbd_keymapdata;
+	if (ISTYPE5(sc->sc_layout)) {
+		a.keymap = &sunkbd5_keymapdata;
+#ifndef SUNKBD5_LAYOUT
+		if (sc->sc_layout < MAXSUNLAYOUT &&
+		    sunkbd_layouts[sc->sc_layout] != -1)
+			sunkbd5_keymapdata.layout =
+			    sunkbd_layouts[sc->sc_layout];
+#endif
+	} else {
+		a.keymap = &sunkbd_keymapdata;
+#ifndef SUNKBD_LAYOUT
+		if (sc->sc_layout < MAXSUNLAYOUT &&
+		    sunkbd_layouts[sc->sc_layout] != -1)
+			sunkbd_keymapdata.layout =
+			    sunkbd_layouts[sc->sc_layout];
+#endif
+	}
 	a.accessops = &comkbd_accessops;
 	a.accesscookie = sc;
 	sc->sc_wskbddev = config_found(self, &a, wskbddevprint);
@@ -303,7 +334,11 @@ comkbd_ioctl(v, cmd, data, flag, p)
 
 	switch (cmd) {
 	case WSKBDIO_GTYPE:
-		*d_int = WSKBD_TYPE_SUN;
+		if (ISTYPE5(sc->sc_layout)) {
+			*d_int = WSKBD_TYPE_SUN5;
+		} else {
+			*d_int = WSKBD_TYPE_SUN;
+		}
 		return (0);
 	case WSKBDIO_SETLEDS:
 		comkbd_setleds(v, *d_int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2.4.3 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ce4231.c,v 1.2.4.4 2003/03/27 23:42:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -34,6 +34,11 @@
 /*
  * Driver for CS4231 based audio found in some sun4m systems (cs4231)
  * based on ideas from the S/Linux project and the NetBSD project.
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include "audio.h"
@@ -212,7 +217,10 @@ ce4231_match(parent, vcf, aux)
 {
 	struct ebus_attach_args *ea = aux;
 
-	return (strcmp("SUNW,CS4231", ea->ea_name) == 0);
+	if (!strcmp("SUNW,CS4231", ea->ea_name) ||
+	    !strcmp("audio", ea->ea_name))
+		return (1);
+	return (0);
 }
 
 void    
@@ -229,7 +237,7 @@ ce4231_attach(parent, self, aux)
 	sc->sc_last_format = 0xffffffff;
 
 	/* Pass on the bus tags */
-	sc->sc_bustag = ea->ea_bustag;
+	sc->sc_bustag = ea->ea_memtag;
 	sc->sc_dmatag = ea->ea_dmatag;
 
 	/* Make sure things are sane. */
@@ -243,13 +251,13 @@ ce4231_attach(parent, self, aux)
 		return;
 	}
 
-	sc->sc_cih = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[0],
+	sc->sc_cih = bus_intr_establish(sc->sc_bustag, ea->ea_intrs[0],
 	    IPL_AUDIO, 0, ce4231_cintr, sc);
 	if (sc->sc_cih == NULL) {
 		printf(": couldn't establish capture interrupt\n");
 		return;
 	}
-	sc->sc_pih = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[1],
+	sc->sc_pih = bus_intr_establish(sc->sc_bustag, ea->ea_intrs[1],
 	    IPL_AUDIO, 0, ce4231_pintr, sc);
 	if (sc->sc_pih == NULL) {
 		printf(": couldn't establish play interrupt1\n");
@@ -258,28 +266,28 @@ ce4231_attach(parent, self, aux)
 
 	/* XXX what if prom has already mapped?! */
 
-	if (ebus_bus_map(ea->ea_bustag, 0,
+	if (ebus_bus_map(sc->sc_bustag, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_cshandle) != 0) {
 		printf(": couldn't map cs4231 registers\n");
 		return;
 	}
 
-	if (ebus_bus_map(ea->ea_bustag, 0,
+	if (ebus_bus_map(sc->sc_bustag, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[1]), ea->ea_regs[1].size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_pdmahandle) != 0) {
 		printf(": couldn't map dma1 registers\n");
 		return;
 	}
 
-	if (ebus_bus_map(ea->ea_bustag, 0,
+	if (ebus_bus_map(sc->sc_bustag, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[2]), ea->ea_regs[2].size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_cdmahandle) != 0) {
 		printf(": couldn't map dma2 registers\n");
 		return;
 	}
 
-	if (ebus_bus_map(ea->ea_bustag, 0,
+	if (ebus_bus_map(sc->sc_bustag, 0,
 	    EBUS_PADDR_FROM_REG(&ea->ea_regs[3]), ea->ea_regs[3].size,
 	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_auxhandle) != 0) {
 		printf(": couldn't map aux registers\n");
@@ -385,10 +393,8 @@ ce4231_set_speed(sc, argp)
 		}
 	}
 
-	if (selected == -1) {
-		printf("%s: can't find speed\n", sc->sc_dev.dv_xname);
+	if (selected == -1)
 		selected = 3;
-	}
 
 	sc->sc_speed_bits = speed_table[selected].bits;
 	sc->sc_need_commit = 1;
@@ -576,60 +582,72 @@ ce4231_set_params(addr, setmode, usemode, p, r)
 	struct audio_params *p, *r;
 {
 	struct ce4231_softc *sc = (struct ce4231_softc *)addr;
-	int err, bits, enc;
-	void (*pswcode)(void *, u_char *, int cnt);
-	void (*rswcode)(void *, u_char *, int cnt);
-
-	enc = p->encoding;
-	pswcode = rswcode = 0;
-	switch (enc) {
-	case AUDIO_ENCODING_SLINEAR_LE:
-		if (p->precision == 8) {
-			enc = AUDIO_ENCODING_ULINEAR_LE;
-			pswcode = rswcode = change_sign8;
-		}
-		break;
-	case AUDIO_ENCODING_ULINEAR_LE:
-		if (p->precision == 16) {
-			enc = AUDIO_ENCODING_SLINEAR_LE;
-			pswcode = rswcode = change_sign16;
-		}
-		break;
-	case AUDIO_ENCODING_ULINEAR_BE:
-		if (p->precision == 16) {
-			enc = AUDIO_ENCODING_SLINEAR_BE;
-			pswcode = rswcode = change_sign16;
-		}
-		break;
-	}
+	int err, bits, enc = p->encoding;
+	void (*pswcode)(void *, u_char *, int cnt) = NULL;
+	void (*rswcode)(void *, u_char *, int cnt) = NULL;
 
 	switch (enc) {
 	case AUDIO_ENCODING_ULAW:
+		if (p->precision != 8)
+			return (EINVAL);
 		bits = FMT_ULAW >> 5;
 		break;
 	case AUDIO_ENCODING_ALAW:
+		if (p->precision != 8)
+			return (EINVAL);
 		bits = FMT_ALAW >> 5;
 		break;
-	case AUDIO_ENCODING_ADPCM:
-		bits = FMT_ADPCM >> 5;
-		break;
 	case AUDIO_ENCODING_SLINEAR_LE:
-		if (p->precision == 16)
+		if (p->precision == 8) {
+			bits = FMT_PCM8 >> 5;
+			pswcode = rswcode = change_sign8;
+		} else if (p->precision == 16)
 			bits = FMT_TWOS_COMP >> 5;
 		else
 			return (EINVAL);
 		break;
+	case AUDIO_ENCODING_ULINEAR:
+		if (p->precision != 8)
+			return (EINVAL);
+		bits = FMT_PCM8 >> 5;
+		break;
 	case AUDIO_ENCODING_SLINEAR_BE:
-		if (p->precision == 16)
+		if (p->precision == 8) {
+			bits = FMT_PCM8 >> 5;
+			pswcode = rswcode = change_sign8;
+		} else if (p->precision == 16)
 			bits = FMT_TWOS_COMP_BE >> 5;
 		else
 			return (EINVAL);
 		break;
+	case AUDIO_ENCODING_SLINEAR:
+		if (p->precision != 8)
+			return (EINVAL);
+		bits = FMT_PCM8 >> 5;
+		pswcode = rswcode = change_sign8;
+		break;
 	case AUDIO_ENCODING_ULINEAR_LE:
 		if (p->precision == 8)
 			bits = FMT_PCM8 >> 5;
-		else
+		else if (p->precision == 16) {
+			bits = FMT_TWOS_COMP >> 5;
+			pswcode = rswcode = change_sign16_le;
+		} else
 			return (EINVAL);
+		break;
+	case AUDIO_ENCODING_ULINEAR_BE:
+		if (p->precision == 8)
+			bits = FMT_PCM8 >> 5;
+		else if (p->precision == 16) {
+			bits = FMT_TWOS_COMP_BE >> 5;
+			pswcode = rswcode = change_sign16_be;
+		} else
+			return (EINVAL);
+		break;
+	case AUDIO_ENCODING_ADPCM:
+		if (p->precision != 8)
+			return (EINVAL);
+		bits = FMT_ADPCM >> 5;
 		break;
 	default:
 		return (EINVAL);
@@ -876,6 +894,8 @@ ce4231_set_port(addr, cp)
 		error = 0;
 		break;
 	case CSAUDIO_OUTPUT:
+		if (cp->type != AUDIO_MIXER_ENUM)
+			break;
 		if (cp->un.ord != CSPORT_LINEOUT &&
 		    cp->un.ord != CSPORT_SPEAKER &&
 		    cp->un.ord != CSPORT_HEADPHONE)
@@ -1087,17 +1107,17 @@ ce4231_get_port(addr, cp)
 		error = 0;
 		break;
 	case CSAUDIO_RECORD_SOURCE:
-		if (cp->type != AUDIO_MIXER_ENUM) break;
+		if (cp->type != AUDIO_MIXER_ENUM)
+			break;
 		cp->un.ord = MIC_IN_PORT;
 		error = 0;
 		break;
 	case CSAUDIO_OUTPUT:
-		if (cp->type != AUDIO_MIXER_ENUM) break;
+		if (cp->type != AUDIO_MIXER_ENUM)
+			break;
 		cp->un.ord = sc->sc_out_port;
 		error = 0;
 		break;
-	default:
-		printf("Invalid kind!\n");
 	}
 	return (error);
 }
@@ -1460,7 +1480,7 @@ ce4231_trigger_output(addr, start, end, blksize, intr, arg, param)
 	for (p = sc->sc_dmas; p->addr != start; p = p->next)
 		/*EMPTY*/;
 	if (p == NULL) {
-		printf("%s: trigger_output: bad addr: %x\n",
+		printf("%s: trigger_output: bad addr: %p\n",
 		    sc->sc_dev.dv_xname, start);
 		return (EINVAL);
 	}

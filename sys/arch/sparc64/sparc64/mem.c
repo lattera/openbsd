@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/mem.c,v 1.3.4.3 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/mem.c,v 1.3.4.4 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: mem.c,v 1.18 2001/04/24 04:31:12 thorpej Exp $ */
 
 /*
@@ -180,14 +180,23 @@ mmrw(dev, uio, flags)
 					
 				case UIO_USERSPACE:
 					if (uio->uio_rw == UIO_READ)
-						while (cnt--)
-							if(subyte(d++, lduba(v++, ASI_PHYS_CACHED))) {
-								error = EFAULT;
-								goto unlock;
-							}
+						while (cnt--) {
+							char tmp;
+
+							tmp = lduba(v++, ASI_PHYS_CACHED);
+							error = copyout(&tmp, d++, sizeof(tmp));
+							if (error != 0)
+								break;
+						}
 					else
-						while (cnt--)
-							stba(v++, ASI_PHYS_CACHED, fubyte(d++));
+						while (cnt--) {
+							char tmp;
+
+							error = copyin(d++, &tmp, sizeof(tmp));
+							if (error != 0)
+								break;
+							stba(v++, ASI_PHYS_CACHED, tmp);
+						}
 					if (error)
 						goto unlock;
 					break;

@@ -1,4 +1,4 @@
-# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.3 2002/03/28 10:57:11 niklas Exp $
+# 	$OpenBSD: src/sys/arch/sparc64/conf/RAMDISK,v 1.10.4.4 2003/03/27 23:42:35 niklas Exp $
 
 # Machine architecture; required by config(8)
 machine		sparc64
@@ -42,9 +42,11 @@ ebus*	at pci?
 
 hme*	at pci? dev ? function ?
 gem*	at pci? dev ? function ?
+#ti*	at pci? dev ? function ?
 dc*	at pci? dev ? function ?
 
 auxio*	at ebus?
+auxio*	at sbus? slot ? offset ?
 #com*	at ebus?
 clock*	at sbus? slot ? offset ?		# Mostek clock 
 clock*	at ebus?
@@ -83,10 +85,16 @@ scsibus* at atapiscsi?
 dma*	at sbus? slot ? offset ?		# SBus
 esp*	at dma? flags 0x0000			# SBus
 esp*	at sbus? slot ? offset ?
+isp*	at sbus? slot ? offset ?
+option ISP_COMPILE_1000_FW=1
 scsibus* at esp?
 
 siop*	at pci? dev ? function ?
+isp*	at pci? dev ? function ?
+option ISP_COMPILE_FW=1
 scsibus*	at siop?
+
+scsibus*	at isp?
 
 # These entries find devices on all SCSI busses and assign
 # unit numers dynamically.
@@ -97,6 +105,7 @@ cd*	at scsibus? target ? lun ?	# SCSI CD-ROMs
 nsphy*	at mii? phy ?				# NS and compatible PHYs
 qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 dcphy*	at mii? phy ?				# Digital clone PHYs
+amphy*	at mii? phy ?				# AMD AM79c873 PHYs
 ukphy*	at mii? phy ?				# Unknown PHYs
 
 pseudo-device	rd	2	# ramdisk

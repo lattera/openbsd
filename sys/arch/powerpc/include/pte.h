@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/pte.h,v 1.2.14.3 2002/03/29 16:11:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/include/pte.h,v 1.2.14.4 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: pte.h,v 1.1 1996/09/30 16:34:32 ws Exp $	*/
 
 /*-
@@ -57,6 +57,7 @@ struct pte {
 #define	PTE_CHG		0x00000080
 #define	PTE_WIMG	0x00000078
 #define	PTE_W		0x00000040
+#define	PTE_EXE		0x00000040 /* only used in pmap_attr, same as PTE_W */
 #define	PTE_I		0x00000020
 #define	PTE_M		0x00000010
 #define	PTE_G		0x00000008
@@ -79,7 +80,7 @@ typedef	struct pte pte_t;
 
 #ifndef	_LOCORE
 #ifdef	_KERNEL
-extern pte_t *ptable;
+extern struct pte *ptable;
 extern int ptab_cnt;
 #endif	/* _KERNEL */
 #endif	/* _LOCORE */

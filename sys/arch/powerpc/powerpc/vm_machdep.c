@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.6 2002/03/29 19:46:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/vm_machdep.c,v 1.11.2.7 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.1 1996/09/30 16:34:57 ws Exp $	*/
 
 /*
@@ -204,14 +204,14 @@ cpu_coredump(p, vp, cred, chdr)
 	struct md_coredump md_core;
 	int error;
 	
-	CORE_SETMAGIC(*chdr, COREMAGIC, MID_ZERO, 0);
+	CORE_SETMAGIC(*chdr, COREMAGIC, MID_POWERPC, 0);
 	chdr->c_hdrsize = ALIGN(sizeof *chdr);
 	chdr->c_seghdrsize = ALIGN(sizeof cseg);
 	chdr->c_cpusize = sizeof md_core;
 
 	process_read_regs(p, &(md_core.regs));
 	
-	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_ZERO, CORE_CPU);
+	CORE_SETMAGIC(cseg, CORESEGMAGIC, MID_POWERPC, CORE_CPU);
 	cseg.c_addr = 0;
 	cseg.c_size = chdr->c_cpusize;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/frame.h,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/frame.h,v 1.2.4.2 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: frame.h,v 1.9 2001/03/04 09:28:35 mrg Exp $ */
 
 /*
@@ -44,6 +44,9 @@
  *
  *	@(#)frame.h	8.1 (Berkeley) 6/11/93
  */
+
+#ifndef _SPARC64_FRAME_H_
+#define _SPARC64_FRAME_H_
 
 /*
  * Sparc stack frame format.
@@ -133,3 +136,4 @@ struct frame64 {
  */
 #define BIAS	(2048-1)
 
+#endif /* _SPARC64_FRAME_H_ */

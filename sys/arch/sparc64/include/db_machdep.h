@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/db_machdep.h,v 1.4.4.3 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/db_machdep.h,v 1.4.4.4 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.12 2001/07/07 15:16:13 eeh Exp $ */
 
 /*
@@ -80,7 +80,7 @@ typedef struct db_regs {
 } db_regs_t;
 #endif
 
-db_regs_t		ddb_regs;	/* register state */
+extern	db_regs_t ddb_regs;	/* register state */
 #define	DDB_REGS	(&ddb_regs)
 #define	DDB_TF		(&ddb_regs.ddb_tf)
 #define	DDB_FR		(&ddb_regs.ddb_fr)
@@ -144,16 +144,9 @@ int kdb_trap(int, struct trapframe64 *);
 /*
  * We will use elf symbols in DDB when they work.
  */
-#if 1
 #define	DB_ELF_SYMBOLS
-#ifdef __arch64__
 #define DB_ELFSIZE	64
-#else
-#define DB_ELFSIZE	32
-#endif
-#else
-#define DB_AOUT_SYMBOLS
-#endif
+
 /*
  * KGDB definitions
  */

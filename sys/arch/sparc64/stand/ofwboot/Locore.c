@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/Locore.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot/Locore.c,v 1.2.4.3 2003/03/27 23:42:38 niklas Exp $	*/
 /*	$NetBSD: Locore.c,v 1.1 2000/08/20 14:58:36 mrg Exp $	*/
 
 /*
@@ -408,7 +408,7 @@ OF_chain(virt, size, entry, arg, len)
 			(unsigned long)romp, (unsigned long)romp);
 	}
 	entry(0, arg, len, (unsigned long)romp, (unsigned long)romp);
-	panic("OF_chain: kernel returned!\n");
+	panic("OF_chain: kernel returned!");
 	__asm("ta 2" : :);
 }
 

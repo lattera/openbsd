@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/ebusvar.h,v 1.3.4.2 2002/03/28 10:57:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/ebusvar.h,v 1.3.4.3 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: ebusvar.h,v 1.5 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*
@@ -41,7 +41,8 @@ struct ebus_attach_args {
 	char			*ea_name;	/* PROM name */
 	int			ea_node;	/* PROM node */
 	
-	bus_space_tag_t		ea_bustag;
+	bus_space_tag_t		ea_memtag;
+	bus_space_tag_t		ea_iotag;
 	bus_dma_tag_t		ea_dmatag;
 
 	struct ebus_regs	*ea_regs;	/* registers */
@@ -60,7 +61,6 @@ struct ebus_softc {
 
 	bus_space_tag_t			sc_memtag;	/* from pci */
 	bus_space_tag_t			sc_iotag;	/* from pci */
-	bus_space_tag_t			sc_childbustag;	/* pass to children */
 	bus_dma_tag_t			sc_dmatag;	/* XXX */
 
 	struct ebus_ranges		*sc_range;
@@ -75,6 +75,6 @@ bus_dma_tag_t ebus_alloc_dma_tag(struct ebus_softc *, bus_dma_tag_t);
 bus_space_tag_t ebus_alloc_bus_tag(struct ebus_softc *, int);
 
 #define ebus_bus_map(t, bt, a, s, f, v, hp) \
-	bus_space_map2(t, bt, a, s, f, v, hp)
+	bus_space_map(t, a, s, f, hp)
 
 #endif /* _SPARC64_DEV_EBUSVAR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530tty.c,v 1.1.4.3 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/Attic/z8530tty.c,v 1.1.4.4 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: z8530tty.c,v 1.77 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-
@@ -332,6 +332,11 @@ zstty_attach(parent, self, aux)
 		return;
 	}
 #endif
+
+	if (strcmp(args->type, "keyboard") == 0 ||
+	    strcmp(args->type, "mouse") == 0)
+		printf(", %s", args->type);
+
 	printf("\n");
 
 	tp = ttymalloc();
@@ -1325,6 +1330,13 @@ zstty_txint(cs)
 	}
 }
 
+#ifdef DDB
+#include <ddb/db_var.h>
+#define	DB_CONSOLE	db_console
+#else
+#define	DB_CONSOLE	1
+#endif
+
 /*
  * status change interrupt.  (splzs)
  */
@@ -1343,6 +1355,10 @@ zstty_stint(cs, force)
 	 * Check here for console break, so that we can abort
 	 * even when interrupts are locking up the machine.
 	 */
+	if ((zst->zst_hwflags & ZS_HWFLAG_CONSOLE_INPUT) &&
+	    ISSET(rr0, ZSRR0_BREAK) && DB_CONSOLE)
+		zs_abort(cs);
+
 	if (!force)
 		delta = rr0 ^ cs->cs_rr0;
 	else

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/profile.h,v 1.2.8.2 2002/03/29 16:11:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/profile.h,v 1.2.8.3 2003/03/27 23:42:35 niklas Exp $ */
 
 /*
  * Copyright (c) 1998 Dale Rahn. All rights reserved.
@@ -70,4 +70,15 @@
 	.Lfe2: \n\
 		.size _mcount, .Lfe2-_mcount \n\
 	");
-#define _MCOUNT_DECL static __mcount
+#define _MCOUNT_DECL static void __mcount
+#ifdef _KERNEL
+#define MCOUNT_ENTER						\
+	__asm volatile("mfmsr %0" : "=r"(s));			\
+	if ((s & (PSL_IR | PSL_DR)) != (PSL_IR | PSL_DR))	\
+		return;	/* prof not possible in real mode */	\
+	s &= ~PSL_POW;						\
+	__asm volatile("mtmsr %0" :: "r"(s & ~PSL_EE))
+
+#define	MCOUNT_EXIT						\
+	__asm volatile("mtmsr %0" :: "r"(s))
+#endif /* _KERNEL */

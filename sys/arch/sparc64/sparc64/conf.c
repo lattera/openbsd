@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.5 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/conf.c,v 1.11.2.6 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.17 2001/03/26 12:33:26 lukem Exp $ */
 
 /*
@@ -54,12 +54,6 @@
 #include <sys/conf.h>
 
 #include <machine/conf.h>
-
-/* open, close, write, ioctl */
-#define cdev_lpt_init(c,n) { \
-	dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-	dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
-	0, seltrue, (dev_type_mmap((*))) enodev }
 
 #include "pty.h"
 #include "bpfilter.h"
@@ -122,8 +116,6 @@ cdev_decl(pci);
 
 #include "pf.h"
 
-#include <altq/altqconf.h>
-
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
@@ -131,6 +123,8 @@ cdev_decl(xfs_dev);
 
 #include "ksyms.h"
 #include "inet.h"
+
+#include "systrace.h"
 
 struct bdevsw	bdevsw[] =
 {
@@ -215,7 +209,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 47 */
 	cdev_notdef(),			/* 48 */
 	cdev_notdef(),			/* 49 */
-	cdev_notdef(),			/* 50 */
+	cdev_systrace_init(NSYSTRACE,systrace),	/* 50 system call tracing */
 #ifdef XFS
 	cdev_xfs_init(NXFS,xfs_dev),	/* 51: xfs communication device */
 #else
@@ -247,7 +241,7 @@ struct cdevsw	cdevsw[] =
 	cdev_tty_init(NMTTY,mtty),	/* 71: magma serial ports */
 	cdev_gen_init(NMBPP,mbpp),	/* 72: magma parallel ports */
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
-	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
+	cdev_notdef(),			/* 74: ALTQ (deprecated) */
 	cdev_crypto_init(NCRYPTO,crypto), /* 75: /dev/crypto */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 76 *: Kernel symbols device */
 	cdev_tty_init(NSABTTY,sabtty),	/* 77: sab82532 serial ports */
@@ -266,11 +260,11 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 89 */
 	cdev_usb_init(NUSB,usb),	/* 90: USB controller */
 	cdev_usbdev_init(NUHID,uhid),	/* 91: USB generic HID */
-	cdev_ugen_init(NUGEN,ugen),	/* 92: USB generic driver */
+	cdev_usbdev_init(NUGEN,ugen),	/* 92: USB generic driver */
 	cdev_ulpt_init(NULPT,ulpt),	/* 93: USB printers */
 	cdev_usbdev_init(NURIO,urio),	/* 94: USB Diamond Rio 500 */
 	cdev_tty_init(NUCOM,ucom),	/* 95: USB tty */
-	cdev_ugen_init(NUSCANNER,uscanner), /* 96: USB scanners */
+	cdev_usbdev_init(NUSCANNER,uscanner), /* 96: USB scanners */
 	cdev_notdef(),			/* 97 */
 	cdev_notdef(),			/* 98 */
 	cdev_notdef(),			/* 99 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.4 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/cpu.h,v 1.5.4.5 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.28 2001/06/14 22:56:58 thorpej Exp $ */
 
 /*
@@ -53,12 +53,20 @@
  */
 #define	CPU_BOOTED_KERNEL	1	/* string: booted kernel name */
 #define	CPU_LED_BLINK		2	/* int: blink leds? */
-#define	CPU_MAXID		3	/* number of valid machdep ids */
+#define	CPU_ALLOWAPERTURE	3	/* allow xf86 operations */
+#define	CPU_CPUTYPE		4	/* cpu type */
+#define	CPU_CECCERRORS		5	/* Correctable ECC errors */
+#define	CPU_CECCLAST		6	/* Correctable ECC last fault addr */
+#define	CPU_MAXID		7	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES {			\
 	{ 0, 0 },				\
 	{ "booted_kernel", CTLTYPE_STRING },	\
 	{ "led_blink", CTLTYPE_INT },		\
+	{ "allowaperture", CTLTYPE_INT },	\
+	{ "cputype", CTLTYPE_INT },		\
+	{ "ceccerrs", CTLTYPE_INT },		\
+	{ "cecclast", CTLTYPE_QUAD },		\
 }
 
 #ifdef _KERNEL
@@ -171,7 +179,6 @@ struct clockframe {
 };
 
 #define	CLKF_USERMODE(framep)	(((framep)->t.tf_tstate & TSTATE_PRIV) == 0)
-#define	CLKF_BASEPRI(framep)	(((framep)->t.tf_oldpil) == 0)
 #define	CLKF_PC(framep)		((framep)->t.tf_pc)
 #define	CLKF_INTR(framep)	((!CLKF_USERMODE(framep))&&\
 				(((framep)->t.tf_kstack < (vaddr_t)EINTSTACK)&&\
@@ -200,13 +207,13 @@ void setsoftint(void);
 void setsoftnet(void);
 #endif
 
-int	want_ast;
+extern	int want_ast;
 
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
-int	want_resched;		/* resched() was called */
+extern	int want_resched;	/* resched() was called */
 #define	need_resched()		(want_resched = 1, want_ast = 1)
 
 /*
@@ -227,8 +234,8 @@ int	want_resched;		/* resched() was called */
  *
  * XXX this must be per-cpu (eventually)
  */
-struct	proc *fpproc;		/* FPU owner */
-int	foundfpu;		/* true => we have an FPU */
+extern	struct proc *fpproc;	/* FPU owner */
+extern	int foundfpu;		/* true => we have an FPU */
 
 /*
  * Interrupt handler chains.  Interrupt handlers should return 0 for
@@ -242,8 +249,9 @@ struct intrhand {
 	short			ih_number;	/* interrupt number */
 						/* the H/W provides */
 	char			ih_pil;		/* interrupt priority */
+	volatile char		ih_busy;	/* handler is on list */
 	struct intrhand		*ih_next;	/* global list */
-	struct intrhand		*ih_pending;	/* interrupt queued */
+	struct intrhand		*ih_pending;	/* pending list */
 	volatile u_int64_t	*ih_map;	/* Interrupt map reg */
 	volatile u_int64_t	*ih_clr;	/* clear interrupt reg */
 };
@@ -252,9 +260,6 @@ extern struct intrhand *intrlev[MAXINTNUM];
 
 void	intr_establish(int level, struct intrhand *);
 
-/* cpu.c */
-paddr_t cpu_alloc(void);
-u_int64_t cpu_init(paddr_t, int);
 /* disksubr.c */
 struct dkbad;
 int isbad(struct dkbad *bt, int, int, int);

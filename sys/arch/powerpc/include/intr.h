@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.5 2002/03/29 16:11:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/include/intr.h,v 1.4.2.6 2003/03/27 23:42:35 niklas Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom, Opsycon AB and RTMX Inc, USA.
@@ -36,6 +36,7 @@
 #define _POWERPC_INTR_H_
 
 #define	IPL_BIO		0
+#define	IPL_AUDIO	IPL_BIO /* XXX - was defined this val in audio_if.h */
 #define	IPL_NET		1
 #define	IPL_TTY		2
 #define	IPL_IMP		3
@@ -66,6 +67,9 @@ void do_pending_int(void);
 
 volatile extern int cpl, ipending, astpending, tickspending;
 extern int imask[7];
+
+/* SPL asserts */
+#define	splassert(wantipl)	/* nothing */
 
 /*
  * Reorder protection in the following inline functions is
@@ -131,6 +135,7 @@ set_sint(int pending)
 #define splnet()	splraise(imask[IPL_NET])
 #define spltty()	splraise(imask[IPL_TTY])
 #define splimp()	splraise(imask[IPL_IMP])
+#define splaudio()	splraise(imask[IPL_AUDIO])
 #define splclock()	splraise(imask[IPL_CLOCK])
 #define splvm()		splraise(imask[IPL_IMP])
 #define splstatclock()	splhigh()

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3.4.4 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/vm_machdep.c,v 1.3.4.5 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.38 2001/06/30 00:02:20 eeh Exp $ */
 
 /*
@@ -90,11 +90,8 @@ pagemove(from, to, size)
 	while (size > 0) {
 		if (pmap_extract(pmap_kernel(), (vaddr_t)from, &pa) == FALSE)
 			panic("pagemove 2");
-		pmap_remove(pmap_kernel(),
-		    (vaddr_t)from, (vaddr_t)from + PAGE_SIZE);
-		pmap_enter(pmap_kernel(),
-		    (vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE,
-		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		pmap_kremove((vaddr_t)from, PAGE_SIZE);
+		pmap_kenter_pa((vaddr_t)to, pa, VM_PROT_READ|VM_PROT_WRITE);
 		from += PAGE_SIZE;
 		to += PAGE_SIZE;
 		size -= PAGE_SIZE;
@@ -179,28 +176,14 @@ vunmapbuf(bp, len)
 	uvm_km_free_wakeup(kernel_map, kva, len);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = NULL;
-
-#if 0	/* XXX: The flush above is sufficient, right? */
-	if (CACHEINFO.c_vactype != VAC_NONE)
-		cpuinfo.cache_flush(bp->b_data, len);
-#endif
 }
 
 
 /*
  * The offset of the topmost frame in the kernel stack.
  */
-#ifdef __arch64__
 #define	TOPFRAMEOFF (USPACE-sizeof(struct trapframe)-CC64FSZ)
 #define	STACK_OFFSET	BIAS
-#else
-#undef	trapframe
-#define	trapframe	trapframe64
-#undef	rwindow
-#define	rwindow		rwindow32
-#define	TOPFRAMEOFF (USPACE-sizeof(struct trapframe)-CC64FSZ)
-#define	STACK_OFFSET	0
-#endif
 
 #ifdef DEBUG
 char cpu_forkname[] = "cpu_fork()";

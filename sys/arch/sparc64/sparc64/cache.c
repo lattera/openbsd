@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/cache.c,v 1.2.4.1 2001/10/31 03:07:58 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/cache.c,v 1.2.4.2 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: cache.c,v 1.5 2000/12/06 01:47:50 mrg Exp $ */
 
 /*
@@ -85,7 +85,7 @@ cache_enable()
 	 * Anyway, sun4u ECC is generated in the E$, so we can't disable that
 	 * and expect to use any RAM.
 	 */
-	cacheinfo.c_enabled = 1; /* enable cache flusing */
+	cacheinfo.c_enabled = 1; /* enable cache flushing */
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/include/intr.h,v 1.1.2.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/include/intr.h,v 1.1.2.3 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: intr.h,v 1.8 2001/01/14 23:50:30 thorpej Exp $ */
 
 /*-
@@ -46,12 +46,13 @@
 #define	IPL_NET		PIL_NET		/* network */
 #define	IPL_SOFTSERIAL	4		/* serial */
 #define	IPL_TTY		PIL_TTY		/* terminal */
-#define	IPL_IMP		PIL_IMP		/* memory allocation */
+#define	IPL_VM		PIL_VM		/* memory allocation */
 #define	IPL_AUDIO	PIL_AUD		/* audio */
 #define	IPL_CLOCK	PIL_CLOCK	/* clock */
 #define	IPL_SERIAL	PIL_SER		/* serial */
 #define	IPL_SCHED	PIL_SCHED	/* scheduler */
 #define	IPL_LOCK	PIL_LOCK	/* locks */
+#define IPL_STATCLOCK	PIL_STATCLOCK	/* statclock */
 #define	IPL_HIGH	PIL_HIGH	/* everything */
 
 void *

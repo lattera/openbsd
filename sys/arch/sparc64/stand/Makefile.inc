@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/Makefile.inc,v 1.2.4.1 2001/10/31 03:07:59 nate Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/Makefile.inc,v 1.2.4.2 2003/03/27 23:42:37 niklas Exp $
 #	$NetBSD: Makefile.inc,v 1.7 2000/08/20 14:57:16 mrg Exp $
 
 .ifndef __INCLUDED_STAND_MAKEFILE_INC
@@ -13,6 +13,7 @@ BINDIR=		/usr/mdec
 CPPFLAGS+=	-D_STANDALONE -DSUN4U
 CPPFLAGS+=	-I.
 
+CFLAGS+=	-fno-stack-protector
 CFLAGS+=	-msoft-float
 .endif
 

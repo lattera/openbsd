@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_trace.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_trace.c,v 1.2.4.3 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.23 2001/07/10 06:06:16 eeh Exp $ */
 
 /*
@@ -56,19 +56,17 @@ void db_print_window(u_int64_t);
 #define ULOAD(x)	probeget((paddr_t)(u_long)&(x), ASI_AIUS, sizeof(x))	
 
 void
-db_stack_trace_cmd(addr, have_addr, count, modif)
+db_stack_trace_print(addr, have_addr, count, modif, pr)
 	db_expr_t       addr;
 	int             have_addr;
 	db_expr_t       count;
 	char            *modif;
+	int		(*pr)(const char *, ...);
 {
 	vaddr_t		frame;
 	boolean_t	kernel_only = TRUE;
 	boolean_t	trace_thread = FALSE;
 	char		c, *cp = modif;
-	int		(*pr)(const char *, ...);
-
-	pr = db_printf;
 
 	while ((c = *cp++) != 0) {
 		if (c == 't')
@@ -159,7 +157,7 @@ db_stack_trace_cmd(addr, have_addr, count, modif)
 				(*pr)("%x, ", (u_int)KLOAD(f32->fr_arg[i]));
 			(*pr)("%x) at ", (u_int)KLOAD(f32->fr_arg[i]));
 		}
-		db_printsym(pc, DB_STGY_PROC);
+		db_printsym(pc, DB_STGY_PROC, pr);
 		(*pr)("\n");
 	}
 }
@@ -220,7 +218,7 @@ u_int64_t frame;
 				  (unsigned long long)f->fr_fp,
 				  (unsigned long long)f->fr_pc);
 			/* Sometimes this don't work.  Dunno why. */
-			db_printsym(f->fr_pc, DB_STGY_PROC);
+			db_printsym(f->fr_pc, DB_STGY_PROC, db_printf);
 			db_printf("\n");
 		} else {
 			struct frame64 fr;
@@ -254,7 +252,7 @@ u_int64_t frame;
 			db_printf("%8x %8x %8x %8x %8x %8x %8x=sp %8x=pc:",
 				  f->fr_arg[0], f->fr_arg[1], f->fr_arg[2], f->fr_arg[3],
 				  f->fr_arg[4], f->fr_arg[5], f->fr_fp, f->fr_pc);
-			db_printsym(f->fr_pc, DB_STGY_PROC);
+			db_printsym(f->fr_pc, DB_STGY_PROC, db_printf);
 			db_printf("\n");
 		} else {
 			struct frame32 fr;
@@ -361,7 +359,7 @@ db_dump_trap(addr, have_addr, count, modif)
 		  tf, (unsigned long long)tf->tf_tstate,
 		  (unsigned long long)tf->tf_pc,
 		  (unsigned long long)tf->tf_npc);
-	db_printf("y: %x\tpil: %d\toldpil: %d\tfault: %llx\tkstack: %llx\ttt: %x\tGlobals:\n", 
+	db_printf("y: %x\tpil: %d\toldpil: %d\tfault: %llx\tkstack: %llx\ttt: %x\nGlobals:\n", 
 		  (int)tf->tf_y, (int)tf->tf_pil, (int)tf->tf_oldpil,
 		  (unsigned long long)tf->tf_fault,
 		  (unsigned long long)tf->tf_kstack, (int)tf->tf_tt);

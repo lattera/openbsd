@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
-/*	$NetBSD: openprom.c,v 1.2 2000/11/18 23:45:05 mrg Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openprom.c,v 1.2.4.3 2003/03/27 23:42:37 niklas Exp $	*/
+/*	$NetBSD: openprom.c,v 1.4 2002/01/10 06:21:53 briggs Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -63,7 +63,6 @@
 
 static	int lastnode;			/* speed hack */
 extern	int optionsnode;		/* node ID of ROM's options */
-extern	struct promvec *promvec;
 
 static int openpromcheckid(int, int);
 static int openpromgetstr(int, char *, char **);
@@ -74,10 +73,6 @@ openpromopen(dev, flags, mode, p)
 	int flags, mode;
 	struct proc *p;
 {
-#if defined(SUN4)
-	if (cputyp==CPU_SUN4)
-		return (ENODEV);
-#endif
 
 	return (0);
 }
@@ -98,13 +93,10 @@ openpromclose(dev, flags, mode, p)
  */
 static int
 openpromcheckid(sid, tid)
-	register int sid, tid;
+	int sid, tid;
 {
-	register struct nodeops *no;
-
-	no = promvec->pv_nodeops;
-	for (; sid != 0; sid = no->no_nextnode(sid))
-		if (sid == tid || openpromcheckid(no->no_child(sid), tid))
+	for (; sid != 0; sid = OF_peer(sid))
+		if (sid == tid || openpromcheckid(OF_child(sid), tid))
 			return (1);
 
 	return (0);
@@ -115,8 +107,8 @@ openpromgetstr(len, user, cpp)
 	int len;
 	char *user, **cpp;
 {
-	register int error;
-	register char *cp;
+	int error;
+	char *cp;
 
 	/* Reject obvious bogus requests */
 	if ((u_int)len > (8 * 1024) - 1)
@@ -225,13 +217,15 @@ openpromioctl(dev, cmd, data, flags, p)
 		s = splhigh();
 		error = OF_nextprop(node, name, nextprop);
 		splx(s);
-		if (error == 0) {
-			op->op_buflen = len;
-			error = subyte(op->op_buf, 0);
-			break;
-		}
 		if (error == -1) {
 			error = EINVAL;
+			break;
+		}
+		if (error == 0) {
+			char nul = '\0';
+
+			op->op_buflen = 0;
+			error = copyout(&nul, op->op_buf, sizeof(char));
 			break;
 		}
 		len = strlen(nextprop);

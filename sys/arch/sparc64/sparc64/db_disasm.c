@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_disasm.c,v 1.2.4.2 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/db_disasm.c,v 1.2.4.3 2003/03/27 23:42:37 niklas Exp $	*/
 /*	$NetBSD: db_disasm.c,v 1.9 2000/08/16 11:29:42 pk Exp $ */
 
 /*
@@ -1006,19 +1006,19 @@ db_disasm(loc, altfmt)
 			val = (((insn>>20)&0x3)<<13)|(insn & 0x1fff);
 			val = SIGNEX(val, 16);
 			db_printsym((db_addr_t)(loc + (4 * val)),
-			    DB_STGY_ANY);
+			    DB_STGY_ANY, db_printf);
 			break;
 		case 'm':
 			db_printsym((db_addr_t)(loc + (4 * SIGNEX(insn, 22))),
-				DB_STGY_ANY);
+				DB_STGY_ANY, db_printf);
 			break;
 		case 'u':
 			db_printsym((db_addr_t)(loc + (4 * SIGNEX(insn, 19))),
-			    DB_STGY_ANY);
+			    DB_STGY_ANY, db_printf);
 			break;
 		case 'n':
 			db_printsym((db_addr_t)(loc + (4 * SIGNEX(insn, 30))),
-			    DB_STGY_PROC);
+			    DB_STGY_PROC, db_printf);
 			break;
 		case 's':
 			db_printf("%%asi");

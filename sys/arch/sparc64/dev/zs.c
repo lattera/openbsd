@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3.4.3 2002/03/28 11:23:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/zs.c,v 1.3.4.4 2003/03/27 23:42:36 niklas Exp $	*/
 /*	$NetBSD: zs.c,v 1.29 2001/05/30 15:24:24 lukem Exp $	*/
 
 /*-
@@ -253,7 +253,7 @@ zs_attach_mainbus(parent, self, aux)
 				return;
 			}
 			zsaddr[zs_unit] = (struct zsdevice *)
-				(unsigned long int)kvaddr;
+				bus_space_vaddr(sa->sa_bustag, kvaddr);
 		}
 	}
 	zsc->zsc_bustag = sa->sa_bustag;
@@ -377,7 +377,7 @@ zs_attach(zsc, zsd, pri)
 	 */
 	bus_intr_establish(zsc->zsc_bustag, pri, IPL_SERIAL, 0, zshard, zsc);
 	if (!(zsc->zsc_softintr = softintr_establish(softpri, zssoft, zsc)))
-		panic("zsattach: could not establish soft interrupt\n");
+		panic("zsattach: could not establish soft interrupt");
 
 	evcnt_attach(&zsc->zsc_dev, "intr", &zsc->zsc_intrcnt);
 
@@ -808,21 +808,22 @@ zs_console_flags(promunit, node, channel)
 	int channel;
 {
 	int cookie, flags = 0;
-	u_int chosen;
+	u_int options;
 	char buf[255];
 
 	/*
 	 * We'll just to the OBP grovelling down here since that's
 	 * the only type of firmware we support.
 	 */
-	chosen = OF_finddevice("/chosen");
+	options = OF_finddevice("/options");
 
 	/* Default to channel 0 if there are no explicit prom args */
 	cookie = 0;
-	if (node == OF_instance_to_package(OF_stdin())) {
-		if (OF_getprop(chosen, "input-device", buf, sizeof(buf)) != -1) {
 
-			if (!strcmp("ttyb", buf))
+	if (node == OF_instance_to_package(OF_stdin())) {
+		if (OF_getprop(options, "input-device",
+		    buf, sizeof(buf)) != -1) {
+			if (strncmp("ttyb", buf, strlen("ttyb")) == 0)
 				cookie = 1;
 		}
 
@@ -831,9 +832,9 @@ zs_console_flags(promunit, node, channel)
 	}
 
 	if (node == OF_instance_to_package(OF_stdout())) { 
-		if (OF_getprop(chosen, "output-device", buf, sizeof(buf)) != -1) {
-
-			if (!strcmp("ttyb", buf))
+		if (OF_getprop(options, "output-device",
+		    buf, sizeof(buf)) != -1) {
+			if (strncmp("ttyb", buf, strlen("ttyb")) == 0)
 				cookie = 1;
 		}
 		

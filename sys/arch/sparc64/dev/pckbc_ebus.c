@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pckbc_ebus.c,v 1.1 2002/02/18 17:52:08 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pckbc_ebus.c,v 1.1.2.1 2003/03/27 23:42:35 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -34,6 +34,11 @@
 /*
  * Driver for i8042 keyboard controller found on some PCI based
  * UltraSPARCs
+ *
+ * Effort sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F30602-01-2-0537.
+ *
  */
 
 #include <sys/types.h>
@@ -94,10 +99,10 @@ pckbc_ebus_attach(parent, self, aux)
 	struct pckbc_ebus_softc *sc = (void *)self;
 	struct pckbc_softc *psc = &sc->sc_pckbc;
 	struct ebus_attach_args *ea = aux;
-	struct pckbc_internal *t;
+	struct pckbc_internal *t = NULL;
 	int console;
 
-	sc->sc_iot = ea->ea_bustag;
+	sc->sc_iot = ea->ea_iotag;
 	sc->sc_node = ea->ea_node;
 	console = pckbc_ebus_is_console(sc);
 
@@ -116,7 +121,8 @@ pckbc_ebus_attach(parent, self, aux)
 	if (console == 0) {
 		/* Use prom address if available, otherwise map it. */
 		if (ea->ea_nvaddrs)
-			sc->sc_ioh = (bus_space_handle_t)ea->ea_vaddrs[0];
+			bus_space_map(sc->sc_iot, ea->ea_vaddrs[0], 0, 0,
+			    &sc->sc_ioh);
 		else if (ebus_bus_map(sc->sc_iot, 0,
 		    EBUS_PADDR_FROM_REG(&ea->ea_regs[0]), ea->ea_regs[0].size,
 		    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_ioh) != 0) {
@@ -141,14 +147,14 @@ pckbc_ebus_attach(parent, self, aux)
 
 	psc->intr_establish = pckbc_ebus_intr_establish;
 
-	sc->sc_irq[0] = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[0],
+	sc->sc_irq[0] = bus_intr_establish(ea->ea_iotag, ea->ea_intrs[0],
 	    IPL_TTY, 0, pckbcintr, psc);
 	if (sc->sc_irq[0] == NULL) {
 		printf(": couldn't get intr0\n");
 		return;
 	}
 
-	sc->sc_irq[1] = bus_intr_establish(ea->ea_bustag, ea->ea_intrs[1],
+	sc->sc_irq[1] = bus_intr_establish(ea->ea_iotag, ea->ea_intrs[1],
 	    IPL_TTY, 0, pckbcintr, psc);
 	if (sc->sc_irq[1] == NULL) {
 		printf(": couldn't get intr1\n");

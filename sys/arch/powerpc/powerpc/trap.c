@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.7 2002/03/29 19:46:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.16.2.8 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -41,6 +41,8 @@
 #include <sys/ktrace.h>
 #include <sys/pool.h>
 
+#include <dev/cons.h>
+
 #include <machine/cpu.h>
 #include <machine/fpu.h>
 #include <machine/frame.h>
@@ -50,13 +52,18 @@
 #include <machine/trap.h>
 #include <machine/db_machdep.h>
 
+#include "systrace.h"
+#include <dev/systrace.h>
+
 #include <uvm/uvm_extern.h>
 
 #include <ddb/db_extern.h>
 #include <ddb/db_sym.h>
+#include <ddb/db_output.h>
 
 static int fix_unaligned(struct proc *p, struct trapframe *frame);
 int badaddr(char *addr, u_int32_t len);
+static __inline void userret(struct proc *, int, u_quad_t);
 void trap(struct trapframe *frame);
 
 /* These definitions should probably be somewhere else				XXX */
@@ -77,7 +84,7 @@ ppc_dumpbt(struct trapframe *frame)
 	/* dumpframe is defined in db_trace.c */
 	addr=frame->fixreg[1];
 	while (addr != 0) {
-		addr = db_dumpframe(addr);
+		addr = db_dumpframe(addr, db_printf);
 	}
 	return;
 }
@@ -119,15 +126,9 @@ save_vec(struct proc *p)
 	__asm__ volatile ("mfspr %0, 256" : "=r" (tmp));
 	pcb->pcb_vr->vrsave = tmp;
 
-#ifdef AS_SUPPORTS_ALTIVEC
 #define STR(x) #x
 #define SAVE_VEC_REG(reg, addr)   \
 	__asm__ volatile ("stvxl %0, 0, %1" :: "n"(reg),"r" (addr));
-#else
-#define STR(x) #x
-#define SAVE_VEC_REG(reg, addr)   \
-	__asm__ volatile (".long 0x7c0003ce + (%0 << 21) + (%1 << 11)" :: "n"(reg), "r" (addr))
-#endif
 
 	SAVE_VEC_REG(0,&pcb_vr->vreg[0]);
 	SAVE_VEC_REG(1,&pcb_vr->vreg[1]);
@@ -161,11 +162,7 @@ save_vec(struct proc *p)
 	SAVE_VEC_REG(29,&pcb_vr->vreg[29]);
 	SAVE_VEC_REG(30,&pcb_vr->vreg[30]);
 	SAVE_VEC_REG(31,&pcb_vr->vreg[31]);
-#ifdef AS_SUPPORTS_ALTIVEC
 	__asm__ volatile ("mfvscr 0");
-#else 
-	__asm__ volatile (".long 0x10000604");
-#endif
 	SAVE_VEC_REG(0,&pcb_vr->vscr);
 
 	/* fix kernel msr back */
@@ -199,20 +196,11 @@ enable_vec(struct proc *p)
 	__asm__ volatile ("mtmsr %0" :: "r" (msr));
 	__asm__ volatile ("sync;isync");
 
-#ifdef AS_SUPPORTS_ALTIVEC
 #define LOAD_VEC_REG(reg, addr)   \
 	__asm__ volatile ("lvxl %0, 0, %1" :: "n"(reg), "r" (addr));
-#else
-#define LOAD_VEC_REG(reg, addr)   \
-	__asm__ volatile (".long 0x7c0002ce + (%0 << 21) + (%1 << 11)" :: "n"(reg), "r" (addr));
-#endif
 
 	LOAD_VEC_REG(0, &pcb_vr->vscr);
-#ifdef AS_SUPPORTS_ALTIVEC
 	__asm__ volatile ("mtvscr 0");
-#else
-	__asm__ volatile (".long 0x10000644");
-#endif
 	tmp = pcb_vr->vrsave;
 	__asm__ volatile ("mtspr 256, %0" :: "r" (tmp));
 
@@ -254,6 +242,36 @@ enable_vec(struct proc *p)
 }
 #endif /* ALTIVEC */
 
+static __inline void
+userret(register struct proc *p, int pc, u_quad_t oticks)
+{
+	int sig;
+
+	/* take pending signals */
+	while ((sig = CURSIG(p)) != 0)
+		postsig(sig);
+	p->p_priority = p->p_usrpri;
+	if (want_resched) {
+
+		/*
+		 * We're being preempted.
+		 */
+		preempt(NULL);
+		while ((sig = CURSIG(p)))
+			postsig(sig);
+	}
+
+	/*
+	 * If profiling, charge recent system time to the trapped pc.
+	 */
+	if (p->p_flag & P_PROFIL) {
+		extern int psratio;
+
+		addupc_task(p, pc, (int)(p->p_sticks - oticks) * psratio);
+	}
+
+	curpriority = p->p_priority;
+}
 
 void
 trap(frame)
@@ -313,7 +331,7 @@ trap(frame)
 				va &= ADDR_PIDX | ADDR_POFF;
 				va |= user_sr << ADDR_SR_SHIFT;
 				map = &p->p_vmspace->vm_map;
-				if (pte_spill_v(map->pmap, va, frame->dsisr)) {
+				if (pte_spill_v(map->pmap, va, frame->dsisr, 0)) {
 					return;
 				}
 			}
@@ -342,7 +360,7 @@ printf("kern dsi on addr %x iar %x\n", frame->dar, frame->srr0);
 			int ftype, vftype;
 			
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->dar, frame->dsisr))
+				frame->dar, frame->dsisr, 0))
 			{
 				/* fault handled by spill handler */
 				break;
@@ -372,7 +390,7 @@ printf("dsi on addr %x iar %x lr %x\n", frame->dar, frame->srr0,frame->lr);
 			int ftype;
 			
 			if (pte_spill_v(p->p_vmspace->vm_map.pmap,
-				frame->srr0, 0))
+				frame->srr0, 0, 1))
 			{
 				/* fault handled by spill handler */
 				break;
@@ -459,11 +477,18 @@ printf("isi iar %x lr %x\n", frame->srr0, frame->lr);
 			rval[1] = frame->fixreg[FIRSTARG + 1];
 
 #ifdef SYSCALL_DEBUG
-	scdebug_call(p, code, params);
+			scdebug_call(p, code, params);
 #endif
 
 			
-			switch (error = (*callp->sy_call)(p, params, rval)) {
+#if NSYSTRACE > 0
+			if (ISSET(p->p_flag, P_SYSTRACE))
+				error = systrace_redirect(code, p, params,
+				    rval);
+			else
+#endif
+				error = (*callp->sy_call)(p, params, rval);
+			switch (error) {
 			case 0:
 				frame->fixreg[0] = error;
 				frame->fixreg[FIRSTARG] = rval[0];
@@ -531,13 +556,15 @@ mpc_print_pci_stat();
 #ifdef DDB
 		/* set up registers */
 		db_save_regs(frame);
-#endif
 		db_find_sym_and_offset(frame->srr0, &name, &offset);
+#else
+		name = NULL;
+#endif
 		if (!name) {
 			name = "0";
 			offset = frame->srr0;
 		}
-		panic ("trap type %x at %x (%s+0x%x) lr %x\n",
+		panic ("trap type %x at %x (%s+0x%x) lr %x",
 			type, frame->srr0, name, offset, frame->lr);
 
 
@@ -558,7 +585,7 @@ mpc_print_pci_stat();
 		}
 		if (frame->srr1 & (1<<(31-13))) {
 			/* privileged instruction exception */
-			errstr[errnum] = "priviledged instr";
+			errstr[errnum] = "privileged instr";
 			errnum++;
 		}
 		if (frame->srr1 & (1<<(31-14))) {
@@ -568,7 +595,9 @@ mpc_print_pci_stat();
 			/*
 				instr = copyin (srr0)
 				if (instr == BKPT_INST && uid == 0) {
+					cnpollc(TRUE);
 					db_trap(T_BREAKPOINT?)
+					cnpollc(FALSE);
 					break;
 				}
 			*/
@@ -594,7 +623,9 @@ for (i = 0; i < errnum; i++) {
 		/* should check for correct byte here or panic */
 #ifdef DDB
 		db_save_regs(frame);
+		cnpollc(TRUE);
 		db_trap(T_BREAKPOINT, 0);
+		cnpollc(FALSE);
 #else
 		panic("trap EXC_PGM");
 #endif
@@ -631,35 +662,8 @@ for (i = 0; i < errnum; i++) {
 		ADDUPROF(p);
 	}
 
-	/* take pending signals */
-	{
-		int sig;
+	userret(p, frame->srr0, sticks);
 
-		while ((sig = CURSIG(p)))
-			postsig(sig);
-	}
-
-	p->p_priority = p->p_usrpri;
-	if (want_resched) {
-		int sig;
-
-		/*
-		 * We're being preempted.
-		 */
-		preempt(NULL);
-		while ((sig = CURSIG(p)))
-			postsig(sig);
-	}
-
-	/*
-	 * If profiling, charge recent system time to the trapped pc.
-	 */
-	if (p->p_flag & P_PROFIL) {
-		extern int psratio;
-
-		addupc_task(p, frame->srr0,
-			    (int)(p->p_sticks - sticks) * psratio);
-	}
 	/*
 	 * If someone stole the fpu while we were away, disable it
 	 */
@@ -679,8 +683,6 @@ for (i = 0; i < errnum; i++) {
 		frame->srr1 |= PSL_VEC;
 	}
 #endif /* ALTIVEC */
-
-	curpriority = p->p_priority;
 }
 
 void
@@ -696,12 +698,13 @@ child_return(arg)
 	tf->cr &= ~0x10000000;
 	/* Disable FPU, VECT, as we can't be fpuproc */
 	tf->srr1 &= ~(PSL_FP|PSL_VEC);
+
+	userret(p, tf->srr0, 0);
+
 #ifdef	KTRACE
 	if (KTRPOINT(p, KTR_SYSRET))
 		ktrsysret(p, SYS_fork, 0, 0);
 #endif
-	/* Profiling?							XXX */
-	curpriority = p->p_priority;
 }
 
 int
@@ -713,7 +716,7 @@ badaddr(addr, len)
 	u_int32_t v;
 	register void *oldh = curpcb->pcb_onfault;
 
-	if (setfault(env)) {
+	if (setfault(&env)) {
 		curpcb->pcb_onfault = oldh;
 		return EFAULT;
 	}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.4.2 2002/03/28 11:23:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/pci_machdep.c,v 1.6.4.3 2003/03/27 23:42:35 niklas Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.22 2001/07/20 00:07:13 eeh Exp $	*/
 
 /*
@@ -338,61 +338,39 @@ pci_make_tag(pc, b, d, f)
 
 /* assume we are mapped little-endian/side-effect */
 pcireg_t
-pci_conf_read(pc, tag, reg)
-	pci_chipset_tag_t pc;
-	pcitag_t tag;
-	int reg;
+pci_conf_read(pci_chipset_tag_t pc, pcitag_t tag, int reg)
 {
-	struct psycho_pbm *pp = pc->cookie;
-	struct psycho_softc *sc = pp->pp_sc;
-	pcireg_t val = (pcireg_t)~0;
+        pcireg_t val = (pcireg_t)~0;
 
-	DPRINTF(SPDB_CONF, ("pci_conf_read: tag %lx reg %x ", 
-		(long)tag, reg));
-	if (PCITAG_NODE(tag) != -1) {
-		DPRINTF(SPDB_CONF, ("asi=%x addr=%qx (offset=%x) ...",
-			bus_type_asi[sc->sc_configtag->type],
-			(long long)(sc->sc_configaddr + 
-				PCITAG_OFFSET(tag) + reg),
-			(int)PCITAG_OFFSET(tag) + reg));
-
-		val = bus_space_read_4(sc->sc_configtag, sc->sc_configaddr,
-			PCITAG_OFFSET(tag) + reg);
-	}
+        DPRINTF(SPDB_CONF, ("pci_conf_read: tag %lx reg %x ",
+                (long)PCITAG_OFFSET(tag), reg));
+        if (PCITAG_NODE(tag) != -1) {
+                val = bus_space_read_4(pc->bustag, pc->bushandle,
+                        PCITAG_OFFSET(tag) + reg);
+        }
 #ifdef DEBUG
-	else DPRINTF(SPDB_CONF, ("pci_conf_read: bogus pcitag %x\n",
-	    (int)PCITAG_OFFSET(tag));
+        else DPRINTF(SPDB_CONF, ("pci_conf_read: bogus pcitag %x\n",
+            (int)PCITAG_OFFSET(tag)));
 #endif
-	DPRINTF(SPDB_CONF, (" returning %08x\n", (u_int)val));
+        DPRINTF(SPDB_CONF, (" returning %08x\n", (u_int)val));
 
-	return (val);
+        return (val);
 }
 
 void
-pci_conf_write(pc, tag, reg, data)
-	pci_chipset_tag_t pc;
-	pcitag_t tag;
-	int reg;
-	pcireg_t data;
+pci_conf_write(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t data)
 {
-	struct psycho_pbm *pp = pc->cookie;
-	struct psycho_softc *sc = pp->pp_sc;
+        DPRINTF(SPDB_CONF, ("pci_conf_write: tag %lx; reg %x; data %x; ",
+                (long)PCITAG_OFFSET(tag), reg, (int)data));
 
-	DPRINTF(SPDB_CONF, ("pci_conf_write: tag %lx; reg %x; data %x; ", 
-		(long)PCITAG_OFFSET(tag), reg, (int)data));
-	DPRINTF(SPDB_CONF, ("asi = %x; readaddr = %qx (offset = %x)\n",
-		bus_type_asi[sc->sc_configtag->type],
-		(long long)(sc->sc_configaddr + PCITAG_OFFSET(tag) + reg), 
-		(int)PCITAG_OFFSET(tag) + reg));
+        /* If we don't know it, just punt. */
+        if (PCITAG_NODE(tag) == -1) {
+                DPRINTF(SPDB_CONF, ("pci_config_write: bad addr"));
+                return;
+        }
 
-	/* If we don't know it, just punt. */
-	if (PCITAG_NODE(tag) == -1) {
-		DPRINTF(SPDB_CONF, ("pci_config_write: bad addr"));
-		return;
-	}
-
-	bus_space_write_4(sc->sc_configtag, sc->sc_configaddr, 
-		PCITAG_OFFSET(tag) + reg, data);
+        bus_space_write_4(pc->bustag, pc->bushandle,
+                PCITAG_OFFSET(tag) + reg, data);
 }
 
 /*
