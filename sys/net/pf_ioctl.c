@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50.2.1 2003/08/12 02:23:47 brad Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50.2.2 2004/03/29 19:58:02 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -333,6 +333,7 @@ pf_remove_if_empty_ruleset(struct pf_ruleset *ruleset)
 	if (TAILQ_EMPTY(&anchor->rulesets)) {
 		TAILQ_REMOVE(&pf_anchors, anchor, entries);
 		free(anchor, M_TEMP);
+		pf_update_anchor_rules();
 	}
 }
 
