@@ -1,4 +1,4 @@
-/*	$Id: pf_encap.h,v 1.8 1998/10/12 22:15:13 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/pf_encap.h,v 1.2 1998/11/15 00:44:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

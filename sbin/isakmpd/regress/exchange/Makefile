@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.3 1998/08/03 21:05:56 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/exchange/Attic/Makefile,v 1.2 1998/11/15 00:44:08 niklas Exp $
 
 #
 # Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

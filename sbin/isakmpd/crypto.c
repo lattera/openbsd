@@ -1,4 +1,4 @@
-/*	$Id: crypto.c,v 1.21 1998/11/12 15:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/crypto.c,v 1.2 1998/11/15 00:43:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

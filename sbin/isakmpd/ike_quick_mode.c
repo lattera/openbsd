@@ -1,4 +1,4 @@
-/*	$Id: ike_quick_mode.c,v 1.57 1998/11/14 13:20:09 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_quick_mode.c,v 1.2 1998/11/15 00:43:55 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

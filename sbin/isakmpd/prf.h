@@ -1,4 +1,4 @@
-/*	$Id: prf.h,v 1.1 1998/07/11 20:06:22 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/prf.h,v 1.2 1998/11/15 00:44:02 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

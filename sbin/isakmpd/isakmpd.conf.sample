@@ -1,4 +1,4 @@
-#	$Id: isakmpd.conf.sample,v 1.15 1998/11/14 23:41:43 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/Attic/isakmpd.conf.sample,v 1.2 1998/11/15 00:43:59 niklas Exp $
 
 # A configuration sample for the isakmpd ISAKMP/Oakley (aka IKE) daemon.
 

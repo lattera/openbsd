@@ -1,4 +1,4 @@
-/*	$Id: exchange.h,v 1.15 1998/08/13 21:43:57 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/exchange.h,v 1.2 1998/11/15 00:43:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$Id: log.c,v 1.13 1998/07/26 00:48:55 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/log.c,v 1.2 1998/11/15 00:43:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

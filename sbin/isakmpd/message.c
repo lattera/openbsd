@@ -1,4 +1,4 @@
-/*	$Id: message.c,v 1.100 1998/11/12 13:02:29 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/message.c,v 1.2 1998/11/15 00:44:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

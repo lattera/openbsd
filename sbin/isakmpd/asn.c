@@ -1,4 +1,4 @@
-/*	$Id: asn.c,v 1.20 1998/08/21 13:47:55 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/asn.c,v 1.2 1998/11/15 00:43:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

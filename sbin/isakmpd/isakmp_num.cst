@@ -1,4 +1,4 @@
-#	$Id: isakmp_num.cst,v 1.2 1998/07/27 21:34:11 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/isakmp_num.cst,v 1.2 1998/11/15 00:43:57 niklas Exp $
 
 #
 # Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

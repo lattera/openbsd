@@ -1,4 +1,4 @@
-/*	$Id: math_ec2n.h,v 1.3 1998/07/17 16:32:16 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/math_ec2n.h,v 1.2 1998/11/15 00:44:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

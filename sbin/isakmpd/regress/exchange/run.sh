@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: run.sh,v 1.3 1998/08/03 21:06:00 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/exchange/Attic/run.sh,v 1.2 1998/11/15 00:44:09 niklas Exp $
 
 #
 # Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

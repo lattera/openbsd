@@ -1,4 +1,4 @@
-/*	$Id: dh.c,v 1.2 1998/07/18 22:08:59 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/dh.c,v 1.2 1998/11/15 00:43:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

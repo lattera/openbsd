@@ -1,4 +1,4 @@
-/*	$Id: prftest.c,v 1.2 1998/10/07 16:40:50 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/prf/Attic/prftest.c,v 1.2 1998/11/15 00:44:11 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

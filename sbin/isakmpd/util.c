@@ -1,4 +1,4 @@
-/*	$Id: util.c,v 1.12 1998/11/12 13:01:46 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/util.c,v 1.2 1998/11/15 00:44:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

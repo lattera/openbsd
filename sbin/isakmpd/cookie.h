@@ -1,4 +1,4 @@
-/*	$Id: cookie.h,v 1.5 1998/08/05 09:21:43 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/cookie.h,v 1.2 1998/11/15 00:43:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

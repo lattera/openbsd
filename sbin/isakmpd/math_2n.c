@@ -1,4 +1,4 @@
-/*	$Id: math_2n.c,v 1.10 1998/08/15 21:58:21 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/math_2n.c,v 1.2 1998/11/15 00:44:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

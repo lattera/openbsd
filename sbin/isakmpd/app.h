@@ -1,4 +1,4 @@
-/*	$Id: app.h,v 1.2 1998/09/27 21:36:43 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/app.h,v 1.2 1998/11/15 00:43:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$Id: timer.c,v 1.7 1998/08/11 15:03:26 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/timer.c,v 1.2 1998/11/15 00:44:03 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

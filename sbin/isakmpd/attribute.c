@@ -1,4 +1,4 @@
-/*	$Id: attribute.c,v 1.5 1998/10/07 16:40:42 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/attribute.c,v 1.2 1998/11/15 00:43:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$Id: x509test.c,v 1.3 1998/08/21 14:33:12 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/x509/Attic/x509test.c,v 1.2 1998/11/15 00:44:12 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

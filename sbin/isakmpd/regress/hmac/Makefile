@@ -1,3 +1,5 @@
+#	$OpenBSD: src/sbin/isakmpd/regress/hmac/Attic/Makefile,v 1.2 1998/11/15 00:44:09 niklas Exp $
+
 # Test HMAC:
 
 PROG=		hmactest

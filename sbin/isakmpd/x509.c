@@ -1,4 +1,4 @@
-/*	$Id: x509.c,v 1.8 1998/08/21 14:33:09 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/x509.c,v 1.2 1998/11/15 00:44:05 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

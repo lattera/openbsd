@@ -1,4 +1,4 @@
-/*	$Id: math_group.h,v 1.4 1998/07/18 22:08:58 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/math_group.h,v 1.2 1998/11/15 00:44:01 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

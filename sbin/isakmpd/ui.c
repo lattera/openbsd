@@ -1,4 +1,4 @@
-/*	$Id: ui.c,v 1.20 1998/11/12 13:01:19 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ui.c,v 1.2 1998/11/15 00:44:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

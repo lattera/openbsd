@@ -1,4 +1,4 @@
-/*	$Id: field.c,v 1.5 1998/09/12 19:26:31 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/field.c,v 1.2 1998/11/15 00:43:53 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

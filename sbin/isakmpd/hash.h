@@ -1,4 +1,4 @@
-/*	$Id: hash.h,v 1.6 1998/07/25 22:04:36 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/hash.h,v 1.2 1998/11/15 00:43:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

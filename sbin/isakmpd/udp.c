@@ -1,4 +1,4 @@
-/*	$Id: udp.c,v 1.22 1998/10/11 20:25:11 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/udp.c,v 1.2 1998/11/15 00:44:04 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

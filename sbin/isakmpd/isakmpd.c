@@ -1,4 +1,4 @@
-/*	$Id: isakmpd.c,v 1.22 1998/10/11 16:19:12 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/isakmpd.c,v 1.2 1998/11/15 00:43:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

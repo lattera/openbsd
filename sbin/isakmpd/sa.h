@@ -1,4 +1,4 @@
-/*	$Id: sa.h,v 1.37 1998/11/14 23:42:27 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/sa.h,v 1.2 1998/11/15 00:44:02 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

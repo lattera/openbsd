@@ -1,4 +1,4 @@
-/*	$Id: conf.c,v 1.9 1998/10/08 21:21:37 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/conf.c,v 1.2 1998/11/15 00:43:50 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

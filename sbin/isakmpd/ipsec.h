@@ -1,4 +1,4 @@
-/*	$Id: ipsec.h,v 1.28 1998/11/14 13:20:11 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ipsec.h,v 1.2 1998/11/15 00:43:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

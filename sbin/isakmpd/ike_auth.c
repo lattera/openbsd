@@ -1,4 +1,4 @@
-/*	$Id: ike_auth.c,v 1.20 1998/08/26 14:25:34 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/ike_auth.c,v 1.2 1998/11/15 00:43:54 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niklas Hallqvist.  All rights reserved.

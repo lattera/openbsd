@@ -1,4 +1,4 @@
-/*	$Id: asn_useful.h,v 1.6 1998/08/21 13:47:57 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/Attic/asn_useful.h,v 1.2 1998/11/15 00:43:49 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$Id: hmactest.c,v 1.3 1998/08/09 19:16:24 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/hmac/Attic/hmactest.c,v 1.2 1998/11/15 00:44:10 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.
