@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/serverloop.h,v 1.2 2001/01/29 01:58:17 niklas Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/serverloop.h,v 1.2.6.1 2001/09/27 19:03:55 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -18,5 +18,10 @@
  * (of the child program), and reads from stdout and stderr (of the child
  * program).
  */
-void    server_loop(pid_t pid, int fdin, int fdout, int fderr);
-void    server_loop2(void);
+#ifndef SERVERLOOP_H
+#define SERVERLOOP_H
+
+void    server_loop(pid_t, int, int, int);
+void    server_loop2(Authctxt *);
+
+#endif

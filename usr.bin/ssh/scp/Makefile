@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/scp/Makefile,v 1.12 2001/04/16 02:31:48 mouring Exp $
+#	$OpenBSD: src/usr.bin/ssh/scp/Makefile,v 1.12.2.1 2001/09/27 19:03:56 jason Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -10,6 +10,6 @@ BINMODE?=555
 BINDIR=	/usr/bin
 MAN=	scp.1
 
-SRCS=	scp.c scp-common.c
+SRCS=	scp.c misc.c
 
 .include <bsd.prog.mk>

@@ -12,20 +12,11 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.9 2000/12/19 23:17:57 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.9.2.1 2001/09/27 19:03:54 jason Exp $"); */
 
 #ifndef MPAUX_H
 #define MPAUX_H
 
-/*
- * Computes a 16-byte session id in the global variable session_id. The
- * session id is computed by concatenating the linearized, msb first
- * representations of host_key_n, session_key_n, and the cookie.
- */
-void
-compute_session_id(u_char session_id[16],
-    u_char cookie[8],
-    BIGNUM * host_key_n,
-    BIGNUM * session_key_n);
+void	 compute_session_id(u_char[16], u_char[8], BIGNUM *, BIGNUM *);
 
 #endif				/* MPAUX_H */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.14 2001/01/29 01:58:16 niklas Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.14.2.1 2001/09/27 19:03:54 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -56,9 +56,6 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #include <dirent.h>
 
 #include "version.h"
-
-/* Define this to be the path of the xauth program. */
-#define XAUTH_PATH "/usr/X11R6/bin/xauth"
 
 /*
  * Define this to use pipes instead of socketpairs for communicating with the

@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-skey.c,v 1.12 2001/05/18 14:13:28 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-skey.c,v 1.12.2.1 2001/09/27 19:03:54 jason Exp $");
 
 #ifdef SKEY
 

@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.23 2001/04/12 19:15:24 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.23.2.1 2001/09/27 19:03:54 jason Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -34,7 +34,7 @@ extern ServerOptions options;
  * based on the file, and returns zero otherwise.
  */
 
-int
+static int
 check_rhosts_file(const char *filename, const char *hostname,
 		  const char *ipaddr, const char *client_user,
 		  const char *server_user)

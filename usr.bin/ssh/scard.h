@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6 2001/08/01 22:03:33 markus Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.6.4.1 2001/09/27 19:03:55 jason Exp $ */
 
 #include <openssl/engine.h>
 

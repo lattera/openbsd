@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-bsdauth.c,v 1.1 2001/05/18 14:13:28 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-bsdauth.c,v 1.1.4.1 2001/09/27 19:03:54 jason Exp $");
 
 #ifdef BSD_AUTH
 #include "xmalloc.h"

@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  *
  *
- * Copyright (c) 1999,2000 Markus Friedl.  All rights reserved.
+ * Copyright (c) 1999, 2000 Markus Friedl.  All rights reserved.
  * Copyright (c) 1999 Niels Provos.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26 2001/04/12 19:15:24 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26.2.1 2001/09/27 19:03:54 jason Exp $");
 
 #include "packet.h"
 #include "match.h"
@@ -49,7 +49,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.26 2001/04/12 19:15:24 markus Ex
  * pointer over the key.  Skips any whitespace at the beginning and at end.
  */
 
-int
+static int
 hostfile_read_key(char **cpp, u_int *bitsp, Key *ret)
 {
 	char *cp;
@@ -82,7 +82,7 @@ auth_rsa_read_key(char **cpp, u_int *bitsp, BIGNUM * e, BIGNUM * n)
 	return ret;
 }
 
-int
+static int
 hostfile_check_key(int bits, Key *key, const char *host, const char *filename, int linenum)
 {
 	if (key == NULL || key->type != KEY_RSA1 || key->rsa == NULL)

@@ -25,10 +25,12 @@
 #include "includes.h"
 #include "uuencode.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.15 2001/01/16 23:58:09 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/radix.c,v 1.15.2.1 2001/09/27 19:03:54 jason Exp $");
 
 #ifdef AFS
 #include <krb.h>
+
+#include <radix.h>
 
 typedef u_char my_u_char;
 typedef u_int my_u_int32_t;

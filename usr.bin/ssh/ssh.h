@@ -10,7 +10,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.62 2001/01/23 10:45:10 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.62.2.1 2001/09/27 19:03:55 jason Exp $"); */
 
 #ifndef SSH_H
 #define SSH_H
@@ -81,5 +81,8 @@
 
 /* Name of Kerberos service for SSH to use. */
 #define KRB4_SERVICE_NAME		"rcmd"
+
+/* Used to identify ``EscapeChar none'' */
+#define SSH_ESCAPECHAR_NONE		-2
 
 #endif				/* SSH_H */
