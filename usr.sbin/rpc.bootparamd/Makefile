@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1996/09/04 22:52:09 deraadt Exp $
+#	$OpenBSD: src/usr.sbin/rpc.bootparamd/Makefile,v 1.4 1997/09/21 11:44:16 deraadt Exp $
 
 .include <bsd.own.mk>
 

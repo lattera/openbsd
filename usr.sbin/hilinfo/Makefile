@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1 1994/04/04 21:52:21 cgd Exp $
+#	$OpenBSD: src/usr.sbin/hilinfo/Attic/Makefile,v 1.2 1997/09/21 11:43:43 deraadt Exp $
 
 PROG=	hilinfo
 NOMAN=

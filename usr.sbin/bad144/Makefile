@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/6/93
-#	$Id: Makefile,v 1.4 1994/12/22 11:32:57 cgd Exp $
+#	$OpenBSD: src/usr.sbin/bad144/Attic/Makefile,v 1.2 1997/09/21 11:43:23 deraadt Exp $
 
 PROG=	bad144
 MAN=	bad144.8

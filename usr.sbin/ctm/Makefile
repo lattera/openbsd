@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 1996/07/01 21:59:22 gpalmer Exp $
+#	$OpenBSD: src/usr.sbin/ctm/Attic/Makefile,v 1.2 1997/09/21 11:43:34 deraadt Exp $
 
 SUBDIR=	ctm ctm_scan ctm_rmail ctm_smail ctm_dequeue
 

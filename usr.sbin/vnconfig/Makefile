@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:48:31 deraadt Exp $
+#	$OpenBSD: src/usr.sbin/vnconfig/Attic/Makefile,v 1.3 1997/09/21 11:44:35 deraadt Exp $
 
 PROG=	vnconfig
 MAN=	vnconfig.8

@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/6/93
-#	$Id: Makefile,v 1.4 1994/12/22 11:39:18 cgd Exp $
+#	$OpenBSD: src/usr.sbin/quotaon/Makefile,v 1.2 1997/09/21 11:44:09 deraadt Exp $
 
 PROG=	quotaon
 MAN=	quotaon.8

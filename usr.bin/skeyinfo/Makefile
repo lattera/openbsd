@@ -1,4 +1,4 @@
-# $OpenBSD: src/usr.bin/skeyinfo/Makefile,v 1.1 1997/07/23 04:10:52 millert Exp $
+#	$OpenBSD: src/usr.bin/skeyinfo/Makefile,v 1.2 1997/09/21 11:50:53 deraadt Exp $
 
 PROG=	skeyinfo
 BINOWN=	root

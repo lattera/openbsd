@@ -1,4 +1,4 @@
-# $Id: Makefile.inc,v 1.1 1995/01/31 19:09:38 phk Exp $
+#	$OpenBSD: src/usr.sbin/ctm/Attic/Makefile.inc,v 1.2 1997/09/21 11:43:34 deraadt Exp $
 
 .if exists(${.CURDIR}/../../Makefile.inc)
 .include "${.CURDIR}/../../Makefile.inc"

@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	8.1 (Berkeley) 6/6/93
-#	$Id: Makefile,v 1.4 1994/12/22 11:40:19 cgd Exp $
+#	$OpenBSD: src/usr.sbin/repquota/Makefile,v 1.2 1997/09/21 11:44:14 deraadt Exp $
 
 PROG=	repquota
 MAN=	repquota.8

@@ -1,5 +1,4 @@
-# bootpgw/Makefile
-# $Id: Makefile,v 1.2 1994/12/22 11:33:16 cgd Exp $
+#	$OpenBSD: src/usr.sbin/bootpgw/Attic/Makefile,v 1.2 1997/09/21 11:43:26 deraadt Exp $
 
 PROG=	bootpgw
 SRCDIR= ${.CURDIR}/../bootpd

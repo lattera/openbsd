@@ -1,5 +1,4 @@
-#	$OpenBSD: src/usr.bin/mesg/Makefile,v 1.2 1996/06/26 05:37:04 deraadt Exp $
-#	$NetBSD: Makefile,v 1.3 1994/12/23 07:16:29 jtc Exp $
+#	$OpenBSD: src/usr.bin/mesg/Makefile,v 1.3 1997/09/21 11:50:00 deraadt Exp $
 
 PROG=	mesg
 

@@ -1,4 +1,4 @@
-# @(#) $Id: Makefile,v 1.1.1.1 1995/10/18 08:48:02 deraadt Exp $
+#	$OpenBSD: src/usr.sbin/rarpd/Makefile,v 1.3 1997/09/21 11:44:10 deraadt Exp $
 
 PROG=	rarpd
 SRCS=	rarpd.c arptab.c
