@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/spamd-setup/spamd-setup.c,v 1.5 2003/03/09 19:22:26 beck Exp $ */
+/*	$OpenBSD: src/libexec/spamd-setup/spamd-setup.c,v 1.6 2003/03/10 19:35:21 deraadt Exp $ */
 /*
  * Copyright (c) 2003 Bob Beck.  All rights reserved.
  *
@@ -776,5 +776,5 @@ main(int argc, char *argv[])
 		free(cidrs);
 		free(blists[i].bl);
 	}
-	exit(1);
+	exit(0);
 }
