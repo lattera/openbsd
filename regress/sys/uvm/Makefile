@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/sys/uvm/Makefile,v 1.2 2002/02/23 01:25:11 art Exp $
+#	$OpenBSD: src/regress/sys/uvm/Makefile,v 1.3 2005/01/06 10:14:20 otto Exp $
 
-SUBDIR=misc
+SUBDIR=misc mmap_size
 
 install:
 
