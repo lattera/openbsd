@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr53c9x.c,v 1.6.8.6 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr53c9x.c,v 1.6.8.7 2004/02/19 10:56:20 niklas Exp $	*/
 /*     $NetBSD: ncr53c9x.c,v 1.56 2000/11/30 14:41:46 thorpej Exp $    */
 
 /*
@@ -149,7 +149,7 @@ struct cfdriver esp_cd = {
 };
 
 /*
- * Names for the NCR53c9x variants, correspnding to the variant tags
+ * Names for the NCR53c9x variants, corresponding to the variant tags
  * in ncr53c9xvar.h.
  */
 const char *ncr53c9x_variant_names[] = {
@@ -869,7 +869,7 @@ ncr53c9x_poll(sc, xs, count)
 /*
  * Schedule a scsi operation.  This has now been pulled out of the interrupt
  * handler so that we may call it from ncr53c9x_scsi_cmd and ncr53c9x_done.
- * This may save us an unecessary interrupt just to get things going.
+ * This may save us an unnecessary interrupt just to get things going.
  * Should only be called when state == NCR_IDLE and at bio pl.
  */
 void
@@ -1098,7 +1098,7 @@ ncr53c9x_done(sc, ecb)
 #ifdef NCR53C9X_DEBUG
 	if (ncr53c9x_debug & NCR_SHOWMISC) {
 		if (xs->resid != 0)
-			printf("resid=%d ", xs->resid);
+			printf("resid=%lu ", (unsigned long)xs->resid);
 		if (xs->error == XS_SENSE)
 			printf("sense=0x%02x\n", xs->sense.error_code);
 		else
@@ -1290,6 +1290,8 @@ int
 ncr53c9x_reselect(sc, message, tagtype, tagid)
 	struct ncr53c9x_softc *sc;
 	int message;
+	int tagtype;
+	int tagid;
 {
 	u_char selid, target, lun;
 	struct ncr53c9x_ecb *ecb = NULL;
@@ -1682,7 +1684,7 @@ gotit:
 
 	case NCR_IDENTIFIED:
 		/*
-		 * IDENTIFY message was recived and queue tag is expected now
+		 * IDENTIFY message was received and queue tag is expected now
 		 */
 		if ((sc->sc_imess[0] != MSG_SIMPLE_Q_TAG) ||
 		    (sc->sc_msgify == 0)) {

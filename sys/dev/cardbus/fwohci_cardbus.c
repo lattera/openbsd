@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/Attic/fwohci_cardbus.c,v 1.3.4.1 2003/05/13 19:34:57 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/Attic/fwohci_cardbus.c,v 1.3.4.2 2004/02/19 10:56:14 niklas Exp $	*/
 /*	$NetBSD: fwohci_cardbus.c,v 1.5 2002/01/26 16:34:28 ichiro Exp $	*/
 
 /*
@@ -88,8 +88,10 @@ struct cfattach fwohci_cardbus_ca = {
 	fwohci_cardbus_attach, fwohci_cardbus_detach, fwohci_activate
 };
 
-#define	CARDBUS_OHCI_MAP_REGISTER	PCI_OHCI_MAP_REGISTER
 #define	CARDBUS_INTERFACE_OHCI		PCI_INTERFACE_OHCI
+#define	CARDBUS_OHCI_MAP_REGISTER	PCI_OHCI_MAP_REGISTER
+#define	CARDBUS_OHCI_CONTROL_REGISTER	PCI_OHCI_CONTROL_REGISTER
+#define	CARDBUS_GLOBAL_SWAP_BE		PCI_GLOBAL_SWAP_BE
 #define	cardbus_devinfo			pci_devinfo
 
 int

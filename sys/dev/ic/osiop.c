@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/osiop.c,v 1.3.4.2 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/osiop.c,v 1.3.4.3 2004/02/19 10:56:20 niklas Exp $	*/
 /*	$NetBSD: osiop.c,v 1.9 2002/04/05 18:27:54 bouyer Exp $	*/
 
 /*
@@ -68,7 +68,7 @@
  *
  * bus_space/bus_dma'fied by Izumi Tsutsui <tsutsui@ceres.dti.ne.jp>
  *
- * The 53c710 datasheet is avaliable at:
+ * The 53c710 datasheet is available at:
  * http://www.lsilogic.com/techlib/techdocs/storage_stand_prod/index.html
  */
 
@@ -81,8 +81,6 @@
 #include <sys/malloc.h>
 #include <sys/buf.h>
 #include <sys/kernel.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -114,7 +112,7 @@ void osiop_update_xfer_mode(struct osiop_softc *, int);
 void scsi_period_to_osiop(struct osiop_softc *, int);
 void osiop_timeout(void *);
 
-int osiop_reset_delay = 250;	/* delay after reset, in milleseconds */
+int osiop_reset_delay = 250;	/* delay after reset, in milliseconds */
 
 /* #define OSIOP_DEBUG */
 #ifdef OSIOP_DEBUG
@@ -230,8 +228,8 @@ osiop_attach(sc)
 		printf(": failed to create script map, err=%d\n", err);
 		return;
 	}
-	err = bus_dmamap_load(sc->sc_dmat, sc->sc_scrdma,
-	    sc->sc_script, PAGE_SIZE, NULL, BUS_DMA_NOWAIT);
+	err = bus_dmamap_load_raw(sc->sc_dmat, sc->sc_scrdma,
+	    &seg, nseg, PAGE_SIZE, BUS_DMA_NOWAIT);
 	if (err) {
 		printf(": failed to load script map, err=%d\n", err);
 		return;
@@ -270,8 +268,8 @@ osiop_attach(sc)
 		printf(": failed to create ds map, err=%d\n", err);
 		return;
 	}
-	err = bus_dmamap_load(sc->sc_dmat, sc->sc_dsdma, sc->sc_ds,
-	    sizeof(struct osiop_ds) * OSIOP_NACB, NULL, BUS_DMA_NOWAIT);
+	err = bus_dmamap_load_raw(sc->sc_dmat, sc->sc_dsdma,
+	    &seg, nseg, sizeof(struct osiop_ds) * OSIOP_NACB, BUS_DMA_NOWAIT);
 	if (err) {
 		printf(": failed to load ds map, err=%d\n", err);
 		return;
@@ -1010,7 +1008,7 @@ osiop_start(sc)
 	/*
 	 * Negotiate wide is the initial negotiation state;  since the 53c710
 	 * doesn't do wide transfers, just begin the synchronous transfer
-	 * negotation here.
+	 * negotiation here.
 	 */
 	if (ti->state == NEG_INIT) {
 		if ((ti->flags & TI_NOSYNC) != 0) {
@@ -1480,7 +1478,7 @@ osiop_checkintr(sc, istat, dstat, sstat0, status)
 				printf("couldn't find saved data pointer: "
 				    "curaddr %lx curlen %lx i %d\n",
 				    acb->curaddr, acb->curlen, i);
-#ifdef DDB
+#if defined(OSIOP_DEBUG) && defined(DDB)
 				Debugger();
 #endif
 			}
@@ -1699,9 +1697,9 @@ osiop_checkintr(sc, istat, dstat, sstat0, status)
 #ifdef OSIOP_DEBUG
 	if (osiop_debug & DEBUG_DMA)
 		panic("osiop_chkintr: **** temp ****");
-#endif
 #ifdef DDB
 	Debugger();
+#endif
 #endif
 	osiop_reset(sc);	/* hard reset */
 	*status = SCSI_OSIOP_NOSTATUS;

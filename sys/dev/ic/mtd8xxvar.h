@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mtd8xxvar.h,v 1.2 2003/10/21 18:58:49 jmc Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mtd8xxvar.h,v 1.2.2.1 2004/02/19 10:56:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Oleg Safiullin <form@pdp11.org.ru>

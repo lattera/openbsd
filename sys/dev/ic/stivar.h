@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/stivar.h,v 1.3.4.5 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/stivar.h,v 1.3.4.6 2004/02/19 10:56:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000-2003 Michael Shalayeff
@@ -29,21 +29,23 @@
 #ifndef _IC_STIVAR_H_
 #define _IC_STIVAR_H_
 
-/* #define	STIDEBUG */
-
 struct sti_softc {
 	struct device sc_dev;
 	void *sc_ih;
 
+	u_int	sc_wsmode;
 	u_int	sc_flags;
 #define	STI_TEXTMODE	0x0001
 #define	STI_CLEARSCR	0x0002
 #define	STI_CONSOLE	0x0004
 	int	sc_devtype;
 	int	sc_nscreens;
-	
+	int	sc_bpp;
+
 	bus_space_tag_t iot, memt;
-	bus_space_handle_t ioh, romh, fbh;
+	bus_space_handle_t romh;
+	bus_addr_t base, fbaddr;
+	bus_size_t fblen;
 
 	struct sti_dd sc_dd;		/* in word format */
 	struct sti_font sc_curfont;
@@ -54,6 +56,7 @@ struct sti_softc {
 	u_int	sc_fontmaxcol;		/* ...or in off-screen frame buffer */
 	u_int	sc_fontbase;
 
+	u_int8_t sc_rcmap[STI_NCMAP], sc_gcmap[STI_NCMAP], sc_bcmap[STI_NCMAP];
 	vaddr_t	sc_code;
 
 	sti_init_t	init;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_var.h,v 1.3.2.3 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_var.h,v 1.3.2.4 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: in_var.h,v 1.16 1996/02/13 23:42:15 christos Exp $	*/
 
 /*
@@ -91,7 +91,7 @@ void	in_socktrim(struct sockaddr_in *);
 	/* struct in_addr addr; */ \
 	/* struct ifnet *ifp; */ \
 { \
-	register struct in_ifaddr *ia; \
+	struct in_ifaddr *ia; \
 \
 	for (ia = in_ifaddr.tqh_first; \
 	    ia != NULL && ia->ia_addr.sin_addr.s_addr != (addr).s_addr; \
@@ -161,7 +161,7 @@ struct in_multistep {
 	/* struct ifnet *ifp; */ \
 	/* struct in_multi *inm; */ \
 { \
-	register struct in_ifaddr *ia; \
+	struct in_ifaddr *ia; \
 \
 	IFP_TO_IA((ifp), ia); \
 	if (ia == NULL) \

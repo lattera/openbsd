@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8.4.4 2003/03/28 00:38:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/xlreg.h,v 1.8.4.5 2004/02/19 10:56:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -482,7 +482,7 @@ struct xl_chain_data {
 	struct xl_chain		*xl_tx_tail;
 	struct xl_chain		*xl_tx_free;
 
-	/* 3c90xB "cyclone/hurricane/tornade" stuff */
+	/* 3c90xB "cyclone/hurricane/tornado" stuff */
 	int			xl_tx_prod;
 	int			xl_tx_cons;
 	int			xl_tx_cnt;
@@ -575,7 +575,6 @@ struct xl_softc {
 	bus_space_tag_t		xl_funct;
 	struct xl_type		*xl_info;	/* 3Com adapter info */
 	u_int8_t		xl_hasmii;	/* whether we have mii or not */
-	u_int8_t		xl_unit;	/* interface number */
 	u_int8_t		xl_type;
 	u_int32_t		xl_xcvr;
 	u_int16_t		xl_media;

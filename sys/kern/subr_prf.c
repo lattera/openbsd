@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.17 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.18 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -60,7 +60,7 @@
  * note that stdarg.h and the ansi style va_start macro is used for both
  * ansi and traditional c compilers.
  */
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 #ifdef KGDB
 #include <sys/kgdb.h>
@@ -524,10 +524,13 @@ int
 db_printf(const char *fmt, ...)
 {
 	va_list ap;
-	int retval;
+	int flags, retval;
 
+	flags = TODDB;
+	if (db_log)
+		flags |= TOLOG;
 	va_start(ap, fmt);
-	retval = kprintf(fmt, TODDB, NULL, NULL, ap);
+	retval = kprintf(fmt, flags, NULL, NULL, ap);
 	va_end(ap);
 	return(retval);
 }
@@ -648,19 +651,6 @@ vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
  *
  *	reg=3<BITTWO,BITONE>
  *
- * The format %: passes an additional format string and argument list
- * recursively.  Its usage is:
- *
- * fn(char *fmt, ...)
- * {
- *	va_list ap;
- *	va_start(ap, fmt);
- *	printf("prefix: %: suffix\n", fmt, ap);
- *	va_end(ap);
- * }
- *
- * this is the actual printf innards
- *
  * This code is large and complicated...
  */
 
@@ -761,16 +751,6 @@ kprintf(const char *fmt0, int oflags, void *vp, char *sbuf, va_list ap)
 
 rflag:		ch = *fmt++;
 reswitch:	switch (ch) {
-		/* XXX: non-standard '%:' format */
-#ifndef __powerpc__
-		case ':':
-			if (!(oflags & TOBUFONLY)) {
-				cp = va_arg(ap, char *);
-				kprintf(cp, oflags, vp,
-				    NULL, va_arg(ap, va_list));
-			}
-			continue;	/* no output */
-#endif
 		/* XXX: non-standard '%b' format */
 		case 'b': {
 			char *b, *z;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_timer.c,v 1.2.16.1 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_timer.c,v 1.2.16.2 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: pk_timer.c,v 1.6 1996/02/13 22:05:39 christos Exp $	*/
 
 /* 
@@ -66,9 +66,9 @@ int             pk_t23 = 18 * PR_SLOWHZ;	/* clear timer */
 void
 pk_timer()
 {
-	register struct pkcb *pkp;
-	register struct pklcd *lcp, **pp;
-	register int    lcns_jammed, cant_restart;
+	struct pkcb *pkp;
+	struct pklcd *lcp, **pp;
+	int    lcns_jammed, cant_restart;
 
 	FOR_ALL_PKCBS(pkp) {
 		switch (pkp->pk_state) {

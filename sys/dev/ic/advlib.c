@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/advlib.c,v 1.3.6.4 2002/03/28 11:50:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/advlib.c,v 1.3.6.5 2004/02/19 10:56:15 niklas Exp $	*/
 /*      $NetBSD: advlib.c,v 1.7 1998/10/28 20:39:46 dante Exp $        */
 
 /*
@@ -80,7 +80,7 @@
 /*                                Static functions                            */
 /******************************************************************************/
 
-/* Initializzation routines */
+/* Initialization routines */
 static u_int32_t AscLoadMicroCode(bus_space_tag_t, bus_space_handle_t,
 					u_int16_t, u_int16_t *, u_int16_t);
 static void AscInitLram(ASC_SOFTC *);
@@ -239,7 +239,7 @@ static void DvcDelayNanoSecond(u_int32_t);
 
 
 /******************************************************************************/
-/*                            Initializzation routines                        */
+/*                            Initialization routines                         */
 /******************************************************************************/
 
 /*
@@ -576,7 +576,7 @@ AscInitFromASC_SOFTC(sc)
 
 /*
  * - Initialize RISC chip
- * - Intialize Lram
+ * - Initialize Lram
  * - Load uCode into Lram
  * - Enable Interrupts
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_init.c,v 1.9.6.5 2003/06/07 11:03:41 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_init.c,v 1.9.6.6 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: vfs_init.c,v 1.6 1996/02/09 19:00:58 christos Exp $	*/
 
 /*
@@ -131,7 +131,7 @@ vfs_opv_init_explicit(vfs_opv_desc)
 		/*
 		 * Sanity check:  is this operation listed
 		 * in the list of operations?  We check this
-		 * by seeing if its offest is zero.  Since
+		 * by seeing if its offset is zero.  Since
 		 * the default routine should always be listed
 		 * first, it should be the only one with a zero
 		 * offset.  Any other operation with a zero
@@ -228,8 +228,6 @@ vfs_op_init()
 /*
  * Routines having to do with the management of the vnode table.
  */
-extern struct vnodeops dead_vnodeops;
-extern struct vnodeops spec_vnodeops;
 struct vattr va_null;
 
 /*

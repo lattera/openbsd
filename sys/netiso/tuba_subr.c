@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tuba_subr.c,v 1.4.14.4 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tuba_subr.c,v 1.4.14.5 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: tuba_subr.c,v 1.7 1996/02/13 22:12:32 christos Exp $	*/
 
 /*
@@ -67,7 +67,7 @@
 #include <netiso/tuba_table.h>
 #include <dev/rndvar.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 static struct sockaddr_iso null_siso = {sizeof(null_siso), AF_ISO,};
 extern int      tuba_table_size, tcp_keepidle, tcp_keepintvl, tcp_maxidle;
@@ -116,11 +116,11 @@ tuba_init()
  */
 static void
 tuba_getaddr(arg, siso, index)
-	register struct addr_arg *arg;
+	struct addr_arg *arg;
 	struct sockaddr_iso **siso;
 	u_long          index;
 {
-	register struct tuba_cache *tc;
+	struct tuba_cache *tc;
 	if (index <= tuba_table_size && (tc = tuba_table[index])) {
 		if (siso)
 			*siso = &tc->tc_siso;
@@ -133,10 +133,10 @@ tuba_getaddr(arg, siso, index)
 
 int
 tuba_output(m, tp)
-	register struct mbuf *m;
+	struct mbuf *m;
 	struct tcpcb   *tp;
 {
-	register struct tcpiphdr *n;
+	struct tcpiphdr *n;
 	struct isopcb  *isop;
 	struct addr_arg arg;
 
@@ -175,7 +175,7 @@ tuba_refcnt(isop, delta)
 	struct isopcb  *isop;
 	int delta;
 {
-	register struct tuba_cache *tc;
+	struct tuba_cache *tc;
 	unsigned        index;
 
 	if (delta != 1)
@@ -213,8 +213,8 @@ tuba_pcbconnect(v, nam)
 	void *v;
 	struct mbuf    *nam;
 {
-	register struct inpcb *inp = v;
-	register struct sockaddr_iso *siso;
+	struct inpcb *inp = v;
+	struct sockaddr_iso *siso;
 	struct sockaddr_in *sin = mtod(nam, struct sockaddr_in *);
 	struct tcpcb   *tp = intotcpcb(inp);
 	struct isopcb  *isop = (struct isopcb *) tp->t_tuba_pcb;
@@ -254,12 +254,12 @@ void
 tuba_tcpinput(struct mbuf *m, ...)
 {
 	unsigned long   lindex, findex;
-	register struct tcpiphdr *ti;
-	register struct inpcb *inp;
+	struct tcpiphdr *ti;
+	struct inpcb *inp;
 	caddr_t         optp = NULL;
 	int             optlen = 0;
 	int             len, tlen, off;
-	register struct tcpcb *tp = 0;
+	struct tcpcb *tp = 0;
 	int             tiflags;
 	struct socket  *so = NULL;
 	int             todrop, acked, ourfinisacked, needoutput = 0;

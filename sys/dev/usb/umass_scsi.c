@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass_scsi.c,v 1.4.4.1 2003/06/07 10:39:47 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umass_scsi.c,v 1.4.4.2 2004/02/19 10:56:34 niklas Exp $ */
 /*	$NetBSD: umass_scsipi.c,v 1.9 2003/02/16 23:14:08 augustss Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
@@ -126,8 +126,8 @@ umass_atapi_attach(struct umass_softc *sc)
 	scbus = umass_scsi_setup(sc);
 	scbus->sc_link.adapter_target = UMASS_SCSIID_HOST;
 	scbus->sc_link.luns = 1;
+	scbus->sc_link.openings = 1;
 	scbus->sc_link.flags |= SDEV_ATAPI;
-	scbus->sc_link.quirks |= SDEV_NOLUNS;
 	scbus->sc_link.device = &umass_atapiscsi_dev;
 
 	DPRINTF(UDMASS_USB, ("%s: umass_attach_bus: ATAPI\n"
@@ -161,7 +161,6 @@ umass_scsi_setup(struct umass_softc *sc)
 
 	/* Fill in the link. */
 	scbus->sc_link.adapter_buswidth = 2;
-	scbus->sc_link.openings = 1;
 	scbus->sc_link.adapter = &scbus->sc_adapter;
 	scbus->sc_link.adapter_softc = sc;
 	scbus->sc_link.openings = 1;
@@ -374,8 +373,8 @@ umass_scsi_cb(struct umass_softc *sc, void *priv, int residue, int status)
 		}
 		/* FALLTHROUGH */
 	case STATUS_CMD_FAILED:
-		printf("umass_scsi_cb: status cmd failed for scsi op 0x%02x\n",
-		    xs->cmd->opcode);
+		DPRINTF(UDMASS_CMD, ("umass_scsi_cb: status cmd failed for "
+		    "scsi op 0x%02x\n", xs->cmd->opcode));
 		/* fetch sense data */
 		memset(&scbus->sc_sense_cmd, 0, sizeof(scbus->sc_sense_cmd));
 		scbus->sc_sense_cmd.opcode = REQUEST_SENSE;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vfsops.c,v 1.10.2.5 2003/06/07 11:06:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/union/Attic/union_vfsops.c,v 1.10.2.6 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: union_vfsops.c,v 1.10 1995/06/18 14:47:47 cgd Exp $	*/
 
 /*
@@ -495,7 +495,7 @@ union_statfs(mp, sbp, p)
 #define union_checkexp ((int (*)(struct mount *, struct mbuf *,	\
 	int *, struct ucred **))eopnotsupp)
 
-struct vfsops union_vfsops = {
+const struct vfsops union_vfsops = {
 	union_mount,
 	union_start,
 	union_unmount,

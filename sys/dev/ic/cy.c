@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.9.2.6 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/cy.c,v 1.9.2.7 2004/02/19 10:56:17 niklas Exp $	*/
 /*
  * Copyright (c) 1996 Timo Rossi.
  * All rights reserved.
@@ -300,17 +300,10 @@ cyopen(dev, flag, mode, p)
 
 	s = spltty();
 	if (cy->cy_tty == NULL) {
-		if ((cy->cy_tty = ttymalloc()) == NULL) {
-			splx(s);
-			printf("%s port %d open: can't allocate tty\n",
-			    sc->sc_dev.dv_xname, port);
-			return (ENOMEM);
-		}
+		cy->cy_tty = ttymalloc();
 	}
 	splx(s);
 
-	tp = cy->cy_tty;
-	tty_attach(tp);
 	tp = cy->cy_tty;
 	tp->t_oproc = cystart;
 	tp->t_param = cyparam;
@@ -589,7 +582,7 @@ cyioctl(dev, cmd, data, flag, p)
 		break;
 
 	case TIOCSFLAGS:
-		error = suser(p->p_ucred, &p->p_acflag);
+		error = suser(p, 0);
 		if (error != 0)
 			return (EPERM);
 
@@ -941,7 +934,7 @@ cy_modem_control(cy, bits, howto)
 void
 cy_poll(void *arg)
 {
-	int card, port;
+	int port;
 	struct cy_softc *sc = arg;
 	struct cy_port *cy;
 	struct tty *tp;
@@ -1049,9 +1042,9 @@ cy_poll(void *arg)
 			    CD1400_MSVR2_CD) != 0);
 
 #ifdef CY_DEBUG
-			printf("cy_poll: carrier change "
-			    "(card %d, port %d, carrier %d)\n",
-			    card, port, carrier);
+			printf("%s: cy_poll: carrier change "
+			    "(port %d, carrier %d)\n",
+			    sc->sc_dev.dv_xname, port, carrier);
 #endif
 			if (CY_DIALIN(tp->t_dev) &&
 			    !(*linesw[tp->t_line].l_modem)(tp, carrier))
@@ -1083,13 +1076,13 @@ cy_poll(void *arg)
 			cy->cy_fifo_overruns = 0;
 			/* doesn't report overrun count,
 			   but shouldn't really matter */
-			log(LOG_WARNING, "cy%d port %d fifo overrun\n",
-			    card, port);
+			log(LOG_WARNING, "%s: port %d fifo overrun\n",
+			    sc->sc_dev.dv_xname, port);
 		}
 		if (cy->cy_ibuf_overruns) {
 			cy->cy_ibuf_overruns = 0;
-			log(LOG_WARNING, "cy%d port %d ibuf overrun\n",
-			    card, port);
+			log(LOG_WARNING, "%s: port %d ibuf overrun\n",
+			    sc->sc_dev.dv_xname, port);
 		}
 	} /* for(port...) */
 #ifdef CY_DEBUG1

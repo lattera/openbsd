@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.11 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.12 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -123,6 +123,9 @@ sys_rfork(struct proc *p, void *v, register_t *retval)
 	return (fork1(p, SIGCHLD, flags, NULL, 0, NULL, NULL, retval));
 }
 
+/* print the 'table full' message once per 10 seconds */
+struct timeval fork_tfmrate = { 10, 0 };
+
 int
 fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
     void (*func)(void *), void *arg, register_t *retval)
@@ -144,7 +147,10 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	 */
 	uid = p1->p_cred->p_ruid;
 	if ((nprocs >= maxproc - 5 && uid != 0) || nprocs >= maxproc) {
-		tablefull("proc");
+		static struct timeval lasttfm;
+
+		if (ratecheck(&lasttfm, &fork_tfmrate))
+			tablefull("proc");
 		return (EAGAIN);
 	}
 	nprocs++;
@@ -171,7 +177,7 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	}
 
 	/*
-	 * From now on, we're comitted to the fork and cannot fail.
+	 * From now on, we're committed to the fork and cannot fail.
 	 */
 
 	/* Allocate new proc. */
@@ -275,6 +281,11 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	else
 		p2->p_sigacts = sigactsinit(p1);
 
+	/*
+	 * If emulation has process fork hook, call it now.
+	 */
+	if (p2->p_emul->e_proc_fork)
+		(*p2->p_emul->e_proc_fork)(p2, p1);
 	/*
 	 * This begins the section where we must prevent the parent
 	 * from being swapped.

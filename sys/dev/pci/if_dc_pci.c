@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.8 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.9 2004/02/19 10:56:26 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -102,6 +102,7 @@ struct dc_type dc_devs[] = {
 	{ PCI_VENDOR_ACCTON, PCI_PRODUCT_ACCTON_EN2242 },
 	{ PCI_VENDOR_CONEXANT, PCI_PRODUCT_CONEXANT_RS7112 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_21145 },
+	{ PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3CSHO100BTX },
 	{ 0, 0 }
 };
 
@@ -172,7 +173,7 @@ void dc_pci_acpi(self, aux)
 	r = pci_conf_read(pc, pa->pa_tag, cptr) & 0xFF;
 	if (r == 0x01) {
 
-		r = pci_conf_read(pc, pa->pa_tag, cptr + 4);
+		r = pci_conf_read(pc, pa->pa_tag, cptr + PCI_PMCSR);
 		if (r & DC_PSTATE_D3) {
 			u_int32_t		iobase, membase, irq;
 
@@ -186,7 +187,7 @@ void dc_pci_acpi(self, aux)
 			    "-- setting to D0\n", sc->sc_dev.dv_xname,
 			    r & DC_PSTATE_D3);
 			r &= 0xFFFFFFFC;
-			pci_conf_write(pc, pa->pa_tag, cptr + 4, r);
+			pci_conf_write(pc, pa->pa_tag, cptr + PCI_PMCSR, r);
 
 			/* Restore PCI config data. */
 			pci_conf_write(pc, pa->pa_tag, DC_PCI_CFBIO, iobase);
@@ -281,7 +282,7 @@ void dc_pci_attach(parent, self, aux)
 		printf("\n");
 		goto fail;
 	}
-	printf(": %s", intrstr);
+	printf(": %s,", intrstr);
 
 	/* Need this info to decide on a chip type. */
 	sc->dc_revision = revision = PCI_REVISION(pa->pa_class);
@@ -324,6 +325,17 @@ void dc_pci_attach(parent, self, aux)
 			pci_conf_write(pc, pa->pa_tag, DC_PCI_CFLT, command);
 		}
 		break;
+	case PCI_VENDOR_3COM:
+		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_3COM_3CSHO100BTX) {
+			found = 1;
+			sc->dc_type = DC_TYPE_AN983;
+			sc->dc_flags |= DC_TX_USE_TX_INTR;
+			sc->dc_flags |= DC_TX_ADMTEK_WAR;
+			sc->dc_pmode = DC_PMODE_MII;
+		}
+		dc_eeprom_width(sc);
+		dc_read_srom(sc, sc->dc_romwidth);
+		break;
 	case PCI_VENDOR_ADMTEK:
 		if (PCI_PRODUCT(pa->pa_id) == PCI_PRODUCT_ADMTEK_AL981) {
 			found = 1;
@@ -337,6 +349,7 @@ void dc_pci_attach(parent, self, aux)
 			sc->dc_type = DC_TYPE_AN983;
 			sc->dc_flags |= DC_TX_USE_TX_INTR;
 			sc->dc_flags |= DC_TX_ADMTEK_WAR;
+			sc->dc_flags |= DC_64BIT_HASH;
 			sc->dc_pmode = DC_PMODE_MII;
 		}
 		dc_eeprom_width(sc);
@@ -447,9 +460,13 @@ void dc_pci_attach(parent, self, aux)
 	/* Save the cache line size. */
 	if (DC_IS_DAVICOM(sc))
 		sc->dc_cachesize = 0;
-	else
+	else {
 		sc->dc_cachesize = pci_conf_read(pc, pa->pa_tag,
 		    DC_PCI_CFLT) & 0xFF;
+#ifdef __hppa__
+		sc->dc_cachesize = 16;
+#endif
+	}
 
 	/* Reset the adapter. */
 	dc_reset(sc);

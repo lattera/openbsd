@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.8 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_forward.c,v 1.3.2.9 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: ip6_forward.c,v 1.75 2001/06/29 12:42:13 jinmei Exp $	*/
 
 /*
@@ -60,6 +60,7 @@
 #endif
 
 #ifdef IPSEC
+#include <netinet/ip_ipsp.h>
 #include <netinet/ip_ah.h>
 #include <netinet/ip_esp.h>
 #include <netinet/udp.h>
@@ -92,7 +93,6 @@ ip6_forward(m, srcrt)
 	struct rtentry *rt;
 	int error, type = 0, code = 0;
 	struct mbuf *mcopy = NULL;
-	long time_second = time.tv_sec;
 	struct ifnet *origifp;	/* maybe unnecessary */
 #ifdef IPSEC
 	u_int8_t sproto = 0;
@@ -115,8 +115,8 @@ ip6_forward(m, srcrt)
 	    IN6_IS_ADDR_UNSPECIFIED(&ip6->ip6_src)) {
 		ip6stat.ip6s_cantforward++;
 		/* XXX in6_ifstat_inc(rt->rt_ifp, ifs6_in_discard) */
-		if (ip6_log_time + ip6_log_interval < time_second) {
-			ip6_log_time = time_second;
+		if (ip6_log_time + ip6_log_interval < time.tv_sec) {
+			ip6_log_time = time.tv_sec;
 			log(LOG_DEBUG,
 			    "cannot forward "
 			    "from %s to %s nxt %d received on %s\n",
@@ -289,8 +289,8 @@ ip6_forward(m, srcrt)
 		ip6stat.ip6s_badscope++;
 		in6_ifstat_inc(rt->rt_ifp, ifs6_in_discard);
 
-		if (ip6_log_time + ip6_log_interval < time_second) {
-			ip6_log_time = time_second;
+		if (ip6_log_time + ip6_log_interval < time.tv_sec) {
+			ip6_log_time = time.tv_sec;
 			log(LOG_DEBUG,
 			    "cannot forward "
 			    "src %s, dst %s, nxt %d, rcvif %s, outif %s\n",
@@ -359,7 +359,7 @@ ip6_forward(m, srcrt)
 	 * Also, don't send redirect if forwarding using a route
 	 * modified by a redirect.
 	 */
-	if (rt->rt_ifp == m->m_pkthdr.rcvif && !srcrt &&
+	if (rt->rt_ifp == m->m_pkthdr.rcvif && !srcrt && ip6_sendredirects &&
 	    (rt->rt_flags & (RTF_DYNAMIC|RTF_MODIFIED)) == 0) {
 		if ((rt->rt_ifp->if_flags & IFF_POINTOPOINT) &&
 		    nd6_is_addr_neighbor((struct sockaddr_in6 *)&ip6_forward_rt.ro_dst, rt->rt_ifp)) {
@@ -454,7 +454,7 @@ ip6_forward(m, srcrt)
 		}
 	}
 
-#if NPF > 0
+#if NPF > 0 || defined(IPSEC)
 senderr:
 #endif
 	if (mcopy == NULL)

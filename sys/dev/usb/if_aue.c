@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.13.2.9 2003/06/07 11:02:32 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_aue.c,v 1.13.2.10 2004/02/19 10:56:33 niklas Exp $ */
 /*	$NetBSD: if_aue.c,v 1.82 2003/03/05 17:37:36 shiba Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999, 2000
@@ -226,7 +226,7 @@ Static const struct aue_type aue_devs[] = {
 };
 #define aue_lookup(v, p) ((struct aue_type *)usb_lookup(aue_devs, v, p))
 
-USB_DECLARE_DRIVER(aue);
+USB_DECLARE_DRIVER_CLASS(aue, DV_IFNET);
 
 Static void aue_reset_pegasus_II(struct aue_softc *sc);
 Static int aue_tx_list_init(struct aue_softc *);

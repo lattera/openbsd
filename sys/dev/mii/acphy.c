@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/acphy.c,v 1.1 2003/08/12 19:42:37 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/acphy.c,v 1.1.4.1 2004/02/19 10:56:24 niklas Exp $	*/
 /*	$NetBSD: acphy.c,v 1.13 2003/04/29 01:49:33 thorpej Exp $	*/
 
 /*

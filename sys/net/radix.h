@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/radix.h,v 1.3.16.4 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/radix.h,v 1.3.16.5 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: radix.h,v 1.8 1996/02/13 22:00:37 christos Exp $	*/
 
 /*
@@ -48,7 +48,6 @@ struct radix_node {
 #define RNF_NORMAL	1		/* leaf contains normal route */
 #define RNF_ROOT	2		/* leaf is root leaf for tree */
 #define RNF_ACTIVE	4		/* This node is alive (for rtfree) */
-#define RNF_IGNORE	8		/* Ignore this entry (for if down) */
 	union {
 		struct {			/* leaf only data: */
 			caddr_t	rn_Key;		/* object of search */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap.h,v 1.8.10.3 2003/06/07 11:06:06 ho Exp $ */
+/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap.h,v 1.8.10.4 2004/02/19 10:57:20 niklas Exp $ */
 /*	$NetBSD: umap.h,v 1.9 1999/07/08 01:19:06 wrstuden Exp $	*/
 
 /*
@@ -103,7 +103,7 @@ void umap_mapids(struct mount *v_mount, struct ucred *credp);
 #endif
 
 extern int (**umapfs_vnodeop_p)(void *);
-extern struct vfsops umapfs_vfsops;
+extern const struct vfsops umapfs_vfsops;
 
 int     umap_bypass(void *);
 

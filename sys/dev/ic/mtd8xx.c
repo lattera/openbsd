@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/mtd8xx.c,v 1.3 2003/11/17 13:21:29 espie Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/mtd8xx.c,v 1.3.2.1 2004/02/19 10:56:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Oleg Safiullin <form@pdp11.org.ru>

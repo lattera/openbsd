@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.41.4.7 2003/05/13 19:35:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.41.4.8 2004/02/19 10:56:26 niklas Exp $	*/
 /*	$NetBSD: if_de.c,v 1.45 1997/06/09 00:34:18 thorpej Exp $	*/
 
 /*-
@@ -2370,7 +2370,7 @@ tulip_identify_asante_nic(
 	mi->mi_gpr_length = 0;
 	mi->mi_gpr_offset = 0;
 	mi->mi_reset_length = 0;
-	mi->mi_reset_offset = 0;;
+	mi->mi_reset_offset = 0;
 
 	mi->mi_phyaddr = TULIP_MII_NOPHY;
 	for (idx = 20; idx > 0 && mi->mi_phyaddr == TULIP_MII_NOPHY; idx--) {

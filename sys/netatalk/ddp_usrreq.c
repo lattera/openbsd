@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netatalk/Attic/ddp_usrreq.c,v 1.2.12.3 2002/03/28 14:57:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netatalk/Attic/ddp_usrreq.c,v 1.2.12.4 2004/02/19 10:57:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
@@ -293,7 +293,7 @@ at_pcbsetaddr( ddp, addr, p )
 		return( EINVAL );
 	    }
 	    if ( sat->sat_port < ATPORT_RESERVED &&
-		    suser( p->p_ucred, &p->p_acflag )) {
+		    suser( p, 0 )) {
 		return( EACCES );
 	    }
 	}

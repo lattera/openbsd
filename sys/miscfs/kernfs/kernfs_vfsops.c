@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.13.2.8 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vfsops.c,v 1.13.2.9 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: kernfs_vfsops.c,v 1.26 1996/04/22 01:42:27 christos Exp $	*/
 
 /*
@@ -165,7 +165,7 @@ kernfs_root(mp, vpp)
 	struct mount *mp;
 	struct vnode **vpp;
 {
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	int error;
 
 #ifdef KERNFS_DIAGNOSTIC
@@ -209,7 +209,7 @@ kernfs_statfs(mp, sbp, p)
 	return (0);
 }
 
-struct vfsops kernfs_vfsops = {
+const struct vfsops kernfs_vfsops = {
 	kernfs_mount,
 	kernfs_start,
 	kernfs_unmount,

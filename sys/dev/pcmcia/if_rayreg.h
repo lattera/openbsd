@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1.2.4 2003/03/28 00:38:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rayreg.h,v 1.1.2.5 2004/02/19 10:56:31 niklas Exp $	*/
 /*	$NetBSD: if_rayreg.h,v 1.3 2000/08/10 11:48:46 ad Exp $	*/
 
 /* 
@@ -175,7 +175,7 @@ struct ray_csc {
 	u_int16_t	csc_mrx_overflow;	/* ECF incs on rx overflow */
 	u_int16_t	csc_mrx_cksum;	/* " on cksum error */
 	u_int16_t	csc_rx_hcksum;	/* " on header cksum error */
-	u_int8_t	csc_rx_noise;		/* average RSL measuremant */
+	u_int8_t	csc_rx_noise;		/* average RSL measurement */
 };
 
 /* status area */
@@ -388,11 +388,11 @@ struct ray_startup_params_tail_4 {
 #define	RAY_CMD_MAX		0x0e
 
 /*
- * unsolicted commands from the ECF
+ * unsolicited commands from the ECF
  */
 #define	RAY_ECMD_RX_DONE		0x80	/* process rx packet */
 #define	RAY_ECMD_REJOIN_DONE		0x81	/* rejoined the network */
-#define	RAY_ECMD_ROAM_START		0x82	/* romaining started */
+#define	RAY_ECMD_ROAM_START		0x82	/* roaming started */
 #define	RAY_ECMD_JAPAN_CALL_SIGNAL	0x83	/* japan test thing */
 
 
@@ -502,7 +502,7 @@ struct ray_cmd_tx {
 	u_int8_t	c_antenna;
 };
 
-/* RAY_CMD_TX_REQ (for bulid 4) */
+/* RAY_CMD_TX_REQ (for build 4) */
 struct ray_cmd_tx_4 {
 	u_int8_t	c_status;	/* ccs generic header */
 	u_int8_t	c_cmd;		/* " */
@@ -564,14 +564,6 @@ struct ray_param_req {
 
 #ifdef _KERNEL
 #define	RAY_FAILCAUSE_WAITING	257
-#endif
-
-#ifndef SIOCGIFGENERIC
-#define SIOCGIFGENERIC  _IOWR('i', 57, struct ifreq)    /* generic IF get op */
-#endif
-
-#ifndef SIOCSIFGENERIC
-#define SIOCSIFGENERIC  _IOWR('i', 58, struct ifreq)    /* generic IF get op */
 #endif
 
 /* get a param the data is a ray_param_request structure */

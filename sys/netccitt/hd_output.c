@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/hd_output.c,v 1.3.16.2 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/hd_output.c,v 1.3.16.3 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: hd_output.c,v 1.7 1996/05/07 02:36:06 thorpej Exp $	*/
 
 /*
@@ -55,7 +55,7 @@
 #include <netccitt/x25.h>
 #include <netccitt/pk_extern.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 /*
  *      HDLC OUTPUT INTERFACE
@@ -68,8 +68,8 @@
 int
 hd_output(struct mbuf *m0, ...)
 {
-	register struct hdcb *hdp;
-	register struct mbuf *m = m0;
+	struct hdcb *hdp;
+	struct mbuf *m = m0;
 	int             len;
 	va_list	ap;
 
@@ -107,9 +107,9 @@ hd_output(struct mbuf *m0, ...)
 
 void
 hd_start(hdp)
-	register struct hdcb *hdp;
+	struct hdcb *hdp;
 {
-	register struct mbuf *m;
+	struct mbuf *m;
 
 	/*
 	 * The iframe is only transmitted if all these conditions are FALSE.
@@ -151,11 +151,11 @@ hd_start(hdp)
  */
 void
 hd_send_iframe(hdp, buf, poll_bit)
-	register struct hdcb *hdp;
-	register struct mbuf *buf;
+	struct hdcb *hdp;
+	struct mbuf *buf;
 	int             poll_bit;
 {
-	register struct Hdlc_iframe *iframe;
+	struct Hdlc_iframe *iframe;
 	struct mbuf    *m;
 
 	KILL_TIMER(hdp);
@@ -203,8 +203,8 @@ hd_send_iframe(hdp, buf, poll_bit)
 int
 hd_ifoutput(struct mbuf *m, ...)
 {
-	register struct hdcb *hdp;
-	register struct ifnet *ifp;
+	struct hdcb *hdp;
+	struct ifnet *ifp;
 	int             s = splimp();
 	va_list	ap;
 
@@ -242,7 +242,7 @@ hd_ifoutput(struct mbuf *m, ...)
 
 void
 hd_resend_iframe(hdp)
-	register struct hdcb *hdp;
+	struct hdcb *hdp;
 {
 
 	if (hdp->hd_retxcnt++ < hd_n2) {

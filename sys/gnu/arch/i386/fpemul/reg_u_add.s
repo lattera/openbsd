@@ -1,5 +1,5 @@
 	.file	"reg_u_add.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_u_add.s,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_u_add.s,v 1.1.16.2 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  reg_u_add.S
  *
@@ -118,7 +118,7 @@ xOp1_not_denorm:
 	jnz	FPU_Arith_exit
 
 xOp2_not_denorm:
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 /*	xorl	%ecx,%ecx*/
 	movl	EXP(%esi),%ecx
@@ -156,7 +156,7 @@ L_accum_loaded:
 
 	testl	$0x80000000,SIGH(%esi)
 	je	L_bugged
-#endif PARANOID
+#endif /* PARANOID */
 
 /* The number to be shifted is in %eax:%ebx:%edx*/
 	cmpw	$32,%cx		/* shrd only works for 0..31 bits */
@@ -240,7 +240,7 @@ L_bugged:
 	call	EXCEPTION
 	pop	%ebx
 	jmp	L_exit
-#endif PARANOID
+#endif /* PARANOID */
 
 
 L_exit:

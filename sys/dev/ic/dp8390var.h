@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dp8390var.h,v 1.1.8.4 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dp8390var.h,v 1.1.8.5 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD: dp8390var.h,v 1.8 1998/08/12 07:19:09 scottr Exp $	*/
 
 /*
@@ -106,7 +106,7 @@ struct dp8390_softc {
  * Compile-time config flags
  */
 /*
- * This sets the default for enabling/disablng the transceiver.
+ * This sets the default for enabling/disabling the transceiver.
  */
 #define DP8390_DISABLE_TRANSCEIVER	0x0001
 

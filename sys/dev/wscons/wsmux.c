@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.4.4 2003/03/28 00:38:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/wscons/wsmux.c,v 1.6.4.5 2004/02/19 10:56:35 niklas Exp $	*/
 /*	$NetBSD: wsmux.c,v 1.9 2000/05/28 10:33:14 takemura Exp $	*/
 
 /*
@@ -294,7 +294,7 @@ wsmuxioctl(dev, cmd, data, flag, p)
 }
 
 int
-wsmuxselect(dev, events, p)
+wsmuxpoll(dev, events, p)
 	dev_t dev;
 	int events;
 	struct proc *p;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.5 2003/06/07 11:06:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_arcsubr.c,v 1.5.14.6 2004/02/19 10:57:21 niklas Exp $	*/
 /*	$NetBSD: if_arcsubr.c,v 1.8 1996/05/07 02:40:29 thorpej Exp $	*/
 
 /*
@@ -73,7 +73,7 @@ static struct mbuf *arc_defrag(struct ifnet *, struct mbuf *);
  * option.
  */
 #if ARC_PHDSMTU > 60480
-ERROR: The arc_phdsmtu is ARC_PHDSMTU, but must not exceed 60480.
+#error The arc_phdsmtu is ARC_PHDSMTU, but must not exceed 60480.
 #endif
 u_int16_t arc_phdsmtu = ARC_PHDSMTU;
 u_int8_t  arcbroadcastaddr = 0;
@@ -88,7 +88,7 @@ u_int8_t  arcbroadcastaddr = 0;
  */
 int
 arc_output(ifp, m0, dst, rt0)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 	struct mbuf *m0;
 	struct sockaddr *dst;
 	struct rtentry *rt0;
@@ -96,7 +96,7 @@ arc_output(ifp, m0, dst, rt0)
 	struct mbuf		*m, *m1, *mcopy;
 	struct rtentry		*rt;
 	struct arccom		*ac;
-	register struct arc_header *ah;
+	struct arc_header *ah;
 	int			s, error, newencoding, len;
 	u_int8_t		atype, adst;
 	int			tfrags, sflag, fsflag, rsflag;
@@ -145,7 +145,8 @@ arc_output(ifp, m0, dst, rt0)
 			adst = ntohl(SIN(dst)->sin_addr.s_addr) & 0xFF;
 
 		/* If broadcasting on a simplex interface, loopback a copy */
-		if ((m->m_flags & M_BCAST) && (ifp->if_flags & IFF_SIMPLEX))
+		if ((m->m_flags & M_BCAST) && (ifp->if_flags & IFF_SIMPLEX) &&
+		    m_tag_find(m, PACKET_TAG_PF_ROUTED, NULL) == NULL)
 			mcopy = m_copy(m, 0, (int)M_COPYALL);
 		if (ifp->if_flags & IFF_LINK0) {
 			atype = ARCTYPE_IP;
@@ -463,8 +464,8 @@ arc_input(ifp, m)
 	struct ifnet *ifp;
 	struct mbuf *m;
 {
-	register struct arc_header *ah;
-	register struct ifqueue *inq;
+	struct arc_header *ah;
+	struct ifqueue *inq;
 	u_int8_t atype;
 	int s;
 
@@ -522,10 +523,10 @@ arc_input(ifp, m)
 static char digits[] = "0123456789abcdef";
 char *
 arc_sprintf(ap)
-	register u_int8_t *ap;
+	u_int8_t *ap;
 {
 	static char arcbuf[3];
-	register char *cp = arcbuf;
+	char *cp = arcbuf;
 
 	*cp++ = digits[*ap >> 4];
 	*cp++ = digits[*ap++ & 0xf];
@@ -538,9 +539,9 @@ arc_sprintf(ap)
  */
 void
 arc_ifattach(ifp)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 {
-	register struct arccom *ac;
+	struct arccom *ac;
 
 	ifp->if_type = IFT_ARCNET;
 	ifp->if_addrlen = 1;

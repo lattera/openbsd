@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_output.c,v 1.3.16.2 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_output.c,v 1.3.16.3 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: clnp_output.c,v 1.9 1996/04/13 01:34:32 cgd Exp $	*/
 
 /*-
@@ -79,7 +79,7 @@ SOFTWARE.
 #include <netiso/clnp_stat.h>
 #include <netiso/argo_debug.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 static struct clnp_fixed dt_template = {
 	ISO8473_CLNP,		/* network identifier */
@@ -183,9 +183,9 @@ clnp_output(struct mbuf *m0, ...)
 	int             datalen;/* number of bytes of data in m0 */
 	int             flags;	/* flags */
 	int             error = 0;	/* return value of function */
-	register struct mbuf *m = m0;	/* mbuf for clnp header chain */
-	register struct clnp_fixed *clnp;	/* ptr to fixed part of hdr */
-	register caddr_t hoff;	/* offset into header */
+	struct mbuf *m = m0;	/* mbuf for clnp header chain */
+	struct clnp_fixed *clnp;	/* ptr to fixed part of hdr */
+	caddr_t hoff;	/* offset into header */
 	int             total_len;	/* total length of packet */
 	struct iso_addr *src;	/* ptr to source address */
 	struct iso_addr *dst;	/* ptr to destination address */

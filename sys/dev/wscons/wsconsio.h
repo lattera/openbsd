@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.7 2003/05/16 00:29:42 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsconsio.h,v 1.10.2.8 2004/02/19 10:56:35 niklas Exp $ */
 /* $NetBSD: wsconsio.h,v 1.31.2.1 2000/07/07 09:49:17 hannken Exp $ */
 
 /*
@@ -270,6 +270,7 @@ struct wsmouse_calibcoords {
 #define		WSDISPLAY_TYPE_XVIDEO	37	/* Xvideo */
 #define		WSDISPLAY_TYPE_SUNCG12	38	/* Sun cgtwelve */
 #define		WSDISPLAY_TYPE_MGX	39	/* SMS MGX */
+#define		WSDISPLAY_TYPE_SB_P9000	40	/* Tadpole SPARCbook P9000 */
 
 /* Basic display information.  Not applicable to all display types. */
 struct wsdisplay_fbinfo {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty_tty.c,v 1.6.10.1 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty_tty.c,v 1.6.10.2 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: tty_tty.c,v 1.13 1996/03/30 22:24:46 christos Exp $	*/
 
 /*-
@@ -143,14 +143,14 @@ cttyioctl(dev, cmd, addr, flag, p)
 
 /*ARGSUSED*/
 int
-cttyselect(dev, flag, p)
+cttypoll(dev, events, p)
 	dev_t dev;
-	int flag;
+	int events;
 	struct proc *p;
 {
 	struct vnode *ttyvp = cttyvp(p);
 
-	if (ttyvp == NULL)
-		return (1);	/* try operation to get EOF/failure */
-	return (VOP_SELECT(ttyvp, flag, FREAD|FWRITE, NOCRED, p));
+	if (ttyvp == NULL)	/* try operation to get EOF/failure */
+		return (seltrue(dev, events, p));
+	return (VOP_POLL(ttyvp, events, p));
 }

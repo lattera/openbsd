@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.7 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_var.h,v 1.4.2.8 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: ip6_var.h,v 1.33 2000/06/11 14:59:20 jinmei Exp $	*/
 
 /*
@@ -203,10 +203,10 @@ struct	ip6stat {
 #define	IPV6_MINMTU		0x04	/* use minimum MTU (IPV6_USE_MIN_MTU) */
 
 extern struct	ip6stat ip6stat;	/* statistics */
-extern u_int32_t ip6_id;		/* fragment identifier */
 extern int	ip6_defhlim;		/* default hop limit */
 extern int	ip6_defmcasthlim;	/* default multicast hop limit */
 extern int	ip6_forwarding;		/* act as router? */
+extern int	ip6_sendredirect;	/* send ICMPv6 redirect? */
 extern int	ip6_forward_srcrt;	/* forward src-routed? */
 extern int	ip6_use_deprecated;	/* allow deprecated addr as source */
 extern int	ip6_rr_prune;		/* router renumbering prefix
@@ -281,6 +281,9 @@ int	none_input(struct mbuf **, int *, int);
 
 struct 	in6_addr *in6_selectsrc(struct sockaddr_in6 *, struct ip6_pktopts *,
 	struct ip6_moptions *, struct route_in6 *, struct in6_addr *, int *);
+
+u_int32_t ip6_randomid(void);
+u_int32_t ip6_randomflowlabel(void);
 #endif /* _KERNEL */
 
 #endif /* !_NETINET6_IP6_VAR_H_ */

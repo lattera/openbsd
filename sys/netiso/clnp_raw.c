@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_raw.c,v 1.2.16.3 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_raw.c,v 1.2.16.4 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: clnp_raw.c,v 1.9 1996/02/13 22:08:42 christos Exp $	*/
 
 /*-
@@ -81,7 +81,7 @@ SOFTWARE.
 
 #include <netiso/tp_user.h>	/* XXX -- defines SOL_NETWORK */
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 struct sockproto rclnp_proto = {PF_ISO, 0};
 /*
@@ -200,7 +200,7 @@ rclnp_ctloutput(op, so, level, optname, m)
 	struct mbuf   **m;	/* ptr to ptr to option data */
 {
 	int             error = 0;
-	register struct rawisopcb *rp = sotorawisopcb(so);	/* raw cb ptr */
+	struct rawisopcb *rp = sotorawisopcb(so);	/* raw cb ptr */
 
 #ifdef ARGO_DEBUG
 	if (argo_debug[D_CTLOUTPUT]) {
@@ -284,12 +284,12 @@ rclnp_ctloutput(op, so, level, optname, m)
 /* ARGSUSED */
 int
 clnp_usrreq(so, req, m, nam, control)
-	register struct socket *so;
+	struct socket *so;
 	int             req;
 	struct mbuf    *m, *nam, *control;
 {
-	register int    error = 0;
-	register struct rawisopcb *rp = sotorawisopcb(so);
+	int    error = 0;
+	struct rawisopcb *rp = sotorawisopcb(so);
 
 	rp = sotorawisopcb(so);
 	switch (req) {

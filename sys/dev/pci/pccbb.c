@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.6 2003/03/28 00:38:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/pccbb.c,v 1.18.2.7 2004/02/19 10:56:28 niklas Exp $ */
 /*	$NetBSD: pccbb.c,v 1.42 2000/06/16 23:41:35 cgd Exp $	*/
 
 /*
@@ -769,6 +769,30 @@ pccbb_chipinit(sc)
 		DPRINTF(("0x%x\n", reg));
 		pci_conf_write(pc, tag, TOPIC_SLOT_CTRL, reg);
 		break;
+
+	case CB_TOPIC97:
+		reg = pci_conf_read(pc, tag, TOPIC_SLOT_CTRL);
+		DPRINTF(("%s: topic slot ctrl reg 0x%x -> ",
+		    sc->sc_dev.dv_xname, reg));
+		reg |= (TOPIC_SLOT_CTRL_SLOTON | TOPIC_SLOT_CTRL_SLOTEN |
+		    TOPIC_SLOT_CTRL_ID_LOCK | TOPIC_SLOT_CTRL_CARDBUS);
+		reg &= ~TOPIC_SLOT_CTRL_SWDETECT;
+		reg |= TOPIC97_SLOT_CTRL_PCIINT;
+		reg &= ~(TOPIC97_SLOT_CTRL_STSIRQP | TOPIC97_SLOT_CTRL_IRQP);
+		DPRINTF(("0x%x\n", reg));
+		pci_conf_write(pc, tag, TOPIC_SLOT_CTRL, reg);
+
+		/* make sure to assert LV card support bits */
+		bus_space_write_1(sc->sc_base_memt, sc->sc_base_memh,
+		    0x800 + 0x3e, bus_space_read_1(sc->sc_base_memt,
+		    sc->sc_base_memh, 0x800 + 0x3e) | 0x03);
+
+		/* Power on the controller if the BIOS didn't */
+		reg = pci_conf_read(pc, tag, TOPIC100_PMCSR);
+		if ((reg & TOPIC100_PMCSR_MASK) != TOPIC100_PMCSR_D0)
+			pci_conf_write(pc, tag, TOPIC100_PMCSR,
+			    (reg & ~TOPIC100_PMCSR_MASK) | TOPIC100_PMCSR_D0);
+		break;
 	}
 
 	/* Close all memory and I/O windows. */
@@ -1000,8 +1024,10 @@ pccbbintr_function(sc)
 			s = splclock();
 		} else if (pil->pil_level == IPL_AUDIO) {
 			s = splaudio();
+#ifdef IPL_IMP
 		} else if (pil->pil_level == IPL_IMP) {
 			s = splimp();
+#endif
 		} else if (pil->pil_level == IPL_TTY) {
 			s = spltty();
 #if 0

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs.h,v 1.9.4.3 2003/03/28 00:38:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs.h,v 1.9.4.4 2004/02/19 10:56:14 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: cardbusdevs,v 1.11 2001/08/22 16:33:57 aaron Exp 
+ *	OpenBSD: cardbusdevs,v 1.14 2003/09/27 19:38:10 fgsch Exp 
  */
 /*	$NetBSD: cardbusdevs,v 1.7 1999/12/11 22:22:34 explorer Exp $	*/
 
@@ -50,6 +50,7 @@
 
 #define	CARDBUS_VENDOR_DEC	0x1011		/* DEC */
 #define	CARDBUS_VENDOR_OPTI	0x1045		/* Opti */
+#define	CARDBUS_VENDOR_DLINK	0x1186		/* D-Link */
 #define	CARDBUS_VENDOR_3COM	0x10B7		/* 3Com */
 #define	CARDBUS_VENDOR_REALTEK	0x10ec		/* Realtek Semiconductor */
 #define	CARDBUS_VENDOR_ACCTON	0x1113		/* Accton */
@@ -57,6 +58,7 @@
 #define	CARDBUS_VENDOR_COREGA	0x1259		/* Corega */
 #define	CARDBUS_VENDOR_ADMTEK	0x1317		/* ADMtek */
 #define	CARDBUS_VENDOR_ABOCOM	0x13d1		/* Abocom */
+#define	CARDBUS_VENDOR_NETGEAR	0x168c		/* Netgear */
 #define	CARDBUS_VENDOR_INTEL	0x8086		/* Intel */
 #define	CARDBUS_VENDOR_ADP	0x9004		/* Adaptec */
 #define	CARDBUS_VENDOR_ADP2	0x9005		/* Adaptec(2) */
@@ -96,11 +98,17 @@
 /* DEC products */
 #define	CARDBUS_PRODUCT_DEC_21142	0x0019		/* 21142/3 */
 
+/* D-Link products */
+#define	CARDBUS_PRODUCT_DLINK_DFE_690TXD	0x1340		/* DFE-690TXD */
+
 /* Intel products */
 #define	CARDBUS_PRODUCT_INTEL_82557	0x1229		/* 82557 */
 /* XXX product name? */
 #define	CARDBUS_PRODUCT_INTEL_MODEM56	0x1002		/* Modem */
 #define	CARDBUS_PRODUCT_INTEL_DFE660	0x7192		/* DFE-660 */
+
+/* Netgear products */
+#define	CARDBUS_PRODUCT_NETGEAR_HA501	0x0007		/* HA501 */
 
 /* Opti products */
 #define	CARDBUS_PRODUCT_OPTI_82C861	0xc861		/* 82C861 */

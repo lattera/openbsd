@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_rl_pci.c,v 1.2.4.5 2003/03/28 00:38:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_rl_pci.c,v 1.2.4.6 2004/02/19 10:56:27 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -62,7 +62,6 @@
 #include <net/bpf.h>
 #endif
 
-#include <uvm/uvm_extern.h>              /* for vtophys */
 #include <machine/bus.h>
 
 #include <dev/mii/mii.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.35 2004/01/18 12:22:39 markus Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.35.2.1 2004/02/19 10:57:23 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.

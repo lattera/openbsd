@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umct.c,v 1.6.4.2 2003/06/07 11:02:33 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umct.c,v 1.6.4.3 2004/02/19 10:56:34 niklas Exp $	*/
 /*	$NetBSD: umct.c,v 1.10 2003/02/23 04:20:07 simonb Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
@@ -38,7 +38,7 @@
 
 /*
  * MCT USB-RS232 Interface Controller
- * http://www.mct.com.tw/p_u232.html
+ * http://www.mct.com.tw/prod/rs232.html
  * http://www.dlink.com/products/usb/dsbs25
  */
 

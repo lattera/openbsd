@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/systrace.h,v 1.12.4.1 2003/05/13 19:34:56 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/systrace.h,v 1.12.4.2 2004/02/19 10:56:13 niklas Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -47,6 +47,7 @@ struct str_msg_ugid {
 
 #define SYSTR_MAX_POLICIES	64
 #define SYSTR_MAXARGS		64
+#define SYSTR_MAXFNAME		8
 
 struct str_msg_ask {
 	int code;
@@ -62,14 +63,16 @@ struct str_msg_child {
 	pid_t new_pid;
 };
 
-#define SYSTR_MSG_ASK	1
-#define SYSTR_MSG_RES	2
-#define SYSTR_MSG_EMUL	3
-#define SYSTR_MSG_CHILD	4
-#define SYSTR_MSG_UGID	5
+#define SYSTR_MSG_ASK		1
+#define SYSTR_MSG_RES		2
+#define SYSTR_MSG_EMUL		3
+#define SYSTR_MSG_CHILD		4
+#define SYSTR_MSG_UGID		5
+#define SYSTR_MSG_POLICYFREE	6
 
 #define SYSTR_MSG_NOPROCESS(x) \
-	((x)->msg.msg_type == SYSTR_MSG_CHILD)
+	((x)->msg.msg_type == SYSTR_MSG_CHILD || \
+	 (x)->msg.msg_type == SYSTR_MSG_POLICYFREE)
 
 struct str_message {
 	int msg_type;
@@ -128,14 +131,19 @@ struct systrace_policy {
 #define strp_code	strp_data.assign.code
 #define strp_policy	strp_data.assign.policy
 
+#define	SYSTR_NOLINKS	1
+
 struct systrace_replace {
 	pid_t strr_pid;
+	u_int16_t strr_seqnr;
+	int16_t reserved;
 	int strr_nrepl;
 	caddr_t	strr_base;	/* Base memory */
 	size_t strr_len;	/* Length of memory */
 	int strr_argind[SYSTR_MAXARGS];
 	size_t strr_off[SYSTR_MAXARGS];
 	size_t strr_offlen[SYSTR_MAXARGS];
+	int32_t strr_flags[SYSTR_MAXARGS];
 };
 
 #define STRIOCCLONE	_IOR('s', 100, int)
@@ -159,6 +167,8 @@ struct systrace_replace {
 #define SYSTR_FLAGS_SETEGID	0x004
 
 #ifdef _KERNEL
+#include <sys/namei.h>
+
 struct str_process;
 struct fsystrace {
 	struct lock lock;
@@ -186,6 +196,7 @@ struct fsystrace {
 
 /* Internal prototypes */
 
+void systrace_namei(struct nameidata *);
 int systrace_redirect(int, struct proc *, void *, register_t *);
 void systrace_exit(struct proc *);
 void systrace_fork(struct proc *, struct proc *);

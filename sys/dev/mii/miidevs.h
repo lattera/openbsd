@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.9 2003/05/16 00:29:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miidevs.h,v 1.11.2.10 2004/02/19 10:56:24 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: miidevs,v 1.36 2003/05/14 05:16:58 nate Exp 
+ *	OpenBSD: miidevs,v 1.39 2003/10/05 03:24:24 krw Exp 
  */
 /* $NetBSD: miidevs,v 1.3 1998/11/05 03:43:43 thorpej Exp $ */
 
@@ -109,6 +109,8 @@
 /* Altima Communications PHYs */
 #define	MII_MODEL_xxALTIMA_AC101	0x0021
 #define	MII_STR_xxALTIMA_AC101	"AC101 10/100 media interface"
+#define	MII_MODEL_xxALTIMA_AC101L	0x0012
+#define	MII_STR_xxALTIMA_AC101L	"AC101L 10/100 media interface"
 
 /* Broadcom Corp. PHYs */
 #define	MII_MODEL_xxBROADCOM_BCM5400	0x0004
@@ -123,6 +125,10 @@
 #define	MII_STR_xxBROADCOM_BCM5701	"BCM5701 10/100/1000baseTX PHY"
 #define	MII_MODEL_xxBROADCOM_BCM5703	0x0016
 #define	MII_STR_xxBROADCOM_BCM5703	"BCM5703 10/100/1000baseTX PHY"
+#define	MII_MODEL_xxBROADCOM_BCM5704	0x0019
+#define	MII_STR_xxBROADCOM_BCM5704	"BCM5704 10/100/1000baseTX PHY"
+#define	MII_MODEL_xxBROADCOM_BCM5705	0x001a
+#define	MII_STR_xxBROADCOM_BCM5705	"BCM5705 10/100/1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5400	0x0004
 #define	MII_STR_BROADCOM_BCM5400	"BCM5400 1000baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5401	0x0005
@@ -137,6 +143,8 @@
 #define	MII_STR_BROADCOM_BCM5221	"BCM5221 100baseTX PHY"
 #define	MII_MODEL_BROADCOM_BCM5201	0x0021
 #define	MII_STR_BROADCOM_BCM5201	"BCM5201 10/100 media interface"
+#define	MII_MODEL_BROADCOM_BCM4401_0x0036	BCM4401
+#define	MII_STR_BROADCOM_BCM4401_0x0036	"10/100baseTX PHY"
 
 /* Davicom Semiconductor PHYs */
 #define	MII_MODEL_DAVICOM_DM9102	0x0004

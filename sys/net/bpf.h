@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/bpf.h,v 1.12.4.7 2003/06/07 11:06:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/bpf.h,v 1.12.4.8 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: bpf.h,v 1.15 1996/12/13 07:57:33 mikel Exp $	*/
 
 /*
@@ -111,6 +111,8 @@ struct bpf_version {
 #define BIOCGRSIG	_IOR('B',115, u_int)
 #define BIOCGHDRCMPLT	_IOR('B',116, u_int)
 #define BIOCSHDRCMPLT	_IOW('B',117, u_int)
+#define	BIOCLOCK	_IO('B',118)
+#define	BIOCSETWF	_IOW('B',119, struct bpf_program)
 
 struct bpf_timeval {
 	u_int32_t	tv_sec;
@@ -167,6 +169,7 @@ struct bpf_hdr {
 #define DLT_PPP_BSDOS	16	/* BSD/OS Point-to-point Protocol */
 #define DLT_OLD_PFLOG	17	/* Packet filter logging, old (XXX remove?) */
 #define DLT_PFSYNC	18	/* Packet filter state syncing */
+#define DLT_IEEE802_11	105	/* IEEE 802.11 wireless */
 #define DLT_PFLOG	117	/* Packet filter logging, by pcap people */
 
 /*

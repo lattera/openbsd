@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.9 2003/06/07 11:02:31 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_ne_pcmcia.c,v 1.25.2.10 2004/02/19 10:56:30 niklas Exp $	*/
 /*	$NetBSD: if_ne_pcmcia.c,v 1.17 1998/08/15 19:00:04 thorpej Exp $	*/
 
 /*
@@ -43,7 +43,6 @@
 #include <netinet/if_ether.h>
 
 #include <machine/bus.h>
-#include <machine/intr.h>
 
 #include <dev/pcmcia/pcmciareg.h>
 #include <dev/pcmcia/pcmciavar.h>
@@ -209,6 +208,10 @@ const struct ne2000dev {
       PCMCIA_CIS_GVC_NP0335,
       0, -1, { 0x00, 0x40, 0x05 } },
 
+    { PCMCIA_VENDOR_INVALID, PCMCIA_PRODUCT_INVALID,
+      PCMCIA_CIS_RELIA_RE2408T,
+      0, -1, { 0x00, 0xc0, 0x0c } },
+
     /*
      * You have to add new entries which contains
      * PCMCIA_VENDOR_INVALID and/or PCMCIA_PRODUCT_INVALID
@@ -363,6 +366,10 @@ const struct ne2000dev {
       PCMCIA_CIS_COREGA_ETHER_II_PCC_T,
       0, -1, { 0x00, 0x00, 0xf4 } },
 
+    { PCMCIA_VENDOR_COREGA, PCMCIA_PRODUCT_COREGA_ETHER_II_PCC_TD,
+      PCMCIA_CIS_COREGA_ETHER_II_PCC_TD,
+      0, -1, { 0x00, 0x00, 0xf4 } },
+
     { PCMCIA_VENDOR_COREGA, PCMCIA_PRODUCT_COREGA_FAST_ETHER_PCC_TX,
       PCMCIA_CIS_COREGA_FAST_ETHER_PCC_TX,
       0, -1, { 0x00, 0x00, 0xf4 } },
@@ -434,6 +441,10 @@ const struct ne2000dev {
     { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
       PCMCIA_CIS_NETGEAR_FA410TXC,
       0, -1, { 0x00, 0x48, 0x54 } },
+
+    { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA410TXC,
+      PCMCIA_CIS_DLINK_DFE670TXD,
+      0, -1, { 0x00, 0x40, 0x05 } },
 
     { PCMCIA_VENDOR_NETGEAR, PCMCIA_PRODUCT_NETGEAR_FA411,
       PCMCIA_CIS_NETGEAR_FA411,
@@ -946,7 +957,7 @@ ne_pcmcia_ax88190_set_iobase(psc)
 		goto fail_2;
 	}
 
-#ifdef DIAGNOSTIC
+#ifdef NE_DEBUG
 	printf(": LAN iobase 0x%x (0x%x) ->",
 	    bus_space_read_1(pcmh.memt, pcmh.memh, offset + 0) |
 	    bus_space_read_1(pcmh.memt, pcmh.memh, offset + 2) << 8,
@@ -956,7 +967,7 @@ ne_pcmcia_ax88190_set_iobase(psc)
 	    psc->sc_pcioh.addr & 0xff);
 	bus_space_write_1(pcmh.memt, pcmh.memh, offset + 2,
 	    psc->sc_pcioh.addr >> 8);
-#ifdef DIAGNOSTIC
+#ifdef NE_DEBUG
 	printf(" 0x%x", bus_space_read_1(pcmh.memt, pcmh.memh, offset + 0) |
 	    bus_space_read_1(pcmh.memt, pcmh.memh, offset + 2) << 8);
 #endif

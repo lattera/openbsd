@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umass_quirks.c,v 1.6.4.1 2003/06/07 10:39:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/umass_quirks.c,v 1.6.4.2 2004/02/19 10:56:34 niklas Exp $	*/
 /*	$NetBSD: umass_quirks.c,v 1.39 2003/05/08 15:19:47 augustss Exp $	*/
 
 /*
@@ -243,7 +243,7 @@ Static const struct umass_quirk umass_quirks[] = {
 	{ { USB_VENDOR_NEODIO, USB_PRODUCT_NEODIO_ND3050 },
 	  UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
 	  0,
-	  PQUIRK_NOMODESENSE | PQUIRK_FORCELUNS,
+	  PQUIRK_NOMODESENSE,
 	  UMATCH_VENDOR_PRODUCT,
 	  NULL, NULL
 	},
@@ -251,7 +251,7 @@ Static const struct umass_quirk umass_quirks[] = {
 	{ { USB_VENDOR_NEODIO, USB_PRODUCT_NEODIO_ND5010 },
 	  UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
 	  0,
-	  PQUIRK_NOMODESENSE | PQUIRK_FORCELUNS,
+	  PQUIRK_NOMODESENSE,
 	  UMATCH_VENDOR_PRODUCT,
 	  NULL, NULL
 	},
@@ -299,7 +299,7 @@ Static const struct umass_quirk umass_quirks[] = {
 	{ { USB_VENDOR_PEN, USB_PRODUCT_PEN_MOBILEDRIVE },
 	  UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
 	  0,
-	  PQUIRK_NOMODESENSE | PQUIRK_NODOORLOCK | PQUIRK_FORCELUNS,
+	  PQUIRK_NOMODESENSE | PQUIRK_NODOORLOCK,
 	  UMATCH_DEVCLASS_DEVSUBCLASS_DEVPROTO,
 	  NULL, NULL
 	},
@@ -323,7 +323,7 @@ Static const struct umass_quirk umass_quirks[] = {
 	{ { USB_VENDOR_PILOTECH, USB_PRODUCT_PILOTECH_CRW600 },
 	  UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
 	  0,
-	  PQUIRK_NOMODESENSE | PQUIRK_FORCELUNS,
+	  PQUIRK_NOMODESENSE,
 	  UMATCH_VENDOR_PRODUCT,
 	  NULL, NULL
 	},
@@ -347,7 +347,7 @@ Static const struct umass_quirk umass_quirks[] = {
 	{ { USB_VENDOR_SHUTTLE, USB_PRODUCT_SHUTTLE_EUSB },
 	  UMASS_WPROTO_CBI_I, UMASS_CPROTO_ATAPI,
 	  UMASS_QUIRK_NO_START_STOP,
-	  PQUIRK_NOTUR,
+	  PQUIRK_NOTUR | PQUIRK_NOSENSE,
 	  UMATCH_VENDOR_PRODUCT,
 	  umass_init_shuttle, NULL
 	},
@@ -360,13 +360,13 @@ Static const struct umass_quirk umass_quirks[] = {
 	  NULL, NULL
 	},
 
-	{ { USB_VENDOR_SIIG, USB_PRODUCT_SIIG_MULTICARDREADER }, 
+	{ { USB_VENDOR_SIIG, USB_PRODUCT_SIIG_MULTICARDREADER },
 	  UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
 	  UMASS_QUIRK_NO_START_STOP,
 	  0,
 	  UMATCH_DEVCLASS_DEVSUBCLASS_DEVPROTO,
 	  NULL,NULL
-	}, 
+	},
 
 	{ { USB_VENDOR_SONY, USB_PRODUCT_SONY_DRIVEV2 },
 	  UMASS_WPROTO_BBB, UMASS_CPROTO_ISD_ATA,
@@ -432,6 +432,13 @@ Static const struct umass_quirk umass_quirks[] = {
 	  NULL, umass_fixup_yedata
 	},
 
+       { { USB_VENDOR_SIGMATEL, USB_PRODUCT_SIGMATEL_DNSSF7X},
+         UMASS_WPROTO_UNSPEC, UMASS_CPROTO_UNSPEC,
+         0,
+         SDEV_NOSYNCCACHE | PQUIRK_NODOORLOCK,
+         UMATCH_VENDOR_PRODUCT,
+         NULL, NULL
+       },
 };
 
 const struct umass_quirk *

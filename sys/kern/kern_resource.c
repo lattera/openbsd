@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.10.2.8 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.10.2.9 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_resource.c,v 1.38 1996/10/23 07:19:38 matthias Exp $	*/
 
 /*-
@@ -68,7 +68,7 @@ sys_getpriority(curp, v, retval)
 {
 	register struct sys_getpriority_args /* {
 		syscallarg(int) which;
-		syscallarg(int) who;
+		syscallarg(id_t) who;
 	} */ *uap = v;
 	register struct proc *p;
 	register int low = NZERO + PRIO_MAX + 1;
@@ -126,7 +126,7 @@ sys_setpriority(curp, v, retval)
 {
 	register struct sys_setpriority_args /* {
 		syscallarg(int) which;
-		syscallarg(int) who;
+		syscallarg(id_t) who;
 		syscallarg(int) prio;
 	} */ *uap = v;
 	register struct proc *p;
@@ -195,7 +195,7 @@ donice(curp, chgp, n)
 	if (n < PRIO_MIN)
 		n = PRIO_MIN;
 	n += NZERO;
-	if (n < chgp->p_nice && suser(pcred->pc_ucred, &curp->p_acflag))
+	if (n < chgp->p_nice && suser(curp, 0))
 		return (EACCES);
 	chgp->p_nice = n;
 	SCHED_LOCK(s);
@@ -213,7 +213,7 @@ sys_setrlimit(p, v, retval)
 {
 	register struct sys_setrlimit_args /* {
 		syscallarg(int) which;
-		syscallarg(struct rlimit *) rlp;
+		syscallarg(const struct rlimit *) rlp;
 	} */ *uap = v;
 	struct rlimit alim;
 	int error;
@@ -238,13 +238,10 @@ dosetrlimit(p, which, limp)
 	if (which >= RLIM_NLIMITS)
 		return (EINVAL);
 
-	if (limp->rlim_cur < 0 || limp->rlim_max < 0)
-		return (EINVAL);
-
 	alimp = &p->p_rlimit[which];
 	if (limp->rlim_cur > alimp->rlim_max ||
 	    limp->rlim_max > alimp->rlim_max)
-		if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		if ((error = suser(p, 0)) != 0)
 			return (error);
 	if (p->p_limit->p_refcnt > 1 &&
 	    (p->p_limit->p_lflags & PL_SHAREMOD) == 0) {

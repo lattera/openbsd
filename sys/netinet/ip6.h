@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.7 2003/06/07 11:06:08 ho Exp $	*/
-/*	$KAME: ip6.h,v 1.14 2000/10/09 01:04:09 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip6.h,v 1.2.2.8 2004/02/19 10:57:23 niklas Exp $	*/
+/*	$KAME: ip6.h,v 1.45 2003/06/05 04:46:38 keiichi Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -81,7 +81,7 @@ struct ip6_hdr {
 	} ip6_ctlun;
 	struct in6_addr ip6_src;	/* source address */
 	struct in6_addr ip6_dst;	/* destination address */
-} __attribute__((__packed__));
+} __packed;
 
 #define ip6_vfc		ip6_ctlun.ip6_un2_vfc
 #define ip6_flow	ip6_ctlun.ip6_un1.ip6_un1_flow
@@ -109,13 +109,24 @@ struct ip6_hdr {
 #endif
 
 /*
+ * for IPv6 pseudo header checksum
+ * XXX nonstandard
+ */
+struct ip6_hdr_pseudo {
+	struct in6_addr ip6ph_src;
+	struct in6_addr ip6ph_dst;
+	u_int32_t	ip6ph_len;
+	u_int8_t	ip6ph_zero[3];
+	u_int8_t	ip6ph_nxt;
+} __packed;
+
+/*
  * Extension Headers
  */
-
 struct	ip6_ext {
 	u_int8_t ip6e_nxt;
 	u_int8_t ip6e_len;
-} __attribute__((__packed__));
+} __packed;
 
 /* Hop-by-Hop options header */
 /* XXX should we pad it to force alignment on an 8-byte boundary? */
@@ -123,7 +134,7 @@ struct ip6_hbh {
 	u_int8_t ip6h_nxt;	/* next header */
 	u_int8_t ip6h_len;	/* length in units of 8 octets */
 	/* followed by options */
-} __attribute__((__packed__));
+} __packed;
 
 /* Destination options header */
 /* XXX should we pad it to force alignment on an 8-byte boundary? */
@@ -131,14 +142,17 @@ struct ip6_dest {
 	u_int8_t ip6d_nxt;	/* next header */
 	u_int8_t ip6d_len;	/* length in units of 8 octets */
 	/* followed by options */
-} __attribute__((__packed__));
+} __packed;
 
 /* Option types and related macros */
 #define IP6OPT_PAD1		0x00	/* 00 0 00000 */
 #define IP6OPT_PADN		0x01	/* 00 0 00001 */
 #define IP6OPT_JUMBO		0xC2	/* 11 0 00010 = 194 */
-#define IP6OPT_JUMBO_LEN	6
-#define IP6OPT_RTALERT		0x05	/* 00 0 00101 */
+#define IP6OPT_NSAP_ADDR	0xC3	/* 11 0 00011 */
+#define IP6OPT_TUNNEL_LIMIT	0x04	/* 00 0 00100 */
+#define IP6OPT_RTALERT		0x05	/* 00 0 00101 (KAME definition) */
+#define IP6OPT_ROUTER_ALERT	0x05	/* (2292bis def, recommended) */
+
 #define IP6OPT_RTALERT_LEN	4
 #define IP6OPT_RTALERT_MLD	0	/* Datagram contains an MLD message */
 #define IP6OPT_RTALERT_RSVP	1	/* Datagram contains an RSVP message */
@@ -153,6 +167,56 @@ struct ip6_dest {
 
 #define IP6OPT_MUTABLE		0x20
 
+/* IPv6 options: common part */
+struct ip6_opt {
+	u_int8_t ip6o_type;
+	u_int8_t ip6o_len;
+} __packed;
+
+/* Jumbo Payload Option */
+struct ip6_opt_jumbo {
+	u_int8_t ip6oj_type;
+	u_int8_t ip6oj_len;
+	u_int8_t ip6oj_jumbo_len[4];
+} __packed;
+#define IP6OPT_JUMBO_LEN 6
+
+/* NSAP Address Option */
+struct ip6_opt_nsap {
+	u_int8_t ip6on_type;
+	u_int8_t ip6on_len;
+	u_int8_t ip6on_src_nsap_len;
+	u_int8_t ip6on_dst_nsap_len;
+	/* followed by source NSAP */
+	/* followed by destination NSAP */
+} __packed;
+
+/* Tunnel Limit Option */
+struct ip6_opt_tunnel {
+	u_int8_t ip6ot_type;
+	u_int8_t ip6ot_len;
+	u_int8_t ip6ot_encap_limit;
+} __packed;
+
+/* Router Alert Option */
+struct ip6_opt_router {
+	u_int8_t ip6or_type;
+	u_int8_t ip6or_len;
+	u_int8_t ip6or_value[2];
+} __packed;
+/* Router alert values (in network byte order) */
+#if BYTE_ORDER == BIG_ENDIAN
+#define IP6_ALERT_MLD	0x0000
+#define IP6_ALERT_RSVP	0x0001
+#define IP6_ALERT_AN	0x0002
+#else
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define IP6_ALERT_MLD	0x0000
+#define IP6_ALERT_RSVP	0x0100
+#define IP6_ALERT_AN	0x0200
+#endif /* LITTLE_ENDIAN */
+#endif
+
 /* Routing header */
 struct ip6_rthdr {
 	u_int8_t  ip6r_nxt;	/* next header */
@@ -160,7 +224,7 @@ struct ip6_rthdr {
 	u_int8_t  ip6r_type;	/* routing type */
 	u_int8_t  ip6r_segleft;	/* segments left */
 	/* followed by routing type specific data */
-} __attribute__((__packed__));
+} __packed;
 
 /* Type 0 Routing header */
 struct ip6_rthdr0 {
@@ -168,10 +232,8 @@ struct ip6_rthdr0 {
 	u_int8_t  ip6r0_len;		/* length in units of 8 octets */
 	u_int8_t  ip6r0_type;		/* always zero */
 	u_int8_t  ip6r0_segleft;	/* segments left */
-	u_int8_t  ip6r0_reserved;	/* reserved field */
-	u_int8_t  ip6r0_slmap[3];	/* strict/loose bit map */
-	struct in6_addr  ip6r0_addr[1];	/* up to 23 addresses */
-} __attribute__((__packed__));
+	u_int32_t ip6r0_reserved;	/* reserved field */
+} __packed;
 
 /* Fragment header */
 struct ip6_frag {
@@ -179,7 +241,7 @@ struct ip6_frag {
 	u_int8_t  ip6f_reserved;	/* reserved field */
 	u_int16_t ip6f_offlg;		/* offset, reserved, and flag */
 	u_int32_t ip6f_ident;		/* identification */
-} __attribute__((__packed__));
+} __packed;
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define IP6F_OFF_MASK		0xfff8	/* mask out offset from _offlg */

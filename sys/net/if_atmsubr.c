@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.4 2003/03/28 00:41:28 niklas Exp $       */
+/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.12.2.5 2004/02/19 10:57:21 niklas Exp $       */
 
 /*
  *
@@ -129,7 +129,7 @@
 
 int
 atm_output(ifp, m0, dst, rt0)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 	struct mbuf *m0;
 	struct sockaddr *dst;
 	struct rtentry *rt0;
@@ -137,8 +137,8 @@ atm_output(ifp, m0, dst, rt0)
 	u_int16_t etype = 0;			/* if using LLC/SNAP */
 	int s, error = 0, sz, len;
 	struct atm_pseudohdr atmdst, *ad;
-	register struct mbuf *m = m0;
-	register struct rtentry *rt;
+	struct mbuf *m = m0;
+	struct rtentry *rt;
 	struct atmllc *atmllc;
 	u_int32_t atm_flags;
 
@@ -281,11 +281,11 @@ bad:
 void
 atm_input(ifp, ah, m, rxhand)
 	struct ifnet *ifp;
-	register struct atm_pseudohdr *ah;
+	struct atm_pseudohdr *ah;
 	struct mbuf *m;
 	void *rxhand;
 {
-	register struct ifqueue *inq;
+	struct ifqueue *inq;
 	u_int16_t etype = ETHERTYPE_IP; /* default */
 	int s;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.6.8.5 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.6.8.6 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: fifo.h,v 1.10 1996/02/09 22:40:15 christos Exp $	*/
 
 /*
@@ -51,7 +51,7 @@ int	fifo_read(void *);
 int	fifo_write(void *);
 #define fifo_lease_check nullop
 int	fifo_ioctl(void *);
-int	fifo_select(void *);
+int	fifo_poll(void *);
 int	fifo_kqfilter(void *);
 #define fifo_fsync	nullop
 #define fifo_remove	fifo_badop

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.7 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tx.c,v 1.9.2.8 2004/02/19 10:56:27 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_tx.c,v 1.45 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -678,6 +678,7 @@ epic_ifioctl(ifp, command, data)
 			epic_init(sc);		
 			break;
 		}
+		break;
 	}
 #endif /* __FreeBSD__ */
 

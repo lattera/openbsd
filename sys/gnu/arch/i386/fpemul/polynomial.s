@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/polynomial.s,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/polynomial.s,v 1.1.16.2 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  polynomial.S
  *
@@ -124,7 +124,7 @@ L_accum_loop:
 	movl	-28(%ebp),%eax
 	mull	4(%edi)			/* x ms long */
 	movl	%edx,-12(%ebp)
-#endif EXTRA_PRECISE
+#endif /* EXTRA_PRECISE */
 
 	movl	-24(%ebp),%eax
 	mull	(%edi)			/* x ls long */
@@ -171,7 +171,7 @@ L_accum_loop:
 	addl	$1,-24(%ebp)
 	adcl	$0,-20(%ebp)
 L_no_poly_round:
-#endif EXTRA_PRECISE
+#endif /* EXTRA_PRECISE */
 
 	subl	TERM_SIZE,%ecx
 	jns	L_accum_loop
@@ -184,7 +184,7 @@ L_accum_done:
 
 	addl	$1,-24(%ebp)
 	adcl	$0,-20(%ebp)
-#endif EXTRA_PRECISE
+#endif /* EXTRA_PRECISE */
 
 L_poly_done:
 	movl	-24(%ebp),%eax

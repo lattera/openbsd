@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.5 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lge.c,v 1.3.4.6 2004/02/19 10:56:27 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Wind River Systems
  * Copyright (c) 1997, 1998, 1999, 2000, 2001
@@ -512,7 +512,7 @@ void lge_attach(parent, self, aux)
 	if (!(command & PCI_COMMAND_IO_ENABLE)) {
 		printf("%s: failed to enable I/O ports!\n",
 		       sc->sc_dv.dv_xname);
-		error = ENXIO;;
+		error = ENXIO;
 		goto fail;
 	}
 	/*
@@ -1245,7 +1245,7 @@ int lge_encap(sc, m_head, txidx)
 			tot_len += m->m_len;
 			f = &cur_tx->lge_frags[frag];
 			f->lge_fraglen = m->m_len;
-			f->lge_fragptr_lo = vtophys(mtod(m, vm_offset_t));
+			f->lge_fragptr_lo = vtophys(mtod(m, vaddr_t));
 			f->lge_fragptr_hi = 0;
 			frag++;
 		}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/snprintf.c,v 1.2.2.1 2003/06/07 10:41:25 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/snprintf.c,v 1.2.2.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: printf.c,v 1.10 1996/11/30 04:19:21 gwr Exp $	*/
 
 /*-
@@ -34,7 +34,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 #include "stand.h"
 
@@ -48,8 +48,7 @@ static char *sbuf, *sbuf_end;
 static size_t sbuf_len;
 
 void
-sputchar(c)
-	int c;
+sputchar(int c)
 {
 	if (sbuf < sbuf_end)
 		*sbuf = c;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/m88k/Attic/ffs.S,v 1.2 2004/01/22 20:39:06 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/m88k/Attic/ffs.S,v 1.2.2.1 2004/02/19 10:57:18 niklas Exp $	*/
 
 /*
  * Written by Miodrag Vallat, 2004 - Public Domain

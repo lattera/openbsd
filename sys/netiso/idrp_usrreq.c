@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/idrp_usrreq.c,v 1.2.16.2 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/idrp_usrreq.c,v 1.2.16.3 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: idrp_usrreq.c,v 1.5 1996/02/13 22:09:33 christos Exp $	*/
 
 /*
@@ -53,7 +53,7 @@
 #include <netiso/iso_var.h>
 #include <netiso/idrp_var.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 struct isopcb   idrp_isop;
 static struct sockaddr_iso idrp_addrs[2] =
@@ -114,7 +114,7 @@ int
 idrp_output(struct mbuf *m, ...)
 {
 	struct mbuf *addr;
-	register struct sockaddr_iso *siso;
+	struct sockaddr_iso *siso;
 	int             s = splsoftnet(), i;
 	va_list ap;
 	va_start(ap, m);

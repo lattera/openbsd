@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/clnp_timer.c,v 1.2.16.1 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/clnp_timer.c,v 1.2.16.2 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: clnp_timer.c,v 1.7 1996/02/13 22:08:55 christos Exp $	*/
 
 /*-
@@ -91,7 +91,7 @@ extern struct clnp_fragl *clnp_frags;
  */
 struct clnp_fragl *
 clnp_freefrags(cfh)
-	register struct clnp_fragl *cfh;	/* fragment header to delete */
+	struct clnp_fragl *cfh;	/* fragment header to delete */
 {
 	struct clnp_fragl *next = cfh->cfl_next;
 	struct clnp_frag *cf;
@@ -143,7 +143,7 @@ clnp_freefrags(cfh)
 void
 clnp_slowtimo()
 {
-	register struct clnp_fragl *cfh = clnp_frags;
+	struct clnp_fragl *cfh = clnp_frags;
 	int             s = splsoftnet();
 
 	while (cfh != NULL) {
@@ -172,7 +172,7 @@ clnp_slowtimo()
 void
 clnp_drain()
 {
-	register struct clnp_fragl *cfh = clnp_frags;
+	struct clnp_fragl *cfh = clnp_frags;
 
 	while (cfh != NULL)
 		cfh = clnp_freefrags(cfh);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/wdt.c,v 1.1.4.2 2002/03/28 15:35:59 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/wdt.c,v 1.1.4.3 2004/02/19 10:56:30 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1998,1999 Alex Nash
@@ -579,7 +579,7 @@ wdt_sched (struct wdt_softc *wdt, struct proc *p)
 	 * if the counters aren't reloaded within wdt->timeout_secs
 	 * seconds.
 	 */
-	if ((error = suser(p->p_ucred, &p->p_acflag)))
+	if ((error = suser(p, 0)))
 		return(error);
 
 	/* block out the timeout handler */

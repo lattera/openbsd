@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.8 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_kthread.c,v 1.7.2.9 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_kthread.c,v 1.3 1998/12/22 21:21:36 kleink Exp $	*/
 
 /*-
@@ -54,7 +54,7 @@
  * ansi and traditional c compilers.
  * XXX: this requires that stdarg.h define: va_alist and va_dcl
  */
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 /*
  * Fork a kernel thread.  Any process can request this to be done.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_meas.c,v 1.2.16.1 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_meas.c,v 1.2.16.2 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: tp_meas.c,v 1.7 1996/02/13 22:11:18 christos Exp $	*/
 
 /*-
@@ -101,7 +101,7 @@ Tpmeas(ref, kind, timev, seq, win, size)
 	struct timeval *timev;
 	u_int           seq, win, size;
 {
-	register struct tp_Meas *tpm;
+	struct tp_Meas *tpm;
 	static int      mseq;
 
 	tpm = &tp_Meas[tp_Measn++];

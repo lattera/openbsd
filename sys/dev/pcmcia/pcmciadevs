@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs,v 1.32.2.10 2003/06/07 11:02:31 ho Exp $
+	$OpenBSD: src/sys/dev/pcmcia/pcmciadevs,v 1.32.2.11 2004/02/19 10:56:31 niklas Exp $
 /* $NetBSD: pcmciadevs,v 1.13 1998/08/17 23:10:12 thorpej Exp $ */
 
 /*
@@ -61,6 +61,8 @@ vendor COMPAQ			0x0138	Compaq
 vendor GREYCELL			0x0143	Grey Cell
 vendor LINKSYS			0x0149	Linksys
 vendor NETGEAR			0x0149	Netgear
+vendor SIEMENS			0x02ac	Siemens
+vendor SIERRA			0x0192	Sierra
 vendor SIMPLETECH		0x014d	Simple Technology
 vendor SYMBOL2			0x014d	Symbol
 vendor LUCENT			0x0156	Lucent
@@ -315,6 +317,14 @@ product SANDISK SDCFB		0x0401 Sandisk CompactFlash
 /* Simple Technology */
 product SIMPLETECH COMMUNICATOR288 0x0100 Simple Technology 28.8 Communicator
 
+/* Siemens */
+product SIEMENS SS1021		0x0002 Siemens SpeedStream 1021
+
+/* Sierra */
+product SIERRA	A550		0xa550 A550
+product SIERRA	A555		0xa555 A555
+product SIERRA	A710		0xa710 A710/A750
+
 /* Socket Communications */
 product SOCKET EA_ETHER		0x0000 Socket Communications EA
 product SOCKET LP_WLAN_CF	0x0001 Socket Communications Low Power WLAN
@@ -373,6 +383,7 @@ vendor INTERSIL			-1	Intersil
 vendor PLANET			-1	Planet
 vendor PLANEX			-1	Planex
 vendor PREMAX			-1	Premax
+vendor RELIA			-1	Relia Technologies
 vendor RPTI			-1	RPTI
 vendor SARAMNCOM		-1	SaramNcom Co.,Ltd.
 vendor SHUTTLE			-1	Shuttle
@@ -406,12 +417,14 @@ product LINKSYS ECARD_2		{ "LINKSYS", "E-CARD", NULL, NULL }
 product COREGA ETHER_PCC_T	{ "corega&spK.K.", "corega&spEther&spPCC-T", NULL, NULL }
 product COREGA ETHER_PCC_TD	{ "corega&spK.K.", "corega&spEther&spPCC-TD", NULL, NULL }
 product COREGA ETHER_II_PCC_T	{ "corega&spK.K.", "corega&spEtherII&spPCC-T", NULL, NULL }
+product COREGA ETHER_II_PCC_TD	{ "corega&spK.K.", "corega&spEtherII&spPCC-TD", NULL, NULL }
 product COREGA FAST_ETHER_PCC_TX	{ "corega&spK.K.", "corega&spFastEther&spPCC-TX", NULL, NULL }
 product COREGA FETHER_PCC_TXD	{ "corega&spK.K.", "corega&spFEther&spPCC-TXD", NULL, NULL }
 product COREGA FETHER_PCC_TXF	{ "corega", "FEther&spPCC-TXF", NULL, NULL }
 product COREGA WIRELESS_LAN_PCC_11	{ "corega&spK.K.", "Wireless&spLAN&spPCC-11", NULL, NULL }
 product COREGA WIRELESS_LAN_PCCA_11	{ "corega&spK.K.", "Wireless&spLAN&spPCCA-11", NULL, NULL }
 product COREGA WIRELESS_LAN_PCCB_11	{ "corega_K.K.", "Wireless_LAN_PCCB-11", NULL, NULL }
+product COREGA WIRELESS_LAN_PCCL_11	{ "corega", "WL&spPCCL-11", "ISL37300P", NULL }
 product SVEC COMBOCARD		{ "Ethernet", "Adapter", NULL, NULL }
 product SVEC LANCARD		{ "SVEC", "FD605&spPCMCIA&spEtherNet&spCard", "V1-1", NULL }
 /*
@@ -456,3 +469,4 @@ product GEMTEK WLAN		{ "Intersil", "PRISM&sp2_5&spPCMCIA&spADAPTER", "ISL37300P"
 product SIMPLETECH SPECTRUM24_ALT	{ "Symbol&spTechnologies", "LA4111&spSpectrum24&spWireless&spLAN&spPC&spCard", NULL, NULL }
 product AROWANA FE		{ "PCMCIA", "Fast-Ethernet", NULL, NULL }
 product GVC NP0335		{ "ETHER-C16", "ETHER-C16", "Fast&spEthernet", NULL }
+product RELIA RE2408T		{ "PCMCIA&spLAN", "Ethernet", "A", "004743118001" }

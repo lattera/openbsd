@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic6360reg.h,v 1.1 1998/09/11 07:24:57 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic6360reg.h,v 1.1.8.1 2004/02/19 10:56:15 niklas Exp $	*/
 /*	$NetBSD: aic6360.c,v 1.52 1996/12/10 21:27:51 thorpej Exp $	*/
 
 /*
@@ -51,7 +51,7 @@
  * Charles Hannum (mycroft@duality.gnu.ai.mit.edu).  Thanks a million!
  */
 
-/* Definitions, most of them has turned out to be unneccesary, but here they
+/* Definitions, most of them have turned out to be unnecessary, but here they
  * are anyway.
  */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.7 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_mem.c,v 1.9.6.8 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: procfs_mem.c,v 1.8 1996/02/09 22:40:50 christos Exp $	*/
 
 /*
@@ -110,7 +110,7 @@ procfs_checkioperm(p, t)
 	if ((t->p_cred->p_ruid != p->p_cred->p_ruid ||
 	    ISSET(t->p_flag, P_SUGIDEXEC) ||
 	    ISSET(t->p_flag, P_SUGID)) &&
-	    (error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	    (error = suser(p, 0)) != 0)
 		return (error);
 
 	if ((t->p_pid == 1) && (securelevel > -1))

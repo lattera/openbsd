@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vfsops.c,v 1.19.2.7 2003/05/13 19:21:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vfsops.c,v 1.19.2.8 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: msdosfs_vfsops.c,v 1.48 1997/10/18 02:54:57 briggs Exp $	*/
 
 /*-
@@ -854,7 +854,7 @@ msdosfs_check_export(mp, nam, exflagsp, credanonp)
 #define msdosfs_sysctl ((int (*)(int *, u_int, void *, size_t *, void *, \
                                     size_t, struct proc *))eopnotsupp)
 
-struct vfsops msdosfs_vfsops = {
+const struct vfsops msdosfs_vfsops = {
 	msdosfs_mount,
 	msdosfs_start,
 	msdosfs_unmount,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7.2.4 2003/05/13 19:35:12 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/umodem.c,v 1.7.2.5 2004/02/19 10:56:34 niklas Exp $ */
 /*	$NetBSD: umodem.c,v 1.45 2002/09/23 05:51:23 simonb Exp $	*/
 
 /*
@@ -39,8 +39,8 @@
  */
 
 /*
- * Comm Class spec:  http://www.usb.org/developers/data/devclass/usbcdc10.pdf
- *                   http://www.usb.org/developers/data/devclass/usbcdc11.pdf
+ * Comm Class spec:  http://www.usb.org/developers/devclass_docs/usbccs10.pdf
+ *                   http://www.usb.org/developers/devclass_docs/usbcdc11.pdf
  */
 
 /*

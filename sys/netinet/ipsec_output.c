@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ipsec_output.c,v 1.7.2.5 2003/03/28 00:06:54 niklas Exp $ */
+/*	$OpenBSD: src/sys/netinet/ipsec_output.c,v 1.7.2.6 2004/02/19 10:57:24 niklas Exp $ */
 /*
  * The author of this code is Angelos D. Keromytis (angelos@cis.upenn.edu)
  *
@@ -44,6 +44,7 @@
 #include <netinet6/in6_var.h>
 #endif /* INET6 */
 
+#include <netinet/udp.h>
 #include <netinet/ip_ipsp.h>
 #include <netinet/ip_ah.h>
 #include <netinet/ip_esp.h>
@@ -55,6 +56,9 @@
 #else
 #define DPRINTF(x)
 #endif
+
+int	udpencap_enable = 0;	/* disabled by default */
+int	udpencap_port = 4500;	/* triggers decapsulation */
 
 /*
  * Loop over a tdb chain, taking into consideration protocol tunneling. The
@@ -180,7 +184,7 @@ ipsp_process_packet(struct mbuf *m, struct tdb *tdb, int af, int tunalready)
 			 * This is not a bridge packet, remember if we
 			 * had IP_DF.
 			 */
-			setdf = ntohs(ip->ip_off) & IP_DF;
+			setdf = ip->ip_off & htons(IP_DF);
 #endif /* INET */
 
 #ifdef INET6
@@ -262,9 +266,7 @@ ipsp_process_packet(struct mbuf *m, struct tdb *tdb, int af, int tunalready)
 						return ENOBUFS;
 
 				ip = mtod(m, struct ip *);
-				NTOHS(ip->ip_off);
-				ip->ip_off |= IP_DF;
-				HTONS(ip->ip_off);
+				ip->ip_off |= htons(IP_DF);
 			}
 
 			/* Remember that we appended a tunnel header. */
@@ -338,12 +340,35 @@ ipsp_process_done(struct mbuf *m, struct tdb *tdb)
 
 	tdb->tdb_last_used = time.tv_sec;
 
+	if (udpencap_enable && udpencap_port &&
+	    (tdb->tdb_flags & TDBF_UDPENCAP) != 0) {
+		struct mbuf *mi;
+		struct udphdr *uh;
+
+		mi = m_inject(m, sizeof(struct ip), sizeof(struct udphdr),
+		    M_DONTWAIT);
+		if (mi == NULL) {
+			m_freem(m);
+			return ENOMEM;
+		}
+		uh = mtod(mi, struct udphdr *);
+		uh->uh_sport = uh->uh_dport = htons(udpencap_port);
+		if (tdb->tdb_udpencap_port)
+			uh->uh_dport = tdb->tdb_udpencap_port;
+
+		uh->uh_ulen = htons(m->m_pkthdr.len - sizeof(struct ip));
+		uh->uh_sum = 0;
+		espstat.esps_udpencout++;
+	}
+
 	switch (tdb->tdb_dst.sa.sa_family) {
 #ifdef INET
 	case AF_INET:
 		/* Fix the header length, for AH processing. */
 		ip = mtod(m, struct ip *);
 		ip->ip_len = htons(m->m_pkthdr.len);
+		if ((tdb->tdb_flags & TDBF_UDPENCAP) != 0)
+			ip->ip_p = IPPROTO_UDP;
 		break;
 #endif /* INET */
 
@@ -361,6 +386,8 @@ ipsp_process_done(struct mbuf *m, struct tdb *tdb)
 		}
 		ip6 = mtod(m, struct ip6_hdr *);
 		ip6->ip6_plen = htons(m->m_pkthdr.len - sizeof(*ip6));
+		if ((tdb->tdb_flags & TDBF_UDPENCAP) != 0)
+			ip6->ip6_nxt = IPPROTO_UDP;
 		break;
 #endif /* INET6 */
 
@@ -410,9 +437,6 @@ ipsp_process_done(struct mbuf *m, struct tdb *tdb)
 	switch (tdb->tdb_dst.sa.sa_family) {
 #ifdef INET
 	case AF_INET:
-		NTOHS(ip->ip_len);
-		NTOHS(ip->ip_off);
-
 		return ip_output(m, (void *)NULL, (void *)NULL, IP_RAWOUTPUT, (void *)NULL, (void *)NULL);
 #endif /* INET */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.7 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/elink3.c,v 1.37.2.8 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD: elink3.c,v 1.32 1997/05/14 00:22:00 thorpej Exp $	*/
 
 /*
@@ -65,7 +65,6 @@
 
 #include <machine/cpu.h>
 #include <machine/bus.h>
-#include <machine/intr.h>
 
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
@@ -464,7 +463,7 @@ ep_detach(self)
  * Use the config_cntrl register  in window 0 instead.
  * Used on original, 10Mbit ISA (3c509), 3c509B, and pre-Demon EISA cards
  * that implement  CONFIG_CTRL.  We don't have a good way to set the
- * default active mediuim; punt to ifconfig  instead.
+ * default active medium; punt to ifconfig instead.
  *
  * XXX what about 3c515, pcmcia 10/100?
  */

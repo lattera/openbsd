@@ -3,9 +3,9 @@
  * (Modifications made here may easily be lost!)
  *
  * Created from the file:
- *	OpenBSD: vnode_if.src,v 1.9.6.6 2003/05/13 19:21:29 ho Exp 
+ *	OpenBSD
  * by the script:
- *	OpenBSD: vnode_if.sh,v 1.6.6.3 2003/05/13 19:21:29 ho Exp 
+ *	OpenBSD
  */
 
 /*
@@ -461,7 +461,7 @@ struct vnodeop_desc vop_ioctl_desc = {
 int VOP_IOCTL(vp, command, data, fflag, cred, p)
 	struct vnode *vp;
 	u_long command;
-	caddr_t data;
+	void *data;
 	int fflag;
 	struct ucred *cred;
 	struct proc *p;
@@ -477,37 +477,33 @@ int VOP_IOCTL(vp, command, data, fflag, cred, p)
 	return (VCALL(vp, VOFFSET(vop_ioctl), &a));
 }
 
-int vop_select_vp_offsets[] = {
-	VOPARG_OFFSETOF(struct vop_select_args,a_vp),
+int vop_poll_vp_offsets[] = {
+	VOPARG_OFFSETOF(struct vop_poll_args,a_vp),
 	VDESC_NO_OFFSET
 };
-struct vnodeop_desc vop_select_desc = {
+struct vnodeop_desc vop_poll_desc = {
 	0,
-	"vop_select",
+	"vop_poll",
 	0,
-	vop_select_vp_offsets,
+	vop_poll_vp_offsets,
 	VDESC_NO_OFFSET,
-	VOPARG_OFFSETOF(struct vop_select_args, a_cred),
-	VOPARG_OFFSETOF(struct vop_select_args, a_p),
+	VDESC_NO_OFFSET,
+	VOPARG_OFFSETOF(struct vop_poll_args, a_p),
 	VDESC_NO_OFFSET,
 	NULL,
 };
 
-int VOP_SELECT(vp, which, fflags, cred, p)
+int VOP_POLL(vp, events, p)
 	struct vnode *vp;
-	int which;
-	int fflags;
-	struct ucred *cred;
+	int events;
 	struct proc *p;
 {
-	struct vop_select_args a;
-	a.a_desc = VDESC(vop_select);
+	struct vop_poll_args a;
+	a.a_desc = VDESC(vop_poll);
 	a.a_vp = vp;
-	a.a_which = which;
-	a.a_fflags = fflags;
-	a.a_cred = cred;
+	a.a_events = events;
 	a.a_p = p;
-	return (VCALL(vp, VOFFSET(vop_select), &a));
+	return (VCALL(vp, VOFFSET(vop_poll), &a));
 }
 
 int vop_kqfilter_vp_offsets[] = {
@@ -1147,7 +1143,7 @@ struct vnodeop_desc vop_advlock_desc = {
 
 int VOP_ADVLOCK(vp, id, op, fl, flags)
 	struct vnode *vp;
-	caddr_t id;
+	void *id;
 	int op;
 	struct flock *fl;
 	int flags;
@@ -1368,7 +1364,7 @@ struct vnodeop_desc *vfs_op_descs[] = {
 	&vop_write_desc,
 	&vop_lease_desc,
 	&vop_ioctl_desc,
-	&vop_select_desc,
+	&vop_poll_desc,
 	&vop_kqfilter_desc,
 	&vop_revoke_desc,
 	&vop_fsync_desc,

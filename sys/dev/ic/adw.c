@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.6 2002/03/28 11:50:59 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/adw.c,v 1.3.2.7 2004/02/19 10:56:15 niklas Exp $ */
 /* $NetBSD: adw.c,v 1.23 2000/05/27 18:24:50 dante Exp $	 */
 
 /*
@@ -53,8 +53,6 @@
 
 #include <machine/bus.h>
 #include <machine/intr.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -1043,7 +1041,7 @@ adw_timeout(arg)
 #endif
 		/*
 		 * waiting for multishot callout_reset() let's restart it
-		 * by hand so the next time a timeout event will occour
+		 * by hand so the next time a timeout event will occur
 		 * we will reset the bus.
 		 */
 		timeout_add(&xs->stimeout, (ccb->timeout * hz) / 1000);
@@ -1215,7 +1213,7 @@ adw_isr_callback(sc, scsiq)
 
 	/*
 	 * 'done_status' contains the command's ending status.
-	 * 'host_status' conatins the host adapter status.
+	 * 'host_status' contains the host adapter status.
 	 * 'scsi_status' contains the scsi peripheral status.
 	 */
 

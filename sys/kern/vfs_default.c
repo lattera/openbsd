@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_default.c,v 1.3.8.6 2003/06/07 11:03:41 ho Exp $  */
+/*	$OpenBSD: src/sys/kern/vfs_default.c,v 1.3.8.7 2004/02/19 10:56:38 niklas Exp $  */
 
 /*
  *    Portions of this code are:
@@ -62,6 +62,7 @@ vop_generic_revoke(v)
 	void *v;
 {
 	struct vop_revoke_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_vp;
 		int a_flags;
 	} */ *ap = v;
@@ -84,7 +85,7 @@ vop_generic_revoke(v)
 		if (vp->v_flag & VXLOCK) {
 			vp->v_flag |= VXWANT;
 			simple_unlock(&vp->v_interlock);
-			tsleep((caddr_t)vp, PINOD, "vop_generic_revokeall", 0);
+			tsleep(vp, PINOD, "vop_generic_revokeall", 0);
 			return(0);
 		}
 		/*
@@ -133,6 +134,7 @@ vop_generic_abortop(v)
 	void *v;
 {
 	struct vop_abortop_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_dvp;
 		struct componentname *a_cnp;
 	} */ *ap = v;
@@ -153,6 +155,7 @@ vop_generic_lock(v)
 	void *v;
 {
 	struct vop_lock_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_vp;
 		int a_flags;
 		struct proc *a_p;
@@ -222,6 +225,7 @@ vop_generic_unlock(v)
 	void *v;
 {
 	struct vop_unlock_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_vp;
 		int a_flags;
 		struct proc *a_p;
@@ -242,6 +246,7 @@ vop_generic_islocked(v)
 	void *v;
 {
 	struct vop_islocked_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_vp;
 	} */ *ap = v;
 
@@ -260,6 +265,7 @@ vop_generic_kqfilter(v)
 	void *v;
 {
 	struct vop_kqfilter_args /* {
+		struct vnodeop_desc *a_desc;
 		struct vnode *a_vp;
 		struct knote *a_kn;
 	} */ *ap = v;

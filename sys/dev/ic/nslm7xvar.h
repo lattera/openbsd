@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/nslm7xvar.h,v 1.1.2.1 2003/05/12 19:59:52 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/nslm7xvar.h,v 1.1.2.2 2004/02/19 10:56:20 niklas Exp $	*/
 /*	$NetBSD: nslm7xvar.h,v 1.10 2002/11/15 14:55:42 ad Exp $ */
 
 /*-
@@ -70,7 +70,7 @@
 #define LM_ID_MASK	0xFE
 
 /*
- * additionnal registers for the Winbond chips:
+ * additional registers for the Winbond chips:
  * WB83781D: mostly lm7x compatible; extra temp sensors in bank1 & 2
  * WB83782D & WB83627HF: voltage sensors needs different handling, more FAN
  *                       dividers; mode voltage sensors, more temp sensors.
@@ -94,6 +94,7 @@
 #define WB_CHIPID_83781_2	0x11
 #define WB_CHIPID_83782		0x30
 #define WB_CHIPID_83627		0x21
+#define WB_CHIPID_83627THF	0x90
 #define WB_CHIPID_83697		0x60
 #define WB_BANK0_FANBAT	0x5D
 /* Bank1 regs */
@@ -114,7 +115,7 @@
 #define WB_BANK5_VBAT	0x51
 
 #define WB83781_NUM_SENSORS	13
-#define WB83697_NUM_SENSORS	14
+#define WB83697_NUM_SENSORS	13
 #define WB_NUM_SENSORS	15
 
 struct lm_softc {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.7 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_proto.c,v 1.17.2.8 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: in6_proto.c,v 1.66 2000/10/10 15:35:47 itojun Exp $	*/
 
 /*
@@ -101,6 +101,11 @@
 #include "gif.h"
 #if NGIF > 0
 #include <netinet6/in6_gif.h>
+#endif
+
+#include "carp.h"
+#if NCARP > 0
+#include <netinet/ip_carp.h>
 #endif
 
 /*
@@ -210,6 +215,13 @@ struct ip6protosw inet6sw[] = {
   rip6_usrreq,
   0,		0,		0,		0,
 },
+#if NCARP > 0
+{ SOCK_RAW,	&inet6domain,	IPPROTO_CARP,	PR_ATOMIC|PR_ADDR,
+  carp6_input,	rip6_output,	0,		rip6_ctloutput,
+  rip6_usrreq,
+  0,		0,		0,		0,		carp_sysctl
+},
+#endif /* NCARP */
 /* raw wildcard */
 { SOCK_RAW,	&inet6domain,	0,		PR_ATOMIC|PR_ADDR,
   rip6_input,	rip6_output,	0,		rip6_ctloutput,
@@ -238,12 +250,8 @@ struct domain inet6domain =
 #endif /* GATEWAY6 */
 #endif /* !IPV6FORWARDING */
 
-#ifndef	IPV6_SENDREDIRECTS
-#define	IPV6_SENDREDIRECTS	1
-#endif
-
 int	ip6_forwarding = IPV6FORWARDING;	/* act as router? */
-int	ip6_sendredirects = IPV6_SENDREDIRECTS;
+int	ip6_sendredirects = 1;
 int	ip6_defhlim = IPV6_DEFHLIM;
 int	ip6_defmcasthlim = IPV6_DEFAULT_MULTICAST_HOPS;
 int	ip6_accept_rtadv = 0;	/* "IPV6FORWARDING ? 0 : 1" is dangerous */

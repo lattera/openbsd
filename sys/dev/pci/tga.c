@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.7 2003/05/13 19:35:09 ho Exp $ */
+/* $OpenBSD: src/sys/dev/pci/tga.c,v 1.6.4.8 2004/02/19 10:56:30 niklas Exp $ */
 /* $NetBSD: tga.c,v 1.40 2002/03/13 15:05:18 ad Exp $ */
 
 /*
@@ -55,8 +55,6 @@
 #include <dev/wscons/wscons_raster.h>
 #include <dev/rasops/rasops.h>
 #include <dev/wsfont/wsfont.h>
-
-#include <uvm/uvm_extern.h>
 
 #ifdef __alpha__
 #include <machine/pte.h>
@@ -202,7 +200,7 @@ tga_getdevconfig(memt, pc, tag, dc)
 	struct rasops_info *rip;
 	int cookie;
 	bus_size_t pcisize;
-	int i, cacheable;
+	int i;
 
 	dc->dc_memt = memt;
 
@@ -212,10 +210,8 @@ tga_getdevconfig(memt, pc, tag, dc)
 	/* XXX magic number */
 	if (pci_mapreg_info(pc, tag, 0x10,
 	    PCI_MAPREG_TYPE_MEM | PCI_MAPREG_MEM_TYPE_32BIT,
-	    &dc->dc_pcipaddr, &pcisize, &cacheable))
+	    &dc->dc_pcipaddr, &pcisize, NULL))
 		return;
-	if (!cacheable)
-		panic("tga memory not cacheable");
 
 	DPRINTF("tga_getdevconfig: preparing to map\n");
 #ifdef __OpenBSD__

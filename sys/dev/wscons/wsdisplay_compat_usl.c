@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay_compat_usl.c,v 1.5.4.4 2003/05/13 19:35:13 ho Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay_compat_usl.c,v 1.5.4.5 2004/02/19 10:56:35 niklas Exp $ */
 /* $NetBSD: wsdisplay_compat_usl.c,v 1.12 2000/03/23 07:01:47 thorpej Exp $ */
 
 /*
@@ -107,6 +107,9 @@ usl_sync_init(scr, sdp, p, acqsig, relsig, frsig)
 	struct usl_syncdata *sd;
 	int res;
 
+	if (acqsig <= 0 || acqsig >= NSIG || relsig <= 0 || relsig >= NSIG ||
+	    frsig <= 0 || frsig >= NSIG)
+		return (EINVAL);
 	sd = malloc(sizeof(struct usl_syncdata), M_DEVBUF, M_NOWAIT);
 	if (!sd)
 		return (ENOMEM);
@@ -429,7 +432,7 @@ wsdisplay_usl_ioctl2(sc, scr, cmd, data, flag, p)
 		return (0);
 
 	    case KDENABIO:
-		if (suser(p->p_ucred, &p->p_acflag) || securelevel > 1)
+		if (suser(p, 0) || securelevel > 1)
 			return (EPERM);
 		/* FALLTHRU */
 	    case KDDISABIO:

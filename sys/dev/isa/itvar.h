@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/isa/itvar.h,v 1.1.2.1 2003/06/07 10:32:24 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/itvar.h,v 1.1.2.2 2004/02/19 10:56:22 niklas Exp $	*/
 
 /*
- * Copyright (c) 2003 Julien Bordet <zejames@greygats.org>
+ * Copyright (c) 2003 Julien Bordet <zejames@greyhats.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

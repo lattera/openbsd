@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.9 2003/05/16 00:29:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/yds.c,v 1.1.4.10 2004/02/19 10:56:30 niklas Exp $	*/
 /*	$NetBSD: yds.c,v 1.5 2001/05/21 23:55:04 minoura Exp $	*/
 
 /*
@@ -1837,7 +1837,7 @@ yds_init(sc_)
 		delay(1);
 	}
 	if (to == AC97_TIMEOUT) {
-		printf("%s: no AC97 avaliable\n", sc->sc_dev.dv_xname);
+		printf("%s: no AC97 available\n", sc->sc_dev.dv_xname);
 		return -1;
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.9 2003/05/13 19:35:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_wb.c,v 1.4.2.10 2004/02/19 10:56:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -1683,6 +1683,7 @@ int wb_ioctl(ifp, command, data)
 		default:
 			wb_init(sc);
 		}
+		break;
 	case SIOCSIFFLAGS:
 		if (ifp->if_flags & IFF_UP) {
 			wb_init(sc);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11.10.6 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs_subr.c,v 1.11.10.7 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: procfs_subr.c,v 1.15 1996/02/12 15:01:42 christos Exp $	*/
 
 /*
@@ -298,16 +298,15 @@ vfs_getuserstr(uio, buf, buflenp)
 	return (0);
 }
 
-vfs_namemap_t *
+const vfs_namemap_t *
 vfs_findname(nm, buf, buflen)
-	vfs_namemap_t *nm;
+	const vfs_namemap_t *nm;
 	char *buf;
 	int buflen;
 {
 
 	for (; nm->nm_name; nm++)
-		if (bcmp((const void *) buf, (const void *) nm->nm_name,
-		    buflen + 1) == 0)
+		if (bcmp(buf, nm->nm_name, buflen + 1) == 0)
 			return (nm);
 
 	return (0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.9 2003/05/13 19:34:57 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ac97.c,v 1.3.4.10 2004/02/19 10:56:15 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Constantine Sapuntzakis
@@ -294,6 +294,8 @@ int ac97_get_portnum_by_name(struct ac97_codec_if *, char *, char *,
 				  char *);
 void ac97_restore_shadow(struct ac97_codec_if *self);
 
+static void ac97_ad198x_init(struct ac97_softc *);
+
 struct ac97_codec_if_vtbl ac97civ = {
 	ac97_mixer_get_port,
 	ac97_mixer_set_port,
@@ -308,6 +310,7 @@ const struct ac97_codecid {
 	u_int8_t rev;
 	u_int8_t shift;	/* no use yet */
 	char * const name;
+	void (*init)(struct ac97_softc *);
 }  ac97_ad[] = {
 	{ 0x03, 0xff, 0, 0,	"AD1819" },
 	{ 0x40, 0xff, 0, 0,	"AD1881" },
@@ -316,6 +319,8 @@ const struct ac97_codecid {
 	{ 0x61, 0xff, 0, 0,	"AD1886" },
 	{ 0x70, 0xff, 0, 0,	"AD1981" },
 	{ 0x72, 0xff, 0, 0,	"AD1981A" },
+	{ 0x74, 0xff, 0, 0,	"AD1981B" },
+	{ 0x75, 0xff, 0, 0,	"AD1985",	ac97_ad198x_init },
 }, ac97_ak[] = {
 	{ 0x00,	0xfe, 1, 0,	"AK4540" },
 	{ 0x01,	0xfe, 1, 0,	"AK4540" },
@@ -329,6 +334,11 @@ const struct ac97_codecid {
 	{ 0x00, 0xf0, 0xf, 0,	"RL5306" },
 	{ 0x10, 0xf0, 0xf, 0,	"RL5382" },
 	{ 0x20, 0xf0, 0xf, 0,	"RL5383" },
+}, ac97_cm[] = {
+	{ 0x41,	0xff, 0, 0,	"CMI9738" },
+	{ 0x61,	0xff, 0, 0,	"CMI9739" },
+}, ac97_cr[] = {
+	{ 0x84,	0xff, 0, 0,	"EV1938" },
 }, ac97_cs[] = {
 	{ 0x00,	0xf8, 7, 0,	"CS4297" },
 	{ 0x10,	0xf8, 7, 0,	"CS4297A" },
@@ -338,6 +348,11 @@ const struct ac97_codecid {
 	{ 0x40,	0xf8, 7, 0,	"CS4201" },
 	{ 0x50,	0xf8, 7, 0,	"CS4205" },
 	{ 0x60,	0xf8, 7, 0,	"CS4291" },
+}, ac97_cx[] = {
+	{ 0x29, 0xff, 0, 0,	"CX20468" },
+}, ac97_em[] = {
+	{ 0x23, 0xff, 0, 0,	"EM28023" },
+	{ 0x28, 0xff, 0, 0,	"EM28028" },
 }, ac97_es[] = {
 	{ 0x08, 0xff, 0, 0,	"ES1921" },
 }, ac97_is[] = {
@@ -348,6 +363,9 @@ const struct ac97_codecid {
 }, ac97_ns[] = {
 	{ 0x00,	0xff, 0, 0,	"LM454[03568]" },
 	{ 0x31,	0xff, 0, 0,	"LM4549" },
+}, ac97_ps[] = {
+	{ 0x01,	0xff, 0, 0,	"UCB1510" },
+	{ 0x04,	0xff, 0, 0,	"UCB1400" },
 }, ac97_sl[] = {
 	{ 0x22,	0xff, 0, 0,	"Si3036" },
 	{ 0x23,	0xff, 0, 0,	"Si3038" },
@@ -362,6 +380,8 @@ const struct ac97_codecid {
 	{ 0x56,	0xff, 0, 0,	"STAC9756/57" },
 	{ 0x66,	0xff, 0, 0,	"STAC9766/67" },
 	{ 0x84,	0xff, 0, 0,	"STAC9784/85" },
+}, ac97_vi[] = {
+	{ 0x61, 0xff, 0, 0,	"VT1612A" },
 }, ac97_tt[] = {
 	{ 0x02,	0xff, 0, 0,	"TR28022" },
 	{ 0x03,	0xff, 0, 0,	"TR28023" },
@@ -387,18 +407,24 @@ const struct ac97_vendorid {
 	const struct ac97_codecid * const codecs;
 	u_int8_t num;
 } ac97_vendors[] = {
+	{ 0x01408300, "Creative",		cl(ac97_cr) },
 	{ 0x41445300, "Analog Devices",		cl(ac97_ad) },
-	{ 0x414B4D00, "Asahi Kasei",		cl(ac97_ak) },
-	{ 0x414c4700, "Avance Logic",		cl(ac97_av) },
+	{ 0x414b4D00, "Asahi Kasei",		cl(ac97_ak) },
 	{ 0x414c4300, "Realtek",		cl(ac97_rl) },
+	{ 0x414c4700, "Avance Logic",		cl(ac97_av) },
+	{ 0x434d4900, "C-Media Electronics",	cl(ac97_cm) },
 	{ 0x43525900, "Cirrus Logic",		cl(ac97_cs) },
+	{ 0x43585400, "Conexant",		cl(ac97_cx) },
+	{ 0x454d4300, "eMicro",			cl(ac97_em) },
 	{ 0x45838300, "ESS Technology",		cl(ac97_es) },
 	{ 0x48525300, "Intersil",		cl(ac97_is) },
 	{ 0x49434500, "ICEnsemble",		cl(ac97_ic) },
 	{ 0x4e534300, "National Semiconductor", cl(ac97_ns) },
+	{ 0x50534300, "Philips Semiconductor",	cl(ac97_ps) },
 	{ 0x53494c00, "Silicon Laboratory",	cl(ac97_sl) },
 	{ 0x54524100, "TriTech Microelectronics", cl(ac97_tt) },
 	{ 0x54584e00, "Texas Instruments",	cl(ac97_ti) },
+	{ 0x56494100, "VIA Technologies",	cl(ac97_vi) },
 	{ 0x57454300, "Winbond",		cl(ac97_wb) },
 	{ 0x574d4c00, "Wolfson",		cl(ac97_wo) },
 	{ 0x594d4800, "Yamaha",			cl(ac97_ym) },
@@ -643,6 +669,9 @@ ac97_attach(host_if)
 	u_int32_t id;
 	mixer_ctrl_t ctl;
 	int error, i;
+	void (*initfunc)(struct ac97_softc *);
+
+	initfunc = NULL;
 
 	if (!(as = malloc(sizeof(struct ac97_softc), M_DEVBUF, M_NOWAIT)))
 		return (ENOMEM);
@@ -688,9 +717,10 @@ ac97_attach(host_if)
 					if (codec->id == (id & codec->mask))
 						break;
 				}
-				if (codec >= vendor->codecs && codec->mask)
+				if (codec >= vendor->codecs && codec->mask) {
 					printf(" %s", codec->name);
-				else
+					initfunc = codec->init;
+				} else
 					printf(" <%02x>", id & 0xff);
 				if (codec >= vendor->codecs && codec->rev)
 					printf(" rev %d",
@@ -750,6 +780,10 @@ ac97_attach(host_if)
 	ctl.dev = ac97_get_portnum_by_name(&as->codec_if, AudioCrecord,
 	    AudioNsource, NULL);
 	ac97_mixer_set_port(&as->codec_if, &ctl);
+
+	/* use initfunc for specific device */
+	if (initfunc != NULL)
+		initfunc(as);
 
 	return (0);
 }
@@ -1018,4 +1052,18 @@ ac97_set_rate(codec_if, p, mode)
 		return (EIO);
 
 	return (0);
+}
+
+/*
+ * Codec-dependent initialization
+ */
+  	 
+static void
+ac97_ad198x_init(struct ac97_softc *as)
+{
+        unsigned short misc;
+
+        ac97_read(as, AC97_AD_REG_MISC, &misc);
+        ac97_write(as, AC97_AD_REG_MISC,
+	    misc|AC97_AD_MISC_DAM|AC97_AD_MISC_MADPD);
 }

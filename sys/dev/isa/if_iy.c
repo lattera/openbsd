@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.5 2003/03/28 00:38:16 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/if_iy.c,v 1.4.6.6 2004/02/19 10:56:22 niklas Exp $	*/
 /*	$NetBSD: if_iy.c,v 1.4 1996/05/12 23:52:53 mycroft Exp $	*/
 /* #define IYDEBUG */
 /* #define IYMEMDEBUG */
@@ -71,8 +71,6 @@
 #include <netns/ns.h>
 #include <netns/ns_if.h>
 #endif
-
-#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/intr.h>

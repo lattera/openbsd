@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/dev.c,v 1.2.16.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/dev.c,v 1.2.16.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: dev.c,v 1.4 1994/10/30 21:48:23 cgd Exp $	*/
 
 /*-
@@ -40,22 +40,19 @@
 int errno;
 
 int
-nodev()
+nodev(void)
 {
 	return (ENXIO);
 }
 
 void
-nullsys()
+nullsys(void)
 {
 }
 
 /* ARGSUSED */
 int
-noioctl(f, cmd, data)
-	struct open_file *f;
-	u_long cmd;
-	void *data;
+noioctl(struct open_file *f, u_long cmd, void *data)
 {
 	return (EINVAL);
 }

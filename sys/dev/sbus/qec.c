@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/qec.c,v 1.2.4.4 2003/05/13 19:35:11 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/qec.c,v 1.2.4.5 2004/02/19 10:56:32 niklas Exp $	*/
 /*	$NetBSD: qec.c,v 1.12 2000/12/04 20:12:55 fvdl Exp $ */
 
 /*-
@@ -72,7 +72,8 @@ void *	qec_intr_establish(
 		int,			/*`device class' interrupt level*/
 		int,			/*flags*/
 		int (*)(void *),	/*handler*/
-		void *);		/*arg*/
+		void *,			/*arg*/
+		const char *);		/*what*/
 
 struct cfattach qec_ca = {
 	sizeof(struct qec_softc), qecmatch, qecattach
@@ -135,11 +136,9 @@ qecattach(parent, self, aux)
 		return;
 	}
 
-	if (sbus_bus_map(sa->sa_bustag,
-			 sa->sa_reg[0].sbr_slot,
-			 sa->sa_reg[0].sbr_offset,
-			 sa->sa_reg[0].sbr_size,
-			 BUS_SPACE_MAP_LINEAR, 0, &sc->sc_regs) != 0) {
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
+	    sa->sa_reg[0].sbr_offset, sa->sa_reg[0].sbr_size,
+	    0, 0, &sc->sc_regs) != 0) {
 		printf("%s: attach: cannot map registers\n", self->dv_xname);
 		return;
 	}
@@ -149,11 +148,8 @@ qecattach(parent, self, aux)
 	 * Lance ring-buffers can be stored. Note the buffer's location
 	 * and size, so the child driver can pick them up.
 	 */
-	if (sbus_bus_map(sa->sa_bustag,
-			 sa->sa_reg[1].sbr_slot,
-			 sa->sa_reg[1].sbr_offset,
-			 sa->sa_reg[1].sbr_size,
-			 BUS_SPACE_MAP_LINEAR, 0, &bh) != 0) {
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[1].sbr_slot,
+	    sa->sa_reg[1].sbr_offset, sa->sa_reg[1].sbr_size, 0, 0, &bh) != 0) {
 		printf("%s: attach: cannot map registers\n", self->dv_xname);
 		return;
 	}
@@ -286,7 +282,7 @@ qec_bus_map(t, t0, addr, size, flags, hp)
 }
 
 void *
-qec_intr_establish(t, t0, pri, level, flags, handler, arg)
+qec_intr_establish(t, t0, pri, level, flags, handler, arg, what)
 	bus_space_tag_t t;
 	bus_space_tag_t t0;
 	int pri;
@@ -294,6 +290,7 @@ qec_intr_establish(t, t0, pri, level, flags, handler, arg)
 	int flags;
 	int (*handler)(void *);
 	void *arg;
+	const char *what;
 {
 	struct qec_softc *sc = t->cookie;
 
@@ -310,15 +307,15 @@ qec_intr_establish(t, t0, pri, level, flags, handler, arg)
 		pri = sc->sc_intr->sbi_pri;
 	}
 
-        if (t->parent == 0 || t->parent->sparc_bus_mmap == 0) {
-                printf("\nebus_bus_mmap: invalid parent");
-                return (NULL);
-        }
+	for (t = t->parent; t; t = t->parent) {
+		if (t->sparc_intr_establish != NULL)
+			return ((*t->sparc_intr_establish)
+			    (t, t0, pri, level, flags, handler, arg, what));
+	}
 
-        t = t->parent;
+	panic("qec_intr_extablish): no handler found");
 
-        return ((*t->sparc_intr_establish)(t, t0, pri, level, flags,
-            handler, arg));
+	return (NULL);
 }
 
 void

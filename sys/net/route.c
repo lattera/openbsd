@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/route.c,v 1.16.2.7 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/route.c,v 1.16.2.8 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -139,6 +139,9 @@ int	rttrash;		/* routes not in table but not freed */
 struct	sockaddr wildcard;	/* zero valued cookie for wildcard searches */
 
 static int okaytoclone(u_int, int);
+static int rtdeletemsg(struct rtentry *);
+static int rtflushclone1(struct radix_node *, void *);
+static void rtflushclone(struct radix_node_head *, struct rtentry *);
 
 #ifdef IPSEC
 
@@ -170,7 +173,7 @@ route_init()
 
 void
 rtalloc_noclone(ro, howstrict)
-	register struct route *ro;
+	struct route *ro;
 	int howstrict;
 {
 	if (ro->ro_rt && ro->ro_rt->rt_ifp && (ro->ro_rt->rt_flags & RTF_UP))
@@ -192,12 +195,12 @@ okaytoclone(flags, howstrict)
 
 struct rtentry *
 rtalloc2(dst, report,howstrict)
-	register struct sockaddr *dst;
+	struct sockaddr *dst;
 	int report,howstrict;
 {
-	register struct radix_node_head *rnh = rt_tables[dst->sa_family];
-	register struct rtentry *rt;
-	register struct radix_node *rn;
+	struct radix_node_head *rnh = rt_tables[dst->sa_family];
+	struct rtentry *rt;
+	struct radix_node *rn;
 	struct rtentry *newrt = 0;
 	struct rt_addrinfo info;
 	int  s = splnet(), err = 0, msgtype = RTM_MISS;
@@ -237,7 +240,7 @@ miss:		if (report) {
  */
 void
 rtalloc(ro)
-	register struct route *ro;
+	struct route *ro;
 {
 	if (ro->ro_rt && ro->ro_rt->rt_ifp && (ro->ro_rt->rt_flags & RTF_UP))
 		return;				 /* XXX */
@@ -246,12 +249,12 @@ rtalloc(ro)
 
 struct rtentry *
 rtalloc1(dst, report)
-	register struct sockaddr *dst;
+	struct sockaddr *dst;
 	int report;
 {
-	register struct radix_node_head *rnh = rt_tables[dst->sa_family];
-	register struct rtentry *rt;
-	register struct radix_node *rn;
+	struct radix_node_head *rnh = rt_tables[dst->sa_family];
+	struct rtentry *rt;
+	struct radix_node *rn;
 	struct rtentry *newrt = 0;
 	struct rt_addrinfo info;
 	int  s = splsoftnet(), err = 0, msgtype = RTM_MISS;
@@ -304,9 +307,9 @@ rtalloc1(dst, report)
 
 void
 rtfree(rt)
-	register struct rtentry *rt;
+	struct rtentry *rt;
 {
-	register struct ifaddr *ifa;
+	struct ifaddr *ifa;
 
 	if (rt == NULL)
 		panic("rtfree");
@@ -330,7 +333,7 @@ rtfree(rt)
 
 void
 ifafree(ifa)
-	register struct ifaddr *ifa;
+	struct ifaddr *ifa;
 {
 	if (ifa == NULL)
 		panic("ifafree");
@@ -449,6 +452,67 @@ out:
 }
 
 /*
+ * Delete a route and generate a message
+ */
+static int
+rtdeletemsg(rt)
+	struct rtentry *rt;
+{
+	int error;
+	struct rt_addrinfo info;
+
+	/*
+	 * Request the new route so that the entry is not actually
+	 * deleted.  That will allow the information being reported to
+	 * be accurate (and consistent with route_output()).
+	 */
+	bzero((caddr_t)&info, sizeof(info));
+	info.rti_info[RTAX_DST] = rt_key(rt);
+	info.rti_info[RTAX_NETMASK] = rt_mask(rt);
+	info.rti_info[RTAX_GATEWAY] = rt->rt_gateway;
+	info.rti_flags = rt->rt_flags;
+	error = rtrequest1(RTM_DELETE, &info, &rt);
+
+	rt_missmsg(RTM_DELETE, &info, info.rti_flags, error);
+
+	/* Adjust the refcount */
+	if (error == 0 && rt->rt_refcnt <= 0) {
+		rt->rt_refcnt++;
+		rtfree(rt);
+	}
+	return (error);
+}
+
+static int
+rtflushclone1(rn, arg)
+	struct radix_node *rn;
+	void *arg;
+{
+	struct rtentry *rt, *parent;
+
+	rt = (struct rtentry *)rn;
+	parent = (struct rtentry *)arg;
+	if ((rt->rt_flags & RTF_CLONED) != 0 && rt->rt_parent == parent)
+		rtdeletemsg(rt);
+	return 0;
+}
+
+static void
+rtflushclone(rnh, parent)
+	struct radix_node_head *rnh;
+	struct rtentry *parent;
+{
+
+#ifdef DIAGNOSTIC
+	if (!parent || (parent->rt_flags & RTF_CLONING) == 0)
+		panic("rtflushclone: called with a non-cloning route");
+	if (!rnh->rnh_walktree)
+		panic("rtflushclone: no rnh_walktree");
+#endif
+	rnh->rnh_walktree(rnh, rtflushclone1, (void *)parent);
+}
+
+/*
 * Routing table ioctl interface.
 */
 int
@@ -465,7 +529,7 @@ ifa_ifwithroute(flags, dst, gateway)
 	int flags;
 	struct sockaddr	*dst, *gateway;
 {
-	register struct ifaddr *ifa;
+	struct ifaddr *ifa;
 
 #ifdef IPSEC
 	/*
@@ -595,9 +659,9 @@ rtrequest1(req, info, ret_nrt)
 	struct rtentry **ret_nrt;
 {
 	int s = splsoftnet(); int error = 0;
-	register struct rtentry *rt;
-	register struct radix_node *rn;
-	register struct radix_node_head *rnh;
+	struct rtentry *rt, *crt;
+	struct radix_node *rn;
+	struct radix_node_head *rnh;
 	struct ifaddr *ifa;
 	struct sockaddr *ndst;
 #define senderr(x) { error = x ; goto bad; }
@@ -610,12 +674,21 @@ rtrequest1(req, info, ret_nrt)
 	case RTM_DELETE:
 		if ((rn = rnh->rnh_deladdr(dst, netmask, rnh)) == NULL)
 			senderr(ESRCH);
+		rt = (struct rtentry *)rn;
+		if ((rt->rt_flags & RTF_CLONING) != 0) {
+			/* clean up any cloned children */
+			rtflushclone(rnh, rt);
+		}
 		if (rn->rn_flags & (RNF_ACTIVE | RNF_ROOT))
 			panic ("rtrequest delete");
 		rt = (struct rtentry *)rn;
 		if (rt->rt_gwroute) {
 			rt = rt->rt_gwroute; RTFREE(rt);
 			(rt = (struct rtentry *)rn)->rt_gwroute = NULL;
+		}
+		if (rt->rt_parent) {
+			rt->rt_parent->rt_refcnt--;
+			rt->rt_parent = NULL;
 		}
 		rt->rt_flags &= ~RTF_UP;
 		if ((ifa = rt->rt_ifa) && ifa->ifa_rtrequest)
@@ -632,8 +705,11 @@ rtrequest1(req, info, ret_nrt)
 	case RTM_RESOLVE:
 		if (ret_nrt == NULL || (rt = *ret_nrt) == NULL)
 			senderr(EINVAL);
+		if ((rt->rt_flags & RTF_CLONING) == 0)
+			senderr(EINVAL);
 		ifa = rt->rt_ifa;
-		flags = rt->rt_flags & ~RTF_CLONING;
+		flags = rt->rt_flags & ~(RTF_CLONING | RTF_STATIC);
+		flags |= RTF_CLONED;
 		gateway = rt->rt_gateway;
 		if ((netmask = rt->rt_genmask) == NULL)
 			flags |= RTF_HOST;
@@ -659,15 +735,6 @@ rtrequest1(req, info, ret_nrt)
 			rt_maskedcopy(dst, ndst, netmask);
 		} else
 			Bcopy(dst, ndst, dst->sa_len);
-		rn = rnh->rnh_addaddr((caddr_t)ndst, (caddr_t)netmask,
-					rnh, rt->rt_nodes);
-		if (rn == NULL) {
-			if (rt->rt_gwroute)
-				rtfree(rt->rt_gwroute);
-			Free(rt_key(rt));
-			Free(rt);
-			senderr(EEXIST);
-		}
 		ifa->ifa_refcnt++;
 		rt->rt_ifa = ifa;
 		rt->rt_ifp = ifa->ifa_ifp;
@@ -678,12 +745,38 @@ rtrequest1(req, info, ret_nrt)
 			 */
 			rt->rt_rmx = (*ret_nrt)->rt_rmx; /* copy metrics */
 			rt->rt_parent = *ret_nrt;	 /* Back ptr. to parent. */
+			rt->rt_parent->rt_refcnt++;
+		}
+		rn = rnh->rnh_addaddr((caddr_t)ndst, (caddr_t)netmask,
+		    rnh, rt->rt_nodes);
+		if (rn == NULL && (crt = rtalloc1(ndst, 0)) != NULL) {
+			/* overwrite cloned route */
+			if ((crt->rt_flags & RTF_CLONED) != 0) {
+				rtdeletemsg(crt);
+				rn = rnh->rnh_addaddr((caddr_t)ndst,
+				    (caddr_t)netmask, rnh, rt->rt_nodes);
+			}
+			RTFREE(crt);
+		}
+		if (rn == 0) {
+			IFAFREE(ifa);
+			if ((rt->rt_flags & RTF_CLONED) != 0 && rt->rt_parent)
+				rtfree(rt->rt_parent);
+			if (rt->rt_gwroute)
+				rtfree(rt->rt_gwroute);
+			Free(rt_key(rt));
+			Free(rt);
+			senderr(EEXIST);
 		}
 		if (ifa->ifa_rtrequest)
 			ifa->ifa_rtrequest(req, rt, info);
 		if (ret_nrt) {
 			*ret_nrt = rt;
 			rt->rt_refcnt++;
+		}
+		if ((rt->rt_flags & RTF_CLONING) != 0) {
+			/* clean up any cloned children */
+			rtflushclone(rnh, rt);
 		}
 		break;
 	}
@@ -706,7 +799,7 @@ rt_setgate(rt0, dst, gate)
 {
 	caddr_t new, old;
 	int dlen = ROUNDUP(dst->sa_len), glen = ROUNDUP(gate->sa_len);
-	register struct rtentry *rt = rt0;
+	struct rtentry *rt = rt0;
 
 	if (rt->rt_gateway == NULL || glen > ROUNDUP(rt->rt_gateway->sa_len)) {
 		old = (caddr_t)rt_key(rt);
@@ -751,9 +844,9 @@ void
 rt_maskedcopy(src, dst, netmask)
 	struct sockaddr *src, *dst, *netmask;
 {
-	register u_char *cp1 = (u_char *)src;
-	register u_char *cp2 = (u_char *)dst;
-	register u_char *cp3 = (u_char *)netmask;
+	u_char *cp1 = (u_char *)src;
+	u_char *cp2 = (u_char *)dst;
+	u_char *cp3 = (u_char *)netmask;
 	u_char *cplim = cp2 + *cp3;
 	u_char *cplim2 = cp2 + *cp1;
 
@@ -773,12 +866,12 @@ rt_maskedcopy(src, dst, netmask)
  */
 int
 rtinit(ifa, cmd, flags)
-	register struct ifaddr *ifa;
+	struct ifaddr *ifa;
 	int cmd, flags;
 {
-	register struct rtentry *rt;
-	register struct sockaddr *dst;
-	register struct sockaddr *deldst;
+	struct rtentry *rt;
+	struct sockaddr *dst;
+	struct sockaddr *deldst;
 	struct mbuf *m = NULL;
 	struct rtentry *nrt = NULL;
 	int error;

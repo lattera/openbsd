@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/apio.c,v 1.1.2.2 2003/06/07 11:02:32 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/apio.c,v 1.1.2.3 2004/02/19 10:56:32 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -87,10 +87,7 @@ struct cfdriver apio_cd = {
 };
 
 int
-apio_match(parent, match, aux)
-	struct device *parent;
-	void *match;
-	void *aux;
+apio_match(struct device *parent, void *match, void *aux)
 {
 	struct sbus_attach_args *sa = aux;
 
@@ -100,9 +97,7 @@ apio_match(parent, match, aux)
 }
 
 void
-apio_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+apio_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct apio_softc *sc = (void *)self;
 	struct sbus_attach_args *sa = aux;
@@ -127,29 +122,23 @@ apio_attach(parent, self, aux)
 		return;
 	}
 
-	if (sbus_bus_map(sa->sa_bustag,
-	    sa->sa_reg[0].sbr_slot,
-	    sa->sa_reg[0].sbr_offset,
-	    sa->sa_reg[0].sbr_size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_csr_h)) {
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
+	    sa->sa_reg[0].sbr_offset, sa->sa_reg[0].sbr_size,
+	    0, 0, &sc->sc_csr_h)) {
 		printf(": couldn't map csr\n");
 		return;
 	}
 
-	if (sbus_bus_map(sa->sa_bustag,
-	    sa->sa_reg[1].sbr_slot,
-	    sa->sa_reg[1].sbr_offset,
-	    sa->sa_reg[1].sbr_size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_clk_h)) {
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[1].sbr_slot,
+	    sa->sa_reg[1].sbr_offset, sa->sa_reg[1].sbr_size,
+	    0, 0, &sc->sc_clk_h)) {
 		printf(": couldn't map clk\n");
 		return;
 	}
 
-	if (sbus_bus_map(sa->sa_bustag,
-	    sa->sa_reg[2].sbr_slot,
-	    sa->sa_reg[2].sbr_offset,
-	    sa->sa_reg[2].sbr_size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_lpt_h)) {
+	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[2].sbr_slot,
+	    sa->sa_reg[2].sbr_offset, sa->sa_reg[2].sbr_size,
+	    0, 0, &sc->sc_lpt_h)) {
 		printf(": couldn't map clk\n");
 		return;
 	}
@@ -166,9 +155,7 @@ apio_attach(parent, self, aux)
 }
 
 int
-apio_print(aux, name)
-	void *aux;
-	const char *name;
+apio_print(void *aux, const char *name)
 {
 	struct apio_attach_args *aaa = aux;
 
@@ -193,9 +180,7 @@ struct cfattach lpt_apio_ca = {
 };
 
 void
-apio_intr_enable(dv, en)
-	struct device *dv;
-	u_int8_t en;
+apio_intr_enable(struct device *dv, u_int8_t en)
 {
 	struct apio_softc *sc = (struct apio_softc *)dv;
 	u_int8_t csr;
@@ -207,18 +192,13 @@ apio_intr_enable(dv, en)
 }
 
 int
-lpt_apio_match(parent, match, aux)
-	struct device *parent;
-	void *match;
-	void *aux;
+lpt_apio_match(struct device *parent, void *match, void *aux)
 {
 	return (1);
 }
 
 void
-lpt_apio_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+lpt_apio_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct lpt_apio_softc *sc = (struct lpt_apio_softc *)self;
 	struct apio_attach_args *aaa = aux;
@@ -228,7 +208,7 @@ lpt_apio_attach(parent, self, aux)
 	sc->sc_lpt.sc_ioh = aaa->aaa_ioh;
 	sc->sc_clk_h = aaa->aaa_clkh;
 	sc->sc_ih = bus_intr_establish(aaa->aaa_iot, aaa->aaa_pri,
-	    IPL_TTY, 0, lpt_apio_intr, sc);
+	    IPL_TTY, 0, lpt_apio_intr, sc, self->dv_xname);
 	if (sc->sc_ih == NULL) {
 		printf(": cannot allocate intr\n");
 		return;
@@ -239,8 +219,7 @@ lpt_apio_attach(parent, self, aux)
 }
 
 int
-lpt_apio_intr(vsc)
-	void *vsc;
+lpt_apio_intr(void *vsc)
 {
 	struct lpt_apio_softc *sc = vsc;
 	int r;

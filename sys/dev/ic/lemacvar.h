@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/ic/lemacvar.h,v 1.1.4.1 2001/10/31 03:22:42 nate Exp $ */
+/*      $OpenBSD: src/sys/dev/ic/lemacvar.h,v 1.1.4.2 2004/02/19 10:56:19 niklas Exp $ */
 /*      $NetBSD: lemacvar.h,v 1.6 2001/06/13 10:46:03 wiz Exp $ */
 
 /*
@@ -62,11 +62,11 @@ struct lemac_softc {
 	u_int16_t sc_mctbl[LEMAC_MCTBL_SIZE/sizeof(u_int16_t)];
 					/* local copy of multicast table */
 	struct {
-		unsigned cntr_txnospc;	/* total # of no trnasmit memory */
-		unsigned cntr_txfull;	/* total # of tranmitter full */
-		unsigned cntr_tne_intrs;/* total # of tranmit done intrs */
+		unsigned cntr_txnospc;	/* total # of no transmit memory */
+		unsigned cntr_txfull;	/* total # of transmitter full */
+		unsigned cntr_tne_intrs;/* total # of transmit done intrs */
 		unsigned cntr_rne_intrs;/* total # of receive done intrs */
-		unsigned cntr_txd_intrs;/* total # of tranmit error intrs */
+		unsigned cntr_txd_intrs;/* total # of transmit error intrs */
 		unsigned cntr_rxd_intrs;/* total # of receive error intrs */
 	} sc_cntrs;
 

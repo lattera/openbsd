@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.5 2003/03/28 00:38:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82596.c,v 1.2.2.6 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD: i82586.c,v 1.18 1998/08/15 04:42:42 mycroft Exp $	*/
 
 /*-
@@ -140,6 +140,8 @@ Mode of operation:
    of the xmit command chain, with the host processor in control of
    the synchronization.
 */
+
+#include "bpfilter.h"
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -326,7 +328,8 @@ i82596_attach(sc, name, etheraddr, media, nmedia, defmedia)
 		padbuf = malloc(ETHER_MIN_LEN - ETHER_CRC_LEN, M_DEVBUF,
 		    M_NOWAIT);
 		if (padbuf == NULL) {
-			printf("%s: can't allocate pad buffer\n");
+			printf("%s: can't allocate pad buffer\n",
+			    sc->sc_dev.dv_xname);
 			return;
 		}
 		bzero(padbuf, ETHER_MIN_LEN - ETHER_CRC_LEN);
@@ -380,9 +383,13 @@ i82596_cmd_wait(sc)
 		}
 	}
 
-	printf("i82596_cmd_wait: timo(%ssync): scb status: %b\n",
-	    sc->async_cmd_inprogress?"a":"",
-	    sc->ie_bus_read16(sc, IE_SCB_STATUS(sc->scb)), IE_STAT_BITS);
+#ifdef I82596_DEBUG
+	if (sc->sc_debug & IED_CMDS)
+		printf("i82596_cmd_wait: timo(%ssync): scb status: %b\n",
+		    sc->async_cmd_inprogress? "a" : "",
+		    sc->ie_bus_read16(sc, IE_SCB_STATUS(sc->scb)),
+		    IE_STAT_BITS);
+#endif
 	return (1);	/* Timeout */
 }
 
@@ -569,7 +576,6 @@ reset:
 	i82596_cmd_wait(sc);
 	i82596_reset(sc, 1);
 	goto out;
-
 }
 
 /*
@@ -1121,10 +1127,8 @@ i82596_readframe(sc, num)
 
 #if NBPFILTER > 0
 	/* Check for a BPF filter; if so, hand it up. */
-	if (ifp->if_bpf) {
-		/* Pass it up. */
+	if (ifp->if_bpf)
 		bpf_mtap(ifp->if_bpf, m);
-	}
 #endif /* NBPFILTER > 0 */
 
 	/*
@@ -1204,9 +1208,14 @@ i82596_xmit(sc)
 		bus_space_barrier(sc->bt, sc->bh, off, 2,
 				  BUS_SPACE_BARRIER_WRITE);
 
-		if (i82596_start_cmd(sc, IE_CUC_START, 0, 0, 1))
-			printf("%s: i82596_xmit: start xmit command timed out\n",
-			       sc->sc_dev.dv_xname);
+		if (i82596_start_cmd(sc, IE_CUC_START, 0, 0, 1)) {
+#ifdef I82596_DEBUG
+			if (sc->sc_debug & IED_XMIT)
+				printf("%s: i82596_xmit: "
+				    "start xmit command timed out\n",
+				       sc->sc_dev.dv_xname);
+#endif
+		}
 	}
 
 	sc->sc_arpcom.ac_if.if_timer = 5;
@@ -1362,8 +1371,10 @@ i82596_reset(sc, hard)
 {
 	int s = splnet();
 
+#ifdef I82596_DEBUG
 	if (hard)
 		printf("%s: reset\n", sc->sc_dev.dv_xname);
+#endif
 
 	/* Clear OACTIVE in case we're called from watchdog (frozen xmit). */
 	sc->sc_arpcom.ac_if.if_timer = 0;
@@ -1372,8 +1383,11 @@ i82596_reset(sc, hard)
 	/*
 	 * Stop i82596 dead in its tracks.
 	 */
-	if (i82596_start_cmd(sc, IE_RUC_ABORT | IE_CUC_ABORT, 0, 0, 0))
+	if (i82596_start_cmd(sc, IE_RUC_ABORT | IE_CUC_ABORT, 0, 0, 0)) {
+#ifdef I82596_DEBUG
 		printf("%s: abort commands timed out\n", sc->sc_dev.dv_xname);
+#endif
+	}
 
 	/*
 	 * This can really slow down the i82596_reset() on some cards, but it's
@@ -1514,7 +1528,7 @@ i82596_setup_bufs(sc)
 
 	sc->nrxbuf = sc->nframes * B_PER_F;
 
-	/* The receice frame descriptors */
+	/* The receive frame descriptors */
 	ptr += cl;
 	sc->rframes = ptr - 2;
 	ptr += sc->nframes * 64;

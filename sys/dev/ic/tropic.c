@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/tropic.c,v 1.1.2.3 2002/03/28 12:09:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/tropic.c,v 1.1.2.4 2004/02/19 10:56:21 niklas Exp $	*/
 /*	$NetBSD: tropic.c,v 1.6 1999/12/17 08:26:31 fvdl Exp $	*/
 
 /* 
@@ -1436,7 +1436,7 @@ struct tr_softc *sc;
 
 
 /*
- * copy out the packet byte-by-byte in resonably optimal fashion
+ * copy out the packet byte-by-byte in reasonably optimal fashion
  */
 int
 tr_mbcopy(sc, dhb, m0)
@@ -1470,7 +1470,7 @@ struct mbuf *m0;
  * We copy the trailer information and then all the normal
  * data into mbufs.
  *
- * called from tr_rint - receive interupt routine
+ * called from tr_rint - receive interrupt routine
  */
 struct mbuf *
 tr_get(sc, totlen, ifp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_cksum.c,v 1.4.2.5 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_cksum.c,v 1.4.2.6 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: in6_cksum.c,v 1.10 2000/12/03 00:53:59 itojun Exp $	*/
 
 /*
@@ -94,9 +94,6 @@ in6_cksum(m, nxt, off, len)
 	int sum = 0;
 	int mlen = 0;
 	int byte_swapped = 0;
-#if 0
-	int srcifid = 0, dstifid = 0;
-#endif
 	struct ip6_hdr *ip6;	
 	union {
 		u_int16_t phs[4];
@@ -104,7 +101,7 @@ in6_cksum(m, nxt, off, len)
 			u_int32_t	ph_len;
 			u_int8_t	ph_zero[3];
 			u_int8_t	ph_nxt;
-		} ph __attribute__((__packed__));
+		} ph __packed;
 	} uph;
 	union {
 		u_int8_t	c[2];
@@ -127,16 +124,6 @@ in6_cksum(m, nxt, off, len)
 	 * First create IP6 pseudo header and calculate a summary.
 	 */
 	ip6 = mtod(m, struct ip6_hdr *);
-#if 0
-	if (IN6_IS_SCOPE_LINKLOCAL(&ip6->ip6_src)) {
-		srcifid = ip6->ip6_src.s6_addr16[1];
-		ip6->ip6_src.s6_addr16[1] = 0;
-	}
-	if (IN6_IS_SCOPE_LINKLOCAL(&ip6->ip6_dst)) {
-		dstifid = ip6->ip6_dst.s6_addr16[1];
-		ip6->ip6_dst.s6_addr16[1] = 0;
-	}
-#endif
 	w = (u_int16_t *)&ip6->ip6_src;
 	uph.ph.ph_len = htonl(len);
 	uph.ph.ph_nxt = nxt;
@@ -157,12 +144,6 @@ in6_cksum(m, nxt, off, len)
 	sum += uph.phs[0];  sum += uph.phs[1];
 	sum += uph.phs[2];  sum += uph.phs[3];
 
-#if 0
-	if (srcifid)
-		ip6->ip6_src.s6_addr16[1] = srcifid;
-	if (dstifid)
-		ip6->ip6_dst.s6_addr16[1] = dstifid;
-#endif
 	/*
 	 * Secondly calculate a summary of the first mbuf excluding offset.
 	 */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.12.4.1 2003/06/07 11:02:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/noct.c,v 1.12.4.2 2004/02/19 10:56:28 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -45,8 +45,6 @@
 #include <sys/device.h>
 #include <sys/extent.h>
 #include <sys/kthread.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <crypto/cryptodev.h>
 #include <dev/rndvar.h>

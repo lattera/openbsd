@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.9 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.10 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -54,6 +54,7 @@
 #include <sys/buf.h>
 #include <sys/dirent.h>
 #include <sys/msgbuf.h>
+#include <sys/poll.h>
 #include <miscfs/kernfs/kernfs.h>
 
 #include <uvm/uvm_extern.h>
@@ -75,7 +76,7 @@ extern char machine[], cpu_model[];
 extern int ipsp_kern(int, char **, int);
 #endif
 
-struct kern_target kern_targets[] = {
+const struct kern_target kern_targets[] = {
 /* NOTE: The name must be less than UIO_MX-16 chars in length */
 #define N(s) sizeof(s)-1, s
      /*        name            data          tag           type  ro/rw */
@@ -111,7 +112,7 @@ struct kern_target kern_targets[] = {
 #endif
 #undef N
 };
-static int nkern_targets = sizeof(kern_targets) / sizeof(kern_targets[0]);
+static const int nkern_targets = sizeof(kern_targets) / sizeof(kern_targets[0]);
 
 int	kernfs_badop(void *);
 
@@ -126,7 +127,6 @@ int	kernfs_setattr(void *);
 int	kernfs_read(void *);
 int	kernfs_write(void *);
 #define	kernfs_ioctl	(int (*)(void *))enoioctl
-#define	kernfs_select	eopnotsupp
 #define	kernfs_mmap	eopnotsupp
 #define	kernfs_fsync	nullop
 #define	kernfs_seek	nullop
@@ -156,8 +156,8 @@ int	kernfs_vfree(void *);
 #define	kernfs_update	eopnotsupp
 #define	kernfs_bwrite	eopnotsupp
 
-int	kernfs_xread(struct kern_target *, int, char **, int);
-int	kernfs_xwrite(struct kern_target *, char *, int);
+int	kernfs_xread(const struct kern_target *, int, char **, int);
+int	kernfs_xwrite(const struct kern_target *, char *, int);
 int	kernfs_freevp(struct vnode *, struct proc *);
 
 int (**kernfs_vnodeop_p)(void *);
@@ -174,7 +174,7 @@ struct vnodeopv_entry_desc kernfs_vnodeop_entries[] = {
 	{ &vop_read_desc, kernfs_read },	/* read */
 	{ &vop_write_desc, kernfs_write },	/* write */
 	{ &vop_ioctl_desc, kernfs_ioctl },	/* ioctl */
-	{ &vop_select_desc, kernfs_select },	/* select */
+	{ &vop_poll_desc, kernfs_poll },	/* poll */
 	{ &vop_revoke_desc, kernfs_revoke },    /* revoke */
 	{ &vop_fsync_desc, kernfs_fsync },	/* fsync */
 	{ &vop_remove_desc, kernfs_remove },	/* remove */
@@ -216,7 +216,7 @@ kernfs_init(vfsp)
 
 int
 kernfs_allocvp(kt, mp, vpp)
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	struct mount *mp;
 	struct vnode **vpp;
 {
@@ -288,12 +288,12 @@ kernfs_freevp(vp, p)
 	return(0);
 }
 
-struct kern_target *
+const struct kern_target *
 kernfs_findtarget(name, namlen)
 	char	*name;
 	int	namlen;
 {
-	struct kern_target *kt = NULL;
+	const struct kern_target *kt = NULL;
 	int i;
 	
 	for (i = 0; i < nkern_targets; i++) {
@@ -306,7 +306,7 @@ kernfs_findtarget(name, namlen)
 
 #ifdef KERNFS_DIAGNOSTIC
 	if (i == nkern_targets || kt == NULL)
-		printf("kernfs_findtarget: no match for %s\n");
+		printf("kernfs_findtarget: no match for %s\n", name);
 #endif
 	return(kt);
 }
@@ -314,7 +314,7 @@ kernfs_findtarget(name, namlen)
 	
 int
 kernfs_xread(kt, off, bufp, len)
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	int off;
 	char **bufp;
 	int len;
@@ -440,7 +440,7 @@ kernfs_xread(kt, off, bufp, len)
 
 int
 kernfs_xwrite(kt, buf, len)
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	char *buf;
 	int len;
 {
@@ -486,7 +486,7 @@ kernfs_lookup(v)
 	struct vnode *dvp = ap->a_dvp;
 	char *pname = cnp->cn_nameptr;
 	struct proc *p = cnp->cn_proc;
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	struct vnode *vp;
 	int error, wantpunlock;
 
@@ -585,7 +585,6 @@ kernfs_getattr(v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct vattr *vap = ap->a_vap;
-	struct timeval tv;
 	int error = 0;
 	char strbuf[KSTRING], *buf;
 
@@ -597,8 +596,7 @@ kernfs_getattr(v)
 	vap->va_fsid = vp->v_mount->mnt_stat.f_fsid.val[0];
 	vap->va_size = 0;
 	vap->va_blocksize = DEV_BSIZE;
-	microtime(&tv);
-	TIMEVAL_TO_TIMESPEC(&tv, &vap->va_atime);
+	TIMEVAL_TO_TIMESPEC(&time, &vap->va_atime);
 	vap->va_mtime = vap->va_atime;
 	vap->va_ctime = vap->va_atime;
 	vap->va_gen = 0;
@@ -617,11 +615,17 @@ kernfs_getattr(v)
 		vap->va_fileid = 2;
 		vap->va_size = DEV_BSIZE;
 	} else {
-		struct kern_target *kt = VTOKERN(vp)->kf_kt;
+		const struct kern_target *kt = VTOKERN(vp)->kf_kt;
 		int nbytes, total;
 #ifdef KERNFS_DIAGNOSTIC
 		printf("kernfs_getattr: stat target %s\n", kt->kt_name);
 #endif
+		if (kt == &kern_targets[2]) {
+			/* set boottime times to boottime */
+			TIMEVAL_TO_TIMESPEC(&boottime, &vap->va_atime);
+			vap->va_mtime = vap->va_atime;
+			vap->va_ctime = vap->va_atime;
+		}
 		vap->va_type = kt->kt_vtype;
 		vap->va_mode = kt->kt_mode;
 		vap->va_nlink = 1;
@@ -675,7 +679,7 @@ kernfs_read(v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct uio *uio = ap->a_uio;
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	char strbuf[KSTRING], *buf;
 	int off, len;
 	int error;
@@ -715,7 +719,7 @@ kernfs_write(v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct uio *uio = ap->a_uio;
-	struct kern_target *kt;
+	const struct kern_target *kt;
 	int error, xlen;
 	char strbuf[KSTRING];
 
@@ -758,7 +762,7 @@ kernfs_readdir(v)
 	int error, i;
 	struct uio *uio = ap->a_uio;
 	struct dirent d;
-	struct kern_target *kt;
+	const struct kern_target *kt;
 
 	if (ap->a_vp->v_type != VDIR)
 		return (ENOTDIR);
@@ -947,4 +951,17 @@ kernfs_badop(v)
 
 	panic("kernfs: bad op");
 	return 0;
+}
+
+int
+kernfs_poll(v)
+	void *v;
+{
+	struct vop_poll_args /* {
+		struct vnode *a_vp;
+		int a_events;  
+		struct proc *a_p;   
+	} */ *ap = v;
+
+	return (ap->a_events & (POLLIN | POLLOUT | POLLRDNORM | POLLWRNORM));
 }

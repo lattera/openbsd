@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap_vfsops.c,v 1.15.2.6 2003/06/07 11:06:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/umapfs/Attic/umap_vfsops.c,v 1.15.2.7 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: umap_vfsops.c,v 1.35 2002/09/21 18:09:31 christos Exp $	*/
 
 /*
@@ -90,7 +90,7 @@ umapfs_mount(mp, path, data, ndp, p)
 #endif
 
 	/* only for root */
-	if ((error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	if ((error = suser(p, 0)) != 0)
 		return error;
 
 #ifdef UMAPFS_DIAGNOSTIC
@@ -301,7 +301,7 @@ const struct vnodeopv_desc * const umapfs_vnodeopv_descs[] = {
 	NULL,
 };
 
-struct vfsops umapfs_vfsops = {
+const struct vfsops umapfs_vfsops = {
 	umapfs_mount,
 	layerfs_start,
 	umapfs_unmount,

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.5 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/route.h,v 1.7.2.6 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: route.h,v 1.9 1996/02/13 22:00:49 christos Exp $	*/
 
 /*
@@ -139,6 +139,7 @@ struct ortentry {
 #define RTF_PROTO3	0x2000		/* protocol specific routing flag */
 #define RTF_PROTO2	0x4000		/* protocol specific routing flag */
 #define RTF_PROTO1	0x8000		/* protocol specific routing flag */
+#define RTF_CLONED	0x10000		/* this is a cloned route */
 
 #ifndef _KERNEL
 /* obsoleted */
@@ -190,6 +191,7 @@ struct rt_msghdr {
 #define RTM_NEWADDR	0xc	/* address being added to iface */
 #define RTM_DELADDR	0xd	/* address being removed from iface */
 #define RTM_IFINFO	0xe	/* iface going up/down etc. */
+#define RTM_IFANNOUNCE	0xf	/* iface arrival/departure */
 
 #define RTV_MTU		0x1	/* init or lock _mtu */
 #define RTV_HOPCOUNT	0x2	/* init or lock _hopcount */
@@ -290,6 +292,7 @@ int	 route_output(struct mbuf *, ...);
 int	 route_usrreq(struct socket *, int, struct mbuf *,
 			   struct mbuf *, struct mbuf *);
 void	 rt_ifmsg(struct ifnet *);
+void	 rt_ifannouncemsg(struct ifnet *, int);
 void	 rt_maskedcopy(struct sockaddr *,
 	    struct sockaddr *, struct sockaddr *);
 void	 rt_missmsg(int, struct rt_addrinfo *, int, int);

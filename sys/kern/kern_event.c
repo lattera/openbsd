@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8.2.5 2003/03/28 00:41:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_event.c,v 1.8.2.6 2004/02/19 10:56:37 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000,2001 Jonathan Lemon <jlemon@FreeBSD.org>
@@ -48,6 +48,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/mount.h>
+#include <sys/poll.h>
 #include <sys/syscallargs.h>
 
 int	kqueue_scan(struct file *fp, int maxevents,
@@ -60,7 +61,7 @@ int	kqueue_write(struct file *fp, off_t *poff, struct uio *uio,
 		    struct ucred *cred);
 int	kqueue_ioctl(struct file *fp, u_long com, caddr_t data,
 		    struct proc *p);
-int	kqueue_select(struct file *fp, int which, struct proc *p);
+int	kqueue_poll(struct file *fp, int events, struct proc *p);
 int 	kqueue_kqfilter(struct file *fp, struct knote *kn);
 int	kqueue_stat(struct file *fp, struct stat *st, struct proc *p);
 int	kqueue_close(struct file *fp, struct proc *p);
@@ -70,7 +71,7 @@ struct fileops kqueueops = {
 	kqueue_read,
 	kqueue_write,
 	kqueue_ioctl,
-	kqueue_select,
+	kqueue_poll,
 	kqueue_kqfilter,
 	kqueue_stat,
 	kqueue_close
@@ -195,8 +196,7 @@ filt_procattach(struct knote *kn)
 	 * setuid/setgid privs (unless you're root).
 	 */
 	if ((p->p_cred->p_ruid != curproc->p_cred->p_ruid ||
-	        (p->p_flag & P_SUGID)) &&
-	    suser(curproc->p_ucred, &curproc->p_acflag) != 0)
+	    (p->p_flag & P_SUGID)) && suser(curproc, 0) != 0)
 		return (EACCES);
 
 	kn->kn_ptr.p_proc = p;
@@ -286,6 +286,24 @@ filt_proc(struct knote *kn, long hint)
 	}
 
 	return (kn->kn_fflags != 0);
+}
+
+/*
+ * filt_seltrue:
+ *
+ *	This filter "event" routine simulates seltrue().
+ */
+int
+filt_seltrue(struct knote *kn, long hint)
+{
+
+	/*
+	 * We don't know how much data can be read/written,
+	 * but we know that it *can* be.  This is about as
+	 * good as select/poll does as well.
+	 */
+	kn->kn_data = 0;
+	return (1);
 }
 
 int
@@ -683,22 +701,22 @@ kqueue_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 
 /*ARGSUSED*/
 int
-kqueue_select(struct file *fp, int which, struct proc *p)
+kqueue_poll(struct file *fp, int events, struct proc *p)
 {
 	struct kqueue *kq = (struct kqueue *)fp->f_data;
-	int res = 0;
+	int revents = 0;
 	int s = splnet();
 
-	if (which == FREAD) {
+	if (events & (POLLIN | POLLRDNORM)) {
 		if (kq->kq_count) {
-			res = 1;
+			revents |= events & (POLLIN | POLLRDNORM);
 		} else {
 			selrecord(p, &kq->kq_sel);
 			kq->kq_state |= KQ_SEL;
 		}
 	}
 	splx(s);
-	return (res);
+	return (revents);
 }
 
 /*ARGSUSED*/
@@ -905,4 +923,15 @@ knote_dequeue(struct knote *kn)
 	kn->kn_status &= ~KN_QUEUED;
 	kq->kq_count--;
 	splx(s);
+}
+
+void
+klist_invalidate(struct klist *list)
+{
+	struct knote *kn;
+
+	SLIST_FOREACH(kn, list, kn_selnext) {
+		kn->kn_status |= KN_DETACHED;
+		kn->kn_flags |= EV_EOF | EV_ONESHOT;
+	}
 }

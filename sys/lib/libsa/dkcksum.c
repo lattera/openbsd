@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/dkcksum.c,v 1.3.16.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/dkcksum.c,v 1.3.16.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: disklabel.c,v 1.3 1994/10/26 05:44:42 cgd Exp $	*/
 
 /*-
@@ -40,11 +40,10 @@
  * Compute checksum for disk label.
  */
 u_int
-dkcksum(lp)
-	register struct disklabel *lp;
+dkcksum(struct disklabel *lp)
 {
-	register u_short *start, *end;
-	register u_short sum = 0;
+	u_short *start, *end;
+	u_short sum = 0;
 
 	start = (u_short *)lp;
 	end = (u_short *)&lp->d_partitions[lp->d_npartitions];

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/ioctl.c,v 1.2.16.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/ioctl.c,v 1.2.16.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: ioctl.c,v 1.4 1994/10/30 21:48:24 cgd Exp $	*/
 
 /*-
@@ -64,12 +64,9 @@
 #include "stand.h"
 
 int
-ioctl(fd, cmd, arg)
-	int fd;
-	u_long cmd;
-	char *arg;
+ioctl(int fd, u_long cmd, char *arg)
 {
-	register struct open_file *f = &files[fd];
+	struct open_file *f = &files[fd];
 
 	if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {
 		errno = EBADF;

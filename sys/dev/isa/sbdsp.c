@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/sbdsp.c,v 1.14.4.5 2003/05/13 19:35:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/sbdsp.c,v 1.14.4.6 2004/02/19 10:56:22 niklas Exp $	*/
 
 /*
  * Copyright (c) 1991-1993 Regents of the University of California.
@@ -54,7 +54,6 @@
 #include <sys/device.h>
 #include <sys/proc.h>
 #include <sys/buf.h>
-#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
 #include <machine/intr.h>

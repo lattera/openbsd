@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.7 2003/03/28 00:38:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.2.4.8 2004/02/19 10:56:20 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -594,7 +594,7 @@ rl_list_tx_init(sc)
  * attempt to document it here. The driver provides a buffer area and
  * places its base address in the RX buffer start address register.
  * The chip then begins copying frames into the RX buffer. Each frame
- * is preceeded by a 32-bit RX status word which specifies the length
+ * is preceded by a 32-bit RX status word which specifies the length
  * of the frame and certain other status bits. Each frame (starting with
  * the status word) is also 32-bit aligned. The frame length is in the
  * first 16 bits of the status word; the lower 15 bits correspond with
@@ -607,7 +607,7 @@ rl_list_tx_init(sc)
  * The reason we do this is because m_devget() doesn't let us specify an
  * offset into the mbuf storage space, so we have to artificially create
  * one. The ring is allocated in such a way that there are a few unused
- * bytes of space preceecing it so that it will be safe for us to do the
+ * bytes of space preceding it so that it will be safe for us to do the
  * 2-byte backstep even if reading from the ring at offset 0.
  */
 void
@@ -871,7 +871,7 @@ int rl_encap(sc, m_head)
 	/* Pad frames to at least 60 bytes. */
 	if (m_head->m_pkthdr.len < RL_MIN_FRAMELEN) {
 		/*
-		 * Make security concious people happy: zero out the
+		 * Make security-conscious people happy: zero out the
 		 * bytes in the pad area, since we don't know what
 		 * this mbuf cluster buffer's previous user might
 		 * have left in it.
@@ -1219,8 +1219,8 @@ rl_attach(sc)
 	rl_read_eeprom(sc, (caddr_t)&rl_did, RL_EE_PCI_DID, addr_len, 1, 0);
 
 	if (rl_did == RT_DEVICEID_8139 || rl_did == ACCTON_DEVICEID_5030 ||
-	    rl_did == DELTA_DEVICEID_8139 || rl_did == ADDTRON_DEVICEID_8139
-	    || rl_did == DLINK_DEVICEID_8139)
+	    rl_did == DELTA_DEVICEID_8139 || rl_did == ADDTRON_DEVICEID_8139 ||
+	    rl_did == DLINK_DEVICEID_8139 || rl_did == DLINK_DEVICEID_8139_2)
 		sc->rl_type = RL_8139;
 	else if (rl_did == RT_DEVICEID_8129)
 		sc->rl_type = RL_8129;
@@ -1362,7 +1362,7 @@ rl_miibus_readreg(self, phy, reg)
 
 	if (sc->rl_type == RL_8139) {
 		/*
-		* The RTL8139 PHY is mapped into PCI registers, unforunately
+		* The RTL8139 PHY is mapped into PCI registers, unfortunately
 		* it has no phyid, or phyaddr, so assume it is phyaddr 0.
 		*/
 		if (phy != 0)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/tcic2var.h,v 1.1.6.2 2002/03/28 12:09:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/tcic2var.h,v 1.1.6.3 2004/02/19 10:56:21 niklas Exp $	*/
 /*	$NetBSD: tcic2var.h,v 1.1 1999/03/23 20:04:14 bad Exp $	*/
 
 /*
@@ -307,7 +307,7 @@ static __inline__ int
 tcic_read_aux_1(iot, ioh, auxreg, reg)
 	bus_space_tag_t iot;
 	bus_space_handle_t ioh;
-	int auxreg;
+	int auxreg, reg;
 {
 	int mode, val;
 	mode = bus_space_read_1(iot, ioh, TCIC_R_MODE);

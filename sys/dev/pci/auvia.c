@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.10 2003/06/07 11:02:29 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.11 2004/02/19 10:56:25 niklas Exp $ */
 /*	$NetBSD: auvia.c,v 1.7 2000/11/15 21:06:33 jdolecek Exp $	*/
 
 /*-
@@ -52,8 +52,6 @@
 #include <sys/malloc.h>
 #include <sys/device.h>
 #include <sys/audioio.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/pcivar.h>
@@ -131,6 +129,7 @@ struct cfattach auvia_ca = {
 #define		AUVIA_PCICONF_ACSGD	 0x00000400	/* SGD enab */
 #define		AUVIA_PCICONF_ACFM	 0x00000200	/* FM enab */
 #define		AUVIA_PCICONF_ACSB	 0x00000100	/* SB enab */
+#define		AUVIA_PCICONF_PRIVALID	 0x00000001	/* primary codec rdy */
 
 #define AUVIA_PLAY_BASE			0x00
 #define AUVIA_RECORD_BASE		0x10
@@ -341,7 +340,7 @@ auvia_attach_codec(void *addr, struct ac97_codec_if *cif)
 void
 auvia_reset_codec(void *addr)
 {
-#ifdef notyet /* XXX seems to make codec become unready... ??? */
+	int i;
 	struct auvia_softc *sc = addr;
 	pcireg_t r;
 
@@ -357,8 +356,11 @@ auvia_reset_codec(void *addr)
 	pci_conf_write(sc->sc_pc, sc->sc_pt, AUVIA_PCICONF_JUNK, r);
 	delay(200);
 
-	auvia_waitready_codec(sc);
-#endif
+	for (i = 500000; i != 0 && !(pci_conf_read(sc->sc_pc, sc->sc_pt,
+		AUVIA_PCICONF_JUNK) & AUVIA_PCICONF_PRIVALID); i--)
+		DELAY(1);
+	if (i == 0)
+		printf("%s: codec reset timed out\n", sc->sc_dev.dv_xname);
 }
 
 

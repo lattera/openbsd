@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.6 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_var.h,v 1.8.2.7 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: in6_var.h,v 1.55 2001/02/16 12:49:45 itojun Exp $	*/
 
 /*
@@ -271,13 +271,15 @@ struct	in6_aliasreq {
  * prefix related flags passed between kernel(NDP related part) and
  * user land command(ifconfig) and daemon(rtadvd).
  */
+struct prf_ra {
+	u_char onlink : 1;
+	u_char autonomous : 1;
+	u_char router : 1;
+	u_char reserved : 5;
+};
+
 struct in6_prflags {
-	struct prf_ra {
-		u_char onlink : 1;
-		u_char autonomous : 1;
-		u_char router : 1;
-		u_char reserved : 5;
-	} prf_ra;
+	struct prf_ra prf_ra;
 	u_char prf_reserved1;
 	u_short prf_reserved2;
 	/* want to put this on 4byte offset */
@@ -591,6 +593,8 @@ int	in6_matchlen(struct in6_addr *, struct in6_addr *);
 int	in6_are_prefix_equal(struct in6_addr *, struct in6_addr *, int);
 void	in6_prefixlen2mask(struct in6_addr *, int);
 void	in6_purgeprefix(struct ifnet *);
+void	in6_ifaddloop(struct ifaddr *);
+void	in6_ifremloop(struct ifaddr *);
 
 int	in6_is_addr_deprecated(struct sockaddr_in6 *);
 struct inpcb;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.9.6.7 2003/06/07 11:03:41 ho Exp $
+#	$OpenBSD: src/sys/kern/Attic/vnode_if.src,v 1.9.6.8 2004/02/19 10:56:39 niklas Exp $
 #	$NetBSD: vnode_if.src,v 1.10 1996/05/11 18:26:27 mycroft Exp $
 #
 # Copyright (c) 1992, 1993
@@ -37,7 +37,7 @@
 # protocol used by each vop call.  The first column is the name of
 # the variable, the remaining three columns are in, out and error
 # respectively.  The "in" column defines the lock state on input,
-# the "out" column defines the state on succesful return, and the
+# the "out" column defines the state on successful return, and the
 # "error" column defines the locking state on error exit.
 #
 # The locking value can take the following values:
@@ -203,22 +203,18 @@ vop_lease {
 vop_ioctl {
 	IN struct vnode *vp;
 	IN u_long command;
-	IN caddr_t data;
+	IN void *data;
 	IN int fflag;
 	IN struct ucred *cred;
 	IN struct proc *p;
 };
 
 #
-#% select	vp	U U U
+#% poll	vp	U U U
 #
-# Needs work?  (fflags)
-#
-vop_select {
+vop_poll {
 	IN struct vnode *vp;
-	IN int which;
-	IN int fflags;
-	IN struct ucred *cred;
+	IN int events;
 	IN struct proc *p;
 };
 
@@ -433,7 +429,7 @@ vop_pathconf {
 #
 vop_advlock {
 	IN struct vnode *vp;
-	IN caddr_t id;
+	IN void *id;
 	IN int op;
 	IN struct flock *fl;
 	IN int flags;

@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs_data.h,v 1.9.4.3 2003/03/28 00:38:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/cardbus/Attic/cardbusdevs_data.h,v 1.9.4.4 2004/02/19 10:56:14 niklas Exp $	*/
 
 /*
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: cardbusdevs,v 1.11 2001/08/22 16:33:57 aaron Exp 
+ *	OpenBSD: cardbusdevs,v 1.14 2003/09/27 19:38:10 fgsch Exp 
  */
 /*	$NetBSD: cardbusdevs,v 1.7 1999/12/11 22:22:34 explorer Exp $	*/
 
@@ -105,6 +105,10 @@ struct cardbus_known_product cardbus_known_product[] = {
 	    "21142/3",
 	},
 	{
+	    CARDBUS_VENDOR_DLINK, CARDBUS_PRODUCT_DLINK_DFE_690TXD,
+	    "DFE-690TXD",
+	},
+	{
 	    CARDBUS_VENDOR_INTEL, CARDBUS_PRODUCT_INTEL_82557,
 	    "82557",
 	},
@@ -115,6 +119,10 @@ struct cardbus_known_product cardbus_known_product[] = {
 	{
 	    CARDBUS_VENDOR_INTEL, CARDBUS_PRODUCT_INTEL_DFE660,
 	    "DFE-660",
+	},
+	{
+	    CARDBUS_VENDOR_NETGEAR, CARDBUS_PRODUCT_NETGEAR_HA501,
+	    "HA501",
 	},
 	{
 	    CARDBUS_VENDOR_OPTI, CARDBUS_PRODUCT_OPTI_82C861,
@@ -157,6 +165,10 @@ struct cardbus_known_vendor cardbus_known_vendors[] = {
 	    "Opti",
 	},
 	{
+	    CARDBUS_VENDOR_DLINK, 0,
+	    "D-Link",
+	},
+	{
 	    CARDBUS_VENDOR_3COM, 0,
 	    "3Com",
 	},
@@ -183,6 +195,10 @@ struct cardbus_known_vendor cardbus_known_vendors[] = {
 	{
 	    CARDBUS_VENDOR_ABOCOM, 0,
 	    "Abocom",
+	},
+	{
+	    CARDBUS_VENDOR_NETGEAR, 0,
+	    "Netgear",
 	},
 	{
 	    CARDBUS_VENDOR_INTEL, 0,

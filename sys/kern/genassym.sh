@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/kern/genassym.sh,v 1.3.12.4 2003/03/28 00:41:26 niklas Exp $
+#	$OpenBSD: src/sys/kern/genassym.sh,v 1.3.12.5 2004/02/19 10:56:37 niklas Exp $
 #	$NetBSD: genassym.sh,v 1.9 1998/04/25 19:48:27 matthias Exp $
 
 #
@@ -43,8 +43,8 @@ else
 	ccode=0
 fi
 
-TMPC=`mktemp /tmp/genassym_c.XXXXXX` || exit 1
-TMP=`mktemp /tmp/genassym.XXXXXX` || {
+TMPC=`mktemp /tmp/genassym_c.XXXXXXXXXX` || exit 1
+TMP=`mktemp /tmp/genassym.XXXXXXXXXX` || {
 	rm -f ${TMPC}
 	exit 1
 }
@@ -94,9 +94,23 @@ $0 ~ /^endif/ {
 	next;
 }
 
+/^union[ \t]/ {
+	structname = $2;
+	prefixname = toupper($3);
+	structtype = "union"
+	if (union[structname] == 1)
+		next;
+	else {
+		union[structname] = 1;
+		$0 = "define " toupper(structname) "_SIZEOF sizeof(union " structname ")";
+	}
+	# fall through
+}
+
 /^struct[ \t]/ {
 	structname = $2;
 	prefixname = toupper($3);
+	structtype = "struct"
 	if (struct[structname] == 1)
 		next;
 	else {
@@ -108,9 +122,9 @@ $0 ~ /^endif/ {
 
 /^member[ \t]/ {
 	if (NF > 2)
-		$0 = "define " prefixname toupper($2) " offsetof(struct " structname ", " $3 ")";
+		$0 = "define " prefixname toupper($2) " offsetof(" structtype " " structname ", " $3 ")";
 	else
-		$0 = "define " prefixname toupper($2) " offsetof(struct " structname ", " $2 ")";
+		$0 = "define " prefixname toupper($2) " offsetof(" structtype " " structname ", " $2 ")";
 	# fall through
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.6 2003/03/28 00:38:15 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/siopvar_common.h,v 1.4.4.7 2004/02/19 10:56:20 niklas Exp $ */
 /*	$NetBSD: siopvar_common.h,v 1.22 2002/10/23 02:32:36 christos Exp $ */
 
 /*
@@ -41,47 +41,46 @@
 typedef struct scr_table {
 	u_int32_t count;
 	u_int32_t addr;
-} scr_table_t __attribute__((__packed__));
+} scr_table_t __packed;
 
 /* Number of scatter/gather entries */
-#define SIOP_NSG	(MAXPHYS/NBPG + 1)	/* XXX NBPG */
+/* XXX Ensure alignment of siop_xfer's. */
+#define SIOP_NSG	17	/* XXX (MAXPHYS/NBPG + 1) */
 
 /*
  * This structure interfaces the SCRIPT with the driver; it describes a full
- * transfer. 
- * If you change something here, don't forget to update offsets in {s,es}iop.ss
+ * transfer. If you change something here, don't forget to update offsets in
+ * {s,es}iop.ss
  */
 struct siop_common_xfer {
-	u_int8_t msg_out[16];	/* 0 */
-	u_int8_t msg_in[16];	/* 16 */
-	u_int32_t status;	/* 32 */
-	u_int32_t pad1;		/* 36 */
-	u_int32_t id;		/* 40 */
-	u_int32_t pad2;		/* 44 */
-	scr_table_t t_msgin;	/* 48 */
-	scr_table_t t_extmsgin;	/* 56 */
-	scr_table_t t_extmsgdata; /* 64 */
-	scr_table_t t_msgout;	/* 72 */
-	scr_table_t cmd;	/* 80 */
-	scr_table_t t_status;	/* 88 */
-	scr_table_t data[SIOP_NSG]; /* 96 */
-} __attribute__((__packed__));
+	u_int8_t msg_out[16];		/*   0 */
+	u_int8_t msg_in[16];		/*  16 */
+	u_int32_t status;		/*  32 */
+	u_int32_t pad1;			/*  36 */
+	u_int32_t id;			/*  40 */
+	struct scsi_generic xscmd; 	/*  44 */
+	scr_table_t t_msgin;		/*  56 */
+	scr_table_t t_extmsgin;		/*  64 */
+	scr_table_t t_extmsgdata; 	/*  72 */
+	scr_table_t t_msgout;		/*  80 */
+	scr_table_t cmd;		/*  88 */
+	scr_table_t t_status;		/*  96 */
+	scr_table_t data[SIOP_NSG]; 	/* 104 */
+} __packed;
 
-/* status can hold the SCSI_* status values, and 2 additionnal values: */
+/* status can hold the SCSI_* status values, and 2 additional values: */
 #define SCSI_SIOP_NOCHECK	0xfe	/* don't check the scsi status */
 #define SCSI_SIOP_NOSTATUS	0xff	/* device didn't report status */
 
 /*
- * This decribes a command handled by the SCSI controller
+ * This describes a command handled by the SCSI controller
  */
 struct siop_common_cmd {
 	struct siop_common_softc *siop_sc; /* points back to our adapter */
 	struct siop_common_target *siop_target; /* pointer to our target def */
 	struct scsi_xfer *xs; /* xfer from the upper level */
 	struct siop_common_xfer *siop_tables; /* tables for this cmd */
-	struct scsi_sense rs_cmd; /* request sense command buffer */
 	bus_addr_t	dsa; /* DSA value to load */
-	bus_dmamap_t	dmamap_cmd;
 	bus_dmamap_t	dmamap_data;
 	int status;
 	int flags;
@@ -142,13 +141,13 @@ struct siop_common_softc {
 	int mode;			/* current SE/LVD/HVD mode */
 	bus_space_tag_t sc_rt;		/* bus_space registers tag */
 	bus_space_handle_t sc_rh;	/* bus_space registers handle */
-	bus_addr_t sc_raddr;		/* register adresses */
+	bus_addr_t sc_raddr;		/* register addresses */
 	bus_space_tag_t sc_ramt;	/* bus_space ram tag */
 	bus_space_handle_t sc_ramh;	/* bus_space ram handle */
 	bus_dma_tag_t sc_dmat;		/* bus DMA tag */
 	void (*sc_reset)(struct siop_common_softc*); /* reset callback */
 	bus_dmamap_t  sc_scriptdma;	/* DMA map for script */
-	bus_addr_t sc_scriptaddr;	/* on-board ram or physical adress */
+	bus_addr_t sc_scriptaddr;	/* on-board ram or physical address */
 	u_int32_t *sc_script;		/* script location in memory */
 	struct siop_common_target *targets[16]; /* per-target states */
 };
@@ -165,7 +164,7 @@ struct siop_common_softc {
 #define SF_CHIP_DBLR	0x00000400 /* clock doubler or quadrupler */
 #define SF_CHIP_QUAD	0x00000800 /* clock quadrupler, with PPL */
 #define SF_CHIP_FIFO	0x00001000 /* large fifo */
-#define SF_CHIP_PF	0x00002000 /* Intructions prefetch */
+#define SF_CHIP_PF	0x00002000 /* Instructions prefetch */
 #define SF_CHIP_RAM	0x00004000 /* on-board RAM */
 #define SF_CHIP_LS	0x00008000 /* load/store instruction */
 #define SF_CHIP_10REGS	0x00010000 /* 10 scratch registers */

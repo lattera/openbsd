@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_osfp.c,v 1.9 2004/01/04 20:08:42 pvalchev Exp $ */
+/*	$OpenBSD: src/sys/net/pf_osfp.c,v 1.9.2.1 2004/02/19 10:57:22 niklas Exp $ */
 
 /*
  * Copyright (c) 2003 Mike Frantzen <frantzen@w4g.org>

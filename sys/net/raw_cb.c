@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/raw_cb.c,v 1.2.16.2 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/raw_cb.c,v 1.2.16.3 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: raw_cb.c,v 1.9 1996/02/13 22:00:39 christos Exp $	*/
 
 /*
@@ -65,10 +65,10 @@ struct rawcbhead rawcb;
  */
 int
 raw_attach(so, proto)
-	register struct socket *so;
+	struct socket *so;
 	int proto;
 {
-	register struct rawcb *rp = sotorawcb(so);
+	struct rawcb *rp = sotorawcb(so);
 	int error;
 
 	/*
@@ -93,7 +93,7 @@ raw_attach(so, proto)
  */
 void
 raw_detach(rp)
-	register struct rawcb *rp;
+	struct rawcb *rp;
 {
 	struct socket *so = rp->rcb_socket;
 
@@ -128,11 +128,11 @@ raw_disconnect(rp)
 #ifdef notdef
 int
 raw_bind(so, nam)
-	register struct socket *so;
+	struct socket *so;
 	struct mbuf *nam;
 {
 	struct sockaddr *addr = mtod(nam, struct sockaddr *);
-	register struct rawcb *rp;
+	struct rawcb *rp;
 
 	if (ifnet == 0)
 		return (EADDRNOTAVAIL);

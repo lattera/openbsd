@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.11.6.8 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.11.6.9 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_ktrace.c,v 1.23 1996/02/09 18:59:36 christos Exp $	*/
 
 /*
@@ -296,7 +296,7 @@ sys_ktrace(curp, v, retval)
 	register_t *retval;
 {
 	struct sys_ktrace_args /* {
-		syscallarg(char *) fname;
+		syscallarg(const char *) fname;
 		syscallarg(int) ops;
 		syscallarg(int) facs;
 		syscallarg(pid_t) pid;

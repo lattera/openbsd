@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/awi_wep.c,v 1.2.4.5 2002/03/28 11:51:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/awi_wep.c,v 1.2.4.6 2004/02/19 10:56:17 niklas Exp $	*/
 /*	$NetBSD: awi_wep.c,v 1.2 2000/07/04 14:47:58 onoe Exp $	*/
 
 /*
@@ -207,7 +207,11 @@ awi_wep_getnwkey(sc, nwkey)
 #ifdef __FreeBSD__
 	suerr = suser(curproc);
 #else
+#ifdef __OpenBSD__
+	suerr = suser(curproc, 0);
+#else
 	suerr = suser(curproc->p_ucred, &curproc->p_acflag);
+#endif
 #endif
 	error = 0;
 	for (i = 0; i < IEEE80211_WEP_NKID; i++) {

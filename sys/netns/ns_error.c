@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netns/Attic/ns_error.c,v 1.2.16.1 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netns/Attic/ns_error.c,v 1.2.16.2 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: ns_error.c,v 1.6 1996/02/13 22:13:53 christos Exp $	*/
 
 /*
@@ -72,7 +72,7 @@ int
 ns_err_x(c)
 	int c;
 {
-	register u_short *w, *lim, *base = ns_errstat.ns_es_codes;
+	u_short *w, *lim, *base = ns_errstat.ns_es_codes;
 	u_short x = c;
 
 	/*
@@ -100,10 +100,10 @@ ns_error(om, type, param)
 	int type;
 	int param;
 {
-	register struct ns_epidp *ep;
+	struct ns_epidp *ep;
 	struct mbuf *m;
 	struct idp *nip;
-	register struct idp *oip = mtod(om, struct idp *);
+	struct idp *oip = mtod(om, struct idp *);
 	extern int idpcksum;
 
 	/*
@@ -196,11 +196,11 @@ void
 ns_err_input(m)
 	struct mbuf *m;
 {
-	register struct ns_errp *ep;
+	struct ns_errp *ep;
 #ifdef NS_ERRPRINTFS
-	register struct ns_epidp *epidp = mtod(m, struct ns_epidp *);
+	struct ns_epidp *epidp = mtod(m, struct ns_epidp *);
 #endif
-	register int i;
+	int i;
 	int type, code, param;
 
 	/*
@@ -312,8 +312,8 @@ int
 ns_echo(m)
 struct mbuf *m;
 {
-	register struct idp *idp = mtod(m, struct idp *);
-	register struct echo {
+	struct idp *idp = mtod(m, struct idp *);
+	struct echo {
 	    struct idp	ec_idp;
 	    u_short		ec_op; /* Operation, 1 = request, 2 = reply */
 	} *ec = (struct echo *)idp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.11 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sig.c,v 1.35.2.12 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -227,7 +227,7 @@ sys_sigaction(p, v, retval)
 {
 	register struct sys_sigaction_args /* {
 		syscallarg(int) signum;
-		syscallarg(struct sigaction *) nsa;
+		syscallarg(const struct sigaction *) nsa;
 		syscallarg(struct sigaction *) osa;
 	} */ *uap = v;
 	struct sigaction vec;
@@ -263,14 +263,12 @@ sys_sigaction(p, v, retval)
 		if ((sa->sa_mask & bit) == 0)
 			sa->sa_flags |= SA_NODEFER;
 		sa->sa_mask &= ~bit;
-		error = copyout((caddr_t)sa, (caddr_t)SCARG(uap, osa),
-				sizeof (vec));
+		error = copyout(sa, SCARG(uap, osa), sizeof (vec));
 		if (error)
 			return (error);
 	}
 	if (SCARG(uap, nsa)) {
-		error = copyin((caddr_t)SCARG(uap, nsa), (caddr_t)sa,
-		    sizeof (vec));
+		error = copyin(SCARG(uap, nsa), sa, sizeof (vec));
 		if (error)
 			return (error);
 		setsigvec(p, signum, sa);
@@ -501,7 +499,7 @@ sys_sigsuspend(p, v, retval)
 	ps->ps_oldmask = p->p_sigmask;
 	ps->ps_flags |= SAS_OLDMASK;
 	p->p_sigmask = SCARG(uap, mask) &~ sigcantmask;
-	while (tsleep((caddr_t) ps, PPAUSE|PCATCH, "pause", 0) == 0)
+	while (tsleep(ps, PPAUSE|PCATCH, "pause", 0) == 0)
 		/* void */;
 	/* always return EINTR rather than ERESTART... */
 	return (EINTR);
@@ -509,13 +507,58 @@ sys_sigsuspend(p, v, retval)
 
 /* ARGSUSED */
 int
+sys_osigaltstack(p, v, retval)
+	struct proc *p;
+	void *v;
+	register_t *retval;
+{
+	register struct sys_osigaltstack_args /* {
+		syscallarg(const struct osigaltstack *) nss;
+		syscallarg(struct osigaltstack *) oss;
+	} */ *uap = v;
+	struct sigacts *psp;
+	struct osigaltstack ss;
+	int error;
+
+	psp = p->p_sigacts;
+	if ((psp->ps_flags & SAS_ALTSTACK) == 0)
+		psp->ps_sigstk.ss_flags |= SS_DISABLE;
+	if (SCARG(uap, oss)) {
+		ss.ss_sp = psp->ps_sigstk.ss_sp;
+		ss.ss_size = psp->ps_sigstk.ss_size;
+		ss.ss_flags = psp->ps_sigstk.ss_flags;
+		if ((error = copyout(&ss, SCARG(uap, oss), sizeof(ss))))
+			return (error);
+	}
+	if (SCARG(uap, nss) == NULL)
+		return (0);
+	error = copyin(SCARG(uap, nss), &ss, sizeof(ss));
+	if (error)
+		return (error);
+	if (ss.ss_flags & SS_DISABLE) {
+		if (psp->ps_sigstk.ss_flags & SS_ONSTACK)
+			return (EINVAL);
+		psp->ps_flags &= ~SAS_ALTSTACK;
+		psp->ps_sigstk.ss_flags = ss.ss_flags;
+		return (0);
+	}
+	if (ss.ss_size < MINSIGSTKSZ)
+		return (ENOMEM);
+	psp->ps_flags |= SAS_ALTSTACK;
+	psp->ps_sigstk.ss_sp = ss.ss_sp;
+	psp->ps_sigstk.ss_size = ss.ss_size;
+	psp->ps_sigstk.ss_flags = ss.ss_flags;
+	return (0);
+}
+
+int
 sys_sigaltstack(p, v, retval)
 	struct proc *p;
 	void *v;
 	register_t *retval;
 {
 	register struct sys_sigaltstack_args /* {
-		syscallarg(struct sigaltstack *) nss;
+		syscallarg(const struct sigaltstack *) nss;
 		syscallarg(struct sigaltstack *) oss;
 	} */ *uap = v;
 	struct sigacts *psp;
@@ -525,12 +568,12 @@ sys_sigaltstack(p, v, retval)
 	psp = p->p_sigacts;
 	if ((psp->ps_flags & SAS_ALTSTACK) == 0)
 		psp->ps_sigstk.ss_flags |= SS_DISABLE;
-	if (SCARG(uap, oss) && (error = copyout((caddr_t)&psp->ps_sigstk,
-	    (caddr_t)SCARG(uap, oss), sizeof (struct sigaltstack))))
+	if (SCARG(uap, oss) && (error = copyout(&psp->ps_sigstk,
+	    SCARG(uap, oss), sizeof(struct sigaltstack))))
 		return (error);
 	if (SCARG(uap, nss) == NULL)
 		return (0);
-	error = copyin((caddr_t)SCARG(uap, nss), (caddr_t)&ss, sizeof (ss));
+	error = copyin(SCARG(uap, nss), &ss, sizeof(ss));
 	if (error)
 		return (error);
 	if (ss.ss_flags & SS_DISABLE) {
@@ -831,8 +874,10 @@ psignal1(p, signum, dolock)
 	if (prop & SA_CONT)
 		p->p_siglist &= ~stopsigmask;
 
-	if (prop & SA_STOP)
+	if (prop & SA_STOP) {
 		p->p_siglist &= ~contsigmask;
+		p->p_flag &= ~P_CONTINUED;
+	}
 
 	p->p_siglist |= mask;
 
@@ -927,6 +972,8 @@ psignal1(p, signum, dolock)
 			 * an event, then it goes back to run state.
 			 * Otherwise, process goes back to sleep state.
 			 */
+			p->p_flag |= P_CONTINUED;
+			wakeup(p->p_pptr);
 			if (action == SIG_DFL)
 				p->p_siglist &= ~mask;
 			if (action == SIG_CATCH)
@@ -1029,7 +1076,7 @@ issignal(struct proc *p)
 #ifdef	PROCFS
 				/* procfs debugging */
 				p->p_stat = SSTOP;
-				wakeup((caddr_t)p);
+				wakeup(p);
 				mi_switch();
 #else
 				panic("procfs debugging");
@@ -1155,7 +1202,7 @@ proc_stop(p)
 
 	p->p_stat = SSTOP;
 	p->p_flag &= ~P_WAITED;
-	wakeup((caddr_t)p->p_pptr);
+	wakeup(p->p_pptr);
 }
 
 /*
@@ -1315,7 +1362,7 @@ coredump(p)
 	 * group privileges.
 	 */
 	if ((p->p_flag & P_SUGID) &&
-	    (error = suser(p->p_ucred, &p->p_acflag)) != 0)
+	    (error = suser(p, 0)) != 0)
 		return (error);
 	if ((p->p_flag & P_SUGID) && nosuidcoredump)
 		return (EPERM);
@@ -1364,7 +1411,7 @@ coredump(p)
 	fill_eproc(p, &p->p_addr->u_kproc.kp_eproc);
 
 	core.c_midmag = 0;
-	strncpy(core.c_name, p->p_comm, MAXCOMLEN);
+	strlcpy(core.c_name, p->p_comm, sizeof(core.c_name));
 	core.c_nseg = 0;
 	core.c_signo = p->p_sigacts->ps_sig;
 	core.c_ucode = p->p_sigacts->ps_code;

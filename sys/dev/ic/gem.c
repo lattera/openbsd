@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.6 2003/05/13 19:35:00 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gem.c,v 1.11.4.7 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD: gem.c,v 1.1 2001/09/16 00:11:43 eeh Exp $ */
 
 /*
@@ -51,8 +51,6 @@
 
 #include <machine/endian.h>
 
-#include <uvm/uvm_extern.h>
- 
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/if_media.h>
@@ -116,12 +114,9 @@ int		gem_mediachange(struct ifnet *);
 void		gem_mediastatus(struct ifnet *, struct ifmediareq *);
 
 struct mbuf	*gem_get(struct gem_softc *, int, int);
-int		gem_put(struct gem_softc *, int, struct mbuf *);
-void		gem_read(struct gem_softc *, int, int);
 int		gem_eint(struct gem_softc *, u_int);
 int		gem_rint(struct gem_softc *);
 int		gem_tint(struct gem_softc *, u_int32_t);
-void		gem_power(int, void *);
 
 #ifdef GEM_DEBUG
 #define	DPRINTF(sc, x)	if ((sc)->sc_arpcom.ac_if.if_flags & IFF_DEBUG) \
@@ -200,6 +195,19 @@ gem_config(sc)
 			goto fail_5;
 		}
 		sc->sc_rxsoft[i].rxs_mbuf = NULL;
+	}
+	/*
+	 * Create the transmit buffer DMA maps.
+	 */
+	for (i = 0; i < GEM_NTXDESC; i++) {
+		if ((error = bus_dmamap_create(sc->sc_dmatag, MCLBYTES,
+		    GEM_NTXSEGS, MCLBYTES, 0, BUS_DMA_NOWAIT,
+		    &sc->sc_txd[i].sd_map)) != 0) {
+			printf("%s: unable to create tx DMA map %d, "
+			    "error = %d\n", sc->sc_dev.dv_xname, i, error);
+			goto fail_6;
+		}
+		sc->sc_txd[i].sd_mbuf = NULL;
 	}
 
 	/*
@@ -332,6 +340,12 @@ gem_config(sc)
 	 * Free any resources we've allocated during the failed attach
 	 * attempt.  Do this in reverse order and fall through.
 	 */
+ fail_6:
+	for (i = 0; i < GEM_NTXDESC; i++) {
+		if (sc->sc_txd[i].sd_map != NULL)
+			bus_dmamap_destroy(sc->sc_dmatag,
+			    sc->sc_txd[i].sd_map);
+	}
  fail_5:
 	for (i = 0; i < GEM_NRXDESC; i++) {
 		if (sc->sc_rxsoft[i].rxs_dmamap != NULL)
@@ -454,14 +468,10 @@ gem_stop(struct ifnet *ifp, int disable)
 	 */
 	for (i = 0; i < GEM_NTXDESC; i++) {
 		sd = &sc->sc_txd[i];
-		if (sd->sd_map != NULL) {
+		if (sd->sd_mbuf != NULL) {
 			bus_dmamap_sync(sc->sc_dmatag, sd->sd_map, 0,
 			    sd->sd_map->dm_mapsize, BUS_DMASYNC_POSTWRITE);
 			bus_dmamap_unload(sc->sc_dmatag, sd->sd_map);
-			bus_dmamap_destroy(sc->sc_dmatag, sd->sd_map);
-			sd->sd_map = NULL;
-		}
-		if (sd->sd_mbuf != NULL) {
 			m_freem(sd->sd_mbuf);
 			sd->sd_mbuf = NULL;
 		}
@@ -490,7 +500,6 @@ gem_reset_rx(struct gem_softc *sc)
 	bus_space_handle_t h = sc->sc_h;
 	int i;
 
-
 	/*
 	 * Resetting while DMA is in progress can cause a bus hang, so we
 	 * disable DMA first.
@@ -502,7 +511,7 @@ gem_reset_rx(struct gem_softc *sc)
 		if ((bus_space_read_4(t, h, GEM_RX_CONFIG) & 1) == 0)
 			break;
 	if ((bus_space_read_4(t, h, GEM_RX_CONFIG) & 1) != 0)
-		printf("%s: cannot disable read dma\n",
+		printf("%s: cannot disable rx dma\n",
 			sc->sc_dev.dv_xname);
 
 	/* Wait 5ms extra. */
@@ -544,7 +553,7 @@ gem_reset_tx(struct gem_softc *sc)
 		if ((bus_space_read_4(t, h, GEM_TX_CONFIG) & 1) == 0)
 			break;
 	if ((bus_space_read_4(t, h, GEM_TX_CONFIG) & 1) != 0)
-		printf("%s: cannot disable read dma\n",
+		printf("%s: cannot disable tx dma\n",
 			sc->sc_dev.dv_xname);
 
 	/* Wait 5ms extra. */
@@ -557,7 +566,7 @@ gem_reset_tx(struct gem_softc *sc)
 		if ((bus_space_read_4(t, h, GEM_RESET) & GEM_RESET_TX) == 0)
 			break;
 	if ((bus_space_read_4(t, h, GEM_RESET) & GEM_RESET_TX) != 0) {
-		printf("%s: cannot reset receiver\n",
+		printf("%s: cannot reset transmitter\n",
 			sc->sc_dev.dv_xname);
 		return (1);
 	}
@@ -660,42 +669,29 @@ gem_meminit(struct gem_softc *sc)
 static int
 gem_ringsize(int sz)
 {
-	int v;
-
 	switch (sz) {
 	case 32:
-		v = GEM_RING_SZ_32;
-		break;
+		return GEM_RING_SZ_32;
 	case 64:
-		v = GEM_RING_SZ_64;
-		break;
+		return GEM_RING_SZ_64;
 	case 128:
-		v = GEM_RING_SZ_128;
-		break;
+		return GEM_RING_SZ_128;
 	case 256:
-		v = GEM_RING_SZ_256;
-		break;
+		return GEM_RING_SZ_256;
 	case 512:
-		v = GEM_RING_SZ_512;
-		break;
+		return GEM_RING_SZ_512;
 	case 1024:
-		v = GEM_RING_SZ_1024;
-		break;
+		return GEM_RING_SZ_1024;
 	case 2048:
-		v = GEM_RING_SZ_2048;
-		break;
+		return GEM_RING_SZ_2048;
 	case 4096:
-		v = GEM_RING_SZ_4096;
-		break;
+		return GEM_RING_SZ_4096;
 	case 8192:
-		v = GEM_RING_SZ_8192;
-		break;
+		return GEM_RING_SZ_8192;
 	default:
-		v = GEM_RING_SZ_32;
-		printf("gem: invalid Receive Descriptor ring size\n");
-		break;
+		printf("gem: invalid Receive Descriptor ring size %d\n", sz);
+		return GEM_RING_SZ_32;
 	}
-	return (v);
 }
 
 /*
@@ -1197,7 +1193,7 @@ gem_mii_readreg(self, phy, reg)
 	int n;
 	u_int32_t v;
 
-#ifdef GEM_DEBUG1
+#ifdef GEM_DEBUG
 	if (sc->sc_debug)
 		printf("gem_mii_readreg: phy %d reg %d\n", phy, reg);
 #endif
@@ -1229,7 +1225,7 @@ gem_mii_writereg(self, phy, reg, val)
 	int n;
 	u_int32_t v;
 
-#ifdef GEM_DEBUG1
+#ifdef GEM_DEBUG
 	if (sc->sc_debug)
 		printf("gem_mii_writereg: phy %d reg %d val %x\n", 
 			phy, reg, val);
@@ -1576,21 +1572,15 @@ gem_encap(sc, mhead, bixp)
 	bus_dmamap_t map;
 
 	cur = frag = *bixp;
-
-	if (bus_dmamap_create(sc->sc_dmatag, MCLBYTES, GEM_NTXDESC,
-	    MCLBYTES, 0, BUS_DMA_NOWAIT, &map) != 0) {
-		return (ENOBUFS);
-	}
+	map = sc->sc_txd[cur].sd_map;
 
 	if (bus_dmamap_load_mbuf(sc->sc_dmatag, map, mhead,
 	    BUS_DMA_NOWAIT) != 0) {
-		bus_dmamap_destroy(sc->sc_dmatag, map);
 		return (ENOBUFS);
 	}
 
 	if ((sc->sc_tx_cnt + map->dm_nsegs) > (GEM_NTXDESC - 2)) {
 		bus_dmamap_unload(sc->sc_dmatag, map);
-		bus_dmamap_destroy(sc->sc_dmatag, map);
 		return (ENOBUFS);
 	}
 
@@ -1613,6 +1603,7 @@ gem_encap(sc, mhead, bixp)
 	}
 
 	sc->sc_tx_cnt += map->dm_nsegs;
+	sc->sc_txd[*bixp].sd_map = sc->sc_txd[cur].sd_map;
 	sc->sc_txd[cur].sd_map = map;
 	sc->sc_txd[cur].sd_mbuf = mhead;
 
@@ -1641,14 +1632,10 @@ gem_tint(sc, status)
 	cons = sc->sc_tx_cons;
 	while (cons != hwcons) {
 		sd = &sc->sc_txd[cons];
-		if (sd->sd_map != NULL) {
+		if (sd->sd_mbuf != NULL) {
 			bus_dmamap_sync(sc->sc_dmatag, sd->sd_map, 0,
 			    sd->sd_map->dm_mapsize, BUS_DMASYNC_POSTWRITE);
 			bus_dmamap_unload(sc->sc_dmatag, sd->sd_map);
-			bus_dmamap_destroy(sc->sc_dmatag, sd->sd_map);
-			sd->sd_map = NULL;
-		}
-		if (sd->sd_mbuf != NULL) {
 			m_freem(sd->sd_mbuf);
 			sd->sd_mbuf = NULL;
 		}

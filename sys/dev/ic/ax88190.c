@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ax88190.c,v 1.1.4.1 2001/10/31 03:22:41 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ax88190.c,v 1.1.4.2 2004/02/19 10:56:17 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-
@@ -56,7 +56,6 @@
 #endif
 
 #include <machine/bus.h>
-#include <machine/intr.h>
 
 #include <dev/mii/miivar.h>
 #include <dev/mii/mii.h>

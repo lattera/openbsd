@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.7 2003/05/13 19:35:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.5.4.8 2004/02/19 10:56:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -64,8 +64,6 @@
 
 #include <netinet/if_ether.h>
 
-#include <uvm/uvm_extern.h>
-
 #include <machine/cpu.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
@@ -91,16 +89,21 @@ const struct pci_matchid fxp_pci_devices[] = {
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82559 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82559ER },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82562 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82562EH_HPNA_0 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82562EH_HPNA_1 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82562EH_HPNA_2 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_0 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_1 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_2 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_3 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_4 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_5 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_0 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_1 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_2 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_3 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_4 },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VM_5 },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_M },
 };
 
@@ -128,21 +131,14 @@ fxp_pci_attach(parent, self, aux)
 	pci_intr_handle_t ih;
 	const char *intrstr = NULL;
 	u_int8_t enaddr[6];
-	bus_space_tag_t iot = pa->pa_iot;
-	bus_addr_t iobase;
 	bus_size_t iosize;
 	pcireg_t rev = PCI_REVISION(pa->pa_class);
 
-	if (pci_io_find(pc, pa->pa_tag, FXP_PCI_IOBA, &iobase, &iosize)) {
-		printf(": can't find i/o space\n");
-		return;
-	}
-
-	if (bus_space_map(iot, iobase, iosize, 0, &sc->sc_sh)) {
+	if (pci_mapreg_map(pa, FXP_PCI_IOBA, PCI_MAPREG_TYPE_IO, 0,
+	    &sc->sc_st, &sc->sc_sh, NULL, &iosize, 0)) {
 		printf(": can't map i/o space\n");
 		return;
 	}
-	sc->sc_st = iot;
 	sc->sc_dmat = pa->pa_dmat;
 
 	/*
@@ -150,6 +146,7 @@ fxp_pci_attach(parent, self, aux)
 	 */
 	if (pci_intr_map(pa, &ih)) {
 		printf(": couldn't map interrupt\n");
+		bus_space_unmap(sc->sc_st, sc->sc_sh, iosize);
 		return;
 	}
 
@@ -161,6 +158,7 @@ fxp_pci_attach(parent, self, aux)
 		if (intrstr != NULL)
 			printf(" at %s", intrstr);
 		printf("\n");
+		bus_space_unmap(sc->sc_st, sc->sc_sh, iosize);
 		return;
 	}
 
@@ -199,9 +197,16 @@ fxp_pci_attach(parent, self, aux)
 		break;
 	}
 
+	/* enable bus mastering */
+	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG,
+	    PCI_COMMAND_MASTER_ENABLE |
+	    pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_COMMAND_STATUS_REG));
+
 	/* Do generic parts of attach. */
 	if (fxp_attach_common(sc, enaddr, intrstr)) {
 		/* Failed! */
+		pci_intr_disestablish(pc, sc->sc_ih);
+		bus_space_unmap(sc->sc_st, sc->sc_sh, iosize);
 		return;
 	}
 }

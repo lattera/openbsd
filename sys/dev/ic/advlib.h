@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/advlib.h,v 1.4.6.3 2003/03/28 00:38:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/advlib.h,v 1.4.6.4 2004/02/19 10:56:15 niklas Exp $	*/
 /*      $NetBSD: advlib.h,v 1.5 1998/10/28 20:39:46 dante Exp $        */
 
 /*
@@ -324,7 +324,7 @@
 
 
 /*
- * SCSI Iquiry structure
+ * SCSI Inquiry structure
  */
 
 typedef struct

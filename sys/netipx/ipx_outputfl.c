@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_outputfl.c,v 1.5.2.1 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_outputfl.c,v 1.5.2.2 2004/02/19 10:57:26 niklas Exp $	*/
 
 /*-
  *
@@ -60,8 +60,8 @@ ipx_outputfl(m0, ro, flags)
 	struct route *ro;
 	int flags;
 {
-	register struct ipx *ipx = mtod(m0, struct ipx *);
-	register struct ifnet *ifp = NULL;
+	struct ipx *ipx = mtod(m0, struct ipx *);
+	struct ifnet *ifp = NULL;
 	int error = 0;
 	struct sockaddr_ipx *dst;
 	struct route ipxroute;
@@ -162,7 +162,7 @@ int
 ipx_output_type20(m)
 	struct mbuf *m;
 {
-	register struct ipx *ipx;
+	struct ipx *ipx;
 	union ipx_net *nbnet;
 	struct ipx_ifaddr *ia, *tia = NULL;
 	int error = 0;

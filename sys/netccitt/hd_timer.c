@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/hd_timer.c,v 1.2.16.1 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/hd_timer.c,v 1.2.16.2 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: hd_timer.c,v 1.6 1996/02/13 22:04:33 christos Exp $	*/
 
 /*
@@ -73,8 +73,8 @@ int             hd_n2 = N2;
 void
 hd_timer()
 {
-	register struct hdcb *hdp;
-	register int    s = splimp();
+	struct hdcb *hdp;
+	int    s = splimp();
 
 	for (hdp = hdcbhead; hdp; hdp = hdp->hd_next) {
 		if (hdp->hd_rrtimer && (--hdp->hd_rrtimer == 0)) {

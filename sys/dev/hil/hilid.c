@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/hil/hilid.c,v 1.2 2003/02/26 20:22:04 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/hil/hilid.c,v 1.2.4.1 2004/02/19 10:56:15 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  * All rights reserved.
@@ -90,7 +90,7 @@ hilidattach(struct device *parent, struct device *self, void *aux)
 
 	printf("%s: security code", self->dv_xname);
 	for (i = 0; i < sizeof(sc->sc_id); i++)
-		printf(" %02.2x", sc->sc_id[i]);
+		printf(" %02x", sc->sc_id[i]);
 
 	printf("\n");
 }

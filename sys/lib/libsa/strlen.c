@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/strlen.c,v 1.2.12.1 2003/06/07 11:03:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/strlen.c,v 1.2.12.2 2004/02/19 10:57:19 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -36,12 +36,12 @@
 #include "stand.h"
 
 size_t
-strlen(str)
-	const char *str;
+strlen(const char *str)
 {
-	register const char *s;
+	const char *s;
 
-	for (s = str; *s; ++s);
-	return(s - str);
+	for (s = str; *s; ++s)
+		;
+	return (s - str);
 }
 

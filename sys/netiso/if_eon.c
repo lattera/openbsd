@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/if_eon.c,v 1.7.2.6 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/if_eon.c,v 1.7.2.7 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: if_eon.c,v 1.15 1996/05/09 22:29:37 scottr Exp $	*/
 
 /*-
@@ -103,7 +103,7 @@ SOFTWARE.
 #include <netiso/iso_errno.h>
 #include <netiso/eonvar.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 extern struct timeval time;
 
@@ -132,7 +132,7 @@ struct eon_llinfo eon_llinfo;
 void
 eonattach()
 {
-	register struct ifnet *ifp = eonif;
+	struct ifnet *ifp = eonif;
 
 #ifdef ARGO_DEBUG
 	if (argo_debug[D_EON]) {
@@ -176,12 +176,12 @@ eonattach()
  */
 int
 eonioctl(ifp, cmd, data)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 	u_long          cmd;
-	register caddr_t data;
+	caddr_t data;
 {
 	int             s = splimp();
-	register int    error = 0;
+	int    error = 0;
 
 #ifdef ARGO_DEBUG
 	if (argo_debug[D_EON]) {
@@ -190,7 +190,7 @@ eonioctl(ifp, cmd, data)
 #endif
 
 	switch (cmd) {
-		register struct ifaddr *ifa;
+		struct ifaddr *ifa;
 
 	case SIOCSIFADDR:
 		if ((ifa = (struct ifaddr *) data) != NULL) {
@@ -208,12 +208,12 @@ eonioctl(ifp, cmd, data)
 void
 eoniphdr(hdr, loc, ro, class, zero)
 	struct route   *ro;
-	register struct eon_iphdr *hdr;
+	struct eon_iphdr *hdr;
 	caddr_t         loc;
 	int		class, zero;
 {
 	struct mbuf     mhead;
-	register struct sockaddr_in *sin = satosin(&ro->ro_dst);
+	struct sockaddr_in *sin = satosin(&ro->ro_dst);
 	if (zero) {
 		bzero((caddr_t) hdr, sizeof(*hdr));
 		bzero((caddr_t) ro, sizeof(*ro));
@@ -267,12 +267,12 @@ eoniphdr(hdr, loc, ro, class, zero)
 void
 eonrtrequest(cmd, rt, info)
 	int cmd;
-	register struct rtentry *rt;
-	register struct rt_addrinfo *info;
+	struct rtentry *rt;
+	struct rt_addrinfo *info;
 {
 	unsigned long   zerodst = 0;
 	caddr_t         ipaddrloc = (caddr_t) & zerodst;
-	register struct eon_llinfo *el = (struct eon_llinfo *) rt->rt_llinfo;
+	struct eon_llinfo *el = (struct eon_llinfo *) rt->rt_llinfo;
 	struct sockaddr *gate;
 
 	/*
@@ -340,13 +340,13 @@ eonrtrequest(cmd, rt, info)
 int
 eonoutput(ifp, m, sdst, rt)
 	struct ifnet   *ifp;
-	register struct mbuf *m;	/* packet */
+	struct mbuf *m;	/* packet */
 	struct sockaddr *sdst;		/* destination addr */
 	struct rtentry *rt;
 {
 	struct sockaddr_iso *dst = (struct sockaddr_iso *) sdst;
-	register struct eon_llinfo *el;
-	register struct eon_iphdr *ei;
+	struct eon_llinfo *el;
+	struct eon_iphdr *ei;
 	struct route   *ro;
 	int             datalen;
 	struct mbuf    *mh;
@@ -364,7 +364,7 @@ eonoutput(ifp, m, sdst, rt)
 	ifp->if_opackets++;
 	if (rt == 0 || (el = (struct eon_llinfo *) rt->rt_llinfo) == 0) {
 		if (dst->siso_family == AF_LINK) {
-			register struct sockaddr_dl *sdl = (struct sockaddr_dl *) dst;
+			struct sockaddr_dl *sdl = (struct sockaddr_dl *) dst;
 
 			ipaddrloc = LLADDR(sdl);
 			alen = sdl->sdl_alen;
@@ -417,8 +417,9 @@ send:
 	m = mh;
 	MH_ALIGN(m, sizeof(struct eon_iphdr));
 	m->m_len = sizeof(struct eon_iphdr);
-	ifp->if_obytes +=
-		(ei->ei_ip.ip_len = (u_short) (m->m_pkthdr.len = datalen));
+	m->m_pkthdr.len = datalen;
+	ei->ei_ip.ip_len = htons(datalen);
+	ifp->if_obytes += datalen;
 	*mtod(m, struct eon_iphdr *) = *ei;
 
 #ifdef ARGO_DEBUG
@@ -446,8 +447,8 @@ void
 eoninput(struct mbuf *m, ...)
 {
 	int             iphlen;
-	register struct eon_hdr *eonhdr;
-	register struct ip *iphdr;
+	struct eon_hdr *eonhdr;
+	struct ip *iphdr;
 	struct ifnet   *eonifp;
 	int             s;
 	va_list ap;
@@ -584,7 +585,7 @@ eonctlinput(cmd, sa, dummy)
 	}
 #endif
 
-	if (cmd < 0 || cmd > PRC_NCMDS)
+	if (cmd < 0 || cmd >= PRC_NCMDS)
 		return NULL;
 
 	IncStat(es_icmp[cmd]);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/cons.c,v 1.9.12.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/cons.c,v 1.9.12.2 2004/02/19 10:57:19 niklas Exp $	*/
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -45,9 +45,9 @@
 #include <dev/cons.h>
 
 void
-cninit()
+cninit(void)
 {
-	register struct consdev *cp;
+	struct consdev *cp;
 
 	/*
 	 * Collect information about all possible consoles
@@ -71,8 +71,7 @@ cninit()
 }
 
 int
-cnset(dev)
-	dev_t dev;
+cnset(dev_t dev)
 {
 	struct consdev *cp;
 
@@ -98,7 +97,7 @@ cnset(dev)
 }
 
 int
-cngetc()
+cngetc(void)
 {
 	if (cn_tab == NULL)
 		return (0);
@@ -106,8 +105,7 @@ cngetc()
 }
 
 void
-cnputc(c)
-	register int c;
+cnputc(int c)
 {
 	if (cn_tab != NULL && c) {
 		(*cn_tab->cn_putc)(cn_tab->cn_dev, c);
@@ -117,10 +115,9 @@ cnputc(c)
 }
 
 int
-cnischar()
+cnischar(void)
 {
 	if (cn_tab != NULL)
 		return ((*cn_tab->cn_getc)(cn_tab->cn_dev|0x80));
-	else
-		return 0;
+	return 0;
 }

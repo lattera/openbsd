@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.9 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/cmpci.c,v 1.1.8.10 2004/02/19 10:56:25 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Takuya SHIOZAKI
@@ -468,7 +468,7 @@ cmpci_query_encoding(handle, fp)
 		strlcpy(fp->name, AudioEulinear, sizeof fp->name);
 		fp->encoding = AUDIO_ENCODING_ULINEAR;
 		fp->precision = 8;
-		fp->flags = AUDIO_ENCODINGFLAG_EMULATED;
+		fp->flags = 0;
 		break;
 	case 1:
 		strlcpy(fp->name, AudioEmulaw, sizeof fp->name);

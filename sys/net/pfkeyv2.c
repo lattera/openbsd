@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.34.2.6 2003/03/28 00:41:29 niklas Exp $ */
+/* $OpenBSD: src/sys/net/pfkeyv2.c,v 1.34.2.7 2004/02/19 10:57:22 niklas Exp $ */
 
 /*
  *	@(#)COPYRIGHT	1.1 (NRL) 17 January 1995
@@ -99,18 +99,21 @@ static const struct sadb_alg ealgs[] = {
 	{ SADB_X_EALG_BLF, 64, 40, BLF_MAXKEYLEN * 8},
 	{ SADB_X_EALG_CAST, 64, 40, 128},
 	{ SADB_X_EALG_SKIPJACK, 64, 80, 80},
-	{ SADB_X_EALG_AES, 128, 64, 256},
+	{ SADB_X_EALG_AES, 128, 64, 256}
 };
 
 static const struct sadb_alg aalgs[] = {
 	{ SADB_AALG_SHA1HMAC, 0, 160, 160 },
 	{ SADB_AALG_MD5HMAC, 0, 128, 128 },
-	{ SADB_AALG_RIPEMD160HMAC, 0, 160, 160 }
+	{ SADB_X_AALG_RIPEMD160HMAC, 0, 160, 160 },
+	{ SADB_X_AALG_SHA2_256, 0, 256, 256 },
+	{ SADB_X_AALG_SHA2_384, 0, 384, 384 },
+	{ SADB_X_AALG_SHA2_512, 0, 512, 512 }
 };
 
 static const struct sadb_alg calgs[] = {
 	{ SADB_X_CALG_DEFLATE, 0, 0, 0},
-	{ SADB_X_CALG_LZS, 0, 0, 0},
+	{ SADB_X_CALG_LZS, 0, 0, 0}
 };
 
 extern uint32_t sadb_exts_allowed_out[SADB_MAX+1];
@@ -539,6 +542,9 @@ pfkeyv2_get(struct tdb *sa, void **headers, void **buffer)
 	if (sa->tdb_emxkey)
 		i+= PADUP(sa->tdb_emxkeylen) + sizeof(struct sadb_key);
 
+	if (sa->tdb_udpencap_port)
+		i+= sizeof(struct sadb_x_udpencap);
+
 	if (!(p = malloc(i, M_PFKEY, M_DONTWAIT))) {
 		rval = ENOMEM;
 		goto ret;
@@ -625,6 +631,12 @@ pfkeyv2_get(struct tdb *sa, void **headers, void **buffer)
 	if (sa->tdb_emxkey) {
 		headers[SADB_EXT_KEY_ENCRYPT] = p;
 		export_key(&p, sa, PFKEYV2_ENCRYPTION_KEY);
+	}
+
+	/* Export UDP encapsulation port, if present */
+	if (sa->tdb_udpencap_port) {
+		headers[SADB_X_EXT_UDPENCAP] = p;
+		export_udpencap(&p, sa);
 	}
 
 	rval = 0;
@@ -892,6 +904,12 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			rval = EINVAL;
 			goto ret;
 		}
+		/* UDP encapsulation is only supported for ESP */
+		if (smsg->sadb_msg_satype != SADB_SATYPE_ESP &&
+		    headers[SADB_X_EXT_UDPENCAP]) {
+			rval = EINVAL;
+			goto ret;
+		}
 
 		s = spltdb();
 
@@ -962,6 +980,8 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			    headers[SADB_X_EXT_DST_MASK],
 			    headers[SADB_X_EXT_PROTOCOL],
 			    headers[SADB_X_EXT_FLOW_TYPE]);
+			import_udpencap(newsa,
+			    headers[SADB_X_EXT_UDPENCAP]);
 
 			headers[SADB_EXT_KEY_AUTH] = NULL;
 			headers[SADB_EXT_KEY_ENCRYPT] = NULL;
@@ -1007,6 +1027,8 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			    PFKEYV2_LIFETIME_SOFT);
 			import_lifetime(sa2, headers[SADB_EXT_LIFETIME_HARD],
 			    PFKEYV2_LIFETIME_HARD);
+			import_udpencap(sa2,
+			    headers[SADB_X_EXT_UDPENCAP]);
 		}
 
 		splx(s);
@@ -1029,6 +1051,12 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		    headers[SADB_X_EXT_DST_FLOW] &&
 		    headers[SADB_X_EXT_SRC_MASK] &&
 		    headers[SADB_X_EXT_DST_MASK])) {
+			rval = EINVAL;
+			goto ret;
+		}
+		/* UDP encapsulation is only supported for ESP */
+		if (smsg->sadb_msg_satype != SADB_SATYPE_ESP &&
+		    headers[SADB_X_EXT_UDPENCAP]) {
 			rval = EINVAL;
 			goto ret;
 		}
@@ -1108,6 +1136,8 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			    headers[SADB_X_EXT_DST_MASK],
 			    headers[SADB_X_EXT_PROTOCOL],
 			    headers[SADB_X_EXT_FLOW_TYPE]);
+			import_udpencap(newsa,
+			    headers[SADB_X_EXT_UDPENCAP]);
 
 			headers[SADB_EXT_KEY_AUTH] = NULL;
 			headers[SADB_EXT_KEY_ENCRYPT] = NULL;
@@ -1942,7 +1972,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 			sadb_comb->sadb_comb_auth_maxbits = 160;
 		} else if (!strncasecmp(ipsec_def_auth, "hmac-ripemd160",
 		    sizeof("hmac_ripemd160"))) {
-			sadb_comb->sadb_comb_auth = SADB_AALG_RIPEMD160HMAC;
+			sadb_comb->sadb_comb_auth = SADB_X_AALG_RIPEMD160HMAC;
 			sadb_comb->sadb_comb_auth_minbits = 160;
 			sadb_comb->sadb_comb_auth_maxbits = 160;
 		} else if (!strncasecmp(ipsec_def_auth, "hmac-md5",
@@ -1950,6 +1980,21 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 			sadb_comb->sadb_comb_auth = SADB_AALG_MD5HMAC;
 			sadb_comb->sadb_comb_auth_minbits = 128;
 			sadb_comb->sadb_comb_auth_maxbits = 128;
+		} else if (!strncasecmp(ipsec_def_auth, "hmac-sha2-256",
+		    sizeof("hmac-sha2-256"))) {
+			sadb_comb->sadb_comb_auth = SADB_X_AALG_SHA2_256;
+			sadb_comb->sadb_comb_auth_minbits = 256;
+			sadb_comb->sadb_comb_auth_maxbits = 256;
+		} else if (!strncasecmp(ipsec_def_auth, "hmac-sha2-384",
+		    sizeof("hmac-sha2-384"))) {
+			sadb_comb->sadb_comb_auth = SADB_X_AALG_SHA2_384;
+			sadb_comb->sadb_comb_auth_minbits = 384;
+			sadb_comb->sadb_comb_auth_maxbits = 384;
+		} else if (!strncasecmp(ipsec_def_auth, "hmac-sha2-512",
+		    sizeof("hmac-sha2-512"))) {
+			sadb_comb->sadb_comb_auth = SADB_X_AALG_SHA2_512;
+			sadb_comb->sadb_comb_auth_minbits = 512;
+			sadb_comb->sadb_comb_auth_maxbits = 512;
 		}
 
 		sadb_comb->sadb_comb_soft_allocations = ipsec_soft_allocations;

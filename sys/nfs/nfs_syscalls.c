@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.13.2.8 2003/06/07 11:07:44 ho Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.13.2.9 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: nfs_syscalls.c,v 1.19 1996/02/18 11:53:52 fvdl Exp $	*/
 
 /*
@@ -243,7 +243,7 @@ sys_nfssvc(p, v, retval)
 	/*
 	 * Must be super user
 	 */
-	error = suser(p->p_ucred, &p->p_acflag);
+	error = suser(p, 0);
 	if(error)
 		return (error);
 	while (nfssvc_sockhead_flag & SLP_INIT) {

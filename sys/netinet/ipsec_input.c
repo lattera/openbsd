@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.19.2.7 2003/05/13 19:36:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.19.2.8 2004/02/19 10:57:24 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr) and
@@ -74,7 +74,6 @@
 
 #include "bpfilter.h"
 
-int ipsec_common_input(struct mbuf *, int, int, int, int);
 void *ipsec_common_ctlinput(int, struct sockaddr *, void *, int);
 
 #ifdef ENCDEBUG
@@ -100,7 +99,8 @@ extern u_char ip6_protox[];
  * filtering).
  */
 int
-ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto)
+ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto,
+    int udpencap)
 {
 #define IPSEC_ISTAT(x,y,z) (sproto == IPPROTO_ESP ? (x)++ : \
 			    sproto == IPPROTO_AH ? (y)++ : (z)++)
@@ -152,10 +152,10 @@ ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto)
 	}
 
 	/*
-     * Find tunnel control block and (indirectly) call the appropriate
-     * kernel crypto routine. The resulting mbuf chain is a valid
-     * IP packet ready to go through input processing.
-     */
+	 * Find tunnel control block and (indirectly) call the appropriate
+	 * kernel crypto routine. The resulting mbuf chain is a valid
+	 * IP packet ready to go through input processing.
+	 */
 
 	bzero(&dst_address, sizeof(dst_address));
 	dst_address.sa.sa_family = af;
@@ -210,6 +210,14 @@ ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto)
 		return EINVAL;
 	}
 
+	if (udpencap && !(tdbp->tdb_flags & TDBF_UDPENCAP)) {
+		splx(s);
+		DPRINTF(("ipsec_common_input(): attempted to use non-udpencap SA %s/%08x/%u\n", ipsp_address(dst_address), ntohl(spi), tdbp->tdb_sproto));
+		m_freem(m);
+		espstat.esps_udpinval++;
+		return EINVAL;
+	}
+
 	if (tdbp->tdb_xform == NULL) {
 		splx(s);
 		DPRINTF(("ipsec_common_input(): attempted to use uninitialized SA %s/%08x/%u\n", ipsp_address(dst_address), ntohl(spi), tdbp->tdb_sproto));
@@ -227,7 +235,7 @@ ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto)
 		 */
 		m->m_pkthdr.rcvif = &encif[0].sc_if;
 	}
-
+	
 	/* Register first use, setup expiration timer. */
 	if (tdbp->tdb_first_use == 0) {
 		int pri;
@@ -307,15 +315,21 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff,
 
 		ip = mtod(m, struct ip *);
 		ip->ip_len = htons(m->m_pkthdr.len);
-		HTONS(ip->ip_off);
 		ip->ip_sum = 0;
 		ip->ip_sum = in_cksum(m, ip->ip_hl << 2);
 		prot = ip->ip_p;
 
 		/* IP-in-IP encapsulation */
 		if (prot == IPPROTO_IPIP) {
+			if (m->m_pkthdr.len - skip < sizeof(struct ip)) {
+				m_freem(m);
+				IPSEC_ISTAT(espstat.esps_hdrops,
+				    ahstat.ahs_hdrops,
+				    ipcompstat.ipcomps_hdrops);
+				return EINVAL;
+			}
 			/* ipn will now contain the inner IPv4 header */
-			m_copydata(m, ip->ip_hl << 2, sizeof(struct ip),
+			m_copydata(m, skip, sizeof(struct ip),
 			    (caddr_t) &ipn);
 
 			/*
@@ -349,8 +363,15 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff,
 #if INET6
 		/* IPv6-in-IP encapsulation. */
 		if (prot == IPPROTO_IPV6) {
+			if (m->m_pkthdr.len - skip < sizeof(struct ip6_hdr)) {
+				m_freem(m);
+				IPSEC_ISTAT(espstat.esps_hdrops,
+				    ahstat.ahs_hdrops,
+				    ipcompstat.ipcomps_hdrops);
+				return EINVAL;
+			}
 			/* ip6n will now contain the inner IPv6 header. */
-			m_copydata(m, ip->ip_hl << 2, sizeof(struct ip6_hdr),
+			m_copydata(m, skip, sizeof(struct ip6_hdr),
 			    (caddr_t) &ip6n);
 
 			/*
@@ -409,6 +430,13 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff,
 #ifdef INET
 		/* IP-in-IP encapsulation */
 		if (prot == IPPROTO_IPIP) {
+			if (m->m_pkthdr.len - skip < sizeof(struct ip)) {
+				m_freem(m);
+				IPSEC_ISTAT(espstat.esps_hdrops,
+				    ahstat.ahs_hdrops,
+				    ipcompstat.ipcomps_hdrops);
+				return EINVAL;
+			}
 			/* ipn will now contain the inner IPv4 header */
 			m_copydata(m, skip, sizeof(struct ip), (caddr_t) &ipn);
 
@@ -443,6 +471,13 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff,
 
 		/* IPv6-in-IP encapsulation */
 		if (prot == IPPROTO_IPV6) {
+			if (m->m_pkthdr.len - skip < sizeof(struct ip6_hdr)) {
+				m_freem(m);
+				IPSEC_ISTAT(espstat.esps_hdrops,
+				    ahstat.ahs_hdrops,
+				    ipcompstat.ipcomps_hdrops);
+				return EINVAL;
+			}
 			/* ip6n will now contain the inner IPv6 header. */
 			m_copydata(m, skip, sizeof(struct ip6_hdr),
 			    (caddr_t) &ip6n);
@@ -520,6 +555,9 @@ ipsec_common_input_cb(struct mbuf *m, struct tdb *tdbp, int skip, int protoff,
 		m->m_flags |= M_COMP;
 	else
 		m->m_flags |= M_AUTH | M_AUTH_AH;
+
+	if (tdbp->tdb_flags & TDBF_TUNNELING)
+		m->m_flags |= M_TUNNEL;
 
 #if NBPFILTER > 0
 	bpfif = &encif[0].sc_if;
@@ -612,6 +650,10 @@ esp_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlen, void *newp,
 	switch (name[0]) {
 	case ESPCTL_ENABLE:
 		return sysctl_int(oldp, oldlen, newp, newlen, &esp_enable);
+	case ESPCTL_UDPENCAP_ENABLE:
+		return sysctl_int(oldp, oldlen, newp, newlen, &udpencap_enable);
+	case ESPCTL_UDPENCAP_PORT:
+		return sysctl_int(oldp, oldlen, newp, newlen, &udpencap_port);
 	default:
 		return ENOPROTOOPT;
 	}
@@ -665,7 +707,7 @@ ah4_input(struct mbuf *m, ...)
 	va_end(ap);
 
 	ipsec_common_input(m, skip, offsetof(struct ip, ip_p), AF_INET,
-	    IPPROTO_AH);
+	    IPPROTO_AH, 0);
 	return;
 }
 
@@ -721,7 +763,7 @@ esp4_input(struct mbuf *m, ...)
 	va_end(ap);
 
 	ipsec_common_input(m, skip, offsetof(struct ip, ip_p), AF_INET,
-	    IPPROTO_ESP);
+	    IPPROTO_ESP, 0);
 }
 
 /* IPv4 ESP callback. */
@@ -763,7 +805,7 @@ ipcomp4_input(struct mbuf *m, ...)
 	va_end(ap);
 
 	ipsec_common_input(m, skip, offsetof(struct ip, ip_p), AF_INET,
-	    IPPROTO_IPCOMP);
+	    IPPROTO_IPCOMP, 0);
 }
 
 /* IPv4 IPCOMP callback */
@@ -910,7 +952,7 @@ ah6_input(struct mbuf **mp, int *offp, int proto)
 		}
 		protoff += offsetof(struct ip6_ext, ip6e_nxt);
 	}
-	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto);
+	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto, 0);
 	return IPPROTO_DONE;
 }
 
@@ -996,7 +1038,7 @@ esp6_input(struct mbuf **mp, int *offp, int proto)
 		}
 		protoff += offsetof(struct ip6_ext, ip6e_nxt);
 	}
-	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto);
+	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto, 0);
 	return IPPROTO_DONE;
 
 }
@@ -1050,7 +1092,7 @@ ipcomp6_input(struct mbuf **mp, int *offp, int proto)
 
 		protoff += offsetof(struct ip6_ext, ip6e_nxt);
 	}
-	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto);
+	ipsec_common_input(*mp, *offp, protoff, AF_INET6, proto, 0);
 	return IPPROTO_DONE;
 }
 

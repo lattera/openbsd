@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/safereg.h,v 1.4 2003/08/20 16:28:35 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/safereg.h,v 1.4.4.1 2004/02/19 10:56:29 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2003 Sam Leffler, Errno Consulting

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/frag6.c,v 1.6.2.5 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/frag6.c,v 1.6.2.6 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: frag6.c,v 1.40 2002/05/27 21:40:31 itojun Exp $	*/
 
 /*
@@ -133,7 +133,7 @@ do {									\
 void
 frag6_init()
 {
-	ip6_id = arc4random();
+
 	ip6q.ip6q_next = ip6q.ip6q_prev = &ip6q;
 }
 

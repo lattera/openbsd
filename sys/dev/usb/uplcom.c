@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uplcom.c,v 1.1.4.4 2003/05/13 19:35:12 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/uplcom.c,v 1.1.4.5 2004/02/19 10:56:34 niklas Exp $	*/
 /*	$NetBSD: uplcom.c,v 1.29 2002/09/23 05:51:23 simonb Exp $	*/
 /*
  * Copyright (c) 2001 The NetBSD Foundation, Inc.
@@ -38,8 +38,8 @@
 
 /*
  * Simple datasheet
- * http://www.prolific.com.tw/download/DataSheet/pl2303_ds11.PDF
- * http://www.nisseisg.co.jp/jyouhou/_cp/@gif/2303.pdf
+ * http://www.prolific.com.tw/PDF/PL-2303%20Market%20Spec.pdf
+ * http://www.hitachi-hitec.com/jyouhou/prolific/2303.pdf
  * 	(english)
  *
  */
@@ -165,6 +165,8 @@ static const struct usb_devno uplcom_devs[] = {
 	{ USB_VENDOR_TDK, USB_PRODUCT_TDK_UHA6400 },
 	/* TDK USB-PDC Adapter UPA9664 */
 	{ USB_VENDOR_TDK, USB_PRODUCT_TDK_UPA9664 },
+	/* Ericsson DCU-10 & DCU-11, made by Susteen, Inc. */
+	{ USB_VENDOR_SUSTEEN, USB_PRODUCT_SUSTEEN_DCU11 },
 };
 #define uplcom_lookup(v, p) usb_lookup(uplcom_devs, v, p)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/spif.c,v 1.2.4.3 2003/06/07 11:02:32 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/spif.c,v 1.2.4.4 2004/02/19 10:56:32 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999-2002 Jason L. Wright (jason@thought.net)
@@ -97,7 +97,7 @@ int	sbppread(dev_t, struct uio *, int);
 int	sbppwrite(dev_t, struct uio *, int);
 int	sbpp_rw(dev_t, struct uio *);
 int	spifppcintr(void *);
-int	sbppselect(dev_t, int, struct proc *);
+int	sbpppoll(dev_t, int, struct proc *);
 int	sbppioctl(dev_t, u_long, caddr_t, int, struct proc *);
 
 struct cfattach spif_ca = {
@@ -186,7 +186,7 @@ spifattach(parent, self, aux)
 	sc->sc_bustag = sa->sa_bustag;
 	if (sbus_bus_map(sa->sa_bustag, sa->sa_reg[0].sbr_slot,
 	    sa->sa_reg[0].sbr_offset, sa->sa_reg[0].sbr_size,
-	    BUS_SPACE_MAP_LINEAR, 0, &sc->sc_regh) != 0) {
+	    0, 0, &sc->sc_regh) != 0) {
 		printf(": can't map registers\n");
 		return;
 	}
@@ -216,14 +216,16 @@ spifattach(parent, self, aux)
 	}
 
 	sc->sc_ppcih = bus_intr_establish(sa->sa_bustag,
-	    sa->sa_intr[PARALLEL_INTR].sbi_pri, IPL_TTY, 0, spifppcintr, sc);
+	    sa->sa_intr[PARALLEL_INTR].sbi_pri, IPL_TTY, 0, spifppcintr, sc,
+	    self->dv_xname);
 	if (sc->sc_ppcih == NULL) {
 		printf(": failed to establish ppc interrupt\n");
 		goto fail_unmapregs;
 	}
 
 	sc->sc_stcih = bus_intr_establish(sa->sa_bustag,
-	    sa->sa_intr[SERIAL_INTR].sbi_pri, IPL_TTY, 0, spifstcintr, sc);
+	    sa->sa_intr[SERIAL_INTR].sbi_pri, IPL_TTY, 0, spifstcintr, sc,
+	    self->dv_xname);
 	if (sc->sc_stcih == NULL) {
 		printf(": failed to establish stc interrupt\n");
 		goto fail_unmapregs;
@@ -310,9 +312,6 @@ sttyattach(parent, dev, aux)
 		DTR_WRITE(sc, port, 0);
 
 		tp = ttymalloc();
-		if (tp == NULL)
-			break;
-		tty_attach(tp);
 
 		tp->t_oproc = stty_start;
 		tp->t_param = stty_param;
@@ -513,7 +512,7 @@ sttyioctl(dev, cmd, data, flags, p)
 		*((int *)data) = sp->sp_openflags;
 		break;
 	case TIOCSFLAGS:
-		if (suser(p->p_ucred, &p->p_acflag))
+		if (suser(p, 0))
 			error = EPERM;
 		else
 			sp->sp_openflags = *((int *)data) &
@@ -1125,12 +1124,12 @@ sbpp_rw(dev, uio)
 }
 
 int
-sbppselect(dev, rw, p)
+sbpppoll(dev, events, p)
 	dev_t dev;
-	int rw;
+	int events;
 	struct proc *p;
 {
-	return (ENODEV);
+	return (seltrue(dev, events, p));
 }
 
 int

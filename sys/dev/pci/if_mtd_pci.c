@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_mtd_pci.c,v 1.9 2003/09/29 10:05:07 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_mtd_pci.c,v 1.9.2.1 2004/02/19 10:56:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 2003 Oleg Safiullin <form@pdp11.org.ru>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_constant.c,v 1.1 1996/08/27 10:32:57 downsj Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_constant.c,v 1.1.16.1 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  reg_constant.c
  *
@@ -66,6 +66,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/systm.h>
+#include <sys/user.h>
 #include <machine/cpu.h>
 #include <machine/pcb.h>
 

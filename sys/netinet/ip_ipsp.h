@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.60.2.8 2003/05/13 19:36:17 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_ipsp.h,v 1.60.2.9 2004/02/19 10:57:24 niklas Exp $	*/
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
  * Angelos D. Keromytis (kermit@csd.uch.gr),
@@ -57,6 +57,9 @@ union sockaddr_union {
 #define	MD5HMAC96_KEYSIZE	16
 #define	SHA1HMAC96_KEYSIZE	20
 #define	RIPEMD160HMAC96_KEYSIZE	20
+#define	SHA2_256HMAC96_KEYSIZE	32
+#define	SHA2_384HMAC96_KEYSIZE	48
+#define	SHA2_512HMAC96_KEYSIZE	64
 
 #define	AH_HMAC_HASHLEN		12	/* 96 bits of authenticator */
 #define	AH_HMAC_RPLENGTH	4	/* 32 bits of replay counter */
@@ -66,7 +69,10 @@ union sockaddr_union {
 #define	AH_MD5_ALEN		16
 #define	AH_SHA1_ALEN		20
 #define	AH_RMD160_ALEN		20
-#define	AH_ALEN_MAX		20 	/* Keep updated */
+#define	AH_SHA2_256_ALEN	32
+#define	AH_SHA2_384_ALEN	48
+#define	AH_SHA2_512_ALEN	64
+#define	AH_ALEN_MAX		64 	/* Keep updated */
 
 /* Reserved SPI numbers */
 #define	SPI_LOCAL_USE		0
@@ -294,6 +300,7 @@ struct tdb {				/* tunnel descriptor block */
 #define	TDBF_RANDOMPADDING	0x04000	/* Random data in the ESP padding */
 #define	TDBF_SKIPCRYPTO		0x08000	/* Skip actual crypto processing */
 #define	TDBF_USEDTUNNEL		0x10000	/* Appended a tunnel header in past */
+#define	TDBF_UDPENCAP		0x20000	/* UDP encapsulation */
 
 	u_int32_t	tdb_flags;	/* Flags related to this TDB */
 
@@ -357,6 +364,8 @@ struct tdb {				/* tunnel descriptor block */
 	u_int32_t	tdb_mtu;	/* MTU at this point in the chain */
 	u_int64_t	tdb_mtutimeout;	/* When to ignore this entry */
 
+	u_int16_t	tdb_udpencap_port;	/* Peer UDP port */
+
 	struct sockaddr_encap   tdb_filter; /* What traffic is acceptable */
 	struct sockaddr_encap   tdb_filtermask; /* And the mask */
 
@@ -409,7 +418,7 @@ struct ipsecinit {
 static __inline u_int64_t
 htonq(u_int64_t q)
 {
-	register u_int32_t u, l;
+	u_int32_t u, l;
 	u = q >> 32;
 	l = (u_int32_t) q;
 
@@ -524,6 +533,8 @@ extern struct tdb *gettdbbyaddr(union sockaddr_union *, u_int8_t,
 extern struct tdb *gettdbbysrc(union sockaddr_union *, u_int8_t,
     struct ipsec_ref *, struct ipsec_ref *, struct mbuf *, int,
     struct sockaddr_encap *, struct sockaddr_encap *);
+extern struct tdb *gettdbbysrcdst(u_int32_t, union sockaddr_union *,
+    union sockaddr_union *, u_int8_t);
 extern void puttdb(struct tdb *);
 extern void tdb_delete(struct tdb *);
 extern struct tdb *tdb_alloc(void);
@@ -640,6 +651,7 @@ extern struct tdb *ipsp_spd_lookup(struct mbuf *, int, int, int *, int,
     struct tdb *, struct inpcb *);
 extern struct tdb *ipsp_spd_inp(struct mbuf *, int, int, int *, int,
     struct tdb *, struct inpcb *, struct ipsec_policy *);
+extern int ipsec_common_input(struct mbuf *, int, int, int, int, int);
 extern int ipsec_common_input_cb(struct mbuf *, struct tdb *, int, int,
     struct m_tag *);
 extern int ipsp_acquire_sa(struct ipsec_policy *, union sockaddr_union *,

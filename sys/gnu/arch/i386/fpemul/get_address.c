@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/get_address.c,v 1.1.16.2 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/get_address.c,v 1.1.16.3 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  get_address.c
  *
@@ -71,6 +71,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/systm.h>
+#include <sys/user.h>
 #include <machine/cpu.h>
 #include <machine/pcb.h>
 #include <machine/reg.h>

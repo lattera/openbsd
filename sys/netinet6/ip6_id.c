@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_id.c,v 1.3 2003/12/12 06:57:12 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_id.c,v 1.3.2.1 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$NetBSD: ip6_id.c,v 1.7 2003/09/13 21:32:59 itojun Exp $	*/
 /*	$KAME: ip6_id.c,v 1.8 2003/09/06 13:41:06 itojun Exp $	*/
 

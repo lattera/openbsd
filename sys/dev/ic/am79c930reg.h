@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.5 2003/03/28 00:38:12 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/Attic/am79c930reg.h,v 1.1.2.6 2004/02/19 10:56:17 niklas Exp $ */
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -98,7 +98,7 @@
 #define AM79C930_LMA_HI_ISAPWRDWN	0x80	
  
 /*
- * mmm, inconsistancy in chip documentation:
+ * mmm, inconsistency in chip documentation:
  * According to page 79--80, all four of the following are equivalent
  * and address the single byte pointed at by BSS_{FS,MBS} | LMA_{HI,LO}
  * According to tables on p63 and p67, they're the LSB through MSB

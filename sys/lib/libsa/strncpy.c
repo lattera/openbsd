@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/strncpy.c,v 1.1.14.1 2003/06/07 11:03:43 ho Exp $ */
+/*	$OpenBSD: src/sys/lib/libsa/strncpy.c,v 1.1.14.2 2004/02/19 10:57:19 niklas Exp $ */
 
 /*-
  * Copyright (c) 1996 Michael Shalayeff
@@ -31,13 +31,11 @@
 #include "stand.h"
 
 char *
-strncpy(s1, s2, n)
-	char *s1;
-	const char *s2;
-	size_t	n;
+strncpy(char *s1, const char *s2, size_t n)
 {
 	char *p = s1;
-	while(n-- && (*s1++ = *s2++) != '\0')
+
+	while (n-- && (*s1++ = *s2++) != '\0')
 		;
 	return p;
 }

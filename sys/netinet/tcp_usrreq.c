@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.6 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_usrreq.c,v 1.39.2.7 2004/02/19 10:57:24 niklas Exp $	*/
 /*	$NetBSD: tcp_usrreq.c,v 1.20 1996/02/13 23:44:16 christos Exp $	*/
 
 /*
@@ -137,8 +137,8 @@ tcp_usrreq(so, req, m, nam, control)
 	struct mbuf *m, *nam, *control;
 {
 	struct sockaddr_in *sin;
-	register struct inpcb *inp;
-	register struct tcpcb *tp = NULL;
+	struct inpcb *inp;
+	struct tcpcb *tp = NULL;
 	int s;
 	int error = 0;
 	int ostate;
@@ -484,7 +484,7 @@ tcp_usrreq(so, req, m, nam, control)
 		panic("tcp_usrreq");
 	}
 	if (tp && (so->so_options & SO_DEBUG))
-		tcp_trace(TA_USER, ostate, tp, NULL, req, 0);
+		tcp_trace(TA_USER, ostate, tp, (caddr_t)0, req, 0);
 	splx(s);
 	return (error);
 }
@@ -498,9 +498,9 @@ tcp_ctloutput(op, so, level, optname, mp)
 {
 	int error = 0, s;
 	struct inpcb *inp;
-	register struct tcpcb *tp;
-	register struct mbuf *m;
-	register int i;
+	struct tcpcb *tp;
+	struct mbuf *m;
+	int i;
 
 	s = splsoftnet();
 	inp = sotoinpcb(so);
@@ -563,7 +563,7 @@ tcp_ctloutput(op, so, level, optname, mp)
 			break;
 
 #ifdef TCP_SACK
-		case TCP_SACK_DISABLE:
+		case TCP_SACK_ENABLE:
 			if (m == NULL || m->m_len < sizeof (int)) {
 				error = EINVAL;
 				break;
@@ -580,13 +580,13 @@ tcp_ctloutput(op, so, level, optname, mp)
 			}
 
 			if (*mtod(m, int *))
-				tp->sack_disable = 1;
+				tp->sack_enable = 1;
 			else
-				tp->sack_disable = 0;
+				tp->sack_enable = 0;
 			break;
 #endif
 #ifdef TCP_SIGNATURE
-		case TCP_SIGNATURE_ENABLE:
+		case TCP_MD5SIG:
 			if (m == NULL || m->m_len < sizeof (int)) {
 				error = EINVAL;
 				break;
@@ -600,7 +600,7 @@ tcp_ctloutput(op, so, level, optname, mp)
 			if (*mtod(m, int *)) {
 				tp->t_flags |= TF_SIGNATURE;
 #ifdef TCP_SACK
-				tp->sack_disable = 1;
+				tp->sack_enable = 0;
 #endif /* TCP_SACK */
 			} else
 				tp->t_flags &= ~TF_SIGNATURE;
@@ -626,8 +626,13 @@ tcp_ctloutput(op, so, level, optname, mp)
 			*mtod(m, int *) = tp->t_maxseg;
 			break;
 #ifdef TCP_SACK
-		case TCP_SACK_DISABLE:
-			*mtod(m, int *) = tp->sack_disable;
+		case TCP_SACK_ENABLE:
+			*mtod(m, int *) = tp->sack_enable;
+			break;
+#endif
+#ifdef TCP_SIGNATURE
+		case TCP_MD5SIG:
+			*mtod(m, int *) = tp->t_flags & TF_SIGNATURE;
 			break;
 #endif
 		default:
@@ -658,7 +663,7 @@ int
 tcp_attach(so)
 	struct socket *so;
 {
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 	struct inpcb *inp;
 	int error;
 
@@ -703,7 +708,7 @@ tcp_attach(so)
  */
 struct tcpcb *
 tcp_disconnect(tp)
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 {
 	struct socket *so = tp->t_inpcb->inp_socket;
 
@@ -733,7 +738,7 @@ tcp_disconnect(tp)
  */
 struct tcpcb *
 tcp_usrclosed(tp)
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 {
 
 	switch (tp->t_state) {
@@ -834,15 +839,13 @@ tcp_ident(oldp, oldlenp, newp, newlen)
 		switch (tir.faddr.ss_family) {
 #ifdef INET6
 		case AF_INET6:
-			inp = in_pcblookup(&tcbtable, &f6,
-			    fin6->sin6_port, &l6, lin6->sin6_port,
-			    INPLOOKUP_WILDCARD | INPLOOKUP_IPV6);
+			inp = in6_pcblookup_listen(&tcbtable,
+			    &l6, lin6->sin6_port, 0);
 			break;
 #endif
 		case AF_INET:
-			inp = in_pcblookup(&tcbtable, &fin->sin_addr,
-			    fin->sin_port, &lin->sin_addr, lin->sin_port,
-			    INPLOOKUP_WILDCARD);
+			inp = in_pcblookup_listen(&tcbtable, 
+			    lin->sin_addr, lin->sin_port, 0);
 			break;
 		}
 	}
@@ -927,6 +930,15 @@ tcp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
 		return (sysctl_int(oldp, oldlenp, newp, newlen,
 		   &tcp_do_ecn));
 #endif
+	case TCPCTL_SYN_CACHE_LIMIT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		   &tcp_syn_cache_limit));
+	case TCPCTL_SYN_BUCKET_LIMIT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		   &tcp_syn_bucket_limit));
+	case TCPCTL_RFC3390:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &tcp_do_rfc3390));
 	default:
 		return (ENOPROTOOPT);
 	}

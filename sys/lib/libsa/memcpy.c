@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/memcpy.c,v 1.3.14.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/memcpy.c,v 1.3.14.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: bcopy.c,v 1.5 1995/04/22 13:46:50 cgd Exp $	*/
 
 /*-
@@ -39,13 +39,10 @@
  * This is designed to be small, not fast.
  */
 void *
-memcpy(s1, s2, n)
-	void *s1;
-	const void *s2;
-	size_t n;
+memcpy(void *s1, const void *s2, size_t n)
 {
-	register const char *f = s2;
-	register char *t = s1;
+	const char *f = s2;
+	char *t = s1;
 
 	if (f < t) {
 		f += n;

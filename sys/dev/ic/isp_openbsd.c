@@ -1,4 +1,4 @@
-/* 	$OpenBSD: src/sys/dev/ic/isp_openbsd.c,v 1.6.2.7 2003/03/28 00:38:14 niklas Exp $ */
+/* 	$OpenBSD: src/sys/dev/ic/isp_openbsd.c,v 1.6.2.8 2004/02/19 10:56:19 niklas Exp $ */
 /*
  * Platform (OpenBSD) dependent common attachment code for Qlogic adapters.
  *
@@ -293,7 +293,7 @@ ispcmd(XS_T *xs)
 	timeout_set(&xs->stimeout, isp_wdog, isp);
 
 	if (XS_LUN(xs) >= isp->isp_maxluns) {
-		xs->error = XS_SELTIMEOUT;;
+		xs->error = XS_SELTIMEOUT;
 		return (COMPLETE);
 	}
 
@@ -517,7 +517,7 @@ isp_wdog(void *arg)
 			(void) isp_control(isp, ISPCTL_ABORT_CMD, arg);
 
 			/*
-			 * After this point, the comamnd is really dead.
+			 * After this point, the command is really dead.
 			 */
 			if (XS_XFRLEN(xs)) {
 				ISP_DMAFREE(isp, xs, handle);
@@ -621,8 +621,8 @@ isp_requeue(void *arg)
 }
 
 /*
- * Restart function after a LOOP UP event or a commmand completing,
- * somtimes done as a timeout for some hysteresis.
+ * Restart function after a LOOP UP event or a command completing,
+ * sometimes done as a timeout for some hysteresis.
  */
 static void
 isp_trestart(void *arg)
@@ -690,7 +690,7 @@ isp_async(struct ispsoftc *isp, ispasync_t cmd, void *arg)
 		bus = (tgt >> 16) & 0xffff;
 		tgt &= 0xffff;
 		sdp += bus;
-		flags = sdp->isp_devparam[tgt].actv_flags;;
+		flags = sdp->isp_devparam[tgt].actv_flags;
 		period = sdp->isp_devparam[tgt].actv_period;
 
 		if ((flags & DPARM_SYNC) && period &&

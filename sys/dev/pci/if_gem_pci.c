@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.2.4.5 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_gem_pci.c,v 1.2.4.6 2004/02/19 10:56:27 niklas Exp $	*/
 /*	$NetBSD: if_gem_pci.c,v 1.1 2001/09/16 00:11:42 eeh Exp $ */
 
 /*
@@ -44,8 +44,6 @@
 
 #include <machine/endian.h>
 
-#include <uvm/uvm_extern.h>
- 
 #include <net/if.h>
 #include <net/if_dl.h>
 #include <net/if_media.h>

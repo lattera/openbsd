@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/sbus/dma_sbus.c,v 1.5.4.4 2003/06/07 11:02:32 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/sbus/dma_sbus.c,v 1.5.4.5 2004/02/19 10:56:32 niklas Exp $	*/
 /*	$NetBSD: dma_sbus.c,v 1.5 2000/07/09 20:57:42 pk Exp $ */
 
 /*-
@@ -101,7 +101,8 @@ void	*dmabus_intr_establish(
 		int,			/*`device class' level*/
 		int,			/*flags*/
 		int (*)(void *),	/*handler*/
-		void *);		/*handler arg*/
+		void *,			/*handler arg*/
+		const char *);		/*what*/
 
 static	bus_space_tag_t dma_alloc_bustag(struct dma_softc *sc);
 
@@ -122,9 +123,7 @@ struct cfdriver dma_cd = {
 };
 
 int
-dmaprint_sbus(aux, busname)
-	void *aux;
-	const char *busname;
+dmaprint_sbus(void *aux, const char *busname)
 {
 	struct sbus_attach_args *sa = aux;
 	bus_space_tag_t t = sa->sa_bustag;
@@ -137,10 +136,7 @@ dmaprint_sbus(aux, busname)
 }
 
 int
-dmamatch_sbus(parent, vcf, aux)
-	struct device *parent;
-	void *vcf;
-	void *aux;
+dmamatch_sbus(struct device *parent, void *vcf, void *aux)
 {
 	struct cfdata *cf = vcf;
 	struct sbus_attach_args *sa = aux;
@@ -254,7 +250,8 @@ dmabus_intr_establish(
 	int level,
 	int flags,
 	int (*handler)(void *),
-	void *arg)
+	void *arg,
+	const char *what)
 {
 	struct lsi64854_softc *sc = t->cookie;
 
@@ -269,16 +266,17 @@ dmabus_intr_establish(
 	for (t = t->parent; t; t = t->parent) {
 		if (t->sparc_intr_establish != NULL)
 			return ((*t->sparc_intr_establish)
-				(t, t0, pri, level, flags, handler, arg));
+				(t, t0, pri, level, flags, handler, arg, what));
 
 	}
+
+	panic("dmabus_intr_establish: no handler found");
 
 	return (NULL);
 }
 
 bus_space_tag_t
-dma_alloc_bustag(sc)
-	struct dma_softc *sc;
+dma_alloc_bustag(struct dma_softc *sc)
 {
 	struct sparc_bus_space_tag *sbt;
 

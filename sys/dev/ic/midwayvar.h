@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/midwayvar.h,v 1.9.14.1 2002/03/28 11:51:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/midwayvar.h,v 1.9.14.2 2004/02/19 10:56:19 niklas Exp $	*/
 
 /*
  *
@@ -50,7 +50,7 @@
 #define EN_NTX          8       /* number of tx bufs to use */
 #endif
 #ifndef EN_TXSZ
-#define EN_TXSZ         32      /* trasmit buf size in KB */
+#define EN_TXSZ         32      /* transmit buf size in KB */
 #endif
 #ifndef EN_RXSZ
 #define EN_RXSZ         32      /* recv buf size in KB */

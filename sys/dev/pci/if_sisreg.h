@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.4 2003/03/28 00:38:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_sisreg.h,v 1.1.2.5 2004/02/19 10:56:27 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ee.columbia.edu>.  All rights reserved.
@@ -75,8 +75,10 @@
 #define SIS_TIMEUNIT		0xA4
 #define SIS_GPIO		0xB8
 
-/* NS DP83815 registers */
+/* NS DP83815/6 registers */
+#define NS_IHR			0x1C
 #define NS_CLKRUN		0x3C
+#define NS_SRR			0x58
 #define NS_BMCR			0x80
 #define NS_BMSR			0x84
 #define NS_PHYIDR1		0x88
@@ -97,6 +99,11 @@
 #define NS_CLKRUN_PMESTS	0x00008000
 #define NS_CLKRUN_PMEENB	0x00000100
 #define NS_CLNRUN_CLKRUN_ENB	0x00000001
+
+/* NS silicon revisions */
+#define NS_SRR_15C		0x302
+#define NS_SRR_15D		0x403
+#define NS_SRR_16A		0x505
 
 #define SIS_CSR_TX_ENABLE	0x00000001
 #define SIS_CSR_TX_DISABLE	0x00000002
@@ -119,6 +126,10 @@
 #define SIS_EECTL_DOUT		0x00000002
 #define SIS_EECTL_CLK		0x00000004
 #define SIS_EECTL_CSEL		0x00000008
+
+#define	SIS_MII_CLK		0x00000040
+#define	SIS_MII_DIR		0x00000020
+#define	SIS_MII_DATA		0x00000010
 
 #define SIS_EECMD_WRITE		0x140
 #define SIS_EECMD_READ		0x180
@@ -380,6 +391,23 @@ struct sis_type {
 	char			*sis_name;
 };
 
+struct sis_mii_frame {
+	u_int8_t		mii_stdelim;
+	u_int8_t		mii_opcode;
+	u_int8_t		mii_phyaddr;
+	u_int8_t		mii_regaddr;
+	u_int8_t		mii_turnaround;
+	u_int16_t		mii_data;
+};
+
+/*
+ * MII constants
+ */
+#define	SIS_MII_STARTDELIM	0x01
+#define	SIS_MII_READOP		0x02
+#define	SIS_MII_WRITEOP		0x01
+#define	SIS_MII_TURNAROUND	0x02
+
 #define SIS_TYPE_900	1
 #define SIS_TYPE_7016	2
 #define SIS_TYPE_83815	3
@@ -391,10 +419,10 @@ struct sis_softc {
 	mii_data_t		sc_mii;
 	bus_space_handle_t	sis_bhandle;
 	bus_space_tag_t		sis_btag;
-	u_int8_t		sis_unit;
 	u_int8_t		sis_type;
 	u_int8_t		sis_rev;
 	u_int8_t		sis_link;
+	u_int			sis_srr;
 	struct sis_list_data	*sis_ldata;
 	struct sis_ring_data	sis_cdata;
 	struct timeout		sis_timeout;
@@ -405,6 +433,7 @@ struct sis_softc {
 	caddr_t			sc_listkva;
 	bus_dmamap_t		sc_rx_sparemap;
 	bus_dmamap_t		sc_tx_sparemap;
+	int			sis_stopped;
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.10 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty.c,v 1.38.2.11 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
@@ -56,6 +56,7 @@
 #include <sys/resourcevar.h>
 #include <sys/sysctl.h>
 #include <sys/pool.h>
+#include <sys/poll.h>
 
 #include <sys/namei.h>
 
@@ -845,7 +846,7 @@ ttioctl(tp, cmd, data, flag, p)
 		*(struct winsize *)data = tp->t_winsize;
 		break;
 	case TIOCGPGRP:			/* get pgrp of tty */
-		if (!isctty(p, tp) && suser(p->p_ucred, &p->p_acflag))
+		if (!isctty(p, tp) && suser(p, 0))
 			return (ENOTTY);
 		*(int *)data = tp->t_pgrp ? tp->t_pgrp->pg_id : NO_PID;
 		break;
@@ -1026,35 +1027,35 @@ ttioctl(tp, cmd, data, flag, p)
 }
 
 int
-ttselect(device, rw, p)
+ttpoll(device, events, p)
 	dev_t device;
-	int rw;
+	int events;
 	struct proc *p;
 {
-	register struct tty *tp;
-	int nread, s;
+	struct tty *tp;
+	int revents, s;
 
 	tp = (*cdevsw[major(device)].d_tty)(device);
 
+	revents = 0;
 	s = spltty();
-	switch (rw) {
-	case FREAD:
-		nread = ttnread(tp);
-		if (nread > 0 || (!ISSET(tp->t_cflag, CLOCAL) &&
-				  !ISSET(tp->t_state, TS_CARR_ON)))
-			goto win;
-		selrecord(p, &tp->t_rsel);
-		break;
-	case FWRITE:
-		if (tp->t_outq.c_cc <= tp->t_lowat) {
-win:			splx(s);
-			return (1);
-		}
-		selrecord(p, &tp->t_wsel);
-		break;
+	if (events & (POLLIN | POLLRDNORM)) {
+		if (ttnread(tp) > 0 || (!ISSET(tp->t_cflag, CLOCAL) &&
+		    !ISSET(tp->t_state, TS_CARR_ON)))
+			revents |= events & (POLLIN | POLLRDNORM);
+	}
+	if (events & (POLLOUT | POLLWRNORM)) {
+		if (tp->t_outq.c_cc <= tp->t_lowat)
+			revents |= events & (POLLOUT | POLLWRNORM);
+	}
+	if (revents == 0) {
+		if (events & (POLLIN | POLLRDNORM))
+			selrecord(p, &tp->t_rsel);
+		if (events & (POLLOUT | POLLWRNORM))
+			selrecord(p, &tp->t_wsel);
 	}
 	splx(s);
-	return (0);
+	return (revents);
 }
 
 struct filterops ttyread_filtops =
@@ -1175,8 +1176,8 @@ ttywait(tp)
 	error = 0;
 	s = spltty();
 	while ((tp->t_outq.c_cc || ISSET(tp->t_state, TS_BUSY)) &&
-	    (ISSET(tp->t_state, TS_CARR_ON) || ISSET(tp->t_cflag, CLOCAL))
-	    && tp->t_oproc) {
+	    (ISSET(tp->t_state, TS_CARR_ON) || ISSET(tp->t_cflag, CLOCAL)) &&
+	    tp->t_oproc) {
 		(*tp->t_oproc)(tp);
 		if ((tp->t_outq.c_cc || ISSET(tp->t_state, TS_BUSY)) &&
 		    (ISSET(tp->t_state, TS_CARR_ON) || ISSET(tp->t_cflag, CLOCAL))
@@ -2260,45 +2261,8 @@ tty_init()
 }
 
 /*
- * Attach a tty to the tty list.
- *
- * This should be called ONLY once per real tty (including pty's).
- * eg, on the sparc, the keyboard and mouse have struct tty's that are
- * distinctly NOT usable as tty's, and thus should not be attached to
- * the ttylist.  This is why this call is not done from ttymalloc().
- *
- * Device drivers should attach tty's at a similar time that they are
- * ttymalloc()'ed, or, for the case of statically allocated struct tty's
- * either in the attach or (first) open routine.
- */
-void
-tty_attach(tp)
-	struct tty *tp;
-{
-
-	TAILQ_INSERT_TAIL(&ttylist, tp, tty_link);
-	++tty_count;
-	timeout_set(&tp->t_rstrt_to, ttrstrt, tp);
-}
-
-/*
- * Remove a tty from the tty list.
- */
-void
-tty_detach(tp)
-	struct tty *tp;
-{
-
-	--tty_count;
-#ifdef DIAGNOSTIC
-	if (tty_count < 0)
-		panic("tty_detach: tty_count < 0");
-#endif
-	TAILQ_REMOVE(&ttylist, tp, tty_link);
-}
-
-/*
- * Allocate a tty structure and its associated buffers.
+ * Allocate a tty structure and its associated buffers, and attach it to the
+ * tty list.
  */
 struct tty *
 ttymalloc()
@@ -2312,19 +2276,29 @@ ttymalloc()
 	clalloc(&tp->t_canq, 1024, 1);
 	/* output queue doesn't need quoting */
 	clalloc(&tp->t_outq, 1024, 0);
+
+	TAILQ_INSERT_TAIL(&ttylist, tp, tty_link);
+	++tty_count;
+	timeout_set(&tp->t_rstrt_to, ttrstrt, tp);
+
 	return(tp);
 }
 
+
 /*
- * Free a tty structure and its buffers.
- *
- * Be sure to call tty_detach() for any tty that has been
- * tty_attach()ed.
+ * Free a tty structure and its buffers, after removing it from the tty list.
  */
 void
 ttyfree(tp)
 	struct tty *tp;
 {
+
+	--tty_count;
+#ifdef DIAGNOSTIC
+	if (tty_count < 0)
+		panic("ttyfree: tty_count < 0");
+#endif
+	TAILQ_REMOVE(&ttylist, tp, tty_link);
 
 	clfree(&tp->t_rawq);
 	clfree(&tp->t_canq);

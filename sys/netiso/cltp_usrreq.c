@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/cltp_usrreq.c,v 1.2.16.2 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/cltp_usrreq.c,v 1.2.16.3 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: cltp_usrreq.c,v 1.9 1996/02/13 22:08:59 christos Exp $	*/
 
 /*
@@ -55,7 +55,7 @@
 #include <netiso/tp_param.h>
 #include <netiso/tp_var.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 #endif
 
 
@@ -79,10 +79,10 @@ cltp_input(struct mbuf *m0, ...)
 {
 	struct sockaddr *srcsa, *dstsa;
 	u_int           cons_channel;
-	register struct isopcb *isop;
-	register struct mbuf *m = m0;
-	register u_char *up = mtod(m, u_char *);
-	register struct sockaddr_iso *src;
+	struct isopcb *isop;
+	struct mbuf *m = m0;
+	u_char *up = mtod(m, u_char *);
+	struct sockaddr_iso *src;
 	int             len, hdrlen = *up + 1, dlen = 0;
 	u_char         *uplim = up + hdrlen;
 	caddr_t         dtsap = NULL;
@@ -169,7 +169,7 @@ bad:
  */
 void
 cltp_notify(isop)
-	register struct isopcb *isop;
+	struct isopcb *isop;
 {
 
 	sorwakeup(isop->isop_socket);
@@ -185,7 +185,7 @@ cltp_ctlinput(cmd, sa, dummy)
 	extern u_char   inetctlerrmap[];
 	struct sockaddr_iso *siso;
 
-	if ((unsigned) cmd > PRC_NCMDS)
+	if ((unsigned) cmd >= PRC_NCMDS)
 		return;
 	if (sa->sa_family != AF_ISO && sa->sa_family != AF_CCITT)
 		return;
@@ -214,11 +214,11 @@ cltp_ctlinput(cmd, sa, dummy)
 int
 cltp_output(struct mbuf *m, ...)
 {
-	register struct isopcb *isop;
-	register int    len;
-	register struct sockaddr_iso *siso;
+	struct isopcb *isop;
+	int    len;
+	struct sockaddr_iso *siso;
 	int             hdrlen, error = 0, docsum;
-	register u_char *up;
+	u_char *up;
 	va_list ap;
 
 	va_start(ap, m);
@@ -282,7 +282,7 @@ cltp_usrreq(so, req, m, nam, control)
 	int             req;
 	struct mbuf    *m, *nam, *control;
 {
-	register struct isopcb *isop = sotoisopcb(so);
+	struct isopcb *isop = sotoisopcb(so);
 	int             s = 0, error = 0;
 
 	if (req == PRU_CONTROL)

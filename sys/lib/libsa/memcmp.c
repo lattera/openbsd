@@ -31,7 +31,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/sys/lib/libsa/memcmp.c,v 1.4.14.1 2003/06/07 11:03:42 ho Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libsa/memcmp.c,v 1.4.14.2 2004/02/19 10:57:19 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include "stand.h"
@@ -40,12 +40,10 @@ static char *rcsid = "$OpenBSD: src/sys/lib/libsa/memcmp.c,v 1.4.14.1 2003/06/07
  * Compare memory regions.
  */
 int
-memcmp(s1, s2, n)
-	const void *s1, *s2;
-	size_t n;
+memcmp(const void *s1, const void *s2, size_t n)
 {
 	if (n != 0) {
-		register const unsigned char *p1 = s1, *p2 = s2;
+		const unsigned char *p1 = s1, *p2 = s2;
 
 		do {
 			if (*p1++ != *p2++)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.5 2003/03/28 00:38:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_xe.c,v 1.11.2.6 2004/02/19 10:56:31 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Niklas Hallqvist, Brandon Creighton, Job de Haas
@@ -327,7 +327,7 @@ xe_pcmcia_attach(parent, self, aux)
 	sc->sc_flags = xe_pcmcia_interpret_manfid(parent);
 
 	/*
-	 * Configuration as adviced by DINGO documentation.
+	 * Configuration as advised by DINGO documentation.
 	 * We only know about this flag after the manfid interpretation.
 	 * Dingo has some extra configuration registers in the CCR space.
 	 */

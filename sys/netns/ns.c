@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netns/Attic/ns.c,v 1.2.16.2 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netns/Attic/ns.c,v 1.2.16.3 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: ns.c,v 1.10 1996/02/13 22:13:49 christos Exp $	*/
 
 /*
@@ -63,11 +63,11 @@ ns_control(so, cmd, data, ifp)
 	struct socket *so;
 	u_long cmd;
 	caddr_t data;
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 {
-	register struct ifreq *ifr = (struct ifreq *)data;
-	register struct ns_aliasreq *ifra = (struct ns_aliasreq *)data;
-	register struct ns_ifaddr *ia;
+	struct ifreq *ifr = (struct ifreq *)data;
+	struct ns_aliasreq *ifra = (struct ns_aliasreq *)data;
+	struct ns_ifaddr *ia;
 	int dstIsNew, hostIsNew, error = 0;
 
 	/*
@@ -213,8 +213,8 @@ ns_control(so, cmd, data, ifp)
 */
 void
 ns_ifscrub(ifp, ia)
-	register struct ifnet *ifp;
-	register struct ns_ifaddr *ia; 
+	struct ifnet *ifp;
+	struct ns_ifaddr *ia; 
 {
 	if (ia->ia_flags & IFA_ROUTE) {
 		if (ifp->if_flags & IFF_POINTOPOINT) {
@@ -230,13 +230,13 @@ ns_ifscrub(ifp, ia)
  */
 int
 ns_ifinit(ifp, ia, sns, scrub)
-	register struct ifnet *ifp;
-	register struct ns_ifaddr *ia;
-	register struct sockaddr_ns *sns;
+	struct ifnet *ifp;
+	struct ns_ifaddr *ia;
+	struct sockaddr_ns *sns;
 	int scrub;
 {
 	struct sockaddr_ns oldaddr;
-	register union ns_host *h = &ia->ia_addr.sns_addr.x_host;
+	union ns_host *h = &ia->ia_addr.sns_addr.x_host;
 	int s = splimp(), error;
 
 	/*
@@ -306,11 +306,11 @@ bad:
  */
 struct ns_ifaddr *
 ns_iaonnetof(dst)
-	register struct ns_addr *dst;
+	struct ns_addr *dst;
 {
-	register struct ns_ifaddr *ia;
-	register struct ns_addr *compare;
-	register struct ifnet *ifp;
+	struct ns_ifaddr *ia;
+	struct ns_addr *compare;
+	struct ifnet *ifp;
 	struct ns_ifaddr *ia_maybe = 0;
 	union ns_net net = dst->x_net;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.64.2.10 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.64.2.11 2004/02/19 10:57:24 niklas Exp $	*/
 /*	$NetBSD: ip_output.c,v 1.28 1996/02/13 23:43:07 christos Exp $	*/
 
 /*
@@ -146,7 +146,7 @@ ip_output(struct mbuf *m0, ...)
 	 */
 	if ((flags & (IP_FORWARDING|IP_RAWOUTPUT)) == 0) {
 		ip->ip_v = IPVERSION;
-		ip->ip_off &= IP_DF;
+		ip->ip_off &= htons(IP_DF);
 		ip->ip_id = htons(ip_randomid());
 		ip->ip_hl = hlen >> 2;
 		ipstat.ips_localout++;
@@ -531,7 +531,7 @@ ip_output(struct mbuf *m0, ...)
 		}
 
 		/* Don't allow broadcast messages to be fragmented */
-		if ((u_int16_t)ip->ip_len > ifp->if_mtu) {
+		if (ntohs(ip->ip_len) > ifp->if_mtu) {
 			error = EMSGSIZE;
 			goto bad;
 		}
@@ -546,7 +546,7 @@ sendit:
 	 */
 	if ((flags & IP_MTUDISC) && ro && ro->ro_rt &&
 	    (ro->ro_rt->rt_rmx.rmx_locks & RTV_MTU) == 0)
-		ip->ip_off |= IP_DF;
+		ip->ip_off |= htons(IP_DF);
 
 #ifdef IPSEC
 	/*
@@ -584,8 +584,8 @@ sendit:
 		}
 
 		/* Check if we are allowed to fragment */
-		if (ip_mtudisc && (ip->ip_off & IP_DF) && tdb->tdb_mtu &&
-		    (u_int16_t)ip->ip_len > tdb->tdb_mtu &&
+		if (ip_mtudisc && (ip->ip_off & htons(IP_DF)) && tdb->tdb_mtu &&
+		    ntohs(ip->ip_len) > tdb->tdb_mtu &&
 		    tdb->tdb_mtutimeout > time.tv_sec) {
 			struct rtentry *rt = NULL;
 
@@ -612,10 +612,6 @@ sendit:
 			error = EMSGSIZE;
 			goto bad;
 		}
-
-		/* Massage the IP header for use by the IPsec code */
-		ip->ip_len = htons((u_short) ip->ip_len);
-		ip->ip_off = htons((u_short) ip->ip_off);
 
 		/*
 		 * Clear these -- they'll be set in the recursive invocation
@@ -677,9 +673,7 @@ sendit:
 	/*
 	 * If small enough for interface, can just send directly.
 	 */
-	if ((u_int16_t)ip->ip_len <= mtu) {
-		ip->ip_len = htons((u_int16_t)ip->ip_len);
-		ip->ip_off = htons((u_int16_t)ip->ip_off);
+	if (ntohs(ip->ip_len) <= mtu) {
 		if ((ifp->if_capabilities & IFCAP_CSUM_IPv4) &&
 		    ifp->if_bridge == NULL) {
 			m->m_pkthdr.csum |= M_IPV4_CSUM_OUT;
@@ -701,7 +695,7 @@ sendit:
 	 * Too large for interface; fragment if possible.
 	 * Must be able to put at least 8 bytes per fragment.
 	 */
-	if (ip->ip_off & IP_DF) {
+	if (ip->ip_off & htons(IP_DF)) {
 #ifdef IPSEC
 		icmp_mtu = ifp->if_mtu;
 #endif
@@ -723,7 +717,7 @@ sendit:
 	}
 
 	error = ip_fragment(m, ifp, mtu);
-	if (error == EMSGSIZE)
+	if (error)
 		goto bad;
 
 	for (; m; m = m0) {
@@ -786,7 +780,7 @@ ip_fragment(struct mbuf *m, struct ifnet *ifp, u_long mtu)
 	 */
 	m0 = m;
 	mhlen = sizeof (struct ip);
-	for (off = hlen + len; off < (u_int16_t)ip->ip_len; off += len) {
+	for (off = hlen + len; off < ntohs(ip->ip_len); off += len) {
 		MGETHDR(m, M_DONTWAIT, MT_HEADER);
 		if (m == 0) {
 			ipstat.ips_odropped++;
@@ -804,11 +798,12 @@ ip_fragment(struct mbuf *m, struct ifnet *ifp, u_long mtu)
 			mhip->ip_hl = mhlen >> 2;
 		}
 		m->m_len = mhlen;
-		mhip->ip_off = ((off - hlen) >> 3) + (ip->ip_off & ~IP_MF);
-		if (ip->ip_off & IP_MF)
+		mhip->ip_off = ((off - hlen) >> 3) +
+		    (ntohs(ip->ip_off) & ~IP_MF);
+		if (ip->ip_off & htons(IP_MF))
 			mhip->ip_off |= IP_MF;
-		if (off + len >= (u_int16_t)ip->ip_len)
-			len = (u_int16_t)ip->ip_len - off;
+		if (off + len >= ntohs(ip->ip_len))
+			len = ntohs(ip->ip_len) - off;
 		else
 			mhip->ip_off |= IP_MF;
 		mhip->ip_len = htons((u_int16_t)(len + mhlen));
@@ -835,10 +830,10 @@ ip_fragment(struct mbuf *m, struct ifnet *ifp, u_long mtu)
 	 * and updating header, then send each fragment (in order).
 	 */
 	m = m0;
-	m_adj(m, hlen + firstlen - (u_int16_t)ip->ip_len);
+	m_adj(m, hlen + firstlen - ntohs(ip->ip_len));
 	m->m_pkthdr.len = hlen + firstlen;
 	ip->ip_len = htons((u_int16_t)m->m_pkthdr.len);
-	ip->ip_off = htons((u_int16_t)(ip->ip_off | IP_MF));
+	ip->ip_off |= htons(IP_MF);
 	if ((ifp->if_capabilities & IFCAP_CSUM_IPv4) &&
 	    ifp->if_bridge == NULL) {
 		m->m_pkthdr.csum |= M_IPV4_CSUM_OUT;
@@ -868,7 +863,7 @@ ip_insertoptions(m, opt, phlen)
 	unsigned optlen;
 
 	optlen = opt->m_len - sizeof(p->ipopt_dst);
-	if (optlen + (u_int16_t)ip->ip_len > IP_MAXPACKET)
+	if (optlen + ntohs(ip->ip_len) > IP_MAXPACKET)
 		return (m);		/* XXX should fail */
 	if (p->ipopt_dst.s_addr)
 		ip->ip_dst = p->ipopt_dst;
@@ -894,7 +889,7 @@ ip_insertoptions(m, opt, phlen)
 	ip = mtod(m, struct ip *);
 	bcopy((caddr_t)p->ipopt_list, (caddr_t)(ip + 1), (unsigned)optlen);
 	*phlen = sizeof(struct ip) + optlen;
-	ip->ip_len += optlen;
+	ip->ip_len = htons(ntohs(ip->ip_len) + optlen);
 	return (m);
 }
 
@@ -1094,7 +1089,7 @@ ip_ctloutput(op, so, level, optname, mp)
 			switch (optname) {
 			case IP_AUTH_LEVEL:
 				if (optval < ipsec_auth_default_level &&
-				    suser(p->p_ucred, &p->p_acflag)) {
+				    suser(p, 0)) {
 					error = EACCES;
 					break;
 				}
@@ -1103,7 +1098,7 @@ ip_ctloutput(op, so, level, optname, mp)
 
 			case IP_ESP_TRANS_LEVEL:
 				if (optval < ipsec_esp_trans_default_level &&
-				    suser(p->p_ucred, &p->p_acflag)) {
+				    suser(p, 0)) {
 					error = EACCES;
 					break;
 				}
@@ -1112,7 +1107,7 @@ ip_ctloutput(op, so, level, optname, mp)
 
 			case IP_ESP_NETWORK_LEVEL:
 				if (optval < ipsec_esp_network_default_level &&
-				    suser(p->p_ucred, &p->p_acflag)) {
+				    suser(p, 0)) {
 					error = EACCES;
 					break;
 				}
@@ -1120,7 +1115,7 @@ ip_ctloutput(op, so, level, optname, mp)
 				break;
 			case IP_IPCOMP_LEVEL:
 				if (optval < ipsec_ipcomp_default_level &&
-				    suser(p->p_ucred, &p->p_acflag)) {
+				    suser(p, 0)) {
 					error = EACCES;
 					break;
 				}
@@ -1440,7 +1435,7 @@ ip_ctloutput(op, so, level, optname, mp)
 				m->m_len += ipr->ref_len;
 				*mtod(m, u_int16_t *) = ipr->ref_type;
 				m_copyback(m, sizeof(u_int16_t), ipr->ref_len,
-					   (caddr_t)(ipr + 1));
+				    ipr + 1);
 			}
 #endif
 			break;
@@ -1884,8 +1879,6 @@ ip_mloopback(ifp, m, dst)
 		 * than the interface's MTU.  Can this possibly matter?
 		 */
 		ip = mtod(copym, struct ip *);
-		ip->ip_len = htons((u_int16_t)ip->ip_len);
-		ip->ip_off = htons((u_int16_t)ip->ip_off);
 		ip->ip_sum = 0;
 		ip->ip_sum = in_cksum(copym, ip->ip_hl << 2);
 		(void) looutput(ifp, copym, sintosa(dst), NULL);
@@ -1921,7 +1914,7 @@ in_delayed_cksum(struct mbuf *m)
 	}
 
 	if ((offset + sizeof(u_int16_t)) > m->m_len)
-		m_copyback(m, offset, sizeof(csum), (caddr_t) &csum);
+		m_copyback(m, offset, sizeof(csum), &csum);
 	else
 		*(u_int16_t *)(mtod(m, caddr_t) + offset) = csum;
 }

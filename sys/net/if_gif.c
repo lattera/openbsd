@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.6 2003/05/13 19:36:15 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/if_gif.c,v 1.7.2.7 2004/02/19 10:57:21 niklas Exp $	*/
 /*	$KAME: if_gif.c,v 1.43 2001/02/20 08:51:07 itojun Exp $	*/
 
 /*
@@ -63,44 +63,87 @@
 
 extern int ifqmaxlen;
 
-int ngif;
-void gifattach(int);
+void	gifattach(int);
+int	gif_clone_create(struct if_clone *, int);
+int	gif_clone_destroy(struct ifnet *);
 
 /*
  * gif global variable definitions
  */
-struct gif_softc *gif_softc = 0;
+struct gif_softc_head gif_softc_list;
+struct if_clone gif_cloner =
+    IF_CLONE_INITIALIZER("gif", gif_clone_create, gif_clone_destroy);
 
+/* ARGSUSED */
 void
-gifattach(n)
-	int n;
+gifattach(count)
+	int count;
 {
-	register struct gif_softc *sc;
-	register int i;
+	LIST_INIT(&gif_softc_list);
+	if_clone_attach(&gif_cloner);
+}
 
-	ngif = n;
-	gif_softc = sc = malloc (ngif * sizeof(struct gif_softc),
-	    M_DEVBUF, M_WAIT);
-	bzero(sc, ngif * sizeof(struct gif_softc));
-	for (i = 0; i < ngif; sc++, i++) {
-		snprintf(sc->gif_if.if_xname, sizeof sc->gif_if.if_xname,
-		    "gif%d", i);
-		sc->gif_if.if_mtu    = GIF_MTU;
-		sc->gif_if.if_flags  = IFF_POINTOPOINT | IFF_MULTICAST;
-		sc->gif_if.if_ioctl  = gif_ioctl;
-		sc->gif_if.if_start = gif_start;
-		sc->gif_if.if_output = gif_output;
-		sc->gif_if.if_type   = IFT_GIF;
-		sc->gif_if.if_snd.ifq_maxlen = ifqmaxlen;
-		sc->gif_if.if_softc = sc;
-		if_attach(&sc->gif_if);
-		if_alloc_sadl(&sc->gif_if);
+int
+gif_clone_create(ifc, unit)
+	struct if_clone *ifc;
+	int unit;
+{
+	struct gif_softc *sc;
+	int s;
+
+	sc = malloc(sizeof(*sc), M_DEVBUF, M_NOWAIT);
+	if (!sc)
+		return (ENOMEM);
+	bzero(sc, sizeof(*sc));
+
+	snprintf(sc->gif_if.if_xname, sizeof sc->gif_if.if_xname,
+	     "%s%d", ifc->ifc_name, unit);
+	sc->gif_if.if_mtu    = GIF_MTU;
+	sc->gif_if.if_flags  = IFF_POINTOPOINT | IFF_MULTICAST;
+	sc->gif_if.if_ioctl  = gif_ioctl;
+	sc->gif_if.if_start  = gif_start;
+	sc->gif_if.if_output = gif_output;
+	sc->gif_if.if_type   = IFT_GIF;
+	sc->gif_if.if_snd.ifq_maxlen = ifqmaxlen;
+	sc->gif_if.if_softc = sc;
+	if_attach(&sc->gif_if);
+	if_alloc_sadl(&sc->gif_if);
 
 #if NBPFILTER > 0
-		bpfattach(&sc->gif_if.if_bpf, &sc->gif_if, DLT_NULL,
-			  sizeof(u_int));
+	bpfattach(&sc->gif_if.if_bpf, &sc->gif_if, DLT_NULL,
+		  sizeof(u_int));
 #endif
-	}
+	s = splnet();
+	LIST_INSERT_HEAD(&gif_softc_list, sc, gif_list);
+	splx(s);
+
+	return (0);
+}
+
+int
+gif_clone_destroy(ifp)
+	struct ifnet *ifp;
+{
+	struct gif_softc *sc = ifp->if_softc;
+	int s;
+
+	s = splnet();
+	LIST_REMOVE(sc, gif_list);
+	splx(s);
+
+#if NBPFILTER > 0
+	bpfdetach(ifp);
+#endif
+	if_detach(ifp);
+
+	if (sc->gif_psrc)
+		free((caddr_t)sc->gif_psrc, M_IFADDR);
+	sc->gif_psrc = NULL;
+	if (sc->gif_pdst)
+		free((caddr_t)sc->gif_pdst, M_IFADDR);
+	sc->gif_pdst = NULL;
+	free(sc, M_DEVBUF);
+	return (0);
 }
 
 void
@@ -149,7 +192,7 @@ gif_output(ifp, m, dst, rt)
 	struct sockaddr *dst;
 	struct rtentry *rt;	/* added in net2 */
 {
-	register struct gif_softc *sc = (struct gif_softc*)ifp;
+	struct gif_softc *sc = (struct gif_softc*)ifp;
 	int error = 0;
 	struct m_tag *mtag;
 
@@ -245,7 +288,6 @@ gif_ioctl(ifp, cmd, data)
 	int error = 0, size;
 	struct sockaddr *dst, *src;
 	struct sockaddr *sa;
-	int i;
 	int s;
 	struct gif_softc *sc2;
 		
@@ -360,8 +402,7 @@ gif_ioctl(ifp, cmd, data)
 			break;
 		}
 
-		for (i = 0; i < ngif; i++) {
-			sc2 = gif_softc + i;
+		LIST_FOREACH(sc2, &gif_softc_list, gif_list) {
 			if (sc2 == sc)
 				continue;
 			if (!sc2->gif_pdst || !sc2->gif_psrc)

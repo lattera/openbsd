@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.4 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_usrreq.c,v 1.3.10.5 2004/02/19 10:56:12 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff.  All rights reserved.
@@ -32,6 +32,8 @@
 #include <sys/sysctl.h>
 
 #include <ddb/db_var.h>
+
+int	db_log;
 
 int
 ddb_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
@@ -81,6 +83,8 @@ ddb_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 			return (EPERM);
 		db_console = ctlval;
 		return (0);
+	case DBCTL_LOG:
+		return (sysctl_int(oldp, oldlenp, newp, newlen, &db_log));
 	default:
 		return (EOPNOTSUPP);
 	}

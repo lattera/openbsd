@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/close.c,v 1.5.14.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/close.c,v 1.5.14.2 2004/02/19 10:57:18 niklas Exp $	*/
 /*	$NetBSD: close.c,v 1.5 1995/09/06 19:53:29 pk Exp $	*/
 
 /*-
@@ -66,13 +66,12 @@
 
 int
 #ifndef __INTERNAL_LIBSA_CREAD
-close(fd)
+close(int fd)
 #else
-oclose(fd)
+oclose(int fd)
 #endif
-	int fd;
 {
-	register struct open_file *f = &files[fd];
+	struct open_file *f = &files[fd];
 	int err1 = 0, err2 = 0;
 
 	if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_wi_usb.c,v 1.7 2004/01/13 16:53:36 fgsch Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_wi_usb.c,v 1.7.2.1 2004/02/19 10:56:33 niklas Exp $ */
 
 /*
  * Copyright (c) 2003 Dale Rahn. All rights reserved.

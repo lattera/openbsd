@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.1.4.3 2003/03/28 00:38:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_hpt_reg.h,v 1.1.4.4 2004/02/19 10:56:29 niklas Exp $	*/
 /*      $NetBSD: pciide_hpt_reg.h,v 1.4 2001/07/23 14:55:27 bouyer Exp $       */
 
 /*
@@ -21,7 +21,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,     
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
  * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -40,14 +40,13 @@
  */
 
 /*
- * The HPT366, HPT370 and HPT372 have the save vendor/device ID but not the
+ * The HPT366, HPT370 and HPT372 have the same vendor/device ID but not the
  * same revision.
  */
 #define HPT366_REV 0x01
 #define HPT370_REV 0x03
 #define HPT370A_REV 0x04
 #define HPT372_REV 0x05
-#define HPT372A_REV 0x01
 #define HPT374_REV 0x07
 
 #define HPT_IDETIM(chan, drive) (0x40 + ((drive) * 4) + ((chan) * 8))
@@ -136,9 +135,17 @@ static u_int32_t hpt370_pio[] =
 	{0x06914e8a, 0x06914e65, 0x06514e33, 0x06514e22, 0x06514e21};
 static u_int32_t hpt370_dma[] =
 	{0x26514e97, 0x26514e33, 0x26514e21};
-static u_int32_t hpt370_udma[] = 
+static u_int32_t hpt370_udma[] =
 	{0x16514e31, 0x164d4e31, 0x16494e31, 0x166d4e31, 0x16454e31,
-	 0x1a85f442};
+	 0x16454e31};
+
+static u_int32_t hpt372_pio[] =
+	{0x0d029d5e, 0x0d029d26, 0x0c829ca6, 0x0c829c84, 0x0c829c62};
+static u_int32_t hpt372_dma[] =
+	{0x2c82922e, 0x2c829266, 0x2c829262};
+static u_int32_t hpt372_udma[] =
+	{0x1c82dc62, 0x1c9adc62, 0x1c91dc62, 0x1c8edc62, 0x1c8ddc62,
+	 0x1c6ddc62, 0x1c81dc62};
 
 static u_int32_t hpt374_pio[] =
 	{0x0ac1f48a, 0x0ac1f465, 0x0a81f454, 0x0a81f443, 0x0a81f442};

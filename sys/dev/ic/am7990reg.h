@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/am7990reg.h,v 1.3.6.2 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/am7990reg.h,v 1.3.6.3 2004/02/19 10:56:17 niklas Exp $	*/
 /*	$NetBSD: am7990reg.h,v 1.1 1995/04/11 04:17:50 mycroft Exp $	*/
 
 /*-
@@ -129,7 +129,7 @@ struct leinit {
 #define	LE_C3_ACON	0x0002		/* ALE control, eh? */
 #define	LE_C3_BCON	0x0001		/* byte control */
 
-/* Initialzation block (mode) */
+/* Initialization block (mode) */
 #define	LE_MODE_PROM	0x8000		/* promiscuous mode */
 /*			0x7f80		   reserved, must be zero */
 #define	LE_MODE_INTL	0x0040		/* internal loopback */
@@ -159,7 +159,7 @@ struct leinit {
 #define	LE_T1_ERR	0x40		/* error summary */
 #define	LE_T1_MORE	0x10		/* multiple collisions */
 #define	LE_T1_ONE	0x08		/* single collision */
-#define	LE_T1_DEF	0x04		/* defferred transmit */
+#define	LE_T1_DEF	0x04		/* deferred transmit */
 #define	LE_T1_STP	0x02		/* start of packet */
 #define	LE_T1_ENP	0x01		/* end of packet */
 

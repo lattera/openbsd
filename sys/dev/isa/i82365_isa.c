@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.4 2002/03/28 12:11:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/i82365_isa.c,v 1.9.4.5 2004/02/19 10:56:22 niklas Exp $	*/
 /*	$NetBSD: i82365_isa.c,v 1.11 1998/06/09 07:25:00 thorpej Exp $	*/
 
 /*
@@ -37,8 +37,6 @@
 #include <sys/device.h>
 #include <sys/extent.h>
 #include <sys/malloc.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <machine/bus.h>
 #include <machine/intr.h>

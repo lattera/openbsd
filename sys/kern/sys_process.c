@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.8 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_process.c,v 1.7.6.9 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-
@@ -143,7 +143,7 @@ sys_ptrace(p, v, retval)
 		if ((t->p_cred->p_ruid != p->p_cred->p_ruid ||
 		    ISSET(t->p_flag, P_SUGIDEXEC) ||
 		    ISSET(t->p_flag, P_SUGID)) &&
-		    (error = suser(p->p_ucred, &p->p_acflag)) != 0)
+		    (error = suser(p, 0)) != 0)
 			return (error);
 
 		/*

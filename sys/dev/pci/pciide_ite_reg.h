@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_ite_reg.h,v 1.1 2003/12/20 08:03:55 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_ite_reg.h,v 1.1.2.1 2004/02/19 10:56:29 niklas Exp $	*/
 /*
  * Copyright (c) 2003 Alexander Yurchenko <grange@openbsd.org>
  *

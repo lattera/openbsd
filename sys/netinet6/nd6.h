@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6.h,v 1.3.2.5 2003/03/28 00:41:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6.h,v 1.3.2.6 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: nd6.h,v 1.95 2002/06/08 11:31:06 itojun Exp $	*/
 
 /*
@@ -51,6 +51,9 @@ struct	llinfo_nd6 {
 	short	ln_state;	/* reachability state */
 	short	ln_router;	/* 2^0: ND6 router bit */
 	int	ln_byhint;	/* # of times we made it reachable by UL hint */
+
+	long	ln_ntick;
+	struct timeout ln_timer_ch;
 };
 
 #define ND6_LLINFO_NOSTATE	-2
@@ -69,12 +72,7 @@ struct	llinfo_nd6 {
 #define ND6_LLINFO_PROBE	4
 
 #define ND6_IS_LLINFO_PROBREACH(n) ((n)->ln_state > ND6_LLINFO_INCOMPLETE)
-
-/*
- * Since the granularity of our retransmission timer is seconds, we should
- * ensure that a positive timer value will be mapped to at least one second.
- */
-#define ND6_RETRANS_SEC(r) (((r) + 999) / 1000)
+#define ND6_LLINFO_PERMANENT(n)	((n)->ln_expire == 0)
 
 struct nd_ifinfo {
 	u_int32_t linkmtu;		/* LinkMTU */
@@ -363,6 +361,7 @@ struct nd_opt_hdr *nd6_option(union nd_opts *);
 int nd6_options(union nd_opts *);
 struct	rtentry *nd6_lookup(struct in6_addr *, int, struct ifnet *);
 void nd6_setmtu(struct ifnet *);
+void nd6_llinfo_settimer(struct llinfo_nd6 *, long);
 void nd6_timer(void *);
 void nd6_purge(struct ifnet *);
 void nd6_nud_hint(struct rtentry *, struct in6_addr *, int);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.3.4.5 2003/05/13 19:35:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmcia_cis.c,v 1.3.4.6 2004/02/19 10:56:31 niklas Exp $	*/
 /*	$NetBSD: pcmcia_cis.c,v 1.9 1998/08/22 23:41:48 msaitoh Exp $	*/
 
 /*
@@ -1014,8 +1014,9 @@ pcmcia_parse_cis_tuple(tuple, arg)
 								idx++;
 								/*
 								 * until
-								 * non-extensi
-								 * on byte
+								 * non-
+								 * extension
+								 * byte
 								 */
 							} while (reg2 & 0x80);
 						}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21.6.9 2003/05/13 19:21:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.21.6.10 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -64,6 +64,7 @@
 #include <sys/malloc.h>
 #include <sys/dirent.h>		/* defines dirent structure */
 #include <sys/lockf.h>
+#include <sys/poll.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -368,7 +369,7 @@ msdosfs_setattr(v)
 	}
 	if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
 		if (cred->cr_uid != dep->de_pmp->pm_uid &&
-		    (error = suser(cred, &ap->a_p->p_acflag)) &&
+		    (error = suser_ucred(cred)) &&
 		    ((vap->va_vaflags & VA_UTIMES_NULL) == 0 ||
 		    (error = VOP_ACCESS(ap->a_vp, VWRITE, cred, ap->a_p))))
 			return (error);
@@ -387,7 +388,7 @@ msdosfs_setattr(v)
 	 */
 	if (vap->va_mode != (mode_t)VNOVAL) {
 		if (cred->cr_uid != dep->de_pmp->pm_uid &&
-		    (error = suser(cred, &ap->a_p->p_acflag)))
+		    (error = suser_ucred(cred)))
 			return (error);
 		/* We ignore the read and execute bits. */
 		if (vap->va_mode & VWRITE)
@@ -401,7 +402,7 @@ msdosfs_setattr(v)
 	 */
 	if (vap->va_flags != VNOVAL) {
 		if (cred->cr_uid != dep->de_pmp->pm_uid &&
-		    (error = suser(cred, &ap->a_p->p_acflag)))
+		    (error = suser_ucred(cred)))
 			return (error);
 		if (vap->va_flags & SF_ARCHIVED)
 			dep->de_Attributes &= ~ATTR_ARCHIVE;
@@ -706,20 +707,16 @@ msdosfs_ioctl(v)
 }
 
 int
-msdosfs_select(v)
+msdosfs_poll(v)
 	void *v;
 {
-#if 0
-	struct vop_select_args /* {
+	struct vop_poll_args /* {
 		struct vnode *a_vp;
-		int a_which;
-		int a_fflags;
-		struct ucred *a_cred;
+		int a_events;
 		struct proc *a_p;
-	} */ *ap;
-#endif
+	} */ *ap = v;
 
-	return (1);             /* DOS filesystems never block? */
+	return (seltrue(ap->a_vp->v_rdev, ap->a_events, ap->a_p));
 }
 
 /*
@@ -1904,7 +1901,7 @@ struct vnodeopv_entry_desc msdosfs_vnodeop_entries[] = {
 	{ &vop_write_desc, msdosfs_write },		/* write */
 	{ &vop_lease_desc, msdosfs_lease_check },	/* lease */
 	{ &vop_ioctl_desc, msdosfs_ioctl },		/* ioctl */
-	{ &vop_select_desc, msdosfs_select },		/* select */
+	{ &vop_poll_desc, msdosfs_poll },		/* poll */
 	{ &vop_fsync_desc, msdosfs_fsync },		/* fsync */
 	{ &vop_remove_desc, msdosfs_remove },		/* remove */
 	{ &vop_link_desc, msdosfs_link },		/* link */

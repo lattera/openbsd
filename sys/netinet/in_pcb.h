@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22.2.6 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.h,v 1.22.2.7 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: in_pcb.h,v 1.14 1996/02/13 23:42:00 christos Exp $	*/
 
 /*
@@ -87,6 +87,7 @@ union inpaddru {
  */
 struct inpcb {
 	LIST_ENTRY(inpcb) inp_hash;
+	LIST_ENTRY(inpcb) inp_lhash;		/* extra hash for lport */
 	CIRCLEQ_ENTRY(inpcb) inp_queue;
 	struct	  inpcbtable *inp_table;
 	union	  inpaddru inp_faddru;		/* Foreign address. */
@@ -147,8 +148,8 @@ struct inpcb {
 
 struct inpcbtable {
 	CIRCLEQ_HEAD(, inpcb) inpt_queue;
-	LIST_HEAD(inpcbhead, inpcb) *inpt_hashtbl;
-	u_long	  inpt_hash;
+	LIST_HEAD(inpcbhead, inpcb) *inpt_hashtbl, *inpt_lhashtbl;
+	u_long	  inpt_hash, inpt_lhash;
 	u_int16_t inpt_lastport;
 };
 
@@ -237,10 +238,15 @@ void	 in_pcbdisconnect(void *);
 struct inpcb *
 	 in_pcbhashlookup(struct inpcbtable *, struct in_addr,
 			       u_int, struct in_addr, u_int);
+struct inpcb *
+	 in_pcblookup_listen(struct inpcbtable *, struct in_addr, u_int, int);
 #ifdef INET6
 struct inpcb *
 	 in6_pcbhashlookup(struct inpcbtable *, struct in6_addr *,
 			       u_int, struct in6_addr *, u_int);
+struct inpcb *
+	 in6_pcblookup_listen(struct inpcbtable *,
+			       struct in6_addr *, u_int, int);
 int	 in6_pcbbind(struct inpcb *, struct mbuf *);
 int	 in6_pcbconnect(struct inpcb *, struct mbuf *);
 int	 in6_setsockaddr(struct inpcb *, struct mbuf *);
@@ -250,7 +256,7 @@ void	 in_pcbinit(struct inpcbtable *, int);
 struct inpcb *
 	 in_pcblookup(struct inpcbtable *, void *, u_int, void *,
 	    u_int, int);
-void	 in_pcbnotify(struct inpcbtable *, struct sockaddr *,
+int	 in_pcbnotify(struct inpcbtable *, struct sockaddr *,
 	    u_int, struct in_addr, u_int, int, void (*)(struct inpcb *, int));
 void	 in_pcbnotifyall(struct inpcbtable *, struct sockaddr *,
 	    int, void (*)(struct inpcb *, int));

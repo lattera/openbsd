@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/pcmciareg.h,v 1.4.6.1 2001/05/14 22:26:08 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/pcmciareg.h,v 1.4.6.2 2004/02/19 10:56:31 niklas Exp $	*/
 /*	$NetBSD: pcmciareg.h,v 1.6 1998/08/13 15:00:02 nathanw Exp $	*/
 
 /*
@@ -233,7 +233,7 @@
 #define	PCMCIA_CCR_SOCKETCOPY_COPY_MASK			0x70
 #define	PCMCIA_CCR_SOCKETCOPY_COPY_SHIFT		4
 #define	PCMCIA_CCR_SOCKETCOPY_SOCKET_MASK		0x0F
-#define PCMCIA_CCR_EXTSTATUS			0x08
+#define	PCMCIA_CCR_EXTSTATUS			0x08
 #define	PCMCIA_CCR_IOBASE0			0x0A
 #define	PCMCIA_CCR_IOBASE1			0x0C
 #define	PCMCIA_CCR_IOBASE2			0x0E

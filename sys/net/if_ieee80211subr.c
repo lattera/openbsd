@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/Attic/if_ieee80211subr.c,v 1.2 2004/01/26 03:35:36 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/net/Attic/if_ieee80211subr.c,v 1.2.2.1 2004/02/19 10:57:21 niklas Exp $	*/
 /*	$NetBSD: if_ieee80211subr.c,v 1.43 2003/07/06 20:54:25 dyoung Exp $	*/
 /*	$FreeBSD: src/sys/net/if_ieee80211subr.c,v 1.4 2003/01/21 08:55:59 alfred Exp $	*/
 

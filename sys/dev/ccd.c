@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.8 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ccd.c,v 1.41.2.9 2004/02/19 10:56:13 niklas Exp $	*/
 /*	$NetBSD: ccd.c,v 1.33 1996/05/05 04:21:14 thorpej Exp $	*/
 
 /*-
@@ -111,8 +111,6 @@
 #include <sys/conf.h>
 
 #include <dev/ccdvar.h>
-
-#include <uvm/uvm_extern.h>
 
 #ifdef __GNUC__
 #define INLINE static __inline

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_sfreg.h,v 1.3.2.2 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_sfreg.h,v 1.3.2.3 2004/02/19 10:56:27 niklas Exp $	*/
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -1038,7 +1038,6 @@ struct sf_softc {
 	void			*sf_intrhand;	/* interrupt handler cookie */
 	struct sf_type		*sf_info;	/* Starfire adapter info */
 	struct sf_type		*sf_pinfo;
-	u_int8_t		sf_unit;	/* interface number */
 	u_int8_t		sf_type;
 	u_int8_t		sf_phy_addr;
 	u_int8_t		sf_want_auto;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tuba_usrreq.c,v 1.3.10.1 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tuba_usrreq.c,v 1.3.10.2 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: tuba_usrreq.c,v 1.8 1996/02/13 22:12:40 christos Exp $	*/
 
 /*
@@ -83,9 +83,9 @@ tuba_usrreq(so, req, m, nam, control)
 	int             req;
 	struct mbuf    *m, *nam, *control;
 {
-	register struct inpcb *inp;
-	register struct isopcb *isop = NULL;
-	register struct tcpcb *tp = NULL;
+	struct inpcb *inp;
+	struct isopcb *isop = NULL;
+	struct tcpcb *tp = NULL;
 	int             s;
 	int             error = 0;
 	int             ostate;

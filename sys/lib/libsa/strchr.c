@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/strchr.c,v 1.2.8.1 2003/06/07 11:03:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/strchr.c,v 1.2.8.2 2004/02/19 10:57:19 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -30,7 +30,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/sys/lib/libsa/strchr.c,v 1.2.8.1 2003/06/07 11:03:43 ho Exp $";
+static char *rcsid = "$OpenBSD: src/sys/lib/libsa/strchr.c,v 1.2.8.2 2004/02/19 10:57:19 niklas Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #ifndef _STANDALONE
@@ -40,8 +40,7 @@ static char *rcsid = "$OpenBSD: src/sys/lib/libsa/strchr.c,v 1.2.8.1 2003/06/07 
 #endif
 
 char *
-strchr(p, ch)
-	register const char *p, ch;
+strchr(const char *p, int ch)
 {
 	for (;; ++p) {
 		if (*p == ch)

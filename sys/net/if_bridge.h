@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.12.2.6 2003/06/07 11:06:06 ho Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.h,v 1.12.2.7 2004/02/19 10:57:21 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -33,6 +33,8 @@
 
 #ifndef _NET_IF_BRIDGE_H_
 #define _NET_IF_BRIDGE_H_
+
+#include <net/pfvar.h>
 
 /*
  * Bridge control request: add/delete member interfaces.
@@ -132,6 +134,7 @@ struct ifbrlreq {
 	u_int8_t		ifbr_flags;		/* flags */
 	struct ether_addr	ifbr_src;		/* source mac */
 	struct ether_addr	ifbr_dst;		/* destination mac */
+	char			ifbr_tagname[PF_TAG_NAME_SIZE];	/* pf tagname */
 };
 #define	BRL_ACTION_BLOCK	0x01			/* block frame */
 #define	BRL_ACTION_PASS		0x02			/* pass frame */
@@ -162,6 +165,7 @@ struct brl_node {
 	SIMPLEQ_ENTRY(brl_node)	brl_next;	/* next rule */
 	struct ether_addr	brl_src;	/* source mac address */
 	struct ether_addr	brl_dst;	/* destination mac address */
+	u_int16_t		brl_tag;	/* pf tag ID */
 	u_int8_t		brl_action;	/* what to do with match */
 	u_int8_t		brl_flags;	/* comparision flags */
 };
@@ -231,6 +235,7 @@ struct bridge_rtnode {
  */
 struct bridge_softc {
 	struct				ifnet sc_if;	/* the interface */
+	LIST_ENTRY(bridge_softc)	sc_list;	/* all bridges */
 	u_int64_t			sc_designated_root;
 	u_int64_t			sc_bridge_id;
 	struct bridge_iflist		*sc_root_port;
@@ -266,7 +271,7 @@ void	bridge_ifdetach(struct ifnet *);
 struct mbuf *bridge_input(struct ifnet *, struct ether_header *,
     struct mbuf *);
 int	bridge_output(struct ifnet *, struct mbuf *, struct sockaddr *,
-    struct rtentry *rt);
+    struct rtentry *);
 struct mbuf *bstp_input(struct bridge_softc *, struct ifnet *,
     struct ether_header *, struct mbuf *);
 void	bstp_initialization(struct bridge_softc *);

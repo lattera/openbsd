@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/strcmp.c,v 1.2.14.1 2003/06/07 11:03:43 ho Exp $ */
+/*	$OpenBSD: src/sys/lib/libsa/strcmp.c,v 1.2.14.2 2004/02/19 10:57:19 niklas Exp $ */
 
 /*-
  * Copyright (c) 1996 Michael Shalayeff
@@ -31,9 +31,7 @@
 #include "stand.h"
 
 int
-strcmp(s1, s2)
-	register const char *s1;
-	register const char *s2;
+strcmp(const char *s1, const char *s2)
 {
 	while(*s1 && *s2 && *s1 == *s2)
 		s1++, s2++;

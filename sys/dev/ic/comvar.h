@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/comvar.h,v 1.16.2.4 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/comvar.h,v 1.16.2.5 2004/02/19 10:56:17 niklas Exp $	*/
 /*	$NetBSD: comvar.h,v 1.5 1996/05/05 19:50:47 christos Exp $	*/
 
 /*
@@ -79,7 +79,7 @@ struct com_softc {
 #ifdef __HAVE_GENERIC_SOFT_INTERRUPTS
 	void *sc_si;
 #else
-	struct timeout sc_poll_tmo;
+	struct timeout sc_comsoft_tmo;
 #endif
 
 	int sc_overflows;
@@ -144,7 +144,7 @@ int	comspeed(long, long);
 u_char	com_cflag2lcr(tcflag_t);
 int	comparam(struct tty *, struct termios *);
 void	comstart(struct tty *);
-void	compoll(void *);
+void	comsoft(void *);
 
 struct consdev;
 int	comcnattach(bus_space_tag_t, int, int, int, tcflag_t);
@@ -155,6 +155,7 @@ void	comcnputc(dev_t, int);
 void	comcnpollc(dev_t, int);
 int	com_common_getc(bus_space_tag_t, bus_space_handle_t);
 void	com_common_putc(bus_space_tag_t, bus_space_handle_t, int);
+void	com_raisedtr(void *);
 
 #ifdef KGDB
 int	com_kgdb_attach(bus_space_tag_t, int, int, int, tcflag_t);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_disks.c,v 1.5.2.3 2003/05/13 19:35:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/raidframe/Attic/rf_disks.c,v 1.5.2.4 2004/02/19 10:56:31 niklas Exp $	*/
 /*	$NetBSD: rf_disks.c,v 1.31 2000/06/02 01:17:14 oster Exp $	*/
 
 /*
@@ -297,17 +297,17 @@ rf_ConfigureSpareDisks(RF_ShutdownList_t ** listp, RF_Raid_t * raidPtr,
 			goto fail;
 		}
 		if (disks[i].numBlocks < raidPtr->sectorsPerDisk) {
-			RF_ERRORMSG3("Spare disk %s (%d blocks) is too small"
-			    " to serve as a spare (need %ld blocks).\n",
-			    disks[i].devname, disks[i].blockSize,
-			    (long int) raidPtr->sectorsPerDisk);
+			RF_ERRORMSG3("Spare disk %s (%llu blocks) is too small"
+			    " to serve as a spare (need %llu blocks).\n",
+			    disks[i].devname, disks[i].numBlocks,
+			    raidPtr->sectorsPerDisk);
 			ret = EINVAL;
 			goto fail;
 		} else
 			if (disks[i].numBlocks > raidPtr->sectorsPerDisk) {
 				RF_ERRORMSG2("Warning: truncating spare disk"
-				    " %s to %ld blocks.\n", disks[i].devname,
-				    (long int) raidPtr->sectorsPerDisk);
+				    " %s to %llu blocks.\n", disks[i].devname,
+				    raidPtr->sectorsPerDisk);
 
 				disks[i].numBlocks = raidPtr->sectorsPerDisk;
 			}
@@ -1110,18 +1110,18 @@ rf_add_hot_spare(RF_Raid_t *raidPtr, RF_SingleComponent_t *sparePtr)
 		goto fail;
 	}
 	if (disks[spare_number].numBlocks < raidPtr->sectorsPerDisk) {
-		RF_ERRORMSG3("Spare disk %s (%d blocks) is too small to serve"
-		    " as a spare (need %ld blocks).\n",
-		    disks[spare_number].devname, disks[spare_number].blockSize,
-		    (long int) raidPtr->sectorsPerDisk);
+		RF_ERRORMSG3("Spare disk %s (%llu blocks) is too small to serve"
+		    " as a spare (need %llu blocks).\n",
+		    disks[spare_number].devname, disks[spare_number].numBlocks,
+		    raidPtr->sectorsPerDisk);
 		ret = EINVAL;
 		goto fail;
 	} else {
 		if (disks[spare_number].numBlocks >
 		    raidPtr->sectorsPerDisk) {
-			RF_ERRORMSG2("Warning: truncating spare disk %s to %ld"
+			RF_ERRORMSG2("Warning: truncating spare disk %s to %llu"
 			    " blocks.\n", disks[spare_number].devname,
-			    (long int) raidPtr->sectorsPerDisk);
+			    raidPtr->sectorsPerDisk);
 
 			disks[spare_number].numBlocks = raidPtr->sectorsPerDisk;
 		}

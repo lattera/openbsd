@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.5 2003/03/28 00:38:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/miivar.h,v 1.4.2.6 2004/02/19 10:56:24 niklas Exp $	*/
 /*	$NetBSD: miivar.h,v 1.17 2000/03/06 20:56:57 thorpej Exp $	*/
 
 /*-
@@ -50,7 +50,7 @@
 #endif
 
 /*
- * Media Independent Interface autoconfiguration defintions.
+ * Media Independent Interface autoconfiguration definitions.
  *
  * This file exports an interface which attempts to be compatible
  * with the BSD/OS 3.0 interface.
@@ -129,6 +129,8 @@ struct mii_softc {
 	LIST_ENTRY(mii_softc) mii_list;	/* entry on parent's PHY list */
 
 	int mii_phy;			/* our MII address */
+	int mii_model;			/* MII_MODEL(ma->mii_id2) */
+	int mii_rev;			/* MII_REV(ma->mii_id2) */
 	int mii_offset;			/* first PHY, second PHY, etc. */
 	int mii_inst;			/* instance for ifmedia */
 

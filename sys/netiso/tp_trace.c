@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netiso/Attic/tp_trace.c,v 1.2.16.1 2003/06/07 11:06:10 ho Exp $	*/
+/*	$OpenBSD: src/sys/netiso/Attic/tp_trace.c,v 1.2.16.2 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: tp_trace.c,v 1.6 1996/02/13 22:12:20 christos Exp $	*/
 
 /*-
@@ -105,7 +105,7 @@ tpTrace(tpcb, event, arg, src, len, arg4, arg5)
 	u_int           arg4;
 	u_int           arg5;
 {
-	register struct tp_Trace *tp;
+	struct tp_Trace *tp;
 
 	tp = &tp_Trace[tp_Tracen++];
 	tp_Tracen %= TPTRACEN;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8.2.6 2003/03/28 00:06:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_gif.c,v 1.8.2.7 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$KAME: in_gif.c,v 1.50 2001/01/22 07:27:16 itojun Exp $	*/
 
 /*
@@ -64,14 +64,13 @@ in_gif_output(ifp, family, m, rt)
 	struct mbuf	*m;
 	struct rtentry *rt;
 {
-	register struct gif_softc *sc = (struct gif_softc*)ifp;
+	struct gif_softc *sc = (struct gif_softc*)ifp;
 	struct sockaddr_in *sin_src = (struct sockaddr_in *)sc->gif_psrc;
 	struct sockaddr_in *sin_dst = (struct sockaddr_in *)sc->gif_pdst;
 	struct tdb tdb;
 	struct xformsw xfs;
 	int error;
 	int hlen, poff;
-	u_int16_t plen;
 	struct mbuf *mp;
 
 	if (sin_src == NULL || sin_dst == NULL ||
@@ -149,12 +148,6 @@ in_gif_output(ifp, family, m, rt)
 #if NBRIDGE > 0
  sendit:
 #endif /* NBRIDGE */
-	/* ip_output needs host-order length.  it should be nuked */
-	m_copydata(m, offsetof(struct ip, ip_len), sizeof(u_int16_t),
-		   (caddr_t) &plen);
-	NTOHS(plen);
-	m_copyback(m, offsetof(struct ip, ip_len), sizeof(u_int16_t),
-		   (caddr_t) &plen);
 
 	return ip_output(m, (void *)NULL, (void *)NULL, 0, (void *)NULL, (void *)NULL);
 }
@@ -166,22 +159,23 @@ in_gif_input(struct mbuf *m, ...)
 	struct gif_softc *sc;
 	struct ifnet *gifp = NULL;
 	struct ip *ip;
-	int i;
 	va_list ap;
 
 	va_start(ap, m);
 	off = va_arg(ap, int);
 	va_end(ap);
 
-	/* XXX what if we run transport-mode IPsec to protect gif tunnel ? */
-	if (m->m_flags & (M_AUTH | M_CONF))
+	/* IP-in-IP header is caused by tunnel mode, so skip gif lookup */
+	if (m->m_flags & M_TUNNEL) {
+		m->m_flags &= ~M_TUNNEL;
 		goto inject;
+	}
 
 	ip = mtod(m, struct ip *);
 
 	/* this code will be soon improved. */
 #define	satosin(sa)	((struct sockaddr_in *)(sa))
-	for (i = 0, sc = gif_softc; i < ngif; i++, sc++) {
+	LIST_FOREACH(sc, &gif_softc_list, gif_list) {
 		if (sc->gif_psrc == NULL || sc->gif_pdst == NULL ||
 		    sc->gif_psrc->sa_family != AF_INET ||
 		    sc->gif_pdst->sa_family != AF_INET) {

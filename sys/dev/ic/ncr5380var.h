@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/ncr5380var.h,v 1.5.12.3 2003/03/28 00:38:14 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/ncr5380var.h,v 1.5.12.4 2004/02/19 10:56:20 niklas Exp $	*/
 /*	$NetBSD: ncr5380var.h,v 1.6 1996/05/10 18:04:06 gwr Exp $	*/
 
 /*
@@ -35,7 +35,7 @@
 
 /*
  * This file defines the interface between the machine-dependent
- * module and the machine-indepenedent ncr5380sbc.c module.
+ * module and the machine-independent ncr5380sbc.c module.
  */
 
 #define SCI_CLR_INTR(sc)	(*(sc)->sci_iack)

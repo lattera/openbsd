@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/wdcevent.h,v 1.1.2.1 2003/03/28 00:38:15 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/wdcevent.h,v 1.1.2.2 2004/02/19 10:56:21 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Constantine Sapuntzakis
@@ -51,7 +51,7 @@ static __inline void WDC_LOG_STATUS(struct channel_softc *chp,
     u_int8_t status) {
 	if (chp->ch_prev_log_status == status)
 		return;
-	
+
 	chp->ch_prev_log_status = status;
 	wdc_log(chp, WDCEVENT_STATUS, 1, &status);
 }
@@ -82,7 +82,7 @@ static __inline void WDC_LOG_ATA_CMDSHORT(struct channel_softc *chp, u_int8_t cm
 	wdc_log(chp, WDCEVENT_ATA_SHORT, 1, &cmd);
 }
 
-static __inline void WDC_LOG_ATA_CMDLONG(struct channel_softc *chp, 
+static __inline void WDC_LOG_ATA_CMDLONG(struct channel_softc *chp,
     u_int8_t head, u_int8_t precomp, u_int8_t cylinhi, u_int8_t cylinlo,
     u_int8_t sector, u_int8_t count, u_int8_t command) {
 	char record[8] = { head, precomp, cylinhi, cylinlo,

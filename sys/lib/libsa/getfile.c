@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/getfile.c,v 1.3.14.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/getfile.c,v 1.3.14.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: getfile.c,v 1.6 1996/10/14 04:49:21 cgd Exp $	*/
 
 /*-
@@ -35,10 +35,10 @@
 
 #define CTRL(x) (x&037)
 
+int	getfile(char *, int);
+
 int
-getfile(prompt, mode)
-	char *prompt;
-	int mode;
+getfile(char *prompt, int mode)
 {
 	int fd;
 	char buf[100];

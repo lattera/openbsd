@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pppvar.h,v 1.7.8.4 2003/03/28 00:41:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pppvar.h,v 1.7.8.5 2004/02/19 10:57:21 niklas Exp $	*/
 /*	$NetBSD: if_pppvar.h,v 1.5 1997/01/03 07:23:29 mikel Exp $	*/
 /*
  * if_pppvar.h - private structures and declarations for PPP.
@@ -130,6 +130,7 @@ struct ppp_softc {
 	u_int16_t sc_outfcs;		/* FCS so far for output packet */
 	u_char	sc_rawin[16];		/* chars as received */
 	int	sc_rawin_count;		/* # in sc_rawin */
+	LIST_ENTRY(ppp_softc) sc_list;	/* all ppp interfaces */
 };
 
 #ifdef _KERNEL

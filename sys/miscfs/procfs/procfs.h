@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/procfs.h,v 1.8.10.5 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/procfs.h,v 1.8.10.6 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: procfs.h,v 1.17 1996/02/12 15:01:41 christos Exp $	*/
 
 /*
@@ -73,15 +73,6 @@ struct pfsnode {
 #define PROCFS_NOTELEN	64	/* max length of a note (/proc/$pid/note) */
 #define PROCFS_CTLLEN 	8	/* max length of a ctl msg (/proc/$pid/ctl */
 
-struct procfs_args {
-	int version;
-	int flags;
-};
-
-#define PROCFS_ARGSVERSION	1
-
-#define	PROCFSMNT_LINUXCOMPAT	0x01
-
 /*
  * Kernel stuff follows
  */
@@ -117,7 +108,7 @@ struct vfs_namemap {
 };
 
 int vfs_getuserstr(struct uio *, char *, int *);
-vfs_namemap_t *vfs_findname(vfs_namemap_t *, char *, int);
+const vfs_namemap_t *vfs_findname(const vfs_namemap_t *, char *, int);
 
 int procfs_allocvp(struct mount *, struct vnode **, long, pfstype);
 int procfs_checkioperm(struct proc *p, struct proc *t);
@@ -133,6 +124,7 @@ int procfs_docpuinfo(struct proc *, struct proc *, struct pfsnode *pfsp, struct 
 int procfs_domap(struct proc *, struct proc *, struct pfsnode *pfsp, struct uio *uio, int);
 int procfs_freevp(struct vnode *);
 int procfs_getcpuinfstr(char *, int *);
+int procfs_poll(void *);
 
 /* functions to check whether or not files should be displayed */
 int procfs_validfile(struct proc *, struct mount *);
@@ -146,7 +138,7 @@ int procfs_rw(void *);
 #define PROCFS_WANT	0x02
 
 extern int (**procfs_vnodeop_p)(void *);
-extern struct vfsops procfs_vfsops;
+extern const struct vfsops procfs_vfsops;
 
 struct vfsconf;
 

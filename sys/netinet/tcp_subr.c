@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.10 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.23.2.11 2004/02/19 10:57:24 niklas Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -131,6 +131,7 @@ int	tcp_do_rfc1323 = TCP_DO_RFC1323;
 int	tcp_do_sack = TCP_DO_SACK;		/* RFC 2018 selective ACKs */
 int	tcp_ack_on_push = 0;	/* set to enable immediate ACK-on-PUSH */
 int	tcp_do_ecn = 0;		/* RFC3168 ECN enabled/disabled? */
+int	tcp_do_rfc3390 = 0;	/* RFC3390 Increasing TCP's Initial Window */
 
 u_int32_t	tcp_now;
 
@@ -138,6 +139,14 @@ u_int32_t	tcp_now;
 #define	TCBHASHSIZE	128
 #endif
 int	tcbhashsize = TCBHASHSIZE;
+
+/* syn hash parameters */
+#define	TCP_SYN_HASH_SIZE	293
+#define	TCP_SYN_BUCKET_SIZE	35
+int	tcp_syn_cache_size = TCP_SYN_HASH_SIZE;
+int	tcp_syn_cache_limit = TCP_SYN_HASH_SIZE*TCP_SYN_BUCKET_SIZE;
+int	tcp_syn_bucket_limit = 3*TCP_SYN_BUCKET_SIZE;
+struct	syn_cache_head tcp_syn_cache[TCP_SYN_HASH_SIZE];
 
 #ifdef INET6
 extern int ip6_defhlim;
@@ -185,6 +194,9 @@ tcp_init()
 	icmp6_mtudisc_callback_register(tcp6_mtudisc_callback);
 #endif /* INET6 */
 
+	/* Initialize the compressed state engine. */
+	syn_cache_init();
+
 	/* Initialize timer state. */
 	tcp_timer_init();
 }
@@ -204,9 +216,9 @@ struct mbuf *
 tcp_template(tp)
 	struct tcpcb *tp;
 {
-	register struct inpcb *inp = tp->t_inpcb;
-	register struct mbuf *m;
-	register struct tcphdr *th;
+	struct inpcb *inp = tp->t_inpcb;
+	struct mbuf *m;
+	struct tcphdr *th;
 
 	if ((m = tp->t_template) == 0) {
 		m = m_get(M_DONTWAIT, MT_HEADER);
@@ -274,7 +286,7 @@ tcp_template(tp)
 			ip6->ip6_src = inp->inp_laddr6;
 			ip6->ip6_dst = inp->inp_faddr6;
 			ip6->ip6_flow = htonl(0x60000000) |
-			    (inp->inp_ipv6.ip6_flow & htonl(0x0fffffff));
+			    (inp->inp_flowinfo & IPV6_FLOWLABEL_MASK);
 
 			ip6->ip6_nxt = IPPROTO_TCP;
 			ip6->ip6_plen = htons(sizeof(struct tcphdr)); /*XXX*/
@@ -320,15 +332,15 @@ void
 tcp_respond(tp, template, m, ack, seq, flags)
 	struct tcpcb *tp;
 	caddr_t template;
-	register struct mbuf *m;
+	struct mbuf *m;
 	tcp_seq ack, seq;
 	int flags;
 {
-	register int tlen;
+	int tlen;
 	int win = 0;
 	struct route *ro = 0;
-	register struct tcphdr *th;
-	register struct tcpiphdr *ti = (struct tcpiphdr *)template;
+	struct tcphdr *th;
+	struct tcpiphdr *ti = (struct tcpiphdr *)template;
 	int af;		/* af on wire */
 
 	if (tp) {
@@ -451,7 +463,7 @@ tcp_respond(tp, template, m, ack, seq, flags)
 		 */
 		th->th_sum = 0;
 		th->th_sum = in_cksum(m, tlen);
-		((struct ip *)ti)->ip_len = tlen;
+		((struct ip *)ti)->ip_len = htons(tlen);
 		((struct ip *)ti)->ip_ttl = ip_defttl;
 		ip_output(m, (void *)NULL, ro, ip_mtudisc ? IP_MTUDISC : 0,
 			(void *)NULL, tp ? tp->t_inpcb : (void *)NULL);
@@ -482,7 +494,7 @@ tcp_newtcpcb(struct inpcb *inp)
 		TCP_TIMER_INIT(tp, i);
 
 #ifdef TCP_SACK
-	tp->sack_disable = tcp_do_sack ? 0 : 1;
+	tp->sack_enable = tcp_do_sack;
 #endif
 	tp->t_flags = tcp_do_rfc1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
 	tp->t_inpcb = inp;
@@ -526,7 +538,7 @@ tcp_newtcpcb(struct inpcb *inp)
  */
 struct tcpcb *
 tcp_drop(tp, errno)
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 	int errno;
 {
 	struct socket *so = tp->t_inpcb->inp_socket;
@@ -558,9 +570,9 @@ tcp_close(struct tcpcb *tp)
 	struct sackhole *p, *q;
 #endif
 #ifdef RTV_RTT
-	register struct rtentry *rt;
+	struct rtentry *rt;
 #ifdef INET6
-	register int bound_to_specific = 0;  /* I.e. non-default */
+	int bound_to_specific = 0;  /* I.e. non-default */
 
 	/*
 	 * This code checks the nature of the route for this connection.
@@ -607,7 +619,7 @@ tcp_close(struct tcpcb *tp)
 	    (rt = inp->inp_route.ro_rt) &&
 	    satosin(rt_key(rt))->sin_addr.s_addr != INADDR_ANY) {
 #endif /* INET6 */
-		register u_long i = 0;
+		u_long i = 0;
 
 		if ((rt->rt_rmx.rmx_locks & RTV_RTT) == 0) {
 			i = tp->t_srtt *
@@ -673,6 +685,7 @@ tcp_close(struct tcpcb *tp)
 
 	tcp_canceltimers(tp);
 	TCP_CLEAR_DELACK(tp);
+	syn_cache_cleanup(tp);
 
 #ifdef TCP_SACK
 	/* Free SACK holes. */
@@ -737,8 +750,8 @@ tcp_notify(inp, error)
 	struct inpcb *inp;
 	int error;
 {
-	register struct tcpcb *tp = (struct tcpcb *)inp->inp_ppcb;
-	register struct socket *so = inp->inp_socket;
+	struct tcpcb *tp = (struct tcpcb *)inp->inp_ppcb;
+	struct socket *so = inp->inp_socket;
 
 	/*
 	 * Ignore some errors if we are hooked up.
@@ -839,10 +852,6 @@ tcp6_ctlinput(cmd, sa, d)
 			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
 			    th.th_sport))
 				valid++;
-			else if (in_pcblookup(&tcbtable, &sa6->sin6_addr,
-			    th.th_dport, (struct in6_addr *)&sa6_src->sin6_addr,
-			    th.th_sport, INPLOOKUP_IPV6))
-				valid++;
 
 			/*
 			 * Depending on the value of "valid" and routing table
@@ -856,8 +865,14 @@ tcp6_ctlinput(cmd, sa, d)
 			return;
 		}
 
-		(void) in6_pcbnotify(&tcbtable, sa, th.th_dport,
-		    (struct sockaddr *)sa6_src, th.th_sport, cmd, NULL, notify);
+		if (in6_pcbnotify(&tcbtable, sa, th.th_dport,
+		    (struct sockaddr *)sa6_src, th.th_sport, cmd, NULL, notify) == 0 &&
+		    syn_cache_count &&
+		    (inet6ctlerrmap[cmd] == EHOSTUNREACH ||
+		     inet6ctlerrmap[cmd] == ENETUNREACH ||
+		     inet6ctlerrmap[cmd] == EHOSTDOWN))
+			syn_cache_unreach((struct sockaddr *)sa6_src,
+			    sa, &th);
 	} else {
 		(void) in6_pcbnotify(&tcbtable, sa, 0,
 		    (struct sockaddr *)sa6_src, 0, cmd, NULL, notify);
@@ -869,10 +884,10 @@ void *
 tcp_ctlinput(cmd, sa, v)
 	int cmd;
 	struct sockaddr *sa;
-	register void *v;
+	void *v;
 {
-	register struct ip *ip = v;
-	register struct tcphdr *th;
+	struct ip *ip = v;
+	struct tcphdr *th;
 	extern int inetctlerrmap[];
 	void (*notify)(struct inpcb *, int) = tcp_notify;
 	int errno;
@@ -893,10 +908,12 @@ tcp_ctlinput(cmd, sa, v)
 		 * Verify that the packet in the icmp payload refers
 		 * to an existing TCP connection.
 		 */
-		if (in_pcblookup(&tcbtable,
-				 &ip->ip_dst, th->th_dport,
-				 &ip->ip_src, th->th_sport,
-				 INPLOOKUP_WILDCARD)) {
+		/*
+		 * XXX is it possible to get a valid PRC_MSGSIZE error for
+		 * a non-established connection?
+		 */
+		if (in_pcbhashlookup(&tcbtable,
+		    ip->ip_dst, th->th_dport, ip->ip_src, th->th_sport)) {
 			struct icmp *icp;
 			icp = (struct icmp *)((caddr_t)ip -
 					      offsetof(struct icmp, icmp_ip));
@@ -914,8 +931,22 @@ tcp_ctlinput(cmd, sa, v)
 
 	if (ip) {
 		th = (struct tcphdr *)((caddr_t)ip + (ip->ip_hl << 2));
-		in_pcbnotify(&tcbtable, sa, th->th_dport, ip->ip_src,
-			     th->th_sport, errno, notify);
+		if (in_pcbnotify(&tcbtable, sa, th->th_dport, ip->ip_src,
+		    th->th_sport, errno, notify) == 0 &&
+		    syn_cache_count &&
+		    (inetctlerrmap[cmd] == EHOSTUNREACH ||
+		     inetctlerrmap[cmd] == ENETUNREACH ||
+		     inetctlerrmap[cmd] == EHOSTDOWN)) {
+			struct sockaddr_in sin;
+
+			bzero(&sin, sizeof(sin));
+			sin.sin_len = sizeof(sin);
+			sin.sin_family = AF_INET;
+			sin.sin_port = th->th_sport;
+			sin.sin_addr = ip->ip_src;
+			syn_cache_unreach((struct sockaddr *)&sin,
+			    sa, th);
+		}
 	} else
 		in_pcbnotifyall(&tcbtable, sa, errno, notify);
 
@@ -1027,29 +1058,7 @@ tcp_signature_tdb_init(tdbp, xsp, ii)
 	struct xformsw *xsp;
 	struct ipsecinit *ii;
 {
-	char *c;
-#define isdigit(c)	  (((c) >= '0') && ((c) <= '9'))
-#define isalpha(c)	( (((c) >= 'A') && ((c) <= 'Z')) || \
-			  (((c) >= 'a') && ((c) <= 'z')) )
-
 	if ((ii->ii_authkeylen < 1) || (ii->ii_authkeylen > 80))
-		return (EINVAL);
-
-	c = (char *)ii->ii_authkey;
-
-	while (c < (char *)ii->ii_authkey + ii->ii_authkeylen - 1) {
-		if (isdigit(*c)) {
-			if (*(c + 1) == ' ')
-				return (EINVAL);
-		} else {
-			if (!isalpha(*c))
-				return (EINVAL);
-		}
-
-		c++;
-	}
-
-	if (!isdigit(*c) && !isalpha(*c))
 		return (EINVAL);
 
 	tdbp->tdb_amxkey = malloc(ii->ii_authkeylen, M_XDATA, M_DONTWAIT);

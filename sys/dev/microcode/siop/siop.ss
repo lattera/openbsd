@@ -1,4 +1,4 @@
-;	$OpenBSD: src/sys/dev/microcode/siop/siop.ss,v 1.3.4.2 2003/03/28 00:38:19 niklas Exp $
+;	$OpenBSD: src/sys/dev/microcode/siop/siop.ss,v 1.3.4.3 2004/02/19 10:56:24 niklas Exp $
 ;	$NetBSD: siop.ss,v 1.17 2002/07/26 14:11:34 wiz Exp $
 
 ;
@@ -33,13 +33,13 @@ ARCH 720
 
 ; offsets in siop_common_xfer
 ABSOLUTE t_id = 40;
-ABSOLUTE t_msg_in = 48;
-ABSOLUTE t_ext_msg_in = 56;
-ABSOLUTE t_ext_msg_data = 64;
-ABSOLUTE t_msg_out = 72;
-ABSOLUTE t_cmd = 80;
-ABSOLUTE t_status = 88;
-ABSOLUTE t_data = 96;
+ABSOLUTE t_msg_in = 56;
+ABSOLUTE t_ext_msg_in = 64;
+ABSOLUTE t_ext_msg_data = 72;
+ABSOLUTE t_msg_out = 80;
+ABSOLUTE t_cmd = 88;
+ABSOLUTE t_status = 96;
+ABSOLUTE t_data = 104;
 
 ;; interrupt codes
 ; interrupts that need a valid DSA

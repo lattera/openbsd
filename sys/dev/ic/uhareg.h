@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/uhareg.h,v 1.2.6.1 2001/05/14 22:24:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/uhareg.h,v 1.2.6.2 2004/02/19 10:56:21 niklas Exp $	*/
 /*	$NetBSD: uhareg.h,v 1.2 1996/09/01 00:54:41 mycroft Exp $	*/
 
 /*
@@ -226,5 +226,5 @@ struct uha_mscp {
 #define MSCP_ALLOC	0x01
 #define MSCP_ABORT	0x02
 	int timeout;
-} __attribute__((__packed__));
+} __packed;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_amd_reg.h,v 1.3.4.3 2003/03/28 00:38:24 niklas Exp $ 	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_amd_reg.h,v 1.3.4.4 2004/02/19 10:56:29 niklas Exp $ 	*/
 /*	$NetBSD: pciide_amd_reg.h,v 1.2 2000/07/06 15:08:11 bouyer Exp $	*/
 
 /*
@@ -46,9 +46,9 @@
 
 /*
  * The AMD756 chip revision D2 has a bug affecting DMA (but not UDMA)
- * modes.  The workaround documented by AMD is to not use DMA on any 
+ * modes.  The workaround documented by AMD is to not use DMA on any
  * drive which does not support UDMA modes.
- * 
+ *
  * See: http://www.amd.com/products/cpg/athlon/techdocs/pdf/22591.pdf
  */
 #define	AMD756_CHIPREV_DISABLEDMA(product, rev)	\

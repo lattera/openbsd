@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/safe.c,v 1.12 2004/02/03 17:17:33 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/safe.c,v 1.12.2.1 2004/02/19 10:56:29 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2003 Sam Leffler, Errno Consulting
@@ -271,15 +271,15 @@ safe_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_dpfree = sc->sc_dpring;
 	bzero(sc->sc_dpring, SAFE_TOTAL_DPART * sizeof(struct safe_pdesc));
 
-	printf(":");
+	printf(": %s", intrstr);
 
 	devinfo = READ_REG(sc, SAFE_DEVINFO);
 	if (devinfo & SAFE_DEVINFO_RNG)
-		printf(" RNG");
+		printf(" rng");
 
 	bzero(algs, sizeof(algs));
 	if (devinfo & SAFE_DEVINFO_PKEY) {
-		printf(" PK");
+		printf(" key");
 		algs[CRK_MOD_EXP] = CRYPTO_ALG_FLAG_SUPPORTED;
 		crypto_kregister(sc->sc_cid, algs, safe_kprocess);
 		timeout_set(&sc->sc_pkto, safe_kpoll, sc);
@@ -287,27 +287,26 @@ safe_attach(struct device *parent, struct device *self, void *aux)
 
 	bzero(algs, sizeof(algs));
 	if (devinfo & SAFE_DEVINFO_DES) {
-		printf(" 3DES");
+		printf(" des/3des");
 		algs[CRYPTO_3DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
 		algs[CRYPTO_DES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
 	}
 	if (devinfo & SAFE_DEVINFO_AES) {
-		printf(" AES");
+		printf(" aes");
 		algs[CRYPTO_AES_CBC] = CRYPTO_ALG_FLAG_SUPPORTED;
 	}
 	if (devinfo & SAFE_DEVINFO_MD5) {
-		printf(" MD5");
+		printf(" md5");
 		algs[CRYPTO_MD5_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
 	}
 	if (devinfo & SAFE_DEVINFO_SHA1) {
-		printf(" SHA1");
+		printf(" sha1");
 		algs[CRYPTO_SHA1_HMAC] = CRYPTO_ALG_FLAG_SUPPORTED;
 	}
 	crypto_register(sc->sc_cid, algs, safe_newsession,
 	    safe_freesession, safe_process);
 	/* XXX other supported algorithms? */
-
-	printf(", %s\n", intrstr);
+	printf("\n");
 
 	safe_reset_board(sc);		/* reset h/w */
 	safe_init_pciregs(sc);		/* init pci settings */

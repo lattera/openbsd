@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.8 2003/05/16 00:29:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_ifattach.c,v 1.6.2.9 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: in6_ifattach.c,v 1.124 2001/07/18 08:32:51 jinmei Exp $	*/
 
 /*
@@ -53,6 +53,7 @@
 #include <netinet6/in6_ifattach.h>
 #include <netinet6/ip6_var.h>
 #include <netinet6/nd6.h>
+#include <netinet6/ip6_mroute.h>
 
 unsigned long in6_maxmtu = 0;
 
@@ -574,6 +575,7 @@ in6_ifattach(ifp, altifp)
 	case IFT_BRIDGE:
 	case IFT_ENC:
 	case IFT_PFLOG:
+	case IFT_PFSYNC:
 		return;
 	case IFT_PROPVIRTUAL:
 		if (strncmp("bridge", ifp->if_xname, sizeof("bridge")) == 0 &&
@@ -656,6 +658,9 @@ in6_ifdetach(ifp)
 	short rtflags;
 	struct sockaddr_in6 sin6;
 	struct in6_multi_mship *imm;
+
+	/* remove ip6_mrouter stuff */
+	ip6_mrouter_detach(ifp);
 
 	/* remove neighbor management table */
 	nd6_purge(ifp);

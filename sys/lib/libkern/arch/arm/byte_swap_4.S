@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/arm/Attic/byte_swap_4.S,v 1.2 2004/02/01 05:47:10 drahn Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/arm/Attic/byte_swap_4.S,v 1.2.2.1 2004/02/19 10:57:18 niklas Exp $	*/
 /*	$NetBSD: byte_swap_4.S,v 1.1 2000/12/29 20:51:57 bjh21 Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk.h,v 1.2.16.1 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk.h,v 1.2.16.2 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: pk.h,v 1.6 1996/02/13 22:05:08 christos Exp $	*/
 
 /*
@@ -43,7 +43,7 @@
  *
  */
 
-/* Packet type identifier field defintions. */
+/* Packet type identifier field definitions. */
 
 #define X25_CALL                         11
 #define X25_CALL_ACCEPTED                15   

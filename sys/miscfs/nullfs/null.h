@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null.h,v 1.10.8.3 2003/06/07 11:06:05 ho Exp $ */
+/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null.h,v 1.10.8.4 2004/02/19 10:57:20 niklas Exp $ */
 /*	$NetBSD: null.h,v 1.13 2001/11/07 04:56:09 enami Exp $	*/
 
 /*
@@ -119,7 +119,7 @@ struct vnode *layer_checkvp(struct vnode *, char *, int);
 #endif
 
 extern int (**nullfs_vnodeop_p)(void *);
-extern struct vfsops nullfs_vfsops;
+extern const struct vfsops nullfs_vfsops;
 
 int nullfs_init(struct vfsconf *);
 

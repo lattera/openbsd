@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.11 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_exec.c,v 1.39.2.12 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -175,6 +175,8 @@ check_exec(p, epp)
 		if (execsw[i].es_check == NULL)
 			continue;
 		newerror = (*execsw[i].es_check)(p, epp);
+		if (!newerror && !(epp->ep_emul->e_flags & EMUL_ENABLED))
+			newerror = ENOEXEC;
 		/* make sure the first "interesting" error code is saved. */
 		if (!newerror || error == ENOEXEC)
 			error = newerror;
@@ -231,11 +233,11 @@ sys_execve(p, v, retval)
 	register_t *retval;
 {
 	struct sys_execve_args /* {
-		syscallarg(char *) path;
-		syscallarg(char * *) argp;
-		syscallarg(char * *) envp;
+		syscallarg(const char *) path;
+		syscallarg(char *const *) argp;
+		syscallarg(char *const *) envp;
 	} */ *uap = v;
-	int error, i;
+	int error;
 	struct exec_package pack;
 	struct nameidata nid;
 	struct vattr attr;
@@ -258,18 +260,6 @@ sys_execve(p, v, retval)
 	 * Mark this process as "leave me alone, I'm execing".
 	 */
 	p->p_flag |= P_INEXEC;
-
-	/*
-	 * figure out the maximum size of an exec header, if necessary.
-	 * XXX should be able to keep LKM code from modifying exec switch
-	 * when we're still using it, but...
-	 */
-	if (exec_maxhdrsz == 0) {
-		for (i = 0; i < nexecs; i++)
-			if (execsw[i].es_check != NULL
-			    && execsw[i].es_hdrsz > exec_maxhdrsz)
-				exec_maxhdrsz = execsw[i].es_hdrsz;
-	}
 
 	/* init the namei data to point the file user's program name */
 	NDINIT(&nid, LOOKUP, NOFOLLOW, UIO_USERSPACE, SCARG(uap, path), p);
@@ -599,8 +589,31 @@ sys_execve(p, v, retval)
 	if (p->p_flag & P_TRACED)
 		psignal(p, SIGTRAP);
 
-	p->p_emul = pack.ep_emul;
 	free(pack.ep_hdr, M_EXEC);
+
+	/*
+	 * Call emulation specific exec hook. This can setup per-process
+	 * p->p_emuldata or do any other per-process stuff an emulation needs.
+	 *
+	 * If we are executing process of different emulation than the
+	 * original forked process, call e_proc_exit() of the old emulation
+	 * first, then e_proc_exec() of new emulation. If the emulation is
+	 * same, the exec hook code should deallocate any old emulation
+	 * resources held previously by this process.
+	 */
+	if (p->p_emul && p->p_emul->e_proc_exit &&
+	    p->p_emul != pack.ep_emul)
+		(*p->p_emul->e_proc_exit)(p);
+
+	/*
+	 * Call exec hook. Emulation code may NOT store reference to anything
+	 * from &pack.
+	 */
+	if (pack.ep_emul->e_proc_exec)
+		(*pack.ep_emul->e_proc_exec)(p, &pack);
+
+	/* update p_emul, the old value is no longer needed */
+	p->p_emul = pack.ep_emul;
 
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_EMUL))

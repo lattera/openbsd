@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aacreg.h,v 1.2.4.3 2003/03/28 00:38:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aacreg.h,v 1.2.4.4 2004/02/19 10:56:15 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 Michael Smith
@@ -123,7 +123,7 @@ struct aac_adapter_init {
 	u_int32_t PrintfBufferSize;
 	u_int32_t HostPhysMemPages;
 	u_int32_t HostElapsedSeconds;
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * Shared data types
@@ -221,7 +221,7 @@ struct FsaRevision {
 	        u_int32_t ul;
 	} external;
 	u_int32_t buildNumber;
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * Adapter Information
@@ -319,7 +319,7 @@ struct aac_adapter_info {
 	AAC_BatteryPlatform batteryPlatform;
 	u_int32_t SupportedOptions;	/* supported features of this ctrlr */
 	AAC_OemFlavor OemVariant;
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * Monitor/Kernel interface.
@@ -569,7 +569,7 @@ struct aac_blockwrite_response {
 struct aac_fib_list_entry {
 	struct fib_list_entry *Flink;
 	struct fib_list_entry *Blink;
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * FIB (FSA Interface Block?); this is the datastructure passed between the
@@ -592,14 +592,14 @@ struct aac_fib_header {
 		} _s;
 		struct aac_fib_list_entry FibLinks;
 	} _u;
-} __attribute__((__packed__));
+} __packed;
 
 #define AAC_FIB_DATASIZE (512 - sizeof(struct aac_fib_header))
 
 struct aac_fib {
 	struct aac_fib_header Header;
 	u_int8_t data[AAC_FIB_DATASIZE];
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * FIB commands

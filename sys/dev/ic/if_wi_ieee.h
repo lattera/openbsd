@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wi_ieee.h,v 1.3.2.1 2003/03/28 00:38:13 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wi_ieee.h,v 1.3.2.2 2004/02/19 10:56:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -83,6 +83,8 @@ struct wi_req {
 #define WI_RID_IFACE_STATS	0x0100
 #define WI_RID_MGMT_XMIT	0x0200
 #define	WI_RID_MONITOR_MODE	0x0500
+#define WI_RID_SCAN_APS		0x0600
+#define WI_RID_READ_APS		0x0700
 
 struct wi_80211_hdr {
 	u_int16_t		frame_ctl;
@@ -164,7 +166,7 @@ struct wi_counters {
 
 /*
  * These are all the LTV record types that we can read or write
- * from the WaveLAN. Not all of them are temendously useful, but I
+ * from the WaveLAN. Not all of them are tremendously useful, but I
  * list as many as I know about here for completeness.
  */
 
@@ -225,6 +227,7 @@ struct wi_counters {
 #define	WI_RID_CNFAUTHMODE	0xFC2A
 #define	WI_RID_SYMBOL_KEYLENGTH	0xFC2B
 #define	WI_RID_ROAMING_MODE	0xFC2D /* Roaming mode (1:firm,3:disable) */
+#define WI_RID_CUR_BEACON_INT	0xFC33 /* beacon xmit time for BSS creation */
 #define	WI_RID_CNF_DBM_ADJUST	0xFC46 /* Get DBM adjustment factor */
 #define	WI_RID_SYMBOL_PREAMBLE	0xFC8C /* Enable/disable short preamble */
 #define	WI_RID_P2_SHORT_PREAMBLE	0xFCB0 /* Short preamble support */
@@ -290,7 +293,7 @@ struct wi_ltv_keys {
 #define WI_RID_CARD_ID		0xFD0B /* card identification */
 #define WI_RID_MFI_SUP_RANGE	0xFD0C /* modem supplier compatibility */
 #define WI_RID_CFI_SUP_RANGE	0xFD0D /* controller sup. compatibility */
-#define WI_RID_CHANNEL_LIST	0xFD10 /* allowd comm. frequencies. */
+#define WI_RID_CHANNEL_LIST	0xFD10 /* allowed comm. frequencies. */
 #define WI_RID_REG_DOMAINS	0xFD11 /* list of intendted regulatory doms */
 #define WI_RID_TEMP_TYPE	0xFD12 /* hw temp range code */
 #define WI_RID_CIS		0xFD13 /* PC card info struct */
@@ -317,7 +320,7 @@ struct wi_ltv_keys {
 #define WI_RID_MAX_RX_LIFE	0xFD4B /* max rx frame handling duration */
 #define WI_RID_CF_POLL		0xFD4C /* contention free pollable ind */
 #define WI_RID_AUTH_ALGS	0xFD4D /* auth algorithms available */
-#define WI_RID_AUTH_TYPE	0xFD4E /* availanle auth types */
+#define WI_RID_AUTH_TYPE	0xFD4E /* available auth types */
 #define WI_RID_WEP_AVAIL	0xFD4F /* WEP privacy option available */
 #define WI_RID_CUR_TX_RATE1	0xFD80
 #define WI_RID_CUR_TX_RATE2	0xFD81
@@ -341,6 +344,20 @@ struct wi_ltv_keys {
 #define WI_RID_AUTH_STATION	0xFCE3 /* Authenticates Station (AP) */
 #define WI_RID_CHANNEL_REQ	0xFCE4 /* Channel Information Request (AP) */
 #define WI_RID_SCAN_RES		0xFD88 /* Scan Results Table */
+
+struct wi_apinfo {
+	int			scanreason;	/* ScanReason */
+	char			bssid[6];	/* BSSID (mac address) */
+	int			channel;	/* Channel */
+	int			signal;		/* Signal level */
+	int			noise;		/* Average Noise Level*/
+	int			quality;	/* Quality */
+	int			namelen;	/* Length of SSID string */
+	char			name[32];	/* SSID string */
+	int			capinfo;	/* Capability info. */ 
+	int			interval;	/* BSS Beacon Interval */
+	int			rate;		/* Data Rate */
+};
 
 /*
  * The following do not get passed down to the card, they are used
@@ -437,7 +454,7 @@ struct wi_rx_frame {
 
 /*
  * all data packets have a snap (sub-network access protocol) header that
- * isn't entirely definied, but added for ethernet compatibility.
+ * isn't entirely defined, but added for ethernet compatibility.
  */
 struct wi_snap_frame {
 	u_int16_t	wi_dat[3];
@@ -780,6 +797,8 @@ struct wi_scan_p2_hdr {
 #define	WI_NIC_P3_MINI_ATL	0x8023
 #define	WI_NIC_P3_MINI_ATS	0x8024
 
+#define	WI_NIC_P3_USB_NETGEAR	0x8026 	/* Prism3 USB */
+
 struct wi_card_ident {
 	const u_int16_t	card_id;
 	const char	*card_name;
@@ -914,6 +933,10 @@ struct wi_card_ident {
 	}, {								\
 		WI_NIC_P3_MINI_ATS,					\
 		"PRISM3 ISL37300P(PCI)",				\
+		WI_INTERSIL						\
+	}, {								\
+		WI_NIC_P3_USB_NETGEAR,					\
+		"PRISM3 (USB)",						\
 		WI_INTERSIL						\
 	}, {								\
 		0,							\

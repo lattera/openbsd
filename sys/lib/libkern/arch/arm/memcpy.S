@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/arch/arm/memcpy.S,v 1.2 2004/02/01 05:47:10 drahn Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/arch/arm/memcpy.S,v 1.2.2.1 2004/02/19 10:57:18 niklas Exp $	*/
 /*	$NetBSD: memcpy.S,v 1.2 2001/11/20 00:29:20 chris Exp $	*/
 
 /*-

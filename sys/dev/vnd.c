@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/vnd.c,v 1.23.8.7 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/vnd.c,v 1.23.8.8 2004/02/19 10:56:13 niklas Exp $	*/
 /*	$NetBSD: vnd.c,v 1.26 1996/03/30 23:06:11 christos Exp $	*/
 
 /*
@@ -94,8 +94,12 @@ int vnddebug = 0x00;
 
 #define b_cylin	b_resid
 
-#define	vndunit(x)	DISKUNIT((x) & 0x7f)
-#define vndsimple(x)	((x) & 0x80)
+/*
+ * vndunit is a bit weird.  have to reconstitute the dev_t for
+ * DISKUNIT(), but with the minor masked off.
+ */
+#define	vndunit(x)	DISKUNIT(makedev(major(x), minor(x) & 0x7ff))
+#define vndsimple(x)	(minor(x) & 0x800)
 #define	MAKEVNDDEV(maj, unit, part)	MAKEDISKDEV(maj, unit, part)
 
 #define	VNDLABELDEV(dev) (MAKEVNDDEV(major(dev), vndunit(dev), RAW_PART))
@@ -757,7 +761,7 @@ vndioctl(dev, cmd, addr, flag, p)
 		printf("vndioctl(%x, %lx, %p, %x, %p): unit %d\n",
 		    dev, cmd, addr, flag, p, unit);
 #endif
-	error = suser(p->p_ucred, &p->p_acflag);
+	error = suser(p, 0);
 	if (error)
 		return (error);
 	if (unit >= numvnd)

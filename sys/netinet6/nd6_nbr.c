@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.9 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/nd6_nbr.c,v 1.8.2.10 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: nd6_nbr.c,v 1.61 2001/02/10 16:06:14 jinmei Exp $	*/
 
 /*
@@ -59,6 +59,11 @@
 
 #include <dev/rndvar.h>
 
+#include "carp.h"
+#if NCARP > 0
+#include <netinet/ip_carp.h>
+#endif
+
 #define SDL(s) ((struct sockaddr_dl *)s)
 
 struct dadq;
@@ -92,7 +97,7 @@ nd6_ns_input(m, off, icmp6len)
 	struct in6_addr taddr6;
 	struct in6_addr myaddr6;
 	char *lladdr = NULL;
-	struct ifaddr *ifa;
+	struct ifaddr *ifa = NULL;
 	int lladdrlen = 0;
 	int anycast = 0, proxy = 0, tentative = 0;
 	int router = ip6_forwarding;
@@ -187,7 +192,14 @@ nd6_ns_input(m, off, icmp6len)
 	 * (3) "tentative" address on which DAD is being performed.
 	 */
 	/* (1) and (3) check. */
+#if NCARP > 0
+	if (ifp->if_carp) 
+		ifa = carp_iamatch6(ifp->if_carp, &taddr6);
+	if (!ifa) 
+		ifa = (struct ifaddr *)in6ifa_ifpwithaddr(ifp, &taddr6);
+#else
 	ifa = (struct ifaddr *)in6ifa_ifpwithaddr(ifp, &taddr6);
+#endif
 
 	/* (2) check. */
 	if (!ifa) {
@@ -545,7 +557,6 @@ nd6_na_input(m, off, icmp6len)
 	struct rtentry *rt;
 	struct sockaddr_dl *sdl;
 	union nd_opts ndopts;
-	long time_second = time.tv_sec;
 
 	if (ip6->ip6_hlim != 255) {
 		nd6log((LOG_ERR,
@@ -653,12 +664,13 @@ nd6_na_input(m, off, icmp6len)
 		if (is_solicited) {
 			ln->ln_state = ND6_LLINFO_REACHABLE;
 			ln->ln_byhint = 0;
-			if (ln->ln_expire)
-				ln->ln_expire = time_second +
-				    ND_IFINFO(rt->rt_ifp)->reachable;
+			if (!ND6_LLINFO_PERMANENT(ln)) {
+				nd6_llinfo_settimer(ln,
+				    (long)ND_IFINFO(rt->rt_ifp)->reachable * hz);
+			}
 		} else {
 			ln->ln_state = ND6_LLINFO_STALE;
-			ln->ln_expire = time_second + nd6_gctimer;
+			nd6_llinfo_settimer(ln, (long)nd6_gctimer * hz);
 		}
 		if ((ln->ln_router = is_router) != 0) {
 			/*
@@ -712,7 +724,7 @@ nd6_na_input(m, off, icmp6len)
 			 */
 			if (ln->ln_state == ND6_LLINFO_REACHABLE) {
 				ln->ln_state = ND6_LLINFO_STALE;
-				ln->ln_expire = time_second + nd6_gctimer;
+				nd6_llinfo_settimer(ln, (long)nd6_gctimer * hz);
 			}
 			goto freeit;
 		} else if (is_override				   /* (2a) */
@@ -734,14 +746,15 @@ nd6_na_input(m, off, icmp6len)
 			if (is_solicited) {
 				ln->ln_state = ND6_LLINFO_REACHABLE;
 				ln->ln_byhint = 0;
-				if (ln->ln_expire) {
-					ln->ln_expire = time_second +
-					    ND_IFINFO(ifp)->reachable;
+				if (!ND6_LLINFO_PERMANENT(ln)) {
+					nd6_llinfo_settimer(ln,
+					    (long)ND_IFINFO(ifp)->reachable * hz);
 				}
 			} else {
 				if (lladdr && llchange) {
 					ln->ln_state = ND6_LLINFO_STALE;
-					ln->ln_expire = time_second + nd6_gctimer;
+					nd6_llinfo_settimer(ln,
+					    (long)nd6_gctimer * hz);
 				}
 			}
 		}
@@ -768,7 +781,7 @@ nd6_na_input(m, off, icmp6len)
 			dr = defrouter_lookup(in6, rt->rt_ifp);
 			if (dr)
 				defrtrlist_del(dr);
-			else if (!ip6_forwarding && ip6_accept_rtadv) {
+			else if (!ip6_forwarding) {
 				/*
 				 * Even if the neighbor is not in the default
 				 * router list, the neighbor may be used
@@ -924,9 +937,17 @@ nd6_na_output(ifp, daddr6, taddr6, flags, tlladdr, sdl0)
 		 * lladdr in sdl0.  If we are not proxying (sending NA for
 		 * my address) use lladdr configured for the interface.
 		 */
-		if (sdl0 == NULL)
+		if (sdl0 == NULL) {
+#if NCARP > 0
+			if (ifp->if_carp) 
+				mac = carp_macmatch6(ifp->if_carp, m, taddr6);
+			if (mac == NULL)
+				mac = nd6_ifptomac(ifp);
+#else
+
 			mac = nd6_ifptomac(ifp);
-		else if (sdl0->sa_family == AF_LINK) {
+#endif
+		} else if (sdl0->sa_family == AF_LINK) {
 			struct sockaddr_dl *sdl;
 			sdl = (struct sockaddr_dl *)sdl0;
 			if (sdl->sdl_alen == ifp->if_addrlen)
@@ -1116,7 +1137,7 @@ nd6_dad_start(ifa, tick)
 	if (tick == NULL) {
 		nd6_dad_ns_output(dp, ifa);
 		nd6_dad_starttimer(dp,
-		    ND6_RETRANS_SEC(ND_IFINFO(ifa->ifa_ifp)->retrans) * hz);
+		    (long)ND_IFINFO(ifa->ifa_ifp)->retrans * hz / 1000);
 	} else {
 		int ntick;
 
@@ -1208,7 +1229,7 @@ nd6_dad_timer(ifa)
 		 */
 		nd6_dad_ns_output(dp, ifa);
 		nd6_dad_starttimer(dp,
-		    ND6_RETRANS_SEC(ND_IFINFO(ifa->ifa_ifp)->retrans) * hz);
+		    (long)ND_IFINFO(ifa->ifa_ifp)->retrans * hz / 1000);
 	} else {
 		/*
 		 * We have transmitted sufficient number of DAD packets.

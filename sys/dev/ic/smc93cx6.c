@@ -1,5 +1,6 @@
-/*	$OpenBSD: src/sys/dev/ic/smc93cx6.c,v 1.7.2.3 2003/03/28 00:38:15 niklas Exp $	*/
-/* $FreeBSD: sys/dev/aic7xxx/93cx6.c,v 1.5 2000/01/07 23:08:17 gibbs Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/smc93cx6.c,v 1.7.2.4 2004/02/19 10:56:20 niklas Exp $	*/
+/*	$NetBSD: smc93cx6.c,v 1.10 2003/05/02 19:12:19 dyoung Exp $	*/
+
 /*
  * Interface for the 93C66/56/46/26/06 serial eeprom parts.
  *
@@ -19,6 +20,8 @@
  *    Daniel M. Eischen.
  * 4. Modifications may be freely made to this file if the above conditions
  *    are met.
+ *
+ * $FreeBSD: src/sys/dev/aic7xxx/93cx6.c,v 1.5 2000/01/07 23:08:17 gibbs Exp $
  */
 
 /*
@@ -57,20 +60,8 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#if !(defined(__NetBSD__) || defined(__OpenBSD__))
-#include <machine/bus_memio.h>
-#include <machine/bus_pio.h>
-#endif
 #include <machine/bus.h>
-#if defined(__OpenBSD__)
-#include <dev/ic/aic7xxx_openbsd.h>
-#endif 
-#include <dev/ic/aic7xxx_inline.h>
-#if !(defined(__NetBSD__) || defined(__OpenBSD__))
-#include <dev/aic7xxx/93cx6.h>
-#else
 #include <dev/ic/smc93cx6var.h>
-#endif
 
 /*
  * Right now, we only have to read the SEEPROM.  But we make it easier to
@@ -78,64 +69,23 @@
  */
 static struct seeprom_cmd {
   	unsigned char len;
- 	unsigned char bits[9];
+ 	unsigned char bits[3];
 } seeprom_read = {3, {1, 1, 0}};
 
-static struct seeprom_cmd seeprom_ewen = {9, {1, 0, 0, 1, 1, 0, 0, 0, 0}};
-static struct seeprom_cmd seeprom_ewds = {9, {1, 0, 0, 0, 0, 0, 0, 0, 0}};
-static struct seeprom_cmd seeprom_write = {3, {1, 0, 1}};
-
-/*
- * Wait for the SEERDY to go high; about 800 ns.
- */
-#define CLOCK_PULSE(sd, rdy)				\
-	while ((SEEPROM_STATUS_INB(sd) & rdy) == 0) {	\
-		;  /* Do nothing */			\
-	}						\
-	(void)SEEPROM_INB(sd);	/* Clear clock */
-
-/*
- * Send a START condition and the given command
- */
-static void
-send_seeprom_cmd(struct seeprom_descriptor *sd, struct seeprom_cmd *cmd)
-{
-	u_int8_t temp;
-	int i = 0;
-
-	/* Send chip select for one clock cycle. */
-	temp = sd->sd_MS ^ sd->sd_CS;
-	SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-	CLOCK_PULSE(sd, sd->sd_RDY);
-
-	for (i = 0; i < cmd->len; i++) {
-		if (cmd->bits[i] != 0)
-			temp ^= sd->sd_DO;
-		SEEPROM_OUTB(sd, temp);
-		CLOCK_PULSE(sd, sd->sd_RDY);
-		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-		CLOCK_PULSE(sd, sd->sd_RDY);
-		if (cmd->bits[i] != 0)
-			temp ^= sd->sd_DO;
-	}
-}
-
-/*
- * Clear CS put the chip in the reset state, where it can wait for new commands.
- */
-static void
-reset_seeprom(struct seeprom_descriptor *sd)
-{
-	u_int8_t temp;
-
-	temp = sd->sd_MS;
-	SEEPROM_OUTB(sd, temp);
-	CLOCK_PULSE(sd, sd->sd_RDY);
-	SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-	CLOCK_PULSE(sd, sd->sd_RDY);
-	SEEPROM_OUTB(sd, temp);
-	CLOCK_PULSE(sd, sd->sd_RDY);
-}
+#define CLOCK_PULSE(sd, rdy)	do {					\
+	/*								\
+	 * Wait for the SEERDY to go high; about 800 ns.		\
+	 */								\
+	int cpi = 1000;							\
+	if (rdy == 0) {							\
+		DELAY(4); /* more than long enough */			\
+		break;							\
+	}								\
+	while ((SEEPROM_STATUS_INB(sd) & rdy) == 0 && cpi-- > 0) {	\
+		;  /* Do nothing */					\
+	}								\
+	(void)SEEPROM_INB(sd);	/* Clear clock */			\
+} while (0)
 
 /*
  * Read the serial EEPROM and returns 1 if successful and 0 if
@@ -151,21 +101,33 @@ read_seeprom(sd, buf, start_addr, count)
 	int i = 0;
 	u_int k = 0;
 	u_int16_t v;
-	u_int8_t temp;
+	u_int32_t temp;
 
 	/*
 	 * Read the requested registers of the seeprom.  The loop
 	 * will range from 0 to count-1.
 	 */
 	for (k = start_addr; k < count + start_addr; k++) {
+		/* Send chip select for one clock cycle. */
+		temp = sd->sd_MS ^ sd->sd_CS;
+		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+		CLOCK_PULSE(sd, sd->sd_RDY);
+
 		/*
 		 * Now we're ready to send the read command followed by the
 		 * address of the 16-bit register we want to read.
 		 */
-		send_seeprom_cmd(sd, &seeprom_read);
-
+		for (i = 0; i < seeprom_read.len; i++) {
+			if (seeprom_read.bits[i] != 0)
+				temp ^= sd->sd_DO;
+			SEEPROM_OUTB(sd, temp);
+			CLOCK_PULSE(sd, sd->sd_RDY);
+			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+			CLOCK_PULSE(sd, sd->sd_RDY);
+			if (seeprom_read.bits[i] != 0)
+				temp ^= sd->sd_DO;
+		}
 		/* Send the 6 or 8 bit address (MSB first, LSB last). */
-		temp = sd->sd_MS ^ sd->sd_CS;
 		for (i = (sd->sd_chip - 1); i >= 0; i--) {
 			if ((k & (1 << i)) != 0)
 				temp ^= sd->sd_DO;
@@ -197,7 +159,13 @@ read_seeprom(sd, buf, start_addr, count)
 		buf[k - start_addr] = v;
 
 		/* Reset the chip select for the next command cycle. */
-		reset_seeprom(sd);
+		temp = sd->sd_MS;
+		SEEPROM_OUTB(sd, temp);
+		CLOCK_PULSE(sd, sd->sd_RDY);
+		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+		CLOCK_PULSE(sd, sd->sd_RDY);
+		SEEPROM_OUTB(sd, temp);
+		CLOCK_PULSE(sd, sd->sd_RDY);
 	}
 #ifdef AHC_DUMP_EEPROM
 	printf("\nSerial EEPROM:\n\t");
@@ -210,98 +178,4 @@ read_seeprom(sd, buf, start_addr, count)
 	printf ("\n");
 #endif
 	return (1);
-}
-
-/*
- * Write the serial EEPROM and return 1 if successful and 0 if
- * not successful.
- */
-int
-write_seeprom(sd, buf, start_addr, count)
-	struct seeprom_descriptor *sd;
-	u_int16_t *buf;
-	bus_size_t start_addr;
-	bus_size_t count;
-{
-	u_int16_t v;
-	u_int8_t temp;
-	int i, k;
-
-	/* Place the chip into write-enable mode */
-	send_seeprom_cmd(sd, &seeprom_ewen);
-	reset_seeprom(sd);
-
-	/* Write all requested data out to the seeprom. */
-	temp = sd->sd_MS ^ sd->sd_CS;
-	for (k = start_addr; k < count + start_addr; k++) {
-		/* Send the write command */
-		send_seeprom_cmd(sd, &seeprom_write);
-
-		/* Send the 6 or 8 bit address (MSB first). */
-		for (i = (sd->sd_chip - 1); i >= 0; i--) {
-			if ((k & (1 << i)) != 0)
-				temp ^= sd->sd_DO;
-			SEEPROM_OUTB(sd, temp);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-			if ((k & (1 << i)) != 0)
-				temp ^= sd->sd_DO;
-		}
-
-		/* Write the 16 bit value, MSB first */
-		v = buf[k - start_addr];
-		for (i = 15; i >= 0; i--) {
-			if ((v & (1 << i)) != 0)
-				temp ^= sd->sd_DO;
-			SEEPROM_OUTB(sd, temp);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-			if ((v & (1 << i)) != 0)
-				temp ^= sd->sd_DO;
-		}
-
-		/* Wait for the chip to complete the write */
-		temp = sd->sd_MS;
-		SEEPROM_OUTB(sd, temp);
-		CLOCK_PULSE(sd, sd->sd_RDY);
-		temp = sd->sd_MS ^ sd->sd_CS;
-		do {
-			SEEPROM_OUTB(sd, temp);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
-			CLOCK_PULSE(sd, sd->sd_RDY);
-		} while ((SEEPROM_DATA_INB(sd) & sd->sd_DI) == 0);
-
-		reset_seeprom(sd);
-	}
-
-	/* Put the chip back into write-protect mode */
-	send_seeprom_cmd(sd, &seeprom_ewds);
-	reset_seeprom(sd);
-
-	return (1);
-}
-
-int
-verify_cksum(struct seeprom_config *sc)
-{
-	int i;
-	int maxaddr;
-	u_int32_t checksum;
-	u_int16_t *scarray;
-
-	maxaddr = (sizeof(*sc)/2) - 1;
-	checksum = 0;
-	scarray = (uint16_t *)sc;
-
-	for (i = 0; i < maxaddr; i++)
-		checksum = checksum + scarray[i];
-	if (checksum == 0
-	 || (checksum & 0xFFFF) != sc->checksum) {
-		return (0);
-	} else {
-		return(1);
-	}
 }

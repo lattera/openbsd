@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12.2.4 2003/05/13 19:35:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pcireg.h,v 1.12.2.5 2004/02/19 10:56:29 niklas Exp $	*/
 /*	$NetBSD: pcireg.h,v 1.26 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*
@@ -399,9 +399,9 @@ typedef u_int8_t pci_revision_t;
 #define	PCI_MAPREG_MEM_TYPE_32BIT_1M		0x00000002
 #define	PCI_MAPREG_MEM_TYPE_64BIT		0x00000004
 
-#define	PCI_MAPREG_MEM_CACHEABLE(mr)					\
-	    (((mr) & PCI_MAPREG_MEM_CACHEABLE_MASK) != 0)
-#define	PCI_MAPREG_MEM_CACHEABLE_MASK		0x00000008
+#define	PCI_MAPREG_MEM_PREFETCHABLE(mr)					\
+	    (((mr) & PCI_MAPREG_MEM_PREFETCHABLE_MASK) != 0)
+#define	PCI_MAPREG_MEM_PREFETCHABLE_MASK	0x00000008
 
 #define	PCI_MAPREG_MEM_ADDR(mr)						\
 	    ((mr) & PCI_MAPREG_MEM_ADDR_MASK)
@@ -413,7 +413,7 @@ typedef u_int8_t pci_revision_t;
 	    ((mr) & PCI_MAPREG_MEM64_ADDR_MASK)
 #define	PCI_MAPREG_MEM64_SIZE(mr)					\
 	    (PCI_MAPREG_MEM64_ADDR(mr) & -PCI_MAPREG_MEM64_ADDR(mr))
-#define	PCI_MAPREG_MEM64_ADDR_MASK		0xfffffffffffffff0
+#define	PCI_MAPREG_MEM64_ADDR_MASK		0xfffffffffffffff0ULL
 
 #define	PCI_MAPREG_IO_ADDR(mr)						\
 	    ((mr) & PCI_MAPREG_IO_ADDR_MASK)
@@ -463,6 +463,7 @@ typedef u_int8_t pci_revision_t;
 /*
  * Power Management Control Status Register; access via capability pointer.
  */
+#define PCI_PMCSR		0x04
 #define PCI_PMCSR_STATE_MASK	0x03
 #define PCI_PMCSR_STATE_D0	0x00
 #define PCI_PMCSR_STATE_D1	0x01
@@ -510,14 +511,14 @@ typedef u_int8_t pci_intr_line_t;
 struct pci_vpd_smallres {
 	uint8_t		vpdres_byte0;		/* length of data + tag */
 	/* Actual data. */
-} __attribute__((__packed__));
+} __packed;
 
 struct pci_vpd_largeres {
 	uint8_t		vpdres_byte0;
 	uint8_t		vpdres_len_lsb;		/* length of data only */
 	uint8_t		vpdres_len_msb;
 	/* Actual data. */
-} __attribute__((__packed__));
+} __packed;
 
 #define	PCI_VPDRES_ISLARGE(x)			((x) & 0x80)
 
@@ -538,7 +539,7 @@ struct pci_vpd {
 	uint8_t		vpd_key1;
 	uint8_t		vpd_len;		/* length of data only */
 	/* Actual data. */
-} __attribute__((__packed__));
+} __packed;
 
 /*
  * Recommended VPD fields:

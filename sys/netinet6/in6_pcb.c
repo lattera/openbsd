@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9.2.7 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6_pcb.c,v 1.9.2.8 2004/02/19 10:57:25 niklas Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -273,7 +273,7 @@ in6_pcbbind(inp, nam)
 			 * curproc?  (Marked with BSD's {in,}famous XXX ?
 			 */
 			if (ntohs(lport) < IPPORT_RESERVED &&
-			    (error = suser(p->p_ucred, &p->p_acflag)))
+			    (error = suser(p, 0)))
 				return error;
 
 			t = in_pcblookup(head,
@@ -285,21 +285,16 @@ in6_pcbbind(inp, nam)
 				return EADDRINUSE;
 		}
 		inp->inp_laddr6 = sin6->sin6_addr;
-
-		if (!IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)) {
-			inp->inp_ipv6.ip6_flow = htonl(0x60000000) |
-			    (sin6->sin6_flowinfo & htonl(0x0fffffff));
-		}
 	}
 
 	if (lport == 0) {
 		error = in6_pcbsetport(&inp->inp_laddr6, inp, p);
 		if (error != 0)
 			return error;
-	} else
+	} else {
 		inp->inp_lport = lport;
-
-	in_pcbrehash(inp);
+		in_pcbrehash(inp);
+	}
 
 	return 0;
 }
@@ -331,7 +326,7 @@ in6_pcbsetport(laddr, inp, p)
 		first = ipport_hifirstauto;	/* sysctl */
 		last = ipport_hilastauto;
 	} else if (inp->inp_flags & INP_LOWPORT) {
-		if ((error = suser(p->p_ucred, &p->p_acflag)))
+		if ((error = suser(p, 0)))
 			return (EACCES);
 		first = IPPORT_RESERVED-1; /* 1023 */
 		last = 600;		   /* not IPPORT_RESERVED/2 */
@@ -407,6 +402,10 @@ portloop:
 
 	inp->inp_lport = lport;
 	in_pcbrehash(inp);
+
+#if 0
+	inp->inp_flowinfo = 0;	/* XXX */
+#endif
 
 	return 0;
 }
@@ -522,11 +521,10 @@ in6_pcbconnect(inp, nam)
 	}
 	inp->inp_faddr6 = sin6->sin6_addr;
 	inp->inp_fport = sin6->sin6_port;
-	/*
-	 * xxx kazu flowlabel is necessary for connect?
-	 * but if this line is missing, the garbage value remains.
-	 */
-	inp->inp_ipv6.ip6_flow = sin6->sin6_flowinfo;
+	inp->inp_flowinfo &= ~IPV6_FLOWLABEL_MASK;
+	if (ip6_auto_flowlabel)
+		inp->inp_flowinfo |=
+		    (htonl(ip6_randomflowlabel()) & IPV6_FLOWLABEL_MASK);
 	in_pcbrehash(inp);
 	return (0);
 }
@@ -561,12 +559,12 @@ in6_pcbnotify(head, dst, fport_arg, src, lport_arg, cmd, cmdarg, notify)
 	int errno, nmatch = 0;
 	u_int32_t flowinfo;
 
-	if ((unsigned)cmd > PRC_NCMDS || dst->sa_family != AF_INET6)
-		return 1;
+	if ((unsigned)cmd >= PRC_NCMDS || dst->sa_family != AF_INET6)
+		return (0);
 
 	sa6_dst = (struct sockaddr_in6 *)dst;
 	if (IN6_IS_ADDR_UNSPECIFIED(&sa6_dst->sin6_addr))
-		return 1;
+		return (0);
 	if (IN6_IS_ADDR_V4MAPPED(&sa6_dst->sin6_addr))
 		printf("Huh?  Thought in6_pcbnotify() never got "
 		       "called with mapped!\n");
@@ -595,9 +593,9 @@ in6_pcbnotify(head, dst, fport_arg, src, lport_arg, cmd, cmdarg, notify)
 	}
 	errno = inet6ctlerrmap[cmd];
 
-	for (inp = head->inpt_queue.cqh_first;
-	     inp != (struct inpcb *)&head->inpt_queue; inp = ninp) {
-		ninp = inp->inp_queue.cqe_next;
+	for (inp = CIRCLEQ_FIRST(&head->inpt_queue);
+	     inp != CIRCLEQ_END(&head->inpt_queue); inp = ninp) {
+		ninp = CIRCLEQ_NEXT(inp, inp_queue);
 
 		if ((inp->inp_flags & INP_IPV6) == 0)
 			continue;
@@ -673,7 +671,7 @@ in6_pcbnotify(head, dst, fport_arg, src, lport_arg, cmd, cmdarg, notify)
 		if (notify)
 			(*notify)(inp, errno);
 	}
-	return 0;
+	return (nmatch);
 }
 
 /*

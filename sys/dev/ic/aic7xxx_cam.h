@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/aic7xxx_cam.h,v 1.1 2003/12/24 22:45:45 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/aic7xxx_cam.h,v 1.1.2.1 2004/02/19 10:56:16 niklas Exp $	*/
 /*	$NetBSD: aic7xxx_cam.h,v 1.3 2003/04/20 11:17:20 fvdl Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pcdisplay_chars.c,v 1.2.4.1 2001/05/14 22:24:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pcdisplay_chars.c,v 1.2.4.2 2004/02/19 10:56:20 niklas Exp $ */
 /* $NetBSD: pcdisplay_chars.c,v 1.5 2000/06/08 07:01:19 cgd Exp $ */
 
 /*
@@ -337,7 +337,7 @@ pcdisplay_mapchar(id, uni, index)
 	int uni;
 	unsigned int *index;
 {
-	int i;
+	u_int i;
 
 	if (uni < 128) {
 		*index = uni;

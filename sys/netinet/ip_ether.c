@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.7 2003/05/13 19:36:17 ho Exp $  */
+/*	$OpenBSD: src/sys/netinet/ip_ether.c,v 1.6.2.8 2004/02/19 10:57:24 niklas Exp $  */
 /*
  * The author of this code is Angelos D. Keromytis (kermit@adk.gr)
  *
@@ -86,7 +86,7 @@ etherip_input(struct mbuf *m, ...)
 	va_list ap;
 
 #if NGIF > 0
-	int i;
+	struct gif_softc *sc;
 #if NBRIDGE > 0
 	int s;
 #endif /* NBRIDGE */
@@ -222,27 +222,27 @@ etherip_input(struct mbuf *m, ...)
 
 #if NGIF > 0
 	/* Find appropriate gif(4) interface */
-	for (i = 0; i < ngif; i++) {
-		if ((gif_softc[i].gif_psrc == NULL) ||
-		    (gif_softc[i].gif_pdst == NULL) ||
-		    !(gif_softc[i].gif_if.if_flags & (IFF_UP|IFF_RUNNING)))
+	LIST_FOREACH(sc, &gif_softc_list, gif_list) {
+		if ((sc->gif_psrc == NULL) ||
+		    (sc->gif_pdst == NULL) ||
+		    !(sc->gif_if.if_flags & (IFF_UP|IFF_RUNNING)))
 			continue;
 
-		if (!bcmp(gif_softc[i].gif_psrc, &sdst, gif_softc[i].gif_psrc->sa_len) &&
-		    !bcmp(gif_softc[i].gif_pdst, &ssrc, gif_softc[i].gif_pdst->sa_len) &&
-		    gif_softc[i].gif_if.if_bridge != NULL)
+		if (!bcmp(sc->gif_psrc, &sdst, sc->gif_psrc->sa_len) &&
+		    !bcmp(sc->gif_pdst, &ssrc, sc->gif_pdst->sa_len) &&
+		    sc->gif_if.if_bridge != NULL)
 			break;
 	}
 
 	/* None found. */
-	if (i >= ngif) {
+	if (sc == NULL) {
 		DPRINTF(("etherip_input(): no interface found\n"));
 		etheripstat.etherip_noifdrops++;
 		m_freem(m);
 		return;
 	}
 #if NBPFILTER > 0
-	if (gif_softc[i].gif_if.if_bpf) {
+	if (sc->gif_if.if_bpf) {
 		struct mbuf m0;
 		u_int32_t af = sdst.sa.sa_family;
 
@@ -251,7 +251,7 @@ etherip_input(struct mbuf *m, ...)
 		m0.m_len = 4;
 		m0.m_data = (char *)&af;
 
-		bpf_mtap(gif_softc[i].gif_if.if_bpf, &m0);
+		bpf_mtap(sc->gif_if.if_bpf, &m0);
 	}
 #endif
 
@@ -261,12 +261,12 @@ etherip_input(struct mbuf *m, ...)
 	 * NULL if it has consumed the packet.  In the case of gif's,
 	 * bridge_input() returns non-NULL when an error occurs.
 	 */
-	m->m_pkthdr.rcvif = &gif_softc[i].gif_if;
+	m->m_pkthdr.rcvif = &sc->gif_if;
 	if (m->m_flags & (M_BCAST|M_MCAST))
-		gif_softc[i].gif_if.if_imcasts++;
+		sc->gif_if.if_imcasts++;
 
 	s = splnet();
-	m = bridge_input(&gif_softc[i].gif_if, &eh, m);
+	m = bridge_input(&sc->gif_if, &eh, m);
 	splx(s);
 	if (m == NULL)
 		return;
@@ -412,7 +412,7 @@ etherip_output(struct mbuf *m, struct tdb *tdb, struct mbuf **mp, int skip,
 	eip.eip_ver = ETHERIP_VERSION & ETHERIP_VER_VERS_MASK;
 	eip.eip_pad = 0;
 	m_copyback(m, hlen - sizeof(struct etherip_header),
-	    sizeof(struct etherip_header), (caddr_t)&eip);
+	    sizeof(struct etherip_header), &eip);
 
 	*mp = m;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofbus.c,v 1.7.2.3 2002/03/28 15:38:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofbus.c,v 1.7.2.4 2004/02/19 10:56:25 niklas Exp $	*/
 /*	$NetBSD: ofbus.c,v 1.3 1996/10/13 01:38:11 christos Exp $	*/
 
 /*
@@ -167,9 +167,6 @@ ofbprobe(parent, cf, aux)
 	return 1;
 }
 
-#ifdef __powerpc__
-void uni_n_config(int);
-#endif /* __powerpc__ */
 void
 ofbattach(parent, dev, aux)
 	struct device *parent, *dev;
@@ -206,10 +203,6 @@ ofbattach(parent, dev, aux)
 			units = 2;
 #endif
 
-#ifdef __powerpc__
-		} else if (!strcmp(name, "uni-n")) {
-			uni_n_config(ofp->phandle);
-#endif /* __powerpc__ */
 		}
 	}
 	for (child = OF_child(ofp->phandle); child; child = OF_peer(child)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vrreg.h,v 1.2.6.3 2003/03/28 00:38:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vrreg.h,v 1.2.6.4 2004/02/19 10:56:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -407,12 +407,16 @@ struct vr_chain {
 	struct vr_desc		*vr_ptr;
 	struct mbuf		*vr_mbuf;
 	struct vr_chain		*vr_nextdesc;
+	bus_addr_t		vr_paddr;
+	bus_dmamap_t		vr_map;
 };
 
 struct vr_chain_onefrag {
 	struct vr_desc		*vr_ptr;
-	struct mbuf		*vr_mbuf;
 	struct vr_chain_onefrag	*vr_nextdesc;
+	u_int8_t		*vr_buf;
+	bus_addr_t		vr_paddr;
+	bus_dmamap_t		vr_map;
 };
 
 struct vr_chain_data {
@@ -467,6 +471,8 @@ struct vr_softc {
 	struct vr_chain_data	vr_cdata;
 	struct mii_data		sc_mii;
 	struct timeout		sc_to;
+	bus_dmamap_t		sc_listmap;	/* descriptor list map */
+	bus_dma_segment_t	sc_listseg;
 };
 
 #define VR_F_RESTART		0x01		/* Restart unit on next tick */

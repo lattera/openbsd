@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/isa/nsclpcsio_isa.c,v 1.2 2004/01/12 14:10:53 grange Exp $ */
+/* $OpenBSD: src/sys/dev/isa/nsclpcsio_isa.c,v 1.2.2.1 2004/02/19 10:56:22 niklas Exp $ */
 /* $NetBSD: nsclpcsio_isa.c,v 1.5 2002/10/22 16:18:26 drochner Exp $ */
 
 /*

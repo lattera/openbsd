@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofcons.c,v 1.3.2.4 2003/05/13 19:35:04 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofcons.c,v 1.3.2.5 2004/02/19 10:56:25 niklas Exp $	*/
 /*	$NetBSD: ofcons.c,v 1.3 1996/10/13 01:38:11 christos Exp $	*/
 
 /*
@@ -43,7 +43,7 @@
 
 #include <dev/ofw/openfirm.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 struct ofc_softc {
 	struct device of_dev;
@@ -150,7 +150,7 @@ ofcopen(dev, flag, mode, p)
 		tp->t_ispeed = tp->t_ospeed = TTYDEF_SPEED;
 		ofcparam(tp, &tp->t_termios);
 		ttsetwater(tp);
-	} else if ((tp->t_state&TS_XCLUDE) && suser(p->p_ucred, &p->p_acflag))
+	} else if ((tp->t_state&TS_XCLUDE) && suser(p, 0))
 		return EBUSY;
 	tp->t_state |= TS_CARR_ON;
 	

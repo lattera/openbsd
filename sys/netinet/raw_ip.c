@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/raw_ip.c,v 1.20.2.5 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/raw_ip.c,v 1.20.2.6 2004/02/19 10:57:24 niklas Exp $	*/
 /*	$NetBSD: raw_ip.c,v 1.25 1996/02/18 18:58:33 christos Exp $	*/
 
 /*
@@ -119,14 +119,12 @@ struct sockaddr_in ripsrc = { sizeof(ripsrc), AF_INET };
 void
 rip_input(struct mbuf *m, ...)
 {
-	register struct ip *ip = mtod(m, struct ip *);
-	register struct inpcb *inp;
+	struct ip *ip = mtod(m, struct ip *);
+	struct inpcb *inp;
 	struct socket *last = 0;
 
 	ripsrc.sin_addr = ip->ip_src;
-	for (inp = rawcbtable.inpt_queue.cqh_first;
-	    inp != (struct inpcb *)&rawcbtable.inpt_queue;
-	    inp = inp->inp_queue.cqe_next) {
+	CIRCLEQ_FOREACH(inp, &rawcbtable.inpt_queue, inp_queue) {
 #ifdef INET6
 		if (inp->inp_flags & INP_IPV6)
 			continue;
@@ -178,8 +176,8 @@ rip_output(struct mbuf *m, ...)
 {
 	struct socket *so;
 	u_long dst;
-	register struct ip *ip;
-	register struct inpcb *inp;
+	struct ip *ip;
+	struct inpcb *inp;
 	int flags;
 	va_list ap;
 
@@ -205,9 +203,9 @@ rip_output(struct mbuf *m, ...)
 			return (ENOBUFS);
 		ip = mtod(m, struct ip *);
 		ip->ip_tos = 0;
-		ip->ip_off = 0;
+		ip->ip_off = htons(0);
 		ip->ip_p = inp->inp_ip.ip_p;
-		ip->ip_len = m->m_pkthdr.len;
+		ip->ip_len = htons(m->m_pkthdr.len);
 		ip->ip_src = inp->inp_laddr;
 		ip->ip_dst.s_addr = dst;
 		ip->ip_ttl = MAXTTL;
@@ -216,20 +214,18 @@ rip_output(struct mbuf *m, ...)
 			m_freem(m);
 			return (EMSGSIZE);
 		}
-		if (m->m_pkthdr.len < sizeof (struct ip)) {
+		if (m->m_pkthdr.len < sizeof(struct ip)) {
 			m_freem(m);
 			return (EINVAL);
 		}
 		ip = mtod(m, struct ip *);
-		NTOHS(ip->ip_len);
-		NTOHS(ip->ip_off);
 		/*
 		 * don't allow both user specified and setsockopt options,
 		 * and don't allow packet length sizes that will crash
 		 */
 		if ((ip->ip_hl != (sizeof (*ip) >> 2) && inp->inp_options) ||
-		    ip->ip_len > m->m_pkthdr.len ||
-		    ip->ip_len < ip->ip_hl << 2) {
+		    ntohs(ip->ip_len) > m->m_pkthdr.len ||
+		    ntohs(ip->ip_len) < ip->ip_hl << 2) {
 			m_freem(m);
 			return (EINVAL);
 		}
@@ -261,8 +257,8 @@ rip_ctloutput(op, so, level, optname, m)
 	int level, optname;
 	struct mbuf **m;
 {
-	register struct inpcb *inp = sotoinpcb(so);
-	register int error;
+	struct inpcb *inp = sotoinpcb(so);
+	int error;
 
 	if (level != IPPROTO_IP) {
 		if (op == PRCO_SETOPT && *m)
@@ -326,12 +322,12 @@ u_long	rip_recvspace = RIPRCVQ;
 /*ARGSUSED*/
 int
 rip_usrreq(so, req, m, nam, control)
-	register struct socket *so;
+	struct socket *so;
 	int req;
 	struct mbuf *m, *nam, *control;
 {
-	register int error = 0;
-	register struct inpcb *inp = sotoinpcb(so);
+	int error = 0;
+	struct inpcb *inp = sotoinpcb(so);
 #ifdef MROUTING
 	extern struct socket *ip_mrouter;
 #endif
@@ -437,7 +433,7 @@ rip_usrreq(so, req, m, nam, control)
 	 */
 	case PRU_SEND:
 	    {
-		register u_int32_t dst;
+		u_int32_t dst;
 
 		if (so->so_state & SS_ISCONNECTED) {
 			if (nam) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cardbus/cardbus_map.c,v 1.1.8.2 2002/03/29 23:39:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/cardbus/cardbus_map.c,v 1.1.8.3 2004/02/19 10:56:14 niklas Exp $ */
 /*	$NetBSD: cardbus_map.c,v 1.10 2000/03/07 00:31:46 mycroft Exp $	*/
 
 /*
@@ -219,7 +219,12 @@ cardbus_mem_find(cc, cf, tag, reg, type, basep, sizep, flagsp)
 		*sizep = PCI_MAPREG_MEM_SIZE(mask);
 	}
 	if (flagsp != 0) {
-		*flagsp = PCI_MAPREG_MEM_CACHEABLE(address);
+		*flagsp =
+#ifdef BUS_SPACE_MAP_PREFETCHABLE
+		    PCI_MAPREG_MEM_PREFETCHABLE(address) ?
+		      BUS_SPACE_MAP_PREFETCHABLE :
+#endif
+		0;
 	}
 	
 	return 0;

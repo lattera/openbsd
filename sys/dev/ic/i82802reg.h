@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/i82802reg.h,v 1.1.8.2 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/i82802reg.h,v 1.1.8.3 2004/02/19 10:56:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -34,7 +34,7 @@
  */
 
 /*
- * unfortunatelly FWH does not show up in the pci device scan, 10x intel.
+ * unfortunately FWH does not show up in the pci device scan, 10x intel.
  * so all we do is probe for it in the pchb driver at the following address.
  */
 #define	I82802_IOBASE	0xffb00000

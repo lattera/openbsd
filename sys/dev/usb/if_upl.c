@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_upl.c,v 1.2.4.6 2003/05/13 19:35:11 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/if_upl.c,v 1.2.4.7 2004/02/19 10:56:33 niklas Exp $ */
 /*	$NetBSD: if_upl.c,v 1.19 2002/07/11 21:14:26 augustss Exp $	*/
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -205,7 +205,7 @@ Static struct upl_type sc_devs[] = {
 	{ 0, 0 }
 };
 
-USB_DECLARE_DRIVER(upl);
+USB_DECLARE_DRIVER_CLASS(upl, DV_IFNET);
 
 Static int upl_openpipes(struct upl_softc *);
 Static int upl_tx_list_init(struct upl_softc *);

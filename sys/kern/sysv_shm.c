@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.9 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_shm.c,v 1.14.2.10 2004/02/19 10:56:38 niklas Exp $	*/
 /*	$NetBSD: sysv_shm.c,v 1.50 1998/10/21 22:24:29 tron Exp $	*/
 
 /*
@@ -8,13 +8,17 @@
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND TODD C. MILLER DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL TODD C. MILLER BE LIABLE
- * FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Sponsored in part by the Defense Advanced Research Projects
+ * Agency (DARPA) and Air Force Research Laboratory, Air Force
+ * Materiel Command, USAF, under agreement number F39502-99-1-0512.
  */
 /*
  * Copyright (c) 1994 Adam Glass and Charles M. Hannum.  All rights reserved.
@@ -46,7 +50,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/kernel.h>
 #include <sys/shm.h>
@@ -206,6 +209,12 @@ sys_shmdt(struct proc *p, void *v, register_t *retval)
 int
 sys_shmat(struct proc *p, void *v, register_t *retval)
 {
+	return (sys_shmat1(p, v, retval, 0));
+}
+
+int
+sys_shmat1(struct proc *p, void *v, register_t *retval, int findremoved)
+{
 	struct sys_shmat_args /* {
 		syscallarg(int) shmid;
 		syscallarg(const void *) shmaddr;
@@ -232,7 +241,7 @@ sys_shmat(struct proc *p, void *v, register_t *retval)
 			shmmap_s->shmid = -1;
 		p->p_vmspace->vm_shm = (caddr_t)shmmap_h;
 	}
-	shmseg = shm_find_segment_by_shmid(SCARG(uap, shmid), 0);
+	shmseg = shm_find_segment_by_shmid(SCARG(uap, shmid), findremoved);
 	if (shmseg == NULL)
 		return (EINVAL);
 	error = ipcperm(cred, &shmseg->shm_perm,
@@ -610,8 +619,6 @@ sysctl_sysvshm(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 		bzero(newseqs + shminfo.shmmni,
 		    (val - shminfo.shmmni) * sizeof(unsigned short));
 		free(shmsegs, M_SHM);
-		free(shmseqs, M_SHM);
-		shmsegs = newsegs;
 		shmseqs = newseqs;
 		shminfo.shmmni = val;
 		return (0);

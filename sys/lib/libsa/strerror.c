@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/strerror.c,v 1.5.12.1 2003/06/07 11:03:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/strerror.c,v 1.5.12.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: strerror.c,v 1.11 1996/10/13 02:29:08 christos Exp $	*/
 
 /*-
@@ -35,8 +35,7 @@
 #include "stand.h"
 
 char *
-strerror(err)
-	int err;
+strerror(int err)
 {
 	static	char ebuf[64];
 
@@ -69,7 +68,6 @@ strerror(err)
 		return "Input/output error";
 	case EINVAL:
 		return "Invalid argument";
-
 	default:
 		snprintf(ebuf, sizeof ebuf, "Unknown error: code %d", err);
 		return ebuf;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl80x9.c,v 1.3.4.1 2001/05/14 22:24:09 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/rtl80x9.c,v 1.3.4.2 2004/02/19 10:56:20 niklas Exp $	*/
 /*	$NetBSD: rtl80x9.c,v 1.1 1998/10/31 00:44:33 thorpej Exp $	*/
 
 /*-
@@ -56,7 +56,6 @@
 #endif
 
 #include <machine/bus.h>
-#include <machine/intr.h>
 
 #include <dev/ic/dp8390reg.h>
 #include <dev/ic/dp8390var.h>

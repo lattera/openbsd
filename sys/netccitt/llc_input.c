@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/llc_input.c,v 1.2.16.2 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/llc_input.c,v 1.2.16.3 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: llc_input.c,v 1.3 1996/02/13 22:04:44 christos Exp $	*/
 
 /* 
@@ -56,7 +56,7 @@
 #include <netccitt/dll.h>
 #include <netccitt/llc_var.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 /*
  * This module implements LLC as specified by ISO 8802-2.
@@ -70,10 +70,10 @@
 void
 llcintr()
 {
-	register struct mbuf *m;
-	register int i;
-	register int frame_kind;
-	register u_char cmdrsp;
+	struct mbuf *m;
+	int i;
+	int frame_kind;
+	u_char cmdrsp;
 	struct llc_linkcb *linkp;
 	struct npaidbentry *sapinfo = NULL;
 	struct sdl_hdr *sdlhdr;
@@ -371,7 +371,7 @@ llc_ctlinput(prc, addr, info)
 	struct rtentry *nlrt;
 	struct rtentry *llrt = NULL;
 	struct llc_linkcb *linkp = NULL;
-	register int i;
+	int i;
 
 	/* info must point to something valid at all times */
 	if (info == 0)
@@ -408,9 +408,9 @@ llc_ctlinput(prc, addr, info)
 		return 0;
 
 	case PRC_IFDOWN: {
-		register struct llc_linkcb *linkp;
-		register struct llc_linkcb *nlinkp;
-		register int i;
+		struct llc_linkcb *linkp;
+		struct llc_linkcb *nlinkp;
+		int i;
 
 		/*
 		 * All links are accessible over the doubly linked list llccb_q

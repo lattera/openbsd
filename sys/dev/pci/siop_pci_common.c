@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5.4.4 2003/03/28 00:38:25 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.c,v 1.5.4.5 2004/02/19 10:56:30 niklas Exp $ */
 /*	$NetBSD: siop_pci_common.c,v 1.17 2002/05/04 18:11:06 bouyer Exp $ */
 
 /*
@@ -224,15 +224,20 @@ siop_pci_attach_common(pci_sc, siop_sc, pa, intr)
 	pcireg_t memtype;
 	int memh_valid, ioh_valid;
 	bus_addr_t ioaddr, memaddr;
+	bus_size_t memsize, iosize;
 
 	pci_sc->sc_pp =
 	    siop_lookup_product(pa->pa_id, PCI_REVISION(pa->pa_class));
 	if (pci_sc->sc_pp == NULL) {
-		printf("siop: broken match/attach!\n");
+		printf(": broken match/attach!\n");
 		return 0;
 	}
 	/* copy interesting infos about the chip */
 	siop_sc->features = pci_sc->sc_pp->features;
+#ifdef __hppa__
+	/* XXX On board ram doesn't work (yet?) on hppa. */
+	siop_sc->features &= ~SF_CHIP_RAM;
+#endif
 #ifdef SIOP_SYMLED    /* XXX Should be a devprop! */
 	siop_sc->features |= SF_CHIP_LED0;
 #endif
@@ -259,7 +264,7 @@ siop_pci_attach_common(pci_sc, siop_sc, pa, intr)
 	}
 
 	ioh_valid = (pci_mapreg_map(pa, 0x10, PCI_MAPREG_TYPE_IO, 0,
-	    &iot, &ioh, &ioaddr, NULL, 0) == 0);
+	    &iot, &ioh, &ioaddr, &iosize, 0) == 0);
 
 	if (memh_valid) {
 		siop_sc->sc_rt = memt;
@@ -270,8 +275,27 @@ siop_pci_attach_common(pci_sc, siop_sc, pa, intr)
 		siop_sc->sc_rh = ioh;
 		siop_sc->sc_raddr = ioaddr;
 	} else {
-		printf("\n%s: unable to map device registers\n",
-		    siop_sc->sc_dev.dv_xname);
+		printf(": unable to map device registers\n");
+		return 0;
+	}
+
+	if (pci_intr_map(pa, &intrhandle) != 0) {
+		printf(": couldn't map interrupt\n");
+		bus_space_unmap(siop_sc->sc_rt, siop_sc->sc_rh, iosize);
+		return 0;
+	}
+	intrstr = pci_intr_string(pa->pa_pc, intrhandle);
+	pci_sc->sc_ih = pci_intr_establish(pa->pa_pc, intrhandle, IPL_BIO,
+	    intr, siop_sc, siop_sc->sc_dev.dv_xname);
+	if (pci_sc->sc_ih != NULL) {
+		printf(": %s",
+		    intrstr ? intrstr : "?");
+	} else {
+		printf(": couldn't establish interrupt");
+		if (intrstr != NULL)
+			printf(" at %s", intrstr);
+		printf("\n");
+		bus_space_unmap(siop_sc->sc_rt, siop_sc->sc_rh, iosize);
 		return 0;
 	}
 
@@ -287,33 +311,16 @@ siop_pci_attach_common(pci_sc, siop_sc, pa, intr)
 		}
 		if (pci_mapreg_map(pa, bar, memtype, 0,
                     &siop_sc->sc_ramt, &siop_sc->sc_ramh,
-		    &siop_sc->sc_scriptaddr, NULL, 0) == 0) {
-			printf(" using on-board RAM");
+		    &siop_sc->sc_scriptaddr, &memsize, 0) == 0) {
+			printf(", using %dK of on-board RAM", memsize / 1024);
 		} else {
-			printf(" can't map on-board RAM");
+			printf(", can't map on-board RAM");
 			siop_sc->features &= ~SF_CHIP_RAM;
 		}
 	}
 
-	if (pci_intr_map(pa, &intrhandle) != 0) {
-		printf("\n%s: couldn't map interrupt\n",
-		    siop_sc->sc_dev.dv_xname);
-		return 0;
-	}
-	intrstr = pci_intr_string(pa->pa_pc, intrhandle);
-	pci_sc->sc_ih = pci_intr_establish(pa->pa_pc, intrhandle, IPL_BIO,
-	    intr, siop_sc, siop_sc->sc_dev.dv_xname);
-	if (pci_sc->sc_ih != NULL) {
-		printf(" %s\n",
-		    intrstr ? intrstr : "?");
-	} else {
-		printf("\n%s: couldn't establish interrupt",
-		    siop_sc->sc_dev.dv_xname);
-		if (intrstr != NULL)
-			printf(" at %s", intrstr);
-		printf("\n");
-		return 0;
-	}
+	printf("\n");
+
 	return 1;
 }
 

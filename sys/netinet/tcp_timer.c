@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.6 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.16.2.7 2004/02/19 10:57:24 niklas Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -145,7 +145,7 @@ void
 tcp_canceltimers(tp)
 	struct tcpcb *tp;
 {
-	register int i;
+	int i;
 
 	for (i = 0; i < TCPT_NTIMERS; i++)
 		TCP_TIMER_DISARM(tp, i);

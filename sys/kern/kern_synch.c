@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.11 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.12 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -742,7 +742,6 @@ mi_switch()
 {
 	struct proc *p = curproc;	/* XXX */
 	struct rlimit *rlim;
-	long s, u;
 	struct timeval tv;
 #if defined(MULTIPROCESSOR)
 	int hold_count;
@@ -769,27 +768,26 @@ mi_switch()
 	 * process was running, and add that to its total so far.
 	 */
 	microtime(&tv);
-	u = p->p_rtime.tv_usec + (tv.tv_usec - runtime.tv_usec);
-	s = p->p_rtime.tv_sec + (tv.tv_sec - runtime.tv_sec);
-	if (u < 0) {
-		u += 1000000;
-		s--;
-	} else if (u >= 1000000) {
-		u -= 1000000;
-		s++;
+	if (timercmp(&tv, &runtime, <)) {
+#if 0
+		printf("time is not monotonic! "
+		    "tv=%ld.%06ld, runtime=%ld.%06ld\n",
+		    tv.tv_sec, tv.tv_usec, runtime.tv_sec, runtime.tv_usec);
+#endif
+	} else {
+		timersub(&tv, &runtime, &tv);
+		timeradd(&p->p_rtime, &tv, &p->p_rtime);
 	}
-	p->p_rtime.tv_usec = u;
-	p->p_rtime.tv_sec = s;
 
 	/*
 	 * Check if the process exceeds its cpu resource allocation.
 	 * If over max, kill it.
 	 */
 	rlim = &p->p_rlimit[RLIMIT_CPU];
-	if (s >= rlim->rlim_cur) {
-		if (s >= rlim->rlim_max)
+	if ((rlim_t)p->p_rtime.tv_sec >= rlim->rlim_cur) {
+		if ((rlim_t)p->p_rtime.tv_sec >= rlim->rlim_max) {
 			psignal(p, SIGKILL);
-		else {
+		} else {
 			psignal(p, SIGXCPU);
 			if (rlim->rlim_cur < rlim->rlim_max)
 				rlim->rlim_cur += 5;

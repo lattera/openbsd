@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/net/pfkeyv2.h,v 1.17.2.5 2003/03/28 00:41:29 niklas Exp $ */
+/* $OpenBSD: src/sys/net/pfkeyv2.h,v 1.17.2.6 2004/02/19 10:57:22 niklas Exp $ */
 /*
  *	@(#)COPYRIGHT	1.1 (NRL) January 1998
  * 
@@ -205,10 +205,18 @@ struct sadb_x_cred {
 	uint16_t sadb_x_cred_reserved;
 };
 
+struct sadb_x_udpencap {
+	uint16_t sadb_x_udpencap_len;
+	uint16_t sadb_x_udpencap_exttype;
+	uint16_t sadb_x_udpencap_port;
+	uint16_t sadb_x_udpencap_reserved;
+};
+
 #ifdef _KERNEL
 #define SADB_X_GETSPROTO(x) \
 	( (x) == SADB_SATYPE_AH ? IPPROTO_AH :\
 	(x) == SADB_SATYPE_ESP ? IPPROTO_ESP :\
+	(x) == SADB_X_SATYPE_TCPSIGNATURE ? IPPROTO_TCP :\
 	(x) == SADB_X_SATYPE_IPCOMP ? IPPROTO_IPCOMP: IPPROTO_IPIP )
 #endif
 
@@ -243,7 +251,8 @@ struct sadb_x_cred {
 #define SADB_X_EXT_LOCAL_AUTH         28
 #define SADB_X_EXT_REMOTE_AUTH        29
 #define SADB_X_EXT_SUPPORTED_COMP     30
-#define SADB_EXT_MAX                  30
+#define SADB_X_EXT_UDPENCAP           31
+#define SADB_EXT_MAX                  31
 
 /* Fix pfkeyv2.c struct pfkeyv2_socket if SATYPE_MAX > 31 */
 #define SADB_SATYPE_UNSPEC		 0
@@ -267,11 +276,11 @@ struct sadb_x_cred {
 #define SADB_AALG_NONE               0
 #define SADB_AALG_MD5HMAC            2
 #define SADB_AALG_SHA1HMAC           3
-#define SADB_AALG_DES                4
-#define SADB_AALG_SHA2_256           5
-#define SADB_AALG_SHA2_384           6
-#define SADB_AALG_SHA2_512           7
-#define SADB_AALG_RIPEMD160HMAC      8
+#define SADB_X_AALG_DES              4
+#define SADB_X_AALG_SHA2_256         5
+#define SADB_X_AALG_SHA2_384         6
+#define SADB_X_AALG_SHA2_512         7
+#define SADB_X_AALG_RIPEMD160HMAC    8
 #define SADB_X_AALG_MD5              249
 #define SADB_X_AALG_SHA1             250
 #define SADB_AALG_MAX                250
@@ -287,7 +296,7 @@ struct sadb_x_cred {
 #define SADB_X_EALG_3IDEA     8
 #define SADB_X_EALG_DES_IV32  9
 #define SADB_X_EALG_RC4       10
-#define SADB_X_EALG_NULL      11
+#define SADB_EALG_NULL        11
 #define SADB_X_EALG_AES       12
 #define SADB_X_EALG_SKIPJACK  249
 #define SADB_EALG_MAX         249
@@ -304,6 +313,7 @@ struct sadb_x_cred {
 #define SADB_X_SAFLAGS_CHAINDEL  	0x008    /* Delete whole SA chain */
 #define SADB_X_SAFLAGS_RANDOMPADDING    0x080    /* Random ESP padding */
 #define SADB_X_SAFLAGS_NOREPLAY         0x100    /* No replay counter */
+#define SADB_X_SAFLAGS_UDPENCAP         0x200    /* ESP in UDP  */
 
 #define SADB_X_POLICYFLAGS_POLICY       0x0001	/* This is a static policy */
 
@@ -421,6 +431,7 @@ void export_credentials(void **, struct tdb *, int);
 void export_sa(void **, struct tdb *);
 void export_key(void **, struct tdb *, int);
 void export_auth(void **, struct tdb *, int);
+void export_udpencap(void **, struct tdb *);
 
 void import_auth(struct tdb *, struct sadb_x_cred *, int);
 void import_address(struct sockaddr *, struct sadb_address *);
@@ -432,5 +443,6 @@ void import_sa(struct tdb *, struct sadb_sa *, struct ipsecinit *);
 void import_flow(struct sockaddr_encap *, struct sockaddr_encap *,
     struct sadb_address *, struct sadb_address *, struct sadb_address *,
     struct sadb_address *, struct sadb_protocol *, struct sadb_protocol *);
+void import_udpencap(struct tdb *, struct sadb_x_udpencap *);
 #endif /* _KERNEL */
 #endif /* _NET_PFKEY_V2_H_ */

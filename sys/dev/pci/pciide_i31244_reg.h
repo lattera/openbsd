@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pciide_i31244_reg.h,v 1.1 2003/06/07 20:00:32 grange Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/pciide_i31244_reg.h,v 1.1.4.1 2004/02/19 10:56:29 niklas Exp $	*/
 /*	$NetBSD: pciide_i31244_reg.h,v 1.1 2003/03/18 01:41:54 thorpej Exp $	*/
 
 /*

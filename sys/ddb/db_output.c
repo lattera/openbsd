@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.14.10.4 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.14.10.5 2004/02/19 10:56:12 niklas Exp $	*/
 /*	$NetBSD: db_output.c,v 1.13 1996/04/01 17:27:14 christos Exp $	*/
 
 /* 
@@ -33,7 +33,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 #include <dev/cons.h>
 

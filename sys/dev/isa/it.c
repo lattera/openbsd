@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2.2.1 2003/06/07 10:32:24 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/it.c,v 1.2.2.2 2004/02/19 10:56:22 niklas Exp $	*/
 
 /*
- * Copyright (c) 2003 Julien Bordet <zejames@greygats.org>
+ * Copyright (c) 2003 Julien Bordet <zejames@greyhats.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,12 +81,6 @@ it_match(struct device *parent, void *match, void *aux)
 	int rv;
 	u_int8_t cr;
 
-	/* Must supply an address */
-	if (ia->ipa_nio < 1) {
-		DPRINTF(("%s: ipa_nio=%d\n", __func__, ia->ipa_nio));
-		return (0);
-	}
-
 	iot = ia->ia_iot;
 	iobase = ia->ipa_io[0].base;
 
@@ -100,7 +94,7 @@ it_match(struct device *parent, void *match, void *aux)
 	cr = bus_space_read_1(iot, ioh, ITC_DATA);
 
 	/* The monitoring may have been enabled by BIOS */
-	if (cr == 0x18 || cr == 0x19)
+	if (cr == 0x11 || cr == 0x13 || cr == 0x18 || cr == 0x19)
 		rv = 1;
 
 	DPRINTF(("it: rv = %d, cr = %x\n", rv, cr));
@@ -128,8 +122,6 @@ it_attach(struct device *parent, struct device *self, void *aux)
 	struct isa_attach_args *ia = aux;
 	int i;
 	u_int8_t cr;
-	extern int nsensors;
-	extern struct sensors_head sensors;
 
         iobase = ia->ipa_io[0].base;
 	iot = sc->it_iot = ia->ia_iot;
@@ -167,8 +159,7 @@ it_attach(struct device *parent, struct device *self, void *aux)
 	for (i = 0; i < sc->numsensors; ++i) {
 		strlcpy(sc->sensors[i].device, sc->sc_dev.dv_xname,
 		    sizeof(sc->sensors[i].device));
-		sc->sensors[i].num = nsensors++;
-		SLIST_INSERT_HEAD(&sensors, &sc->sensors[i], list);
+		SENSOR_ADD(&sc->sensors[i]);
 	}
 
 	timeout_set(&it_timeout, it_refresh, sc);

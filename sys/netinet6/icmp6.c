@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.11 2003/06/07 11:06:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/icmp6.c,v 1.6.2.12 2004/02/19 10:57:25 niklas Exp $	*/
 /*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
@@ -642,11 +642,11 @@ icmp6_input(mp, offp, proto)
 			goto badcode;
 		break;
 
-	case MLD6_LISTENER_QUERY:
-	case MLD6_LISTENER_REPORT:
-		if (icmp6len < sizeof(struct mld6_hdr))
+	case MLD_LISTENER_QUERY:
+	case MLD_LISTENER_REPORT:
+		if (icmp6len < sizeof(struct mld_hdr))
 			goto badlen;
-		if (icmp6->icmp6_type == MLD6_LISTENER_QUERY) /* XXX: ugly... */
+		if (icmp6->icmp6_type == MLD_LISTENER_QUERY) /* XXX: ugly... */
 			icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_mldquery);
 		else
 			icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_mldreport);
@@ -660,14 +660,14 @@ icmp6_input(mp, offp, proto)
 		/* m stays. */
 		break;
 
-	case MLD6_LISTENER_DONE:
+	case MLD_LISTENER_DONE:
 		icmp6_ifstat_inc(m->m_pkthdr.rcvif, ifs6_in_mlddone);
-		if (icmp6len < sizeof(struct mld6_hdr))	/* necessary? */
+		if (icmp6len < sizeof(struct mld_hdr))	/* necessary? */
 			goto badlen;
 		break;		/* nothing to be done in kernel */
 
-	case MLD6_MTRACE_RESP:
-	case MLD6_MTRACE:
+	case MLD_MTRACE_RESP:
+	case MLD_MTRACE:
 		/* XXX: these two are experimental.  not officially defined. */
 		/* XXX: per-interface statistics? */
 		break;		/* just pass it to applications */
@@ -885,7 +885,7 @@ icmp6_input(mp, offp, proto)
 static int
 icmp6_notify_error(m, off, icmp6len, code)
 	struct mbuf *m;
-	int off, icmp6len;
+	int off, icmp6len, code;
 {
 	struct icmp6_hdr *icmp6;
 	struct ip6_hdr *eip6;
@@ -1060,7 +1060,7 @@ icmp6_notify_error(m, off, icmp6len, code)
 		}
 #endif
 		icmp6src.sin6_flowinfo =
-			(eip6->ip6_flow & IPV6_FLOWLABEL_MASK);
+		    (eip6->ip6_flow & IPV6_FLOWLABEL_MASK);
 
 		if (finaldst == NULL)
 			finaldst = &eip6->ip6_dst;
@@ -1139,7 +1139,7 @@ icmp6_mtudisc_update(ip6cp, validated)
 	if (rt && (rt->rt_flags & RTF_HOST) &&
 	    !(rt->rt_rmx.rmx_locks & RTV_MTU) &&
 	    (rt->rt_rmx.rmx_mtu > mtu || rt->rt_rmx.rmx_mtu == 0)) {
-		if (mtu < IN6_LINKMTU(rt->rt_ifp)) {
+		if (mtu >= 296 && mtu < IN6_LINKMTU(rt->rt_ifp)) {
 			icmp6stat.icp6s_pmtuchg++;
 			rt->rt_rmx.rmx_mtu = mtu;
 		}
@@ -1753,7 +1753,6 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 	u_char *cp = (u_char *)(nni6 + 1);
 	int niflags = ni6->ni_flags;
 	u_int32_t ltime;
-	long time_second = time.tv_sec;
 
 	if (ifp0 == NULL && !(niflags & NI_NODEADDR_FLAG_ALL))
 		return (0);	/* needless to copy */
@@ -1845,8 +1844,8 @@ ni6_store_addrs(ni6, nni6, ifp0, resid)
 				ltime = ND6_INFINITE_LIFETIME;
 			else {
 				if (ifa6->ia6_lifetime.ia6t_expire >
-				    time_second)
-					ltime = htonl(ifa6->ia6_lifetime.ia6t_expire - time_second);
+				    time.tv_sec)
+					ltime = htonl(ifa6->ia6_lifetime.ia6t_expire - time.tv_sec);
 				else
 					ltime = 0;
 			}
@@ -1908,10 +1907,7 @@ icmp6_rip6_input(mp, off)
 	/* KAME hack: recover scopeid */
 	(void)in6_recoverscope(&rip6src, &ip6->ip6_src, m->m_pkthdr.rcvif);
 
-	for (in6p = rawin6pcbtable.inpt_queue.cqh_first;
-	     in6p != (struct inpcb *)&rawin6pcbtable.inpt_queue;
-	     in6p = in6p->inp_queue.cqe_next)
-	{
+	CIRCLEQ_FOREACH(in6p, &rawin6pcbtable.inpt_queue, inp_queue) {
 		if (!(in6p->in6p_flags & INP_IPV6))
 			continue;
 		if (in6p->in6p_ip6_nxt != IPPROTO_ICMPV6)
@@ -2406,7 +2402,7 @@ icmp6_redirect_output(m0, rt)
 	icmp6_errcount(&icmp6stat.icp6s_outerrhist, ND_REDIRECT, 0);
 
 	/* if we are not router, we don't send icmp6 redirect */
-	if (!ip6_forwarding || ip6_accept_rtadv)
+	if (!ip6_forwarding)
 		goto fail;
 
 	/* sanity check */
@@ -2604,8 +2600,8 @@ icmp6_redirect_output(m0, rt)
 		m->m_pkthdr.len = m->m_len = p - (u_char *)ip6;
 
 		/* connect m0 to m */
-		m_cat(m, m0);
 		m->m_pkthdr.len += m0->m_pkthdr.len;
+		m_cat(m, m0);
 		m0 = NULL;
 	}
 noredhdropt:

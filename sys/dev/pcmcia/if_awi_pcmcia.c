@@ -1,5 +1,5 @@
 /* $NetBSD: if_awi_pcmcia.c,v 1.13 2000/03/22 11:22:20 onoe Exp $ */
-/* $OpenBSD: src/sys/dev/pcmcia/Attic/if_awi_pcmcia.c,v 1.2.2.5 2003/03/28 00:38:26 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pcmcia/Attic/if_awi_pcmcia.c,v 1.2.2.6 2004/02/19 10:56:30 niklas Exp $ */
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -41,7 +41,7 @@
  * PCMCIA attachment for BayStack 650 802.11FH PCMCIA card,
  * based on the AMD 79c930 802.11 controller chip.
  *
- * This attachment can probably be trivally adapted for other FH and
+ * This attachment can probably be trivially adapted for other FH and
  * DS cards based on the same chipset.
  */
 

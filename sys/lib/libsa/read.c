@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libsa/read.c,v 1.4.14.1 2003/06/07 11:03:42 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libsa/read.c,v 1.4.14.2 2004/02/19 10:57:19 niklas Exp $	*/
 /*	$NetBSD: read.c,v 1.7 1996/06/21 20:29:28 pk Exp $	*/
 
 /*-
@@ -66,15 +66,12 @@
 
 ssize_t
 #ifndef __INTERNAL_LIBSA_CREAD
-read(fd, dest, bcount)
+read(int fd, void *dest, size_t bcount)
 #else
-oread(fd, dest, bcount)
+oread(int fd, void *dest, size_t bcount)
 #endif
-	int fd;
-	void *dest;
-	size_t bcount;
 {
-	register struct open_file *f = &files[fd];
+	struct open_file *f = &files[fd];
 	size_t resid;
 
 	if ((unsigned)fd >= SOPEN_MAX || !(f->f_flags & F_READ)) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_output.h,v 1.9.10.2 2003/03/28 00:00:19 niklas Exp $ */
+/*	$OpenBSD: src/sys/ddb/db_output.h,v 1.9.10.3 2004/02/19 10:56:12 niklas Exp $ */
 /*	$NetBSD: db_output.h,v 1.9 1996/04/04 05:13:50 cgd Exp $	*/
 
 /* 
@@ -37,8 +37,10 @@ void db_force_whitespace(void);
 void db_putchar(int);
 int db_print_position(void);
 int db_printf(const char *, ...)
-    __kprintf_attribute__((__format__(__kprintf__,1,2)));
+    __attribute__((__format__(__kprintf__,1,2)));
 void db_end_line(int);
+
+extern int db_log;
 
 /*
  * This is a replacement for the non-standard %z, %n and %r printf formats

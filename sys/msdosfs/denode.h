@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/denode.h,v 1.8.2.3 2002/03/28 15:02:01 niklas Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/denode.h,v 1.8.2.4 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: denode.h,v 1.24 1997/10/17 11:23:39 ws Exp $	*/
 
 /*-
@@ -198,8 +198,6 @@ struct denode {
 	 (dep)->de_FileSize = getulong((dp)->deFileSize), \
 	 (FAT32((dep)->de_pmp) ? DE_INTERNALIZE32((dep), (dp)) : 0))
 
-#define DE_EXTERNALIZE32(dp, dep)                     \
-         putushort((dp)->deHighClust, (dep)->de_StartCluster >> 16)
 #define DE_EXTERNALIZE(dp, dep)				\
 	(bcopy((dep)->de_Name, (dp)->deName, 11),	\
 	 (dp)->deAttributes = (dep)->de_Attributes,	\
@@ -213,7 +211,8 @@ struct denode {
 	 putushort((dp)->deStartCluster, (dep)->de_StartCluster), \
 	 putulong((dp)->deFileSize, \
 	     ((dep)->de_Attributes & ATTR_DIRECTORY) ? 0 : (dep)->de_FileSize),\
-	 (FAT32((dep)->de_pmp) ? DE_EXTERNALIZE32((dp), (dep)) : 0))
+	 putushort((dp)->deHighClust, \
+	     FAT32((dep)->de_pmp) ? (dep)->de_StartCluster >> 16 : 0))
 
 #define	de_forw		de_chain[0]
 #define	de_back		de_chain[1]
@@ -273,7 +272,7 @@ int	lease_check(void *);
 #define	msdosfs_lease_check nullop
 #endif
 int	msdosfs_ioctl(void *);
-int	msdosfs_select(void *);
+int	msdosfs_poll(void *);
 int	msdosfs_fsync(void *);
 int	msdosfs_remove(void *);
 int	msdosfs_link(void *);

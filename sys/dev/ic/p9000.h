@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/p9000.h,v 1.1 2003/06/17 21:21:33 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/p9000.h,v 1.1.4.1 2004/02/19 10:56:20 niklas Exp $	*/
 /*
  * Copyright (c) 2003, Miodrag Vallat.
  *

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dl10019.c,v 1.1.4.2 2001/07/04 10:40:50 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dl10019.c,v 1.1.4.3 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-
@@ -58,7 +58,6 @@
 #endif
 
 #include <machine/bus.h>
-#include <machine/intr.h>
 
 #include <dev/mii/miivar.h>
 #include <dev/mii/mii.h>

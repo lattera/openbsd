@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/load_store.c,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/load_store.c,v 1.1.16.2 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  load_store.c
  *
@@ -72,10 +72,8 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/systm.h>
+#include <sys/user.h>
 #include <machine/cpu.h>
-#if defined(__FreeBSD__)
-#include <machine/md_var.h>
-#endif
 #include <machine/pcb.h>
 
 #include <gnu/arch/i386/fpemul/fpu_emu.h>

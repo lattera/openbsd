@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_subr.c,v 1.6.4.4 2003/05/13 19:35:13 ho Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsemul_vt100_subr.c,v 1.6.4.5 2004/02/19 10:56:35 niklas Exp $ */
 /* $NetBSD: wsemul_vt100_subr.c,v 1.7 2000/04/28 21:56:16 mycroft Exp $ */
 
 /*
@@ -227,11 +227,11 @@ wsemul_vt100_handle_csi(edp, c)
 	    case A3('\0', '\0', 'l'): /* RM */
 		for (n = 0; n < edp->nargs; n++)
 			vt100_ansimode(edp, ARG(n), VTMODE_RESET);
-		break;;
+		break;
 	    case A3('?', '\0', 'l'): /* DECRM */
 		for (n = 0; n < edp->nargs; n++)
 			vt100_decmode(edp, ARG(n), VTMODE_RESET);
-		break;;
+		break;
 	    case A3('\0', '$', 'p'): /* DECRQM request mode ANSI */
 		vt100_ansimode(edp, ARG(0), VTMODE_REPORT);
 		break;

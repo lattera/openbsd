@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netipx/Attic/ipx_ip.c,v 1.7.2.6 2003/06/07 11:06:09 ho Exp $	*/
+/*	$OpenBSD: src/sys/netipx/Attic/ipx_ip.c,v 1.7.2.7 2004/02/19 10:57:26 niklas Exp $	*/
 
 /*-
  *
@@ -71,7 +71,7 @@
 #include <netipx/ipx_if.h>
 #include <netipx/ipx_ip.h>
 
-#include <machine/stdarg.h>
+#include <sys/stdarg.h>
 
 struct ifnet ipxipif;
 struct ifnet_en *ipxip_list; /* list of all hosts and gateways or broadcast addrs */
@@ -85,8 +85,8 @@ ipxipprotoinit(void)
 struct ifnet_en *
 ipxipattach(void)
 {
-	register struct ifnet_en *m;
-	register struct ifnet *ifp;
+	struct ifnet_en *m;
+	struct ifnet *ifp;
 
 	if (ipxipif.if_mtu == 0) {
 		ifp = &ipxipif;
@@ -125,7 +125,7 @@ ipxipattach(void)
 /* ARGSUSED */
 int
 ipxipioctl(ifp, cmd, data)
-	register struct ifnet *ifp;
+	struct ifnet *ifp;
 	u_long cmd;
 	caddr_t data;
 {
@@ -161,9 +161,9 @@ void
 ipxip_input( struct mbuf *m, ...)
 {
 	struct ifnet *ifp;
-	register struct ip *ip;
-	register struct ipx *ipx;
-	register struct ifqueue *ifq = &ipxintrq;
+	struct ip *ip;
+	struct ipx *ipx;
+	struct ifqueue *ifq = &ipxintrq;
 	int len, s;
 	va_list	ap;
 
@@ -204,8 +204,8 @@ ipxip_input( struct mbuf *m, ...)
 	len = ntohs(ipx->ipx_len);
 	if (len & 1)
 		len++;		/* Preserve Garbage Byte */
-	if (ip->ip_len != len) {
-		if (len > ip->ip_len) {
+	if (ntohs(ip->ip_len) - (ip->ip_hl << 2) != len) {
+		if (len > ntohs(ip->ip_len) - (ip->ip_hl << 2)) {
 			ipxipif.if_ierrors++;
 			if (ipxip_badlen)
 				m_freem(ipxip_badlen);
@@ -240,15 +240,15 @@ ipxip_input( struct mbuf *m, ...)
 int
 ipxipoutput(ifp, m, dst, rt)
 	struct ifnet *ifp;
-	register struct mbuf *m;
+	struct mbuf *m;
 	struct sockaddr *dst;
 	struct rtentry *rt;
 {
-	register struct ifnet_en *ifn = (struct ifnet_en *)ifp;
-	register struct ip *ip;
-	register struct route *ro = &(ifn->ifen_route);
-	register int len = 0;
-	register struct ipx *ipx = mtod(m, struct ipx *);
+	struct ifnet_en *ifn = (struct ifnet_en *)ifp;
+	struct ip *ip;
+	struct route *ro = &(ifn->ifen_route);
+	int len = 0;
+	struct ipx *ipx = mtod(m, struct ipx *);
 	int error;
 
 	ifn->ifen_ifnet.if_opackets++;
@@ -290,7 +290,11 @@ ipxipoutput(ifp, m, dst, rt)
 	ip->ip_p = IPPROTO_IDP;
 	ip->ip_src = ifn->ifen_src;
 	ip->ip_dst = ifn->ifen_dst;
-	ip->ip_len = (u_short)len + sizeof(struct ip);
+	if (len + sizeof(struct ip) > IP_MAXPACKET) {
+		m_freem(m);
+		return EMSGSIZE;
+	}
+	ip->ip_len = htons(len + sizeof(struct ip));
 	ip->ip_ttl = MAXTTL;
 
 	/*
@@ -315,9 +319,9 @@ struct ifreq ifr_ipxip = {"ipx0"};
 
 int
 ipxip_route(m)
-	register struct mbuf *m;
+	struct mbuf *m;
 {
-	register struct ipxip_req *rq = mtod(m, struct ipxip_req *);
+	struct ipxip_req *rq = mtod(m, struct ipxip_req *);
 	struct sockaddr_ipx *ipx_dst = (struct sockaddr_ipx *)&rq->rq_ipx;
 	struct sockaddr_in *ip_dst = (struct sockaddr_in *)&rq->rq_ip;
 	struct route ro;
@@ -344,7 +348,7 @@ ipxip_route(m)
 	 * i.e., what return ip address do we use?
 	 */
 	{
-		register struct in_ifaddr *ia;
+		struct in_ifaddr *ia;
 		struct ifnet *ifp = ro.ro_rt->rt_ifp;
 
 		for (ia = in_ifaddr.tqh_first; ia; ia = ia->ia_list.tqe_next)
@@ -394,7 +398,7 @@ int
 ipxip_free(ifp)
 	struct ifnet *ifp;
 {
-	register struct ifnet_en *ifn = (struct ifnet_en *)ifp;
+	struct ifnet_en *ifn = (struct ifnet_en *)ifp;
 	struct route *ro = & ifn->ifen_route;
 
 	if (ro->ro_rt) {
@@ -436,9 +440,9 @@ ipxip_ctlinput(cmd, sa, dummy)
 
 void
 ipxip_rtchange(dst)
-	register struct in_addr *dst;
+	struct in_addr *dst;
 {
-	register struct ifnet_en *ifn;
+	struct ifnet_en *ifn;
 
 	for (ifn = ipxip_list; ifn; ifn = ifn->ifen_next) {
 		if (ifn->ifen_dst.s_addr == dst->s_addr &&

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_ctl.c,v 1.7.12.3 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/procfs/Attic/procfs_ctl.c,v 1.7.12.4 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: procfs_ctl.c,v 1.14 1996/02/09 22:40:48 christos Exp $	*/
 
 /*
@@ -67,7 +67,7 @@
 #define PROCFS_CTL_RUN		4
 #define PROCFS_CTL_WAIT		5
 
-static vfs_namemap_t ctlnames[] = {
+static const vfs_namemap_t ctlnames[] = {
 	/* special /proc commands */
 	{ "attach",	PROCFS_CTL_ATTACH },
 	{ "detach",	PROCFS_CTL_DETACH },
@@ -79,7 +79,7 @@ static vfs_namemap_t ctlnames[] = {
 
 #endif
 
-static vfs_namemap_t signames[] = {
+static const vfs_namemap_t signames[] = {
 	/* regular signal names */
 	{ "hup",	SIGHUP },	{ "int",	SIGINT },
 	{ "quit",	SIGQUIT },	{ "ill",	SIGILL },
@@ -266,7 +266,7 @@ procfs_doctl(curp, p, pfs, uio)
 	int xlen;
 	int error;
 	char msg[PROCFS_CTLLEN+1];
-	vfs_namemap_t *nm;
+	const vfs_namemap_t *nm;
 
 	if (uio->uio_rw != UIO_WRITE)
 		return (EOPNOTSUPP);

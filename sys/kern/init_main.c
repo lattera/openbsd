@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.18 2003/06/07 11:03:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.19 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -57,6 +57,7 @@
 #include <sys/buf.h>
 #include <sys/device.h>
 #include <sys/socketvar.h>
+#include <sys/lockf.h>
 #include <sys/protosw.h>
 #include <sys/reboot.h>
 #include <sys/user.h>
@@ -99,7 +100,7 @@ extern void nfs_init(void);
 const char	copyright[] =
 "Copyright (c) 1982, 1986, 1989, 1991, 1993\n"
 "\tThe Regents of the University of California.  All rights reserved.\n"
-"Copyright (c) 1995-2003 OpenBSD. All rights reserved.  http://www.OpenBSD.org\n";
+"Copyright (c) 1995-2004 OpenBSD. All rights reserved.  http://www.OpenBSD.org\n";
 
 /* Components of the first process -- never freed. */
 struct	session session0;
@@ -136,6 +137,7 @@ void	start_cleaner(void *);
 void	start_update(void *);
 void	start_reaper(void *);
 void    start_crypto(void *);
+void	init_exec(void);
 
 extern char sigcode[], esigcode[];
 #ifdef SYSCALL_DEBUG
@@ -160,7 +162,9 @@ struct emul emul_native = {
 	NULL,
 	sigcode,
 	esigcode,
+	EMUL_ENABLED | EMUL_NATIVE,
 };
+
 
 /*
  * System startup; initialize the world, create process 0, mount root
@@ -179,9 +183,6 @@ main(framep)
 	quad_t lim;
 	int s, i;
 	register_t rval[2];
-#if !defined(NO_PROPOLICE)
-	int *guard = (int *)&__guard[0];
-#endif
 	extern struct pdevinit pdevinit[];
 	extern struct SIMPLELOCK kprintf_slock;
 	extern void scheduler_start(void);
@@ -195,6 +196,11 @@ main(framep)
 	 */
 	curproc = p = &proc0;
 	p->p_cpu = curcpu();
+
+	/*
+	 * Initialize timeouts.
+	 */
+	timeout_startup();
 
 	/*
 	 * Attempt to find console and initialize
@@ -224,11 +230,6 @@ main(framep)
 	/* Initalize sockets. */
 	soinit();
 
-	/*
-	 * Initialize timeouts.
-	 */
-	timeout_startup();
-
 	/* Initialize sysctls (must be done before any processes run) */
 	sysctl_init();
 
@@ -236,6 +237,9 @@ main(framep)
 	 * Initialize process and pgrp structures.
 	 */
 	procinit();
+
+	/* Initialize file locking. */
+	lf_init();
 
 	/*
 	 * Initialize filedescriptors.
@@ -380,9 +384,11 @@ main(framep)
 #endif
 
 #if !defined(NO_PROPOLICE)
-	for (i = 0; i < sizeof(__guard) / 4; i++)
-		guard[i] = arc4random();
+	arc4random_bytes(__guard, sizeof(__guard));
 #endif
+
+	/* init exec and emul */
+	init_exec();
 
 	/* Start the scheduler */
 	scheduler_start();
@@ -503,9 +509,9 @@ start_init(arg)
 	struct proc *p = arg;
 	vaddr_t addr;
 	struct sys_execve_args /* {
-		syscallarg(char *) path;
-		syscallarg(char **) argp;
-		syscallarg(char **) envp;
+		syscallarg(const char *) path;
+		syscallarg(char *const *) argp;
+		syscallarg(char *const *) envp;
 	} */ args;
 	int options, error;
 	long i;

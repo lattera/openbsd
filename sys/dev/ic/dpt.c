@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.5 2003/03/28 00:38:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/dpt.c,v 1.1.2.6 2004/02/19 10:56:18 niklas Exp $	*/
 /*	$NetBSD: dpt.c,v 1.12 1999/10/23 16:26:33 ad Exp $	*/
 
 /*-
@@ -366,7 +366,7 @@ dpt_init(sc, intrstr)
 		model[i++] = ei->ei_suffix[j];
 	model[i] = '\0';
 
-	/* Find the cannonical name for the board */
+	/* Find the canonical name for the board */
 	for (i = 0; dpt_cname[i] != NULL; i += 2)
 		if (memcmp(ei->ei_model, dpt_cname[i], 6) == 0)
 			break;

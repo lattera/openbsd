@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/yukonreg.h,v 1.2 2003/08/12 05:23:06 nate Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/Attic/yukonreg.h,v 1.2.4.1 2004/02/19 10:56:30 niklas Exp $ */
 /*
  * Copyright (c) 2003 Nathan L. Binkert <binkertn@umich.edu>
  *

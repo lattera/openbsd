@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pckbdreg.h,v 1.1.4.1 2001/05/14 22:26:04 niklas Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pckbdreg.h,v 1.1.4.2 2004/02/19 10:56:30 niklas Exp $ */
 /* $NetBSD: pckbdreg.h,v 1.2 1998/04/07 13:43:16 hannken Exp $ */
 
 /*
@@ -22,7 +22,7 @@
 #define	KBR_RESEND	0xFE	/* needs resend of command */
 #define	KBR_ACK		0xFA	/* received a valid command */
 #define	KBR_OVERRUN	0x00	/* flooded */
-#define	KBR_FAILURE	0xFD	/* diagnosic failure */
+#define	KBR_FAILURE	0xFD	/* diagnostic failure */
 #define	KBR_BREAK	0xF0	/* break code prefix - sent on key release */
 #define	KBR_RSTDONE	0xAA	/* reset complete */
 #define	KBR_ECHO	0xEE	/* echo response */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/opl.c,v 1.1.6.3 2003/05/13 19:35:02 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/opl.c,v 1.1.6.4 2004/02/19 10:56:20 niklas Exp $	*/
 /*	$NetBSD: opl.c,v 1.7 1998/12/08 14:26:56 augustss Exp $	*/
 
 /*
@@ -80,7 +80,7 @@ struct real_voice {
 	u_int8_t op[4]; /* Operator offsets */
 };
 
-struct opl_voice voicetab[] = {
+const struct opl_voice voicetab[] = {
 /*       No    I/O offs		OP1	OP2	OP3   OP4	*/
 /*	---------------------------------------------------	*/
 	{ 0,   OPL_L,	{0x00,	0x03,	0x08, 0x0b}},
@@ -205,7 +205,7 @@ opl_find(sc)
 	u_int8_t status1, status2;
 
 	DPRINTFN(2,("opl_find: ioh=0x%x\n", (int)sc->ioh));
-	sc->model = OPL_2;	/* worst case assumtion */
+	sc->model = OPL_2;	/* worst case assumption */
 
 	/* Reset timers 1 and 2 */
 	opl_command(sc, OPL_L, OPL_TIMER_CONTROL, 

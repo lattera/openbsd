@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1.4.3 2003/05/13 19:36:17 ho Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_ipcomp.c,v 1.1.4.4 2004/02/19 10:57:24 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Jean-Jacques Bernard-Gundol (jj@wabbitt.org)
@@ -352,7 +352,7 @@ ipcomp_input_cb(op)
 	crypto_freereq(crp);
 
 	/* Restore the Next Protocol field */
-	m_copyback(m, protoff, sizeof(u_int8_t), (u_int8_t *) & nproto);
+	m_copyback(m, protoff, sizeof(u_int8_t), &nproto);
 
 	/* Back to generic IPsec input processing */
 	error = ipsec_common_input_cb(m, tdb, skip, protoff, NULL);
@@ -559,7 +559,7 @@ ipcomp_output(m, tdb, mp, skip, protoff)
 
 	/* Fix Next Protocol in IPv4/IPv6 header */
 	prot = IPPROTO_IPCOMP;
-	m_copyback(m, protoff, sizeof(u_int8_t), (u_char *) & prot);
+	m_copyback(m, protoff, sizeof(u_int8_t), &prot);
 
 	/* Ok now, we can pass to the crypto processing */
 

@@ -1,5 +1,5 @@
 	.file	"reg_u_mul.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_u_mul.s,v 1.1.16.1 2003/03/28 00:00:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_u_mul.s,v 1.1.16.2 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  reg_u_mul.S
  *
@@ -114,7 +114,7 @@ _C_LABEL(reg_u_mul):
 	jz	L_bugged
 	testl	$0x80000000,SIGH(%edi)
 	jz	L_bugged
-#endif PARANOID
+#endif /* PARANOID */
 
 #ifdef DENORM_OPERAND
 	movl	EXP(%esi),%eax
@@ -135,7 +135,7 @@ xOp1_not_denorm:
 	jnz	FPU_Arith_exit
 
 xOp2_not_denorm:
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 	xorl	%ecx,%ecx
 	xorl	%ebx,%ebx
@@ -206,5 +206,5 @@ L_exit:
 	popl	%esi
 	leave
 	ret
-#endif PARANOID
+#endif /* PARANOID */
 

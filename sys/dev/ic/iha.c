@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.6 2003/05/13 19:35:01 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/iha.c,v 1.3.4.7 2004/02/19 10:56:18 niklas Exp $ */
 /*-------------------------------------------------------------------------
  *
  * Device driver for the INI-9XXXU/UW or INIC-940/950  PCI SCSI Controller.
@@ -1120,7 +1120,7 @@ iha_data_over_run(pScb)
 	case 0x59: /* Read Master CUE                 MMC   */
 	case 0x5a: /* Mode Sense (10 byte version)    SPC-2 */
 	case 0x5c: /* Read Buffer Capacity            MMC   */
-	case 0x5e: /* Persistant Reserve In           SPC-2 */
+	case 0x5e: /* Persistent Reserve In           SPC-2 */
 	case 0x84: /* Receive Copy Results            SPC-2 */
 	case 0xa0: /* Report LUNs                     SPC-2 */
 	case 0xa3: /* Various Report requests         SBC-2/SCC-2*/
@@ -1144,7 +1144,7 @@ iha_data_over_run(pScb)
 }
 
 /*
- * iha_next_state - prcess the current SCB as requested in it's 
+ * iha_next_state - process the current SCB as requested in it's 
  *                  SCB_NxtStat member.
  */
 int
@@ -2769,7 +2769,7 @@ iha_se2_rd(iot, ioh, addr)
 	int i;
 
 	/* Send 'READ' instruction == address | READ bit */
-	iha_se2_instr(iot, ioh, (addr | READ));
+	iha_se2_instr(iot, ioh, (addr | NVREAD));
 
 	readWord = 0;
 	for (i = 15; i >= 0; i--) {

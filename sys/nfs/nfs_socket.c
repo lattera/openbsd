@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.16.2.6 2003/06/07 11:07:43 ho Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_socket.c,v 1.16.2.7 2004/02/19 10:57:26 niklas Exp $	*/
 /*	$NetBSD: nfs_socket.c,v 1.27 1996/04/15 20:20:00 thorpej Exp $	*/
 
 /*
@@ -597,10 +597,12 @@ errout:
 				    error,
 				 rep->r_nmp->nm_mountp->mnt_stat.f_mntfromname);
 			error = nfs_sndlock(&rep->r_nmp->nm_flag, rep);
-			if (!error)
+			if (!error) {
 				error = nfs_reconnect(rep);
-			if (!error)
-				goto tryagain;
+				if (!error)
+					goto tryagain;
+				nfs_sndunlock(&rep->r_nmp->nm_flag);
+			}
 		}
 	} else {
 		if ((so = rep->r_nmp->nm_so) == NULL)
@@ -905,7 +907,7 @@ tryagain:
 	 * Chain request into list of outstanding requests. Be sure
 	 * to put it LAST so timer finds oldest requests first.
 	 */
-	s = splsoftclock();
+	s = splsoftnet();
 	TAILQ_INSERT_TAIL(&nfs_reqq, rep, r_chain);
 
 	/* Get send time for nqnfs */
@@ -947,7 +949,7 @@ tryagain:
 	/*
 	 * RPC done, unlink the request.
 	 */
-	s = splsoftclock();
+	s = splsoftnet();
 	TAILQ_REMOVE(&nfs_reqq, rep, r_chain);
 	splx(s);
 

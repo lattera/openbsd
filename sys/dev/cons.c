@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/cons.c,v 1.7.16.2 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/cons.c,v 1.7.16.3 2004/02/19 10:56:13 niklas Exp $	*/
 /*	$NetBSD: cons.c,v 1.30 1996/04/08 19:57:30 jonathan Exp $	*/
 
 /*
@@ -179,7 +179,7 @@ cnioctl(dev, cmd, data, flag, p)
 	 * output from the "virtual" console.
 	 */
 	if (cmd == TIOCCONS && constty != NULL) {
-		error = suser(p->p_ucred, (u_short *) NULL);
+		error = suser(p, SUSER_NOACCT);
 		if (error)
 			return (error);
 		constty = NULL;
@@ -203,14 +203,14 @@ cnioctl(dev, cmd, data, flag, p)
 
 /*ARGSUSED*/
 int
-cnselect(dev, rw, p)
+cnpoll(dev, rw, p)
 	dev_t dev;
 	int rw;
 	struct proc *p;
 {
 
 	/*
-	 * Redirect the select, if that's appropriate.
+	 * Redirect the poll, if that's appropriate.
 	 * I don't want to think of the possible side effects
 	 * of console redirection here.
 	 */
@@ -220,7 +220,7 @@ cnselect(dev, rw, p)
 		return ENXIO;
 	else
 		dev = cn_tab->cn_dev;
-	return (ttselect(cn_tab->cn_dev, rw, p));
+	return (ttpoll(cn_tab->cn_dev, rw, p));
 }
 
 
@@ -229,12 +229,17 @@ cnkqfilter(dev, kn)
 	dev_t dev;
 	struct knote *kn;
 {
-	if (constty != NULL && (cn_tab == NULL || cn_tab->cn_pri != CN_REMOTE))
-		return 0;
-	if (cn_tab == NULL)
-		return (1);
 
-	dev = cn_tab->cn_dev;
+	/*
+	 * Redirect output, if that's appropriate.
+	 * If there's no real console, return 1.
+	 */
+	if (constty != NULL && (cn_tab == NULL || cn_tab->cn_pri != CN_REMOTE))
+		dev = constty->t_dev;
+	else if (cn_tab == NULL)
+		return (1);
+	else
+		dev = cn_tab->cn_dev;
 	if (cdevsw[major(dev)].d_type & D_KQFILTER)
 		return ((*cdevsw[major(dev)].d_kqfilter)(dev, kn));
 	return (1);
@@ -297,4 +302,3 @@ cnbell(pitch, period, volume)
 
 	(*cn_tab->cn_bell)(cn_tab->cn_dev, pitch, period, volume);
 }
-

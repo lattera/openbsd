@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/safevar.h,v 1.5 2003/08/20 16:28:35 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/safevar.h,v 1.5.4.1 2004/02/19 10:56:30 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2003 Sam Leffler, Errno Consulting

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lkm.c,v 1.26.2.7 2003/05/13 19:21:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lkm.c,v 1.26.2.8 2004/02/19 10:56:37 niklas Exp $	*/
 /*	$NetBSD: kern_lkm.c,v 1.31 1996/03/31 21:40:27 christos Exp $	*/
 
 /*
@@ -96,6 +96,8 @@ static int _lkm_exec(struct lkm_table *, int);
 void lkminit(void);
 int lkmexists(struct lkm_table *);
 
+void init_exec(void);
+
 void
 lkminit()
 {
@@ -125,7 +127,7 @@ lkmopen(dev_t dev, int flag, int devtype, struct proc *p)
 		 * Sleep pending unlock; we use tsleep() to allow
 		 * an alarm out of the open.
 		 */
-		error = tsleep((caddr_t)&lkm_v, TTIPRI|PCATCH, "lkmopn", 0);
+		error = tsleep(&lkm_v, TTIPRI|PCATCH, "lkmopn", 0);
 		if (error)
 			return (error);	/* leave LKM_WANT set -- no problem */
 	}
@@ -268,7 +270,7 @@ lkmclose(dev_t dev, int flag, int mode, struct proc *p)
 		lkmfree(curp);
 	}
 	lkm_v &= ~LKM_ALLOC;
-	wakeup((caddr_t)&lkm_v);	/* thundering herd "problem" here */
+	wakeup(&lkm_v);	/* thundering herd "problem" here */
 
 	return (0);
 }
@@ -814,8 +816,8 @@ _lkm_exec(struct lkm_table *lkmtp, int cmd)
 		/* replace with new */
 		bcopy(args->lkm_exec, &execsw[i], sizeof(struct execsw));
 
-		/* realize need to recompute max header size */
-		exec_maxhdrsz = 0;
+		/* need to recompute max header size */
+		init_exec();
 
 		/* done! */
 		args->lkm_offset = i;	/* slot in execsw[] */
@@ -829,8 +831,8 @@ _lkm_exec(struct lkm_table *lkmtp, int cmd)
 		/* replace current slot contents with old contents */
 		bcopy(&args->lkm_oldexec, &execsw[i], sizeof(struct execsw));
 
-		/* realize need to recompute max header size */
-		exec_maxhdrsz = 0;
+		/* need to recompute max header size */
+		init_exec();
 
 		break;
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/nofn.c,v 1.7.4.2 2003/06/07 11:02:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/nofn.c,v 1.7.4.3 2004/02/19 10:56:28 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net)
@@ -44,8 +44,6 @@
 #include <sys/mbuf.h>
 #include <sys/device.h>
 #include <sys/queue.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <crypto/cryptodev.h>
 #include <crypto/cryptosoft.h>

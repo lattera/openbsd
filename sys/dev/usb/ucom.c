@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.8.2.5 2003/06/07 11:02:33 ho Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/ucom.c,v 1.8.2.6 2004/02/19 10:56:33 niklas Exp $ */
 /*	$NetBSD: ucom.c,v 1.49 2003/01/01 00:10:25 thorpej Exp $	*/
 
 /*
@@ -211,8 +211,10 @@ USB_ATTACH(ucom)
 	tp->t_param = ucomparam;
 	sc->sc_tty = tp;
 
+#ifndef __OpenBSD__
 	DPRINTF(("ucom_attach: tty_attach %p\n", tp));
 	tty_attach(tp);
+#endif
 
 #if defined(__NetBSD__) && NRND > 0
 	rnd_attach_source(&sc->sc_rndsource, USBDEVNAME(sc->sc_dev),
@@ -271,7 +273,9 @@ USB_DETACH(ucom)
 
 	/* Detach and free the tty. */
 	if (tp != NULL) {
+#ifndef __OpenBSD__
 		tty_detach(tp);
+#endif
 		ttyfree(tp);
 		sc->sc_tty = NULL;
 	}
@@ -692,7 +696,7 @@ ucom_do_ioctl(struct ucom_softc *sc, u_long cmd, caddr_t data,
 		break;
 
 	case TIOCSFLAGS:
-		error = suser(p->p_ucred, &p->p_acflag);
+		error = suser(p, 0);
 		if (error)
 			break;
 		sc->sc_swflags = *(int *)data;

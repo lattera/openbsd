@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libkern/libkern.h,v 1.14.10.3 2003/06/07 11:03:41 ho Exp $	*/
+/*	$OpenBSD: src/sys/lib/libkern/libkern.h,v 1.14.10.4 2004/02/19 10:57:18 niklas Exp $	*/
 /*	$NetBSD: libkern.h,v 1.7 1996/03/14 18:52:08 christos Exp $	*/
 
 /*-
@@ -160,8 +160,6 @@ void	 srandom(u_long);
 int	 scanc(u_int, const u_char *, const u_char *, int);
 int	 skpc(int, size_t, u_char *);
 size_t	 strlen(const char *);
-char	*strcat(char *, const char *);
-char	*strcpy(char *, const char *);
 char	*strncpy(char *, const char *, size_t);
 size_t	 strlcpy(char *, const char *, size_t);
 size_t	 strlcat(char *, const char *, size_t);

@@ -1,5 +1,5 @@
 	.file	"reg_div.S"
-/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_div.s,v 1.1.16.2 2003/05/13 19:21:27 ho Exp $	*/
+/*	$OpenBSD: src/sys/gnu/arch/i386/fpemul/Attic/reg_div.s,v 1.1.16.3 2004/02/19 10:56:36 niklas Exp $	*/
 /*
  *  reg_div.S
  *
@@ -114,7 +114,7 @@ xL_arg1_not_denormal:
 	jnz	FPU_Arith_exit
 
 xL_arg2_not_denormal:
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 /* Both arguments are TW_Valid */
 	movb	TW_Valid,TAG(%edi)
@@ -153,7 +153,7 @@ L_arg2_NaN:
 L_zero_zero:
 L_inf_inf:
 	pushl	%edi			/* Destination */
-	call	_C_LABEL(arith)_invalid		/* 0/0 or Infinity/Infinity */
+	call	_C_LABEL(arith_invalid)		/* 0/0 or Infinity/Infinity */
 	jmp	LDiv_exit
 
 L_no_NaN_arg:
@@ -170,7 +170,7 @@ L_no_NaN_arg:
 	/* arg2 must be zero or valid */
 	cmpb	TW_Zero,TAG(%ebx)
 	ja	L_unknown_tags
-#endif PARANOID
+#endif /* PARANOID */
 
 	/* Note that p16-9 says that infinity/0 returns infinity */
 	jmp	L_copy_arg1		/* Answer is Inf */
@@ -183,7 +183,7 @@ L_inf_valid:
 	call	_C_LABEL(denormal_operand)
 	orl	%eax,%eax
 	jnz	FPU_Arith_exit
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 	jmp	L_copy_arg1		/* Answer is Inf */
 
@@ -198,7 +198,7 @@ L_arg1_not_inf:
 	/* arg1 must be valid */
 	cmpb	TW_Valid,TAG(%esi)
 	ja	L_unknown_tags
-#endif PARANOID
+#endif /* PARANOID */
 
 /* Division by zero error */
 	pushl	%edi			/* destination */
@@ -222,7 +222,7 @@ L_arg2_not_zero:
 	call	_C_LABEL(denormal_operand)
 	orl	%eax,%eax
 	jnz	FPU_Arith_exit
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 	jmp	L_return_zero		/* Answer is zero */
 
@@ -231,7 +231,7 @@ L_arg2_not_inf:
 #ifdef PARANOID
 	cmpb	TW_Zero,TAG(%esi)
 	jne	L_unknown_tags
-#endif PARANOID
+#endif /* PARANOID */
 
 	/* arg1 is zero, arg2 is not Infinity or a NaN */
 
@@ -242,7 +242,7 @@ L_arg2_not_inf:
 	call	_C_LABEL(denormal_operand)
 	orl	%eax,%eax
 	jnz	FPU_Arith_exit
-#endif DENORM_OPERAND
+#endif /* DENORM_OPERAND */
 
 L_copy_arg1:
 	movb	TAG(%esi),%al
@@ -299,4 +299,4 @@ L_unknown_tags:
 	movl	_CONST_QNaN+8,%eax
 	movl	%eax,SIGH(%edi)
 	jmp	LDiv_exit
-#endif PARANOID
+#endif /* PARANOID */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netccitt/Attic/pk_acct.c,v 1.4.8.1 2003/06/07 11:06:07 ho Exp $	*/
+/*	$OpenBSD: src/sys/netccitt/Attic/pk_acct.c,v 1.4.8.2 2004/02/19 10:57:23 niklas Exp $	*/
 /*	$NetBSD: pk_acct.c,v 1.9 1996/02/13 22:05:11 christos Exp $	*/
 
 /*
@@ -64,7 +64,7 @@ int
 pk_accton (path)
 	char *path;
 {
-	register struct vnode *vp = NULL;
+	struct vnode *vp = NULL;
 	struct nameidata nd;
 	struct vnode *oacctp = pkacctp;
 	struct proc *p = curproc;
@@ -95,12 +95,12 @@ pk_accton (path)
 
 void
 pk_acct (lcp)
-	register struct pklcd *lcp;
+	struct pklcd *lcp;
 {
-	register struct vnode *vp;
-	register struct sockaddr_x25 *sa;
-	register char *src, *dst;
-	register int len;
+	struct vnode *vp;
+	struct sockaddr_x25 *sa;
+	char *src, *dst;
+	int len;
 	static struct x25acct acbuf;
 
 	if ((vp = pkacctp) == 0)

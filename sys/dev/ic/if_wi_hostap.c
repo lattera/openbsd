@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wi_hostap.c,v 1.24.4.1 2003/06/07 11:02:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wi_hostap.c,v 1.24.4.2 2004/02/19 10:56:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002
@@ -592,7 +592,7 @@ wihap_auth_req(struct wi_softc *sc, struct wi_frame *rxfrm,
 		/* Check for too many stations.
 		 */
 		if (whi->n_stations >= WIHAP_MAX_STATIONS) {
-			status = IEEE80211_STATUS_TOO_MANY_STATIONS;
+			status = IEEE80211_STATUS_TOOMANY;
 			goto fail;
 		}
 
@@ -605,7 +605,7 @@ wihap_auth_req(struct wi_softc *sc, struct wi_frame *rxfrm,
 		splx(s);
 		if (sta == NULL) {
 			/* Out of memory! */
-			status = IEEE80211_STATUS_TOO_MANY_STATIONS;
+			status = IEEE80211_STATUS_TOOMANY;
 			goto fail;
 		}
 	}
@@ -787,7 +787,7 @@ wihap_assoc_req(struct wi_softc *sc, struct wi_frame *rxfrm,
 	if (wihap_check_rates(sta, rates, rates_len) < 0) {
 		if (sc->sc_arpcom.ac_if.if_flags & IFF_DEBUG)
 			printf("wihap_assoc_req: rates mismatch.\n");
-		status = IEEE80211_STATUS_RATES;
+		status = IEEE80211_STATUS_BASIC_RATE;
 		goto fail;
 	}
 
@@ -1203,7 +1203,7 @@ wihap_ioctl(struct wi_softc *sc, u_long command, caddr_t data)
 
 	switch (command) {
 	case SIOCHOSTAP_DEL:
-		if ((error = suser(p->p_ucred, &p->p_acflag)))
+		if ((error = suser(p, 0)))
 			break;
 		if ((error = copyin(ifr->ifr_data, &reqsta, sizeof(reqsta))))
 			break;
@@ -1247,7 +1247,7 @@ wihap_ioctl(struct wi_softc *sc, u_long command, caddr_t data)
 		break;
 
 	case SIOCHOSTAP_ADD:
-		if ((error = suser(p->p_ucred, &p->p_acflag)))
+		if ((error = suser(p, 0)))
 			break;
 		if ((error = copyin(ifr->ifr_data, &reqsta, sizeof(reqsta))))
 			break;
@@ -1270,7 +1270,7 @@ wihap_ioctl(struct wi_softc *sc, u_long command, caddr_t data)
 		break;
 
 	case SIOCHOSTAP_SFLAGS:
-		if ((error = suser(p->p_ucred, &p->p_acflag)))
+		if ((error = suser(p, 0)))
 			break;
 		if ((error = copyin(ifr->ifr_data, &flag, sizeof(int))))
 			break;

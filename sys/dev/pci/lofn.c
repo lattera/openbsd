@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7.2.5 2003/06/07 11:02:30 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/lofn.c,v 1.7.2.6 2004/02/19 10:56:27 niklas Exp $	*/
 
 /*
  * Copyright (c) 2001-2002 Jason L. Wright (jason@thought.net)
@@ -43,8 +43,6 @@
 #include <sys/kernel.h>
 #include <sys/mbuf.h>
 #include <sys/device.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <crypto/cryptodev.h>
 #include <dev/rndvar.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.4.2.3 2003/03/28 00:41:29 niklas Exp $	*/
+/*	$OpenBSD: src/sys/net/pfkeyv2_convert.c,v 1.4.2.4 2004/02/19 10:57:22 niklas Exp $	*/
 /*
  * The author of this code is Angelos D. Keromytis (angelos@keromytis.org)
  *
@@ -135,6 +135,9 @@ import_sa(struct tdb *tdb, struct sadb_sa *sadb_sa, struct ipsecinit *ii)
 
 		if (sadb_sa->sadb_sa_flags & SADB_X_SAFLAGS_NOREPLAY)
 			tdb->tdb_flags |= TDBF_NOREPLAY;
+
+		if (sadb_sa->sadb_sa_flags & SADB_X_SAFLAGS_UDPENCAP)
+			tdb->tdb_flags |= TDBF_UDPENCAP;
 	}
 
 	if (sadb_sa->sadb_sa_state != SADB_SASTATE_MATURE)
@@ -180,7 +183,19 @@ export_sa(void **p, struct tdb *tdb)
 			break;
 
 		case CRYPTO_RIPEMD160_HMAC:
-			sadb_sa->sadb_sa_auth = SADB_AALG_RIPEMD160HMAC;
+			sadb_sa->sadb_sa_auth = SADB_X_AALG_RIPEMD160HMAC;
+			break;
+
+		case CRYPTO_SHA2_256_HMAC:
+			sadb_sa->sadb_sa_auth = SADB_X_AALG_SHA2_256;
+			break;
+
+		case CRYPTO_SHA2_384_HMAC:
+			sadb_sa->sadb_sa_auth = SADB_X_AALG_SHA2_384;
+			break;
+
+		case CRYPTO_SHA2_512_HMAC:
+			sadb_sa->sadb_sa_auth = SADB_X_AALG_SHA2_512;
 			break;
 
 		case CRYPTO_MD5_KPDK:
@@ -781,4 +796,24 @@ export_key(void **p, struct tdb *tdb, int type)
 		bcopy(tdb->tdb_amxkey, *p, tdb->tdb_amxkeylen);
 		*p += PADUP(tdb->tdb_amxkeylen);
 	}
+}
+
+/* Import/Export remote port for UDP Encapsulation */
+void
+import_udpencap(struct tdb *tdb, struct sadb_x_udpencap *sadb_udpencap)
+{
+	if (sadb_udpencap)
+		tdb->tdb_udpencap_port = sadb_udpencap->sadb_x_udpencap_port;
+}
+
+void
+export_udpencap(void **p, struct tdb *tdb)
+{
+	struct sadb_x_udpencap *sadb_udpencap = (struct sadb_x_udpencap *) *p;
+
+	sadb_udpencap->sadb_x_udpencap_port = tdb->tdb_udpencap_port;
+	sadb_udpencap->sadb_x_udpencap_reserved = 0;
+	sadb_udpencap->sadb_x_udpencap_len =
+	    sizeof(struct sadb_x_udpencap) / sizeof(uint64_t);
+	*p += sizeof(struct sadb_x_udpencap);
 }

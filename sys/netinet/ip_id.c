@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/netinet/ip_id.c,v 1.2.4.2 2002/03/28 14:56:45 niklas Exp $ */
+/* $OpenBSD: src/sys/netinet/ip_id.c,v 1.2.4.3 2004/02/19 10:57:24 niklas Exp $ */
 
 /*
  * Copyright 1998 Niels Provos <provos@citi.umich.edu>
@@ -17,11 +17,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by Niels Provos.
- * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -93,13 +88,13 @@ u_int16_t ip_randomid(void);
  */
 
 static u_int16_t
-pmod(u_int16_t gen, u_int16_t exp, u_int16_t mod)
+pmod(u_int16_t gen, u_int16_t expo, u_int16_t mod)
 {
 	u_int16_t s, t, u;
 
 	s = 1;
 	t = gen;
-	u = exp;
+	u = expo;
 
 	while (u) {
 		if (u & 1)
@@ -171,6 +166,7 @@ ip_randomid(void)
 	if (ru_counter >= RU_MAX || time.tv_sec > ru_reseed)
 		ip_initid();
 
+#if 0
 	if (!tmp)
 		tmp = arc4random();
 
@@ -178,6 +174,9 @@ ip_randomid(void)
 	n = tmp & 0x3; tmp = tmp >> 2;
 	if (ru_counter + n >= RU_MAX)
 		ip_initid();
+#else
+	n = 0;
+#endif
 
 	for (i = 0; i <= n; i++)
 		/* Linear Congruential Generator */
@@ -185,5 +184,5 @@ ip_randomid(void)
 
 	ru_counter += i;
 
-	return (ru_seed ^ pmod(ru_g,ru_seed2 ^ ru_x,RU_N)) | ru_msb;
+	return (ru_seed ^ pmod(ru_g,ru_seed2 + ru_x, RU_N)) | ru_msb;
 }

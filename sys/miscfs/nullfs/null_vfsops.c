@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null_vfsops.c,v 1.11.2.5 2003/06/07 11:06:05 ho Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/nullfs/Attic/null_vfsops.c,v 1.11.2.6 2004/02/19 10:57:20 niklas Exp $	*/
 /*	$NetBSD: null_vfsops.c,v 1.38 2002/09/21 18:09:29 christos Exp $	*/
 
 /*
@@ -282,7 +282,7 @@ const struct vnodeopv_desc * const nullfs_vnodeopv_descs[] = {
 	NULL,
 };
 
-struct vfsops nullfs_vfsops = {
+const struct vfsops nullfs_vfsops = {
 	nullfs_mount,
 	layerfs_start,
 	nullfs_unmount,
