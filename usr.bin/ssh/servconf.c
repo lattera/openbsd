@@ -12,7 +12,7 @@ Created: Mon Aug 21 15:48:58 1995 ylo
 */
 
 #include "includes.h"
-RCSID("$Id: servconf.c,v 1.6 1999/09/30 05:11:29 deraadt Exp $");
+RCSID("$Id: servconf.c,v 1.7 1999/10/01 02:38:09 provos Exp $");
 
 #include "ssh.h"
 #include "servconf.h"
@@ -311,7 +311,7 @@ void read_server_config(ServerOptions *options, const char *filename)
 	  break;
 
 	case sRandomSeedFile:
-	  fprintf(stderr, "%s line %d: option is obsolete.\n",
+	  fprintf(stderr, "%s line %d: \"randomseed\" option is obsolete.\n",
 		  filename, linenum);
 	  cp = strtok(NULL, WHITESPACE);
 	  break;
