@@ -1,5 +1,0 @@
-#	$OpenBSD: src/distrib/macppc/Makefile,v 1.1 2001/09/01 16:47:03 drahn Exp $
-
-SUBDIR= ramdisk
-
-.include <bsd.subdir.mk>

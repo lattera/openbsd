@@ -1,4 +1,0 @@
-# enforce yacc...
-BISON=yacc
-# and we want our libiberty too
-LIBIBERTY=-liberty

@@ -1,6 +1,0 @@
-Since OpenBSD OSREV is the first release for MACHINE systems, upgrades
-are not expected.
-If you have been using an old OpenBSD/MACHINE snapshot, you can follow the
-following instructions.
-
-OpenBSDUpgrade({:-CDROM, the miniroot, or the installation floppy-:})

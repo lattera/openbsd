@@ -1,3 +1,0 @@
-interfaces = { enc0, tun0 }
-@0 block in on tun0 all 
-@0 block in on enc0 all 
