@@ -1,4 +1,4 @@
-/*	$Id: i82586.h,v 1.2 1995/11/07 08:51:00 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/i82586.h,v 1.2 1998/08/22 08:37:58 smurph Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

@@ -1,4 +1,4 @@
-/*	$Id: conf.c,v 1.3 1995/11/07 08:50:58 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/conf.c,v 1.2 1998/08/22 08:37:55 smurph Exp $ */
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -22,8 +22,8 @@ extern struct netif_driver le_driver;
 extern struct netif_driver ie_driver;
 
 struct netif_driver *netif_drivers[] = {
-	&le_driver,
 	&ie_driver,
+	&le_driver,
 };
 int n_netif_drivers = sizeof(netif_drivers) / sizeof(netif_drivers[0]);
 

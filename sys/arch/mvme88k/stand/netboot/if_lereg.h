@@ -1,4 +1,4 @@
-/*	$Id: if_lereg.h,v 1.2 1995/11/07 08:51:03 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/netboot/if_lereg.h,v 1.2 1998/08/22 08:38:03 smurph Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
