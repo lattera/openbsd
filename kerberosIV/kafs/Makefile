@@ -1,8 +1,10 @@
-#	$Id: Makefile,v 1.2 1997/11/28 12:48:42 art Exp $
+#	$Id: Makefile,v 1.3 1998/03/12 17:46:26 art Exp $
 
 LIB=	kafs
-CFLAGS+=-I${.CURDIR}
+CFLAGS+=-I${.CURDIR} -I${.CURDIR}/../roken
 SRCS=	afskrb.c afssys.c common.c
+.PATH: ${.CURDIR}/../roken
+SRCS+=	resolve.c
 
 .include <bsd.own.mk> # for AFS
 
