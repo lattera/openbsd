@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.10 2004/03/23 08:02:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_machdep.c,v 1.14.6.11 2004/06/11 15:00:12 grange Exp $	*/
 /*	$NetBSD: pci_machdep.c,v 1.28 1997/06/06 23:29:17 thorpej Exp $	*/
 
 /*-
@@ -497,7 +497,15 @@ pci_intr_map(pa, ihp)
 				}
 			}
 		}
-		/* XXX scan the EISA bus too */
+		if (mip == NULL && mp_eisa_bus != -1) {
+			for (mip = mp_busses[mp_eisa_bus].mb_intrs;
+			    mip != NULL; mip=mip->next) {
+				if (mip->bus_pin == line) {
+					ihp->line = mip->ioapic_ih | line;
+					return 0;
+				}
+			}
+		}
 		if (mip == NULL) {
 			printf("pci_intr_map: "
 			    "bus %d dev %d func %d pin %d; line %d\n",
