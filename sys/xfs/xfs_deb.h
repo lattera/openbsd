@@ -1,4 +1,3 @@
-/* $OpenBSD: src/sys/xfs/Attic/xfs_deb.h,v 1.3.4.1 2000/03/24 09:09:54 niklas Exp $ */
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -37,6 +36,7 @@
  * SUCH DAMAGE.
  */
 
+/* $Id: xfs_deb.h,v 1.5 2000/09/11 14:26:51 art Exp $ */
 
 #ifndef _xfs_deb_h
 #define _xfs_deb_h

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/stand/boot/boot.c,v 1.22 1998/07/08 19:24:52 mickey Exp $	*/
+/*	$OpenBSD: src/sys/stand/boot/boot.c,v 1.22.8.1 2001/05/14 22:45:00 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997,1998 Michael Shalayeff
@@ -57,7 +57,7 @@ boot(bootdev)
 
 	machdep();
 
-	printf(">> OpenBSD/" MACHINE_ARCH " BOOT %s\n", version);
+	printf(">> OpenBSD/" MACHINE " BOOT %s\n", version);
 
 	devboot(bootdev, cmd.bootdev);
 	strncpy(cmd.image, bootfile, sizeof(cmd.image));

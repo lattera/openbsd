@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_page_i.h,v 1.3.4.2 2001/05/14 22:47:47 niklas Exp $	*/
 /*	$NetBSD: uvm_page_i.h,v 1.10 1999/05/24 19:10:57 thorpej Exp $	*/
 
 /* 

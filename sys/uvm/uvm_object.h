@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/uvm_object.h,v 1.3.4.2 2001/05/14 22:47:47 niklas Exp $	*/
 /*	$NetBSD: uvm_object.h,v 1.8 1999/05/25 20:30:09 thorpej Exp $	*/
 
 /*

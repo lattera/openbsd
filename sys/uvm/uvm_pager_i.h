@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_pager_i.h,v 1.3.4.2 2001/05/14 22:47:47 niklas Exp $	*/
 /*	$NetBSD: uvm_pager_i.h,v 1.7 1999/03/25 18:48:55 mrg Exp $	*/
 
 /*

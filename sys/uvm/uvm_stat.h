@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_stat.h,v 1.14 1999/03/25 18:48:56 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.3.4.2 2001/05/14 22:47:48 niklas Exp $	*/
+/*	$NetBSD: uvm_stat.h,v 1.15 1999/06/21 17:25:12 thorpej Exp $	*/
 
 /*
  *
@@ -59,6 +60,8 @@ struct uvm_cnt {
 	void *p;				/* private data */
 };
 
+#ifdef _KERNEL
+
 extern struct uvm_cnt *uvm_cnt_head;
 
 /*
@@ -88,6 +91,7 @@ do { \
 #define UVMCNT_INCR(C) UVMCNT_ADD(C,1)
 #define UVMCNT_DECR(C) UVMCNT_ADD(C,-1)
 
+#endif /* _KERNEL */
 
 /*
  * history/tracing
@@ -128,6 +132,8 @@ LIST_HEAD(uvm_history_head, uvm_history);
 #define	UVMHIST_MAPHIST		0x00000001	/* maphist */
 #define	UVMHIST_PDHIST		0x00000002	/* pdhist */
 
+#ifdef _KERNEL
+
 /*
  * macros to use the history/tracing code.  note that UVMHIST_LOG
  * must take 4 arguments (even if they are ignored by the format).
@@ -155,7 +161,7 @@ do { \
 	(NAME).e = (struct uvm_history_ent *) \
 		malloc(sizeof(struct uvm_history_ent) * (N), M_TEMP, \
 		    M_WAITOK); \
-	bzero((NAME).e, sizeof(struct uvm_history_ent) * (N)); \
+	memset((NAME).e, 0, sizeof(struct uvm_history_ent) * (N)); \
 	LIST_INSERT_HEAD(&uvm_histories, &(NAME), list); \
 } while (0)
 
@@ -167,7 +173,7 @@ do { \
 	(NAME).f = 0; \
 	simple_lock_init(&(NAME).l); \
 	(NAME).e = (struct uvm_history_ent *) (BUF); \
-	bzero((NAME).e, sizeof(struct uvm_history_ent) * (NAME).n); \
+	memset((NAME).e, 0, sizeof(struct uvm_history_ent) * (NAME).n); \
 	LIST_INSERT_HEAD(&uvm_histories, &(NAME), list); \
 } while (0)
 
@@ -237,5 +243,7 @@ uvmhist_print(e)
 	printf("\n");
 }
 #endif /* UVMHIST */
+
+#endif /* _KERNEL */
 
 #endif /* _UVM_UVM_STAT_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27 1999/12/08 06:50:24 itojun Exp $	*/
+/*	$OpenBSD: src/sys/sys/malloc.h,v 1.27.2.1 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: malloc.h,v 1.39 1998/07/12 19:52:01 augustss Exp $	*/
 
 /*
@@ -38,6 +38,16 @@
 
 #ifndef _SYS_MALLOC_H_
 #define	_SYS_MALLOC_H_
+
+#define KERN_MALLOC_BUCKETS   1
+#define KERN_MALLOC_BUCKET    2
+#define KERN_MALLOC_MAXID     3
+
+#define CTL_KERN_MALLOC_NAMES { \
+           {0, 0 }, \
+           { "buckets", CTLTYPE_STRING }, \
+           { "bucket", CTLTYPE_NODE }, \
+}
 
 /*
  * flags to malloc
@@ -159,7 +169,6 @@
 #define	M_USB		101	/* USB general */
 #define	M_USBDEV	102	/* USB device driver */
 #define	M_USBHC		103	/* USB host controller */
-  
 
 /* KAME IPv6 */
 #define	M_IP6OPT	123	/* IPv6 options */
@@ -170,6 +179,10 @@
 #define M_PIPE		104	/* Pipe structures */
 
 #define M_MEMDESC	105	/* Memory range */
+
+#define M_DEBUG		106	/* MALLOC_DEBUG structures */
+
+#define M_KNOTE		107	/* kernel event queue */  
 
 #define	M_TEMP		127	/* misc temporary data buffers */
 #define M_LAST          128     /* Must be last type + 1 */
@@ -282,8 +295,9 @@
 	"USB HC",	/* 103 M_USBHC */ \
 	"pipe", 	/* 104 M_PIPE */ \
 	"memdesc",	/* 105 M_MEMDESC */ \
-	NULL, \
-	NULL, NULL, NULL, NULL, NULL, \
+	"malloc debug",	/* 106 M_DEBUG */ \
+	"knote",	/* 107 M_KNOTE */ \
+	NULL, NULL, NULL, NULL, \
 	NULL, NULL, NULL, NULL, NULL, \
 	NULL, NULL, NULL, NULL, NULL, \
 	NULL, \
@@ -323,14 +337,14 @@ struct kmemusage {
  * Set of buckets for each size of memory block that is retained
  */
 struct kmembuckets {
-	caddr_t kb_next;	/* list of free blocks */
-	caddr_t kb_last;	/* last free block */
-	long	kb_calls;	/* total calls to allocate this size */
-	long	kb_total;	/* total number of blocks allocated */
-	long	kb_totalfree;	/* # of free elements in this bucket */
-	long	kb_elmpercl;	/* # of elements in this sized allocation */
-	long	kb_highwat;	/* high water mark */
-	long	kb_couldfree;	/* over high water mark and could free */
+	caddr_t   kb_next;	/* list of free blocks */
+	caddr_t   kb_last;	/* last free block */
+	u_int64_t kb_calls;	/* total calls to allocate this size */
+	u_int64_t kb_total;	/* total number of blocks allocated */
+	u_int64_t kb_totalfree;	/* # of free elements in this bucket */
+	u_int64_t kb_elmpercl;	/* # of elements in this sized allocation */
+	u_int64_t kb_highwat;	/* high water mark */
+	u_int64_t kb_couldfree;	/* over high water mark and could free */
 };
 
 #ifdef _KERNEL
@@ -422,6 +436,6 @@ extern struct kmembuckets bucket[];
 
 extern void *malloc __P((unsigned long size, int type, int flags));
 extern void free __P((void *addr, int type));
-
+extern int sysctl_malloc __P((int *, u_int, void *, size_t *, void *, size_t));
 #endif /* _KERNEL */
 #endif /* !_SYS_MALLOC_H_ */

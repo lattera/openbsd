@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/uvm_stat.c,v 1.3.4.2 2001/05/14 22:47:48 niklas Exp $	 */
 /*	$NetBSD: uvm_stat.c,v 1.12 1999/03/26 17:34:16 chs Exp $	 */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_fault_i.h,v 1.3.4.2 2001/05/14 22:47:45 niklas Exp $	*/
 /*	$NetBSD: uvm_fault_i.h,v 1.9 1999/06/04 23:38:41 thorpej Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.1 2000/03/24 09:09:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/mbuf.h,v 1.14.2.2 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: mbuf.h,v 1.19 1996/02/09 18:25:14 christos Exp $	*/
 
 /*
@@ -39,6 +39,8 @@
 #ifndef M_WAITOK
 #include <sys/malloc.h>
 #endif
+
+extern void *ipsp_copy_ident(void *);
 
 /*
  * Mbufs are of a single size, MSIZE (machine/param.h), which
@@ -81,7 +83,6 @@ struct	pkthdr {
 	struct	ifnet *rcvif;		/* rcv interface */
 	int	len;			/* total packet length */
 	void	*tdbi;			/* pointer to struct tdb_ident */
-					/* XXX - pull in ip_ipsp.h */ 
 };
 
 /* description of external storage mapped into mbuf, valid if M_EXT set */
@@ -124,12 +125,14 @@ struct mbuf {
 #define	M_EXT		0x0001	/* has associated external storage */
 #define	M_PKTHDR	0x0002	/* start of record */
 #define	M_EOR		0x0004	/* end of record */
+#define	M_PROTO1	0x0008	/* protocol-specific */
 
 /* mbuf pkthdr flags, also in m_flags */
 #define	M_BCAST		0x0100	/* send/received as link-level broadcast */
 #define	M_MCAST		0x0200	/* send/received as link-level multicast */
 #define M_CONF		0x0400  /* packet was encrypted (ESP-transport) */
 #define M_AUTH		0x0800  /* packet was authenticated (AH) */
+
 #if 0 /* NRL IPv6 */
 #define M_TUNNEL       	0x1000  /* packet was tunneled */
 #define M_DAD		0x2000	/* Used on outbound packets to indicate that
@@ -138,17 +141,20 @@ struct mbuf {
 
 /* KAME IPv6 */
 #define M_ANYCAST6	0x4000	/* received as IPv6 anycast */
+
 #if 0 /*KAME IPSEC*/
 #define M_AUTHIPHDR	0x0010	/* data origin authentication for IP header */
 #define M_DECRYPTED	0x0020	/* confidentiality */
 #endif
+
 #define M_LOOP		0x0040	/* for Mbuf statistics */
+
 #if 0 /*KAME IPSEC*/
 #define M_AUTHIPDGM     0x0080  /* data origin authentication */
 #endif
 
 /* flags copied when copying m_pkthdr */
-#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_BCAST|M_MCAST|M_CONF|M_AUTH|M_ANYCAST6|M_LOOP)
+#define	M_COPYFLAGS	(M_PKTHDR|M_EOR|M_PROTO1|M_BCAST|M_MCAST|M_CONF|M_AUTH|M_ANYCAST6|M_LOOP)
 
 /* mbuf types */
 #define	MT_FREE		0	/* should be on free list */
@@ -216,6 +222,7 @@ struct mbuf {
 		(m)->m_nextpkt = (struct mbuf *)NULL; \
 		(m)->m_data = (m)->m_pktdat; \
 		(m)->m_flags = M_PKTHDR; \
+ 		(m)->m_pkthdr.tdbi = NULL; \
 	} else \
 		(m) = m_retryhdr((how), (type)); \
 }
@@ -288,16 +295,55 @@ union mcluster {
 		else \
 			MCLFREE((m)->m_ext.ext_buf); \
 	  } \
+	  if (((m)->m_flags & M_PKTHDR) && ((m)->m_pkthdr.tdbi)) { \
+		free((m)->m_pkthdr.tdbi, M_TEMP); \
+		(m)->m_pkthdr.tdbi = NULL; \
+	  } \
 	  (n) = (m)->m_next; \
 	  FREE((m), mbtypes[(m)->m_type]); \
 	}
+
+/*
+ * Copy just m_pkthdr from from to to.
+ */
+#define M_COPY_HDR(to, from) { \
+	(to)->m_pkthdr = (from)->m_pkthdr; \
+}
+
+#ifdef IPSEC
+/*
+ * Duplicate just m_pkthdr from from to to.
+ * XXX Deal with a generic packet attribute framework.
+ * XXX When that happens, we only need one version of the macro.
+ */
+#define M_DUP_HDR(to, from) { \
+	M_COPY_HDR((to), (from)); \
+	if ((from)->m_pkthdr.tdbi) { \
+		(to)->m_pkthdr.tdbi = ipsp_copy_ident((from)->m_pkthdr.tdbi); \
+	} \
+}
+#else /* IPSEC */
+#define M_DUP_HDR(to, from) { \
+	M_COPY_HDR((to), (from)); \
+}
+#endif /* IPSEC */
+
+/*
+ * Duplicate mbuf pkthdr from from to to.
+ * from must have M_PKTHDR set, and to must be empty.
+ */
+#define M_DUP_PKTHDR(to, from) { \
+	M_DUP_HDR((to), (from)); \
+	(to)->m_flags = (from)->m_flags & M_COPYFLAGS; \
+	(to)->m_data = (to)->m_pktdat; \
+}
 
 /*
  * Copy mbuf pkthdr from from to to.
  * from must have M_PKTHDR set, and to must be empty.
  */
 #define	M_COPY_PKTHDR(to, from) { \
-	(to)->m_pkthdr = (from)->m_pkthdr; \
+	M_COPY_HDR((to), (from)); \
 	(to)->m_flags = (from)->m_flags & M_COPYFLAGS; \
 	(to)->m_data = (to)->m_pktdat; \
 }
@@ -397,6 +443,7 @@ struct	mbuf *m_get __P((int, int));
 struct	mbuf *m_getclr __P((int, int));
 struct	mbuf *m_gethdr __P((int, int));
 struct	mbuf *m_prepend __P((struct mbuf *, int, int));
+struct	mbuf *m_pulldown __P((struct mbuf *, int, int, int *));
 struct	mbuf *m_pullup __P((struct mbuf *, int));
 struct	mbuf *m_pullup2 __P((struct mbuf *, int));
 struct	mbuf *m_retry __P((int, int));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.1 2000/03/24 09:09:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.28.2.2 2001/05/14 22:45:03 niklas Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -48,6 +48,7 @@
 #include <sys/select.h>			/* For struct selinfo. */
 #include <sys/queue.h>
 #include <sys/timeout.h>		/* For struct timeout. */
+#include <sys/event.h>			/* For struct klist */
 
 /*
  * One structure allocated per session.
@@ -154,6 +155,7 @@ struct	proc {
 	char	*p_wmesg;	 /* Reason for sleep. */
 	u_int	p_swtime;	 /* Time swapped in or out. */
 	u_int	p_slptime;	 /* Time since last blocked. */
+	int	p_schedflags;	 /* PSCHED_* flags */
 
 	struct	itimerval p_realtimer;	/* Alarm timer. */
 	struct	timeout p_realit_to;	/* Alarm timeout. */
@@ -172,7 +174,8 @@ struct	proc {
 	int	p_holdcnt;		/* If non-zero, don't swap. */
 	struct	emul *p_emul;		/* Emulation information */
 
-	long	p_spare[1];		/* pad to 256, avoid shifting eproc. */
+	struct	klist p_klist;		/* knotes attached to this process */
+					/* pad to 256, avoid shifting eproc. */
 
 
 /* End area that is zeroed on creation. */
@@ -213,6 +216,9 @@ struct	proc {
 #define	SSLEEP	3		/* Sleeping on an address. */
 #define	SSTOP	4		/* Process debugging or suspension. */
 #define	SZOMB	5		/* Awaiting collection by parent. */
+#define SDEAD	6		/* Process is almost a zombie. */
+
+#define P_ZOMBIE(p)	((p)->p_stat == SZOMB || (p)->p_stat == SDEAD)
 
 /* These flags are kept in p_flag. */
 #define	P_ADVLOCK	0x000001	/* Proc may hold a POSIX adv. lock. */
@@ -241,6 +247,19 @@ struct	proc {
 
 #define	P_NOCLDWAIT	0x080000	/* Let pid 1 wait for my children */
 #define	P_NOZOMBIE	0x100000	/* Pid 1 waits for me instead of dad */
+
+/* Macro to compute the exit signal to be delivered. */
+#define P_EXITSIG(p) \
+    (((p)->p_flag & (P_TRACED | P_FSTRACE)) ? SIGCHLD : (p)->p_exitsig)
+
+/*
+ * These flags are kept in p_schedflags.  p_schedflags may be modified
+ * only at splstatclock().
+ */
+#define PSCHED_SEENRR		0x0001	/* process has been in roundrobin() */
+#define PSCHED_SHOULDYIELD	0x0002	/* process should yield */
+
+#define PSCHED_SWITCHCLEAR	(PSCHED_SEENRR|PSCHED_SHOULDYIELD)
 
 /*
  * MOVE TO ucred.h?
@@ -298,6 +317,8 @@ struct	pcred {
 #define FORK_CLEANFILES	0x00000020
 #define FORK_NOZOMBIE	0x00000040
 #define FORK_SHAREVM	0x00000080
+#define FORK_VMNOSTACK	0x00000100
+#define FORK_SIGHAND	0x00000200
 
 #define	PIDHASH(pid)	(&pidhashtbl[(pid) & pidhash])
 extern LIST_HEAD(pidhashhead, proc) *pidhashtbl;
@@ -307,7 +328,9 @@ extern u_long pidhash;
 extern LIST_HEAD(pgrphashhead, pgrp) *pgrphashtbl;
 extern u_long pgrphash;
 
+#ifndef curproc
 extern struct proc *curproc;		/* Current running proc. */
+#endif
 extern struct proc proc0;		/* Process slot for swapper. */
 extern int nprocs, maxproc;		/* Current and max number of procs. */
 extern int randompid;			/* fork() should create random pid's */
@@ -315,7 +338,14 @@ extern int randompid;			/* fork() should create random pid's */
 LIST_HEAD(proclist, proc);
 extern struct proclist allproc;		/* List of all processes. */
 extern struct proclist zombproc;	/* List of zombie processes. */
-struct proc *initproc;			/* Process slots for init, pager. */
+
+extern struct proclist deadproc;	/* List of dead processes. */
+extern struct simplelock deadproc_slock;
+
+extern struct proc *initproc;		/* Process slots for init, pager. */
+extern struct proc *syncerproc;		/* filesystem syncer daemon */
+
+extern struct pool proc_pool;		/* memory pool for procs */
 
 #define	NQS	32			/* 32 run queues. */
 int	whichqs;			/* Bit mask summary of non-empty Q's. */
@@ -332,6 +362,8 @@ int	enterpgrp __P((struct proc *p, pid_t pgid, int mksess));
 void	fixjobc __P((struct proc *p, struct pgrp *pgrp, int entering));
 int	inferior __P((struct proc *p));
 int	leavepgrp __P((struct proc *p));
+void	yield __P((void));
+void	preempt __P((struct proc *));
 void	mi_switch __P((void));
 void	pgdelete __P((struct pgrp *pgrp));
 void	procinit __P((void));
@@ -347,9 +379,13 @@ void	swapin __P((struct proc *));
 #endif
 int	tsleep __P((void *chan, int pri, char *wmesg, int timo));
 void	unsleep __P((struct proc *));
-void	wakeup __P((void *chan));
+void    wakeup_n __P((void *chan, int));
+void    wakeup __P((void *chan));
+#define wakeup_one(c) wakeup_n((c), 1)
+void	reaper __P((void));
 void	exit1 __P((struct proc *, int));
-int	fork1 __P((struct proc *, int, void *, size_t, register_t *));
+void	exit2 __P((struct proc *));
+int	fork1 __P((struct proc *, int, int, void *, size_t, register_t *));
 void	kmeminit __P((void));
 void	rqinit __P((void));
 int	groupmember __P((gid_t, struct ucred *));

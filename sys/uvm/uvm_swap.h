@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_swap.h,v 1.3 1998/02/07 11:09:48 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.h,v 1.2.6.2 2001/05/14 22:47:48 niklas Exp $	*/
+/*	$NetBSD: uvm_swap.h,v 1.4 1999/06/21 17:25:12 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1997 Matthew R. Green
@@ -33,13 +34,17 @@
 #ifndef _UVM_UVM_SWAP_H_
 #define _UVM_UVM_SWAP_H_
 
+#ifdef _KERNEL
+
 int			uvm_swap_get __P((struct vm_page *, int, int));
-int			uvm_swap_put __P((int, struct vm_page **, int,
-			    int));
-int			uvm_swap_alloc __P((int *wanted, boolean_t lessok));
-void			uvm_swap_free __P((int startslot, int nslots));
+int			uvm_swap_put __P((int, struct vm_page **, int, int));
+int			uvm_swap_alloc __P((int *, boolean_t));
+void			uvm_swap_free __P((int, int));
 
 #ifdef UVM_SWAP_ENCRYPT
 void			uvm_swap_initcrypt_all __P((void));
 #endif
+
+#endif /* _KERNEL */
+
 #endif /* _UVM_UVM_SWAP_H_ */

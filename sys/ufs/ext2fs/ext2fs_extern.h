@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_extern.h,v 1.6 2000/02/07 04:57:18 assar Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_extern.h,v 1.6.2.1 2001/05/14 22:47:39 niklas Exp $	*/
 /*	$NetBSD: ext2fs_extern.h,v 1.1 1997/06/11 09:33:55 bouyer Exp $	*/
 
 /*-
@@ -55,6 +55,8 @@ struct vfsconf;
 struct mbuf;
 struct componentname;
 
+extern struct pool ext2fs_inode_pool;		/* memory pool for inodes */
+
 __BEGIN_DECLS
 
 /* ext2fs_alloc.c */
@@ -101,7 +103,7 @@ void	ext2fs_checkoverlap __P((struct buf *, struct inode *));
 
 /* ext2fs_vfsops.c */
 int ext2fs_mountroot __P((void));
-int ext2fs_mount __P((struct mount *, const char *, caddr_t,
+int ext2fs_mount __P((struct mount *, const char *, void *,
 		   struct nameidata *, struct proc *));
 int ext2fs_reload __P((struct mount *, struct ucred *, struct proc *));
 int ext2fs_mountfs __P((struct vnode *, struct mount *, struct proc *));
@@ -142,6 +144,7 @@ int ext2fs_makeinode __P((int, struct vnode *, struct vnode **,
                           struct componentname *cnp));
 int ext2fs_fsync __P((void *));
 int ext2fs_reclaim __P((void *));
+
 __END_DECLS
 
 #define IS_EXT2_VNODE(vp)   (vp->v_tag == VT_EXT2FS)

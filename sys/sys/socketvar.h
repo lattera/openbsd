@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/socketvar.h,v 1.17 1999/12/08 06:50:24 itojun Exp $	*/
+/*	$OpenBSD: src/sys/sys/socketvar.h,v 1.17.2.1 2001/05/14 22:45:04 niklas Exp $	*/
 /*	$NetBSD: socketvar.h,v 1.18 1996/02/09 18:25:38 christos Exp $	*/
 
 /*-
@@ -95,6 +95,7 @@ struct socket {
 #define	SB_SEL		0x08		/* someone is selecting */
 #define	SB_ASYNC	0x10		/* ASYNC I/O, need signals */
 #define	SB_NOINTR	0x40		/* operations not interruptible */
+#define	SB_KNOTE	0x80		/* kernel note attached */
 
 	void	*so_internal;		/* Space for svr4 stream data */
 	void	(*so_upcall) __P((struct socket *so, caddr_t arg, int waitf));
@@ -128,7 +129,8 @@ struct socket {
 /*
  * Do we need to notify the other side when I/O is possible?
  */
-#define	sb_notify(sb)	(((sb)->sb_flags & (SB_WAIT|SB_SEL|SB_ASYNC)) != 0)
+#define	sb_notify(sb)	(((sb)->sb_flags & (SB_WAIT|SB_SEL|SB_ASYNC| \
+    SB_KNOTE)) != 0)
 
 /*
  * How much space is there in a socket buffer (so->so_snd or so->so_rcv)?
@@ -213,15 +215,19 @@ struct sockaddr;
 struct proc;
 struct msghdr;
 struct stat;
+struct knote;
 
 /*
  * File operations on sockets.
  */
-int	soo_read __P((struct file *fp, struct uio *uio, struct ucred *cred));
-int	soo_write __P((struct file *fp, struct uio *uio, struct ucred *cred));
+int	soo_read __P((struct file *fp, off_t *, struct uio *uio, 
+            struct ucred *cred));
+int	soo_write __P((struct file *fp, off_t *, struct uio *uio,
+            struct ucred *cred));
 int	soo_ioctl __P((struct file *fp, u_long cmd, caddr_t data,
 	    struct proc *p));
 int	soo_select __P((struct file *fp, int which, struct proc *p));
+int	soo_kqfilter __P((struct file *fp, struct knote *kn));
 int 	soo_close __P((struct file *fp, struct proc *p));
 int	soo_stat __P((struct socket *, struct stat *));
 int	uipc_usrreq __P((struct socket *, int , struct mbuf *,

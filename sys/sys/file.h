@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/file.h,v 1.5 2000/02/01 04:00:50 assar Exp $	*/
+/*	$OpenBSD: src/sys/sys/file.h,v 1.5.2.1 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: file.h,v 1.11 1995/03/26 20:24:13 jtc Exp $	*/
 
 /*
@@ -44,6 +44,7 @@
 
 struct proc;
 struct uio;
+struct knote;
 
 /*
  * Kernel descriptor table.
@@ -55,19 +56,24 @@ struct file {
 #define	DTYPE_VNODE	1	/* file */
 #define	DTYPE_SOCKET	2	/* communications endpoint */
 #define	DTYPE_PIPE	3	/* pipe */
+#define	DTYPE_KQUEUE	4	/* event queue */
 	short	f_type;		/* descriptor type */
 	long	f_count;	/* reference count */
 	long	f_msgcount;	/* references from message queue */
 	struct	ucred *f_cred;	/* credentials associated with descriptor */
 	struct	fileops {
-		int	(*fo_read)	__P((struct file *fp, struct uio *uio,
-					    struct ucred *cred));
-		int	(*fo_write)	__P((struct file *fp, struct uio *uio,
-					    struct ucred *cred));
+		int	(*fo_read)	__P((struct file *fp, off_t *, 
+					     struct uio *uio,
+					     struct ucred *cred));
+		int	(*fo_write)	__P((struct file *fp, off_t *,
+					     struct uio *uio,
+					     struct ucred *cred));
 		int	(*fo_ioctl)	__P((struct file *fp, u_long com,
 					    caddr_t data, struct proc *p));
 		int	(*fo_select)	__P((struct file *fp, int which,
 					    struct proc *p));
+		int	(*fo_kqfilter)	__P((struct file *fp,
+					    struct knote *kn));
 		int	(*fo_close)	__P((struct file *fp, struct proc *p));
 	} *f_ops;
 	off_t	f_offset;
@@ -79,5 +85,10 @@ extern struct filelist filehead;	/* head of list of open files */
 extern int maxfiles;			/* kernel limit on number of open files */
 extern int nfiles;			/* actual number of open files */
 extern struct fileops vnops;		/* vnode operations for files */
+
+int     dofileread __P((struct proc *, int, struct file *, void *, size_t,
+            off_t *, register_t *));
+int     dofilewrite __P((struct proc *, int, struct file *, const void *,
+            size_t, off_t *, register_t *));
 
 #endif /* _KERNEL */

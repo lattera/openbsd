@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/mount.h,v 1.34 2000/02/09 10:29:56 assar Exp $	*/
+/*	$OpenBSD: src/sys/sys/mount.h,v 1.34.2.1 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -255,7 +255,7 @@ union mount_info {
 /* new statfs structure with mount options */
 struct statfs {
 	u_int32_t  f_flags;		/* copy of mount flags */
-	u_int32_t  f_bsize;		/* fundamental file system block size */
+	int32_t    f_bsize;		/* fundamental file system block size */
 	u_int32_t  f_iosize;		/* optimal transfer block size */
 	u_int32_t  f_blocks;		/* total data blocks in file system */
 	u_int32_t  f_bfree;		/* free blocks in fs */
@@ -317,6 +317,7 @@ struct ostatfs {
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */
 #define	MOUNT_NCPFS	"ncpfs"		/* NetWare Network File System */
 #define	MOUNT_XFS	"xfs"		/* xfs */
+#define	MOUNT_TCFS	"tcfs"		/* tcfs */
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
@@ -402,7 +403,7 @@ struct mount {
  * Second level identifier specifies which filesystem. Second level
  * identifier VFS_GENERIC returns information about all filesystems.
  */
-#define	VFS_GENERIC		0	/* generic filesystem information */
+#define	VFS_GENERIC	0	/* generic filesystem information */
 /*
  * Third level identifiers for VFS_GENERIC are given below; third
  * level identifiers for specific filesystems are given in their
@@ -411,6 +412,13 @@ struct mount {
 #define VFS_MAXTYPENUM	1	/* int: highest defined filesystem type */
 #define VFS_CONF	2	/* struct: vfsconf for filesystem given
 				   as next argument */
+#define	VFSGEN_MAXID	3	/* max number of vfs.generic ids */
+
+#define	CTL_VFSGENCTL_NAMES { \
+	{ 0, 0 }, \
+	{ "maxtypenum", CTLTYPE_INT }, \
+	{ "conf", CTLTYPE_NODE } \
+}
 
 /*
  * Filesystem configuration information. One of these exists for each
@@ -423,7 +431,7 @@ struct vfsconf {
 	int	vfc_typenum;		/* historic filesystem type number */
 	int	vfc_refcount;		/* number mounted of this type */
 	int	vfc_flags;		/* permanent flags */
-	int	(*vfc_mountroot)(void);	/* if != NULL, routine to mount root */
+	int	(*vfc_mountroot)__P((void));	/* if != NULL, routine to mount root */
 	struct	vfsconf *vfc_next;	/* next in list */
 };
 
@@ -440,7 +448,8 @@ extern int maxvfsconf;		/* highest defined filesystem type */
 extern struct vfsconf *vfsconf;	/* head of list of filesystem types */
 
 struct vfsops {
-	int	(*vfs_mount)	__P((struct mount *mp, const char *path, caddr_t data,
+	int	(*vfs_mount)	__P((struct mount *mp, const char *path,
+				    void *data,
 				    struct nameidata *ndp, struct proc *p));
 	int	(*vfs_start)	__P((struct mount *mp, int flags,
 				    struct proc *p));

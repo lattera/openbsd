@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm.h,v 1.15 1999/03/26 17:34:15 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm.h,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
+/*	$NetBSD: uvm.h,v 1.16 1999/06/21 17:25:11 thorpej Exp $	*/
 
 /*
  *
@@ -57,6 +58,9 @@
 #include <uvm/uvm_pager.h>
 #include <uvm/uvm_pdaemon.h>
 #include <uvm/uvm_swap.h>
+#ifdef UVM_SWAP_ENCRYPT
+#include <uvm/uvm_swap_encrypt.h>
+#endif
 
 /*
  * pull in VM_NFREELIST
@@ -77,6 +81,7 @@ struct uvm {
 	struct pglist page_inactive_obj;/* pages inactive (reclaim or free) */
 	simple_lock_data_t pageqlock;	/* lock for active/inactive page q */
 	simple_lock_data_t fpageqlock;	/* lock for free page q */
+	boolean_t page_init_done;	/* TRUE if uvm_page_init() finished */
 		/* page daemon trigger */
 	int pagedaemon;			/* daemon sleeps on this */
 	struct proc *pagedaemon_proc;	/* daemon's pid */
@@ -115,8 +120,10 @@ extern struct uvm uvm;
  * historys
  */
 
+#ifdef _KERNEL
 UVMHIST_DECL(maphist);
 UVMHIST_DECL(pdhist);
+#endif /* _KERNEL */
 
 /*
  * vm_map_entry etype bits:
@@ -136,21 +143,19 @@ UVMHIST_DECL(pdhist);
  * macros
  */
 
+#ifdef _KERNEL
+
 /*
  * UVM_UNLOCK_AND_WAIT: atomic unlock+wait... front end for the 
  * (poorly named) thread_sleep_msg function.
  */
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
-
 #define UVM_UNLOCK_AND_WAIT(event,lock,intr,msg, timo) \
 	thread_sleep_msg(event,lock,intr,msg, timo)
-
 #else
-
 #define UVM_UNLOCK_AND_WAIT(event,lock,intr,msg, timo) \
 	thread_sleep_msg(event,NULL,intr,msg, timo)
-
 #endif
 
 /*
@@ -158,13 +163,9 @@ UVMHIST_DECL(pdhist);
  */
 
 #if defined(UVM_PAGE_TRKOWN)
-
 #define UVM_PAGE_OWN(PG, TAG) uvm_page_own(PG, TAG)
-
-#else /* UVM_PAGE_TRKOWN */
-
+#else
 #define UVM_PAGE_OWN(PG, TAG) /* nothing */
-
 #endif /* UVM_PAGE_TRKOWN */
 
 /*
@@ -176,5 +177,7 @@ UVMHIST_DECL(pdhist);
 #include <uvm/uvm_map_i.h>
 #include <uvm/uvm_page_i.h>
 #include <uvm/uvm_pager_i.h>
+
+#endif /* _KERNEL */
 
 #endif /* _UVM_UVM_H_ */

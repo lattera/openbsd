@@ -1,6 +1,5 @@
-/* $OpenBSD: src/sys/xfs/Attic/xfs_vfsops-bsd.h,v 1.2.2.1 2000/03/24 09:09:55 niklas Exp $ */
 /*
- * Copyright (c) 1995, 1996, 1997, 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -37,6 +36,7 @@
  * SUCH DAMAGE.
  */
 
+/* $Id: xfs_vfsops-bsd.h,v 1.5 2001/02/21 02:45:12 nate Exp $ */
 
 #ifndef _xfs_vfsops_bsd_h
 #define _xfs_vfsops_bsd_h
@@ -44,7 +44,7 @@
 int
 xfs_mount(struct mount * mp,
 	  const char *user_path,
-	  caddr_t user_data,
+	  void *user_data,
 	  struct nameidata * ndp,
 	  struct proc * p);
 
@@ -68,13 +68,38 @@ xfs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p);
 
 int
 xfs_vget(struct mount * mp,
+#ifdef __APPLE__
+	 void *ino,
+#else
 	 ino_t ino,
+#endif
 	 struct vnode ** vpp);
 
+#ifdef HAVE_STRUCT_VFSOPS_VFS_CHECKEXP
 int
 xfs_fhtovp(struct mount * mp,
 	   struct fid * fhp,
 	   struct vnode ** vpp);
+#else
+int
+xfs_fhtovp(struct mount * mp,
+	   struct fid * fhp,
+	   struct mbuf * nam,
+	   struct vnode ** vpp,
+	   int *exflagsp,
+	   struct ucred ** credanonp);
+#endif
+
+struct mbuf;
+int
+xfs_checkexp (struct mount *mp,
+#ifdef __FreeBSD__
+	      struct sockaddr *nam,
+#else
+	      struct mbuf *nam,
+#endif
+	      int *exflagsp,
+	      struct ucred **credanonp);
 
 int
 xfs_vptofh(struct vnode * vp,

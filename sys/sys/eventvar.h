@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/eventvar.h,v 1.2 2000/11/16 20:31:30 mickey Exp $	*/
+/*	$OpenBSD: src/sys/sys/eventvar.h,v 1.2.4.1 2001/05/14 22:45:01 niklas Exp $	*/
 
 /*-
  * Copyright (c) 1999,2000 Jonathan Lemon <jlemon@FreeBSD.org>

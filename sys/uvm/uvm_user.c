@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/uvm_user.c,v 1.3.4.2 2001/05/14 22:47:49 niklas Exp $	*/
 /*	$NetBSD: uvm_user.c,v 1.7 1999/03/25 18:48:56 mrg Exp $	*/
 
 /*

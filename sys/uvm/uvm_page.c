@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_page.c,v 1.23 1999/05/25 01:34:13 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.6.4.2 2001/05/14 22:47:47 niklas Exp $	*/
+/*	$NetBSD: uvm_page.c,v 1.24 1999/07/22 22:58:38 thorpej Exp $	*/
 
 /* 
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -108,8 +109,8 @@ static vaddr_t      virtual_space_end;
 
 /*
  * we use a hash table with only one bucket during bootup.  we will
- * later rehash (resize) the hash table once malloc() is ready.
- * we static allocate the bootstrap bucket below...
+ * later rehash (resize) the hash table once the allocator is ready.
+ * we static allocate the one bootstrap bucket below...
  */
 
 static struct pglist uvm_bootbucket;
@@ -228,7 +229,7 @@ uvm_page_init(kvm_startp, kvm_endp)
 	/*
 	 * step 2: init the <obj,offset> => <page> hash table. for now
 	 * we just have one bucket (the bootstrap bucket).   later on we
-	 * will malloc() new buckets as we dynamically resize the hash table.
+	 * will allocate new buckets as we dynamically resize the hash table.
 	 */
 
 	uvm.page_nhash = 1;			/* 1 bucket */
@@ -277,7 +278,7 @@ uvm_page_init(kvm_startp, kvm_endp)
 	    (PAGE_SIZE + sizeof(struct vm_page));
 	pagearray = (vm_page_t)uvm_pageboot_alloc(pagecount *
 	    sizeof(struct vm_page));
-	bzero(pagearray, pagecount * sizeof(struct vm_page));
+	memset(pagearray, 0, pagecount * sizeof(struct vm_page));
 					 
 	/*
 	 * step 4: init the vm_page structures and put them in the correct
@@ -330,13 +331,14 @@ uvm_page_init(kvm_startp, kvm_endp)
 	 * step 7: init reserve thresholds
 	 * XXXCDC - values may need adjusting
 	 */
-	uvmexp.reserve_pagedaemon = 1;
-	uvmexp.reserve_kernel = 5;
+	uvmexp.reserve_pagedaemon = 4;
+	uvmexp.reserve_kernel = 6;
 
 	/*
 	 * done!
 	 */
 
+	uvm.page_init_done = TRUE;
 }
 
 /*
@@ -472,14 +474,15 @@ uvm_page_physget(paddrp)
 	int lcv, x;
 
 	/* pass 1: try allocating from a matching end */
-#if (VM_PHYSSEG_STRAT == VM_PSTRAT_BIGFIRST)
+#if (VM_PHYSSEG_STRAT == VM_PSTRAT_BIGFIRST) || \
+	(VM_PHYSSEG_STRAT == VM_PSTRAT_BSEARCH)
 	for (lcv = vm_nphysseg - 1 ; lcv >= 0 ; lcv--)
 #else
 	for (lcv = 0 ; lcv < vm_nphysseg ; lcv++)
 #endif
 	{
 
-		if (vm_physmem[lcv].pgs)
+		if (uvm.page_init_done == TRUE)
 			panic("vm_page_physget: called _after_ bootstrap");
 
 		/* try from front */
@@ -522,7 +525,8 @@ uvm_page_physget(paddrp)
 	}
 
 	/* pass2: forget about matching ends, just allocate something */
-#if (VM_PHYSSEG_STRAT == VM_PSTRAT_BIGFIRST)
+#if (VM_PHYSSEG_STRAT == VM_PSTRAT_BIGFIRST) || \
+	(VM_PHYSSEG_STRAT == VM_PSTRAT_BSEARCH)
 	for (lcv = vm_nphysseg - 1 ; lcv >= 0 ; lcv--)
 #else
 	for (lcv = 0 ; lcv < vm_nphysseg ; lcv++)
@@ -574,7 +578,7 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 	struct vm_physseg *ps;
 
 	if (uvmexp.pagesize == 0)
-		panic("vm_page_physload: page size not set!");
+		panic("uvm_page_physload: page size not set!");
 
 	if (free_list >= VM_NFREELIST || free_list < VM_FREELIST_DEFAULT)
 		panic("uvm_page_physload: bad free list %d\n", free_list);
@@ -583,7 +587,7 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 	 * do we have room?
 	 */
 	if (vm_nphysseg == VM_PHYSSEG_MAX) {
-		printf("vm_page_physload: unable to load physical memory "
+		printf("uvm_page_physload: unable to load physical memory "
 		    "segment\n");
 		printf("\t%d segments allocated, ignoring 0x%lx -> 0x%lx\n",
 		    VM_PHYSSEG_MAX, start, end);
@@ -605,7 +609,7 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 	 */
 	if (!preload) {
 #if defined(VM_PHYSSEG_NOADD)
-		panic("vm_page_physload: tried to add RAM after vm_mem_init");
+		panic("uvm_page_physload: tried to add RAM after vm_mem_init");
 #else
 		/* XXXCDC: need some sort of lockout for this case */
 		paddr_t paddr;
@@ -613,13 +617,13 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 		MALLOC(pgs, struct vm_page *, sizeof(struct vm_page) * npages,
 					 M_VMPAGE, M_NOWAIT);
 		if (pgs == NULL) {
-			printf("vm_page_physload: can not malloc vm_page "
+			printf("uvm_page_physload: can not malloc vm_page "
 			    "structs for segment\n");
 			printf("\tignoring 0x%lx -> 0x%lx\n", start, end);
 			return;
 		}
 		/* zero data, init phys_addr and free_list, and free pages */
-		bzero(pgs, sizeof(struct vm_page) * npages);
+		memset(pgs, 0, sizeof(struct vm_page) * npages);
 		for (lcv = 0, paddr = ptoa(start) ;
 				 lcv < npages ; lcv++, paddr += PAGE_SIZE) {
 			pgs[lcv].phys_addr = paddr;
@@ -681,7 +685,7 @@ uvm_page_physload(start, end, avail_start, avail_end, free_list)
 
 #else
 
-	panic("vm_page_physload: unknown physseg strategy selected!");
+	panic("uvm_page_physload: unknown physseg strategy selected!");
 
 #endif
 
@@ -743,7 +747,7 @@ uvm_page_rehash()
 	MALLOC(newbuckets, struct pglist *, sizeof(struct pglist) * bucketcount,
 					 M_VMPBUCKET, M_NOWAIT);
 	if (newbuckets == NULL) {
-		printf("vm_page_physrehash: WARNING: could not grow page "
+		printf("uvm_page_physrehash: WARNING: could not grow page "
 		    "hash table\n");
 		return;
 	}
@@ -776,7 +780,7 @@ uvm_page_rehash()
 	splx(s);
 
 	/*
-	 * free old bucket array if we malloc'd it previously
+	 * free old bucket array if is not the boot-time table
 	 */
 
 	if (oldbuckets != &uvm_bootbucket)
@@ -856,7 +860,7 @@ uvm_pagealloc_strat(obj, off, anon, flags, strat, free_list)
 
 	if (uvmexp.free < uvmexp.freemin || (uvmexp.free < uvmexp.freetarg &&
 	    uvmexp.inactive < uvmexp.inactarg))
-		thread_wakeup(&uvm.pagedaemon);
+		wakeup(&uvm.pagedaemon);
 
 	/*
 	 * fail if any of these conditions is true:
@@ -871,7 +875,8 @@ uvm_pagealloc_strat(obj, off, anon, flags, strat, free_list)
 		(obj && UVM_OBJ_IS_KERN_OBJECT(obj));
 	if ((uvmexp.free <= uvmexp.reserve_kernel && !use_reserve) ||
 	    (uvmexp.free <= uvmexp.reserve_pagedaemon &&
-	     !(use_reserve && curproc == uvm.pagedaemon_proc)))
+	     !(use_reserve && (curproc == uvm.pagedaemon_proc ||
+				curproc == syncerproc))))
 		goto fail;
 
  again:

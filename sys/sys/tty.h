@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/tty.h,v 1.4 1996/06/10 07:31:41 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/tty.h,v 1.4.16.1 2001/05/14 22:45:05 niklas Exp $	*/
 /*	$NetBSD: tty.h,v 1.30.4.1 1996/06/02 09:08:13 mrg Exp $	*/
 
 /*-
@@ -42,8 +42,9 @@
  */
 
 #include <sys/termios.h>
-#include <sys/select.h>		/* For struct selinfo. */
 #include <sys/queue.h>
+#include <sys/select.h>		/* For struct selinfo. */
+#include <sys/timeout.h>
 
 #ifndef REAL_CLISTS
 /*
@@ -112,6 +113,7 @@ struct tty {
 	short	t_hiwat;		/* High water mark. */
 	short	t_lowat;		/* Low water mark. */
 	short	t_gen;			/* Generation number. */
+	struct timeout t_rstrt_to;	/* restart timeout */
 };
 
 #define	t_cc		t_termios.c_cc
@@ -225,6 +227,7 @@ int	 ttioctl __P((struct tty *tp, u_long com, caddr_t data, int flag,
 int	 ttread __P((struct tty *tp, struct uio *uio, int flag));
 void	 ttrstrt __P((void *tp));
 int	 ttselect __P((dev_t device, int rw, struct proc *p));
+int	 ttkqfilter __P((dev_t dev, struct knote *kn));
 void	 ttsetwater __P((struct tty *tp));
 int	 ttspeedtab __P((int speed, struct speedtab *table));
 int	 ttstart __P((struct tty *tp));
@@ -265,7 +268,7 @@ int	clalloc __P((struct clist *, int, int));
 void	clfree __P((struct clist *));
 
 #if defined(COMPAT_43) || defined(COMPAT_SUNOS) || defined(COMPAT_SVR4) || \
-    defined(COMPAT_FREEBSD)
+    defined(COMPAT_FREEBSD) || defined(COMPAT_OSF1)
 # define COMPAT_OLDTTY
 int 	ttcompat __P((struct tty *, u_long, caddr_t, int, struct proc *));
 #endif

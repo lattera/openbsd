@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/xfs/Attic/xfs_pioctl.h,v 1.3 1999/04/30 01:59:01 art Exp $	*/
+/*	$OpenBSD: src/sys/xfs/Attic/xfs_pioctl.h,v 1.3.4.1 2001/05/14 22:47:53 niklas Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -125,6 +125,10 @@
 #define VIOC_AVIATOR		_VICEIOCTL(56)
 
 #define VIOC_XFSDEBUG_PRINT	_VICEIOCTL(57)
+
+#define VIOC_CALCULATE_CACHE	_VICEIOCTL(58)
+
+#define VIOC_BREAKCALLBACK	_VICEIOCTL(59)
 
 /*
  * GETCELLSTATUS flags

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6 1997/11/06 05:59:19 csapuntz Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_subr.c,v 1.6.10.1 2001/05/14 22:47:41 niklas Exp $	*/
 /*	$NetBSD: ffs_subr.c,v 1.6 1996/03/17 02:16:23 christos Exp $	*/
 
 /*
@@ -86,7 +86,7 @@ ffs_blkatoff(v)
 #endif
 
 /*
- * Update the frsum fields to reflect addition or deletion 
+ * Update the frsum fields to reflect addition or deletion
  * of some frags.
  */
 void

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.1 2000/02/21 22:29:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsiconf.c,v 1.49.2.2 2001/05/14 22:44:59 niklas Exp $	*/
 /*	$NetBSD: scsiconf.c,v 1.57 1996/05/02 01:09:01 neil Exp $	*/
 
 /*
@@ -86,10 +86,17 @@ struct scsi_device probe_switch = {
 
 int scsibusmatch __P((struct device *, void *, void *));
 void scsibusattach __P((struct device *, struct device *, void *));
+int  scsibusactivate __P((struct device *, enum devact));
+int  scsibusdetach __P((struct device *, int));
+void scsibuszeroref __P((struct device *));
+
 int scsibussubmatch __P((struct device *, void *, void *));
 
+
+
 struct cfattach scsibus_ca = {
-	sizeof(struct scsibus_softc), scsibusmatch, scsibusattach
+	sizeof(struct scsibus_softc), scsibusmatch, scsibusattach,
+	scsibusdetach, scsibusactivate, scsibuszeroref
 };
 
 struct cfdriver scsibus_cd = {
@@ -99,6 +106,8 @@ struct cfdriver scsibus_cd = {
 int scsidebug_targets = SCSIDEBUG_TARGETS;
 int scsidebug_luns = SCSIDEBUG_LUNS;
 int scsidebug_level = SCSIDEBUG_LEVEL;
+
+int scsi_autoconf = SCSI_AUTOCONF;
 
 int scsibusprint __P((void *, const char *));
 
@@ -144,12 +153,18 @@ scsibusattach(parent, self, aux)
 	struct scsibus_softc *sb = (struct scsibus_softc *)self;
 	struct scsi_link *sc_link_proto = aux;
 	int nbytes, i;
+	extern int cold;
+
+	if (!cold)
+		scsi_autoconf = 0;
 
 	sc_link_proto->scsibus = sb->sc_dev.dv_unit;
 	sb->adapter_link = sc_link_proto;
 	if (sb->adapter_link->adapter_buswidth == 0)
 		sb->adapter_link->adapter_buswidth = 8;
 	sb->sc_buswidth = sb->adapter_link->adapter_buswidth;
+	if (sb->adapter_link->luns == 0)
+		sb->adapter_link->luns = 8;
 
 	printf(": %d targets\n", sb->sc_buswidth);
 
@@ -177,6 +192,40 @@ scsibusattach(parent, self, aux)
 
 	scsi_probe_bus(sb->sc_dev.dv_unit, -1, -1);
 }
+
+
+int
+scsibusactivate(dev, act)
+	struct device *dev;
+	enum devact act;
+{
+	return (config_activate_children(dev, act));
+}
+
+int  
+scsibusdetach (dev, type)
+	struct device *dev;
+	int type;
+{
+	return (config_detach_children(dev, type));
+}
+
+void
+scsibuszeroref(dev)
+	struct device *dev;
+{
+	struct scsibus_softc *sb = (struct scsibus_softc *)dev;
+	int i;
+
+	for (i = 0; i < sb->sc_buswidth; i++) {
+		if (sb->sc_link[i] != NULL)
+			free(sb->sc_link[i], M_DEVBUF);
+	}
+	
+	free(sb->sc_link, M_DEVBUF);
+}
+
+
 
 int
 scsibussubmatch(parent, match, aux)
@@ -245,7 +294,7 @@ scsi_probe_bus(bus, target, lun)
 	}
 
 	if (lun == -1) {
-		maxlun = 7;
+		maxlun = scsi->adapter_link->luns - 1;
 		minlun = 0;
 	} else {
 		if (lun < 0 || lun > 7)
@@ -524,9 +573,9 @@ struct scsi_quirk_inquiry_pattern scsi_quirk_patterns[] = {
         {{T_CDROM, T_REMOV,
          "ALPS ELECTRIC CO.,LTD. DC544C", "", "SW03D"}, ADEV_NOTUR},
         {{T_CDROM, T_REMOV,
-         "BCD-16X 1997-04-25", "", "VER 2.2"},  SDEV_NOSTARTUNIT},
+         "BCD-16X", "", ""},                    SDEV_NOSTARTUNIT},
         {{T_CDROM, T_REMOV,
-         "BCD-24X 1997-06-27", "", "VER 2.0"},  SDEV_NOSTARTUNIT},
+         "BCD-24X", "", ""},                    SDEV_NOSTARTUNIT},
         {{T_CDROM, T_REMOV,
          "CR-2801TE", "", "1.07"},              ADEV_NOSENSE},
         {{T_CDROM, T_REMOV,
@@ -707,17 +756,17 @@ scsi_probedev(scsi, target, lun)
 #endif /* SCSIDEBUG */
 
 	(void) scsi_test_unit_ready(sc_link,
-	    SCSI_AUTOCONF | SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_NOT_READY | SCSI_IGNORE_MEDIA_CHANGE);
+	    scsi_autoconf | SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_NOT_READY | SCSI_IGNORE_MEDIA_CHANGE);
 
 #ifdef SCSI_2_DEF
 	/* some devices need to be told to go to SCSI2 */
 	/* However some just explode if you tell them this.. leave it out */
-	scsi_change_def(sc_link, SCSI_AUTOCONF | SCSI_SILENT);
+	scsi_change_def(sc_link, scsi_autoconf | SCSI_SILENT);
 #endif /* SCSI_2_DEF */
 
 	/* Now go ask the device all about itself. */
 	bzero(&inqbuf, sizeof(inqbuf));
-	if (scsi_inquire(sc_link, &inqbuf, SCSI_AUTOCONF) != 0)
+	if (scsi_inquire(sc_link, &inqbuf, scsi_autoconf) != 0)
 		goto bad;
 
 	{

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/audioio.h,v 1.10 1998/10/28 17:58:43 downsj Exp $	*/
+/*	$OpenBSD: src/sys/sys/audioio.h,v 1.10.6.1 2001/05/14 22:45:00 niklas Exp $	*/
 /*	$NetBSD: audioio.h,v 1.24 1998/08/13 06:28:41 mrg Exp $	*/
 
 /*
@@ -232,6 +232,7 @@ typedef struct mixer_devinfo {
 		struct audio_mixer_value {
 			audio_mixer_name_t units;
 			int num_channels;
+			int delta;
 		} v;
 	} un;
 } mixer_devinfo_t;
@@ -295,6 +296,7 @@ typedef struct mixer_ctrl {
 #define AudioNagc	"agc"
 #define AudioNdelay	"delay"
 #define AudioNselect	"select" /* select destination */
+#define AudioNvideo     "video"
 
 #define AudioEmulaw		"mulaw"
 #define AudioEalaw		"alaw"

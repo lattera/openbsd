@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/vm/Attic/vm_param.h,v 1.18.2.1 2000/03/24 09:09:53 niklas Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/vm_param.h,v 1.18.2.2 2001/05/14 22:47:50 niklas Exp $	*/
 /*	$NetBSD: vm_param.h,v 1.12 1995/03/26 20:39:16 jtc Exp $	*/
 
 /* 
@@ -150,11 +150,9 @@ extern int		page_shift;
 	{ "loadavg", CTLTYPE_STRUCT }, \
 	{ "psstrings", CTLTYPE_STRUCT }, \
 	{ "uvmexp", CTLTYPE_STRUCT }, \
-	{ "swapencrypt", CTLTYPE_INT }, \
+	{ "swapencrypt", CTLTYPE_NODE }, \
 }
-
 #endif
-
 
 struct _ps_strings {
 	void	*val;

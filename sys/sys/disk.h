@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/disk.h,v 1.4 1996/05/02 13:13:21 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/disk.h,v 1.4.16.1 2001/05/14 22:45:01 niklas Exp $	*/
 /*	$NetBSD: disk.h,v 1.11 1996/04/28 20:22:50 thorpej Exp $	*/
 
 /*
@@ -54,6 +54,7 @@
 
 #include <sys/time.h>
 #include <sys/queue.h>
+#include <sys/lock.h>
 
 struct buf;
 struct disklabel;
@@ -61,7 +62,10 @@ struct cpu_disklabel;
 
 struct disk {
 	TAILQ_ENTRY(disk) dk_link;	/* link in global disklist */
+	struct lock     dk_lock;        /* disk lock */
 	char		*dk_name;	/* disk name */
+	int             dk_flags;       /* disk flags */
+#define DKF_CONSTRUCTED  0x0001
 	int		dk_bopenmask;	/* block devices open */
 	int		dk_copenmask;	/* character devices open */
 	int		dk_openmask;	/* composite (bopen|copen) */
@@ -76,7 +80,7 @@ struct disk {
 	int		dk_busy;	/* busy counter */
 	u_int64_t	dk_xfer;	/* total number of transfers */
 	u_int64_t	dk_seek;	/* total independent seek operations */
-	u_int64_t	dk_bytes;	/* total bytes transfered */
+	u_int64_t	dk_bytes;	/* total bytes transferred */
 	struct timeval	dk_attachtime;	/* time disk was attached */
 	struct timeval	dk_timestamp;	/* timestamp of last unbusy */
 	struct timeval	dk_time;	/* total time spent busy */
@@ -138,12 +142,16 @@ TAILQ_HEAD(disklist_head, disk);	/* the disklist is a TAILQ */
 extern	int disk_count;			/* number of disks in global disklist */
 
 void	disk_init __P((void));
+int     disk_construct __P((struct disk *, char *));
 void	disk_attach __P((struct disk *));
 void	disk_detach __P((struct disk *));
 void	disk_busy __P((struct disk *));
 void	disk_unbusy __P((struct disk *, long));
 void	disk_resetstat __P((struct disk *));
 struct	disk *disk_find __P((char *));
+
+int     disk_lock __P((struct disk *));
+void    disk_unlock __P((struct disk *));
 
 struct device;
 void	dk_establish __P((struct disk *, struct device *));

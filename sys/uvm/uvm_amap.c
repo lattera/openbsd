@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_amap.c,v 1.20 1999/04/11 04:04:11 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
+/*	$NetBSD: uvm_amap.c,v 1.21 1999/07/06 02:15:53 cgd Exp $	*/
 
 /*
  *
@@ -189,23 +190,28 @@ amap_alloc1(slots, padslots, waitf)
 	amap->am_maxslot = totalslots;
 	amap->am_nslot = slots;
 	amap->am_nused = 0;
-	MALLOC(amap->am_slots,  int *, totalslots * sizeof(int), M_UVMAMAP, waitf);
-	if (amap->am_slots) {
-		MALLOC(amap->am_bckptr, int *, totalslots * sizeof(int), M_UVMAMAP, waitf);
-		if (amap->am_bckptr) {
-			MALLOC(amap->am_anon, struct vm_anon **, 
-			    totalslots * sizeof(struct vm_anon *), M_UVMAMAP, waitf);
-		}
-	}
 
-	if (amap->am_anon)
-		return(amap);
+	amap->am_slots = malloc(totalslots * sizeof(int), M_UVMAMAP,
+	    waitf);
+	if (amap->am_slots == NULL)
+		goto fail1;
 
-	if (amap->am_slots) {
-		FREE(amap->am_slots, M_UVMAMAP);
-		if (amap->am_bckptr)
-			FREE(amap->am_bckptr, M_UVMAMAP);
-	}
+	amap->am_bckptr = malloc(totalslots * sizeof(int), M_UVMAMAP, waitf);
+	if (amap->am_bckptr == NULL)
+		goto fail2;
+
+	amap->am_anon = malloc(totalslots * sizeof(struct vm_anon *),
+	    M_UVMAMAP, waitf);
+	if (amap->am_anon == NULL)
+		goto fail3;
+
+	return(amap);
+
+fail3:
+	free(amap->am_bckptr, M_UVMAMAP);
+fail2:
+	free(amap->am_slots, M_UVMAMAP);
+fail1:
 	pool_put(&uvm_amap_pool, amap);
 	return (NULL);
 }
@@ -232,7 +238,7 @@ amap_alloc(sz, padsz, waitf)
 
 	amap = amap_alloc1(slots, padslots, waitf);
 	if (amap)
-		bzero(amap->am_anon, (slots + padslots) * sizeof(struct vm_anon *));
+		memset(amap->am_anon, 0, (slots + padslots) * sizeof(struct vm_anon *));
 
 	UVMHIST_LOG(maphist,"<- done, amap = 0x%x, sz=%d", amap, sz, 0, 0);
 	return(amap);
@@ -393,27 +399,27 @@ amap_extend(entry, addsize)
 
 	/* do am_slots */
 	oldsl = amap->am_slots;
-	bcopy(oldsl, newsl, sizeof(int) * amap->am_nused);
+	memcpy(newsl, oldsl, sizeof(int) * amap->am_nused);
 	amap->am_slots = newsl;
 
 	/* do am_anon */
 	oldover = amap->am_anon;
-	bcopy(oldover, newover, sizeof(struct vm_anon *) * amap->am_nslot);
-	bzero(newover + amap->am_nslot, sizeof(struct vm_anon *) * slotadded);
+	memcpy(newover, oldover, sizeof(struct vm_anon *) * amap->am_nslot);
+	memset(newover + amap->am_nslot, 0, sizeof(struct vm_anon *) * slotadded);
 	amap->am_anon = newover;
 
 	/* do am_bckptr */
 	oldbck = amap->am_bckptr;
-	bcopy(oldbck, newbck, sizeof(int) * amap->am_nslot);
-	bzero(newbck + amap->am_nslot, sizeof(int) * slotadded); /* XXX: needed? */
+	memcpy(newbck, oldbck, sizeof(int) * amap->am_nslot);
+	memset(newbck + amap->am_nslot, 0, sizeof(int) * slotadded); /* XXX: needed? */
 	amap->am_bckptr = newbck;
 
 #ifdef UVM_AMAP_PPREF
 	/* do ppref */
 	oldppref = amap->am_ppref;
 	if (newppref) {
-		bcopy(oldppref, newppref, sizeof(int) * amap->am_nslot);
-		bzero(newppref + amap->am_nslot, sizeof(int) * slotadded);
+		memcpy(newppref, oldppref, sizeof(int) * amap->am_nslot);
+		memset(newppref + amap->am_nslot, 0, sizeof(int) * slotadded);
 		amap->am_ppref = newppref;
 		if ((slotoff + slotmapped) < amap->am_nslot)
 			amap_pp_adjref(amap, slotoff + slotmapped, 
@@ -843,7 +849,7 @@ ReStart:
 }
 
 /*
- * amap_splitref: split a single reference into two seperate references
+ * amap_splitref: split a single reference into two separate references
  *
  * => called from uvm_map's clip routines
  * => origref's map should be locked
@@ -914,7 +920,7 @@ amap_pp_establish(amap)
 	/*
 	 * init ppref
 	 */
-	bzero(amap->am_ppref, sizeof(int) * amap->am_maxslot);
+	memset(amap->am_ppref, 0, sizeof(int) * amap->am_maxslot);
 	pp_setreflen(amap->am_ppref, 0, amap->am_ref, amap->am_nslot);
 	return;
 }

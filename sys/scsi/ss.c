@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/Attic/ss.c,v 1.40 1999/05/11 23:57:44 kstailey Exp $	*/
+/*	$OpenBSD: src/sys/scsi/Attic/ss.c,v 1.40.4.1 2001/05/14 22:45:00 niklas Exp $	*/
 /*	$NetBSD: ss.c,v 1.10 1996/05/05 19:52:55 christos Exp $	*/
 
 /*
@@ -53,8 +53,6 @@
 
 #define SSMODE(z)	( minor(z)       & 0x03)
 #define SSUNIT(z)	((minor(z) >> 4)       )
-
-#define	MIN(a,b) (((a)<(b))?(a):(b))
 
 /*
  * If the mode is 3 (e.g. minor = 3,7,11,15)
@@ -277,9 +275,23 @@ struct scsi_inquiry_pattern ss_patterns[] = {
 	{T_PROCESSOR, T_FIXED,
 	 "HP      ", "C2500A          ", ""},
 	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C2570A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C2520A          ", ""},
+	{T_PROCESSOR, T_FIXED,
 	 "HP      ", "C1130A          ", ""},
 	{T_PROCESSOR, T_FIXED,
 	 "HP      ", "C5110A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C6290A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C5190A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C7190A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C6270A          ", ""},
+	{T_PROCESSOR, T_FIXED,
+	 "HP      ", "C7670A          ", ""},
 };
 
 int

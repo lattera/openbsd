@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.6.2.2 2001/05/14 22:47:49 niklas Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.23 1999/04/11 04:04:11 chs Exp $	*/
 
 /*
@@ -552,7 +553,7 @@ uvm_vnp_terminate(vp)
 
 	/*
 	 * must be a valid uvn that is not already dying (because XLOCK
-	 * protects us from that).   the uvn can't in the the ALOCK state
+	 * protects us from that).   the uvn can't in the ALOCK state
 	 * because it is valid, and uvn's that are in the ALOCK state haven't
 	 * been marked valid yet.
 	 */
@@ -1160,7 +1161,7 @@ ReTry:
 			if (result != VM_PAGER_PEND) {
 				if (ptmp->flags & PG_WANTED)
 					/* still holding object lock */
-					thread_wakeup(ptmp);
+					wakeup(ptmp);
 
 				ptmp->flags &= ~(PG_WANTED|PG_BUSY);
 				UVM_PAGE_OWN(ptmp, NULL);
@@ -1475,7 +1476,7 @@ uvn_get(uobj, offset, pps, npagesp, centeridx, access_type, advice, flags)
 			if ((ptmp->flags & (PG_BUSY|PG_RELEASED)) != 0) {
 				ptmp->flags |= PG_WANTED;
 				UVM_UNLOCK_AND_WAIT(ptmp,
-				    &uobj->vmobjlock, 0, "uvn_get",0);
+				    &uobj->vmobjlock, FALSE, "uvn_get",0);
 				simple_lock(&uobj->vmobjlock);
 				continue;	/* goto top of pps while loop */
 			}
@@ -1520,7 +1521,7 @@ uvn_get(uobj, offset, pps, npagesp, centeridx, access_type, advice, flags)
 		if (result != VM_PAGER_OK) {
 			if (ptmp->flags & PG_WANTED)
 				/* object lock still held */
-				thread_wakeup(ptmp);
+				wakeup(ptmp);
 
 			ptmp->flags &= ~(PG_WANTED|PG_BUSY);
 			UVM_PAGE_OWN(ptmp, NULL);
@@ -1685,7 +1686,7 @@ uvn_io(uvn, pps, npages, flags, rw)
 	uio.uio_segflg = UIO_SYSSPACE;
 	uio.uio_rw = rw;
 	uio.uio_resid = wanted;
-	uio.uio_procp = NULL;
+	uio.uio_procp = curproc;
 
 	/*
 	 * do the I/O!  (XXX: curproc?)
@@ -1734,8 +1735,8 @@ uvn_io(uvn, pps, npages, flags, rw)
 		if (wanted && got == 0) {
 			result = EIO;		/* XXX: error? */
 		} else if (got < PAGE_SIZE * npages && rw == UIO_READ) {
-			bzero((void *) (kva + got),
-			      (npages << PAGE_SHIFT) - got);
+			memset((void *) (kva + got), 0,
+			       (npages << PAGE_SHIFT) - got);
 		}
 	}
 

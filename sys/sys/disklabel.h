@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/disklabel.h,v 1.17 1999/01/11 10:23:42 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/disklabel.h,v 1.17.6.1 2001/05/14 22:45:01 niklas Exp $	*/
 /*	$NetBSD: disklabel.h,v 1.41 1996/05/10 23:07:37 mark Exp $	*/
 
 /*
@@ -66,9 +66,12 @@
  */
 #define	DISKUNIT(dev)	(minor(dev) / MAXPARTITIONS)
 #define	DISKPART(dev)	(minor(dev) % MAXPARTITIONS)
+#define	DISKMINOR(unit, part) \
+    (((unit) * MAXPARTITIONS) + (part))
 #define	MAKEDISKDEV(maj, unit, part) \
-    (makedev((maj), ((unit) * MAXPARTITIONS) + (part)))
-#define	DISKLABELDEV(dev)     (MAKEDISKDEV(major(dev), DISKUNIT(dev), RAW_PART))
+    (makedev((maj), DISKMINOR((unit), (part))))
+#define	DISKLABELDEV(dev) \
+    (MAKEDISKDEV(major(dev), DISKUNIT(dev), RAW_PART))
 
 #define DISKMAGIC	((u_int32_t)0x82564557)	/* The disk magic number */
 
@@ -179,7 +182,7 @@ struct disklabel {
 	.set	d_ncylinders,52
 	.set	d_secpercyl,56
 	.set	d_secperunit,60
-	.set	d_end_,276		/* size of disk label */
+	.set	d_end_,404		/* size of disk label */
 #endif /* _LOCORE */
 
 /* d_type values: */
@@ -243,6 +246,7 @@ static char *dktypenames[] = {
 #define	FS_ADFS		16		/* Acorn Disk Filing System */
 #define FS_EXT2FS	17		/* ext2fs */
 #define FS_CCD		18		/* ccd component */
+#define FS_RAID		19		/* RAIDframe */
 
 #ifdef DKTYPENAMES
 static char *fstypenames[] = {
@@ -265,6 +269,7 @@ static char *fstypenames[] = {
 	"ADFS",
 	"ext2fs",
 	"ccd",
+	"RAID",
 	NULL
 };
 
@@ -289,6 +294,7 @@ static char *fstypesnames[] = {
 	"",		/* 16 */
 	"ext2fs",	/* 17 */
 	"",		/* 18 */
+	"",		/* 19 */
 	NULL
 };
 

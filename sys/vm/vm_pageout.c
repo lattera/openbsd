@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/vm/Attic/vm_pageout.c,v 1.10 1998/12/30 12:26:14 art Exp $	*/
+/*	$OpenBSD: src/sys/vm/Attic/vm_pageout.c,v 1.10.6.1 2001/05/14 22:47:50 niklas Exp $	*/
 /*	$NetBSD: vm_pageout.c,v 1.23 1996/02/05 01:54:07 christos Exp $	*/
 
 /* 
@@ -73,6 +73,7 @@
 #include <sys/proc.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
+#include <sys/pool.h>
 
 #include <vm/vm.h>
 #include <vm/vm_page.h>
@@ -608,8 +609,10 @@ vm_pageout()
 		 * to clean up async pageouts.
 		 */
 		if (cnt.v_free_count < cnt.v_free_target ||
-		    cnt.v_inactive_count < cnt.v_inactive_target)
+		    cnt.v_inactive_count < cnt.v_inactive_target) {
+			pool_drain(0);
 			vm_pageout_scan();
+		}
 		vm_pager_sync();
 		simple_lock(&vm_pages_needed_lock);
 		thread_wakeup(&cnt.v_free_count);

@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_aobj.h,v 1.8 1999/03/26 17:34:15 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.h,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
+/*	$NetBSD: uvm_aobj.h,v 1.9 1999/06/21 17:25:11 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1998 Chuck Silvers, Charles D. Cranor and
@@ -58,6 +59,8 @@
 					 * page is no longer PG_BUSY ... */
 #define UAO_FLAG_NOSWAP		0x8	/* aobj can't swap (kernel obj only!) */
 
+#ifdef _KERNEL
+
 /*
  * prototypes
  */
@@ -70,5 +73,7 @@ void uao_dropswap __P((struct uvm_object *, int));
  */
 
 extern struct uvm_pagerops aobj_pager;
+
+#endif /* _KERNEL */
 
 #endif /* _UVM_UVM_AOBJ_H_ */

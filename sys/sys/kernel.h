@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/kernel.h,v 1.5.16.1 2000/03/24 09:09:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/kernel.h,v 1.5.16.2 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: kernel.h,v 1.11 1995/03/03 01:24:16 cgd Exp $	*/
 
 /*-
@@ -67,5 +67,4 @@ extern int profhz;		/* profiling clock's frequency */
 extern int lbolt;		/* once a second sleep address */
 extern int tickdelta;
 extern long timedelta;
-extern int roundrobin_attempts;	/* number switch attempts before switch */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.1 2000/03/02 07:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/filedesc.h,v 1.6.4.2 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: filedesc.h,v 1.14 1996/04/09 20:55:28 cgd Exp $	*/
 
 /*
@@ -55,8 +55,9 @@
 #define NDENTRIES	32		/* 32 fds per entry */
 #define NDENTRYMASK	(NDENTRIES - 1)
 #define NDENTRYSHIFT	5		/* bits per entry */
-#define NDLOSLOTS(x)	(((x) + NDENTRIES - 1) >> NDENTRYSHIFT)
-#define NDHISLOTS(x)	((NDLOSLOTS(x) + NDENTRIES - 1) >> NDENTRYSHIFT)
+#define NDREDUCE(x)	(((x) + NDENTRIES - 1) >> NDENTRYSHIFT)
+#define NDHISLOTS(x)	(NDREDUCE(NDREDUCE(x)))
+#define NDLOSLOTS(x)	(NDHISLOTS(x) << NDENTRYSHIFT)
 
 struct filedesc {
 	struct	file **fd_ofiles;	/* file structures for open files */
@@ -70,6 +71,11 @@ struct filedesc {
 	int	fd_freefile;		/* approx. next free file */
 	u_short	fd_cmask;		/* mask for file creation */
 	u_short	fd_refcnt;		/* reference count */
+
+	int	fd_knlistsize;		/* size of knlist */
+	struct	klist *fd_knlist;	/* list of attached knotes */
+	u_long	fd_knhashmask;		/* size of knhash */
+	struct	klist *fd_knhash;	/* hash table for attached knotes */
 };
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.7 1999/08/17 14:20:46 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.7.4.1 2001/05/14 22:47:39 niklas Exp $	*/
 /*	$NetBSD: ext2fs_inode.c,v 1.1 1997/06/11 09:33:56 bouyer Exp $	*/
 
 /*
@@ -47,7 +47,6 @@
 #include <sys/vnode.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
-#include <sys/trace.h>
 #include <sys/resourcevar.h>
 
 #include <vm/vm.h>
@@ -61,7 +60,7 @@
 #include <ufs/ext2fs/ext2fs_extern.h>
 
 static int ext2fs_indirtrunc __P((struct inode *, daddr_t, daddr_t,
-									daddr_t, int, long *));
+    				  daddr_t, int, long *));
 
 int
 ext2fs_init(vfsp)
@@ -441,11 +440,7 @@ ext2fs_indirtrunc(ip, lbn, dbn, lastbn, level, countp)
 	 */
 	vp = ITOV(ip);
 	bp = getblk(vp, lbn, (int)fs->e2fs_bsize, 0, 0);
-	if (bp->b_flags & (B_DONE | B_DELWRI)) {
-		/* Braces must be here in case trace evaluates to nothing. */
-		trace(TR_BREADHIT, pack(vp, fs->e2fs_bsize), lbn);
-	} else {
-		trace(TR_BREADMISS, pack(vp, fs->e2fs_bsize), lbn);
+	if (!(bp->b_flags & (B_DONE | B_DELWRI))) {
 		curproc->p_stats->p_ru.ru_inblock++;	/* pay for read */
 		bp->b_flags |= B_READ;
 		if (bp->b_bcount > bp->b_bufsize)

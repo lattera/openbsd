@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.13 2000/02/07 04:47:53 assar Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_syscalls.c,v 1.13.2.1 2001/05/14 22:44:57 niklas Exp $	*/
 /*	$NetBSD: nfs_syscalls.c,v 1.19 1996/02/18 11:53:52 fvdl Exp $	*/
 
 /*
@@ -58,6 +58,8 @@
 #include <sys/namei.h>
 #include <sys/syslog.h>
 #include <sys/filedesc.h>
+#include <sys/signalvar.h>
+#include <sys/kthread.h>
 
 #include <sys/syscallargs.h>
 
@@ -105,7 +107,8 @@ static struct nfsdrt nfsdrt;
 #define	FALSE	0
 
 #ifdef NFSCLIENT
-static int nfs_asyncdaemon[NFS_MAXASYNCDAEMON];
+struct proc *nfs_asyncdaemon[NFS_MAXASYNCDAEMON];
+int nfs_niothreads = -1;
 #endif
 
 #ifdef NFSSERVER
@@ -160,11 +163,7 @@ sys_nfssvc(p, v, retval)
 		(void) tsleep((caddr_t)&nfssvc_sockhead, PSOCK, "nfsd init", 0);
 	}
 	if (SCARG(uap, flag) & NFSSVC_BIOD) {
-#ifdef NFSCLIENT
-		error = nfssvc_iod(p);
-#else
 		error = ENOSYS;
-#endif
 	} else if (SCARG(uap, flag) & NFSSVC_MNTD) {
 #ifndef NFSCLIENT
 		error = ENOSYS;
@@ -441,6 +440,7 @@ nfssvc_nfsd(nsd, argp, p)
 		TAILQ_INSERT_TAIL(&nfsd_head, nfsd, nfsd_chain);
 		nfs_numnfsd++;
 	}
+	PHOLD(p);
 	/*
 	 * Loop getting rpc requests until SIGKILL.
 	 */
@@ -537,8 +537,10 @@ nfssvc_nfsd(nsd, argp, p)
 				nfsd->nfsd_authlen) &&
 			    !copyout(nfsd->nfsd_verfstr, nsd->nsd_verfstr,
 				nfsd->nfsd_verflen) &&
-			    !copyout((caddr_t)nsd, argp, sizeof (*nsd)))
+			    !copyout((caddr_t)nsd, argp, sizeof (*nsd))) {
+			    PRELE(p);
 			    return (ENEEDAUTH);
+			}
 			cacherep = RC_DROPIT;
 		    } else
 			cacherep = nfsrv_getcache(nd, slp, &mreq);
@@ -680,6 +682,7 @@ nfssvc_nfsd(nsd, argp, p)
 		}
 	}
 done:
+	PRELE(p);
 	TAILQ_REMOVE(&nfsd_head, nfsd, nfsd_chain);
 	splx(s);
 	free((caddr_t)nfsd, M_NFSD);
@@ -839,7 +842,7 @@ nfsd_rt(sotype, nd, cacherep)
 
 #ifdef NFSCLIENT
 /*
- * Asynchronous I/O daemons for client nfs.
+ * Asynchronous I/O threads for client nfs.
  * They do read-ahead and write-behind operations on the block I/O cache.
  * Never returns unless it fails or gets killed.
  */
@@ -857,14 +860,15 @@ nfssvc_iod(p)
 	 */
 	myiod = -1;
 	for (i = 0; i < NFS_MAXASYNCDAEMON; i++)
-		if (nfs_asyncdaemon[i] == 0) {
-			nfs_asyncdaemon[i]++;
+		if (nfs_asyncdaemon[i] == NULL) {
 			myiod = i;
 			break;
 		}
 	if (myiod == -1)
 		return (EBUSY);
+	nfs_asyncdaemon[myiod] = p;
 	nfs_numasync++;
+	PHOLD(p);
 	/*
 	 * Just loop around doin our stuff until SIGKILL
 	 */
@@ -902,8 +906,8 @@ nfssvc_iod(p)
 		     * up to, but not including nfs_strategy().
 		     */
 		    if (nbp) {
-			nbp->b_flags &= ~(B_READ|B_DONE|B_ERROR|B_DELWRI);
-			reassignbuf(nbp, nbp->b_vp);
+			nbp->b_flags &= ~(B_READ|B_DONE|B_ERROR);
+			buf_undirty(bp);
 			nbp->b_vp->v_numoutput++;
 		    }
 		    splx(s);
@@ -912,13 +916,54 @@ nfssvc_iod(p)
 		} while ((bp = nbp) != NULL);
 	    }
 	    if (error) {
-		nfs_asyncdaemon[myiod] = 0;
+		PRELE(p);
+		nfs_asyncdaemon[myiod] = NULL;
 		nfs_numasync--;
 		return (error);
 	    }
 	}
 }
 
+void
+start_nfsio(arg)
+	void *arg;
+{
+	nfssvc_iod(curproc);
+	
+	kthread_exit(0);
+}
+
+void
+nfs_getset_niothreads(set)
+	int set;
+{
+	int i, have, start;
+	
+	for (have = 0, i = 0; i < NFS_MAXASYNCDAEMON; i++)
+		if (nfs_asyncdaemon[i] != NULL)
+			have++;
+
+	if (set) {
+		/* clamp to sane range */
+		nfs_niothreads = max(0, min(nfs_niothreads, NFS_MAXASYNCDAEMON));
+
+		start = nfs_niothreads - have;
+
+		while (start > 0) {
+			kthread_create(start_nfsio, NULL, NULL, "nfsio");
+			start--;
+		}
+
+		for (i = 0; (start < 0) && (i < NFS_MAXASYNCDAEMON); i++)
+			if (nfs_asyncdaemon[i] != NULL) {
+				psignal(nfs_asyncdaemon[i], SIGKILL);
+				start++;
+			}
+	} else {
+		if (nfs_niothreads >= 0)
+			nfs_niothreads = have;
+	}
+}
 
 /*
  * Get an authorization string for the uid by having the mount_nfs sitting

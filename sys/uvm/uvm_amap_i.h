@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_amap_i.h,v 1.3.4.2 2001/05/14 22:47:44 niklas Exp $	*/
 /*	$NetBSD: uvm_amap_i.h,v 1.12 1999/03/25 18:48:49 mrg Exp $	*/
 
 /*
@@ -99,7 +100,7 @@ amap_lookups(aref, offset, anons, npages)
 	if ((slot + (npages - 1)) >= amap->am_nslot)
 		panic("amap_lookups: offset out of range");
 
-	bcopy(&amap->am_anon[slot], anons, npages * sizeof(struct vm_anon *));
+	memcpy(anons, &amap->am_anon[slot], npages * sizeof(struct vm_anon *));
 
 	UVMHIST_LOG(maphist, "<- done", 0, 0, 0, 0);
 	return;
@@ -173,7 +174,7 @@ amap_unadd(amap, slot)
 	UVMHIST_FUNC("amap_unadd"); UVMHIST_CALLED(maphist);
 
 	if (slot >= amap->am_nslot)
-		panic("amap_add: offset out of range");
+		panic("amap_unadd: offset out of range");
 
 	if (amap->am_anon[slot] == NULL)
 		panic("amap_unadd: nothing there");

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/vmmeter.h,v 1.6.6.1 2000/02/21 22:29:15 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/vmmeter.h,v 1.6.6.2 2001/05/14 22:45:05 niklas Exp $	*/
 /*	$NetBSD: vmmeter.h,v 1.9 1995/03/26 20:25:04 jtc Exp $	*/
 
 /*-
@@ -122,9 +122,11 @@ struct  forkstat
 	int	cntfork;	/* number of fork() calls */
 	int	cntvfork;	/* number of vfork() calls */
 	int	cntrfork;	/* number of rfork() calls */
+	int	cntkthread;	/* number of kernel threads created */
 	int	sizfork;	/* VM pages affected by fork() */
 	int	sizvfork;	/* VM pages affected by vfork() */
 	int	sizrfork;	/* VM pages affected by rfork() */
+	int	sizkthread;	/* VM pages affected by kernel threads */
 };
 
 #endif /* __VMMETER_H__ */

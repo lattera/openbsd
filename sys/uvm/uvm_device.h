@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_device.h,v 1.7 1999/03/25 18:48:50 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_device.h,v 1.3.4.2 2001/05/14 22:47:45 niklas Exp $	*/
+/*	$NetBSD: uvm_device.h,v 1.8 1999/06/21 17:25:11 thorpej Exp $	*/
 
 /*
  *
@@ -63,10 +64,14 @@ struct uvm_device {
 #define UVM_DEVICE_HOLD		0x1	/* someone has a "hold" on it */
 #define UVM_DEVICE_WANTED	0x2	/* someone wants to put a "hold" on */
 
+#ifdef _KERNEL
+
 /*
  * prototypes
  */
 
 struct uvm_object *udv_attach __P((void *, vm_prot_t, vaddr_t, vsize_t));
+
+#endif /* _KERNEL */
 
 #endif /* _UVM_UVM_DEVICE_H_ */

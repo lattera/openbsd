@@ -1,4 +1,5 @@
-/*	$NetBSD: uvm_aobj.c,v 1.20 1999/05/25 00:09:00 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_aobj.c,v 1.4.4.2 2001/05/14 22:47:44 niklas Exp $	*/
+/*	$NetBSD: uvm_aobj.c,v 1.21 1999/07/07 05:32:26 thorpej Exp $	*/
 
 /*
  * Copyright (c) 1998 Chuck Silvers, Charles D. Cranor and
@@ -263,7 +264,7 @@ uao_find_swhash_elt(aobj, pageidx, create)
 	LIST_INSERT_HEAD(swhash, elt, list);
 	elt->tag = page_tag;
 	elt->count = 0;
-	bzero(elt->slots, sizeof(elt->slots));
+	memset(elt->slots, 0, sizeof(elt->slots));
 
 	return(elt);
 }
@@ -540,7 +541,7 @@ uao_create(size, flags)
 			    M_UVMAOBJ, mflags);
 			if (aobj->u_swslots == NULL)
 				panic("uao_create: malloc swslots failed");
-			bzero(aobj->u_swslots, pages * sizeof(int));
+			memset(aobj->u_swslots, 0, pages * sizeof(int));
 		}
 
 		if (flags) {
@@ -718,9 +719,13 @@ uao_flush(uobj, start, end, flags)
  	 */
 	/*
  	 * XXX
- 	 * deal with PGO_DEACTIVATE (for madvise(MADV_SEQUENTIAL))
- 	 * and PGO_FREE (for msync(MSINVALIDATE))
- 	 */
+	 * Deal with:
+	 *
+	 *	PGO_DEACTIVATE	for sequential access, via uvm_fault(), and
+	 *			for MADV_DONTNEED
+	 *
+	 *	PGO_FREE	for MADV_FREE and MSINVALIDATE
+	 */
 	return TRUE;
 }
 
@@ -919,8 +924,8 @@ uao_get(uobj, offset, pps, npagesp, centeridx, access_type, advice, flags)
 				UVMHIST_LOG(pdhist,
 				    "sleeping, ptmp->flags 0x%x\n",
 				    ptmp->flags,0,0,0);
-				UVM_UNLOCK_AND_WAIT(ptmp, &uobj->vmobjlock, 0,
-				    "uao_get", 0);
+				UVM_UNLOCK_AND_WAIT(ptmp, &uobj->vmobjlock,
+				    FALSE, "uao_get", 0);
 				simple_lock(&uobj->vmobjlock);
 				continue;	/* goto top of pps while loop */
 			}
@@ -982,7 +987,7 @@ uao_get(uobj, offset, pps, npagesp, centeridx, access_type, advice, flags)
 				    rv,0,0,0);
 				if (ptmp->flags & PG_WANTED)
 					/* object lock still held */
-					thread_wakeup(ptmp);
+					wakeup(ptmp);
 				ptmp->flags &= ~(PG_WANTED|PG_BUSY);
 				UVM_PAGE_OWN(ptmp, NULL);
 				uvm_lock_pageq();

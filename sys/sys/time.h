@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/time.h,v 1.9.2.1 2000/03/24 09:09:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/time.h,v 1.9.2.2 2001/05/14 22:45:04 niklas Exp $	*/
 /*	$NetBSD: time.h,v 1.18 1996/04/23 10:29:33 mycroft Exp $	*/
 
 /*
@@ -168,6 +168,7 @@ int	itimerdecr __P((struct itimerval *itp, int usec));
 void	microtime __P((struct timeval *tv));
 void	settime __P((struct timeval *tv));
 int	ratecheck __P((struct timeval *, const struct timeval *));
+int	ppsratecheck __P((struct timeval *, int *, int));
 #else /* !_KERNEL */
 #include <time.h>
 
@@ -182,7 +183,6 @@ int	clock_settime __P((clockid_t, const struct timespec *));
 int	futimes __P((int, const struct timeval *));
 int	getitimer __P((int, struct itimerval *));
 int	gettimeofday __P((struct timeval *, struct timezone *));
-int	nanosleep __P((const struct timespec *, struct timespec *));
 int	setitimer __P((int, const struct itimerval *, struct itimerval *));
 int	settimeofday __P((const struct timeval *, const struct timezone *));
 int	utimes __P((const char *, const struct timeval *));

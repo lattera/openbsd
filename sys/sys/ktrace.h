@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/ktrace.h,v 1.2 1996/03/03 12:11:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/ktrace.h,v 1.2.16.1 2001/05/14 22:45:02 niklas Exp $	*/
 /*	$NetBSD: ktrace.h,v 1.12 1996/02/04 02:12:29 christos Exp $	*/
 
 /*
@@ -165,12 +165,14 @@ __END_DECLS
 
 #else
 
-void ktrcsw __P((struct vnode *, int, int));
-void ktremul __P((struct vnode *, char *));
-void ktrgenio __P((struct vnode *, int, enum uio_rw, struct iovec *, int, int));
-void ktrnamei __P((struct vnode *, char *));
-void ktrpsig __P((struct vnode *, int, sig_t, int, int));
-void ktrsyscall __P((struct vnode *, register_t, size_t, register_t []));
-void ktrsysret __P((struct vnode *, register_t, int, register_t));
+void ktrcsw __P((struct proc *, int, int));
+void ktremul __P((struct proc *, char *));
+void ktrgenio __P((struct proc *, int, enum uio_rw, struct iovec *, int, int));
+void ktrnamei __P((struct proc *, char *));
+void ktrpsig __P((struct proc *, int, sig_t, int, int));
+void ktrsyscall __P((struct proc *, register_t, size_t, register_t []));
+void ktrsysret __P((struct proc *, register_t, int, register_t));
+
+void ktrsettracevnode __P((struct proc *, struct vnode *));
 
 #endif	/* !_KERNEL */
