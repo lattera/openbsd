@@ -28,7 +28,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: compat.c,v 1.12 2000/04/26 20:56:29 markus Exp $");
+RCSID("$Id: compat.c,v 1.13 2000/05/08 17:42:24 markus Exp $");
 
 #include "ssh.h"
 #include "packet.h"
@@ -80,10 +80,12 @@ compat_datafellows(const char *version)
 int
 proto_spec(const char *spec)
 {
-	char *s = xstrdup(spec);
-	char *p;
+	char *s, *p;
 	int ret = SSH_PROTO_UNKNOWN;
 
+	if (spec == NULL)
+		return ret;
+	s = xstrdup(spec);
 	for ((p = strtok(s, SEP)); p; (p = strtok(NULL, SEP))) {
 		switch(atoi(p)) {
 		case 1:
