@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/stand/boot/conf.c,v 1.4 1996/10/30 22:40:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/stand/boot/conf.c,v 1.5 2002/03/14 01:26:27 millert Exp $	*/
 /*	$NetBSD: conf.c,v 1.3 1995/11/23 02:39:31 cgd Exp $	*/
 
 /*
@@ -44,7 +44,7 @@
 
 #include "disk.h"
 
-int	diskopen __P((struct open_file *, ...));	/* XXX */
+int	diskopen(struct open_file *, ...);	/* XXX */
 
 int	errno;
 

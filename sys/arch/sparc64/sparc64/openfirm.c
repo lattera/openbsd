@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.5 2001/12/05 01:59:55 jason Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/sparc64/openfirm.c,v 1.6 2002/03/14 01:26:45 millert Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.13 2001/06/21 00:08:02 eeh Exp $	*/
 
 /*
@@ -544,7 +544,7 @@ OF_read(handle, addr, len)
 	return act;
 }
 
-void prom_printf __P((const char *fmt, ...));	/* XXX for below */
+void prom_printf(const char *fmt, ...);	/* XXX for below */
 
 int
 OF_write(handle, addr, len)
