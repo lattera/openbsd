@@ -1,0 +1,46 @@
+.\"	$OpenBSD: src/share/man/man4/ac97.4,v 1.11 2002/09/26 07:55:39 miod Exp $
+.\"
+.Dd October 7, 1999
+.Dt AC97 4
+.Os
+.Sh NAME
+.Nm ac97
+.Nd generic AC97 codec driver
+.Sh DESCRIPTION
+AC97 codecs contain the analog-to-digital (A/D), digital-to-analog
+(D/A), and mixing circuitry of many modern sound cards.
+AC97 codecs, for the most part, do not talk to host busses like the PCI bus
+directly.
+Instead, they communicate through an interface chip, called
+the host controller.
+The Ensoniq AudioPCI 97 (see
+.Xr eap 4 )
+is an example of such a host controller.
+.Pp
+Unlike many drivers, the
+.Nm
+driver does not appear in the configuration file.
+Instead, the driver is automatically attached by the drivers that require it.
+.Sh SEE ALSO
+.Xr auich 4 ,
+.Xr autri 4 ,
+.Xr auvia 4 ,
+.Xr clcs 4 ,
+.Xr clct 4 ,
+.Xr eap 4 ,
+.Xr emu 4 ,
+.Xr esa 4 ,
+.Xr fms 4 ,
+.Xr maestro 4 ,
+.Xr neo 4 ,
+.Xr yds 4
+.Sh BUGS
+The
+.Nm
+driver does not keep track of the current user settings and instead
+relies on the hardware to do this.
+.Pp
+The
+.Nm
+driver could do more to detect mixer channels that don't work and cull
+them from the list.

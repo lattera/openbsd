@@ -1,0 +1,164 @@
+.\"	$OpenBSD: src/share/man/man4/sbus.4,v 1.10 2002/09/26 07:55:40 miod Exp $
+.\"	$NetBSD: sbus.4,v 1.5 2002/01/21 17:54:10 wiz Exp $
+.\"
+.\" Copyright (c) 2001 The NetBSD Foundation, Inc.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to The NetBSD Foundation
+.\" by Paul Kranenburg.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"        This product includes software developed by the NetBSD
+.\"        Foundation, Inc. and its contributors.
+.\" 4. Neither the name of The NetBSD Foundation nor the names of its
+.\"    contributors may be used to endorse or promote products derived
+.\"    from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+.\" TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+.\" PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 27, 2001
+.Dt SBUS 4
+.Os
+.Sh NAME
+.Nm sbus
+.Nd introduction to machine-independent sbus bus support and drivers
+.Sh SYNOPSIS
+.Cd "sbus* at mainbus?"
+.Cd "sbus* at iommu?"
+.Cd "sbus* at xbox?"
+.Pp
+These
+.Nm
+attachments are specific to the sparc and sparc64 ports.
+.Sh DESCRIPTION
+.Nm
+is a I/O interconnect bus mostly found in
+.Tn SPARC
+workstations and small to medium server class systems. It supports both
+on-board peripherals and extension boards. The
+.Nm
+specifications define the bus protocol as well as the electrical and
+mechanical properties of the extension slots.
+.Sh HARDWARE
+.Ox
+includes machine-independent
+.Nm
+drivers, sorted by device type and driver name:
+.Ss Audio interfaces
+.Bl -tag -width 12n -offset ind -compact
+.It Xr audioamd 4
+.Tn AMD
+7990 codecs
+.It Xr audiocs 4
+.Tn "Crystal Semiconductor"
+CS4231A codecs
+.El
+.Ss SCSI interfaces
+.Bl -tag -width 12n -offset ind -compact
+.It Xr esp 4
+NCR53c94 and compatible
+.Tn SCSI
+interfaces.
+.It Xr isp 4
+Qlogic
+.Tn SCSI
+interfaces.
+.El
+.Ss Network interfaces
+.Bl -tag -width 12n -offset ind -compact
+.It Xr le 4
+.Tn Lance
+7990 series
+.Tn Ethernet
+interfaces.
+.It Xr hme 4
+.Dq Happy Meal
+.Tn Ethernet
+interfaces.
+.It Xr be 4
+.Dq Big Mac
+.Tn Ethernet
+board.
+.It Xr qe 4
+Quad Ethernet Controller
+board.
+.El
+.Ss Bridges
+.Bl -tag -width 12n -offset ind -compact
+.It Xr stp 4
+.Nm sbus
+.Xr pcmcia 4
+bridge.
+.El
+.Ss Graphics devices
+.Bl -tag -width 12n -offset ind -compact
+.It Xr bwtwo 4
+framebuffer device.
+.It Xr cgthree 4
+framebuffer device.
+.It Xr cgsix 4
+framebuffer device.
+.El
+.Ss Serial and parallel interfaces
+.Bl -tag -width 12n -offset ind -compact
+.It Xr apio 4 
+Aurora Technologies pio1 parallel port card.
+.It Xr asio 4
+Aurora Technologies pio2 serial port card.
+.It Xr magma 4
+Magma LC series Serial/Parallel Interface cards.
+.It Xr spif 4
+Sun Serial/Parallel Interface card.
+.El
+.Ss Miscellaneous devices
+.Bl -tag -width 12n -offset ind -compact
+.It Xr uperf 4
+Performance counters on the host bridge.
+.El
+.Sh SEE ALSO
+.Xr apio 4 ,
+.Xr asio 4 ,
+.Xr audioamd 4 ,
+.Xr audiocs 4 ,
+.Xr be 4 ,
+.Xr bwtwo 4 ,
+.Xr cgsix 4 ,
+.Xr cgthree 4 ,
+.Xr esp 4 ,
+.Xr hme 4 ,
+.Xr intro 4 ,
+.Xr isp 4 ,
+.Xr le 4 ,
+.Xr magma 4 ,
+.Xr qe 4 ,
+.Xr qec 4 ,
+.Xr spif 4 ,
+.Xr stp 4 ,
+.Xr uperf 4 ,
+.Xr xbox 4
+.Sh HISTORY
+The machine-independent
+.Nm sbus
+subsystem appeared in
+.Nx 1.3 .
+OpenBSD support first appeared in
+.Ox 2.0 .
