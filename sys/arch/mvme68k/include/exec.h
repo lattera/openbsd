@@ -1,4 +1,4 @@
-/*	$NetBSD: exec.h,v 1.5 1995/03/28 18:15:35 jtc Exp $	*/
+/*	$Id$ */
 
 /*
  * Copyright (c) 1993 Christopher G. Demetriou

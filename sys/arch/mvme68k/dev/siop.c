@@ -1,4 +1,4 @@
-/*	$NetBSD: siop.c,v 1.23 1995/08/18 15:28:08 chopps Exp $	*/
+/*	$Id$ */
 
 /*
  * Copyright (c) 1994 Michael L. Hitch

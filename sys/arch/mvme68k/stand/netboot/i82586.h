@@ -1,4 +1,4 @@
-/*	$NetBSD: i82586.h,v 1.3 1995/01/27 09:49:55 pk Exp $ */
+/*	$Id$ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt

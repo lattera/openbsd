@@ -1,4 +1,4 @@
-|	$NetBSD: oc_cksum.s,v 1.4 1994/10/26 07:51:13 cgd Exp $
+|	$Id$
 
 | Copyright (c) 1988 Regents of the University of California.
 | All rights reserved.

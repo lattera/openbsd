@@ -1,4 +1,4 @@
-/*	$NetBSD: promdev.c,v 1.2 1995/06/09 22:23:04 gwr Exp $ */
+/*	$Id$ */
 
 /*
  * Copyright (c) 1995 Gordon W. Ross

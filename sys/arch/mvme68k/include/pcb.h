@@ -1,4 +1,4 @@
-/*	$NetBSD: pcb.h,v 1.3 1994/10/26 02:33:47 cgd Exp $	*/
+/*	$Id$ */
 
 /*
  * Copyright (c) 1988 University of Utah.

@@ -1,4 +1,4 @@
-/*	$NetBSD: vm_machdep.c,v 1.24 1995/05/25 01:11:29 mycroft Exp $	*/
+/*	$Id$ */
 
 /*
  * Copyright (c) 1988 University of Utah.

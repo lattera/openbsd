@@ -1,4 +1,4 @@
-/*	$NetBSD: float.h,v 1.2 1994/10/26 02:33:43 cgd Exp $	*/
+/*	$Id$ */
 
 #ifndef _MACHINE_FLOAT_H_
 #define _MACHINE_FLOAT_H_

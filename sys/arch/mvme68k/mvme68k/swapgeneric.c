@@ -1,4 +1,4 @@
-/*	$NetBSD: swapgeneric.c,v 1.7 1995/02/16 21:42:52 pk Exp $ */
+/*	$Id$ */
 
 /*-
  * Copyright (c) 1994

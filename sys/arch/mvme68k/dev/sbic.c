@@ -1,4 +1,4 @@
-/*	$NetBSD: sbic.c,v 1.14 1995/08/18 15:28:03 chopps Exp $	*/
+/*	$Id$ */
 
 /*
  * Copyright (c) 1994 Christian E. Hopps

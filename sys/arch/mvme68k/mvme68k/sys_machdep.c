@@ -1,4 +1,4 @@
-/*	$NetBSD: sys_machdep.c,v 1.8 1995/04/22 20:25:54 christos Exp $ */
+/*	$Id$ */
 
 /*
  * Copyright (c) 1982, 1986, 1993
