@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1.2.1 2002/02/02 03:28:25 art Exp $	*/
-/* $NetBSD: genfs_node.h,v 1.2 2001/09/15 22:38:40 chs Exp $ */
+/*	$OpenBSD: src/sys/miscfs/genfs/Attic/genfs.h,v 1.1.2.2 2002/11/04 18:02:31 art Exp $	*/
+/* $NetBSD: genfs_node.h,v 1.3 2001/12/18 07:49:36 chs Exp $ */
 
 /*
  * Copyright (c) 2001 Chuck Silvers.
@@ -59,8 +59,11 @@ struct genfs_node {
 void	genfs_size(struct vnode *, off_t, off_t *);
 void	genfs_node_init(struct vnode *, struct genfs_ops *);
 int	genfs_gop_write(struct vnode *, struct vm_page **, int, int);
+int	genfs_compat_gop_write(struct vnode *, struct vm_page **, int, int);
 
-int	genfs_getpages __P((void *));
-int	genfs_putpages __P((void *));
+int	genfs_getpages(void *);
+int	genfs_putpages(void *);
+int	genfs_compat_getpages(void *);
+int	genfs_null_putpages(void *);
 
 #endif	/* _MISCFS_GENFS_GENFS_NODE_H_ */

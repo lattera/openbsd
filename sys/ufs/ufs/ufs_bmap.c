@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_bmap.c,v 1.11.2.2 2002/10/29 00:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_bmap.c,v 1.11.2.3 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ufs_bmap.c,v 1.3 1996/02/09 22:36:00 christos Exp $	*/
 
 /*
@@ -138,14 +138,9 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
 		maxrun = MAXBSIZE / mp->mnt_stat.f_iosize - 1;
 	}
 
-	xap = ap == NULL ? a : ap;
-	if (!nump)
-		nump = &num;
-	if ((error = ufs_getlbns(vp, bn, xap, nump)) != 0)
-		return (error);
-
-	num = *nump;
-	if (num == 0) {
+	if (bn >= 0 && bn < NDADDR) {
+		if (nump != NULL)
+			*nump = 0;
 		*bnp = blkptrtodb(ump, ip->i_ffs_db[bn]);
 		if (*bnp == 0)
 			*bnp = -1;
@@ -156,6 +151,13 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
 		return (0);
 	}
 
+	xap = ap == NULL ? a : ap;
+	if (!nump)
+		nump = &num;
+	if ((error = ufs_getlbns(vp, bn, xap, nump)) != 0)
+		return (error);
+
+	num = *nump;
 
 	/* Get disk address out of indirect block array */
 	daddr = ip->i_ffs_ib[xap->in_off];
@@ -305,7 +307,7 @@ ufs_getlbns(vp, bn, ap, nump)
 		ap->in_exists = 0;
 		++ap;
 
-		metalbn -= -1 + off * blockcnt;
+		metalbn -= -1 + (off << lbc);
 	}
 #ifdef DIAGNOSTIC
 	if (realbn < 0 && metalbn != realbn) {

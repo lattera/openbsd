@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20.2.2 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_device.c,v 1.39 2001/11/10 07:36:59 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_device.c,v 1.20.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm_device.c,v 1.41 2002/09/06 13:24:12 gehenna Exp $	*/
 
 /*
  *
@@ -116,7 +116,7 @@ udv_attach(arg, accessprot, off, size)
 {
 	dev_t device = *((dev_t *)arg);
 	struct uvm_device *udv, *lcv;
-	paddr_t (*mapfn)(dev_t, off_t, int);
+	dev_type_mmap((*mapfn));
 	UVMHIST_FUNC("udv_attach"); UVMHIST_CALLED(maphist);
 
 	UVMHIST_LOG(maphist, "(device=0x%x)", device,0,0,0);
@@ -127,8 +127,8 @@ udv_attach(arg, accessprot, off, size)
 
 	mapfn = cdevsw[major(device)].d_mmap;
 	if (mapfn == NULL ||
-	    mapfn == (paddr_t (*)(dev_t, off_t, int)) enodev ||
-	    mapfn == (paddr_t (*)(dev_t, off_t, int)) nullop)
+	    mapfn == (dev_type_mmap((*))) enodev ||
+	    mapfn == (dev_type_mmap((*))) nullop)
 		return(NULL);
 
 	/*

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32.2.3 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_mmap.c,v 1.61 2001/11/25 06:42:47 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_mmap.c,v 1.32.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_mmap.c,v 1.66 2002/09/27 19:13:29 mycroft Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -155,17 +155,16 @@ sys_mincore(p, v, retval)
 	if (end <= start)
 		return (EINVAL);
 
-	npgs = len >> PAGE_SHIFT;
-
-	if (uvm_useracc(vec, npgs, B_WRITE) == FALSE)
-		return (EFAULT);
-
 	/*
 	 * Lock down vec, so our returned status isn't outdated by
 	 * storing the status byte for a page.
 	 */
 
-	uvm_vslock(p, vec, npgs, VM_PROT_WRITE);
+	npgs = len >> PAGE_SHIFT;
+	error = uvm_vslock(p, vec, npgs, VM_PROT_WRITE);
+	if (error) {
+		return error;
+	}
 	vm_map_lock_read(map);
 
 	if (uvm_map_lookup_entry(map, start, &entry) == FALSE) {
@@ -260,7 +259,7 @@ sys_mincore(p, v, retval)
 /*
  * sys_mmap: mmap system call.
  *
- * => file offest and address may not be page aligned
+ * => file offset and address may not be page aligned
  *    - if MAP_FIXED, offset and address must have remainder mod PAGE_SIZE
  *    - if address isn't page aligned the mapping starts at trunc_page(addr)
  *      and the return value is adjusted up by the page offset.
@@ -338,7 +337,7 @@ sys_mmap(p, v, retval)
 
 		if (VM_MAXUSER_ADDRESS > 0 &&
 		    (addr + size) > VM_MAXUSER_ADDRESS)
-			return (EINVAL);
+			return (EFBIG);
 		if (vm_min_address > 0 && addr < vm_min_address)
 			return (EINVAL);
 		if (addr > addr + size)
@@ -668,10 +667,12 @@ sys_munmap(p, v, retval)
 	 */
 
 	vm_map_lock(map);
+#if 0
 	if (!uvm_map_checkprot(map, addr, addr + size, VM_PROT_NONE)) {
 		vm_map_unlock(map);
 		return (EINVAL);
 	}
+#endif
 	uvm_unmap_remove(map, addr, addr + size, &dead_entries);
 	vm_map_unlock(map);
 	if (dead_entries != NULL)

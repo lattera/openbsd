@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.39.2.2 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_extern.h,v 1.68 2001/12/08 00:35:33 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_extern.h,v 1.39.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm_extern.h,v 1.73 2002/09/22 07:20:31 chs Exp $	*/
 
 /*
  *
@@ -194,6 +194,7 @@ typedef int		vm_prot_t;
  */
 #define UVM_KMF_NOWAIT	0x1			/* matches M_NOWAIT */
 #define UVM_KMF_VALLOC	0x2			/* allocate VA only */
+#define UVM_KMF_CANFAIL	0x4			/* caller handles failure */
 #define UVM_KMF_TRYLOCK	UVM_FLAG_TRYLOCK	/* try locking only */
 
 /*
@@ -284,9 +285,9 @@ struct uvmexp {
 	int zeropages;		/* number of zero'd pages */
 	int reserve_pagedaemon; /* number of pages reserved for pagedaemon */
 	int reserve_kernel;	/* number of pages reserved for kernel */
-	int anonpages;		/* number of pages used by anon pagers */
-	int vnodepages;		/* number of pages used by vnode page cache */
-	int vtextpages;		/* number of pages used by vtext vnodes */
+	int anonpages;		/* number of pages used by anon mappings */
+	int filepages;		/* number of pages used by cached file data */
+	int execpages;		/* number of pages used by cached exec date */
 
 	/* pageout params */
 	int freemin;    /* min number of free pages */
@@ -294,11 +295,17 @@ struct uvmexp {
 	int inactarg;   /* target number of inactive pages */
 	int wiredmax;   /* max number of wired pages */
 	int anonmin;	/* min threshold for anon pages */
-	int vtextmin;	/* min threshold for vtext pages */
-	int vnodemin;	/* min threshold for vnode pages */
+	int execmin;	/* min threshold for executable pages */
+	int filemin;	/* min threshold for file pages */
 	int anonminpct;	/* min percent anon pages */
-	int vtextminpct;/* min percent vtext pages */
-	int vnodeminpct;/* min percent vnode pages */
+	int execminpct;	/* min percent executable pages */
+	int fileminpct;	/* min percent file pages */
+	int anonmax;	/* max threshold for anon pages */
+	int execmax;	/* max threshold for executable pages */
+	int filemax;	/* max threshold for file pages */
+	int anonmaxpct;	/* max percent anon pages */
+	int execmaxpct;	/* max percent executable pages */
+	int filemaxpct;	/* max percent file pages */
 
 	/* swap */
 	int nswapdev;	/* number of configured swap devices in system */
@@ -367,9 +374,9 @@ struct uvmexp {
 	int pdpageouts;	/* number of times daemon started a pageout */
 	int pdpending;	/* number of times daemon got a pending pagout */
 	int pddeact;	/* number of pages daemon deactivates */
-	int pdreanon;	/* anon pages reactivated due to min threshold */
-	int pdrevnode;	/* vnode pages reactivated due to min threshold */
-	int pdrevtext;	/* vtext pages reactivated due to min threshold */
+	int pdreanon;	/* anon pages reactivated due to thresholds */
+	int pdrefile;	/* file pages reactivated due to thresholds */
+	int pdreexec;	/* executable pages reactivated due to thresholds */
 };
 
 #ifdef _KERNEL
@@ -413,6 +420,20 @@ struct vmspace {
 };
 
 #ifdef _KERNEL
+
+/*
+ * used to keep state while iterating over the map for a core dump.
+ */
+struct uvm_coredump_state {
+	void *cookie;		/* opaque for the caller */
+	vaddr_t start;		/* start of region */
+	vaddr_t end;		/* end of region */
+	vm_prot_t prot;		/* protection of region */
+	int flags;		/* flags; see below */
+};
+
+#define	UVM_COREDUMP_STACK	0x01	/* region is user stack */
+#define	UVM_COREDUMP_NODUMP	0x02	/* don't actually dump this region */
 
 /*
  * the various kernel maps, owned by MD code
@@ -483,6 +504,11 @@ int			uvm_fault(struct vm_map *, vaddr_t, vm_fault_t,
 #if defined(KGDB)
 void			uvm_chgkprot(caddr_t, size_t, int);
 #endif
+int			uvm_coredump_walkmap __P((struct proc *,
+			    struct vnode *, struct ucred *,
+			    int (*)(struct proc *, struct vnode *,
+				    struct ucred *,
+				    struct uvm_coredump_state *), void *));
 void			uvm_fork(struct proc *, struct proc *, boolean_t,
 			    void *, size_t, void (*)(void *), void *);
 void			uvm_exit(struct proc *);
@@ -490,6 +516,8 @@ void			uvm_init_limits(struct proc *);
 boolean_t		uvm_kernacc(caddr_t, size_t, int);
 __dead void		uvm_scheduler(void);
 void			uvm_swapin(struct proc *);
+vaddr_t			uvm_uarea_alloc(void);
+void			uvm_uarea_free(vaddr_t);
 boolean_t		uvm_useracc(caddr_t, size_t, int);
 int			uvm_vslock(struct proc *, caddr_t, size_t,
 			    vm_prot_t);
@@ -603,7 +631,7 @@ void			uvm_deallocate(struct vm_map *, vaddr_t, vsize_t);
 void			uvm_vnp_setsize(struct vnode *, voff_t);
 void			uvm_vnp_sync(struct mount *);
 struct uvm_object	*uvn_attach(void *, vm_prot_t);
-void			uvn_findpages(struct uvm_object *, voff_t,
+int			uvn_findpages(struct uvm_object *, voff_t,
 					   int *, struct vm_page **, int);
 void			uvm_vnp_zerorange(struct vnode *, off_t, size_t);
 

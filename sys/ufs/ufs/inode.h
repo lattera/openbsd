@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.18.2.1 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/inode.h,v 1.18.2.2 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: inode.h,v 1.8 1995/06/15 23:22:50 cgd Exp $	*/
 
 /*
@@ -139,8 +139,12 @@ struct inode_vtbl {
 #define UFS_TRUNCATE(ip, off, flags, cred) \
     ((ip)->i_vtbl->iv_truncate)((ip), (off), (flags), (cred))
 
-#define UFS_UPDATE(ip, sync) \
-    ((ip)->i_vtbl->iv_update)((ip), NULL, NULL, (sync))
+#define UFS_UPDATE(ip, flags) \
+    ((ip)->i_vtbl->iv_update)((ip), NULL, NULL, (flags))
+
+/* flags in UFS_UPDATE */
+#define	UPDATE_WAIT	0x0001
+#define UPDATE_DIROP	0x0002
 
 #define UFS_UPDATE2(ip, atime, mtime, sync) \
     ((ip)->i_vtbl->iv_update)((ip), (atime), (mtime), (sync))

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.4 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_swap.c,v 1.57 2001/11/10 07:37:01 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_swap.c,v 1.46.2.5 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_swap.c,v 1.73 2002/11/02 07:40:49 perry Exp $	*/
 
 /*
  * Copyright (c) 1995, 1996, 1997 Matthew R. Green
@@ -94,14 +94,14 @@
  *  - block size
  *  - max byte count in buffer
  *  - buffer
- *  - credentials to use when doing i/o to file
  *
  * userland controls and configures swap with the swapctl(2) system call.
  * the sys_swapctl performs the following operations:
  *  [1] SWAP_NSWAP: returns the number of swap devices currently configured
  *  [2] SWAP_STATS: given a pointer to an array of swapent structures
  *	(passed in via "arg") of a size passed in via "misc" ... we load
- *	the current swap config into the array.
+ *	the current swap config into the array. The actual work is done 
+ *	in the uvm_swap_stats(9) function.
  *  [3] SWAP_ON: given a pathname in arg (could be device or file) and a
  *	priority in "misc", start swapping on it.
  *  [4] SWAP_OFF: as SWAP_ON, but stops swapping to a device
@@ -197,7 +197,7 @@ static struct pool vndbuf_pool;
 	int s = splbio();						\
 	vnx = pool_get(&vndxfer_pool, PR_WAITOK);			\
 	splx(s);							\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define putvndxfer(vnx) {						\
 	pool_put(&vndxfer_pool, (void *)(vnx));				\
@@ -207,7 +207,7 @@ static struct pool vndbuf_pool;
 	int s = splbio();						\
 	vbp = pool_get(&vndbuf_pool, PR_WAITOK);			\
 	splx(s);							\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define putvndbuf(vbp) {						\
 	pool_put(&vndbuf_pool, (void *)(vbp));				\
@@ -610,7 +610,7 @@ sys_swapctl(p, v, retval)
 	struct swapent *sep;
 	char	userpath[MAXPATHLEN];
 	size_t	len;
-	int	count, error, misc;
+	int	error, misc;
 	int	priority;
 	UVMHIST_FUNC("sys_swapctl"); UVMHIST_CALLED(pdhist);
 
@@ -643,50 +643,16 @@ sys_swapctl(p, v, retval)
 	 * to grab the uvm.swap_data_lock because we may fault&sleep during
 	 * copyout() and we don't want to be holding that lock then!
 	 */
-	if (SCARG(uap, cmd) == SWAP_STATS
-#if defined(COMPAT_13)
-	    || SCARG(uap, cmd) == SWAP_OSTATS
-#endif
-	    ) {
-		sep = (struct swapent *)SCARG(uap, arg);
-		count = 0;
+	if (SCARG(uap, cmd) == SWAP_STATS) {
+		misc = MIN(uvmexp.nswapdev, misc);
+		len = sizeof(struct swapent) * misc;
+		sep = (struct swapent *)malloc(len, M_TEMP, M_WAITOK);
 
-		LIST_FOREACH(spp, &swap_priority, spi_swappri) {
-			for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-			     sdp != (void *)&spp->spi_swapdev && misc-- > 0;
-			     sdp = CIRCLEQ_NEXT(sdp, swd_next)) {
-				sdp->swd_inuse =
-				    btodb((u_int64_t)sdp->swd_npginuse <<
-				    PAGE_SHIFT);
-				error = copyout(&sdp->swd_se, sep,
-				    sizeof(struct swapent));
+		uvm_swap_stats(SCARG(uap, cmd), sep, misc, retval);
+		error = copyout(sep, (void *)SCARG(uap, arg), len);
 
-				/* now copy out the path if necessary */
-#if defined(COMPAT_13)
-				if (error == 0 && SCARG(uap, cmd) == SWAP_STATS)
-#else
-				if (error == 0)
-#endif
-					error = copyout(sdp->swd_path,
-					    &sep->se_path, sdp->swd_pathlen);
-
-				if (error)
-					goto out;
-				count++;
-#if defined(COMPAT_13)
-				if (SCARG(uap, cmd) == SWAP_OSTATS)
-					sep = (struct swapent *)
-					    ((struct oswapent *)sep + 1);
-				else
-#endif
-					sep++;
-			}
-		}
-
+		free(sep, M_TEMP);
 		UVMHIST_LOG(pdhist, "<- done SWAP_STATS", 0, 0, 0, 0);
-
-		*retval = count;
-		error = 0;
 		goto out;
 	}
 
@@ -777,6 +743,10 @@ sys_swapctl(p, v, retval)
 		priority = SCARG(uap, misc);
 		sdp = malloc(sizeof *sdp, M_VMSWAP, M_WAITOK);
 		spp = malloc(sizeof *spp, M_VMSWAP, M_WAITOK);
+		memset(sdp, 0, sizeof(*sdp));
+		sdp->swd_flags = SWF_FAKE;
+		sdp->swd_vp = vp;
+		sdp->swd_dev = (vp->v_type == VBLK) ? vp->v_rdev : NODEV;
 		simple_lock(&uvm.swap_data_lock);
 		if (swaplist_find(vp, 0) != NULL) {
 			error = EBUSY;
@@ -785,10 +755,6 @@ sys_swapctl(p, v, retval)
 			free(spp, M_VMSWAP);
 			break;
 		}
-		memset(sdp, 0, sizeof(*sdp));
-		sdp->swd_flags = SWF_FAKE;	/* placeholder only */
-		sdp->swd_vp = vp;
-		sdp->swd_dev = (vp->v_type == VBLK) ? vp->v_rdev : NODEV;
 
 		/*
 		 * XXX Is NFS elaboration necessary?
@@ -866,6 +832,58 @@ out:
 
 	UVMHIST_LOG(pdhist, "<- done!  error=%d", error, 0, 0, 0);
 	return (error);
+}
+
+/* 
+ * swap_stats: implements swapctl(SWAP_STATS). The function is kept
+ * away from sys_swapctl() in order to allow COMPAT_* swapctl() 
+ * emulation to use it directly without going through sys_swapctl().
+ * The problem with using sys_swapctl() there is that it involves
+ * copying the swapent array to the stackgap, and this array's size
+ * is not known at build time. Hence it would not be possible to 
+ * ensure it would fit in the stackgap in any case.
+ */
+void
+uvm_swap_stats(cmd, sep, sec, retval)
+	int cmd;
+	struct swapent *sep;
+	int sec;
+	register_t *retval;
+{
+	struct swappri *spp;
+	struct swapdev *sdp;
+	int count = 0;
+
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
+		     sdp != (void *)&spp->spi_swapdev && sec-- > 0;
+		     sdp = CIRCLEQ_NEXT(sdp, swd_next)) {
+		  	/*
+			 * backwards compatibility for system call.
+			 * note that we use 'struct oswapent' as an
+			 * overlay into both 'struct swapdev' and
+			 * the userland 'struct swapent', as we
+			 * want to retain backwards compatibility
+			 * with NetBSD 1.3.
+			 */
+			sdp->swd_inuse =
+			    btodb((u_int64_t)sdp->swd_npginuse <<
+			    PAGE_SHIFT);
+			(void)memcpy(sep, &sdp->swd_se,
+			    sizeof(struct swapent));
+			
+			/* now copy out the path if necessary */
+			if (cmd == SWAP_STATS)
+				(void)memcpy(&sep->se_path, sdp->swd_path,
+				    sdp->swd_pathlen);
+
+			count++;
+			sep++;
+		}
+	}
+
+	*retval = count;
+	return;
 }
 
 /*
@@ -1029,6 +1047,20 @@ swap_on(p, sdp)
 		mp = rootvnode->v_mount;
 		sp = &mp->mnt_stat;
 		rootblocks = sp->f_blocks * btodb(sp->f_bsize);
+		/*
+		 * XXX: sp->f_blocks isn't the total number of
+		 * blocks in the filesystem, it's the number of
+		 * data blocks.  so, our rootblocks almost
+		 * definitely underestimates the total size 
+		 * of the filesystem - how badly depends on the
+		 * details of the filesystem type.  there isn't 
+		 * an obvious way to deal with this cleanly
+		 * and perfectly, so for now we just pad our 
+		 * rootblocks estimate with an extra 5 percent.
+		 */
+		rootblocks += (rootblocks >> 5) +
+			(rootblocks >> 6) +
+			(rootblocks >> 7);
 		rootpages = round_page(dbtob(rootblocks)) >> PAGE_SHIFT;
 		if (rootpages > size)
 			panic("swap_on: miniroot larger than swap?");
@@ -1128,7 +1160,7 @@ swap_off(p, sdp)
 	KASSERT(sdp->swd_npginuse == sdp->swd_npgbad);
 
 	/*
-	 * done with the vnode and saved creds.
+	 * done with the vnode.
 	 * drop our ref on the vnode before calling VOP_CLOSE()
 	 * so that spec_close() can tell if this is the last close.
 	 */
@@ -1429,7 +1461,7 @@ out: /* Arrive here at splbio */
 /*
  * sw_reg_start: start an I/O request on the requested swapdev
  *
- * => reqs are sorted by disksort (above)
+ * => reqs are sorted by b_rawblkno (above)
  */
 static void
 sw_reg_start(sdp)
@@ -1475,7 +1507,7 @@ sw_reg_iodone(bp)
 	struct vndxfer *vnx = vbp->vb_xfer;
 	struct buf *pbp = vnx->vx_bp;		/* parent buffer */
 	struct swapdev	*sdp = vnx->vx_sdp;
-	int resid;
+	int resid, error;
 	UVMHIST_FUNC("sw_reg_iodone"); UVMHIST_CALLED(pdhist);
 
 	UVMHIST_LOG(pdhist, "  vbp=%p vp=%p blkno=%x addr=%p",
@@ -1489,12 +1521,11 @@ sw_reg_iodone(bp)
 	pbp->b_resid -= resid;
 	vnx->vx_pending--;
 
-	if (vbp->vb_buf.b_error) {
-		UVMHIST_LOG(pdhist, "  got error=%d !",
-		    vbp->vb_buf.b_error, 0, 0, 0);
-
+	if (vbp->vb_buf.b_flags & B_ERROR) {
 		/* pass error upward */
-		vnx->vx_error = vbp->vb_buf.b_error;
+		error = vbp->vb_buf.b_error ? vbp->vb_buf.b_error : EIO;
+		UVMHIST_LOG(pdhist, "  got error=%d !", error, 0, 0, 0);
+		vnx->vx_error = error;
 	}
 
 	/*

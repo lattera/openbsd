@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.h,v 1.19.2.3 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_map.h,v 1.31 2001/10/03 13:32:23 christos Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.h,v 1.19.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_map.h,v 1.33 2002/11/02 07:40:49 perry Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -225,6 +225,7 @@ struct vm_map {
 #define	VM_MAP_WIREFUTURE	0x04		/* rw: wire future mappings */
 #define	VM_MAP_BUSY		0x08		/* rw: map is busy */
 #define	VM_MAP_WANTLOCK		0x10		/* rw: want to write-lock */
+#define	VM_MAP_DYING		0x20		/* rw: map is being destroyed */
 
 /* XXX: number of kernel maps and entries to statically allocate */
 
@@ -242,7 +243,7 @@ do {									\
 	simple_lock(&(map)->flags_lock);				\
 	(map)->flags = ((map)->flags | (set)) & ~(clear);		\
 	simple_unlock(&(map)->flags_lock);				\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 #endif /* _KERNEL */
 
 /*
@@ -402,7 +403,7 @@ do {									\
 	if ((map)->flags & VM_MAP_INTRSAFE)				\
 		panic("vm_map_lock_read: intrsafe map");		\
 	(void) lockmgr(&(map)->lock, LK_SHARED, NULL, curproc);		\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 #else
 #define	vm_map_lock_read(map)						\
 	(void) lockmgr(&(map)->lock, LK_SHARED, NULL, curproc)
@@ -414,7 +415,7 @@ do {									\
 		simple_unlock(&(map)->lock.lk_interlock);		\
 	else								\
 		(void) lockmgr(&(map)->lock, LK_RELEASE, NULL, curproc);\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define	vm_map_unlock_read(map)						\
 	(void) lockmgr(&(map)->lock, LK_RELEASE, NULL, curproc)
@@ -427,7 +428,7 @@ do {									\
 do {									\
 	if (lockmgr(&(map)->lock, LK_UPGRADE, NULL, curproc) != 0)	\
 		panic("vm_map_upgrade: failed to upgrade lock");	\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 #else
 #define	vm_map_upgrade(map)						\
 	(void) lockmgr(&(map)->lock, LK_UPGRADE, NULL, curproc)
@@ -438,7 +439,7 @@ do {									\
 	simple_lock(&(map)->flags_lock);				\
 	(map)->flags |= VM_MAP_BUSY;					\
 	simple_unlock(&(map)->flags_lock);				\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define	vm_map_unbusy(map)						\
 do {									\
@@ -450,7 +451,7 @@ do {									\
 	simple_unlock(&(map)->flags_lock);				\
 	if (oflags & VM_MAP_WANTLOCK)					\
 		wakeup(&(map)->flags);					\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 #endif /* _KERNEL */
 
 /*

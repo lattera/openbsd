@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.4 2002/10/29 00:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_softdep.c,v 1.30.2.5 2002/11/04 18:02:32 art Exp $	*/
 
 /*
  * Copyright 1998, 2000 Marshall Kirk McKusick. All Rights Reserved.
@@ -4117,7 +4117,8 @@ softdep_fsync(vp)
 		if (error != 0)
 			return (error);
 		if (flushparent) {
-			if ((error = UFS_UPDATE(VTOI(pvp), MNT_WAIT))) {
+			VTOI(pvp)->i_flag |= IN_MODIFIED;
+			if ((error = UFS_UPDATE(VTOI(pvp), UPDATE_WAIT))) {
 				vput(pvp);
 				return (error);
 			}
@@ -4207,6 +4208,7 @@ softdep_sync_metadata(ap)
 	} */ *ap;
 {
 	struct vnode *vp = ap->a_vp;
+	struct inodedep *inodedep;
 	struct pagedep *pagedep;
 	struct allocdirect *adp;
 	struct allocindir *aip;
@@ -4252,10 +4254,8 @@ softdep_sync_metadata(ap)
 	 */
 	waitfor = MNT_NOWAIT;
 top:
-	if (getdirtybuf(&LIST_FIRST(&vp->v_dirtyblkhd), MNT_WAIT) == 0) {
-		FREE_LOCK(&lk);
-		return (0);
-	}
+	if (getdirtybuf(&LIST_FIRST(&vp->v_dirtyblkhd), MNT_WAIT) == 0)
+		goto clean;
 	bp = LIST_FIRST(&vp->v_dirtyblkhd);
 loop:
 	/*
@@ -4430,24 +4430,33 @@ loop:
 	 * then we are done. For certain directories and block
 	 * devices, we may need to do further work.
 	 */
-	if (LIST_FIRST(&vp->v_dirtyblkhd) == NULL) {
+	if (LIST_FIRST(&vp->v_dirtyblkhd) != NULL) {
 		FREE_LOCK(&lk);
-		return (0);
+		/*
+		 * If we are trying to sync a block device, some of its buffers
+		 * may contain metadata that cannot be written until the
+		 * contents of some partially written files have been written
+		 * to disk. The only easy way to accomplish this is to sync the
+		 * entire filesystem (luckily this happens rarely).
+		 */
+		if (vn_isdisk(vp, NULL) &&
+		    vp->v_specmountpoint && !VOP_ISLOCKED(vp) &&
+		    (error = VFS_SYNC(vp->v_specmountpoint, MNT_WAIT,
+		     ap->a_cred, ap->a_p)) != 0)
+			return (error);
+		ACQUIRE_LOCK(&lk);
 	}
 
-	FREE_LOCK(&lk);
+clean:
 	/*
-	 * If we are trying to sync a block device, some of its buffers may
-	 * contain metadata that cannot be written until the contents of some
-	 * partially written files have been written to disk. The only easy
-	 * way to accomplish this is to sync the entire filesystem (luckily
-	 * this happens rarely).
+	 * If there is still an inodedep, we know that the inode has pending
+	 * modifications, and we must force it to be flushed to disk.  We do
+	 * this by explicitly setting IN_MODIFIED so that ffs_update() will
+	 * see it.
 	 */
-	if (vn_isdisk(vp, NULL) &&
-	    vp->v_specmountpoint && !VOP_ISLOCKED(vp) &&
-	    (error = VFS_SYNC(vp->v_specmountpoint, MNT_WAIT, ap->a_cred,
-	     ap->a_p)) != 0)
-		return (error);
+	if (inodedep_lookup(VTOI(vp)->i_fs, VTOI(vp)->i_number, 0, &inodedep))
+		VTOI(vp)->i_flag |= IN_MODIFIED;
+	FREE_LOCK(&lk);
 	return (0);
 }
 
@@ -4598,7 +4607,8 @@ flush_pagedep_deps(pvp, mp, diraddhdp)
 		 */
 		if (dap->da_state & MKDIR_PARENT) {
 			FREE_LOCK(&lk);
-			if ((error = UFS_UPDATE(VTOI(pvp), MNT_WAIT)))
+			VTOI(pvp)->i_flag |= IN_MODIFIED;
+			if ((error = UFS_UPDATE(VTOI(pvp), UPDATE_WAIT)))
 				break;
 			ACQUIRE_LOCK(&lk);
 			/*

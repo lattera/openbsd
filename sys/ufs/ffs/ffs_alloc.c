@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.37.2.2 2002/10/29 00:36:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_alloc.c,v 1.37.2.3 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ffs_alloc.c,v 1.11 1996/05/11 18:27:09 mycroft Exp $	*/
 
 /*
@@ -507,9 +507,8 @@ ffs_reallocblks(v)
 			bwrite(sbp);
 	} else {
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
-		if (!doasyncfree) {
-			UFS_UPDATE(ip, MNT_WAIT);
-		}
+		if (!doasyncfree)
+			UFS_UPDATE(ip, UPDATE_WAIT);
 	}
 	if (ssize < len) {
 		if (doasyncfree)
@@ -708,7 +707,7 @@ ffs_dirpref(pip)
 	minifree = avgifree - fs->fs_ipg / 4;
 	if (minifree < 0)
 		minifree = 0;
-	minbfree = avgbfree - fs->fs_fpg / fs->fs_frag / 4;
+	minbfree = avgbfree - fragstoblks(fs, fs->fs_fpg) / 4;
 	if (minbfree < 0)
 		minbfree = 0;
 #else
@@ -1648,13 +1647,13 @@ ffs_mapsearch(fs, cgp, bpref, allocsiz)
 	len = howmany(fs->fs_fpg, NBBY) - start;
 	loc = scanc((u_int)len, (u_char *)&cg_blksfree(cgp)[start],
 		(u_char *)fragtbl[fs->fs_frag],
-		(u_char)(1 << (allocsiz - 1 + (fs->fs_frag % NBBY))));
+		(u_char)(1 << (allocsiz - 1 + (fs->fs_frag & (NBBY - 1)))));
 	if (loc == 0) {
 		len = start + 1;
 		start = 0;
 		loc = scanc((u_int)len, (u_char *)&cg_blksfree(cgp)[0],
 			(u_char *)fragtbl[fs->fs_frag],
-			(u_char)(1 << (allocsiz - 1 + (fs->fs_frag % NBBY))));
+			(u_char)(1 << (allocsiz - 1 + (fs->fs_frag & (NBBY - 1)))));
 		if (loc == 0) {
 			printf("start = %d, len = %d, fs = %s\n",
 			    start, len, fs->fs_fsmnt);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.54.2.2 2002/06/11 03:29:40 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.54.2.3 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -92,7 +92,9 @@ u_long	bufhash;
 TAILQ_HEAD(bqueues, buf) bufqueues[BQUEUES];
 int needbuffer;
 int nobuffers;
+#ifndef FFS_SOFTDEP
 struct bio_ops bioops;
+#endif
 
 /*
  * Buffer pool for I/O buffers.
@@ -909,7 +911,7 @@ biowait(struct buf *bp)
 	int s;
 
 	s = splbio();
-	while (!ISSET(bp->b_flags, B_DONE))
+	while (!ISSET(bp->b_flags, B_DONE/* | B_DELWRI*/))
 		tsleep(bp, PRIBIO + 1, "biowait", 0);
 	splx(s);
 

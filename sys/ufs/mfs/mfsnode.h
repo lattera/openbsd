@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/mfs/mfsnode.h,v 1.8.2.1 2002/10/29 01:11:09 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/mfs/mfsnode.h,v 1.8.2.2 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: mfsnode.h,v 1.3 1996/02/09 22:31:31 christos Exp $	*/
 
 /*
@@ -35,6 +35,8 @@
  *
  *	@(#)mfsnode.h	8.2 (Berkeley) 8/11/93
  */
+
+#include <miscfs/genfs/genfs.h>
 
 /*
  * This structure defines the control data for the memory based file system.
@@ -88,3 +90,4 @@ struct mfsnode {
 #define	mfs_update	nullop
 #define	mfs_bwrite	vop_generic_bwrite
 #define mfs_mmap	mfs_badop
+#define mfs_putpages	genfs_null_putpages

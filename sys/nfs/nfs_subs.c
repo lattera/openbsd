@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/nfs/nfs_subs.c,v 1.37.2.2 2002/06/11 03:32:04 art Exp $	*/
-/*	$NetBSD: nfs_subs.c,v 1.27.4.3 1996/07/08 20:34:24 jtc Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_subs.c,v 1.37.2.3 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: nfs_subs.c,v 1.104 2002/08/23 05:38:51 enami Exp $	*/
 
 /*
  * Copyright (c) 1989, 1993
@@ -142,6 +142,7 @@ nfstype nfsv3_type[9] = { NFNON, NFREG, NFDIR, NFBLK, NFCHR, NFLNK, NFSOCK,
 enum vtype nv2tov_type[8] = { VNON, VREG, VDIR, VBLK, VCHR, VLNK, VNON, VNON };
 enum vtype nv3tov_type[8]={ VNON, VREG, VDIR, VBLK, VCHR, VLNK, VSOCK, VFIFO };
 int nfs_ticks;
+int nfs_commitsize;
 
 /*
  * Mapping of old NFS Version 2 RPC numbers to generic numbers.
@@ -1125,6 +1126,7 @@ nfs_vfs_init(vfsp)
 		nfs_iodwant[i] = (struct proc *)0;
 	TAILQ_INIT(&nfs_bufq);
 	nfs_nhinit();			/* Init the nfsnode table */
+	nfs_commitsize = uvmexp.npages << (PAGE_SHIFT - 4);
 
 	return (0);
 }
@@ -1144,11 +1146,12 @@ nfs_vfs_init(vfsp)
  *    copy the attributes to *vaper
  */
 int
-nfs_loadattrcache(vpp, mdp, dposp, vaper)
+nfs_loadattrcache(vpp, mdp, dposp, vaper, flags)
 	struct vnode **vpp;
 	struct mbuf **mdp;
 	caddr_t *dposp;
 	struct vattr *vaper;
+	int flags;
 {
 	struct vnode *vp = *vpp;
 	struct vattr *vap;
@@ -1280,7 +1283,16 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
 		} else {
 			np->n_size = vap->va_size;
 			if (vap->va_type == VREG) {
-				uvm_vnp_setsize(vp, np->n_size);
+				if ((flags & NAC_NOTRUNC)
+				    && np->n_size < vp->v_size) {
+					/*
+					 * we can't free pages now because
+					 * the pages can be owned by ourselves.
+					 */
+					np->n_flag |= NTRUNCDELAYED;
+				} else {
+					uvm_vnp_setsize(vp, np->n_size);
+				}
 			}
 		}
 	}
@@ -1295,6 +1307,18 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
 		}
 	}
 	return (0);
+}
+
+void
+nfs_delayedtruncate(vp)
+	struct vnode *vp;
+{
+	struct nfsnode *np = VTONFS(vp);
+
+	if (np->n_flag & NTRUNCDELAYED) {
+		np->n_flag &= ~NTRUNCDELAYED;
+		uvm_vnp_setsize(vp, np->n_size);
+	}
 }
 
 INLINE int

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.3 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_vnode.c,v 1.55 2001/11/10 07:37:01 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_vnode.c,v 1.31.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_vnode.c,v 1.59 2002/09/06 13:24:14 gehenna Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -312,7 +312,7 @@ uvn_get(uobj, offset, pps, npagesp, centeridx, access_type, advice, flags)
  * => returned pages will be BUSY.
  */
 
-void
+int
 uvn_findpages(uobj, offset, npagesp, pgs, flags)
 	struct uvm_object *uobj;
 	voff_t offset;
@@ -320,28 +320,33 @@ uvn_findpages(uobj, offset, npagesp, pgs, flags)
 	struct vm_page **pgs;
 	int flags;
 {
-	int i, count, npages, rv;
+	int i, count, found, npages, rv;
 
-	count = 0;
+	count = found = 0;
 	npages = *npagesp;
 	if (flags & UFP_BACKWARD) {
 		for (i = npages - 1; i >= 0; i--, offset -= PAGE_SIZE) {
 			rv = uvn_findpage(uobj, offset, &pgs[i], flags);
-			if (flags & UFP_DIRTYONLY && rv == 0) {
-				break;
-			}
+			if (rv == 0) {
+				if (flags & UFP_DIRTYONLY)
+					break;
+			} else
+				found++;
 			count++;
 		}
 	} else {
 		for (i = 0; i < npages; i++, offset += PAGE_SIZE) {
 			rv = uvn_findpage(uobj, offset, &pgs[i], flags);
-			if (flags & UFP_DIRTYONLY && rv == 0) {
-				break;
-			}
+			if (rv == 0) {
+				if (flags & UFP_DIRTYONLY)
+					break;
+			} else
+				found++;
 			count++;
 		}
 	}
 	*npagesp = count;
+	return (found);
 }
 
 int
@@ -383,9 +388,9 @@ uvn_findpage(uobj, offset, pgp, flags)
 				continue;
 			}
 			if (UVM_OBJ_IS_VTEXT(uobj)) {
-				uvmexp.vtextpages++;
+				uvmexp.execpages++;
 			} else {
-				uvmexp.vnodepages++;
+				uvmexp.filepages++;
 			}
 			s = splbio();
 			vhold((struct vnode *)uobj);
@@ -404,6 +409,7 @@ uvn_findpage(uobj, offset, pgp, flags)
 				return 0;
 			}
 			pg->flags |= PG_WANTED;
+			UVMHIST_LOG(ubchist, "wait %p", pg,0,0,0);
 			UVM_UNLOCK_AND_WAIT(pg, &uobj->vmobjlock, 0,
 					    "uvn_fp2", 0);
 			simple_lock(&uobj->vmobjlock);
@@ -422,6 +428,7 @@ uvn_findpage(uobj, offset, pgp, flags)
 				(pg->flags & PG_CLEAN) == 0;
 			pg->flags |= PG_CLEAN;
 			if (!dirty) {
+				UVMHIST_LOG(ubchist, "dirtonly", 0,0,0,0);
 				return 0;
 			}
 		}
@@ -466,7 +473,7 @@ uvm_vnp_setsize(vp, newsize)
 	 */
 
 	if (vp->v_size > pgend && vp->v_size != VSIZENOTSET) {
-		(void) uvn_put(uobj, pgend, 0, PGO_FREE);
+		(void) uvn_put(uobj, pgend, 0, PGO_FREE | PGO_SYNCIO);
 	} else {
 		simple_unlock(&uobj->vmobjlock);
 	}

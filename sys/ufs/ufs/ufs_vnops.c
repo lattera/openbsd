@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.2 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_vnops.c,v 1.41.2.3 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*
@@ -711,7 +711,7 @@ ufs_link(v)
 	ip->i_flag |= IN_CHANGE;
 	if (DOINGSOFTDEP(vp))
 		softdep_change_linkcnt(ip);
-	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(vp))) == 0) {
+	if ((error = UFS_UPDATE(ip, UPDATE_DIROP)) == 0) {
 		ufs_makedirentry(ip, cnp, &newdir);
 		error = ufs_direnter(dvp, vp, &newdir, cnp, NULL);
 	}
@@ -983,7 +983,7 @@ abortit:
 	ip->i_flag |= IN_CHANGE;
 	if (DOINGSOFTDEP(fvp))
 		softdep_change_linkcnt(ip);
-	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(fvp))) != 0) {
+	if ((error = UFS_UPDATE(ip, UPDATE_DIROP)) != 0) {
 		VOP_UNLOCK(fvp, 0, p);
 		goto bad;
 	}
@@ -1047,7 +1047,7 @@ abortit:
 			dp->i_flag |= IN_CHANGE;
 			if (DOINGSOFTDEP(tdvp))
                                softdep_change_linkcnt(dp);
-			if ((error = UFS_UPDATE(dp, !DOINGSOFTDEP(tdvp))) 
+			if ((error = UFS_UPDATE(dp, UPDATE_DIROP)) 
 			    != 0) {
 				dp->i_effnlink--;
 				dp->i_ffs_nlink--;
@@ -1065,7 +1065,7 @@ abortit:
 				dp->i_flag |= IN_CHANGE;
 				if (DOINGSOFTDEP(tdvp))
 					softdep_change_linkcnt(dp);
-				(void)UFS_UPDATE(dp, 1);
+				UFS_UPDATE(dp, UPDATE_WAIT|UPDATE_DIROP);
 			}
 			goto bad;
 		}
@@ -1306,7 +1306,7 @@ ufs_mkdir(v)
 	dp->i_flag |= IN_CHANGE;
 	if (DOINGSOFTDEP(dvp))
 		softdep_change_linkcnt(dp);
-	if ((error = UFS_UPDATE(dp, !DOINGSOFTDEP(dvp))) != 0)
+	if ((error = UFS_UPDATE(dp, UPDATE_DIROP)) != 0)
 		goto bad;
 
 	/* 
@@ -1341,7 +1341,7 @@ ufs_mkdir(v)
 			blkoff += DIRBLKSIZ;
 		}
 	}
-	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(tvp))) != 0) {
+	if ((error = UFS_UPDATE(ip, UPDATE_DIROP)) != 0) {
 		(void)VOP_BWRITE(bp);
 		goto bad;
 	}
@@ -2120,7 +2120,7 @@ ufs_makeinode(mode, dvp, vpp, cnp)
 	/*
 	 * Make sure inode goes to disk before directory entry.
 	 */
-	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(tvp))) != 0)
+	if ((error = UFS_UPDATE(ip, UPDATE_DIROP)) != 0)
 		goto bad;
 
 	ufs_makedirentry(ip, cnp, &newdir);

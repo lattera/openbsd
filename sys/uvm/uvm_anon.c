@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.18.2.3 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_anon.c,v 1.21 2001/11/10 07:36:59 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_anon.c,v 1.18.2.4 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm_anon.c,v 1.22 2002/09/21 06:16:07 chs Exp $	*/
 
 /*
  *
@@ -204,8 +204,11 @@ uvm_anfree(anon)
  	 * of the page has been identified and locked.
 	 */
 
-	if (pg && pg->loan_count)
+	if (pg && pg->loan_count) {
+		simple_lock(&anon->an_lock);
 		pg = uvm_anon_lockloanpg(anon);
+		simple_unlock(&anon->an_lock);
+	}
 
 	/*
 	 * if we have a resident page, we must dispose of it before freeing

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ufs/ufs_lookup.c,v 1.18.2.1 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ufs/ufs_lookup.c,v 1.18.2.2 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ufs_lookup.c,v 1.7 1996/02/09 22:36:06 christos Exp $	*/
 
 /*
@@ -789,7 +789,7 @@ ufs_direnter(dvp, tvp, dirp, cnp, newdirbp)
 		} else {
 			error = VOP_BWRITE(bp);
   		}
- 		ret = UFS_UPDATE(dp, !DOINGSOFTDEP(dvp));
+ 		ret = UFS_UPDATE(dp, UPDATE_DIROP);
  		if (error == 0)
  			return (ret);
   		return (error);

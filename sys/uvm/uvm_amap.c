@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.17.2.3 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_amap.c,v 1.40 2001/12/05 01:33:09 enami Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.c,v 1.17.2.4 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm_amap.c,v 1.45 2002/09/15 16:54:27 chs Exp $	*/
 
 /*
  *
@@ -278,10 +278,8 @@ amap_free(amap)
  * => amap should be unlocked (we will lock it)
  * => to safely extend an amap it should have a reference count of
  *    one (thus it can't be shared)
- * => XXXCDC: needs a waitflag or failure return value?
- * => XXXCDC: support padding at this level?
  */
-void
+int
 amap_extend(entry, addsize)
 	struct vm_map_entry *entry;
 	vsize_t addsize;
@@ -304,8 +302,7 @@ amap_extend(entry, addsize)
 	 * there are some unused slots before us in the amap.
 	 */
 
-	amap_lock(amap);					/* lock! */
-
+	amap_lock(amap);
 	AMAP_B2SLOT(slotmapped, entry->end - entry->start); /* slots mapped */
 	AMAP_B2SLOT(slotadd, addsize);			/* slots to add */
 	slotneed = slotoff + slotmapped + slotadd;
@@ -325,13 +322,14 @@ amap_extend(entry, addsize)
 		amap_unlock(amap);
 		UVMHIST_LOG(maphist,"<- done (case 1), amap = 0x%x, sltneed=%d",
 		    amap, slotneed, 0, 0);
-		return;				/* done! */
+		return 0;
 	}
 
 	/*
 	 * case 2: we pre-allocated slots for use and we just need to
 	 * bump nslot up to take account for these slots.
 	 */
+
 	if (amap->am_maxslot >= slotneed) {
 #ifdef UVM_AMAP_PPREF
 		if (amap->am_ppref && amap->am_ppref != PPREF_NONE) {
@@ -345,13 +343,15 @@ amap_extend(entry, addsize)
 #endif
 		amap->am_nslot = slotneed;
 		amap_unlock(amap);
+
 		/*
 		 * no need to zero am_anon since that was done at
 		 * alloc time and we never shrink an allocation.
 		 */
-		UVMHIST_LOG(maphist,"<- done (case 2), amap = 0x%x, slotneed=%d",
-		    amap, slotneed, 0, 0);
-		return;
+
+		UVMHIST_LOG(maphist,"<- done (case 2), amap = 0x%x, "
+		    "slotneed=%d", amap, slotneed, 0, 0);
+		return 0;
 	}
 
 	/*
@@ -367,19 +367,32 @@ amap_extend(entry, addsize)
 	newppref = NULL;
 	if (amap->am_ppref && amap->am_ppref != PPREF_NONE) {
 		newppref = malloc(slotalloc * sizeof(int), M_UVMAMAP,
-		    M_NOWAIT);
+		    M_WAITOK);
 		if (newppref == NULL) {
-			/* give up if malloc fails */
 			free(amap->am_ppref, M_UVMAMAP);
 			amap->am_ppref = PPREF_NONE;
 		}
 	}
 #endif
-	newsl = malloc(slotalloc * sizeof(int), M_UVMAMAP, M_WAITOK);
-	newbck = malloc(slotalloc * sizeof(int), M_UVMAMAP, M_WAITOK);
-	newover = malloc(slotalloc * sizeof(struct vm_anon *),
-	    M_UVMAMAP, M_WAITOK);
-	amap_lock(amap);			/* re-lock! */
+	newsl = malloc(slotalloc * sizeof(int), M_UVMAMAP,
+	    M_WAITOK);
+	newbck = malloc(slotalloc * sizeof(int), M_UVMAMAP,
+	    M_WAITOK);
+	newover = malloc(slotalloc * sizeof(struct vm_anon *), M_UVMAMAP,
+	    M_WAITOK);
+	if (newsl == NULL || newbck == NULL || newover == NULL) {
+		if (newsl != NULL) {
+			free(newsl, M_UVMAMAP);
+		}
+		if (newbck != NULL) {
+			free(newbck, M_UVMAMAP);
+		}
+		if (newover != NULL) {
+			free(newover, M_UVMAMAP);
+		}
+		return ENOMEM;
+	}
+	amap_lock(amap);
 	KASSERT(amap->am_maxslot < slotneed);
 
 	/*
@@ -396,7 +409,8 @@ amap_extend(entry, addsize)
 	/* do am_anon */
 	oldover = amap->am_anon;
 	memcpy(newover, oldover, sizeof(struct vm_anon *) * amap->am_nslot);
-	memset(newover + amap->am_nslot, 0, sizeof(struct vm_anon *) * slotadded);
+	memset(newover + amap->am_nslot, 0, sizeof(struct vm_anon *) *
+	    slotadded);
 	amap->am_anon = newover;
 
 	/* do am_bckptr */
@@ -433,6 +447,7 @@ amap_extend(entry, addsize)
 #endif
 	UVMHIST_LOG(maphist,"<- done (case 3), amap = 0x%x, slotneed=%d",
 	    amap, slotneed, 0, 0);
+	return 0;
 }
 
 /*
@@ -839,11 +854,11 @@ ReStart:
 			 * PG_RELEASED | PG_WANTED.
 			 */
 
-			npg->flags &= ~(PG_BUSY|PG_FAKE);
-			UVM_PAGE_OWN(npg, NULL);
 			uvm_lock_pageq();
 			uvm_pageactivate(npg);
 			uvm_unlock_pageq();
+			npg->flags &= ~(PG_BUSY|PG_FAKE);
+			UVM_PAGE_OWN(npg, NULL);
 			simple_unlock(&nanon->an_lock);
 		}
 		simple_unlock(&anon->an_lock);

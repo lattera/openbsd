@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_amap.h,v 1.9.2.1 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_amap.h,v 1.17 2001/06/02 18:09:25 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_amap.h,v 1.9.2.2 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm_amap.h,v 1.18 2002/09/15 16:54:29 chs Exp $	*/
 
 /*
  *
@@ -92,7 +92,7 @@ void		amap_copy	/* clear amap needs-copy flag */
 			     boolean_t,	vaddr_t, vaddr_t);
 void		amap_cow_now	/* resolve all COW faults now */
 			(struct vm_map *, struct vm_map_entry *);
-void		amap_extend	/* make amap larger */
+int		amap_extend	/* make amap larger */
 			(struct vm_map_entry *, vsize_t);
 int		amap_flags	/* get amap's flags */
 			(struct vm_amap *);

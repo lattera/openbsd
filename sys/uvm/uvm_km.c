@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.3 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_km.c,v 1.55 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_km.c,v 1.26.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_km.c,v 1.59 2002/10/05 17:26:06 oster Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -177,15 +177,17 @@ uvm_km_init(start, end)
 				 VM_MIN_KERNEL_ADDRESS, UAO_FLAG_KERNOBJ);
 
 	/*
-	 * init the map and reserve already allocated kernel space
-	 * before installing.
+	 * init the map and reserve any space that might already
+	 * have been allocated kernel space before installing.
 	 */
 
 	uvm_map_setup(&kernel_map_store, base, end, VM_MAP_PAGEABLE);
 	kernel_map_store.pmap = pmap_kernel();
-	if (base != start && uvm_map(&kernel_map_store, &base, start - base,
-	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-	    UVM_INH_NONE, UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
+	if (start != base &&
+	    uvm_map(&kernel_map_store, &base, start - base, NULL,
+	    UVM_UNKNOWN_OFFSET, 0,
+	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
+			UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 
 	/*
@@ -435,10 +437,12 @@ uvm_km_kmemalloc(map, obj, size, flags)
 		 */
 
 		if (__predict_false(pg == NULL)) {
-			if (flags & UVM_KMF_NOWAIT) {
+			if ((flags & UVM_KMF_NOWAIT) ||
+			    ((flags & UVM_KMF_CANFAIL) &&
+			     uvmexp.swpgonly == uvmexp.swpages)) {
 				/* free everything! */
 				uvm_unmap(map, kva, kva + size);
-				return(0);
+				return (0);
 			} else {
 				uvm_wait("km_getwait2");	/* sleep here */
 				continue;

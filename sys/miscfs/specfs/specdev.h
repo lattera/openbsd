@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/specfs/Attic/specdev.h,v 1.11.2.1 2002/06/11 03:30:21 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/specfs/Attic/specdev.h,v 1.11.2.2 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: specdev.h,v 1.12 1996/02/13 13:13:01 mycroft Exp $	*/
 
 /*
@@ -121,4 +121,42 @@ int	spec_advlock(void *);
 #define	spec_reallocblks spec_badop
 #define	spec_bwrite	vop_generic_bwrite
 #define spec_revoke     vop_generic_revoke
-#define	spec_mmap	spec_badop
+#define	spec_mmap	vop_generic_mmap
+#define spec_getpages	genfs_getpages
+#define spec_putpages	genfs_putpages
+
+/*
+ * Since most of the vnode op vectors for spec files share a bunch of
+ * operations, we maintain them here instead of duplicating them everywhere.
+ *
+ * XXX - vnodeop inheritance would be nice.
+ */
+#define SPEC_VNODEOP_DESCS \
+	{ &vop_open_desc, spec_open },			\
+	{ &vop_lookup_desc, spec_lookup },		\
+	{ &vop_create_desc, spec_create },		\
+	{ &vop_mknod_desc, spec_mknod },		\
+	{ &vop_select_desc, spec_select },		\
+	{ &vop_kqfilter_desc, spec_kqfilter },		\
+	{ &vop_ioctl_desc, spec_ioctl },		\
+	{ &vop_revoke_desc, spec_revoke },		\
+	{ &vop_remove_desc, spec_remove },		\
+	{ &vop_link_desc, spec_link },			\
+	{ &vop_rename_desc, spec_rename },		\
+	{ &vop_mkdir_desc, spec_mkdir },		\
+	{ &vop_rmdir_desc, spec_rmdir },		\
+	{ &vop_symlink_desc, spec_symlink },		\
+	{ &vop_readdir_desc, spec_readdir },		\
+	{ &vop_readlink_desc, spec_readlink },		\
+	{ &vop_abortop_desc, spec_abortop },		\
+	{ &vop_bmap_desc, spec_bmap },			\
+	{ &vop_strategy_desc, spec_strategy },		\
+	{ &vop_lease_desc, spec_lease_check },		\
+	{ &vop_bwrite_desc, spec_bwrite },		\
+	{ &vop_pathconf_desc, spec_pathconf }, 		\
+	{ &vop_advlock_desc, spec_advlock },		\
+	{ &vop_reallocblks_desc, spec_reallocblks },	\
+	{ &vop_mmap_desc, spec_mmap },			\
+	{ &vop_getpages_desc, spec_getpages },		\
+	{ &vop_putpages_desc, spec_putpages }
+	

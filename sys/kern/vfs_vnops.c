@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.38.2.1 2002/06/11 03:29:41 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_vnops.c,v 1.38.2.2 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: vfs_vnops.c,v 1.20 1996/02/04 02:18:41 christos Exp $	*/
 
 /*
@@ -219,8 +219,8 @@ vn_marktext(vp)
 	struct vnode *vp;
 {
 	if ((vp->v_flag & VTEXT) == 0) {
-		uvmexp.vnodepages -= vp->v_uobj.uo_npages;
-		uvmexp.vtextpages += vp->v_uobj.uo_npages;
+		uvmexp.filepages -= vp->v_uobj.uo_npages;
+		uvmexp.execpages += vp->v_uobj.uo_npages;
 #if 0
 	/*
 	 * Doesn't help much because the pager is borked and ubc_flush is

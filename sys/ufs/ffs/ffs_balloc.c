@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.21.2.1 2002/02/02 03:28:26 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_balloc.c,v 1.21.2.2 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ffs_balloc.c,v 1.3 1996/02/09 22:22:21 christos Exp $	*/
 
 /*
@@ -210,7 +210,7 @@ ffs_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 	 */
 	pref = 0;
 	if ((error = ufs_getlbns(vp, lbn, indirs, &num)) != 0)
-		return(error);
+		return (error);
 #ifdef DIAGNOSTIC
 	if (num < 1)
 		panic ("ffs_balloc: ufs_bmaparray returned indirect block");
@@ -248,6 +248,7 @@ ffs_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			if ((error = bwrite(bp)) != 0)
 				goto fail;
 		}
+		unwindidx = 0;
 		allocib = &ip->i_ffs_ib[indirs[0].in_off];
 		*allocib = nb;
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
@@ -336,11 +337,16 @@ ffs_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		if (DOINGSOFTDEP(vp))
 			softdep_setup_allocindir_page(ip, lbn, bp,
 			    indirs[i].in_off, nb, 0, bpp ? *bpp : NULL);
-		bap[indirs[i].in_off] = nb;
+		bap[indirs[num].in_off] = nb;
+		if (allocib == NULL && unwindidx < 0) {
+			unwindidx = i - 1;
+		}
+
 		/*
 		 * If required, write synchronously, otherwise use
 		 * delayed write.
 		 */
+
 		if (flags & B_SYNC) {
 			bwrite(bp);
 		} else {
@@ -359,6 +365,7 @@ ffs_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		} else {
 			nbp = getblk(vp, lbn, fs->fs_bsize, 0, 0);
 			nbp->b_blkno = fsbtodb(fs, nb);
+			clrbuf(nbp);
 		}
 		*bpp = nbp;
 	}
@@ -369,37 +376,86 @@ fail:
 	 * If we have failed part way through block allocation, we
 	 * have to deallocate any indirect blocks that we have allocated.
 	 */
+
+	if (unwindidx >= 0) {
+
+		/*
+		 * First write out any buffers we've created to resolve their
+		 * softdeps.  This must be done in reverse order of creation
+		 * so that we resolve the dependencies in one pass.
+		 * Write the cylinder group buffers for these buffers too.
+		 */
+
+		for (i = num; i >= unwindidx; i--) {
+			if (i == 0) {
+				break;
+			}
+			bp = getblk(vp, indirs[i].in_lbn, (int)fs->fs_bsize, 0,
+			    0);
+			if (bp->b_flags & B_DELWRI) {
+				nb = fsbtodb(fs, cgtod(fs, dtog(fs,
+				    dbtofsb(fs, bp->b_blkno))));
+				bwrite(bp);
+				bp = getblk(ip->i_devvp, nb, (int)fs->fs_cgsize,
+				    0, 0);
+				if (bp->b_flags & B_DELWRI) {
+					bwrite(bp);
+				} else {
+					bp->b_flags |= B_INVAL;
+					brelse(bp);
+				}
+			} else {
+				bp->b_flags |= B_INVAL;
+				brelse(bp);
+			}
+		}
+		if (unwindidx == 0) {
+			ip->i_flag |= IN_MODIFIED | IN_CHANGE | IN_UPDATE;
+			UFS_UPDATE(ip, UPDATE_WAIT);
+		}
+
+		/*
+		 * Now that any dependencies that we created have been
+		 * resolved, we can undo the partial allocation.
+		 */
+
+		if (unwindidx == 0) {
+			*allocib = 0;
+			ip->i_flag |= IN_MODIFIED | IN_CHANGE | IN_UPDATE;
+			UFS_UPDATE(ip, UPDATE_WAIT);
+		} else {
+			int r;
+
+			r = bread(vp, indirs[unwindidx].in_lbn,
+			    (int)fs->fs_bsize, NOCRED, &bp);
+			if (r) {
+				panic("Could not unwind indirect block, error %d", r);
+				brelse(bp);
+			} else {
+				bap = (ufs_daddr_t *)bp->b_data;
+				bap[indirs[unwindidx].in_off] = 0;
+				bwrite(bp);
+			}
+		}
+		for (i = unwindidx + 1; i <= num; i++) {
+			bp = getblk(vp, indirs[i].in_lbn, (int)fs->fs_bsize, 0,
+			    0);
+			bp->b_flags |= B_INVAL;
+			brelse(bp);
+		}
+	}
 	for (deallocated = 0, blkp = allociblk; blkp < allocblk; blkp++) {
 		ffs_blkfree(ip, *blkp, fs->fs_bsize);
 		deallocated += fs->fs_bsize;
-	}
-	if (allocib != NULL) {
-		*allocib = 0;
-	} else if (unwindidx >= 0) {
-		int r;
-
-		r = bread(vp, indirs[unwindidx].in_lbn, 
-		    (int)fs->fs_bsize, NOCRED, &bp);
-		if (r)
-			panic("Could not unwind indirect block, error %d", r);
-		bap = (ufs_daddr_t *)bp->b_data;
-		bap[indirs[unwindidx].in_off] = 0;
-		if (flags & B_SYNC) {
-			bwrite(bp);
-		} else {
-			bdwrite(bp);
-		}
 	}
 	if (deallocated) {
 		/*
 		 * Restore user's disk quota because allocation failed.
 		 */
 		(void)ufs_quota_free_blocks(ip, btodb(deallocated), cred);
-
 		ip->i_ffs_blocks -= btodb(deallocated);
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	}
-
 	return (error);
 }
 
@@ -442,4 +498,4 @@ ffs_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
 
 out:
 	return error;
- }
+}

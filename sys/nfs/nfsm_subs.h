@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfsm_subs.h,v 1.11.12.1 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfsm_subs.h,v 1.11.12.2 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: nfsm_subs.h,v 1.10 1996/03/20 21:59:56 fvdl Exp $	*/
 
 /*
@@ -169,7 +169,7 @@
 				nfsm_adv(NFSX_V3FATTR); \
 		} \
 		if (f) \
-			nfsm_loadattr((v), (struct vattr *)0); \
+			nfsm_loadattr((v), (struct vattr *)0, 0); \
 		}
 
 #define nfsm_getfh(f, s, v3) \
@@ -185,21 +185,22 @@
 			(s) = NFSX_V2FH; \
 		nfsm_dissect((f), nfsfh_t *, nfsm_rndup(s)); }
 
-#define	nfsm_loadattr(v, a) \
+#define	nfsm_loadattr(v, a, flags) \
 		{ struct vnode *ttvp = (v); \
-		if ((t1 = nfs_loadattrcache(&ttvp, &md, &dpos, (a))) != 0) { \
+		if ((t1 = nfs_loadattrcache(&ttvp, &md, &dpos, (a), (flags))) \
+		    != 0) { \
 			error = t1; \
 			m_freem(mrep); \
 			goto nfsmout; \
 		} \
 		(v) = ttvp; }
 
-#define	nfsm_postop_attr(v, f) \
+#define	nfsm_postop_attr(v, f, flags) \
 		{ struct vnode *ttvp = (v); \
 		nfsm_dissect(tl, u_int32_t *, NFSX_UNSIGNED); \
 		if (((f) = fxdr_unsigned(int, *tl)) != 0) { \
 			if ((t1 = nfs_loadattrcache(&ttvp, &md, &dpos, \
-				(struct vattr *)0)) != 0) { \
+				(struct vattr *)0, (flags))) != 0) { \
 				error = t1; \
 				(f) = 0; \
 				m_freem(mrep); \
@@ -212,7 +213,7 @@
 #define NFSV3_WCCRATTR	0
 #define NFSV3_WCCCHK	1
 
-#define	nfsm_wcc_data(v, f) \
+#define	nfsm_wcc_data(v, f, flags) \
 		{ int ttattrf, ttretf = 0; \
 		nfsm_dissect(tl, u_int32_t *, NFSX_UNSIGNED); \
 		if (*tl == nfs_true) { \
@@ -221,7 +222,7 @@
 				ttretf = (VTONFS(v)->n_mtime == \
 					fxdr_unsigned(u_int32_t, *(tl + 2))); \
 		} \
-		nfsm_postop_attr((v), ttattrf); \
+		nfsm_postop_attr((v), ttattrf, (flags)); \
 		if (f) { \
 			(f) = ttretf; \
 		} else { \

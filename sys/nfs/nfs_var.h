@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.16.2.2 2002/10/29 00:36:49 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_var.h,v 1.16.2.3 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: nfs_var.h,v 1.3 1996/02/18 11:53:54 fvdl Exp $	*/
 
 /*
@@ -240,8 +240,9 @@ int nfs_adv(struct mbuf **, caddr_t *, int, int);
 int nfsm_strtmbuf(struct mbuf **, char **, char *, long);
 int nfs_vfs_init(struct vfsconf *);
 int nfs_loadattrcache(struct vnode **, struct mbuf **, caddr_t *,
-			   struct vattr *);
+			   struct vattr *, int flags);
 int nfs_getattrcache(struct vnode *, struct vattr *);
+void nfs_delayedtruncate(struct vnode *);
 int nfs_namei(struct nameidata *, fhandle_t *, int, struct nfssvc_sock *,
 		   struct mbuf *, struct mbuf **, caddr_t *, struct vnode **,
 		   struct proc *, int);
@@ -255,6 +256,9 @@ void nfsm_srvfattr(struct nfsrv_descript *, struct vattr *,
 int nfsrv_fhtovp(fhandle_t *, int, struct vnode **, struct ucred *,
 		      struct nfssvc_sock *, struct mbuf *, int *, int);
 int netaddr_match(int, union nethostaddr *, struct mbuf *);
+
+/* flags for nfs_loadattrcache and friends */
+#define	NAC_NOTRUNC	1	/* don't truncate file size */
 
 void nfs_clearcommit(struct mount *);
 void nfs_merge_commit_ranges(struct vnode *);

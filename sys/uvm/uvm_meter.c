@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.16.2.2 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_meter.c,v 1.22 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_meter.c,v 1.16.2.3 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_meter.c,v 1.23 2001/12/09 03:07:19 chs Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -170,45 +170,56 @@ uvm_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	case VM_PSSTRINGS:
 		return (sysctl_rdstruct(oldp, oldlenp, newp, &_ps,
 		    sizeof(_ps)));
+#define UPDATEMIN(a, ap, bp, cp) 					\
+	{								\
+		t = uvmexp.ap;						\
+		rv = sysctl_int(oldp, oldlenp, newp, newlen, &t);	\
+		if (rv) {						\
+			return rv;					\
+		}							\
+		if (t + uvmexp.bp + uvmexp.cp > 95 || t < 0) {		\
+			return EINVAL;					\
+		}							\
+		uvmexp.ap = t;						\
+		uvmexp.a = t * 256 / 100;				\
+		return rv;						\
+	}
+
 	case VM_ANONMIN:
-		t = uvmexp.anonminpct;
-		rv = sysctl_int(oldp, oldlenp, newp, newlen, &t);
-		if (rv) {
-			return rv;
-		}
-		if (t + uvmexp.vtextminpct + uvmexp.vnodeminpct > 95 || t < 0) {
-			return EINVAL;
-		}
-		uvmexp.anonminpct = t;
-		uvmexp.anonmin = t * 256 / 100;
-		return rv;
+		UPDATEMIN(anonmin, anonminpct, fileminpct, execminpct);
 
-	case VM_VTEXTMIN:
-		t = uvmexp.vtextminpct;
-		rv = sysctl_int(oldp, oldlenp, newp, newlen, &t);
-		if (rv) {
-			return rv;
-		}
-		if (uvmexp.anonminpct + t + uvmexp.vnodeminpct > 95 || t < 0) {
-			return EINVAL;
-		}
-		uvmexp.vtextminpct = t;
-		uvmexp.vtextmin = t * 256 / 100;
-		return rv;
+	case VM_EXECMIN:
+		UPDATEMIN(execmin, execminpct, fileminpct, anonminpct);
 
-	case VM_VNODEMIN:
-		t = uvmexp.vnodeminpct;
-		rv = sysctl_int(oldp, oldlenp, newp, newlen, &t);
-		if (rv) {
-			return rv;
-		}
-		if (uvmexp.anonminpct + uvmexp.vtextminpct + t > 95 || t < 0) {
-			return EINVAL;
-		}
-		uvmexp.vnodeminpct = t;
-		uvmexp.vnodemin = t * 256 / 100;
-		return rv;
+	case VM_FILEMIN:
+		UPDATEMIN(filemin, fileminpct, execminpct, anonminpct);
 
+#undef UPDATEMIN
+#define UPDATEMAX(a, ap)	 					\
+	{								\
+		t = uvmexp.ap;						\
+		rv = sysctl_int(oldp, oldlenp, newp, newlen, &t);	\
+		if (rv) {						\
+			return rv;					\
+		}							\
+		if (t > 100 || t < 0) {					\
+			return EINVAL;					\
+		}							\
+		uvmexp.ap = t;						\
+		uvmexp.a = t * 256 / 100;				\
+		return rv;						\
+	}
+
+	case VM_ANONMAX:
+		UPDATEMAX(anonmax, anonmaxpct);
+
+	case VM_EXECMAX:
+		UPDATEMAX(execmax, execmaxpct);
+
+	case VM_FILEMAX:
+		UPDATEMAX(filemax, filemaxpct);
+
+#undef UPDATEMAX
 	case VM_MAXSLP:
 		return (sysctl_rdint(oldp, oldlenp, newp, maxslp));
 

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.30.2.2 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_glue.c,v 1.55 2001/11/10 07:36:59 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_glue.c,v 1.30.2.3 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_glue.c,v 1.60 2002/09/22 07:20:32 chs Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -90,6 +90,10 @@
  */
 
 static void uvm_swapout(struct proc *);
+
+#define UVM_NUAREA_MAX 16
+void *uvm_uareas;
+int uvm_nuarea;
 
 /*
  * XXXCDC: do these really belong here?
@@ -221,7 +225,7 @@ uvm_vslock(p, addr, len, access_type)
 	map = &p->p_vmspace->vm_map;
 	start = trunc_page((vaddr_t)addr);
 	end = round_page((vaddr_t)addr + len);
-	error = uvm_fault_wire(map, start, end, access_type);
+	error = uvm_fault_wire(map, start, end, VM_FAULT_WIRE, access_type);
 	return error;
 }
 
@@ -284,10 +288,17 @@ uvm_fork(p1, p2, shared, stack, stacksize, func, arg)
 	 * Note the kernel stack gets read/write accesses right off
 	 * the bat.
 	 */
-	error = uvm_fault_wire(kernel_map, (vaddr_t)up,
-	    (vaddr_t)up + USPACE, VM_PROT_READ | VM_PROT_WRITE);
+	error = uvm_fault_wire(kernel_map, (vaddr_t)up, (vaddr_t)up + USPACE,
+	    VM_FAULT_WIRE, VM_PROT_READ | VM_PROT_WRITE);
 	if (error)
 		panic("uvm_fork: uvm_fault_wire failed: %d", error);
+
+#ifdef KSTACK_CHECK_MAGIC
+	/*
+	 * fill stack with magic number
+	 */
+	kstack_setup_magic(p2);
+#endif
 
 	/*
 	 * p_stats currently points at a field in the user struct.  Copy
@@ -319,6 +330,7 @@ uvm_fork(p1, p2, shared, stack, stacksize, func, arg)
  * - we must run in a separate thread because freeing the vmspace
  *   of the dead process may block.
  */
+
 void
 uvm_exit(p)
 	struct proc *p;
@@ -327,8 +339,48 @@ uvm_exit(p)
 
 	uvmspace_free(p->p_vmspace);
 	p->p_flag &= ~P_INMEM;
-	uvm_km_free(kernel_map, va, USPACE);
+	uvm_uarea_free(va);
 	p->p_addr = NULL;
+}
+
+/*
+ * uvm_uarea_alloc: allocate a u-area
+ */
+
+vaddr_t
+uvm_uarea_alloc(void)
+{
+	vaddr_t uaddr;
+
+#ifndef USPACE_ALIGN
+#define USPACE_ALIGN    0
+#endif
+
+	uaddr = (vaddr_t)uvm_uareas;
+	if (uaddr) {
+		uvm_uareas = *(void **)uvm_uareas;
+		uvm_nuarea--;
+	} else {
+		uaddr = uvm_km_valloc_align(kernel_map, USPACE, USPACE_ALIGN);
+	}
+	return uaddr;
+}
+
+/*
+ * uvm_uarea_free: free a u-area
+ */
+
+void
+uvm_uarea_free(vaddr_t uaddr)
+{
+
+	if (uvm_nuarea < UVM_NUAREA_MAX) {
+		*(void **)uaddr = uvm_uareas;
+		uvm_uareas = (void *)uaddr;
+		uvm_nuarea++;
+	} else {
+		uvm_km_free(kernel_map, uaddr, USPACE);
+	}
 }
 
 /*
@@ -336,6 +388,7 @@ uvm_exit(p)
  *
  * - called for process 0 and then inherited by all others.
  */
+
 void
 uvm_init_limits(p)
 	struct proc *p;
@@ -376,7 +429,7 @@ uvm_swapin(p)
 
 	addr = (vaddr_t)p->p_addr;
 	/* make P_INMEM true */
-	error = uvm_fault_wire(kernel_map, addr, addr + USPACE,
+	error = uvm_fault_wire(kernel_map, addr, addr + USPACE, VM_FAULT_WIRE,
 	    VM_PROT_READ | VM_PROT_WRITE);
 	if (error) {
 		panic("uvm_swapin: rewiring stack failed: %d", error);
@@ -495,6 +548,7 @@ loop:
  *   are swapped... otherwise the longest-sleeping or stopped process
  *   is swapped, otherwise the longest resident process...
  */
+
 void
 uvm_swapout_threads()
 {
@@ -606,3 +660,67 @@ uvm_swapout(p)
 	pmap_collect(vm_map_pmap(&p->p_vmspace->vm_map));
 }
 
+/*
+ * uvm_coredump_walkmap: walk a process's map for the purpose of dumping
+ * a core file.
+ */
+
+int
+uvm_coredump_walkmap(p, vp, cred, func, cookie)
+	struct proc *p;
+	struct vnode *vp;
+	struct ucred *cred;
+	int (*func)(struct proc *, struct vnode *, struct ucred *,
+	    struct uvm_coredump_state *);
+	void *cookie;
+{
+	struct uvm_coredump_state state;
+	struct vmspace *vm = p->p_vmspace;
+	struct vm_map *map = &vm->vm_map;
+	struct vm_map_entry *entry;
+	vaddr_t maxstack;
+	int error;
+
+	maxstack = trunc_page(USRSTACK - ctob(vm->vm_ssize));
+
+	for (entry = map->header.next; entry != &map->header;
+	     entry = entry->next) {  
+		/* Should never happen for a user process. */
+		if (UVM_ET_ISSUBMAP(entry))
+			panic("uvm_coredump_walkmap: user process with "
+			    "submap?");
+
+		state.cookie = cookie;
+		state.start = entry->start;
+		state.end = entry->end;
+		state.prot = entry->protection;
+		state.flags = 0;
+
+		if (state.start >= VM_MAXUSER_ADDRESS)  
+			continue;
+
+		if (state.end > VM_MAXUSER_ADDRESS)
+			state.end = VM_MAXUSER_ADDRESS;
+
+		if (state.start >= (vaddr_t)vm->vm_maxsaddr) {
+			if (state.end <= maxstack)
+				continue;
+			if (state.start < maxstack)
+				state.start = maxstack;
+			state.flags |= UVM_COREDUMP_STACK;
+		}
+
+		if ((entry->protection & VM_PROT_WRITE) == 0)
+			state.flags |= UVM_COREDUMP_NODUMP;
+
+		if (entry->object.uvm_obj != NULL &&
+		    entry->object.uvm_obj->pgops == &uvm_deviceops)
+			state.flags |= UVM_COREDUMP_NODUMP;
+
+		error = (*func)(p, vp, cred, &state);
+		if (error)
+			return (error);
+	}
+
+	return (0);
+}

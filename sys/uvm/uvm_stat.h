@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.11.2.1 2002/06/11 03:33:04 art Exp $	*/
-/*	$NetBSD: uvm_stat.h,v 1.22 2001/05/30 11:57:17 mrg Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_stat.h,v 1.11.2.2 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_stat.h,v 1.25 2002/11/02 07:40:49 perry Exp $	*/
 
 /*
  *
@@ -80,17 +80,17 @@ do { \
 	uvm_cnt_head = &CNT; \
 	CNT.name = NAM; \
 	CNT.p = PRIV; \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMCNT_SET(C,V) \
 do { \
 	(C).c = (V); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMCNT_ADD(C,V) \
 do { \
 	(C).c += (V); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMCNT_INCR(C) UVMCNT_ADD(C,1)
 #define UVMCNT_DECR(C) UVMCNT_ADD(C,-1)
@@ -152,6 +152,8 @@ LIST_HEAD(uvm_history_head, uvm_history);
 #define UVMHIST_FUNC(FNAME)
 #define uvmhist_dump(NAME)
 #else
+#include <sys/kernel.h>		/* for "cold" variable */
+
 extern	struct uvm_history_head uvm_histories;
 
 #define UVMHIST_DECL(NAME) struct uvm_history NAME
@@ -168,7 +170,7 @@ do { \
 		    M_WAITOK); \
 	memset((NAME).e, 0, sizeof(struct uvm_history_ent) * (N)); \
 	LIST_INSERT_HEAD(&uvm_histories, &(NAME), list); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMHIST_INIT_STATIC(NAME,BUF) \
 do { \
@@ -180,7 +182,7 @@ do { \
 	(NAME).e = (struct uvm_history_ent *) (BUF); \
 	memset((NAME).e, 0, sizeof(struct uvm_history_ent) * (NAME).n); \
 	LIST_INSERT_HEAD(&uvm_histories, &(NAME), list); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #if defined(UVMHIST_PRINT)
 extern int uvmhist_print_enabled;
@@ -190,7 +192,7 @@ do { \
 			uvmhist_print(E); \
 			DELAY(100000); \
 		} \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 #else
 #define UVMHIST_PRINTNOW(E) /* nothing */
 #endif
@@ -215,7 +217,7 @@ do { \
 	(NAME).e[_i_].v[2] = (u_long)(C); \
 	(NAME).e[_i_].v[3] = (u_long)(D); \
 	UVMHIST_PRINTNOW(&((NAME).e[_i_])); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMHIST_CALLED(NAME) \
 do { \
@@ -227,7 +229,7 @@ do { \
 		splx(s); \
 	} \
 	UVMHIST_LOG(NAME,"called!", 0, 0, 0, 0); \
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 #define UVMHIST_FUNC(FNAME) \
 	static int _uvmhist_cnt = 0; \

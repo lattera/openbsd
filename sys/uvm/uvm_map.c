@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.5 2002/10/29 02:12:53 art Exp $	*/
-/*	$NetBSD: uvm_map.c,v 1.114 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_map.c,v 1.34.2.6 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_map.c,v 1.120 2002/09/22 07:21:29 chs Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -703,6 +703,7 @@ uvm_map(map, startp, size, uobj, uoffset, align, flags)
 	    UVM_MAXPROTECTION(flags);
 	vm_inherit_t inherit = UVM_INHERIT(flags);
 	int advice = UVM_ADVICE(flags);
+	int error;
 	UVMHIST_FUNC("uvm_map");
 	UVMHIST_CALLED(maphist);
 
@@ -839,7 +840,16 @@ uvm_map(map, startp, size, uobj, uoffset, align, flags)
 			goto nomerge;
 		}
 
-		/* got it! */
+		if (prev_entry->aref.ar_amap) {
+			error = amap_extend(prev_entry, size);
+			if (error) {
+				vm_map_unlock(map);
+				if (new_entry) {
+					uvm_mapent_free(new_entry);
+				}
+				return error;
+			}
+		}
 
 		UVMCNT_INCR(map_backmerge);
 		UVMHIST_LOG(maphist,"  starting back merge", 0, 0, 0, 0);
@@ -848,12 +858,9 @@ uvm_map(map, startp, size, uobj, uoffset, align, flags)
 		 * drop our reference to uobj since we are extending a reference
 		 * that we already have (the ref count can not drop to zero).
 		 */
+
 		if (uobj && uobj->pgops->pgo_detach)
 			uobj->pgops->pgo_detach(uobj);
-
-		if (prev_entry->aref.ar_amap) {
-			amap_extend(prev_entry, size);
-		}
 
 		prev_entry->end += size;
 		uvm_rb_fixup(map, prev_entry);
@@ -1515,7 +1522,9 @@ uvm_unmap_remove(map, start, end, entry_list)
 		first_entry = entry;
 		entry = next;
 	}
-	pmap_update(vm_map_pmap(map));
+	if ((map->flags & VM_MAP_DYING) == 0) {
+		pmap_update(vm_map_pmap(map));
+	}
 
 	uvm_tree_sanity(map, "unmap_remove leave");
 
@@ -1561,14 +1570,11 @@ uvm_unmap_detach(first_entry, flags)
 		 * drop reference to our backing object, if we've got one
 		 */
 
-		if (UVM_ET_ISSUBMAP(first_entry)) {
-			/* ... unlikely to happen, but play it safe */
-			uvm_map_deallocate(first_entry->object.sub_map);
-		} else {
-			if (UVM_ET_ISOBJ(first_entry) &&
-			    first_entry->object.uvm_obj->pgops->pgo_detach)
-				first_entry->object.uvm_obj->pgops->
-				    pgo_detach(first_entry->object.uvm_obj);
+		KASSERT(!UVM_ET_ISSUBMAP(first_entry));
+		if (UVM_ET_ISOBJ(first_entry) &&
+		    first_entry->object.uvm_obj->pgops->pgo_detach) {
+			(*first_entry->object.uvm_obj->pgops->pgo_detach)
+				(first_entry->object.uvm_obj);
 		}
 		next_entry = first_entry->next;
 		uvm_mapent_free(first_entry);
@@ -2529,7 +2535,7 @@ uvm_map_pageable(map, start, end, new_pageable, lockflags)
 
 			if (!UVM_ET_ISSUBMAP(entry)) {  /* not submap */
 				if (UVM_ET_ISNEEDSCOPY(entry) &&
-				    ((entry->protection & VM_PROT_WRITE) ||
+				    ((entry->max_protection & VM_PROT_WRITE) ||
 				     (entry->object.uvm_obj == NULL))) {
 					amap_copy(map, entry, M_WAITOK, TRUE,
 					    start, end);
@@ -2582,7 +2588,7 @@ uvm_map_pageable(map, start, end, new_pageable, lockflags)
 	while (entry != &map->header && entry->start < end) {
 		if (entry->wired_count == 1) {
 			rv = uvm_fault_wire(map, entry->start, entry->end,
-			    entry->protection);
+			    VM_FAULT_WIREMAX, entry->max_protection);
 			if (rv) {
 
 				/*
@@ -2793,7 +2799,7 @@ uvm_map_pageable_all(map, flags, limit)
 
 			if (!UVM_ET_ISSUBMAP(entry)) {	/* not submap */
 				if (UVM_ET_ISNEEDSCOPY(entry) &&
-				    ((entry->protection & VM_PROT_WRITE) ||
+				    ((entry->max_protection & VM_PROT_WRITE) ||
 				     (entry->object.uvm_obj == NULL))) {
 					amap_copy(map, entry, M_WAITOK, TRUE,
 					    entry->start, entry->end);
@@ -2819,7 +2825,7 @@ uvm_map_pageable_all(map, flags, limit)
 	     entry = entry->next) {
 		if (entry->wired_count == 1) {
 			rv = uvm_fault_wire(map, entry->start, entry->end,
-			     entry->protection);
+			    VM_FAULT_WIREMAX, entry->max_protection);
 			if (rv) {
 
 				/*
@@ -2978,7 +2984,6 @@ uvm_map_clean(map, start, end, flags)
 				continue;
 
 			simple_lock(&anon->an_lock);
-
 			pg = anon->u.an_page;
 			if (pg == NULL) {
 				simple_unlock(&anon->an_lock);
@@ -2988,43 +2993,29 @@ uvm_map_clean(map, start, end, flags)
 			switch (flags & (PGO_CLEANIT|PGO_FREE|PGO_DEACTIVATE)) {
 
 			/*
-			 * XXX In these first 3 cases, we always just
-			 * XXX deactivate the page.  We may want to
-			 * XXX handle the different cases more
-			 * XXX specifically, in the future.
+			 * In these first 3 cases, we just deactivate the page.
 			 */
 
 			case PGO_CLEANIT|PGO_FREE:
 			case PGO_CLEANIT|PGO_DEACTIVATE:
 			case PGO_DEACTIVATE:
  deactivate_it:
-				/* skip the page if it's loaned or wired */
-				if (pg->loan_count != 0 ||
-				    pg->wire_count != 0) {
-					simple_unlock(&anon->an_lock);
-					continue;
-				}
-
-				uvm_lock_pageq();
-
 				/*
-				 * skip the page if it's not actually owned
-				 * by the anon (may simply be loaned to the
-				 * anon).
+				 * skip the page if it's loaned or wired,
+				 * since it shouldn't be on a paging queue
+				 * at all in these cases.
 				 */
 
-				if ((pg->pqflags & PQ_ANON) == 0) {
-					KASSERT(pg->uobject == NULL);
+				uvm_lock_pageq();
+				if (pg->loan_count != 0 ||
+				    pg->wire_count != 0) {
 					uvm_unlock_pageq();
 					simple_unlock(&anon->an_lock);
 					continue;
 				}
 				KASSERT(pg->uanon == anon);
-
-				/* ...and deactivate the page. */
 				pmap_clear_reference(pg);
 				uvm_pagedeactivate(pg);
-
 				uvm_unlock_pageq();
 				simple_unlock(&anon->an_lock);
 				continue;
@@ -3039,7 +3030,7 @@ uvm_map_clean(map, start, end, flags)
 				if (amap_refs(amap) > 1)
 					goto deactivate_it;
 
-				/* XXX skip the page if it's wired */
+				/* skip the page if it's wired */
 				if (pg->wire_count != 0) {
 					simple_unlock(&anon->an_lock);
 					continue;
@@ -3057,6 +3048,9 @@ uvm_map_clean(map, start, end, flags)
  flush_object:
 		/*
 		 * flush pages if we've got a valid backing object.
+		 * note that we must always clean object pages before
+		 * freeing them since otherwise we could reveal stale
+		 * data from files.
 		 */
 
 		offset = current->offset + (start - current->start);
@@ -3064,7 +3058,7 @@ uvm_map_clean(map, start, end, flags)
 		if (uobj != NULL) {
 			simple_lock(&uobj->vmobjlock);
 			error = (uobj->pgops->pgo_put)(uobj, offset,
-			    offset + size, flags);
+			    offset + size, flags | PGO_CLEANIT);
 		}
 		start += size;
 	}
@@ -3249,9 +3243,7 @@ uvmspace_exec(p, start, end)
 		 * when a process execs another program image.
 		 */
 
-		vm_map_lock(map);
 		vm_map_modflags(map, 0, VM_MAP_WIREFUTURE);
-		vm_map_unlock(map);
 
 		/*
 		 * now unmap the old program
@@ -3304,35 +3296,34 @@ uvmspace_free(vm)
 	struct vmspace *vm;
 {
 	struct vm_map_entry *dead_entries;
+	struct vm_map *map;
 	UVMHIST_FUNC("uvmspace_free"); UVMHIST_CALLED(maphist);
 
 	UVMHIST_LOG(maphist,"(vm=0x%x) ref=%d", vm, vm->vm_refcnt,0,0);
-	if (--vm->vm_refcnt == 0) {
-
-		/*
-		 * lock the map, to wait out all other references to it.  delete
-		 * all of the mappings and pages they hold, then call the pmap
-		 * module to reclaim anything left.
-		 */
-
-#ifdef SYSVSHM
-		/* Get rid of any SYSV shared memory segments. */
-		if (vm->vm_shm != NULL)
-			shmexit(vm);
-#endif
-		vm_map_lock(&vm->vm_map);
-		if (vm->vm_map.nentries) {
-			uvm_unmap_remove(&vm->vm_map,
-			    vm->vm_map.min_offset, vm->vm_map.max_offset,
-			    &dead_entries);
-			if (dead_entries != NULL)
-				uvm_unmap_detach(dead_entries, 0);
-		}
-		pmap_destroy(vm->vm_map.pmap);
-		vm->vm_map.pmap = NULL;
-		pool_put(&uvm_vmspace_pool, vm);
+	if (--vm->vm_refcnt > 0) {
+		return;
 	}
-	UVMHIST_LOG(maphist,"<- done", 0,0,0,0);
+
+	/*
+	 * at this point, there should be no other references to the map.
+	 * delete all of the mappings, then destroy the pmap.
+	 */
+
+	map = &vm->vm_map;
+	map->flags |= VM_MAP_DYING;
+#ifdef SYSVSHM
+	/* Get rid of any SYSV shared memory segments. */
+	if (vm->vm_shm != NULL)
+		shmexit(vm);
+#endif
+	if (map->nentries) {
+		uvm_unmap_remove(map, map->min_offset, map->max_offset,
+		    &dead_entries);
+		if (dead_entries != NULL)
+			uvm_unmap_detach(dead_entries, 0);
+	}
+	pmap_destroy(map->pmap);
+	pool_put(&uvm_vmspace_pool, vm);
 }
 
 /*

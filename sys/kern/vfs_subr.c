@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.4 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_subr.c,v 1.79.2.5 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -800,8 +800,8 @@ vput(vp)
 	vputonfreelist(vp);
 
 	if (vp->v_flag & VTEXT) {
-		uvmexp.vtextpages -= vp->v_uobj.uo_npages;
-		uvmexp.vnodepages += vp->v_uobj.uo_npages;
+		uvmexp.execpages -= vp->v_uobj.uo_npages;
+		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
 	vp->v_flag &= ~VTEXT;
 	simple_unlock(&vp->v_interlock);
@@ -845,8 +845,8 @@ vrele(vp)
 	vputonfreelist(vp);
 
 	if (vp->v_flag & VTEXT) {
-		uvmexp.vtextpages -= vp->v_uobj.uo_npages;
-		uvmexp.vnodepages += vp->v_uobj.uo_npages;
+		uvmexp.execpages -= vp->v_uobj.uo_npages;
+		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
 	vp->v_flag &= ~VTEXT;
 	if (vn_lock(vp, LK_EXCLUSIVE|LK_INTERLOCK, p) == 0)
@@ -1058,8 +1058,8 @@ vclean(vp, flags, p)
 		panic("vclean: deadlock");
 	vp->v_flag |= VXLOCK;
 	if (vp->v_flag & VTEXT) {
-		uvmexp.vtextpages -= vp->v_uobj.uo_npages;
-		uvmexp.vnodepages += vp->v_uobj.uo_npages;
+		uvmexp.execpages -= vp->v_uobj.uo_npages;
+		uvmexp.filepages += vp->v_uobj.uo_npages;
 	}
 	vp->v_flag &= ~VTEXT;
 
@@ -2030,7 +2030,6 @@ vinvalbuf(vp, flags, cred, p, slpflag, slptimeo)
 	struct proc *p;
 	int slpflag, slptimeo;
 {
-	struct uvm_object *uobj = &vp->v_uobj;
 	struct buf *bp;
 	struct buf *nbp, *blist;
 	int s, error;
@@ -2038,13 +2037,10 @@ vinvalbuf(vp, flags, cred, p, slpflag, slptimeo)
 	    (flags & V_SAVE ? PGO_CLEANIT : 0);
 
 	/* XXXUBC this doesn't look at flags or slp* */
-	if (TAILQ_FIRST(&uobj->memq)) {
-		simple_lock(&uobj->vmobjlock);
-		error = (uobj->pgops->pgo_put)(uobj, 0, 0, flushflags);
-		simple_unlock(&uobj->vmobjlock);
-		if (error) {
-			return error;
-		}
+	simple_lock(&vp->v_interlock);
+	error = VOP_PUTPAGES(vp, 0, 0, flushflags);
+	if (error) {
+		return error;
 	}
 
 	if (flags & V_SAVE) {
@@ -2118,16 +2114,12 @@ vflushbuf(vp, sync)
 	struct vnode *vp;
 	int sync;
 {
-	struct uvm_object *uobj = &vp->v_uobj;
 	struct buf *bp, *nbp;
+	int flags = PGO_CLEANIT | PGO_ALLPAGES | (sync ? PGO_SYNCIO : 0);
 	int s;
 
-	if (TAILQ_FIRST(&uobj->memq)) {
-		int flags = PGO_CLEANIT|PGO_ALLPAGES| (sync ? PGO_SYNCIO : 0);
-
-		simple_lock(&uobj->vmobjlock);
-		(uobj->pgops->pgo_put)(uobj, 0, 0, flags);
-	}
+	simple_lock(&vp->v_interlock);
+	VOP_PUTPAGES(vp, 0, 0, flags);
 
 loop:
 	s = splbio();

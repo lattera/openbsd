@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm.h,v 1.15.2.1 2002/02/02 03:28:26 art Exp $	*/
-/*	$NetBSD: uvm.h,v 1.31 2001/09/15 20:36:44 chs Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm.h,v 1.15.2.2 2002/11/04 18:02:32 art Exp $	*/
+/*	$NetBSD: uvm.h,v 1.34 2002/11/02 16:50:18 perry Exp $	*/
 
 /*
  *
@@ -68,6 +68,8 @@
 #include <uvm/uvm_swap_encrypt.h>
 #endif
 
+#ifdef _KERNEL
+
 /*
  * pull in VM_NFREELIST
  */
@@ -126,6 +128,8 @@ struct uvm {
 	struct uvm_object *kernel_object;
 };
 
+#endif /* _KERNEL */
+
 /*
  * vm_map_entry etype bits:
  */
@@ -151,9 +155,11 @@ extern struct uvm uvm;
  * historys
  */
 
+#ifdef UVMHIST
 UVMHIST_DECL(maphist);
 UVMHIST_DECL(pdhist);
 UVMHIST_DECL(ubchist);
+#endif
 
 /*
  * UVM_UNLOCK_AND_WAIT: atomic unlock+wait... wrapper around the
@@ -164,7 +170,7 @@ UVMHIST_DECL(ubchist);
 do {									\
 	(void) ltsleep(event, PVM | PNORELOCK | (intr ? PCATCH : 0),	\
 	    msg, timo, slock);						\
-} while (0)
+} while (/*CONSTCOND*/ 0)
 
 /*
  * UVM_KICK_PDAEMON: perform checks to determine if we need to

@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16.2.3 2002/06/11 03:33:03 art Exp $	*/
-/*	$NetBSD: uvm_loan.c,v 1.35 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/Attic/uvm_loan.c,v 1.16.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_loan.c,v 1.39 2002/07/14 23:53:41 chs Exp $	*/
 
 /*
  *
@@ -449,7 +449,8 @@ uvm_loanuobj(ufi, output, flags, va)
 	if (uobj->pgops->pgo_get) {	/* try locked pgo_get */
 		npages = 1;
 		pg = NULL;
-		error = uobj->pgops->pgo_get(uobj, va - ufi->entry->start,
+		error = (*uobj->pgops->pgo_get)(uobj,
+		    va - ufi->entry->start + ufi->entry->offset,
 		    &pg, &npages, 0, VM_PROT_READ, MADV_NORMAL, PGO_LOCKED);
 	} else {
 		error = EIO;		/* must have pgo_get op */
@@ -474,7 +475,8 @@ uvm_loanuobj(ufi, output, flags, va)
 
 		/* locked: uobj */
 		npages = 1;
-		error = uobj->pgops->pgo_get(uobj, va - ufi->entry->start,
+		error = (*uobj->pgops->pgo_get)(uobj,
+		    va - ufi->entry->start + ufi->entry->offset,
 		    &pg, &npages, 0, VM_PROT_READ, MADV_NORMAL, PGO_SYNCIO);
 		/* locked: <nothing> */
 
@@ -518,7 +520,9 @@ uvm_loanuobj(ufi, output, flags, va)
 				wakeup(pg);
 			}
 			if (pg->flags & PG_RELEASED) {
+				uvm_lock_pageq();
 				uvm_pagefree(pg);
+				uvm_unlock_pageq();
 				return (0);
 			}
 			uvm_lock_pageq();
@@ -743,19 +747,52 @@ uvm_unloanpage(ploans, npages)
 	int npages;
 {
 	struct vm_page *pg;
+	struct simplelock *slock;
 
 	uvm_lock_pageq();
 	while (npages-- > 0) {
 		pg = *ploans++;
 
 		/*
-		 * drop our loan.  if page is unowned and we are removing
-		 * the last loan, we can free the page.
-		 * the 
+		 * do a little dance to acquire the object or anon lock
+		 * as appropriate.  we are locking in the wrong order,
+		 * so we have to do a try-lock here.
+		 */
+
+		slock = NULL;
+		while (pg->uobject != NULL || pg->uanon != NULL) {
+			if (pg->uobject != NULL) {
+				slock = &pg->uobject->vmobjlock;
+			} else {
+				slock = &pg->uanon->an_lock;
+			}
+			if (simple_lock_try(slock)) {
+				break;
+			}
+			uvm_unlock_pageq();
+			uvm_lock_pageq();
+			slock = NULL;
+		}
+
+		/*
+		 * drop our loan.  if page is owned by an anon but
+		 * PQ_ANON is not set, the page was loaned to the anon
+		 * from an object which dropped ownership, so resolve
+		 * this by turning the anon's loan into real ownership
+		 * (ie. decrement loan_count again and set PQ_ANON).
+		 * after all this, if there are no loans left, put the
+		 * page back a paging queue (if the page is owned by
+		 * an anon) or free it (if the page is now unowned).
 		 */
 
 		KASSERT(pg->loan_count > 0);
 		pg->loan_count--;
+		if (pg->uobject == NULL && pg->uanon != NULL &&
+		    (pg->pqflags & PQ_ANON) == 0) {
+			KASSERT(pg->loan_count > 0);
+			pg->loan_count--;
+			pg->pqflags |= PQ_ANON;
+		}
 		if (pg->loan_count == 0) {
 			if (pg->uobject == NULL && pg->uanon == NULL) {
 				KASSERT((pg->flags & PG_BUSY) == 0);
@@ -763,9 +800,12 @@ uvm_unloanpage(ploans, npages)
 			} else {
 				uvm_pageactivate(pg);
 			}
-		} else if (pg->loan_count == 1 && pg->uanon != NULL &&
-			   pg->uobject == NULL) {
+		} else if (pg->loan_count == 1 && pg->uobject != NULL &&
+			   pg->uanon != NULL) {
 			uvm_pageactivate(pg);
+		}
+		if (slock != NULL) {
+			simple_unlock(slock);
 		}
 	}
 	uvm_unlock_pageq();

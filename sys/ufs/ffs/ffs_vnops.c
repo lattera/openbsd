@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.2 2002/06/11 03:32:50 art Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ffs/ffs_vnops.c,v 1.24.2.3 2002/11/04 18:02:32 art Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*
@@ -124,47 +124,24 @@ struct vnodeopv_desc ffs_vnodeop_opv_desc =
 int (**ffs_specop_p)(void *);
 struct vnodeopv_entry_desc ffs_specop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
-	{ &vop_lookup_desc, spec_lookup },		/* lookup */
-	{ &vop_create_desc, spec_create },		/* create */
-	{ &vop_mknod_desc, spec_mknod },		/* mknod */
-	{ &vop_open_desc, spec_open },			/* open */
 	{ &vop_close_desc, ufsspec_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, ufs_getattr },		/* getattr */
 	{ &vop_setattr_desc, ufs_setattr },		/* setattr */
 	{ &vop_read_desc, ufsspec_read },		/* read */
 	{ &vop_write_desc, ufsspec_write },		/* write */
-	{ &vop_lease_desc, spec_lease_check },		/* lease */
-	{ &vop_ioctl_desc, spec_ioctl },		/* ioctl */
-	{ &vop_select_desc, spec_select },		/* select */
-	{ &vop_kqfilter_desc, spec_kqfilter },		/* kqfilter */
-	{ &vop_revoke_desc, spec_revoke },		/* revoke */
 	{ &vop_fsync_desc, ffs_fsync },			/* fsync */
-	{ &vop_remove_desc, spec_remove },		/* remove */
-	{ &vop_link_desc, spec_link },			/* link */
-	{ &vop_rename_desc, spec_rename },		/* rename */
-	{ &vop_mkdir_desc, spec_mkdir },		/* mkdir */
-	{ &vop_rmdir_desc, spec_rmdir },		/* rmdir */
-	{ &vop_symlink_desc, spec_symlink },		/* symlink */
-	{ &vop_readdir_desc, spec_readdir },		/* readdir */
-	{ &vop_readlink_desc, spec_readlink },		/* readlink */
-	{ &vop_abortop_desc, spec_abortop },		/* abortop */
 	{ &vop_inactive_desc, ufs_inactive },		/* inactive */
 	{ &vop_reclaim_desc, ffs_reclaim },		/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
-	{ &vop_bmap_desc, spec_bmap },			/* bmap */
-	{ &vop_strategy_desc, spec_strategy },		/* strategy */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },		/* islocked */
-	{ &vop_pathconf_desc, spec_pathconf },		/* pathconf */
-	{ &vop_advlock_desc, spec_advlock },		/* advlock */
-	{ &vop_reallocblks_desc, spec_reallocblks },	/* reallocblks */
-	{ &vop_bwrite_desc, vop_generic_bwrite },
 #ifdef UFS_EXTATTR
 	{ &vop_getextattr_desc, ufs_vop_getextattr },
 	{ &vop_setextattr_desc, ufs_vop_setextattr },
 #endif
+	SPEC_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_specop_opv_desc =
@@ -174,47 +151,26 @@ struct vnodeopv_desc ffs_specop_opv_desc =
 int (**ffs_fifoop_p)(void *);
 struct vnodeopv_entry_desc ffs_fifoop_entries[] = {
 	{ &vop_default_desc, vn_default_error },
-	{ &vop_lookup_desc, fifo_lookup },		/* lookup */
-	{ &vop_create_desc, fifo_create },		/* create */
-	{ &vop_mknod_desc, fifo_mknod },		/* mknod */
-	{ &vop_open_desc, fifo_open },			/* open */
 	{ &vop_close_desc, ufsfifo_close },		/* close */
 	{ &vop_access_desc, ufs_access },		/* access */
 	{ &vop_getattr_desc, ufs_getattr },		/* getattr */
 	{ &vop_setattr_desc, ufs_setattr },		/* setattr */
 	{ &vop_read_desc, ufsfifo_read },		/* read */
 	{ &vop_write_desc, ufsfifo_write },		/* write */
-	{ &vop_lease_desc, fifo_lease_check },		/* lease */
-	{ &vop_ioctl_desc, fifo_ioctl },		/* ioctl */
-	{ &vop_select_desc, fifo_select },		/* select */
-	{ &vop_kqfilter_desc, fifo_kqfilter },		/* kqfilter */
-	{ &vop_revoke_desc, fifo_revoke },		/* revoke */
 	{ &vop_fsync_desc, ffs_fsync },			/* fsync */
-	{ &vop_remove_desc, fifo_remove },		/* remove */
-	{ &vop_link_desc, fifo_link },			/* link */
-	{ &vop_rename_desc, fifo_rename },		/* rename */
-	{ &vop_mkdir_desc, fifo_mkdir },		/* mkdir */
-	{ &vop_rmdir_desc, fifo_rmdir },		/* rmdir */
-	{ &vop_symlink_desc, fifo_symlink },		/* symlink */
-	{ &vop_readdir_desc, fifo_readdir },		/* readdir */
-	{ &vop_readlink_desc, fifo_readlink },		/* readlink */
-	{ &vop_abortop_desc, fifo_abortop },		/* abortop */
 	{ &vop_inactive_desc, ufs_inactive },		/* inactive */
 	{ &vop_reclaim_desc, ffs_reclaim },		/* reclaim */
 	{ &vop_lock_desc, ufs_lock },			/* lock */
 	{ &vop_unlock_desc, ufs_unlock },		/* unlock */
 	{ &vop_bmap_desc, fifo_bmap },			/* bmap */
-	{ &vop_strategy_desc, fifo_strategy },		/* strategy */
 	{ &vop_print_desc, ufs_print },			/* print */
 	{ &vop_islocked_desc, ufs_islocked },		/* islocked */
-	{ &vop_pathconf_desc, fifo_pathconf },		/* pathconf */
-	{ &vop_advlock_desc, fifo_advlock },		/* advlock */
-	{ &vop_reallocblks_desc, fifo_reallocblks },	/* reallocblks */
 	{ &vop_bwrite_desc, vop_generic_bwrite },
 #ifdef UFS_EXTATTR
 	{ &vop_getextattr_desc, ufs_vop_getextattr },
 	{ &vop_setextattr_desc, ufs_vop_setextattr },
 #endif
+	FIFO_VNODEOP_DESCS,
 	{ NULL, NULL }
 };
 struct vnodeopv_desc ffs_fifoop_opv_desc =
@@ -246,7 +202,6 @@ ffs_fsync(v)
 	struct vnode *vp = ap->a_vp;
 	struct buf *bp, *nbp;
 	int s, error, passes, skipmeta;
-	struct uvm_object *uobj;
 
 	if (vp->v_type == VBLK &&
 	    vp->v_specmountpoint != NULL &&
@@ -256,26 +211,24 @@ ffs_fsync(v)
 	/*
 	 * Flush all dirty data associated with a vnode.
 	 */
-	passes = NIADDR + 1;
-	skipmeta = 0;
-	if (ap->a_waitfor == MNT_WAIT)
-		skipmeta = 1;
-	s = splbio();
 
 	if (vp->v_type == VREG) {
-		uobj = &vp->v_uobj;
-		simple_lock(&uobj->vmobjlock);
-		error = (uobj->pgops->pgo_put)(uobj, 0, 0,
-		    PGO_ALLPAGES|PGO_CLEANIT|
+		simple_lock(&vp->v_interlock);
+		error = VOP_PUTPAGES(vp, 0, 0, PGO_ALLPAGES | PGO_CLEANIT |
 		    ((ap->a_waitfor == MNT_WAIT) ? PGO_SYNCIO : 0));
 		if (error) {
 			return (error);
 		}
 	}
 
+	passes = NIADDR + 1;
+	skipmeta = 0;
+	if (ap->a_waitfor == MNT_WAIT)
+		skipmeta = 1;
+	s = splbio();
+
 loop:
-	for (bp = LIST_FIRST(&vp->v_dirtyblkhd); bp;
-	     bp = LIST_NEXT(bp, b_vnbufs))
+	LIST_FOREACH(bp, &vp->v_dirtyblkhd, b_vnbufs)
 		bp->b_flags &= ~B_SCANNED;
 	for (bp = LIST_FIRST(&vp->v_dirtyblkhd); bp; bp = nbp) {
 		nbp = LIST_NEXT(bp, b_vnbufs);
@@ -328,12 +281,12 @@ loop:
 	}
 	if (ap->a_waitfor == MNT_WAIT) {
 		vwaitforio(vp, 0, "ffs_fsync", 0);
+		splx(s);
 
 		/*
 		 * Ensure that any filesystem metadata associated
 		 * with the vnode has been written.
 		 */
-		splx(s);
 		if ((error = softdep_sync_metadata(ap)) != 0)
 			return (error);
 		s = splbio();
@@ -347,7 +300,7 @@ loop:
 			 * types, go around and try again until it is clean.
 			 */
 			if (passes > 0) {
-				passes -= 1;
+				passes--;
 				goto loop;
 			}
 #ifdef DIAGNOSTIC
@@ -358,7 +311,8 @@ loop:
 	}
 	splx(s);
 	
-	error = (UFS_UPDATE(VTOI(vp), ap->a_waitfor == MNT_WAIT));
+	error = (UFS_UPDATE(VTOI(vp), ap->a_waitfor == MNT_WAIT ?
+	    UPDATE_WAIT : 0));
 	if (error)
 		printf("ffs_fsync: UFS_UPDATE failed. %d\n", error);
 	return (error);
@@ -414,11 +368,65 @@ ffs_getpages(void *v)
 	     blkoff(fs, *ap->a_count << PAGE_SHIFT) != 0) &&
 	    DOINGSOFTDEP(ap->a_vp)) {
 		if ((ap->a_flags & PGO_LOCKED) == 0) {
-			simple_unlock(&vp->v_uobj.vmobjlock);
+			simple_unlock(&vp->v_interlock);
 		}
 		return EINVAL;
 	}
 	return genfs_getpages(v);
+}
+
+int
+ffs_putpages(void *v)
+{
+	struct vop_putpages_args /* {
+		struct vnode *a_vp;
+		voff_t a_offlo;
+		voff_t a_offhi;
+		int a_flags;
+	} */ *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct uvm_object *uobj = &vp->v_uobj;
+	struct inode *ip = VTOI(vp);
+	struct fs *fs = ip->i_fs;
+	struct vm_page *pg;
+	off_t off;
+	ufs_lbn_t lbn;
+
+	if (!DOINGSOFTDEP(vp) || (ap->a_flags & PGO_CLEANIT) == 0) {
+		return genfs_putpages(v);
+	}
+
+	/*
+	 * for softdep files, force the pages in a block to be written together.
+	 * if we're the pagedaemon and we would have to wait for other pages,
+	 * just fail the request.  the pagedaemon will pick a different page.
+	 */
+
+	ap->a_offlo &= ~fs->fs_qbmask;
+	lbn = lblkno(fs, ap->a_offhi);
+	ap->a_offhi = blkroundup(fs, ap->a_offhi);
+	if (curproc == uvm.pagedaemon_proc) {
+		for (off = ap->a_offlo; off < ap->a_offhi; off += PAGE_SIZE) {
+			pg = uvm_pagelookup(uobj, off);
+
+			/*
+			 * we only have missing pages here because the
+			 * calculation of offhi above doesn't account for
+			 * fragments.  so once we see one missing page,
+			 * the rest should be missing as well, but we'll
+			 * check for the rest just to be paranoid.
+			 */
+
+			if (pg == NULL) {
+				continue;
+			}
+			if (pg->flags & PG_BUSY) {
+				simple_unlock(&uobj->vmobjlock);
+				return EBUSY;
+			}
+		}
+	}
+	return genfs_putpages(v);
 }
 
 /*

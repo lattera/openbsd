@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.4 2002/10/29 00:36:50 art Exp $	*/
-/*	$NetBSD: uvm_page.c,v 1.71 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_page.c,v 1.38.2.5 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_page.c,v 1.80 2002/10/30 02:48:28 simonb Exp $	*/
 
 /*
  * Copyright (c) 1997 Charles D. Cranor and Washington University.
@@ -169,6 +169,10 @@ uvm_pageinsert(pg)
 	TAILQ_INSERT_TAIL(buck, pg, hashq);
 	simple_unlock(&uvm.hashlock);
 
+	if (UVM_OBJ_IS_AOBJ(uobj)) {
+		uvmexp.anonpages++;
+	}
+
 	TAILQ_INSERT_TAIL(&uobj->memq, pg, listq);
 	pg->flags |= PG_TABLED;
 	uobj->uo_npages++;
@@ -190,19 +194,21 @@ uvm_pageremove(pg)
 	int s;
 
 	KASSERT(pg->flags & PG_TABLED);
-	buck = &uvm.page_hash[uvm_pagehash(uobj ,pg->offset)];
+	buck = &uvm.page_hash[uvm_pagehash(uobj, pg->offset)];
 	simple_lock(&uvm.hashlock);
 	TAILQ_REMOVE(buck, pg, hashq);
 	simple_unlock(&uvm.hashlock);
 
 	if (UVM_OBJ_IS_VTEXT(uobj) || UVM_OBJ_IS_VNODE(uobj)) {
 		if (UVM_OBJ_IS_VNODE(uobj))
-			uvmexp.vnodepages--;
+			uvmexp.filepages--;
 		else
-			uvmexp.vtextpages--;
+			uvmexp.execpages--;
 		s = splbio();
 		vholdrele((struct vnode *)uobj);
 		splx(s);
+	} else if (UVM_OBJ_IS_AOBJ(uobj)) {
+		uvmexp.anonpages--;
 	}
 
 	/* object should be locked */
@@ -376,11 +382,17 @@ uvm_page_init(kvm_startp, kvm_endp)
 	uvmexp.reserve_pagedaemon = 4;
 	uvmexp.reserve_kernel = 6;
 	uvmexp.anonminpct = 10;
-	uvmexp.vnodeminpct = 10;
-	uvmexp.vtextminpct = 5;
+	uvmexp.fileminpct = 10;
+	uvmexp.execminpct = 5;
+	uvmexp.anonmaxpct = 80;
+	uvmexp.filemaxpct = 50;
+	uvmexp.execmaxpct = 30;
 	uvmexp.anonmin = uvmexp.anonminpct * 256 / 100;
-	uvmexp.vnodemin = uvmexp.vnodeminpct * 256 / 100;
-	uvmexp.vtextmin = uvmexp.vtextminpct * 256 / 100;
+	uvmexp.filemin = uvmexp.fileminpct * 256 / 100;
+	uvmexp.execmin = uvmexp.execminpct * 256 / 100;
+	uvmexp.anonmax = uvmexp.anonmaxpct * 256 / 100;
+	uvmexp.filemax = uvmexp.filemaxpct * 256 / 100;
+	uvmexp.execmax = uvmexp.execmaxpct * 256 / 100;
 
 	/*
 	 * determine if we should zero pages in the idle loop.
@@ -865,6 +877,11 @@ uvm_page_recolor(int newncolors)
 	if (newncolors <= uvmexp.ncolors)
 		return;
 
+	if (uvm.page_init_done == FALSE) {
+		uvmexp.ncolors = newncolors;
+		return;
+	}
+
 	bucketcount = newncolors * VM_NFREELIST;
 	bucketarray = malloc(bucketcount * sizeof(struct pgflbucket),
 	    M_VMPAGE, M_NOWAIT);
@@ -1226,32 +1243,39 @@ uvm_pagefree(pg)
 		 * unbusy the page, and we're done.
 		 */
 
-		if (pg->pqflags & PQ_ANON) {
-			pg->pqflags &= ~PQ_ANON;
-			pg->uanon = NULL;
-		} else if (pg->flags & PG_TABLED) {
+		if (pg->uobject != NULL) {
 			uvm_pageremove(pg);
 			pg->flags &= ~PG_CLEAN;
+		} else if (pg->uanon != NULL) {
+			if ((pg->pqflags & PQ_ANON) == 0) {
+				pg->loan_count--;
+			} else {
+				pg->pqflags &= ~PQ_ANON;
+			}
+			pg->uanon = NULL;
 		}
 		if (pg->flags & PG_WANTED) {
 			wakeup(pg);
 		}
-		pg->flags &= ~(PG_WANTED|PG_BUSY);
+		pg->flags &= ~(PG_WANTED|PG_BUSY|PG_RELEASED);
 #ifdef UVM_PAGE_TRKOWN
 		pg->owner_tag = NULL;
 #endif
-		return;
+		if (pg->loan_count) {
+			uvm_pagedequeue(pg);
+			return;
+		}
 	}
 
 	/*
 	 * remove page from its object or anon.
-	 * adjust swpgonly if the page is swap-backed.
 	 */
 
-	if (pg->flags & PG_TABLED) {
+	if (pg->uobject != NULL) {
 		uvm_pageremove(pg);
-	} else if (pg->pqflags & PQ_ANON) {
+	} else if (pg->uanon != NULL) {
 		pg->uanon->u.an_page = NULL;
+		uvmexp.anonpages--;
 	}
 
 	/*
@@ -1267,9 +1291,6 @@ uvm_pagefree(pg)
 	if (pg->wire_count) {
 		pg->wire_count = 0;
 		uvmexp.wired--;
-	}
-	if (pg->pqflags & PQ_ANON) {
-		uvmexp.anonpages--;
 	}
 
 	/*
@@ -1302,6 +1323,7 @@ uvm_pagefree(pg)
  * => pages must either all belong to the same object, or all belong to anons.
  * => if pages are object-owned, object must be locked.
  * => if pages are anon-owned, anons must be locked.
+ * => caller must lock page queues if pages may be released.
  */
 
 void
@@ -1355,7 +1377,7 @@ uvm_page_own(pg, tag)
 		if (pg->owner_tag) {
 			printf("uvm_page_own: page %p already owned "
 			    "by proc %d [%s]\n", pg,
-			     pg->owner, pg->owner_tag);
+			    pg->owner, pg->owner_tag);
 			panic("uvm_page_own");
 		}
 		pg->owner = (curproc) ? curproc->p_pid :  (pid_t) -1;
@@ -1369,14 +1391,13 @@ uvm_page_own(pg, tag)
 		    "page (%p)\n", pg);
 		panic("uvm_page_own");
 	}
-	pg->owner_tag = NULL;
 	KASSERT((pg->pqflags & (PQ_ACTIVE|PQ_INACTIVE)) ||
-		(pg->uanon == NULL && pg->uobject == NULL) ||
-		pg->uobject == uvm.kernel_object ||
-		pg->wire_count > 0 ||
-		(pg->loan_count == 1 && pg->uanon == NULL) ||
-		pg->loan_count > 1);
-	return;
+	    (pg->uanon == NULL && pg->uobject == NULL) ||
+	    pg->uobject == uvm.kernel_object ||
+	    pg->wire_count > 0 ||
+	    (pg->loan_count == 1 && pg->uanon == NULL) ||
+	    pg->loan_count > 1);
+	pg->owner_tag = NULL;
 }
 #endif
 

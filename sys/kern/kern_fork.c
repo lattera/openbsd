@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47.2.3 2002/10/29 00:36:44 art Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.47.2.4 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -168,7 +168,7 @@ fork1(struct proc *p1, int exitsig, int flags, void *stack, size_t stacksize,
 	/*
 	 * Allocate a pcb and kernel stack for the process
 	 */
-	uaddr = uvm_km_valloc(kernel_map, USPACE);
+	uaddr = uvm_uarea_alloc();
 	if (uaddr == 0) {
 		chgproccnt(uid, -1);
 		nprocs--;

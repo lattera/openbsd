@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28.2.3 2002/06/11 03:33:04 art Exp $	*/
-/*	$NetBSD: uvm_pager.c,v 1.54 2001/11/10 07:37:00 lukem Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pager.c,v 1.28.2.4 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_pager.c,v 1.58 2002/10/01 07:52:30 chs Exp $	*/
 
 /*
  *
@@ -56,11 +56,7 @@ struct pool *uvm_aiobuf_pool;
  * list of uvm pagers in the system
  */
 
-extern struct uvm_pagerops uvm_deviceops;
-extern struct uvm_pagerops uvm_vnodeops;
-extern struct uvm_pagerops ubc_pager;
-
-struct uvm_pagerops *uvmpagerops[] = {
+struct uvm_pagerops * const uvmpagerops[] = {
 	&aobj_pager,
 	&uvm_deviceops,
 	&uvm_vnodeops,
@@ -300,7 +296,7 @@ uvm_aio_aiodone(bp)
 	struct uvm_object *uobj;
 	struct simplelock *slock;
 	int i, error, swslot;
-	boolean_t write, swap, pageout;
+	boolean_t write, swap;
 	UVMHIST_FUNC("uvm_aio_aiodone"); UVMHIST_CALLED(ubchist);
 	UVMHIST_LOG(ubchist, "bp %p", bp, 0,0,0);
 
@@ -331,26 +327,26 @@ uvm_aio_aiodone(bp)
 
 	swslot = 0;
 	slock = NULL;
-	swap = (pgs[0]->pqflags & PQ_SWAPBACKED) != 0;
-	pageout = (pgs[0]->flags & PG_PAGEOUT) != 0;
+	pg = pgs[0];
+	swap = (pg->uanon != NULL && pg->uobject == NULL) ||
+		(pg->pqflags & PQ_AOBJ) != 0;
 	if (!swap) {
-		uobj = pgs[0]->uobject;
+		uobj = pg->uobject;
 		slock = &uobj->vmobjlock;
 		simple_lock(slock);
 		uvm_lock_pageq();
 	} else if (error) {
-		pg = pgs[0];
-		if (pg->pqflags & PQ_ANON) {
-			swslot = pg->uanon->an_swslot;
+		if (pg->uobject != NULL) {
+			swslot = uao_find_swslot(pg->uobject,
+			    pg->offset >> PAGE_SHIFT);
 		} else {
-			swslot = uao_find_swslot(pg->uobject, pg->offset);
+			swslot = pg->uanon->an_swslot;
 		}
 		KASSERT(swslot);
 	}
 	for (i = 0; i < npages; i++) {
 		pg = pgs[i];
 		KASSERT(swap || pg->uobject == uobj);
-		KASSERT(pageout ^ ((pg->flags & PG_PAGEOUT) == 0));
 		UVMHIST_LOG(ubchist, "pg %p", pg, 0,0,0);
 
 		/*
@@ -359,10 +355,10 @@ uvm_aio_aiodone(bp)
 		 */
 
 		if (swap) {
-			if (pg->pqflags & PQ_ANON) {
-				slock = &pg->uanon->an_lock;
-			} else {
+			if (pg->uobject != NULL) {
 				slock = &pg->uobject->vmobjlock;
+			} else {
+				slock = &pg->uanon->an_lock;
 			}
 			simple_lock(slock);
 			uvm_lock_pageq();
@@ -432,7 +428,6 @@ uvm_aio_aiodone(bp)
 		simple_unlock(slock);
 	} else {
 		KASSERT(write);
-		KASSERT(pageout);
 
 		/* these pages are now only in swap. */
 		simple_lock(&uvm.swap_data_lock);

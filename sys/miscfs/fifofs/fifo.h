@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.9.2.1 2002/06/11 03:30:20 art Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/fifofs/fifo.h,v 1.9.2.2 2002/11/04 18:02:31 art Exp $	*/
 /*	$NetBSD: fifo.h,v 1.10 1996/02/09 22:40:15 christos Exp $	*/
 
 /*
@@ -36,6 +36,8 @@
  *	@(#)fifo.h	8.3 (Berkeley) 8/10/94
  */
 #ifdef FIFO
+
+#include <miscfs/genfs/genfs.h>
 
 /*
  * Prototypes for fifo operations on vnodes.
@@ -81,9 +83,43 @@ int	fifo_advlock(void *);
 #define fifo_reallocblks fifo_badop
 #define fifo_bwrite	nullop
 #define fifo_mmap	fifo_badop
+#define fifo_putpages	genfs_null_putpages
 
 void 	fifo_printinfo(struct vnode *);
 
 extern int (**fifo_vnodeop_p)(void *);
+
+/*
+ * Since most of the vnode op vectors for spec files share a bunch of
+ * operations, we maintain them here instead of duplicating them everywhere.
+ *
+ * XXX - vnodeop inheritance would be nice.
+ */
+#define FIFO_VNODEOP_DESCS \
+	{ &vop_open_desc, fifo_open },			\
+	{ &vop_lookup_desc, fifo_lookup },		\
+	{ &vop_create_desc, fifo_create },		\
+	{ &vop_mknod_desc, fifo_mknod },		\
+	{ &vop_remove_desc, fifo_remove },		\
+	{ &vop_link_desc, fifo_link },			\
+	{ &vop_rename_desc, fifo_rename },		\
+	{ &vop_mkdir_desc, fifo_mkdir },		\
+	{ &vop_rmdir_desc, fifo_rmdir },		\
+	{ &vop_symlink_desc, fifo_symlink },		\
+	{ &vop_readdir_desc, fifo_readdir },		\
+	{ &vop_readlink_desc, fifo_readlink },		\
+	{ &vop_abortop_desc, fifo_abortop },		\
+	{ &vop_select_desc, fifo_select },		\
+	{ &vop_lease_desc, fifo_lease_check },		\
+	{ &vop_ioctl_desc, fifo_ioctl },		\
+	{ &vop_select_desc, fifo_select },		\
+	{ &vop_revoke_desc, fifo_revoke },		\
+	{ &vop_pathconf_desc, fifo_pathconf },		\
+	{ &vop_advlock_desc, fifo_advlock },		\
+	{ &vop_strategy_desc, fifo_strategy },  	\
+	{ &vop_reallocblks_desc, fifo_reallocblks },	\
+	{ &vop_mmap_desc, fifo_mmap },			\
+	{ &vop_putpages_desc, fifo_putpages }
+	
 
 #endif /* FIFO */

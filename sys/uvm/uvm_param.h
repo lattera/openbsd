@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.6 2001/12/04 23:22:42 art Exp $	*/
-/*	$NetBSD: uvm_param.h,v 1.12 2001/08/05 03:33:16 matt Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_param.h,v 1.6.2.1 2002/11/04 18:02:33 art Exp $	*/
+/*	$NetBSD: uvm_param.h,v 1.13 2001/12/09 03:07:19 chs Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993
@@ -114,11 +114,14 @@ typedef int	boolean_t;
 #define VM_SWAPENCRYPT	5		/* int */
 #define VM_NKMEMPAGES	6		/* int - # kmem_map pages */
 #define	VM_ANONMIN	7
-#define	VM_VTEXTMIN	8
-#define	VM_VNODEMIN	9
+#define	VM_EXECMIN	8
+#define	VM_FILEMIN	9
 #define	VM_MAXSLP	10
 #define	VM_USPACE	11
-#define	VM_MAXID	12		/* number of valid vm ids */
+#define	VM_ANONMAX	12
+#define	VM_EXECMAX	13
+#define	VM_FILEMAX	14
+#define	VM_MAXID	15		/* number of valid vm ids */
 
 #define	CTL_VM_NAMES { \
 	{ 0, 0 }, \
@@ -129,10 +132,13 @@ typedef int	boolean_t;
 	{ "swapencrypt", CTLTYPE_NODE }, \
 	{ "nkmempages", CTLTYPE_INT }, \
 	{ "anonmin", CTLTYPE_INT }, \
-	{ "vtextmin", CTLTYPE_INT }, \
-	{ "vnodemin", CTLTYPE_INT }, \
+	{ "execmin", CTLTYPE_INT }, \
+	{ "filemin", CTLTYPE_INT }, \
 	{ "maxslp", CTLTYPE_INT }, \
 	{ "uspace", CTLTYPE_INT }, \
+	{ "anonmax", CTLTYPE_INT }, \
+	{ "execmax", CTLTYPE_INT }, \
+	{ "filemax", CTLTYPE_INT }, \
 }
 
 struct _ps_strings {
