@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/brconfig/Attic/brconfig.c,v 1.6 2000/02/04 06:32:04 deraadt Exp $	*/
+/*	$OpenBSD: src/sbin/brconfig/Attic/brconfig.c,v 1.6.2.1 2000/10/06 20:40:26 jason Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -435,6 +435,7 @@ bridge_show_all(s)
 			continue;
 		bridge_status(s, ifrp->ifr_name);
 	}
+	free(inbuf);
 	return (0);
 }
 
@@ -545,7 +546,7 @@ bridge_list(s, brdg, delim)
 		if (inbuf == NULL)
 			err(1, "malloc");
 		if (ioctl(s, SIOCBRDGIFS, &bifc) < 0)
-			err(1, brdg);
+			err(1, "%s", brdg);
 		if (bifc.ifbic_len + sizeof(*reqp) < len)
 			break;
 		len *= 2;
@@ -731,7 +732,7 @@ bridge_addrs(s, brdg, delim)
 		printb("flags", ifba->ifba_flags, IFBAFBITS);
 		printf("\n");
 	}
-
+	free(inbuf);
 	return (0);
 }
 

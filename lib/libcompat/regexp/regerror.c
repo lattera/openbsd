@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/lib/libcompat/regexp/Attic/regerror.c,v 1.3 1999/08/02 17:10:47 downsj Exp $	*/
+/*	$OpenBSD: src/lib/libcompat/regexp/Attic/regerror.c,v 1.3.4.1 2000/10/06 20:40:26 jason Exp $	*/
 #ifndef lint
-static char *rcsid = "$OpenBSD: src/lib/libcompat/regexp/Attic/regerror.c,v 1.3 1999/08/02 17:10:47 downsj Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libcompat/regexp/Attic/regerror.c,v 1.3.4.1 2000/10/06 20:40:26 jason Exp $";
 #endif /* not lint */
 
 #include <regexp.h>
@@ -15,7 +15,7 @@ v8_regerror(s)
 	if (_new_regerror != NULL)
 		_new_regerror(s);
 	else
-		warnx(s);
+		warnx("%s", s);
 	return;
 }
 

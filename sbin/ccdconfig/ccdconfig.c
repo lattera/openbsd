@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/ccdconfig/Attic/ccdconfig.c,v 1.12 1998/08/15 20:16:34 deraadt Exp $	*/
+/*	$OpenBSD: src/sbin/ccdconfig/Attic/ccdconfig.c,v 1.12.8.1 2000/10/06 20:40:26 jason Exp $	*/
 /*	$NetBSD: ccdconfig.c,v 1.6 1996/05/16 07:11:18 thorpej Exp $	*/
 
 /*-
@@ -491,7 +491,7 @@ do_io(path, cmd, cciop)
 
 #define KVM_ABORT(kd, str) {						\
 	(void)kvm_close((kd));						\
-	warnx((str));							\
+	warnx("%s", (str));						\
 	warnx(kvm_geterr((kd)));					\
 	return (1);							\
 }
