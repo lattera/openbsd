@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.12 2003/04/11 16:12:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/locore.s,v 1.48.6.13 2003/04/15 03:55:50 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.145 1996/05/03 19:41:19 christos Exp $	*/
 
 /*-
@@ -1503,11 +1503,6 @@ NENTRY(remrunqueue)
  * something to come ready.
  */
 ENTRY(idle)
-	pushl	%esi
-	call	_C_LABEL(pmap_deactivate)
-	addl	$4,%esp
-
-2:	
 	cli
 	movl	_C_LABEL(whichqs),%ecx
 	testl	%ecx,%ecx
@@ -1526,7 +1521,7 @@ ENTRY(idle)
 #else
 	hlt
 #endif
-	jmp	2b
+	jmp	_C_LABEL(idle)
 
 #ifdef DIAGNOSTIC
 NENTRY(switch_error)
