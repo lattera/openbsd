@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/stdio/remove.c,v 1.5 2003/06/02 20:18:37 millert Exp $	*/
+/*	$OpenBSD: src/lib/libc/stdio/remove.c,v 1.6 2004/09/28 18:12:44 otto Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -36,7 +36,7 @@
 #if 0
 static char sccsid[] = "@(#)remove.c	8.1 (Berkeley) 6/4/93";
 #else
-static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/remove.c,v 1.5 2003/06/02 20:18:37 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/remove.c,v 1.6 2004/09/28 18:12:44 otto Exp $";
 #endif
 #endif /* LIBC_SCCS and not lint */
 
@@ -45,8 +45,7 @@ static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/remove.c,v 1.5 2003/06/02 20
 #include <sys/stat.h>
 
 int
-remove(file)
-	const char *file;
+remove(const char *file)
 {
 	struct stat st;
 
