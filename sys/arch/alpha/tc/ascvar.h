@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/espvar.h,v 1.6 1997/01/24 19:58:12 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/tc/Attic/ascvar.h,v 1.1 2000/07/05 21:50:38 ericj Exp $	*/
 /*	$NetBSD: espvar.h,v 1.12 1996/11/24 04:21:30 cgd Exp $	*/
 
 #if defined(__sparc__) && !defined(SPARC_DRIVER)
