@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmain.c,v 1.17 2002/12/09 00:45:38 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/sup/src/Attic/supcmain.c,v 1.18 2004/01/23 03:48:43 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1992 Carnegie Mellon University
@@ -417,8 +417,7 @@ main(argc, argv)
 			if (!silent)
 				loginfo("SUP Restarting %s with new supfile %s",
 					progname, supfname);
-			for (fd = getdtablesize(); fd > 3; fd--)
-				(void) close(fd);
+			closefrom(4);
 			execv(progname, argv);
 			logquit(1, "Restart failed");
 		}
