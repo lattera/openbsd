@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/tcpdump/tcpdump.c,v 1.19 2000/10/03 14:21:57 ho Exp $	*/
+
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
@@ -24,7 +26,7 @@ static const char copyright[] =
     "@(#) Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997\n\
 The Regents of the University of California.  All rights reserved.\n";
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.17 2000/04/26 21:35:44 jakob Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.18 2000/04/30 05:23:28 ericj Exp $ (LBL)";
 #endif
 
 /*
@@ -46,6 +48,7 @@ static const char rcsid[] =
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "interface.h"
 #include "addrtoname.h"
