@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/rnd.c,v 1.73 2004/07/21 01:02:07 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/rnd.c,v 1.73.2.1 2005/02/27 00:54:16 brad Exp $	*/
 
 /*
  * rnd.c -- A strong random number generator
@@ -1041,16 +1041,15 @@ randompoll(dev, events, p)
 	int	events;
 	struct proc *p;
 {
-	int revents = 0;
+	int revents;
 
+	revents = events & (POLLOUT | POLLWRNORM);	/* always writable */
 	if (events & (POLLIN | POLLRDNORM)) {
-		if (random_state.entropy_count > 0)
-			revents |= events & (POLLIN | POLLRDNORM);
-		else
+		if (minor(dev) == RND_SRND && random_state.entropy_count <= 0)
 			selrecord(p, &rnd_rsel);
+		else
+			revents |= events & (POLLIN | POLLRDNORM);
 	}
-	if (events & (POLLOUT | POLLWRNORM))
-		revents = events & (POLLOUT | POLLWRNORM); /* always writable */
 
 	return (revents);
 }
