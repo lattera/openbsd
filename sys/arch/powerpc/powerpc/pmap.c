@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.7 2002/03/29 19:46:01 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/pmap.c,v 1.14.2.8 2002/03/30 08:32:27 niklas Exp $ */
 
 /*
  * Copyright (c) 2001, 2002 Dale Rahn. All rights reserved.
