@@ -1,0 +1,198 @@
+.\"	$OpenBSD: src/share/man/man4/pcmcia.4,v 1.35 2003/09/04 22:14:42 jmc Exp $
+.\"	$NetBSD: pcmcia.4,v 1.4 1998/06/07 09:10:30 enami Exp $
+.\"
+.\" Copyright (c) 1997 The NetBSD Foundation, Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"        This product includes software developed by the NetBSD
+.\"        Foundation, Inc. and its contributors.
+.\" 4. Neither the name of The NetBSD Foundation nor the names of its
+.\"    contributors may be used to endorse or promote products derived
+.\"    from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+.\" TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+.\" PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 11, 1998
+.Dt PCMCIA 4
+.Os
+.Sh NAME
+.Nm pcmcia
+.Nd introduction to PCMCIA (PC Card) support
+.Sh SYNOPSIS
+.Cd "# i386"
+.Cd "pcic0   at isa? port 0x3e0 iomem 0xd0000 iosiz 0x10000"
+.Cd "pcic1   at isa? port 0x3e2 iomem 0xe0000 iosiz 0x4000"
+.Cd "pcic2   at isa? port 0x3e4 iomem 0xe0000 iosiz 0x4000"
+.Cd "pcic*   at isapnp?"
+.Cd "pcic*   at pci? dev? function ?"
+.Cd "pcmcia* at pcic? controller ? socket ?"
+.Pp
+.Cd "# i386"
+.Cd "tcic0   at isa? port 0x240 iomem 0xd0000 iosiz 0x10000"
+.Cd "pcmcia* at tcic? controller ? socket ?"
+.Pp
+.Cd "# sparc"
+.Cd "tslot*  at sbus? slot ? offset ?"
+.Cd "pcmcia* at tslot? socket ?"
+.Pp
+.Cd "# sparc/sparc64"
+.Cd "stp*    at sbus? slot ? offset ?"
+.Cd "pcmcia* at stp? socket ?"
+.Pp
+.Cd "# all architectures"
+.Cd "cbb*      at pci? dev? function ?"
+.Cd "cardslot* at cbb? flags 0x0000"
+.Cd "pcmcia*   at cardslot?"
+.Sh DESCRIPTION
+The
+.Nm
+subsystem provides machine-independent bus support and
+drivers for PCMCIA (PC Card)
+devices.
+.Sh SUPPORTED DEVICES
+The following devices are supported, sorted by function
+and driver name:
+.Ss Miscellaneous
+.Bl -tag -width 12n -offset ind -compact
+.It Xr gpr 4
+GemPlus GPR400 smartcard reader.
+.El
+.Ss Serial interfaces and modems
+.Bl -tag -width 12n -offset ind -compact
+.It Xr com 4 , Xr pccom 4
+8250/16450/16550-compatible PCMCIA serial cards and modems.
+.El
+.Ss Network interfaces
+.Bl -tag -width 12n -offset ind -compact
+.It Xr an 4
+Aironet Communications 4500/4800 IEEE 802.11DS wireless controller.
+.It Xr awi 4
+BayStack 650 wireless 802.11FH wireless controller.
+.It Xr cnw 4
+Xircom Creditcard Netwave cards.
+.It Xr ep 4
+3Com 3c556, 3c562, 3c574, and 3c589 EtherLink III Ethernet cards.
+.It Xr ne 4
+NE2000 compatible cards.
+.It Xr ray 4
+Raytheon Raylink / WebGear Aviator IEEE 802.11FH 2Mbps wireless controller.
+.It Xr rln 4
+Proxim RangeLAN2 PC-Card.
+.It Xr sm 4
+Megahertz Ethernet cards.
+.It Xr wi 4
+WaveLAN/IEEE, PRISM-II and Spectrum24 IEEE 802.11DS cards.
+.It Xr xe 4
+Xircom 16bit Ethernet cards.
+.El
+.Ss SCSI controllers
+.Bl -tag -width 12n -offset ind -compact
+.It Xr aic 4
+Adaptec APA-14[56]0 and NewMedia BusToaster SCSI controller cards.
+.El
+.Ss IDE controllers
+.Bl -tag -width 12n -offset ind -compact
+.It Xr wdc 4
+Devices which implement an ATA/IDE interface, such as mini disk drives,
+CDROMs.
+This includes Compact Flash cards which emulate a disk drive.
+.El
+.Pp
+The supported PCMCIA controllers are those that are i82365 compatible.
+.Sh NOTES
+On some
+.Nm
+adapters, for instance the
+.Xr sbus 4 Ns -based
+.Xr stp 4 ,
+the
+.Nm
+bus will be mapped in big-endian format instead of the natural (and
+preferred) little endian format.
+Unfortunately such controllers lack the hardware facility to swap bytes,
+and it is not efficient to convert all drivers to always know about this.
+While 8 bit drivers can invisibly work on such a bus, 16 bit
+drivers will need modification to handle this.
+So far,
+.Xr wi 4
+is the only driver to require these modifications.
+.Pp
+If the
+.Nm
+adapter is not detected, or if
+.Nm
+events (such as card insertion) do not occur, there may be a
+.Tn PCI
+card BIOS mapped in the same memory space the
+.Nm
+driver is configured to use (this is often the case with ethernet
+card boot ROMs).
+The output from
+.Xr dmesg 8
+should contain a line beginning with
+.Dq bios0
+that lists the memory address and size of mapped regions.
+If there is a conflict, you can use
+.Xr boot_config 8
+to change the iomem parameter of the
+.Em pcic
+device to a non-overlapping address, such as 0xd8000 for
+.Em pcic0 .
+Some experimentation may be required to find a working value; in some
+cases the size parameter of the
+.Em pcic
+device may need to be decreased to avoid a conflict.
+.Sh SEE ALSO
+.Xr aic 4 ,
+.Xr an 4 ,
+.Xr awi 4 ,
+.Xr cardbus 4 ,
+.Xr cbb 4 ,
+.Xr cnw 4 ,
+.Xr com 4 ,
+.Xr eisa 4 ,
+.Xr ep 4 ,
+.Xr gpr 4 ,
+.Xr intro 4 ,
+.Xr isa 4 ,
+.Xr isapnp 4 ,
+.Xr ne 4 ,
+.Xr pci 4 ,
+.Xr pcic 4 ,
+.Xr ray 4 ,
+.Xr rln 4 ,
+.Xr sbus 4 ,
+.Xr sm 4 ,
+.Xr stp 4 ,
+.Xr tcic 4 ,
+.Xr tslot 4 ,
+.Xr usb 4 ,
+.Xr wdc 4 ,
+.Xr wi 4 ,
+.Xr xe 4
+.Sh HISTORY
+The
+.Nm
+driver
+appeared in
+.Ox 2.3 .
