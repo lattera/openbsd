@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sys/dev/Attic/rndioctl.h,v 1.7 2000/04/10 19:44:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/rndioctl.h,v 1.8 2000/04/13 13:48:30 mickey Exp $	*/
 
 /*
- * Copyright (c) 1996 Michael Shalayeff.
+ * Copyright (c) 1996,2000 Michael Shalayeff.
  *
  * This software derived from one contributed by Theodore Ts'o.
  *
