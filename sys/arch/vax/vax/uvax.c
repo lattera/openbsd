@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvax.c,v 1.8 2003/06/12 01:07:27 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/uvax.c,v 1.9 2003/06/12 01:07:31 deraadt Exp $ */
 /*	$NetBSD: uvax.c,v 1.4 1997/02/19 10:04:27 ragge Exp $ */
 /*
  * Copyright (c) 1996 Ludd, University of Lule}, Sweden.
