@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.13 2003/05/16 00:29:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.14 2003/05/18 18:16:45 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -104,6 +104,8 @@ void	 kputchar(int, int, struct tty *);
 
 #ifdef MULTIPROCESSOR
 
+#ifdef notdef
+
 struct simplelock kprintf_slock;
 
 #define KPRINTF_MUTEX_ENTER(s)						\
@@ -117,6 +119,24 @@ do {									\
 	simple_unlock(&kprintf_slock);					\
 	splx((s));							\
 } while (/*CONSTCOND*/0)
+
+#else
+
+struct __mp_lock kprintf_slock;
+
+#define KPRINTF_MUTEX_ENTER(s)						\
+do {									\
+	(s) = splhigh();						\
+	__mp_lock(&kprintf_slock);					\
+} while (/*CONSTCOND*/0)
+
+#define KPRINTF_MUTEX_EXIT(s)						\
+do {									\
+	__mp_unlock(&kprintf_slock);					\
+	splx((s));							\
+} while (/*CONSTCOND*/0)
+
+#endif
 
 #else
 

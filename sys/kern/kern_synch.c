@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.9 2003/05/15 16:45:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_synch.c,v 1.17.4.10 2003/05/18 18:16:45 niklas Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*-
@@ -64,7 +64,7 @@ int	lbolt;			/* once a second sleep address */
 int whichqs;			/* Bit mask summary of non-empty Q's. */
 struct prochd qs[NQS];
 
-struct simplelock sched_lock;
+struct SIMPLELOCK sched_lock;
 
 void scheduler_start(void);
 
@@ -614,15 +614,13 @@ unsleep(p)
 void
 sched_unlock_idle(void)
 {
-
-	simple_unlock(&sched_lock);
+	SIMPLE_UNLOCK(&sched_lock);
 }
 
 void
 sched_lock_idle(void)
 {
-
-	simple_lock(&sched_lock);
+	SIMPLE_LOCK(&sched_lock);
 }
 #endif /* MULTIPROCESSOR || LOCKDEBUG */
 
@@ -763,7 +761,11 @@ mi_switch()
 	 * selects a new process and removes it from the run queue.
 	 */
 	if (p->p_flag & P_BIGLOCK)
+#ifdef notyet
 		hold_count = spinlock_release_all(&kernel_lock);
+#else
+		hold_count = __mp_release_all(&kernel_lock);
+#endif
 #endif
 
 	/*
@@ -824,7 +826,11 @@ mi_switch()
 	 * we reacquire the interlock.
 	 */
 	if (p->p_flag & P_BIGLOCK)
+#ifdef notyet
 		spinlock_acquire_count(&kernel_lock, hold_count);
+#else
+		__mp_acquire_count(&kernel_lock, hold_count);
+#endif
 #endif
 }
 
@@ -839,7 +845,7 @@ rqinit()
 
 	for (i = 0; i < NQS; i++)
 		qs[i].ph_link = qs[i].ph_rlink = (struct proc *)&qs[i];
-	simple_lock_init(&sched_lock);
+	SIMPLE_LOCK_INIT(&sched_lock);
 }
 
 /*
