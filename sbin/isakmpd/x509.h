@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/x509.h,v 1.13 2001/08/25 22:17:13 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/x509.h,v 1.14 2001/11/03 13:15:35 ho Exp $	*/
 /*	$EOM: x509.h,v 1.11 2000/09/28 12:53:27 niklas Exp $	*/
 
 /*
@@ -61,6 +61,7 @@ struct x509_aca {
 };
 
 struct X509;
+struct X509_STORE;
 
 /* Functions provided by cert handler.  */
 
