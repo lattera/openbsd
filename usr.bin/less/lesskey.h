@@ -1,4 +1,15 @@
 /*
+ * Copyright (C) 1984-2002  Mark Nudelman
+ *
+ * You may distribute under the terms of either the GNU General Public
+ * License or the Less License, as specified in the README file.
+ *
+ * For more information about less, or for information on how to 
+ * contact the author, see the README file.
+ */
+
+
+/*
  * Format of a lesskey file:
  *
  *	LESSKEY_MAGIC (4 bytes)
@@ -18,6 +29,7 @@
 
 #define	CMD_SECTION		'c'
 #define	EDIT_SECTION		'e'
+#define	VAR_SECTION		'v'
 #define	END_SECTION		'x'
 
 #define	C0_END_LESSKEY_MAGIC	'E'
