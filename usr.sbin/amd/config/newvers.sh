@@ -37,14 +37,14 @@
 # SUCH DAMAGE.
 #
 #	from: @(#)newvers.sh	8.1 (Berkeley) 6/6/93
-#	$Id: newvers.sh,v 1.3 1994/06/13 20:49:14 mycroft Exp $
+#	$Id: newvers.sh,v 1.1.1.1 1995/10/18 08:47:14 deraadt Exp $
 #
 PATH=/usr/ucb:/bin:/usr/bin:$PATH
 if [ $# -ne 3 ]; then echo "Usage: newvers program arch os" >&2; exit 1; fi
 version="version.$1"
 if [ ! -r $version ]; then echo 0 > $version; chmod 444 $version; fi
 v=`cat $version`
-u=${USER-${LOGNAME-root}}
+u=${LOGNAME-${USER-root}}
 h=`hostname`
 #h=`expr "$h" : '\([^.]*\)'`
 t=`date`
