@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.54 2001/03/22 02:00:36 jason Exp $	*/
+/*	$OpenBSD: src/sys/net/if_bridge.c,v 1.54.2.1 2001/08/21 21:30:56 jason Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000 Jason L. Wright (jason@thought.net)
@@ -1841,7 +1841,7 @@ bridge_flushrule(bif)
 	}
 	while (!SIMPLEQ_EMPTY(&bif->bif_brlout)) {
 		p = SIMPLEQ_FIRST(&bif->bif_brlout);
-		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlin, p, brl_next);
+		SIMPLEQ_REMOVE_HEAD(&bif->bif_brlout, p, brl_next);
 		free(p, M_DEVBUF);
 	}
 	return (0);
@@ -1910,7 +1910,7 @@ bridge_filter(sc, ifp, eh, m)
 	if (hlen < sizeof(struct ip))
 		goto dropit;
 	if (hlen > m->m_len) {
-		if ((m = m_pullup(m, sizeof(struct ip))) == NULL)
+		if ((m = m_pullup(m, hlen)) == NULL)
 			return (NULL);
 		ip = mtod(m, struct ip *);
 	}
@@ -1936,6 +1936,8 @@ bridge_filter(sc, ifp, eh, m)
 
 	/* Finally, we get to filter the packet! */
 	if (fr_checkp && (*fr_checkp)(ip, hlen, ifp, 0, &m))
+		return (NULL);
+	if (m == NULL)		/* in case of 'fastroute' */
 		return (NULL);
 
 	/* Rebuild the IP header */
