@@ -16,7 +16,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: channels.c,v 1.38 2000/01/24 20:37:29 markus Exp $");
+RCSID("$Id: channels.c,v 1.39 2000/03/16 20:56:14 markus Exp $");
 
 #include "ssh.h"
 #include "packet.h"
@@ -556,7 +556,7 @@ channel_output_poll()
 					len = 512;
 			} else {
 				/* Keep the packets at reasonable size. */
-				if (len > packet_get_maxsize()/2)
+				if (len > packet_get_maxsize())
 					len = packet_get_maxsize()/2;
 			}
 			packet_start(SSH_MSG_CHANNEL_DATA);
