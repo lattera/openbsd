@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.14 2004/06/05 23:13:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.15 2004/06/06 23:23:13 deraadt Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -382,11 +382,7 @@ struct kinfo_proc2 {
 	u_int32_t p_pctcpu;		/* FIXPT_T: %cpu for this process during p_swtime */
 	u_int32_t p_swtime;		/* U_INT: Time swapped in or out. */
 	u_int32_t p_slptime;		/* U_INT: Time since last blocked. */
-#ifdef MULTIPROCESSOR
-	int32_t	__p_free1;		/* INT: Unused slot */
-#else
 	int32_t	p_schedflags;		/* INT: PSCHED_* flags */
-#endif
 
 	u_int64_t p_uticks;		/* U_QUAD_T: Statclock hits in user mode. */
 	u_int64_t p_sticks;		/* U_QUAD_T: Statclock hits in system mode. */
