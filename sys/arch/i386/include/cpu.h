@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.3 2001/07/14 10:02:35 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.4 2001/07/16 21:40:38 niklas Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -341,6 +341,7 @@ int	i386_set_ldt __P((struct proc *, void *, register_t *));
 
 /* isa_machdep.c */
 void	isa_defaultirq __P((void));
+void	isa_nodefaultirq __P((void));
 int	isa_nmi __P((void));
 
 /* pmap.c */
