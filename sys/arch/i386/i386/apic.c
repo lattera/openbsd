@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apic.c,v 1.1.2.4 2004/06/09 15:45:08 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apic.c,v 1.1.2.5 2004/06/10 18:19:28 grange Exp $	*/
 /* $NetBSD: apic.c,v 1.1.2.2 2000/02/21 18:51:00 sommerfeld Exp $ */
 
 /*-
@@ -69,10 +69,10 @@ apic_format_redir(where1, where2, idx, redirhi, redirlo)
 	u_int32_t redirhi;
 	u_int32_t redirlo;
 {
-	printf("%s: %s%d %b", where1, where2, idx, redirlo, redirlofmt);
+	printf("%s: %s%d 0x%x", where1, where2, idx, redirlo);
 
 	if ((redirlo & LAPIC_DEST_MASK) == 0)
-		printf(" %b", redirhi, redirlofmt);
+		printf(" 0x%x", redirhi);
 
 	printf("\n");
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.10 2004/06/09 15:45:08 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.11 2004/06/10 18:19:28 grange Exp $	*/
 /*	$NetBSD: mpbios.c,v 1.2 2002/10/01 12:56:57 fvdl Exp $	*/
 
 /*-
@@ -1097,7 +1097,6 @@ mpbios_int(ent, enttype, mpi)
 
 		(*(mpb->mb_intr_print))(dev);
 
-		printf(" (type %b flags %b)\n", type, inttype_fmt,
-		    flags, flagtype_fmt);
+		printf(" (type 0x%x flags 0x%x)\n", type, flags);
 	}
 }
