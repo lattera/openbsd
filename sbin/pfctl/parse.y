@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.343 2003/03/19 15:51:40 henning Exp $	*/
+/*	$OpenBSD: src/sbin/pfctl/parse.y,v 1.343.2.1 2003/05/31 01:00:23 margarida Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -2354,6 +2354,7 @@ natrule		: nataction interface af proto fromto redirpool pooltype
 						    ntohs($6->rport.b);
 					break;
 				case PF_NAT:
+					r.rpool.proxy_port[1] = ntohs($6->rport.b);
 					if (!r.rpool.proxy_port[0] &&
 					    !r.rpool.proxy_port[1]) {
 						r.rpool.proxy_port[0] =
