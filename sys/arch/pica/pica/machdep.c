@@ -37,7 +37,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)machdep.c	8.3 (Berkeley) 1/12/94
- *      $Id: machdep.c,v 1.8 1996/05/15 07:09:11 pefo Exp $
+ *      $Id: machdep.c,v 1.9 1996/06/06 23:07:37 deraadt Exp $
  */
 
 /* from: Utah Hdr: machdep.c 1.63 91/04/24 */
@@ -616,6 +616,13 @@ cpu_startup()
 	/*
 	 * Configure the system.
 	 */
+	if (boothowto & RB_CONFIG) {
+#ifdef BOOT_CONFIG
+		user_config();
+#else
+		printf("kernel does not support -c; continuing..\n");
+#endif
+	}
 	configure();
 }
 
