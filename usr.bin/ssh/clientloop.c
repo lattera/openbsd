@@ -59,7 +59,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.65.2.2 2001/11/15 00:15:19 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.65.2.3 2001/11/15 22:51:15 miod Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -346,8 +346,8 @@ client_wait_until_can_do_something(fd_set **readsetp, fd_set **writesetp,
 		if (session_closed && !channel_still_open() &&
 		    !packet_have_data_to_write()) {
 			/* clear mask since we did not call select() */
-			memset(*readsetp, 0, *maxfdp);
-			memset(*writesetp, 0, *maxfdp);
+			memset(*readsetp, 0, *nallocp);
+			memset(*writesetp, 0, *nallocp);
 			return;
 		} else {
 			FD_SET(connection_in, *readsetp);
@@ -375,8 +375,8 @@ client_wait_until_can_do_something(fd_set **readsetp, fd_set **writesetp,
 		 * We have to return, because the mainloop checks for the flags
 		 * set by the signal handlers.
 		 */
-		memset(*readsetp, 0, *maxfdp);
-		memset(*writesetp, 0, *maxfdp);
+		memset(*readsetp, 0, *nallocp);
+		memset(*writesetp, 0, *nallocp);
 
 		if (errno == EINTR)
 			return;
@@ -522,14 +522,36 @@ process_escapes(Buffer *bin, Buffer *bout, Buffer *berr, char *buf, int len)
 				continue;
 
 			case '&':
-				/* XXX does not work yet with proto 2 */
-				if (compat20)
-					continue;
 				/*
 				 * Detach the program (continue to serve connections,
 				 * but put in background and no more new connections).
 				 */
-				if (!stdin_eof) {
+				/* Restore tty modes. */
+				leave_raw_mode();
+
+				/* Stop listening for new connections. */
+				channel_stop_listening();
+
+				snprintf(string, sizeof string,
+				    "%c& [backgrounded]\n", escape_char);
+				buffer_append(berr, string, strlen(string));
+
+				/* Fork into background. */
+				pid = fork();
+				if (pid < 0) {
+					error("fork: %.100s", strerror(errno));
+					continue;
+				}
+				if (pid != 0) {	/* This is the parent. */
+					/* The parent just exits. */
+					exit(0);
+				}
+				/* The child continues serving connections. */
+				if (compat20) {
+					buffer_append(bin, "\004", 1);
+					/* fake EOF on stdin */
+					return -1;
+				} else if (!stdin_eof) {
 					/*
 					 * Sending SSH_CMSG_EOF alone does not always appear
 					 * to be enough.  So we try to send an EOF character
@@ -545,26 +567,7 @@ process_escapes(Buffer *bin, Buffer *bout, Buffer *berr, char *buf, int len)
 						packet_send();
 					}
 				}
-				/* Restore tty modes. */
-				leave_raw_mode();
-
-				/* Stop listening for new connections. */
-				channel_close_all();	/* proto1 only XXXX */
-
-				printf("%c& [backgrounded]\n", escape_char);
-
-				/* Fork into background. */
-				pid = fork();
-				if (pid < 0) {
-					error("fork: %.100s", strerror(errno));
-					continue;
-				}
-				if (pid != 0) {	/* This is the parent. */
-					/* The parent just exits. */
-					exit(0);
-				}
-				/* The child continues serving connections. */
-				continue; /*XXX ? */
+				continue;
 
 			case '?':
 				snprintf(string, sizeof string,
@@ -820,7 +823,6 @@ client_loop(int have_pty, int escape_char_arg, int ssh2_chan_id)
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
 	signal(SIGTERM, signal_handler);
-	signal(SIGPIPE, SIG_IGN);
 	if (have_pty)
 		signal(SIGWINCH, window_change_handler);
 

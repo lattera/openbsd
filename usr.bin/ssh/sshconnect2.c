@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.72.2.2 2001/11/15 00:15:19 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect2.c,v 1.72.2.3 2001/11/15 22:51:15 miod Exp $");
 
 #include <openssl/bn.h>
 #include <openssl/md5.h>
@@ -460,7 +460,7 @@ userauth_passwd(Authctxt *authctxt)
 	packet_put_cstring(password);
 	memset(password, 0, strlen(password));
 	xfree(password);
-	packet_inject_ignore(64);
+	packet_add_padding(64);
 	packet_send();
 	return 1;
 }
@@ -817,7 +817,7 @@ input_userauth_info_req(int type, int plen, void *ctxt)
 	}
 	packet_done(); /* done with parsing incoming message. */
 
-	packet_inject_ignore(64);
+	packet_add_padding(64);
 	packet_send();
 }
 
@@ -836,16 +836,6 @@ userauth_hostbased(Authctxt *authctxt)
 	u_int blen, slen;
 	int ok, i, len, found = 0;
 
-	p = get_local_name(packet_get_connection_in());
-	if (p == NULL) {
-		error("userauth_hostbased: cannot get local ipaddr/name");
-		return 0;
-	}
-	len = strlen(p) + 2;
-	chost = xmalloc(len);
-	strlcpy(chost, p, len);
-	strlcat(chost, ".", len);
-	debug2("userauth_hostbased: chost %s", chost);
 	/* check for a useful key */
 	for (i = 0; i < authctxt->nkeys; i++) {
 		private = authctxt->keys[i];
@@ -857,14 +847,26 @@ userauth_hostbased(Authctxt *authctxt)
 		}
 	}
 	if (!found) {
-		xfree(chost);
+		debug("userauth_hostbased: no more client hostkeys");
 		return 0;
 	}
 	if (key_to_blob(private, &blob, &blen) == 0) {
 		key_free(private);
-		xfree(chost);
 		return 0;
 	}
+	/* figure out a name for the client host */
+	p = get_local_name(packet_get_connection_in());
+	if (p == NULL) {
+		error("userauth_hostbased: cannot get local ipaddr/name");
+		key_free(private);
+		return 0;
+	}
+	len = strlen(p) + 2;
+	chost = xmalloc(len);
+	strlcpy(chost, p, len);
+	strlcat(chost, ".", len);
+	debug2("userauth_hostbased: chost %s", chost);
+
 	service = datafellows & SSH_BUG_HBSERVICE ? "ssh-userauth" :
 	    authctxt->service;
 	pkalg = xstrdup(key_ssh_name(private));
@@ -882,7 +884,6 @@ userauth_hostbased(Authctxt *authctxt)
 #ifdef DEBUG_PK
 	buffer_dump(&b);
 #endif
-	debug2("xxx: chost %s", chost);
 	ok = key_sign(private, &signature, &slen, buffer_ptr(&b), buffer_len(&b));
 	key_free(private);
 	buffer_free(&b);

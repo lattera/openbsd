@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.60.2.2 2001/11/15 00:15:19 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.60.2.3 2001/11/15 22:51:15 miod Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -611,7 +611,7 @@ do_fingerprint(struct passwd *pw)
 		fclose(f);
 	}
 	if (invalid) {
-		printf("%s is not a valid key file.\n", identity_file);
+		printf("%s is not a public key file.\n", identity_file);
 		exit(1);
 	}
 	exit(0);

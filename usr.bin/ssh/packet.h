@@ -11,7 +11,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/* RCSID("$OpenBSD: src/usr.bin/ssh/packet.h,v 1.22.2.1 2001/09/27 19:03:54 jason Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/packet.h,v 1.22.2.2 2001/11/15 22:51:15 miod Exp $"); */
 
 #ifndef PACKET_H
 #define PACKET_H
@@ -63,7 +63,7 @@ int	 packet_connection_is_on_socket(void);
 int	 packet_connection_is_ipv4(void);
 int	 packet_remaining(void);
 void	 packet_send_ignore(int);
-void	 packet_inject_ignore(int);
+void	 packet_add_padding(u_char);
 
 void	 tty_make_modes(int, struct termios *);
 void	 tty_parse_modes(int, int *);
