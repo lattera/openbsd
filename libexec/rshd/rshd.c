@@ -39,7 +39,7 @@ static char copyright[] =
 
 #ifndef lint
 /* from: static char sccsid[] = "@(#)rshd.c	8.2 (Berkeley) 4/6/94"; */
-static char *rcsid = "$Id: rshd.c,v 1.27 1998/07/10 18:22:54 millert Exp $";
+static char *rcsid = "$Id: rshd.c,v 1.28 1998/07/12 08:46:52 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -177,7 +177,7 @@ main(argc, argv)
 
 	fromlen = sizeof (from);
 	if (getpeername(0, (struct sockaddr *)&from, &fromlen) < 0) {
-		syslog(LOG_ERR, "getpeername: %m");
+		/* syslog(LOG_ERR, "getpeername: %m"); */
 		exit(1);
 	}
 	if (keepalive &&
