@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/games/hack/hack.save.c,v 1.6 2003/05/19 06:30:56 pjanzen Exp $	*/
+/*	$OpenBSD: src/games/hack/hack.save.c,v 1.7 2003/05/19 09:00:54 pjanzen Exp $	*/
 
 /*
  * Copyright (c) 1985, Stichting Centrum voor Wiskunde en Informatica,
@@ -62,10 +62,11 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/games/hack/hack.save.c,v 1.6 2003/05/19 06:30:56 pjanzen Exp $";
+static const char rcsid[] = "$OpenBSD: src/games/hack/hack.save.c,v 1.7 2003/05/19 09:00:54 pjanzen Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
 #include "hack.h"
