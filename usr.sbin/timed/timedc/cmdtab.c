@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$OpenBSD: src/usr.sbin/timed/timedc/Attic/cmdtab.c,v 1.3 2002/05/17 00:21:19 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1983 Regents of the University of California.

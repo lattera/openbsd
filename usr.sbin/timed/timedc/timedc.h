@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$OpenBSD: src/usr.sbin/timed/timedc/Attic/timedc.h,v 1.3 2002/05/17 00:21:19 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1985, 1993 The Regents of the University of California.

@@ -1,4 +1,4 @@
-/*	$Id: cmds.c,v 1.12 2002/01/19 00:32:04 mickey Exp $	*/
+/*	$OpenBSD: src/usr.sbin/timed/timedc/Attic/cmds.c,v 1.14 2002/05/17 00:21:19 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1985, 1993 The Regents of the University of California.
@@ -38,7 +38,7 @@ static char sccsid[] = "@(#)cmds.c	5.1 (Berkeley) 5/11/93";
 #endif /* not lint */
 
 #ifdef sgi
-#ident "$Revision: 1.12 $"
+#ident "$Revision: 1.13 $"
 #endif
 
 #include "timedc.h"
@@ -570,37 +570,4 @@ tracing(int argc, char *argv[])
 	}
 bail:
 	siginterrupt(SIGINT, 0);
-}
-
-int
-priv_resources()
-{
-	struct sockaddr_in sin;
-
-	sock_raw = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (sock_raw < 0)  {
-		perror("opening raw socket");
-		return (-1);
-	}
-
-	(void) seteuid(getuid());
-	(void) setuid(getuid());
-
-	sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) {
-		perror("opening socket");
-		(void)close(sock_raw);
-		return (-1);
-	}
-
-	memset(&sin, 0, sizeof sin);
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = INADDR_ANY;
-	if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-		fprintf(stderr, "all reserved ports in use\n");
-		(void)close(sock_raw);
-		return (-1);
-	}
-
-	return (1);
 }
