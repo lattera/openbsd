@@ -33,7 +33,7 @@
 
 #include <curses.priv.h>
 
-MODULE_ID("$Id: access.c,v 1.1 1998/07/25 20:17:09 tom Exp $")
+MODULE_ID("$From: access.c,v 1.1 1998/07/25 20:17:09 tom Exp $")
 
 int _nc_access(const char *path, int mode)
 {
