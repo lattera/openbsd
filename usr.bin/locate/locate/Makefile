@@ -1,12 +1,12 @@
-#	$OpenBSD: src/usr.bin/locate/locate/Makefile,v 1.4 1996/08/17 04:45:40 deraadt Exp $
+#	$OpenBSD: src/usr.bin/locate/locate/Makefile,v 1.5 1996/08/17 09:37:45 michaels Exp $
 #
 #	@(#)Makefile	8.1 (Berkeley) 6/6/93
-# $Id: Makefile,v 1.3 1996/08/16 22:00:12 michaels Exp $
+# $Id: Makefile,v 1.4 1996/08/17 04:45:40 deraadt Exp $
 
 PROG=	locate
-MAN= locate.1 #locate.updatedb.8
+MAN= locate.1 locate.updatedb.8
 SCRIPTS= updatedb mklocatedb concatdb
-#MLINKS+= locate.updatedb.8 updatedb.8
+MLINKS+= locate.updatedb.8 updatedb.8
 LIBEXECDIR=/usr/libexec
 
 beforeinstall:
