@@ -1,0 +1,154 @@
+OpenBSDInstallPrelude
+
+OpenBSDInstallPart2
+
+	If you have a small machine (less than 6MB of fast RAM) you'll
+	have to setup a miniroot filesystem in the swap partition, as
+	described in the "Preparing your System for OpenBSD Installation"
+	section above.  If your machine has 6MB or more we strongly
+	recommend using the ramdisk kernel instead.  This way you don't
+	need to setup any root image beforehand.
+
+	You need to have the "loadbsd" program in your command path.
+	If AmigaDOS complains about loadbsd not being an executable file,
+	be sure that the "Execute" protection bit is set.  If not, set it
+	with the command:
+		Protect loadbsd add e
+
+	Next you need to get yourself into OpenBSD by loading the
+	kernel from AmigaDOS with loadbsd like so:
+
+		loadbsd bsd.rd
+
+	or, if you are doing a miniroot install:
+
+		loadbsd -b bsd
+
+
+	If you have an AGA machine, and your monitor will handle
+	the dblNTSC mode, you may also {:-include-:} the "-A" option to
+	enable the dblNTSC display mode.
+
+	You should see the screen clear and some information about
+	your system as the kernel configures the hardware.  Note which
+	hard disk device(s) are configured (sd0, sd1, etc).  You will
+	be asked for disknames later during the install.  If you cannot
+	read the messages as they scroll by, do not worry -- you can get
+	at this information later inside the install program.  If you
+	are doing the miniroot install you will be prompted for a root
+	device.  At this time type 'sd0*', where '0' is the device which
+	holds the miniroot-containing swap partition you created during
+	the hard disk preparation.  If the system should hang after
+	entering the root device, try again with
+
+		loadbsd -I ff -b bsd
+
+	This disables synchronous transfer on all SCSI devices.  For
+	ramdisk installations this kind of hang might occur later during
+	the install when accessing the SCSI disk for the first time.  If
+	such a hang occurs, try again with:
+
+		loadbsd -I ff bsd.rd
+
+	While booting, you will probably see several warnings.  You
+	should be warned that no swap space is present, and that
+	init(8) cannot find /etc/rc.  Do not be alarmed, these are
+	completely normal.  When you reach the prompt asking you for a
+	shell name, just hit return.
+
+	You will be asked which terminal type to use, you should just
+	hit return to select the default (vt220).
+
+	The install program will then tell you which disks of that
+	type it can install on, and ask you which it should use.  The
+	name of the disk is typically "sd0" for SCSI drives or the
+	A4000 IDE drives or "wd0" for ISA-connected IDE drives.  Reply
+	with the name of your disk.
+
+	The install program will now ask which file systems should be
+	created on which partitions.  It will automatically select the
+	'a' partition to be the root file system. Next it will ask for
+	which disk and partition you want a file system created on.
+	This will be the same as the disk name (eg. "sd0") with the
+	letter identifying the partition (eg. "d") appended (eg.
+	"sd0d").  Then it will ask where this partition is to be
+	mounted, eg. /usr.  This process will be repeated until you
+	just hit return.
+
+	At this point you will be asked to confirm that the file system
+	information you have entered is correct, and given an opportunity
+	to change the file system table.  Next it will create the new file
+	systems as specified, OVERWRITING ANY EXISTING DATA.  This is the
+	point of no return.
+
+	The install program will now make the filesystems you specified.
+	There should be only one error in this section of the installation.
+	It will look like this:
+
+		newfs: ioctl (WDINFO): Invalid argument
+		newfs: /dev/rsd0a: can't rewrite disk label
+
+	If there are any others, restart from the the beginning of
+	the installation process.  This error is ok as the Amiga
+	does not write disklabels currently.  You should expect
+	this error whenever using newfs.
+
+	After all your file systems have been created, the install program
+	will give you an opportunity to configure the network.  The network
+	configuration you enter (if any) can then be used to do the install
+	from another system using NFS, HTTP or FTP, and will also be the
+	configuration used by the system after the installation is complete.
+
+	If you select to configure the network, the install program will
+	ask you for a name of your system and the DNS domain name to use.
+	Note that the host name should be without the domain part, and that
+	the domain name should NOT {:-include-:} the host name part.
+
+	Next the system will give you a list of network interfaces you can
+	configure.  For each network interface you select to configure, it
+	will ask for the IP address to use, the symbolic host name to use,
+	the netmask to use and any interface-specific flags to set.  The
+	interface-specific flags are usually used to determine which media
+	the network card is to use.  The flags usually carry the following
+	meaning:
+
+		-link0 -link1	Use BNC (coaxial) port [default]
+		link0 -link1	Use AUI port
+		link0 link1		Use UTP (twisted pair) port
+
+	After all network interfaces have been configured the install pro-
+	gram will ask for a default route and IP address of the primary
+	name server to use.  You will also be presented with an opportunity
+	to edit the host table.
+
+	At this point you will be allowed to edit the file system table
+	that will be used for the remainder of the installation and that
+	will be used by the finished system, following which the new file
+	systems will be mounted to complete the installation.
+
+	After these preparatory steps has been completed, you will be
+	able to extract the distribution sets onto your system.  There
+	are several install methods supported; FTP, HTTP, tape, CD-ROM, NFS
+	or a local disk partition.  To install from a tape, the distrib-
+	ution sets must have been written to tape prior to running the
+	installation program, either as tar images or as gzipped tar
+	images.  Note that installation from floppies are not currently
+	supported.
+
+OpenBSDFTPInstall
+
+OpenBSDHTTPInstall
+
+OpenBSDTAPEInstall
+
+OpenBSDCDROMInstall
+
+OpenBSDNFSInstall
+
+OpenBSDDISKInstall({:-"wdN" or -:},,{:- or AmigaDOS FFS (ados)-:})
+		
+OpenBSDCommonFS
+
+OpenBSDCommonURL
+
+OpenBSDCongratulations
