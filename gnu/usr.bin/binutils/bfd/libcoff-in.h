@@ -1,5 +1,5 @@
 /* BFD COFF object file private structure.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 97, 98, 1999
    Free Software Foundation, Inc.
    Written by Cygnus Support.
 
@@ -56,7 +56,7 @@ typedef struct coff_tdata
   file_ptr sym_filepos;
 
   struct coff_ptr_struct *raw_syments;
-  unsigned int raw_syment_count;
+  unsigned long raw_syment_count;
 
   /* These are only valid once writing has begun */
   long int relocbase;
@@ -96,6 +96,14 @@ typedef struct coff_tdata
 
   /* Used by coff_find_nearest_line.  */
   PTR line_info;
+
+  /* The timestamp from the COFF file header.  */
+  long timestamp;
+
+  /* Copy of some of the f_flags bits in the COFF filehdr structure,
+     used by ARM code.  */
+  flagword flags;
+
 } coff_data_type;
 
 /* Tdata for pe image files. */
@@ -208,12 +216,14 @@ struct xcoff_section_tdata
 #define xcoff_section_data(abfd, sec) \
   ((struct xcoff_section_tdata *) coff_section_data ((abfd), (sec))->tdata)
 
-/* Tdata for sections in PEI image files.  */
+/* Tdata for sections in PE files.  */
 
 struct pei_section_tdata
 {
   /* The virtual size of the section.  */
   bfd_size_type virt_size;
+  /* The PE section flags.  */
+  long pe_flags;
 };
 
 /* An accessor macro for the pei_section_tdata structure.  */
@@ -244,6 +254,11 @@ struct coff_link_hash_entry
 
   /* Pointer to array of auxiliary entries, if any.  */
   union internal_auxent *aux;
+
+  /* Flag word; legal values follow.  */
+  unsigned short coff_link_hash_flags;
+  /* Symbol is a PE section symbol.  */
+#define COFF_LINK_HASH_PE_SECTION_SYMBOL (01)
 };
 
 /* COFF linker hash table.  */
@@ -417,6 +432,10 @@ struct coff_final_link_info
   bfd *output_bfd;
   /* Used to indicate failure in traversal routine.  */
   boolean failed;
+  /* If doing "task linking" set only during the time when we want the
+     global symbol writer to convert the storage class of defined global
+     symbols from global to static. */
+  boolean global_to_static;
   /* Hash table for long symbol names.  */
   struct bfd_strtab_hash *strtab;
   /* When doing a relocateable link, an array of information kept for
@@ -453,6 +472,41 @@ struct coff_final_link_info
   struct internal_reloc *internal_relocs;
 };
 
+/* Most COFF variants have no way to record the alignment of a
+   section.  This struct is used to set a specific alignment based on
+   the name of the section.  */
+
+struct coff_section_alignment_entry
+{
+  /* The section name.  */
+  const char *name;
+
+  /* This is either (unsigned int) -1, indicating that the section
+     name must match exactly, or it is the number of letters which
+     must match at the start of the name.  */
+  unsigned int comparison_length;
+
+  /* These macros may be used to fill in the first two fields in a
+     structure initialization.  */
+#define COFF_SECTION_NAME_EXACT_MATCH(name) (name), ((unsigned int) -1)
+#define COFF_SECTION_NAME_PARTIAL_MATCH(name) (name), (sizeof (name) - 1)
+
+  /* Only use this entry if the default section alignment for this
+     target is at least that much (as a power of two).  If this field
+     is COFF_ALIGNMENT_FIELD_EMPTY, it should be ignored.  */
+  unsigned int default_alignment_min;
+
+  /* Only use this entry if the default section alignment for this
+     target is no greater than this (as a power of two).  If this
+     field is COFF_ALIGNMENT_FIELD_EMPTY, it should be ignored.  */
+  unsigned int default_alignment_max;
+
+#define COFF_ALIGNMENT_FIELD_EMPTY ((unsigned int) -1)
+
+  /* The desired alignment for this section (as a power of two).  */
+  unsigned int alignment_power;
+};
+
 extern struct bfd_hash_entry *_bfd_coff_link_hash_newfunc
   PARAMS ((struct bfd_hash_entry *, struct bfd_hash_table *, const char *));
 extern boolean _bfd_coff_link_hash_table_init
@@ -478,6 +532,8 @@ extern boolean _bfd_coff_generic_relocate_section
 extern struct bfd_hash_entry *_bfd_coff_debug_merge_hash_newfunc
   PARAMS ((struct bfd_hash_entry *, struct bfd_hash_table *, const char *));
 extern boolean _bfd_coff_write_global_sym
+  PARAMS ((struct coff_link_hash_entry *, PTR));
+extern boolean _bfd_coff_write_task_globals
   PARAMS ((struct coff_link_hash_entry *, PTR));
 extern boolean _bfd_coff_link_input_bfd
   PARAMS ((struct coff_final_link_info *, bfd *));

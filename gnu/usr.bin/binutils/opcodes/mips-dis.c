@@ -1,5 +1,5 @@
 /* Print mips instructions for GDB, the GNU debugger, or for objdump.
-   Copyright 1989, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (c) 1989, 91-97, 1998 Free Software Foundation, Inc.
    Contributed by Nobuyuki Hikichi(hikichi@sra.co.jp).
 
 This file is part of GDB, GAS, and the GNU binutils.
@@ -18,15 +18,21 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#include <ansidecl.h>
 #include "sysdep.h"
 #include "dis-asm.h"
 #include "opcode/mips.h"
+#include "opintl.h"
 
-/* FIXME: These are needed to figure out if this is a mips16 symbol or
-   not.  It would be better to think of a cleaner way to do this.  */
+/* FIXME: These are needed to figure out if the code is mips16 or
+   not. The low bit of the address is often a good indicator.  No
+   symbol table is available when this code runs out in an embedded
+   system as when it is used for disassembler support in a monitor. */
+
+#if !defined(EMBEDDED_ENV)
+#define SYMTAB_AVAILABLE 1
 #include "elf-bfd.h"
 #include "elf/mips.h"
+#endif
 
 static int print_insn_mips16 PARAMS ((bfd_vma, struct disassemble_info *));
 static void print_mips16_insn_arg
@@ -159,6 +165,12 @@ print_insn_arg (d, l, pc, info)
 			     (l >> OP_SH_CODE) & OP_MASK_CODE);
       break;
 
+
+    case 'q':
+      (*info->fprintf_func) (info->stream, "0x%x",
+			     (l >> OP_SH_CODE2) & OP_MASK_CODE2);
+      break;
+
     case 'C':
       (*info->fprintf_func) (info->stream, "0x%x",
 			     (l >> OP_SH_COPZ) & OP_MASK_COPZ);
@@ -174,6 +186,7 @@ print_insn_arg (d, l, pc, info)
       (*info->fprintf_func) (info->stream, "$f%d",
 			     (l >> OP_SH_FS) & OP_MASK_FS);
       break;
+
 
     case 'T':
     case 'W':
@@ -211,13 +224,110 @@ print_insn_arg (d, l, pc, info)
 			     (l >> OP_SH_CCC) & OP_MASK_CCC);
       break;
 
+    case 'P':
+      (*info->fprintf_func) (info->stream, "%d",
+			     (l >> OP_SH_PERFREG) & OP_MASK_PERFREG);
+      break;
+
+
     default:
+      /* xgettext:c-format */
       (*info->fprintf_func) (info->stream,
-			     "# internal error, undefined modifier(%c)", *d);
+			     _("# internal error, undefined modifier(%c)"),
+			     *d);
       break;
     }
 }
 
+#if SYMTAB_AVAILABLE
+
+/* Figure out the MIPS ISA and CPU based on the machine number.
+   FIXME: What does this have to do with SYMTAB_AVAILABLE?  */
+
+static void
+set_mips_isa_type (mach, isa, cputype)
+     int mach;
+     int *isa;
+     int *cputype;
+{
+  int target_processor = 0;
+  int mips_isa = 0;
+
+  switch (mach)
+    {
+      case bfd_mach_mips3000:
+	target_processor = 3000;
+	mips_isa = 1;
+	break;
+      case bfd_mach_mips3900:
+	target_processor = 3900;
+	mips_isa = 1;
+	break;
+      case bfd_mach_mips4000:
+	target_processor = 4000;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4010:
+	target_processor = 4010;
+	mips_isa = 2;
+	break;
+      case bfd_mach_mips4100:
+	target_processor = 4100;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4111:
+	target_processor = 4100;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4300:
+	target_processor = 4300;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4400:
+	target_processor = 4400;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4600:
+	target_processor = 4600;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips4650:
+	target_processor = 4650;
+	mips_isa = 3;
+	break;
+      case bfd_mach_mips5000:
+	target_processor = 5000;
+	mips_isa = 4;
+	break;
+      case bfd_mach_mips6000:
+	target_processor = 6000;
+	mips_isa = 2;
+	break;
+      case bfd_mach_mips8000:
+	target_processor = 8000;
+	mips_isa = 4;
+	break;
+      case bfd_mach_mips10000:
+	target_processor = 10000;
+	mips_isa = 4;
+	break;
+      case bfd_mach_mips16:
+	target_processor = 16;
+	mips_isa = 3;
+	break;
+      default:
+	target_processor = 3000;
+	mips_isa = 3;
+	break;
+
+    }
+
+  *isa = mips_isa;
+  *cputype = target_processor;
+}
+
+#endif /* SYMTAB_AVAILABLE */
+
 /* Print the mips instruction at address MEMADDR in debugged memory,
    on using INFO.  Returns length of the instruction, in bytes, which is
    always 4.  BIGENDIAN must be 1 if this is big-endian code, 0 if
@@ -230,6 +340,7 @@ _print_insn_mips (memaddr, word, info)
      struct disassemble_info *info;
 {
   register const struct mips_opcode *op;
+  int target_processor, mips_isa;
   static boolean init = 0;
   static const struct mips_opcode *mips_hash[OP_MASK_OP + 1];
 
@@ -255,6 +366,15 @@ _print_insn_mips (memaddr, word, info)
       init = 1;
     }
 
+#if ! SYMTAB_AVAILABLE
+  /* This is running out on a target machine, not in a host tool.
+     FIXME: Where does mips_target_info come from?  */
+  target_processor = mips_target_info.processor;
+  mips_isa = mips_target_info.isa;
+#else  
+  set_mips_isa_type (info->mach, &mips_isa, &target_processor);
+#endif  
+
   info->bytes_per_chunk = 4;
   info->display_endian = info->endian;
 
@@ -267,14 +387,17 @@ _print_insn_mips (memaddr, word, info)
 	    {
 	      register const char *d;
 
+	      if (! OPCODE_IS_MEMBER (op, mips_isa, target_processor, 0))
+		continue;
+
 	      (*info->fprintf_func) (info->stream, "%s", op->name);
 
 	      d = op->args;
 	      if (d != NULL && *d != '\0')
 		{
-		  (*info->fprintf_func) (info->stream, "\t");
+		    (*info->fprintf_func) (info->stream, "\t");
 		  for (; *d != '\0'; d++)
-		    print_insn_arg (d, word, memaddr, info);
+		      print_insn_arg (d, word, memaddr, info);
 		}
 
 	      return 4;
@@ -287,6 +410,13 @@ _print_insn_mips (memaddr, word, info)
   return 4;
 }
 
+
+/* In an environment where we do not know the symbol type of the
+   instruction we are forced to assume that the low order bit of the
+   instructions' address may mark it as a mips16 instruction.  If we
+   are single stepping, or the pc is within the disassembled function,
+   this works.  Otherwise, we need a clue.  Sometimes.  */
+
 int
 print_insn_big_mips (memaddr, info)
      bfd_vma memaddr;
@@ -295,12 +425,21 @@ print_insn_big_mips (memaddr, info)
   bfd_byte buffer[4];
   int status;
 
+#if 1
+  /* FIXME: If odd address, this is CLEARLY a mips 16 instruction.  */
+  /* Only a few tools will work this way.  */
+  if (memaddr & 0x01)
+    return print_insn_mips16 (memaddr, info);
+#endif  
+
+#if SYMTAB_AVAILABLE
   if (info->mach == 16
       || (info->flavour == bfd_target_elf_flavour
-	  && info->symbol != NULL
-	  && (((elf_symbol_type *) info->symbol)->internal_elf_sym.st_other
+	  && info->symbols != NULL
+	  && ((*(elf_symbol_type **) info->symbols)->internal_elf_sym.st_other
 	      == STO_MIPS16)))
     return print_insn_mips16 (memaddr, info);
+#endif  
 
   status = (*info->read_memory_func) (memaddr, buffer, 4, info);
   if (status == 0)
@@ -321,12 +460,20 @@ print_insn_little_mips (memaddr, info)
   bfd_byte buffer[4];
   int status;
 
+
+#if 1
+  if (memaddr & 0x01)
+    return print_insn_mips16 (memaddr, info);
+#endif  
+
+#if SYMTAB_AVAILABLE
   if (info->mach == 16
       || (info->flavour == bfd_target_elf_flavour
-	  && info->symbol != NULL
-	  && (((elf_symbol_type *) info->symbol)->internal_elf_sym.st_other
+	  && info->symbols != NULL
+	  && ((*(elf_symbol_type **) info->symbols)->internal_elf_sym.st_other
 	      == STO_MIPS16)))
     return print_insn_mips16 (memaddr, info);
+#endif  
 
   status = (*info->read_memory_func) (memaddr, buffer, 4, info);
   if (status == 0)
@@ -351,7 +498,7 @@ print_insn_mips16 (memaddr, info)
   int length;
   int insn;
   boolean use_extend;
-  int extend;
+  int extend = 0;
   const struct mips_opcode *op, *opend;
 
   info->bytes_per_chunk = 2;
@@ -756,7 +903,7 @@ print_mips16_insn_arg (type, op, l, use_extend, extend, memaddr, info)
 	    if (signedp && immed >= (1 << (nbits - 1)))
 	      immed -= 1 << nbits;
 	    immed <<= shift;
-	    if ((type == '<' || type == '>' || type == '[' || type == '[')
+	    if ((type == '<' || type == '>' || type == '[' || type == ']')
 		&& immed == 0)
 	      immed = 8;
 	  }

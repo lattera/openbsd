@@ -1,14 +1,14 @@
 /* m88k.h -- Assembler for the Motorola 88000
    Contributed by Devon Bowen of Buffalo University
    and Torbjorn Granlund of the Swedish Institute of Computer Science.
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 1997
+   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 97, 2000
    Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
 
 GAS is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GAS is distributed in the hope that it will be useful,
@@ -70,12 +70,12 @@ struct reloc_info_m88k
 #endif
 
 /* The m88k uses pseudo-ops with no leading period.  */
-#define NO_PSEUDO_DOT
+#define NO_PSEUDO_DOT 1
 
 /* Don't warn on word overflow; it happens on %hi relocs.  */
 #undef WARN_SIGNED_OVERFLOW_WORD
 
-#define md_convert_frag(b,s,f)		{as_fatal ("m88k convert_frag\n");}
+#define md_convert_frag(b,s,f)		{as_fatal (_("m88k convert_frag\n"));}
 
 /* We don't need to do anything special for undefined symbols.  */
 #define md_undefined_symbol(s) 0

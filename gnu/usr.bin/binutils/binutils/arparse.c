@@ -1,33 +1,33 @@
 
-/*  A Bison parser, made from ./arparse.y with Bison version GNU Bison version 1.24
-  */
+/*  A Bison parser, made from arparse.y
+    by GNU Bison version 1.28  */
 
 #define YYBISON 1  /* Identify Bison output.  */
 
-#define	NEWLINE	258
-#define	VERBOSE	259
-#define	FILENAME	260
-#define	ADDLIB	261
-#define	LIST	262
-#define	ADDMOD	263
-#define	CLEAR	264
-#define	CREATE	265
-#define	DELETE	266
-#define	DIRECTORY	267
-#define	END	268
-#define	EXTRACT	269
-#define	FULLDIR	270
-#define	HELP	271
-#define	QUIT	272
-#define	REPLACE	273
-#define	SAVE	274
-#define	OPEN	275
+#define	NEWLINE	257
+#define	VERBOSE	258
+#define	FILENAME	259
+#define	ADDLIB	260
+#define	LIST	261
+#define	ADDMOD	262
+#define	CLEAR	263
+#define	CREATE	264
+#define	DELETE	265
+#define	DIRECTORY	266
+#define	END	267
+#define	EXTRACT	268
+#define	FULLDIR	269
+#define	HELP	270
+#define	QUIT	271
+#define	REPLACE	272
+#define	SAVE	273
+#define	OPEN	274
 
-#line 1 "./arparse.y"
+#line 1 "arparse.y"
 
 /* arparse.y - Stange script language parser */
 
-/*   Copyright (C) 1992, 93, 95, 1997 Free Software Foundation, Inc.
+/*   Copyright (C) 1992, 93, 95, 97, 98, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -55,31 +55,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bucomm.h"
 #include "arsup.h"
 extern int verbose;
+extern int yylex PARAMS ((void));
 static int yyerror PARAMS ((const char *));
 
-#line 35 "./arparse.y"
+#line 36 "arparse.y"
 typedef union {
   char *name;
 struct list *list ;
 
 } YYSTYPE;
-
-#ifndef YYLTYPE
-typedef
-  struct yyltype
-    {
-      int timestamp;
-      int first_line;
-      int first_column;
-      int last_line;
-      int last_column;
-      char *text;
-   }
-  yyltype;
-
-#define YYLTYPE yyltype
-#endif
-
 #include <stdio.h>
 
 #ifndef __cplusplus
@@ -94,7 +78,7 @@ typedef
 #define	YYFLAG		-32768
 #define	YYNTBASE	24
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 275 ? yytranslate[x] : 45)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 274 ? yytranslate[x] : 45)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -122,9 +106,9 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     1,     2,     3,     4,     5,
-     6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
-    16,    17,    18,    19,    20
+     2,     2,     2,     2,     2,     1,     3,     4,     5,     6,
+     7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+    17,    18,    19,    20
 };
 
 #if YYDEBUG != 0
@@ -153,12 +137,16 @@ static const short yyrhs[] = {    -1,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    65,    67,    69,    71,    74,    77,    79,    80,    81,    82,
-    83,    84,    85,    86,    87,    88,    89,    90,    91,    92,
-    93,    97,   102,   107,   112,   116,   121,   126,   133,   138,
-   144,   148,   155,   158,   161,   164,   168,   175,   179,   181,
-   185
+    66,    68,    70,    72,    75,    78,    80,    81,    82,    83,
+    84,    85,    86,    87,    88,    89,    90,    91,    92,    93,
+    94,    98,   103,   108,   113,   117,   122,   127,   134,   139,
+   145,   149,   156,   159,   162,   165,   169,   176,   180,   182,
+   186
 };
+#endif
+
+
+#if YYDEBUG != 0 || defined (YYERROR_VERBOSE)
 
 static const char * const yytname[] = {   "$","error","$undefined.","NEWLINE",
 "VERBOSE","FILENAME","ADDLIB","LIST","ADDMOD","CLEAR","CREATE","DELETE","DIRECTORY",
@@ -166,7 +154,7 @@ static const char * const yytname[] = {   "$","error","$undefined.","NEWLINE",
 "','","start","@1","session","command_line","command","extract_command","replace_command",
 "clear_command","delete_command","addmod_command","list_command","save_command",
 "open_command","create_command","addlib_command","directory_command","optional_filename",
-"modulelist","modulename","optcomma","verbose_command",""
+"modulelist","modulename","optcomma","verbose_command", NULL
 };
 #endif
 
@@ -232,7 +220,8 @@ static const short yycheck[] = {    11,
      5,     5,     0,     0,    -1,    36
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/unsupported/share/bison.simple"
+#line 3 "/usr/share/misc/bison.simple"
+/* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -249,46 +238,66 @@ static const short yycheck[] = {    11,
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 /* As a special exception, when this file is copied by Bison into a
    Bison output file, you may use that output file without restriction.
    This special exception was added by the Free Software Foundation
    in version 1.24 of Bison.  */
 
-#ifndef alloca
-#ifdef __GNUC__
-#define alloca __builtin_alloca
-#else /* not GNU C.  */
-#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
-#include <alloca.h>
-#else /* not sparc */
-#if defined (MSDOS) && !defined (__TURBOC__)
-#include <malloc.h>
-#else /* not MSDOS, or __TURBOC__ */
-#if defined(_AIX)
-#include <malloc.h>
- #pragma alloca
-#else /* not MSDOS, __TURBOC__, or _AIX */
-#ifdef __hpux
-#ifdef __cplusplus
-extern "C" {
-void *alloca (unsigned int);
-};
-#else /* not __cplusplus */
-void *alloca ();
-#endif /* not __cplusplus */
-#endif /* __hpux */
-#endif /* not _AIX */
-#endif /* not MSDOS, or __TURBOC__ */
-#endif /* not sparc.  */
-#endif /* not GNU C.  */
-#endif /* alloca not defined.  */
-
 /* This is the parser code that is written into each bison parser
   when the %semantic_parser declaration is not specified in the grammar.
   It was written by Richard Stallman by simplifying the hairy parser
   used when %semantic_parser is specified.  */
+
+#ifndef YYSTACK_USE_ALLOCA
+#ifdef alloca
+#define YYSTACK_USE_ALLOCA
+#else /* alloca not defined */
+#ifdef __GNUC__
+#define YYSTACK_USE_ALLOCA
+#define alloca __builtin_alloca
+#else /* not GNU C.  */
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi) || (defined (__sun) && defined (__i386))
+#define YYSTACK_USE_ALLOCA
+#include <alloca.h>
+#else /* not sparc */
+/* We think this test detects Watcom and Microsoft C.  */
+/* This used to test MSDOS, but that is a bad idea
+   since that symbol is in the user namespace.  */
+#if (defined (_MSDOS) || defined (_MSDOS_)) && !defined (__TURBOC__)
+#if 0 /* No need for malloc.h, which pollutes the namespace;
+	 instead, just don't use alloca.  */
+#include <malloc.h>
+#endif
+#else /* not MSDOS, or __TURBOC__ */
+#if defined(_AIX)
+/* I don't know what this was needed for, but it pollutes the namespace.
+   So I turned it off.   rms, 2 May 1997.  */
+/* #include <malloc.h>  */
+ #pragma alloca
+#define YYSTACK_USE_ALLOCA
+#else /* not MSDOS, or __TURBOC__, or _AIX */
+#if 0
+#ifdef __hpux /* haible@ilog.fr says this works for HPUX 9.05 and up,
+		 and on HPUX 10.  Eventually we can turn this on.  */
+#define YYSTACK_USE_ALLOCA
+#define alloca __builtin_alloca
+#endif /* __hpux */
+#endif
+#endif /* not _AIX */
+#endif /* not MSDOS, or __TURBOC__ */
+#endif /* not sparc */
+#endif /* not GNU C */
+#endif /* alloca not defined */
+#endif /* YYSTACK_USE_ALLOCA not defined */
+
+#ifdef YYSTACK_USE_ALLOCA
+#define YYSTACK_ALLOC alloca
+#else
+#define YYSTACK_ALLOC malloc
+#endif
 
 /* Note: there must be only one dollar sign in this file.
    It is replaced by the list of actions, each action
@@ -298,8 +307,8 @@ void *alloca ();
 #define yyclearin	(yychar = YYEMPTY)
 #define YYEMPTY		-2
 #define YYEOF		0
-#define YYACCEPT	return(0)
-#define YYABORT 	return(1)
+#define YYACCEPT	goto yyacceptlab
+#define YYABORT 	goto yyabortlab
 #define YYERROR		goto yyerrlab1
 /* Like YYERROR except do call yyerror.
    This remains here temporarily to ease the
@@ -380,24 +389,24 @@ int yydebug;			/*  nonzero means print parse trace	*/
 #ifndef YYMAXDEPTH
 #define YYMAXDEPTH 10000
 #endif
-
-/* Prevent warning if -Wstrict-prototypes.  */
-#ifdef __GNUC__
-int yyparse (void);
-#endif
 
+/* Define __yy_memcpy.  Note that the size argument
+   should be passed with type unsigned int, because that is what the non-GCC
+   definitions require.  With GCC, __builtin_memcpy takes an arg
+   of type size_t, but it can handle unsigned int.  */
+
 #if __GNUC__ > 1		/* GNU C and GNU C++ define this.  */
-#define __yy_memcpy(FROM,TO,COUNT)	__builtin_memcpy(TO,FROM,COUNT)
+#define __yy_memcpy(TO,FROM,COUNT)	__builtin_memcpy(TO,FROM,COUNT)
 #else				/* not GNU C or C++ */
 #ifndef __cplusplus
 
 /* This is the most reliable way to avoid incompatibilities
    in available built-in functions on various systems.  */
 static void
-__yy_memcpy (from, to, count)
-     char *from;
+__yy_memcpy (to, from, count)
      char *to;
-     int count;
+     char *from;
+     unsigned int count;
 {
   register char *f = from;
   register char *t = to;
@@ -412,10 +421,10 @@ __yy_memcpy (from, to, count)
 /* This is the most reliable way to avoid incompatibilities
    in available built-in functions on various systems.  */
 static void
-__yy_memcpy (char *from, char *to, int count)
+__yy_memcpy (char *to, char *from, unsigned int count)
 {
-  register char *f = from;
   register char *t = to;
+  register char *f = from;
   register int i = count;
 
   while (i-- > 0)
@@ -425,7 +434,7 @@ __yy_memcpy (char *from, char *to, int count)
 #endif
 #endif
 
-#line 192 "/usr/unsupported/share/bison.simple"
+#line 217 "/usr/share/misc/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -434,14 +443,29 @@ __yy_memcpy (char *from, char *to, int count)
    to the proper pointer type.  */
 
 #ifdef YYPARSE_PARAM
-#define YYPARSE_PARAM_DECL void *YYPARSE_PARAM;
-#else
-#define YYPARSE_PARAM
+#ifdef __cplusplus
+#define YYPARSE_PARAM_ARG void *YYPARSE_PARAM
 #define YYPARSE_PARAM_DECL
+#else /* not __cplusplus */
+#define YYPARSE_PARAM_ARG YYPARSE_PARAM
+#define YYPARSE_PARAM_DECL void *YYPARSE_PARAM;
+#endif /* not __cplusplus */
+#else /* not YYPARSE_PARAM */
+#define YYPARSE_PARAM_ARG
+#define YYPARSE_PARAM_DECL
+#endif /* not YYPARSE_PARAM */
+
+/* Prevent warning if -Wstrict-prototypes.  */
+#ifdef __GNUC__
+#ifdef YYPARSE_PARAM
+int yyparse (void *);
+#else
+int yyparse (void);
+#endif
 #endif
 
 int
-yyparse(YYPARSE_PARAM)
+yyparse(YYPARSE_PARAM_ARG)
      YYPARSE_PARAM_DECL
 {
   register int yystate;
@@ -468,6 +492,7 @@ yyparse(YYPARSE_PARAM)
 #endif
 
   int yystacksize = YYINITDEPTH;
+  int yyfree_stacks = 0;
 
 #ifdef YYPURE
   int yychar;
@@ -552,18 +577,32 @@ yynewstate:
       if (yystacksize >= YYMAXDEPTH)
 	{
 	  yyerror("parser stack overflow");
+	  if (yyfree_stacks)
+	    {
+	      free (yyss);
+	      free (yyvs);
+#ifdef YYLSP_NEEDED
+	      free (yyls);
+#endif
+	    }
 	  return 2;
 	}
       yystacksize *= 2;
       if (yystacksize > YYMAXDEPTH)
 	yystacksize = YYMAXDEPTH;
-      yyss = (short *) alloca (yystacksize * sizeof (*yyssp));
-      __yy_memcpy ((char *)yyss1, (char *)yyss, size * sizeof (*yyssp));
-      yyvs = (YYSTYPE *) alloca (yystacksize * sizeof (*yyvsp));
-      __yy_memcpy ((char *)yyvs1, (char *)yyvs, size * sizeof (*yyvsp));
+#ifndef YYSTACK_USE_ALLOCA
+      yyfree_stacks = 1;
+#endif
+      yyss = (short *) YYSTACK_ALLOC (yystacksize * sizeof (*yyssp));
+      __yy_memcpy ((char *)yyss, (char *)yyss1,
+		   size * (unsigned int) sizeof (*yyssp));
+      yyvs = (YYSTYPE *) YYSTACK_ALLOC (yystacksize * sizeof (*yyvsp));
+      __yy_memcpy ((char *)yyvs, (char *)yyvs1,
+		   size * (unsigned int) sizeof (*yyvsp));
 #ifdef YYLSP_NEEDED
-      yyls = (YYLTYPE *) alloca (yystacksize * sizeof (*yylsp));
-      __yy_memcpy ((char *)yyls1, (char *)yyls, size * sizeof (*yylsp));
+      yyls = (YYLTYPE *) YYSTACK_ALLOC (yystacksize * sizeof (*yylsp));
+      __yy_memcpy ((char *)yyls, (char *)yyls1,
+		   size * (unsigned int) sizeof (*yylsp));
 #endif
 #endif /* no yyoverflow */
 
@@ -724,83 +763,83 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 66 "./arparse.y"
+#line 67 "arparse.y"
 { prompt(); ;
     break;}
 case 5:
-#line 75 "./arparse.y"
+#line 76 "arparse.y"
 { prompt(); ;
     break;}
 case 18:
-#line 90 "./arparse.y"
+#line 91 "arparse.y"
 { ar_end(); return 0; ;
     break;}
 case 20:
-#line 92 "./arparse.y"
+#line 93 "arparse.y"
 { yyerror("foo"); ;
     break;}
 case 22:
-#line 99 "./arparse.y"
+#line 100 "arparse.y"
 { ar_extract(yyvsp[0].list); ;
     break;}
 case 23:
-#line 104 "./arparse.y"
+#line 105 "arparse.y"
 { ar_replace(yyvsp[0].list); ;
     break;}
 case 24:
-#line 109 "./arparse.y"
+#line 110 "arparse.y"
 { ar_clear(); ;
     break;}
 case 25:
-#line 114 "./arparse.y"
+#line 115 "arparse.y"
 { ar_delete(yyvsp[0].list); ;
     break;}
 case 26:
-#line 118 "./arparse.y"
+#line 119 "arparse.y"
 { ar_addmod(yyvsp[0].list); ;
     break;}
 case 27:
-#line 123 "./arparse.y"
+#line 124 "arparse.y"
 { ar_list(); ;
     break;}
 case 28:
-#line 128 "./arparse.y"
+#line 129 "arparse.y"
 { ar_save(); ;
     break;}
 case 29:
-#line 135 "./arparse.y"
+#line 136 "arparse.y"
 { ar_open(yyvsp[0].name,0); ;
     break;}
 case 30:
-#line 140 "./arparse.y"
+#line 141 "arparse.y"
 { ar_open(yyvsp[0].name,1); ;
     break;}
 case 31:
-#line 146 "./arparse.y"
+#line 147 "arparse.y"
 { ar_addlib(yyvsp[-1].name,yyvsp[0].list); ;
     break;}
 case 32:
-#line 150 "./arparse.y"
+#line 151 "arparse.y"
 { ar_directory(yyvsp[-2].name, yyvsp[-1].list, yyvsp[0].name); ;
     break;}
 case 33:
-#line 157 "./arparse.y"
+#line 158 "arparse.y"
 { yyval.name = yyvsp[0].name; ;
     break;}
 case 34:
-#line 158 "./arparse.y"
+#line 159 "arparse.y"
 { yyval.name = 0; ;
     break;}
 case 35:
-#line 163 "./arparse.y"
+#line 164 "arparse.y"
 { yyval.list = yyvsp[-1].list; ;
     break;}
 case 36:
-#line 165 "./arparse.y"
+#line 166 "arparse.y"
 { yyval.list = 0; ;
     break;}
 case 37:
-#line 170 "./arparse.y"
+#line 171 "arparse.y"
 { 	struct list *n  = (struct list *) malloc(sizeof(struct list));
 			n->next = yyvsp[-2].list; 
 			n->name = yyvsp[0].name;
@@ -808,16 +847,16 @@ case 37:
 		 ;
     break;}
 case 38:
-#line 175 "./arparse.y"
+#line 176 "arparse.y"
 { yyval.list = 0; ;
     break;}
 case 41:
-#line 187 "./arparse.y"
+#line 188 "arparse.y"
 { verbose = !verbose; ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 487 "/usr/unsupported/share/bison.simple"
+#line 543 "/usr/share/misc/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1012,16 +1051,40 @@ yyerrhandle:
 
   yystate = yyn;
   goto yynewstate;
+
+ yyacceptlab:
+  /* YYACCEPT comes here.  */
+  if (yyfree_stacks)
+    {
+      free (yyss);
+      free (yyvs);
+#ifdef YYLSP_NEEDED
+      free (yyls);
+#endif
+    }
+  return 0;
+
+ yyabortlab:
+  /* YYABORT comes here.  */
+  if (yyfree_stacks)
+    {
+      free (yyss);
+      free (yyvs);
+#ifdef YYLSP_NEEDED
+      free (yyls);
+#endif
+    }
+  return 1;
 }
-#line 191 "./arparse.y"
+#line 192 "arparse.y"
 
 
 static int
 yyerror (x)
-     const char *x;
+     const char *x ATTRIBUTE_UNUSED;
 {
   extern int linenumber;
 
-  printf ("Syntax error in archive script, line %d\n", linenumber + 1);
+  printf (_("Syntax error in archive script, line %d\n"), linenumber + 1);
   return 0;
 }

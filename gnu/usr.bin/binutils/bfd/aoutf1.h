@@ -1,5 +1,6 @@
 /* A.out "format 1" file handling code for BFD.
-   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 97, 1998
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -124,19 +125,19 @@ sunos_set_arch_mach (abfd, machtype)
       /* Some Sun3s make magic numbers without cpu types in them, so
 	 we'll default to the 68000. */
       arch = bfd_arch_m68k;
-      machine = 68000;
+      machine = bfd_mach_m68000;
       break;
 
     case M_68010:
     case M_HP200:
       arch = bfd_arch_m68k;
-      machine = 68010;
+      machine = bfd_mach_m68010;
       break;
 
     case M_68020:
     case M_HP300:
       arch = bfd_arch_m68k;
-      machine = 68020;
+      machine = bfd_mach_m68020;
       break;
 
     case M_SPARC:
@@ -147,6 +148,11 @@ sunos_set_arch_mach (abfd, machtype)
     case M_SPARCLET:
       arch = bfd_arch_sparc;
       machine = bfd_mach_sparc_sparclet;
+      break;
+
+    case M_SPARCLITE_LE:
+      arch = bfd_arch_sparc;
+      machine = bfd_mach_sparc_sparclite_le;
       break;
 
     case M_386:
@@ -213,14 +219,14 @@ sunos_write_object_contents (abfd)
     case bfd_arch_m68k:
       switch (bfd_get_mach (abfd))
 	{
-	case 68000:
+	case bfd_mach_m68000:
 	  N_SET_MACHTYPE (*execp, M_UNKNOWN);
 	  break;
-	case 68010:
+	case bfd_mach_m68010:
 	  N_SET_MACHTYPE (*execp, M_68010);
 	  break;
 	default:
-	case 68020:
+	case bfd_mach_m68020:
 	  N_SET_MACHTYPE (*execp, M_68020);
 	  break;
 	}
@@ -230,6 +236,9 @@ sunos_write_object_contents (abfd)
 	{
 	case bfd_mach_sparc_sparclet:
 	  N_SET_MACHTYPE (*execp, M_SPARCLET);
+	  break;
+	case bfd_mach_sparc_sparclite_le:
+	  N_SET_MACHTYPE (*execp, M_SPARCLITE_LE);
 	  break;
 	default:
 	  N_SET_MACHTYPE (*execp, M_SPARC);

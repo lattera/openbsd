@@ -1,5 +1,5 @@
 /* BFD back-end for HPPA BSD core files.
-   Copyright 1993, 94, 95, 1997 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 97, 1998 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -41,15 +41,12 @@
 
 #include "machine/vmparam.h"
 
-#include <stdio.h>
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/dir.h>
 #include <signal.h>
 #include <machine/reg.h>
 #include <sys/user.h>		/* After a.out.h  */
 #include <sys/file.h>
-#include <errno.h>
 
 static asection *make_bfd_asection PARAMS ((bfd *, CONST char *,
 					    flagword, bfd_size_type,
@@ -301,6 +298,8 @@ const bfd_target hppabsd_core_vec =
        BFD_JUMP_TABLE_LINK (_bfd_nolink),
        BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
 
+    NULL,
+    
     (PTR) 0			/* backend_data */
 };
 #endif
