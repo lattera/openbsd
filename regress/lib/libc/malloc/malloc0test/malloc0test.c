@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/regress/lib/libc/malloc/malloc0test/malloc0test.c,v 1.2 2003/07/31 21:48:03 deraadt Exp $	*/
+/*	$OpenBSD: src/regress/lib/libc/malloc/malloc0test/malloc0test.c,v 1.3 2004/02/11 08:16:00 deraadt Exp $	*/
 /*
  * Public domain.  2001, Theo de Raadt
  */
