@@ -1,4 +1,3 @@
-/*	$Id: config.h,v 1.2 1995/11/07 08:50:45 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -44,6 +43,7 @@
 #define CPU_167			0x167
 #define CPU_172			0x172
 #define CPU_177			0x177
+#define CPU_187			0x187
 
 struct brdid {
 	u_long  eye_catcher;
