@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sbin/isakmpd/udp.h,v 1.8 2004/04/15 18:39:26 deraadt Exp $	 */
+/* $OpenBSD: src/sbin/isakmpd/udp.h,v 1.9 2004/06/20 15:24:05 ho Exp $	 */
 /* $EOM: udp.h,v 1.4 1998/12/22 02:23:43 niklas Exp $	 */
 
 /*
@@ -39,9 +39,15 @@ extern int      bind_family;
 #define BIND_FAMILY_INET4	0x0001
 #define BIND_FAMILY_INET6	0x0002
 
-#if 0
-extern in_port_t udp_decode_port(char *);
-#endif
-extern void     udp_init(void);
+struct transport *udp_bind(const struct sockaddr *);
+void		  udp_init(void);
+
+struct udp_transport {
+	struct transport  transport;
+	struct sockaddr	 *src;
+	struct sockaddr	 *dst;
+	int		  s;
+	LIST_ENTRY(udp_transport) link;
+};
 
 #endif				/* _UDP_H_ */
