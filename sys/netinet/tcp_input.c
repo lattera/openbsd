@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.125 2003/02/14 17:54:46 dhartmei Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.125.2.1 2004/03/03 02:35:59 brad Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -1388,8 +1388,10 @@ findpcb:
 				tp->snd_scale = tp->requested_s_scale;
 				tp->rcv_scale = tp->request_r_scale;
 			}
+			tcp_reass_lock(tp);
 			(void) tcp_reass(tp, (struct tcphdr *)0,
 				(struct mbuf *)0, &tlen);
+			tcp_reass_unlock(tp);
 			/*
 			 * if we didn't have to retransmit the SYN,
 			 * use its rtt as our initial srtt & rtt var.
@@ -1648,8 +1650,10 @@ trimthenstep6:
 			tp->snd_scale = tp->requested_s_scale;
 			tp->rcv_scale = tp->request_r_scale;
 		}
+		tcp_reass_lock(tp);
 		(void) tcp_reass(tp, (struct tcphdr *)0, (struct mbuf *)0,
 				 &tlen);
+		tcp_reass_unlock(tp);
 		tp->snd_wl1 = th->th_seq - 1;
 		/* fall into ... */
 
@@ -2152,8 +2156,10 @@ dodata:							/* XXX */
 	 */
 	if ((tlen || (tiflags & TH_FIN)) &&
 	    TCPS_HAVERCVDFIN(tp->t_state) == 0) {
+		tcp_reass_lock(tp);
 		if (th->th_seq == tp->rcv_nxt && tp->segq.lh_first == NULL &&
 		    tp->t_state == TCPS_ESTABLISHED) {
+			tcp_reass_unlock(tp);
 			TCP_SETUP_ACK(tp, tiflags);
 			tp->rcv_nxt += tlen;
 			tiflags = th->th_flags & TH_FIN;
@@ -2170,6 +2176,7 @@ dodata:							/* XXX */
 		} else {
 			m_adj(m, hdroptlen);
 			tiflags = tcp_reass(tp, th, m, &tlen);
+			tcp_reass_unlock(tp);
 			tp->t_flags |= TF_ACKNOW;
 		}
 #ifdef TCP_SACK

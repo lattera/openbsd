@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.65 2002/08/28 15:43:03 pefo Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.65.4.1 2004/03/03 02:35:59 brad Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -670,7 +670,9 @@ tcp_close(struct tcpcb *tp)
 #endif /* RTV_RTT */
 
 	/* free the reassembly queue, if any */
+	tcp_reass_lock(tp);
 	tcp_freeq(tp);
+	tcp_reass_unlock(tp);
 
 	tcp_canceltimers(tp);
 	TCP_CLEAR_DELACK(tp);
@@ -712,7 +714,20 @@ tcp_freeq(struct tcpcb *tp)
 void
 tcp_drain()
 {
+	struct inpcb *inp;
+ 
+	/* called at splimp() */
+	CIRCLEQ_FOREACH(inp, &tcbtable.inpt_queue, inp_queue) {
+		struct tcpcb *tp = (struct tcpcb *)inp->inp_ppcb;
 
+		if (tp != NULL) {
+			if (tcp_reass_lock_try(tp) == 0)
+				continue;
+			if (tcp_freeq(tp))
+				tcpstat.tcps_conndrained++;
+			tcp_reass_unlock(tp);
+		}
+	}
 }
 
 /*
