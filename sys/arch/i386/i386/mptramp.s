@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/mptramp.s,v 1.1.2.2 2001/07/16 23:05:35 niklas Exp $	*/
+
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
  * All rights reserved.
