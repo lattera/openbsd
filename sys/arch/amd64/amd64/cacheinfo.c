@@ -19,16 +19,14 @@ print_cache_config(struct cpu_info *ci, int cache_tag, char *name, char *sep)
 		printf("%s: ", ci->ci_dev->dv_xname);
 	else
 		printf("%s", sep);
+	if (name != NULL)
+		printf("%s ", name);
 
-	if (cai->cai_string != NULL)
+	if (cai->cai_string != NULL) {
 		printf("%s ", cai->cai_string);
-	else if (cai->cai_totalsize >= 1024*1024)
-		printf("%dMB %db/line ", cai->cai_totalsize / 1024 / 1024,
-		    cai->cai_linesize);
-	else
-		printf("%dKB %db/line ", cai->cai_totalsize / 1024,
-		    cai->cai_linesize);
-
+	} else {
+		printf("%d %db/line ", cai->cai_totalsize, cai->cai_linesize);
+	}
 	switch (cai->cai_associativity) {
 	case    0:
 		printf("disabled");
@@ -43,10 +41,6 @@ print_cache_config(struct cpu_info *ci, int cache_tag, char *name, char *sep)
 		printf("%d-way", cai->cai_associativity);
 		break;
 	}
-
-	if (name != NULL)
-		printf(" %s", name);
-
 	return ", ";
 }
 
@@ -68,12 +62,7 @@ print_tlb_config(struct cpu_info *ci, int cache_tag, char *name, char *sep)
 	if (cai->cai_string != NULL) {
 		printf("%s", cai->cai_string);
 	} else {
-		if (cai->cai_linesize >= 1024*1024)
-			printf("%d %dMB entries ", cai->cai_totalsize,
-			    cai->cai_linesize / 1024 / 1024);
-		else
-			printf("%d %dKB entries ", cai->cai_totalsize,
-			    cai->cai_linesize / 1024);
+		printf("%d %d entries ", cai->cai_totalsize, cai->cai_linesize);
 		switch (cai->cai_associativity) {
 		case 0:
 			printf("disabled");
@@ -221,14 +210,15 @@ x86_print_cacheinfo(struct cpu_info *ci)
 {
 	char *sep;
 
-	sep = NULL;
 	if (ci->ci_cinfo[CAI_ICACHE].cai_totalsize != 0 ||
 	    ci->ci_cinfo[CAI_DCACHE].cai_totalsize != 0) {
 		sep = print_cache_config(ci, CAI_ICACHE, "I-cache", NULL);
 		sep = print_cache_config(ci, CAI_DCACHE, "D-cache", sep);
+		if (sep != NULL)
+			printf("\n");
 	}
 	if (ci->ci_cinfo[CAI_L2CACHE].cai_totalsize != 0) {
-		sep = print_cache_config(ci, CAI_L2CACHE, "L2 cache", sep);
+		sep = print_cache_config(ci, CAI_L2CACHE, "L2 cache", NULL);
 		if (sep != NULL)
 			printf("\n");
 	}

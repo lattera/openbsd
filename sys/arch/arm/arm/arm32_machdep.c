@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/arm/arm32_machdep.c,v 1.3 2004/02/12 04:13:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/arm/arm32_machdep.c,v 1.3.2.1 2004/02/22 22:08:19 niklas Exp $	*/
 /*	$NetBSD: arm32_machdep.c,v 1.42 2003/12/30 12:33:15 pk Exp $	*/
 
 /*
@@ -264,6 +264,8 @@ cpu_startup()
 	 */
 #ifdef RAMDISK_HOOKS
 	boothowto = RB_SINGLE | RB_DFLTROOT;
+#else
+	boothowto = RB_AUTOBOOT;
 #endif /* RAMDISK_HOOKS */
 
 	/*
@@ -532,6 +534,26 @@ parse_mi_bootargs(args)
 /*	if (get_bootconf_option(args, "nbuf", BOOTOPT_TYPE_INT, &integer))
 		bufpages = integer;*/
 
+#if NMD > 0 && defined(MEMORY_DISK_HOOKS) && !defined(MEMORY_DISK_ROOT_SIZE)
+	if (get_bootconf_option(args, "memorydisc", BOOTOPT_TYPE_INT, &integer)
+	    || get_bootconf_option(args, "memorydisk", BOOTOPT_TYPE_INT, &integer)) {
+		md_root_size = integer;
+		md_root_size *= 1024;
+		if (md_root_size < 32*1024)
+			md_root_size = 32*1024;
+		if (md_root_size > 2048*1024)
+			md_root_size = 2048*1024;
+	}
+#endif	/* NMD && MEMORY_DISK_HOOKS && !MEMORY_DISK_ROOT_SIZE */
+
+	if (get_bootconf_option(args, "quiet", BOOTOPT_TYPE_BOOLEAN, &integer)
+	    || get_bootconf_option(args, "-q", BOOTOPT_TYPE_BOOLEAN, &integer))
+		if (integer)
+			boothowto |= AB_QUIET;
+	if (get_bootconf_option(args, "verbose", BOOTOPT_TYPE_BOOLEAN, &integer)
+	    || get_bootconf_option(args, "-v", BOOTOPT_TYPE_BOOLEAN, &integer))
+		if (integer)
+			boothowto |= AB_VERBOSE;
 }
 #endif
 

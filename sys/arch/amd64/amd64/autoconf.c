@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/autoconf.c,v 1.4 2004/02/09 20:39:25 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/autoconf.c,v 1.4.2.1 2004/02/22 22:08:18 niklas Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.1 2003/04/26 18:39:26 fvdl Exp $	*/
 
 /*-
@@ -101,10 +101,6 @@ struct device *booted_device;
 int booted_partition;
 dev_t bootdev;
 
-#ifdef RAMDISK_HOOKS
-static struct device fakerdrootdev = { DV_DISK, {}, NULL, 0, "rd0", NULL };
-#endif
-
 /*
  * Determine i/o configuration for a machine.
  */
@@ -117,10 +113,10 @@ cpu_configure(void)
 
 	x86_64_proc0_tss_ldt_init();
 
-	startrtclock();
-
 	if (config_rootfound("mainbus", NULL) == NULL)
 		panic("configure: mainbus not configured");
+
+	startrtclock();
 
 	intr_printconfig();
 
@@ -508,7 +504,6 @@ static	struct nam2blk {
 } nam2blk[] = {
 	{ "wd",		0 },	/* 0 = wd */
 	{ "sd",		4 },	/* 2 = sd */
-	{ "rd",		17 },	/* 17 = rd */
 	{ "raid",	19 },	/* 19 = raid */
 };
 
