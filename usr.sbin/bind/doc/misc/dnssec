@@ -1,3 +1,4 @@
+Copyright (C) 2004  Internet Systems Consortium, Inc. ("ISC")
 Copyright (C) 2000-2002  Internet Software Consortium.
 See COPYRIGHT in the source root or http://isc.org/copyright.html for terms.
 
@@ -9,7 +10,7 @@ this release of BIND9.
 
 OpenSSL Library Required
 
-To support DNSSEC, BIND 9 must be linked with version 0.9.5a or newer of
+To support DNSSEC, BIND 9 must be linked with version 0.9.6e or newer of
 the OpenSSL library.  As of BIND 9.2, the library is no longer
 included in the distribution - it must be provided by the operating
 system or installed separately.
@@ -36,14 +37,6 @@ Serving Secure Zones
 When acting as an authoritative name server, BIND9 includes KEY, SIG
 and NXT records in responses as specified in RFC2535 when the request
 has the DO flag set in the query.
-
-Response generation for wildcard records in secure zones is not fully
-supported.  Responses indicating the nonexistence of a name include a
-NXT record proving the nonexistence of the name itself, but do not
-include any NXT records to prove the nonexistence of a matching
-wildcard record.  Positive responses resulting from wildcard expansion
-do not include the NXT records to prove the nonexistence of a
-non-wildcard match or a more specific wildcard match.
 
 
 Secure Resolution
@@ -88,4 +81,4 @@ future as we consider them inferior to the use of TSIG or SIG(0) to
 ensure the integrity of zone transfers.
 
 
-$ISC: dnssec,v 1.14.2.3 2002/02/08 03:57:24 marka Exp $
+$ISC: dnssec,v 1.14.2.6.4.4 2004/03/08 09:04:25 marka Exp $
