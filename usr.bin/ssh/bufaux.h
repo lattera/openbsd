@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.17.2.1 2002/05/18 04:12:10 jason Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/bufaux.h,v 1.17.2.2 2002/05/18 04:50:37 jason Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.1 2002/05/18 04:12:11 jason Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/servconf.c,v 1.105.2.2 2002/05/18 04:50:38 jason Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 #include <krb.h>
