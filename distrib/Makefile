@@ -1,6 +1,6 @@
-#	$OpenBSD: src/distrib/Makefile,v 1.3 1997/08/06 09:40:30 deraadt Exp $
+#	$OpenBSD: src/distrib/Makefile,v 1.4 1997/09/17 14:18:58 deraadt Exp $
 
-SUBDIR=	${MACHINE} notes
+SUBDIR=	special ${MACHINE} notes
 
 # miniroot and ramdisk are supposed to be "generic" using Makefile.inc
 # to set up architectural dependencies..
