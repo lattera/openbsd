@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.11 2004/03/23 23:26:06 niklas Exp $ */	
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.12 2004/06/11 14:54:40 drahn Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-
@@ -182,6 +182,7 @@ _C_LABEL(Xintr_/**/name/**/num):					\
 	movl	%eax,CPL						;\
 	mask(num)			/* mask it in hardware */	;\
 	early_ack(num)			/* and allow other intrs */	;\
+	incl	MY_COUNT+V_INTR		/* statistical info */		;\
 	sti								;\
 	orl	$num,%eax						;\
 	incl	_C_LABEL(apic_intrcount)(,%eax,4)			;\
