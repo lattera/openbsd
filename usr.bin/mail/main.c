@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.bin/mail/main.c,v 1.2 1996/06/11 12:53:45 deraadt Exp $	*/
+/*	$NetBSD: main.c,v 1.5 1996/06/08 19:48:31 christos Exp $	*/
+
 /*
  * Copyright (c) 1980, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -38,12 +41,16 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char sccsid[] = "from: @(#)main.c	8.1 (Berkeley) 6/6/93";
-static char rcsid[] = "$Id: main.c,v 1.4 1995/05/02 01:40:16 mycroft Exp $";
+#if 0
+static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.bin/mail/main.c,v 1.2 1996/06/11 12:53:45 deraadt Exp $";
+#endif
 #endif /* not lint */
 
 #include "rcv.h"
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include "extern.h"
 
 /*
@@ -64,9 +71,7 @@ main(argc, argv)
 	char *subject;
 	char *ef;
 	char nosrc = 0;
-	void hdrstop();
 	sig_t prevint;
-	void sigchild();
 
 	/*
 	 * Set up a reasonable environment.

@@ -1,3 +1,6 @@
+/*	$OpenBSD: src/usr.bin/mail/version.c,v 1.2 1996/06/11 12:53:54 deraadt Exp $	*/
+/*	$NetBSD: version.c,v 1.4 1996/06/08 19:48:46 christos Exp $	*/
+
 /*
  * Copyright (c) 1980, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,8 +35,11 @@
  */
 
 #ifndef lint
-static char sccsid[] = "from: @(#)version.c	8.1 (Berkeley) 6/6/93";
-static char rcsid[] = "$Id: version.c,v 1.3 1994/06/29 05:09:52 deraadt Exp $";
+#if 0
+static char sccsid[] = "@(#)version.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: src/usr.bin/mail/version.c,v 1.2 1996/06/11 12:53:54 deraadt Exp $";
+#endif
 #endif /* not lint */
 
 /*
