@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/sbin/mount_portal/Attic/pt_tcp.c,v 1.10 2004/03/02 00:43:24 tedu Exp $	*/
+/*	$OpenBSD: src/sbin/mount_portal/Attic/pt_tcp.c,v 1.11 2004/05/08 15:23:02 pedro Exp $	*/
 
 /*
- * Copyright (c) 2004 Pedro Martelletto <pbastos@rdc.puc-rio.br>
+ * Copyright (c) 2004 Pedro Martelletto <pedro@openbsd.org>
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
