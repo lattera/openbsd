@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/swapgeneric.c,v 1.3 1997/10/13 13:43:01 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/swapgeneric.c,v 1.1 2001/09/01 15:44:20 drahn Exp $	*/
 /*	$NetBSD: swapgeneric.c,v 1.1 1996/09/30 16:34:55 ws Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/random.c,v 1.2 1997/10/13 13:43:00 pefo Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/random.c,v 1.1 2001/09/01 15:44:20 drahn Exp $	*/
 
 /*
  * Copyright (c) 1990,1993 The Regents of the University of California.

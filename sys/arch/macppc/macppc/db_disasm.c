@@ -1,5 +1,5 @@
 /*	$NetBSD: db_disasm.c,v 1.8 2001/06/12 05:31:44 simonb Exp $	*/
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/db_disasm.c,v 1.7 2001/08/21 02:49:14 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/db_disasm.c,v 1.1 2001/09/01 15:44:20 drahn Exp $	*/
 /*
  * Copyright (c) 1996 Dale Rahn. All rights reserved.
  *

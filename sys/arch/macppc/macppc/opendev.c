@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/opendev.c,v 1.5 2001/08/18 21:59:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/opendev.c,v 1.1 2001/09/01 15:44:20 drahn Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*

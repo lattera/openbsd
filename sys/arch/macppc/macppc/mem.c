@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/Attic/mem.c,v 1.8 2001/06/24 23:29:35 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/mem.c,v 1.1 2001/09/01 15:44:20 drahn Exp $	*/
 /*	$NetBSD: mem.c,v 1.1 1996/09/30 16:34:50 ws Exp $ */
 
 /*
