@@ -1,5 +1,4 @@
-#	from: @(#)Makefile	5.8 (Berkeley) 7/28/90
-#	$Id: Makefile,v 1.7 1994/12/22 12:31:46 cgd Exp $
+#	$OpenBSD: src/usr.bin/ypcat/Makefile,v 1.2 1996/05/21 21:32:39 deraadt Exp $
 
 PROG=	ypcat
 
