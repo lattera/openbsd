@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)mail.local.c	5.6 (Berkeley) 6/19/91";*/
-static char rcsid[] = "$Id: mail.local.c,v 1.13 1997/03/28 02:16:40 millert Exp $";
+static char rcsid[] = "$Id: mail.local.c,v 1.14 1997/03/29 02:59:56 millert Exp $";
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -231,7 +231,7 @@ baditem(path)
 
 	if (unlink(path) == 0)
 		return;
-	snprintf(npath, sizeof npath, "%s/XXXXXXXXX", _PATH_MAILDIR);
+	snprintf(npath, sizeof npath, "%s/mailXXXXXXXXXX", _PATH_MAILDIR);
 	if (mktemp(npath) == NULL)
 		return;
 	if (rename(path, npath) != -1)
