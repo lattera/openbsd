@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.33 2004/06/10 20:38:43 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.34 2004/06/13 07:31:56 deraadt Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -1627,21 +1627,23 @@ identifycpu(struct cpu_info *ci)
 			cachesize = intel_cachetable[(cpu_cache_edx & 0xFF) - 0x40];
 	}
 
-	if (cachesize > -1) {
-		snprintf(cpu_model, sizeof(cpu_model),
-			"%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class], cachesize);
-	} else {
-		snprintf(cpu_model, sizeof(cpu_model),
-			"%s %s%s (%s%s%s%s-class)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class]);
-	}
+	if ((ci->ci_flags & CPUF_BSP) == 0) {
+		if (cachesize > -1) {
+			snprintf(cpu_model, sizeof(cpu_model),
+				"%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
+				vendorname, modifier, name,
+				((*token) ? "\"" : ""), ((*token) ? token : ""),
+				((*token) ? "\" " : ""), classnames[class], cachesize);
+		} else {
+			snprintf(cpu_model, sizeof(cpu_model),
+				"%s %s%s (%s%s%s%s-class)",
+				vendorname, modifier, name,
+				((*token) ? "\"" : ""), ((*token) ? token : ""),
+				((*token) ? "\" " : ""), classnames[class]);
+		}
 
-	printf("%s: %s", cpu_device, cpu_model);
+		printf("%s: %s", cpu_device, cpu_model);
+	}
 
 #if defined(I586_CPU) || defined(I686_CPU)
 	if (ci->ci_feature_flags && (ci->ci_feature_flags & CPUID_TSC)) {
@@ -1652,31 +1654,38 @@ identifycpu(struct cpu_info *ci)
 
 			ghz = (pentium_mhz + 9) / 1000;
 			fr = ((pentium_mhz + 9) / 10 ) % 100;
-			if (fr)
-				printf(" %d.%02d GHz", ghz, fr);
-			else
-				printf(" %d GHz", ghz);
-		} else
-			printf(" %d MHz", pentium_mhz);
-	}
-#endif
-	printf("\n");
-
-	if (ci->ci_feature_flags) {
-		int numbits = 0;
-
-		printf("%s: ", cpu_device);
-		max = sizeof(i386_cpuid_features)
-			/ sizeof(i386_cpuid_features[0]);
-		for (i = 0; i < max; i++) {
-			if (ci->ci_feature_flags & 
-			    i386_cpuid_features[i].feature_bit) {
-				printf("%s%s", (numbits == 0 ? "" : ","),
-				    i386_cpuid_features[i].feature_name);
-				numbits++;
+			if ((ci->ci_flags & CPUF_BSP) == 0) {
+				if (fr)
+					printf(" %d.%02d GHz", ghz, fr);
+				else
+					printf(" %d GHz", ghz);
+			}
+		} else {
+			if ((ci->ci_flags & CPUF_BSP) == 0) {
+				printf(" %d MHz", pentium_mhz);
 			}
 		}
+	}
+#endif
+	if ((ci->ci_flags & CPUF_BSP) == 0) {
 		printf("\n");
+
+		if (ci->ci_feature_flags) {
+			int numbits = 0;
+	
+			printf("%s: ", cpu_device);
+			max = sizeof(i386_cpuid_features)
+				/ sizeof(i386_cpuid_features[0]);
+			for (i = 0; i < max; i++) {
+				if (ci->ci_feature_flags & 
+				    i386_cpuid_features[i].feature_bit) {
+					printf("%s%s", (numbits == 0 ? "" : ","),
+					    i386_cpuid_features[i].feature_name);
+					numbits++;
+				}
+			}
+			printf("\n");
+		}
 	}
 
 	cpu_class = class;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.11 2004/06/10 18:19:28 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.12 2004/06/13 07:31:56 deraadt Exp $	*/
 /*	$NetBSD: mpbios.c,v 1.2 2002/10/01 12:56:57 fvdl Exp $	*/
 
 /*-
@@ -202,7 +202,7 @@ mp_print(aux, pnp)
 {
 	struct cpu_attach_args * caa = (struct cpu_attach_args *) aux;
 	if (pnp)
-		printf("%s at %s:",caa->caa_name, pnp);
+		printf("%s at %s:", caa->caa_name, pnp);
 	return (UNCONF);
 }
 
@@ -925,7 +925,8 @@ mpbios_bus(ent, self)
 	const struct mpbios_bus *entry = (const struct mpbios_bus *)ent;
 	int bus_id = entry->bus_id;
 
-	printf("mpbios: bus %d is type %6.6s\n", bus_id, entry->bus_type);
+	printf("%s: bus %d is type %6.6s\n", self->dv_xname,
+	    bus_id, entry->bus_type);
 
 #ifdef DIAGNOSTIC
 	/*
@@ -933,8 +934,8 @@ mpbios_bus(ent, self)
 	 * from underneath us
 	 */
 	if (bus_id >= mp_nbus) {
-		panic("mpbios: bus number %d out of range?? (type %6.6s)\n",
-		    bus_id, entry->bus_type);
+		panic("%s: bus number %d out of range?? (type %6.6s)\n",
+		    self->dv_xname, bus_id, entry->bus_type);
 	}
 #endif
 
@@ -954,7 +955,8 @@ mpbios_bus(ent, self)
 		mp_busses[bus_id].mb_data = inb(ELCR0) | (inb(ELCR1) << 8);
 
 		if (mp_eisa_bus != -1)
-			printf("oops: multiple eisa busses?\n");
+			printf("%s: multiple eisa busses?\n",
+			    self->dv_xname);
 		else
 			mp_eisa_bus = bus_id;
 	} else if (memcmp(entry->bus_type, "ISA   ", 6) == 0) {
@@ -963,7 +965,8 @@ mpbios_bus(ent, self)
 		mp_busses[bus_id].mb_intr_print = mp_print_isa_intr;
 		mp_busses[bus_id].mb_intr_cfg = mp_cfg_isa_intr;
 		if (mp_isa_bus != -1)
-			printf("oops: multiple isa busses?\n");
+			printf("%s: multiple isa busses?\n",
+			    self->dv_xname);
 		else
 			mp_isa_bus = bus_id;
 	} else {

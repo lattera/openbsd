@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.18 2004/06/11 05:22:23 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.19 2004/06/13 07:31:56 deraadt Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -400,15 +400,17 @@ cpu_boot_secondary (ci)
 	struct pmap *kpm = pmap_kernel();
 	extern u_int32_t mp_pdirpa;
 
-	printf("%s: starting\n", ci->ci_dev.dv_xname);
+	printf("%s: starting", ci->ci_dev.dv_xname);
 
 	/* XXX move elsewhere, not per CPU. */
 	mp_pdirpa = vtophys(kpm->pm_pdir);
 
 	pcb = ci->ci_idle_pcb;
 
-	printf("%s: init idle stack ptr is 0x%x\n", ci->ci_dev.dv_xname,
-	    pcb->pcb_esp);
+	if (mp_verbose)
+		printf(", init idle stack ptr is 0x%x", pcb->pcb_esp);
+
+	printf("\n");
 
 	CPU_STARTUP(ci);
 

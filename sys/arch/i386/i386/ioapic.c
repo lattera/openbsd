@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.12 2004/06/10 15:58:51 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.13 2004/06/13 07:31:56 deraadt Exp $	*/
 /* 	$NetBSD: ioapic.c,v 1.7 2003/07/14 22:32:40 lukem Exp $	*/
 
 /*-
@@ -218,20 +218,19 @@ ioapic_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_flags = aaa->flags;
 	sc->sc_apicid = aaa->apic_id;
 
-	printf(" apid %d (I/O APIC)\n", aaa->apic_id);
+	printf(" apid %d", aaa->apic_id);
 
 	if (ioapic_find(aaa->apic_id) != NULL) {
-		printf("%s: duplicate apic id (ignored)\n",
-		    sc->sc_dev.dv_xname);
+		printf(": duplicate apic id (ignored)\n");
 		return;
 	}
 
 	ioapic_add(sc);
 
-	printf("%s: pa 0x%lx", sc->sc_dev.dv_xname, aaa->apic_address);
+	printf(": pa 0x%lx", aaa->apic_address);
 
 	if (bus_mem_add_mapping(aaa->apic_address, PAGE_SIZE, 0, &bh) != 0) {
-		printf(": map failed\n");
+		printf(", map failed\n");
 		return;
 	}
 	sc->sc_reg = (volatile u_int32_t *)(bh + IOAPIC_REG);
@@ -272,7 +271,7 @@ ioapic_attach(struct device *parent, struct device *self, void *aux)
 	 * mapping later ...
 	 */
 	if (apic_id != sc->sc_apicid) {
-		printf("%s: misconfigured as apic %d\n", sc->sc_dev.dv_xname,
+		printf("%s: misconfigured as apic %d", sc->sc_dev.dv_xname,
 		    apic_id);
 
 		ioapic_write(sc, IOAPIC_ID,
@@ -282,13 +281,10 @@ ioapic_attach(struct device *parent, struct device *self, void *aux)
 		apic_id = (ioapic_read(sc,IOAPIC_ID) & IOAPIC_ID_MASK) >>
 		    IOAPIC_ID_SHIFT;
 
-		if (apic_id != sc->sc_apicid) {
-			printf("%s: can't remap to apid %d\n",
-			    sc->sc_dev.dv_xname, sc->sc_apicid);
-		} else {
-			printf("%s: remapped to apic %d\n",
-			    sc->sc_dev.dv_xname, sc->sc_apicid);
-		}
+		if (apic_id != sc->sc_apicid)
+			printf(", can't remap to apid %d\n", sc->sc_apicid);
+		else
+			printf(", remapped to apic %d\n", sc->sc_apicid);
 	}
 #if 0
 	/* output of this was boring. */
@@ -515,7 +511,8 @@ ioapic_enable(void)
 #endif
 			
 	for (sc = ioapics; sc != NULL; sc = sc->sc_next) {
-		printf("%s: enabling\n", sc->sc_dev.dv_xname);
+		if (mp_verbose)
+			printf("%s: enabling\n", sc->sc_dev.dv_xname);
 
 		for (p=0; p<sc->sc_apic_sz; p++) {
 			maxlevel = 0;	 /* magic */
