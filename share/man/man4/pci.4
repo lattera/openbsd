@@ -1,0 +1,313 @@
+.\"	$OpenBSD: src/share/man/man4/pci.4,v 1.35 2001/04/16 02:08:14 jason Exp $
+.\"	$NetBSD: pci.4,v 1.29 2000/04/01 00:32:23 tsarna Exp $
+.\"
+.\" Copyright (c) 2000 Theo de Raadt.  All rights reserved.
+.\" Copyright (c) 1997 Jason R. Thorpe.  All rights reserved.
+.\" Copyright (c) 1997 Jonathan Stone
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgements:
+.\"      This product includes software developed by Jonathan Stone
+.\" 4. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 3, 2000
+.Dt PCI 4
+.Os
+.Sh NAME
+.Nm pci
+.Nd introduction to PCI bus support
+.Sh SYNOPSIS
+.Cd "pci* at mainbus? bus ?"
+.Cd "pci* at pchb? bus ?"
+.Cd "pci* at ppb? bus ?"
+.Pp
+Other
+.Nm
+attachments are machine-dependent and depend on the bus topology and
+.Tn PCI
+bus interface of your system.
+See
+.Xr intro 4
+for your system for details.
+.Sh DESCRIPTION
+The system includes a machine-independent
+.Tn PCI
+bus subsystem and
+several machine-independent
+.Tn PCI
+device drivers.
+.Pp
+Your system may support additional
+.Tn PCI
+devices.
+Drivers for
+.Tn PCI
+devices not listed here are machine-dependent.
+Consult your system's
+.Xr intro 4
+for additional information.
+.Pp
+.Ss Details specific to the i386
+Note that interrupt mappings on the i386 may require that you configure
+your BIOS to reserve sufficient interrupts as "PCI/ISAPnP" so that there
+are sufficient interrupts remaining to configure the discovered PCI
+devices.  For more information, see
+.Xr pcibios 4 .
+.Sh SUPPORTED DEVICES
+The system includes machine-independent
+.Tn PCI
+drivers, sorted by device type and driver name:
+.Ss SCSI host adapters
+.Bl -tag -width 10n -offset ind
+.It Xr adw 4 , Xr adv 4
+AdvanSys PCI
+.Tn SCSI
+interfaces.
+.It Xr ahc 4
+Adaptec 27xx, 29xx, 39xx, 29160, and other AIC-7xxx-based
+.Tn SCSI
+interfaces.
+.It Xr bt 4
+Buslogic BT-9xx
+.Tn SCSI
+interfaces.
+.It Xr isp 4
+QLogic ISP-1020, ISP-1040, and ISP-2100
+.Tn SCSI
+and
+.Tn FibreChannel
+interfaces.
+.It Xr iha 4
+Initio INIC-940 and INIC-950 based
+.Tn SCSI
+interfaces.
+.It Xr ncr 4 , Xr siop 4
+LSI/Symbios Logic/NCR 53c8xx and 53c1010-family
+.Tn SCSI
+interfaces.
+.It Xr pcscp 4
+AMD Am53c974 PCscsi-PCI
+.Tn SCSI
+interfaces.
+.El
+.Ss RAID and cache controllers
+.Bl -tag -width 10n -offset ind
+.It Xr aac 4
+Adaptec "FSA" family (Adaptec AAC, Dell PERC, HP NetRaid)
+.Tn RAID
+controllers.
+.It Xr ami 4
+American Megatrends Inc. MegaRAID family
+.Tn RAID
+controllers.
+.It Xr cac 4
+Compaq Smart ARRAY
+.Tn RAID
+controllers.
+.It Xr dpt 4
+DPT SmartCache/SmartRAID III and IV
+.Tn SCSI
+controllers.
+.It Xr gdt 4
+ICP-Vortex GDT
+.Tn RAID
+conttrollers.
+.It Xr twe 4
+3ware Escalade
+.Tn RAID
+controllers.
+.El
+.Ss Network interfaces
+.Bl -tag -width 10n -offset ind
+.It Xr an 4
+Aironet Communications 4500/4800 IEEE 802.11DS wireless network adapter.
+.It Xr dc 4
+Various Tulip-like Ethernet
+interfaces such as the DEC/Intel 21143;
+Macronix 98713, 98713A, 98715, 98715A, 98725, 98727, and 98732;
+Davicom DM9100, DM9102, and DM9102A;
+ASIX Electronics AX88140A and AX88141;
+ADMtek AL981 Comet and AN983 Centaur-P;
+Lite-On 82c168 and 82c169 PNIC;
+and
+Lite-On/Macronix 82c115 PNIC II.
+.It Xr de 4
+.Tn DEC
+DC21x4x (Tulip) based Ethernet
+interfaces, including the DE435, DE450, DE500;
+Znyx ZX3xx;
+SMC 8432, 9332, 9334;
+Cogent/Adaptec EM100FX and EM440TX;
+and Asante single- and multi-port
+Ethernet interfaces.
+Multi-port interfaces are typically configured as
+.Tn PCI Ns \- Ns Tn PCI
+bridges with multiple
+.Xr de 4
+instances on the
+.Tn PCI
+bus on the other side of the bridge.
+.It Xr en 4
+Midway-based Efficient Networks Inc. and Adaptec ATM interfaces.
+.It Xr ep 4
+3Com 3c590 and 3c595 Ethernet interfaces.
+.It Xr fpa 4
+.Tn DEC
+DEFPA
+.Tn FDDI
+interfaces.
+.It Xr fxp 4
+Intel EtherExpress PRO 10+/100B Ethernet interfaces.
+.It Xr le 4
+PCNet-PCI Ethernet interfaces.
+.It Xr lmc 4
+Lan Media Corporation
+.Tn SSI/DS1/HSSI/DS3
+interfaces.
+.It Xr ne 4
+NE2000-compatible Ethernet interfaces.
+.It Xr rl 4
+RealTek 8129/8139 Ethernet interfaces.
+.It Xr sf 4
+Adaptec AIC-6915 "Starfire" Ethernet interfaces.
+.It Xr sis 4
+SiS 900, SiS 7016, and NS DP83815 Ethernet interfaces.
+.It Xr sk 4
+SysKonnect SK-984x Gigabit Ethernet interfaces.
+.It Xr ste 4
+Sundance Technologies ST201 Ethernet interfaces.
+.It Xr ti 4
+Alteon Networks Tigon I and Tigon II Gigabit Ethernet interfaces.
+.It Xr tl 4
+Texas Instruments ThunderLAN-based Ethernet interfaces.
+.It Xr tx 4
+SMC 9432 10/100 Mbps Ethernet interfaces.
+.It Xr txp 4
+3Com 3XP Typhoon/Sidewinder (3C990) 10/100 Mbps Ethernet interfaces.
+.It Xr vr 4
+VIA Technologies VT3043 and VT86C100A Ethernet interfaces.
+.It Xr wb 4
+Winbond W89C840F Ethernet interfaces.
+.It Xr wx 4
+Intel Gigabit Ethernet interfaces.
+.It Xr xl 4
+3Com 3c555, 3c556, 3c900, 3c905, 3c980, and 3cSOHO Ethernet interfaces.
+.El
+.Ss Cryptography accelerators
+.Bl -tag -width 10n -offset ind
+.It Xr hifn 4
+Hi/fn 7751
+Symmetric Encryption Accelerator.
+.It Xr ubsec 4
+Broadcom Bluesteelnet uBsec 5501, 5601, and 5805.
+.It Xr ises 4
+Pijnenburg PCC-ISES hardware crypto accelerator.
+.El
+.Ss Serial interfaces
+.Bl -tag -width 10n -offset ind
+.It Xr cy 4
+Cyclades Cyclom-4Y, -8Y, and -16Y asynchronous serial communications devices.
+.El
+.Ss Display adapters
+.Bl -tag -width 10n -offset ind
+.It Xr vga 4
+VGA graphics cards.
+.El
+.Ss Audio devices
+.Bl -tag -width 10n -offset ind
+.It Xr eap 4
+Ensoniq AudioPCI sound devices.
+.It Xr eso 4
+ESS Solo-1 PCI AudioDrive sound devices.
+.It Xr maestro 4
+ESS Maestro 1, 2 and 2E sound devices.
+.It Xr sv 4
+S3 SonicVibes sound devices.
+.It Xr neo 4
+NeoMagic 256AV/ZX sound devices.
+.It Xr fms 4
+Forte Media FM801 sound devices.
+.It Xr auvia 4
+Integrated AC97 audio controller of the VIA Technologies
+VT82C686A Southbridge.
+.It Xr cmpci 4
+C-Media CMI8x38 sound devices.
+.It Xr auich 4
+Intel 82801AA/AB and 440MX sound devices.
+.It Xr clcs 4
+Cirrus Logic CrystalClear CS4280 sound devices.
+.It Xr clct 4
+Cirrus Logic CrystalClear CS4281 sound devices.
+.It Xr yds 4
+Yamaha DS-XG sound devices.
+.El
+.Ss Miscellaneous devices
+.Bl -tag -width 10n -offset ind
+.It Xr bktr 4
+Brooktree Bt848
+.Tn PCI
+video capture boards.
+.It Xr cbb 4
+.Tn PCI
+Yenta compatible
+.Tn CardBus
+bridges.
+.It Xr ohci 4
+USB OHCI host controller.
+.It Xr pcic 4
+.Tn PCI
+.Tn PCMCIA
+controllers, including the Cirrus Logic GD6729.
+.It Xr ppb 4
+Generic
+.Tn PCI Ns \- Ns Tn PCI
+bridges, including
+.Tn PCI
+expansion backplanes.
+.It Xr puc 4
+PCI
+.Dq universal
+communications cards, containing
+.Xr com 4
+and
+.Xr lpt 4
+communications ports.
+.It Xr uhci 4
+USB UHCI host controller.
+.It Xr wdt 4
+ICS PCI-WDT500/501 watchdog timer devices.
+.El
+.Sh SEE ALSO
+.Xr cardbus 4 ,
+.Xr intro 4 ,
+.Xr isa 4 ,
+.Xr isapnp 4 ,
+.Xr pchb 4 ,
+.Xr pcmcia 4 ,
+.Xr usb 4
+.Sh HISTORY
+The machine-independent
+.Tn PCI
+subsystem appeared in
+.Ox 2.0 .
