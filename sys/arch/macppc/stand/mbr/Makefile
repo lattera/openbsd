@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/powerpc/stand/mbr/Attic/Makefile,v 1.2 1998/04/06 20:13:58 pefo Exp $
+#	$OpenBSD: src/sys/arch/macppc/stand/mbr/Makefile,v 1.1 2001/09/01 15:35:00 drahn Exp $
 
 CLEANFILES= mbr msdos1mb.gz
 
