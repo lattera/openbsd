@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/config/sem.c,v 1.7 1996/12/11 22:36:15 niklas Exp $	*/
-/*	$NetBSD: sem.c,v 1.9 1996/08/31 21:15:15 mycroft Exp $	*/
+/*	$OpenBSD: src/usr.sbin/config/sem.c,v 1.7.2.1 1997/01/18 13:19:24 niklas Exp $	*/
+/*	$NetBSD: sem.c,v 1.10 1996/11/11 23:40:11 gwr Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -121,9 +121,11 @@ initsem()
 	s_qmark = intern("?");
 }
 
+/* Name of include file just ended (set in scan.l) */
+extern const char *lastfile;
+
 void
-enddefs(fname)
-	const char *fname;
+enddefs()
 {
 	register struct devbase *dev;
 
@@ -131,7 +133,7 @@ enddefs(fname)
 		if (!dev->d_isdef) {
 			(void)fprintf(stderr,
 			    "%s: device `%s' used but not defined\n",
-			    fname, dev->d_name);
+			    lastfile, dev->d_name);
 			errors++;
 			continue;
 		}
