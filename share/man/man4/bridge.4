@@ -1,0 +1,292 @@
+.\"	$OpenBSD: src/share/man/man4/bridge.4,v 1.8 1999/03/31 02:00:29 jason Exp $
+.\"
+.\" Copyright (c) 1999 Jason L. Wright (jason@thought.net)
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by Jason L. Wright
+.\" 4. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+.\" ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd February 26, 1999
+.Dt BRIDGE 4
+.Os
+.Sh NAME
+.Nm bridge
+.Nd Ethernet bridge interface
+.Sh SYNOPSIS
+.Cd pseudo-device bridge 2
+.Sh DESCRIPTION
+The
+.Nm bridge
+device allows an Ethernet bridge to be created between two or more interfaces.
+The bridges provided by this interface are learning bridges with the ability
+to do IP filtering, see
+.Xr ipf 4 , Ns
+before packets are forwarded by the bridge.
+.Sh IOCTLS
+A
+.Nm bridge
+interface responds to all of the
+.Xr ioctl 2
+calls specific to other interfaces listed in
+.Xr netintro 4 .
+The following 
+.Xr ioctl 2
+calls are specific to
+.Nm bridge
+devices.
+They are defined in
+.Aq Pa sys/sockio.h .
+.Pp
+.Bl -tag -width SIOCBRDGGIFFLGS
+.It Dv SIOCBRDGIFS
+.Pq Li "struct ifbifconf"
+Retrieve member interface list from a bridge.  This request takes an
+.Ar ifbifconf
+structure (see below) as a value-result parameter.
+The
+.Ar ifbic_len
+field should be initially set to the size of the buffer
+pointed to by
+.Ar ifbic_buf .
+On return it will contain the length, in bytes, of the configuration
+list.
+Alternatively, if the
+.Ar ifbic_len
+passed in is set to 0,
+SIOCBRDGIFS will set
+.Ar ifbic_len
+to the size that
+.Ar ifbic_buf
+needs to be to fit the entire configuration list,
+and will not fill in the other parameters.
+This is useful for determining the exact size that
+.Ar ifbic_buf
+needs to be in advance.
+.Pp
+The argument structure is defined as follows:
+.Bd -literal -offset indent
+struct ifbreq {
+	char ifbr_name[IFNAMSIZ];    /* brdg nam */
+	char ifbr_ifsname[IFNAMSIZ]; /* if name */
+	u_int32_t ifbr_ifsflags;     /* if flags */
+};
+
+#define IFBIF_LEARNING  0x1 /* learns addrs */
+#define IFBIF_DISCOVER  0x2 /* gets fwd'd pkts */
+
+struct ifbifconf {
+	char ifbic_name[IFNAMSIZ]; /* brdg name */
+	u_int32_t       ifbic_len; /* buf size */
+	union {
+		caddr_t ifbicu_buf; /* buffer */
+		struct  ifbreq *ifbicu_req;
+	} ifbic_ifbicu;
+#define ifbic_buf       ifbic_ifbicu.ifbicu_buf
+#define ifbic_req       ifbic_ifbicu.ifbicu_req
+};
+.Ed
+.It Dv SIOCBRDGADD
+.Pq Li "struct ifbreq"
+Add the interface named in
+.Ar ifbr_ifsname
+to the bridge named in
+.Ar ifbr_name .
+.It Dv SIOCBRDGDEL
+.Pq Li "struct ifbreq"
+Delete the interface named in
+.Ar ifbr_ifsname
+from the bridge named in
+.Ar ifbr_name .
+.It Dv SIOCBRDGSIFFLGS
+.Pq Li "struct ifbreq"
+Set the bridge member interface flags for the interface named in
+.Ar ifbr_ifsname
+attached to the bridge
+.Ar ifbr_name .
+.It Dv SIOCBRDGGIFFLGS
+Retrieve the bridge member interface flags for the interface named in
+.Ar ifbr_ifsname
+attached to the bridge
+.Ar ifbr_name .
+.It Dv SIOCBRDGRTS
+.Pq Li "struct ifbaconf"
+Retrieve the address cache of the bridge named in
+.Ar ifbac_name .
+This request takes an
+.Ar ifbaconf
+structure (see below) as a value result parameter.
+The
+.Ar ifbac_len
+field should be initially set to the size of the buffer pointed to by
+.Ar ifbac_buf .
+On return, it will contain the length, in bytes, of the configuration list.
+Alternatively, if the
+.Ar ifbac_len
+passed in is set to 0, SIOCBRDGRTS will set it to the size that
+.Ar ifbac_buf
+needs to be to fit the entire configuration list and not fill in the other
+parameters.
+As with SIOCBRDGIFS, this is useful for determining the exact size that
+.Ar ifbac_buf
+needs to be in advance.
+.Pp
+The argument structure is defined as follows:
+.Bd -literal -offset indent
+struct ifbareq {
+	char ifba_name[IFNAMSIZ];    /* brdg nam */
+	char ifba_ifsname[IFNAMSIZ]; /* dest ifs */
+	u_int8_t ifba_age;           /* addr age */
+	u_int8_t ifba_flags;         /* addr age */
+	struct ether_addr ifba_dst;  /* dst addr */
+};
+
+#define IFBAF_TYPEMASK 0x03  /* addr type mask */
+#define IFBAF_DYNAMIC  0x00  /* dynamic addr */
+#define IFBAF_STATIC   0x01  /* static address */
+
+struct ifbaconf {
+	char ifbac_name[IFNAMSIZ]; /* brdg name */
+	u_int32_t ifbac_len;       /* buf size */
+	union {
+		caddr_t ifbacu_buf;     /* buf */
+		struct ifbareq *ifbacu_req;
+	} ifbac_ifbacu;
+#define	ifbac_buf       ifbac_ifbacu.ifbacu_buf
+#define	ifbac_req       ifbac_ifbacu.ifbacu_req
+};
+.Ed
+.It Dv SIOCBRDGSADDR
+.Pq Li "struct ifbareq"
+Add an entry, manually, to the address cache for the bridge named in
+.Ar ifba_name .
+The address and its associated interface and flags are set in the
+.Ar ifba_dst ,
+.Ar ifba_ifsname ,
+.Ar ifba_flags
+fields, respectively.
+.It Dv SIOCBRDGDADDR
+.Pq Li "struct ifbareq"
+Delete an entry from the address cache of the bridge named in
+.Ar ifba_name .
+Entries are deleted strictly based on the address field
+.Ar ifba_dst .
+.It Dv SIOCBRDGSCACHE
+.Pq Li "struct ifbcachereq"
+Set the maximum address cache size for the bridge named in
+.Ar ifbc_name
+to
+.Ar ifbc_size
+entries.
+.Pp
+The argument structure is as follows:
+.Bd -literal -offset indent
+struct ifbcachereq {
+	char ifbc_name[IFNAMSIZ]; /* bridge */
+	u_int32_t ifbc_size;      /* size */
+};
+.Ed
+.It Dv SIOCBRDGGCACHE
+.Pq Li "struct ifbcachereq"
+Retrieve the maximum size of the address cache for the bridge
+.Ar ifbc_name .
+.It Dv SIOCBRDGSTO
+.Pq Li "struct ifbcachetoreq"
+Set the time, in seconds, that addresses which have not been
+seen on the network (transmitted a packet) remain in the cache.
+If the time is set to zero, no aging is performed on the address
+cache.  The argument structure is as follows:
+.Bd -literal -offset indent
+struct ifbcachetoreq {
+	char ifbct_name[IFNAMSIZ]; /* bridge */
+	u_int32_t ifbct_time;      /* time */
+};
+.Ed
+.It Dv SIOCBRDGGTO
+.Pq Li "struct ifbcachetoreq"
+Retrieve the address cache expiration time (see above).
+.It Dv SIOCBRDGFLUSH
+.Pq Li "struct ifbreq"
+Flush all dynamically learned addresses from the cache.
+.El
+.Sh ERRORS
+If the
+.Xr ioctl 2
+call fails,
+.Xr errno 2
+is set to one of the following values:
+.Bl -tag -width Er
+.It Bq Eq ENOENT
+For an add request, this means that the named interface is not configured
+into the system.
+For delete operation, it means that the named interface is not a member
+of the bridge.
+For a address cache deletion, the address was not found in the table.
+.It Bq Eq ENOMEM
+Memory could not be allocated for an interface or cache entry
+to be added to the bridge.
+.It Bq Eq EEXIST
+The named interface is already a member of the bridge.
+.It Bq Eq EBUSY
+The named interface is already a member of another bridge.
+.It Bq Eq EINVAL
+The named interface is not an Ethernet interface or an invalid ioctl
+was performed on the bridge.
+.It Bq Eq ENETDOWN
+Address cache operation (flush, add, delete) on a bridge that is
+in the down state.
+.It Bq Eq EPERM
+Super-user privilege is required to add and delete interfaces to and from
+bridges and to set the bridge interface flags.
+.It Bq Eq EFAULT
+The buffer used in a SIOCBRDGIFS or SIOCBRDGRTS request points outside
+of the process's allocated address space.
+.It Bq Eq ESRCH
+No such member interface in the bridge.
+.El
+.Sh SEE ALSO
+.Xr errno 2 ,
+.Xr ioctl 2 ,
+.Xr ipf 4 ,
+.Xr netintro 4 ,
+.Xr brconfig 8
+.Sh HISTORY
+The
+.Xr brconfig 8
+command and the
+.Xr bridge 4
+kernel interface first appeared in
+.Ox 2.5 .
+.Sh AUTHOR
+The
+.Xr brconfig 8
+command and the
+.Xr bridge 4
+kernel interface were written by Jason L. Wright <jason@thought.net> as
+part of an undergraduate indenpendent study
+at the University of North Carolina at Greensboro.
+.Sh BUGS
+There is currently no loop detection.  Care must be taken to make sure
+that loops are not created when a bridge is brought up.
