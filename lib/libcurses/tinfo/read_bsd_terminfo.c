@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcurses/tinfo/read_bsd_terminfo.c,v 1.11 2003/03/17 21:57:57 millert Exp $	*/
+/*	$OpenBSD: src/lib/libcurses/tinfo/read_bsd_terminfo.c,v 1.12 2003/03/18 03:46:12 millert Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999, 2000 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -28,7 +28,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/lib/libcurses/tinfo/read_bsd_terminfo.c,v 1.11 2003/03/17 21:57:57 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/lib/libcurses/tinfo/read_bsd_terminfo.c,v 1.12 2003/03/18 03:46:12 millert Exp $";
 #endif
 
 #include <curses.priv.h>
