@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libmenu/m_scale.c,v 1.2 1998/07/24 16:39:16 millert Exp $	*/
+/*	$OpenBSD: src/lib/libmenu/Attic/m_adabind.c,v 1.1 1998/07/24 16:38:52 millert Exp $	*/
 
 /****************************************************************************
  * Copyright (c) 1998 Free Software Foundation, Inc.                        *
@@ -33,41 +33,35 @@
  ****************************************************************************/
 
 /***************************************************************************
-* Module m_scale                                                           *
-* Menu scaling routine                                                     *
+* Module m_adabind.c                                                       *
+* Helper routines to ease the implementation of an Ada95 binding to        *
+* ncurses. For details and copyright of the binding see the ../Ada95       *
+* subdirectory.                                                            *
 ***************************************************************************/
-
 #include "menu.priv.h"
 
-MODULE_ID("$From: m_scale.c,v 1.2 1998/02/11 12:13:50 tom Exp $")
+MODULE_ID("$From: m_adabind.c,v 1.6 1998/02/11 12:13:50 tom Exp $")
 
-/*---------------------------------------------------------------------------
-|   Facility      :  libnmenu  
-|   Function      :  int scale_menu(const MENU *menu)
-|   
-|   Description   :  Returns the minimum window size necessary for the
-|                    subwindow of menu.  
-|
-|   Return Values :  E_OK                  - success
-|                    E_BAD_ARGUMENT        - invalid menu pointer
-|                    E_NOT_CONNECTED       - no items are connected to menu
-+--------------------------------------------------------------------------*/
-int scale_menu(const MENU *menu, int *rows, int *cols)
+/* Prototypes for the functions in this module */
+void  _nc_ada_normalize_menu_opts (int *opt);
+void  _nc_ada_normalize_item_opts (int *opt);
+ITEM* _nc_get_item(const MENU*, int);
+
+void _nc_ada_normalize_menu_opts (int *opt)
 {
-  if (!menu) 
-    RETURN( E_BAD_ARGUMENT );
-  
-  if (menu->items && *(menu->items))
-    {
-      if (rows)
-	*rows = menu->height;
-      if (cols)
-	*cols = menu->width;
-      RETURN(E_OK);
-    }
-  else
-    RETURN( E_NOT_CONNECTED );
+  *opt = ALL_MENU_OPTS & (*opt);
 }
 
-/* m_scale.c ends here */
+void _nc_ada_normalize_item_opts (int *opt)
+{
+  *opt = ALL_ITEM_OPTS & (*opt);
+}
 
+ITEM* _nc_get_item(const MENU* menu, int idx) {
+  if (menu && menu->items && idx>=0 && (idx<menu->nitems))
+    {
+      return menu->items[idx];
+    }
+  else
+    return (ITEM*)0;
+}
