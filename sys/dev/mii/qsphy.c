@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/mii/qsphy.c,v 1.1 1998/09/10 17:17:34 jason Exp $	*/
-/*	$NetBSD: qsphy.c,v 1.3 1998/08/12 20:56:37 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/qsphy.c,v 1.2 1998/11/11 19:34:48 jason Exp $	*/
+/*	$NetBSD: qsphy.c,v 1.11 1998/11/05 04:08:02 thorpej Exp $	*/
 
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
@@ -88,12 +88,6 @@
 
 #include <dev/mii/qsphyreg.h>
 
-struct qsphy_softc {
-	struct mii_softc sc_mii;		/* generic PHY */
-	int sc_capabilities;
-	int sc_active;
-};
-
 #ifdef __NetBSD__
 int	qsphymatch __P((struct device *, struct cfdata *, void *));
 #else
@@ -102,7 +96,7 @@ int	qsphymatch __P((struct device *, void *, void *));
 void	qsphyattach __P((struct device *, struct device *, void *));
 
 struct cfattach qsphy_ca = {
-	sizeof(struct qsphy_softc), qsphymatch, qsphyattach
+	sizeof(struct mii_softc), qsphymatch, qsphyattach
 };
 
 #ifdef __OpenBSD__
@@ -111,18 +105,9 @@ struct cfdriver qsphy_cd = {
 };
 #endif
 
-#define	QSPHY_READ(sc, reg) \
-    (*(sc)->sc_mii.mii_pdata->mii_readreg)((sc)->sc_mii.mii_dev.dv_parent, \
-	(sc)->sc_mii.mii_phy, (reg))
-
-#define	QSPHY_WRITE(sc, reg, val) \
-    (*(sc)->sc_mii.mii_pdata->mii_writereg)((sc)->sc_mii.mii_dev.dv_parent, \
-	(sc)->sc_mii.mii_phy, (reg), (val))
-
 int	qsphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	qsphy_reset __P((struct qsphy_softc *));
-void	qsphy_auto __P((struct qsphy_softc *));
-void	qsphy_status __P((struct qsphy_softc *));
+void	qsphy_reset __P((struct mii_softc *));
+void	qsphy_status __P((struct mii_softc *));
 
 int
 qsphymatch(parent, match, aux)
@@ -138,7 +123,7 @@ qsphymatch(parent, match, aux)
 
 	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_QUALSEMI &&
 	    MII_MODEL(ma->mii_id2) == MII_MODEL_QUALSEMI_QS6612)
-		return (1);
+		return (10);
 
 	return (0);
 }
@@ -148,44 +133,46 @@ qsphyattach(parent, self, aux)
 	struct device *parent, *self;
 	void *aux;
 {
-	struct qsphy_softc *sc = (struct qsphy_softc *)self;
+	struct mii_softc *sc = (struct mii_softc *)self;
 	struct mii_attach_args *ma = aux;
 	struct mii_data *mii = ma->mii_data;
 
 	printf(": %s, rev. %d\n", MII_STR_QUALSEMI_QS6612,
 	    MII_REV(ma->mii_id2));
 
-	sc->sc_mii.mii_inst = mii->mii_instance;
-	sc->sc_mii.mii_phy = ma->mii_phyno;
-	sc->sc_mii.mii_service = qsphy_service;
-	sc->sc_mii.mii_pdata = mii;
+	sc->mii_inst = mii->mii_instance;
+	sc->mii_phy = ma->mii_phyno;
+	sc->mii_service = qsphy_service;
+	sc->mii_pdata = mii;
 
 #define	ADD(m, c)	ifmedia_add(&mii->mii_media, (m), (c), NULL)
 
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_NONE, 0, sc->sc_mii.mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_NONE, 0, sc->mii_inst),
 	    BMCR_ISO);
-	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_100_TX, IFM_LOOP, sc->sc_mii.mii_inst),
+	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_100_TX, IFM_LOOP, sc->mii_inst),
 	    BMCR_LOOP|BMCR_S100);
 
 	qsphy_reset(sc);
 
-	sc->sc_capabilities = QSPHY_READ(sc, MII_BMSR) & ma->mii_capmask;
-	printf("%s: ", sc->sc_mii.mii_dev.dv_xname);
-	if ((sc->sc_capabilities & BMSR_MEDIAMASK) == 0)
+	sc->mii_capabilities =
+	    PHY_READ(sc, MII_BMSR) & ma->mii_capmask;
+	printf("%s: ", sc->mii_dev.dv_xname);
+	if ((sc->mii_capabilities & BMSR_MEDIAMASK) == 0)
 		printf("no media present");
 	else
-		mii_add_media(mii, sc->sc_capabilities, sc->sc_mii.mii_inst);
+		mii_add_media(mii, sc->mii_capabilities,
+		    sc->mii_inst);
 	printf("\n");
 #undef ADD
 }
 
 int
-qsphy_service(self, mii, cmd)
-	struct mii_softc *self;
+qsphy_service(sc, mii, cmd)
+	struct mii_softc *sc;
 	struct mii_data *mii;
 	int cmd;
 {
-	struct qsphy_softc *sc = (struct qsphy_softc *)self;
+	struct ifmedia_entry *ife = mii->mii_media.ifm_cur;
 	int reg;
 
 	switch (cmd) {
@@ -193,8 +180,7 @@ qsphy_service(self, mii, cmd)
 		/*
 		 * If we're not polling our PHY instance, just return.
 		 */
-		if (IFM_INST(mii->mii_media.ifm_media) !=
-		    sc->sc_mii.mii_inst)
+		if (IFM_INST(ife->ifm_media) != sc->mii_inst)
 			return (0);
 		break;
 
@@ -203,10 +189,9 @@ qsphy_service(self, mii, cmd)
 		 * If the media indicates a different PHY instance,
 		 * isolate ourselves.
 		 */
-		if (IFM_INST(mii->mii_media.ifm_media) !=
-		    sc->sc_mii.mii_inst) {
-			reg = QSPHY_READ(sc, MII_BMCR);
-			QSPHY_WRITE(sc, MII_BMCR, reg | BMCR_ISO);
+		if (IFM_INST(ife->ifm_media) != sc->mii_inst) {
+			reg = PHY_READ(sc, MII_BMCR);
+			PHY_WRITE(sc, MII_BMCR, reg | BMCR_ISO);
 			return (0);
 		}
 
@@ -216,14 +201,14 @@ qsphy_service(self, mii, cmd)
 		if ((mii->mii_ifp->if_flags & IFF_UP) == 0)
 			break;
 
-		switch (IFM_SUBTYPE(mii->mii_media.ifm_media)) {
+		switch (IFM_SUBTYPE(ife->ifm_media)) {
 		case IFM_AUTO:
 			/*
 			 * If we're already in auto mode, just return.
 			 */
-			if (QSPHY_READ(sc, MII_BMCR) & BMCR_AUTOEN)
+			if (PHY_READ(sc, MII_BMCR) & BMCR_AUTOEN)
 				return (0);
-			qsphy_auto(sc);
+			(void) mii_phy_auto(sc);
 			break;
 		case IFM_100_T4:
 			/*
@@ -234,10 +219,9 @@ qsphy_service(self, mii, cmd)
 			/*
 			 * BMCR data is stored in the ifmedia entry.
 			 */
-			QSPHY_WRITE(sc, MII_ANAR,
-			    mii_anar(mii->mii_media.ifm_media));
-			QSPHY_WRITE(sc, MII_BMCR,
-			    mii->mii_media.ifm_cur->ifm_data);
+			PHY_WRITE(sc, MII_ANAR,
+			    mii_anar(ife->ifm_media));
+			PHY_WRITE(sc, MII_BMCR, ife->ifm_data);
 		}
 		break;
 
@@ -245,14 +229,13 @@ qsphy_service(self, mii, cmd)
 		/*
 		 * If we're not currently selected, just return.
 		 */
-		if (IFM_INST(mii->mii_media.ifm_media) !=
-		    sc->sc_mii.mii_inst)
+		if (IFM_INST(ife->ifm_media) != sc->mii_inst)
 			return (0);
 
 		/*
 		 * Only used for autonegotiation.
 		 */
-		if (IFM_SUBTYPE(mii->mii_media.ifm_media) != IFM_AUTO)
+		if (IFM_SUBTYPE(ife->ifm_media) != IFM_AUTO)
 			return (0);
 
 		/*
@@ -272,28 +255,29 @@ qsphy_service(self, mii, cmd)
 	qsphy_status(sc);
 
 	/* Callback if something changed. */
-	if (sc->sc_active != mii->mii_media_active || cmd == MII_MEDIACHG) {
-		(*mii->mii_statchg)(sc->sc_mii.mii_dev.dv_parent);
-		sc->sc_active = mii->mii_media_active;
+	if (sc->mii_active != mii->mii_media_active || cmd == MII_MEDIACHG) {
+		(*mii->mii_statchg)(sc->mii_dev.dv_parent);
+		sc->mii_active = mii->mii_media_active;
 	}
 	return (0);
 }
 
 void
 qsphy_status(sc)
-	struct qsphy_softc *sc;
+	struct mii_softc *sc;
 {
-	struct mii_data *mii = sc->sc_mii.mii_pdata;
+	struct mii_data *mii = sc->mii_pdata;
 	int bmsr, bmcr, pctl;
 
 	mii->mii_media_status = IFM_AVALID;
 	mii->mii_media_active = IFM_ETHER;
 
-	bmsr = QSPHY_READ(sc, MII_BMSR) | QSPHY_READ(sc, MII_BMSR);
+	bmsr = PHY_READ(sc, MII_BMSR) |
+	    PHY_READ(sc, MII_BMSR);
 	if (bmsr & BMSR_LINK)
 		mii->mii_media_status |= IFM_ACTIVE;
 
-	bmcr = QSPHY_READ(sc, MII_BMCR);
+	bmcr = PHY_READ(sc, MII_BMCR);
 	if (bmcr & BMCR_ISO) {
 		mii->mii_media_active |= IFM_NONE;
 		mii->mii_media_status = 0;
@@ -303,78 +287,44 @@ qsphy_status(sc)
 	if (bmcr & BMCR_LOOP)
 		mii->mii_media_active |= IFM_LOOP;
 
-	if ((bmcr & BMCR_AUTOEN) && (bmsr & BMSR_ACOMP) == 0) {
-		/* Erg, still trying, I guess... */
-		mii->mii_media_active |= IFM_NONE;
-		return;
-	}
-
-	pctl = QSPHY_READ(sc, MII_QSPHY_PCTL) | QSPHY_READ(sc, MII_QSPHY_PCTL);
-	switch (pctl & PCTL_OPMASK) {
-	case PCTL_10_T:
-		mii->mii_media_active |= IFM_10_T;
-		break;
-	case PCTL_10_T_FDX:
-		mii->mii_media_active |= IFM_10_T|IFM_FDX;
-		break;
-	case PCTL_100_TX:
-		mii->mii_media_active |= IFM_100_TX;
-		break;
-	case PCTL_100_TX_FDX:
-		mii->mii_media_active |= IFM_100_TX|IFM_FDX;
-		break;
-	case PCTL_100_T4:
-		mii->mii_media_active |= IFM_100_T4;
-		break;
-	default:
-		/* Erg... this shouldn't happen. */
-		mii->mii_media_active |= IFM_NONE;
-		break;
-	}
-}
-
-void
-qsphy_auto(sc)
-	struct qsphy_softc *sc;
-{
-	int bmsr, i;
-
-	QSPHY_WRITE(sc, MII_ANAR,
-	    BMSR_MEDIA_TO_ANAR(sc->sc_capabilities) | ANAR_CSMA);
-	QSPHY_WRITE(sc, MII_BMCR, BMCR_AUTOEN | BMCR_STARTNEG);
-
-	/* Wait 500ms for it to complete. */
-	for (i = 0; i < 500; i++) {
-		if ((bmsr = QSPHY_READ(sc, MII_BMSR)) & BMSR_ACOMP)
+	if (bmcr & BMCR_AUTOEN) {
+		if ((bmsr & BMSR_ACOMP) == 0) {
+			/* Erg, still trying, I guess... */
+			mii->mii_media_active |= IFM_NONE;
 			return;
-		delay(1000);
-	}
-#if 0
-	if ((bmsr & BMSR_ACOMP) == 0)
-		printf("%s: autonegotiation failed to complete\n",
-		    sc->sc_mii.mii_dev.dv_xname);
-#endif
+		}
+		pctl = PHY_READ(sc, MII_QSPHY_PCTL) |
+		    PHY_READ(sc, MII_QSPHY_PCTL);
+		switch (pctl & PCTL_OPMASK) {
+		case PCTL_10_T:
+			mii->mii_media_active |= IFM_10_T;
+			break;
+		case PCTL_10_T_FDX:
+			mii->mii_media_active |= IFM_10_T|IFM_FDX;
+			break;
+		case PCTL_100_TX:
+			mii->mii_media_active |= IFM_100_TX;
+			break;
+		case PCTL_100_TX_FDX:
+			mii->mii_media_active |= IFM_100_TX|IFM_FDX;
+			break;
+		case PCTL_100_T4:
+			mii->mii_media_active |= IFM_100_T4;
+			break;
+		default:
+			/* Erg... this shouldn't happen. */
+			mii->mii_media_active |= IFM_NONE;
+			break;
+		}
+	} else
+		mii->mii_media_active = mii_media_from_bmcr(bmcr);
 }
 
 void
 qsphy_reset(sc)
-	struct qsphy_softc *sc;
+	struct mii_softc *sc;
 {
-	int reg, i;
 
-	QSPHY_WRITE(sc, MII_BMCR, BMCR_RESET|BMCR_ISO);
-
-	/* Wait 100ms for it to complete. */
-	for (i = 0; i < 100; i++) {
-		reg = QSPHY_READ(sc, MII_BMCR);
-		if ((reg & BMCR_RESET) == 0)
-			break;
-		delay(1000);
-	}
-
-	/* Make sure the PHY is isolated. */
-	if (sc->sc_mii.mii_inst != 0)
-		QSPHY_WRITE(sc, MII_BMCR, reg | BMCR_ISO);
-
-	QSPHY_WRITE(sc, MII_QSPHY_IMASK, 0);
+	mii_phy_reset(sc);
+	PHY_WRITE(sc, MII_QSPHY_IMASK, 0);
 }

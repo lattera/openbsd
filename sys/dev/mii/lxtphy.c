@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/mii/nsphy.c,v 1.2 1998/11/11 19:34:48 jason Exp $	*/
-/*	$NetBSD: nsphy.c,v 1.16 1998/11/05 04:08:02 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/lxtphy.c,v 1.1 1998/11/11 19:34:46 jason Exp $	*/
+/*	$NetBSD: lxtphy.c,v 1.9 1998/11/05 04:08:02 thorpej Exp $	*/
 
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
@@ -37,7 +37,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
 /*
  * Copyright (c) 1997 Manuel Bouyer.  All rights reserved.
  *
@@ -68,8 +68,8 @@
  */
 
 /*
- * driver for National Semiconductor's DP83840A ethernet 10/100 PHY
- * Data Sheet available from www.national.com
+ * driver for Level One's LXT-970 ethernet 10/100 PHY
+ * datasheet from www.level1.com
  */
 
 #include <sys/param.h>
@@ -86,30 +86,30 @@
 #include <dev/mii/miivar.h>
 #include <dev/mii/miidevs.h>
 
-#include <dev/mii/nsphyreg.h>
+#include <dev/mii/lxtphyreg.h>
 
 #ifdef __NetBSD__
-int	nsphymatch __P((struct device *, struct cfdata *, void *));
+int	lxtphymatch __P((struct device *, struct cfdata *, void *));
 #else
-int	nsphymatch __P((struct device *, void *, void *));
+int	lxtphymatch __P((struct device *, void *, void *));
 #endif
-void	nsphyattach __P((struct device *, struct device *, void *));
+void	lxtphyattach __P((struct device *, struct device *, void *));
 
-struct cfattach nsphy_ca = {
-	sizeof(struct mii_softc), nsphymatch, nsphyattach
+struct cfattach lxtphy_ca = {
+	sizeof(struct mii_softc), lxtphymatch, lxtphyattach
 };
 
 #ifdef __OpenBSD__
-struct cfdriver nsphy_cd = {
-	NULL, "nsphy", DV_DULL
+struct cfdriver lxtphy_cd = {
+	NULL, "lxtphy", DV_DULL
 };
 #endif
 
-int	nsphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	nsphy_status __P((struct mii_softc *));
+int	lxtphy_service __P((struct mii_softc *, struct mii_data *, int));
+void	lxtphy_status __P((struct mii_softc *));
 
 int
-nsphymatch(parent, match, aux)
+lxtphymatch(parent, match, aux)
 	struct device *parent;
 #ifdef __NetBSD__
 	struct cfdata *match;
@@ -120,45 +120,34 @@ nsphymatch(parent, match, aux)
 {
 	struct mii_attach_args *ma = aux;
 
-	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_NATSEMI &&
-	    MII_MODEL(ma->mii_id2) == MII_MODEL_NATSEMI_DP83840)
+	if (MII_OUI(ma->mii_id1, ma->mii_id2) == MII_OUI_LEVEL1 &&
+	    MII_MODEL(ma->mii_id2) == MII_MODEL_LEVEL1_LXT970)
 		return (10);
 
 	return (0);
 }
 
 void
-nsphyattach(parent, self, aux)
-	struct device *parent;
-	struct device *self;
+lxtphyattach(parent, self, aux)
+	struct device *parent, *self;
 	void *aux;
 {
 	struct mii_softc *sc = (struct mii_softc *)self;
 	struct mii_attach_args *ma = aux;
 	struct mii_data *mii = ma->mii_data;
 
-	printf(": %s, rev. %d\n", MII_STR_NATSEMI_DP83840,
+	printf(": %s, rev. %d\n", MII_STR_LEVEL1_LXT970,
 	    MII_REV(ma->mii_id2));
 
 	sc->mii_inst = mii->mii_instance;
 	sc->mii_phy = ma->mii_phyno;
-	sc->mii_service = nsphy_service;
+	sc->mii_service = lxtphy_service;
 	sc->mii_pdata = mii;
-
-	/*
-	 * i82557 wedges if all of its PHYs are isolated!
-	 */
-	if (strcmp(parent->dv_cfdata->cf_driver->cd_name, "fxp") == 0 &&
-	    mii->mii_instance == 0)
-		sc->mii_flags |= MIIF_NOISOLATE;
 
 #define	ADD(m, c)	ifmedia_add(&mii->mii_media, (m), (c), NULL)
 
-#if 0
-	/* Can't do this on the i82557! */
 	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_NONE, 0, sc->mii_inst),
 	    BMCR_ISO);
-#endif
 	ADD(IFM_MAKEWORD(IFM_ETHER, IFM_100_TX, IFM_LOOP, sc->mii_inst),
 	    BMCR_LOOP|BMCR_S100);
 
@@ -177,7 +166,7 @@ nsphyattach(parent, self, aux)
 }
 
 int
-nsphy_service(sc, mii, cmd)
+lxtphy_service(sc, mii, cmd)
 	struct mii_softc *sc;
 	struct mii_data *mii;
 	int cmd;
@@ -210,39 +199,6 @@ nsphy_service(sc, mii, cmd)
 		 */
 		if ((mii->mii_ifp->if_flags & IFF_UP) == 0)
 			break;
-
-		reg = PHY_READ(sc, MII_NSPHY_PCR);
-
-		/*
-		 * Set up the PCR to use LED4 to indicate full-duplex
-		 * in both 10baseT and 100baseTX modes.
-		 */
-		reg |= PCR_LED4MODE;
-
-		/*
-		 * Make sure Carrier Intgrity Monitor function is
-		 * disabled (normal for Node operation, but sometimes
-		 * it's not set?!)
-		 */
-		reg |= PCR_CIMDIS;
-
-		/*
-		 * Make sure "force link good" is not set.  It's only
-		 * intended for debugging, but sometimes it's set
-		 * after a reset.
-		 */
-		reg &= ~PCR_FLINK100;
-
-#if 0
-		/*
-		 * Mystery bits which are supposedly `reserved',
-		 * but we seem to need to set them when the PHY
-		 * is connected to some interfaces!
-		 */
-		reg |= 0x0100 | 0x0400;
-#endif
-
-		PHY_WRITE(sc, MII_NSPHY_PCR, reg);
 
 		switch (IFM_SUBTYPE(ife->ifm_media)) {
 		case IFM_AUTO:
@@ -289,12 +245,13 @@ nsphy_service(sc, mii, cmd)
 
 		/*
 		 * Check to see if we have link.  If we do, we don't
-		 * need to restart the autonegotiation process.  Read
-		 * the BMSR twice in case it's latched.
+		 * need to restart the autonegotiation process.  Use
+		 * the LXT CSR instead of the BMSR, since the CSR's
+		 * link indication is dynamic, not latched, so only
+		 * one register read is required.
 		 */
-		reg = PHY_READ(sc, MII_BMSR) |
-		    PHY_READ(sc, MII_BMSR);
-		if (reg & BMSR_LINK)
+		reg = PHY_READ(sc, MII_LXTPHY_CSR);
+		if (reg & CSR_LINK)
 			return (0);
 
 		/*
@@ -310,7 +267,7 @@ nsphy_service(sc, mii, cmd)
 	}
 
 	/* Update the media status. */
-	nsphy_status(sc);
+	lxtphy_status(sc);
 
 	/* Callback if something changed. */
 	if (sc->mii_active != mii->mii_media_active || cmd == MII_MEDIACHG) {
@@ -321,18 +278,22 @@ nsphy_service(sc, mii, cmd)
 }
 
 void
-nsphy_status(sc)
+lxtphy_status(sc)
 	struct mii_softc *sc;
 {
 	struct mii_data *mii = sc->mii_pdata;
-	int bmsr, bmcr, par, anlpar;
+	int bmcr, csr;
 
 	mii->mii_media_status = IFM_AVALID;
 	mii->mii_media_active = IFM_ETHER;
 
-	bmsr = PHY_READ(sc, MII_BMSR) |
-	    PHY_READ(sc, MII_BMSR);
-	if (bmsr & BMSR_LINK)
+	/*
+	 * Get link status from the CSR; we need to read the CSR
+	 * for media type anyhow, and the link status in the CSR
+	 * doens't latch, so fewer register reads are required.
+	 */
+	csr = PHY_READ(sc, MII_LXTPHY_CSR);
+	if (csr & CSR_LINK)
 		mii->mii_media_status |= IFM_ACTIVE;
 
 	bmcr = PHY_READ(sc, MII_BMCR);
@@ -346,53 +307,17 @@ nsphy_status(sc)
 		mii->mii_media_active |= IFM_LOOP;
 
 	if (bmcr & BMCR_AUTOEN) {
-		/*
-		 * The PAR status bits are only valid of autonegotiation
-		 * has completed (or it's disabled).
-		 */
-		if ((bmsr & BMSR_ACOMP) == 0) {
+		if ((csr & CSR_ACOMP) == 0) {
 			/* Erg, still trying, I guess... */
 			mii->mii_media_active |= IFM_NONE;
 			return;
 		}
-
-		/*
-		 * Argh.  The PAR doesn't seem to indicate duplex mode
-		 * properly!  Determine media based on link partner's
-		 * advertised capabilities.
-		 */
-		if (PHY_READ(sc, MII_ANER) & ANER_LPAN) {
-			anlpar = PHY_READ(sc, MII_ANAR) &
-			    PHY_READ(sc, MII_ANLPAR);
-			if (anlpar & ANLPAR_T4)
-				mii->mii_media_active |= IFM_100_T4;
-			else if (anlpar & ANLPAR_TX_FD)
-				mii->mii_media_active |= IFM_100_TX|IFM_FDX;
-			else if (anlpar & ANLPAR_TX)
-				mii->mii_media_active |= IFM_100_TX;
-			else if (anlpar & ANLPAR_10_FD)
-				mii->mii_media_active |= IFM_10_T|IFM_FDX;
-			else if (anlpar & ANLPAR_10)
-				mii->mii_media_active |= IFM_10_T;
-			else
-				mii->mii_media_active |= IFM_NONE;
-			return;
-		}
-
-		/*
-		 * Link partner is not capable of autonegotiation.
-		 * We will never be in full-duplex mode if this is
-		 * the case, so reading the PAR is OK.
-		 */
-		par = PHY_READ(sc, MII_NSPHY_PAR);
-		if (par & PAR_10)
-			mii->mii_media_active |= IFM_10_T;
-		else
+		if (csr & CSR_SPEED)
 			mii->mii_media_active |= IFM_100_TX;
-#if 0
-		if (par & PAR_FDX)
+		else
+			mii->mii_media_active |= IFM_10_T;
+		if (csr & CSR_DUPLEX)
 			mii->mii_media_active |= IFM_FDX;
-#endif
 	} else
 		mii->mii_media_active = mii_media_from_bmcr(bmcr);
 }
