@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.10 2004/06/13 07:31:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/lapic.c,v 1.1.2.11 2004/06/13 18:46:04 art Exp $	*/
 /* $NetBSD: lapic.c,v 1.1.2.8 2000/02/23 06:10:50 sommerfeld Exp $ */
 
 /*-
@@ -63,12 +63,12 @@
 
 #include <i386/isa/timerreg.h>	/* XXX for TIMER_FREQ */
 
-void	lapic_delay __P((int));
-void	lapic_microtime __P((struct timeval *));
-static __inline u_int32_t lapic_gettick __P((void));
-void	lapic_clockintr __P((void *));
-void	lapic_initclocks __P((void));
-void 	lapic_map __P((paddr_t));
+void	lapic_delay(int);
+void	lapic_microtime(struct timeval *);
+static __inline u_int32_t lapic_gettick(void);
+void	lapic_clockintr(void *);
+void	lapic_initclocks(void);
+void 	lapic_map(paddr_t);
 
 void
 lapic_map(lapic_base)
@@ -215,8 +215,8 @@ lapic_initclocks()
 	i82489_writereg(LAPIC_LVTT, LAPIC_LVTT_TM|LAPIC_TIMER_VECTOR);
 }
 
-extern int gettick __P((void));	/* XXX put in header file */
-extern void (*initclock_func) __P((void)); /* XXX put in header file */
+extern int gettick(void);	/* XXX put in header file */
+extern void (*initclock_func)(void); /* XXX put in header file */
 
 /*
  * Calibrate the local apic count-down timer (which is running at

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.29 2004/06/10 11:40:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.30 2004/06/13 18:46:04 art Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -126,7 +126,7 @@ struct cpu_info {
 	u_int32_t	cpu_class;		/* CPU class */
 
 	struct cpu_functions *ci_func;	/* start/stop functions */
-	void (*cpu_setup) __P((const char *, int, int));	/* proc-dependant init */
+	void (*cpu_setup)(const char *, int, int);	/* proc-dependant init */
 
 	int		ci_want_resched;
 	int		ci_astpending;
@@ -186,8 +186,8 @@ extern struct cpu_info *cpu_info_list;
 extern struct cpu_info	*cpu_info[I386_MAXPROCS];
 extern u_long		 cpus_running;
 
-extern void cpu_boot_secondary_processors __P((void));
-extern void cpu_init_idle_pcbs __P((void));
+extern void cpu_boot_secondary_processors(void);
+extern void cpu_init_idle_pcbs(void);
 
 #else /* MULTIPROCESSOR */
 
@@ -215,7 +215,7 @@ extern void cpu_init_idle_pcbs __P((void));
  * Preemt the current process if in interrupt from user monre,
  * or after the current trap/syscall if in system mode.
  */
-extern void need_resched __P((struct cpu_info *));
+extern void need_resched(struct cpu_info *);
 
 #define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
 #define	CLKF_PC(frame)		((frame)->if_eip)

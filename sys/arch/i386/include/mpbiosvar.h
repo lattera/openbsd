@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/mpbiosvar.h,v 1.1.2.5 2004/06/11 14:58:37 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/mpbiosvar.h,v 1.1.2.6 2004/06/13 18:46:04 art Exp $	*/
 /* $NetBSD: mpbiosvar.h,v 1.1.2.3 2000/02/29 13:17:20 sommerfeld Exp $ */
 
 /*-
@@ -53,8 +53,8 @@ struct mp_bus
 {
 	char *mb_name;		/* XXX bus name */
 	int mb_idx;		/* XXX bus index */
-	void (*mb_intr_print) __P((int));
-	void (*mb_intr_cfg) __P((const struct mpbios_int *, u_int32_t *));
+	void (*mb_intr_print) (int);
+	void (*mb_intr_cfg)(const struct mpbios_int *, u_int32_t *);
 	struct mp_intr_map *mb_intrs;
 	u_int32_t mb_data;	/* random bus-specific datum. */
 };
@@ -79,8 +79,8 @@ extern struct mp_intr_map *mp_intrs;
 extern int mp_isa_bus;
 extern int mp_eisa_bus;
 
-void mpbios_scan __P((struct device *));
-int mpbios_probe __P((struct device *));
+void mpbios_scan(struct device *);
+int mpbios_probe(struct device *);
 #endif
 
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.19 2004/06/13 07:31:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.20 2004/06/13 18:46:04 art Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -109,8 +109,8 @@
 #include <i386/isa/nvram.h>
 #include <dev/isa/isareg.h>
 
-int     cpu_match __P((struct device *, void *, void *));
-void    cpu_attach __P((struct device *, struct device *, void *));
+int     cpu_match(struct device *, void *, void *);
+void    cpu_attach(struct device *, struct device *, void *);
 
 #ifdef MULTIPROCESSOR
 int mp_cpu_start(struct cpu_info *); 
@@ -138,9 +138,9 @@ void	cpu_set_tss_gates(struct cpu_info *);
 
 struct cpu_info *cpu_info[I386_MAXPROCS] = { &cpu_info_primary };
 
-void   	cpu_hatch __P((void *));
-void   	cpu_boot_secondary __P((struct cpu_info *));
-void	cpu_copy_trampoline __P((void));
+void   	cpu_hatch(void *);
+void   	cpu_boot_secondary(struct cpu_info *);
+void	cpu_copy_trampoline(void);
 
 /*
  * Runs once per boot once multiprocessor goo has been detected and

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.34 2004/06/13 07:31:56 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.35 2004/06/13 18:46:04 art Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -249,9 +249,9 @@ int p4_model;
 int p3_step;
 int setperf_prio = 0;		/* for concurrent handlers */
 
-void (*delay_func) __P((int)) = i8254_delay;
-void (*microtime_func) __P((struct timeval *)) = i8254_microtime;
-void (*initclock_func) __P((void)) = i8254_initclocks;
+void (*delay_func)(int) = i8254_delay;
+void (*microtime_func)(struct timeval *) = i8254_microtime;
+void (*initclock_func)(void) = i8254_initclocks;
 void (*update_cpuspeed)(void) = NULL;
 
 /*
@@ -1539,7 +1539,7 @@ identifycpu(struct cpu_info *ci)
 	const struct cpu_cpuid_nameclass *cpup = NULL;
 
 	char *cpu_device = ci->ci_dev.dv_xname;
-	/* XXX SMP XXX void (*cpu_setup) __P((const char *, int, int)); */
+	/* XXX SMP XXX void (*cpu_setup)(const char *, int, int); */
 
 	if (cpuid_level == -1) {
 #ifdef DIAGNOSTIC
@@ -3278,7 +3278,7 @@ idt_vec_alloc(int low, int high)
 }
 
 void
-idt_vec_set(int vec, void (*function) __P((void)))
+idt_vec_set(int vec, void (*function)(void))
 {
 	setgate(&idt[vec], function, 0, SDT_SYS386IGT, SEL_KPL, GCODE_SEL);
 }

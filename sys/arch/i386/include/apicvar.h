@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/apicvar.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/apicvar.h,v 1.1.2.3 2004/06/13 18:46:04 art Exp $	*/
 /* $NetBSD: apicvar.h,v 1.1.2.3 2000/02/27 20:25:00 sommerfeld Exp $ */
 
 /*-
@@ -52,6 +52,6 @@ struct apic_attach_args {
 	paddr_t apic_address;
 };
 
-void apic_format_redir __P((char *, char *, int, u_int32_t, u_int32_t));
+void apic_format_redir(char *, char *, int, u_int32_t, u_int32_t);
 
 #endif /* !_I386_APICVAR_H_ */

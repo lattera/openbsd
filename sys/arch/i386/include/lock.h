@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/lock.h,v 1.1.2.3 2003/05/15 04:08:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/lock.h,v 1.1.2.4 2004/06/13 18:46:04 art Exp $	*/
 /*	$NetBSD: lock.h,v 1.1.2.2 2000/05/03 14:40:55 sommerfeld Exp $	*/
 
 /*-
@@ -61,22 +61,22 @@ typedef	__volatile int		__cpu_simple_lock_t;
 
 #ifdef LOCKDEBUG
 
-extern void __cpu_simple_lock_init __P((__cpu_simple_lock_t *));
-extern void __cpu_simple_lock __P((__cpu_simple_lock_t *));
-extern int __cpu_simple_lock_try __P((__cpu_simple_lock_t *));
-extern void __cpu_simple_unlock __P((__cpu_simple_lock_t *));
+extern void __cpu_simple_lock_init(__cpu_simple_lock_t *);
+extern void __cpu_simple_lock(__cpu_simple_lock_t *);
+extern int __cpu_simple_lock_try(__cpu_simple_lock_t *);
+extern void __cpu_simple_unlock(__cpu_simple_lock_t *);
 
 #else
 
 #include <machine/atomic.h>
 
-static __inline void __cpu_simple_lock_init __P((__cpu_simple_lock_t *))
+static __inline void __cpu_simple_lock_init(__cpu_simple_lock_t *)
 	__attribute__((__unused__));
-static __inline void __cpu_simple_lock __P((__cpu_simple_lock_t *))
+static __inline void __cpu_simple_lock(__cpu_simple_lock_t *)
 	__attribute__((__unused__));
-static __inline int __cpu_simple_lock_try __P((__cpu_simple_lock_t *))
+static __inline int __cpu_simple_lock_try(__cpu_simple_lock_t *)
 	__attribute__((__unused__));
-static __inline void __cpu_simple_unlock __P((__cpu_simple_lock_t *)) 
+static __inline void __cpu_simple_unlock(__cpu_simple_lock_t *)
 	__attribute__((__unused__));
 
 static __inline void
