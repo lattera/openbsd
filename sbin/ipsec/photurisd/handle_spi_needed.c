@@ -34,7 +34,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: handle_spi_needed.c,v 1.1.1.1 1997/07/18 22:48:51 provos Exp $";
+static char rcsid[] = "$Id: handle_spi_needed.c,v 1.2 1997/07/19 12:07:48 provos Exp $";
 #endif
 
 #include <stdio.h>
@@ -177,7 +177,7 @@ handle_spi_needed(u_char *packet, int size, char *address,
 	     return -1;
 	}
 	bcopy(st->icookie, spi->icookie, COOKIE_SIZE);
-	spi->owner = 1;
+	spi->flags |= SPI_OWNER;
 	spi->attribsize = st->oSPIattribsize;
 	spi->attributes = calloc(spi->attribsize, sizeof(u_int8_t));
 	if (spi->attributes == NULL) {
