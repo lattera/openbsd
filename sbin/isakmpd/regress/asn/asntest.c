@@ -1,4 +1,5 @@
-/*	$Id: asntest.c,v 1.6 1998/10/07 16:40:48 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/asn/Attic/asntest.c,v 1.5 1999/03/02 15:27:35 niklas Exp $	*/
+/*	$EOM: asntest.c,v 1.6 1998/10/07 16:40:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

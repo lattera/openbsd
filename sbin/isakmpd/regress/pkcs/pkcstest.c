@@ -1,4 +1,5 @@
-/*	$Id: pkcstest.c,v 1.5 1998/08/20 14:09:04 provos Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/pkcs/Attic/pkcstest.c,v 1.5 1999/03/02 15:27:36 niklas Exp $	*/
+/*	$EOM: pkcstest.c,v 1.5 1998/08/20 14:09:04 provos Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.

@@ -1,4 +1,5 @@
-#	$Id: Makefile,v 1.5 1999/02/25 15:12:00 niklas Exp $
+#	$OpenBSD: src/sbin/isakmpd/regress/pkcs/Attic/Makefile,v 1.5 1999/03/02 15:27:36 niklas Exp $
+#	$EOM: Makefile,v 1.5 1999/02/25 15:12:00 niklas Exp $
 
 # Test PKCS#1
 

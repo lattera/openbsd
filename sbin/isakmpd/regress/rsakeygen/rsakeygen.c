@@ -1,4 +1,5 @@
-/*	$Id: rsakeygen.c,v 1.5 1998/10/07 16:40:51 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/regress/rsakeygen/Attic/rsakeygen.c,v 1.5 1999/03/02 15:27:36 niklas Exp $	*/
+/*	$EOM: rsakeygen.c,v 1.5 1998/10/07 16:40:51 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998 Niels Provos.  All rights reserved.
