@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/txphy.c,v 1.1.2.1 2001/05/14 22:25:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/txphy.c,v 1.1.2.2 2002/03/28 15:34:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Jason L. Wright (jason@thought.net)
@@ -50,8 +50,8 @@
 #include <dev/mii/miivar.h>
 #include <dev/mii/miidevs.h>
 
-int	txphymatch __P((struct device *, void *, void *));
-void	txphyattach __P((struct device *, struct device *, void *));
+int	txphymatch(struct device *, void *, void *);
+void	txphyattach(struct device *, struct device *, void *);
 
 struct cfattach txphy_ca = {
 	sizeof(struct mii_softc), txphymatch, txphyattach, mii_phy_detach,
@@ -62,7 +62,7 @@ struct cfdriver txphy_cd = {
 	NULL, "txphy", DV_DULL
 };
 
-int	txphy_service __P((struct mii_softc *, struct mii_data *, int));
+int	txphy_service(struct mii_softc *, struct mii_data *, int);
 
 int
 txphymatch(parent, match, aux)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_le_pci.c,v 1.12.4.3 2001/11/13 21:10:02 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_le_pci.c,v 1.12.4.4 2002/03/28 15:35:57 niklas Exp $	*/
 /*	$NetBSD: if_le_pci.c,v 1.13 1996/10/25 21:33:32 cgd Exp $	*/
 
 /*-
@@ -78,15 +78,15 @@
 #define	vtophys(va)	alpha_XXX_dmamap((vm_offset_t)(va))
 #endif
 
-int le_pci_match __P((struct device *, void *, void *));
-void le_pci_attach __P((struct device *, struct device *, void *));
+int le_pci_match(struct device *, void *, void *);
+void le_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach le_pci_ca = {
 	sizeof(struct le_softc), le_pci_match, le_pci_attach
 };
 
-hide void le_pci_wrcsr __P((struct am7990_softc *, u_int16_t, u_int16_t));
-hide u_int16_t le_pci_rdcsr __P((struct am7990_softc *, u_int16_t));
+hide void le_pci_wrcsr(struct am7990_softc *, u_int16_t, u_int16_t);
+hide u_int16_t le_pci_rdcsr(struct am7990_softc *, u_int16_t);
 
 /*
  * PCI constants.

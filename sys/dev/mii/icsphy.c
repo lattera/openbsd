@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.5.2.2 2001/07/04 10:41:41 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/icsphy.c,v 1.5.2.3 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: icsphy.c,v 1.17 2000/02/02 23:34:56 thorpej Exp $	*/
 
 /*-
@@ -89,8 +89,8 @@
 
 #include <dev/mii/icsphyreg.h>
 
-int	icsphymatch __P((struct device *, void *, void *));
-void	icsphyattach __P((struct device *, struct device *, void *));
+int	icsphymatch(struct device *, void *, void *);
+void	icsphyattach(struct device *, struct device *, void *);
 
 struct cfattach icsphy_ca = {
 	sizeof(struct mii_softc), icsphymatch, icsphyattach, mii_phy_detach,
@@ -101,9 +101,9 @@ struct cfdriver icsphy_cd = {
 	NULL, "icsphy", DV_DULL
 };
 
-int	icsphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	icsphy_reset __P((struct mii_softc *));
-void	icsphy_status __P((struct mii_softc *));
+int	icsphy_service(struct mii_softc *, struct mii_data *, int);
+void	icsphy_reset(struct mii_softc *);
+void	icsphy_status(struct mii_softc *);
 
 int
 icsphymatch(parent, match, aux)

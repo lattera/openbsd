@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/nsphy.c,v 1.8.2.2 2001/10/31 03:22:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/nsphy.c,v 1.8.2.3 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: nsphy.c,v 1.25 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*-
@@ -89,8 +89,8 @@
 
 #include <dev/mii/nsphyreg.h>
 
-int	nsphymatch __P((struct device *, void *, void *));
-void	nsphyattach __P((struct device *, struct device *, void *));
+int	nsphymatch(struct device *, void *, void *);
+void	nsphyattach(struct device *, struct device *, void *);
 
 struct cfattach nsphy_ca = {
 	sizeof(struct mii_softc), nsphymatch, nsphyattach, mii_phy_detach,
@@ -101,9 +101,9 @@ struct cfdriver nsphy_cd = {
 	NULL, "nsphy", DV_DULL
 };
 
-int	nsphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	nsphy_status __P((struct mii_softc *));
-void	nsphy_reset __P((struct mii_softc *));
+int	nsphy_service(struct mii_softc *, struct mii_data *, int);
+void	nsphy_status(struct mii_softc *);
+void	nsphy_reset(struct mii_softc *);
 
 int
 nsphymatch(parent, match, aux)

@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.490 2002/02/18 10:15:44 deraadt Exp 
+ *		OpenBSD: pcidevs,v 1.494 2002/03/19 15:26:59 mickey Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -637,6 +637,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_ALTEON, PCI_PRODUCT_ALTEON_BCM5701,
 	    "BCM5701 (Broadcom)",
+	},
+	{
+	    PCI_VENDOR_ALTIMA, PCI_PRODUCT_ALTIMA_AC100X,
+	    "AC100X",
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PCNET_PCI,
@@ -2051,6 +2055,14 @@ static const struct pci_known_product pci_known_products[] = {
 	    "PRO 1000XT",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544_SC,
+	    "PRO 1000XS",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82544_GC,
+	    "PRO 1000T",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PRO_100_VE_0,
 	    "PRO/100 VE",
 	},
@@ -2327,8 +2339,32 @@ static const struct pci_known_product pci_known_products[] = {
 	    "82801BA AGP",
 	},
 	{
-	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_CAM,
-	    "82801CA AC97 Audio",
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_LPC,
+	    "82801CA LPC",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_USB_1,
+	    "82801CA/CAM USB",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_SMB,
+	    "82801CA/CAM SMB",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_USB_2,
+	    "82801CA/CAM USB",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_ACA,
+	    "82801CA/CAM AC97 Audio",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_ACM,
+	    "82801CA/CAM Modem",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_USB_3,
+	    "82801CA/CAM USB",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CAM_IDE,
@@ -2337,6 +2373,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_IDE,
 	    "82801CA IDE",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CAM_LPC,
+	    "82801CAM LPC",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82820_MCH,
@@ -7181,6 +7221,10 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_GLOBALSUN,
 	    "Global Sun",
+	},
+	{
+	    PCI_VENDOR_ALTIMA,
+	    "Altima",
 	},
 	{
 	    PCI_VENDOR_ANTARES,

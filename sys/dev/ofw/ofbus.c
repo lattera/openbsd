@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ofw/Attic/ofbus.c,v 1.7.2.2 2001/10/31 03:22:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/ofw/Attic/ofbus.c,v 1.7.2.3 2002/03/28 15:38:28 niklas Exp $	*/
 /*	$NetBSD: ofbus.c,v 1.3 1996/10/13 01:38:11 christos Exp $	*/
 
 /*
@@ -45,11 +45,11 @@
 
 extern void systype(char *);
 
-int ofrprobe __P((struct device *, void *, void *));
-void ofrattach __P((struct device *, struct device *, void *));
-int ofbprobe __P((struct device *, void *, void *));
-void ofbattach __P((struct device *, struct device *, void *));
-static int ofbprint __P((void *, const char *));
+int ofrprobe(struct device *, void *, void *);
+void ofrattach(struct device *, struct device *, void *);
+int ofbprobe(struct device *, void *, void *);
+void ofbattach(struct device *, struct device *, void *);
+static int ofbprint(void *, const char *);
 
 struct cfattach ofbus_ca = {
 	sizeof(struct device), ofbprobe, ofbattach

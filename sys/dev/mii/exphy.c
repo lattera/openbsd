@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/exphy.c,v 1.6.2.3 2001/10/31 03:22:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/exphy.c,v 1.6.2.4 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: exphy.c,v 1.23 2000/02/02 23:34:56 thorpej Exp $	*/
 
 /*-
@@ -85,8 +85,8 @@
 #include <dev/mii/miivar.h>
 #include <dev/mii/miidevs.h>
 
-int	exphymatch __P((struct device *, void *, void *));
-void	exphyattach __P((struct device *, struct device *, void *));
+int	exphymatch(struct device *, void *, void *);
+void	exphyattach(struct device *, struct device *, void *);
 
 struct cfattach exphy_ca = {
 	sizeof(struct mii_softc), exphymatch, exphyattach, mii_phy_detach,
@@ -97,8 +97,8 @@ struct cfdriver exphy_cd = {
 	NULL, "exphy", DV_DULL
 };
 
-int	exphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	exphy_reset __P((struct mii_softc *));
+int	exphy_service(struct mii_softc *, struct mii_data *, int);
+void	exphy_reset(struct mii_softc *);
 
 int
 exphymatch(parent, match, aux)

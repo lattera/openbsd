@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.6 2002/03/06 02:11:46 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.6.4.7 2002/03/28 15:35:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -100,8 +100,8 @@
 
 #include <dev/pci/if_vrreg.h>
 
-int vr_probe			__P((struct device *, void *, void *));
-void vr_attach			__P((struct device *, struct device *, void *));
+int vr_probe(struct device *, void *, void *);
+void vr_attach(struct device *, struct device *, void *);
 
 struct cfattach vr_ca = {
 	sizeof(struct vr_softc), vr_probe, vr_attach
@@ -110,41 +110,41 @@ struct cfdriver vr_cd = {
 	0, "vr", DV_IFNET
 };
 
-int vr_newbuf			__P((struct vr_softc *,
+int vr_newbuf(struct vr_softc *,
 				     struct vr_chain_onefrag *,
-				     struct mbuf *));
-int vr_encap			__P((struct vr_softc *, struct vr_chain *,
-				     struct mbuf * ));
+				     struct mbuf *);
+int vr_encap(struct vr_softc *, struct vr_chain *,
+				     struct mbuf * );
 
-void vr_rxeof			__P((struct vr_softc *));
-void vr_rxeoc			__P((struct vr_softc *));
-void vr_txeof			__P((struct vr_softc *));
-void vr_txeoc			__P((struct vr_softc *));
-void vr_tick			__P((void *));
-int vr_intr			__P((void *));
-void vr_start			__P((struct ifnet *));
-int vr_ioctl			__P((struct ifnet *, u_long, caddr_t));
-void vr_init			__P((void *));
-void vr_stop			__P((struct vr_softc *));
-void vr_watchdog		__P((struct ifnet *));
-void vr_shutdown		__P((void *));
-int vr_ifmedia_upd		__P((struct ifnet *));
-void vr_ifmedia_sts		__P((struct ifnet *, struct ifmediareq *));
+void vr_rxeof(struct vr_softc *);
+void vr_rxeoc(struct vr_softc *);
+void vr_txeof(struct vr_softc *);
+void vr_txeoc(struct vr_softc *);
+void vr_tick(void *);
+int vr_intr(void *);
+void vr_start(struct ifnet *);
+int vr_ioctl(struct ifnet *, u_long, caddr_t);
+void vr_init(void *);
+void vr_stop(struct vr_softc *);
+void vr_watchdog(struct ifnet *);
+void vr_shutdown(void *);
+int vr_ifmedia_upd(struct ifnet *);
+void vr_ifmedia_sts(struct ifnet *, struct ifmediareq *);
 
-void vr_mii_sync		__P((struct vr_softc *));
-void vr_mii_send		__P((struct vr_softc *, u_int32_t, int));
-int vr_mii_readreg		__P((struct vr_softc *, struct vr_mii_frame *));
-int vr_mii_writereg		__P((struct vr_softc *, struct vr_mii_frame *));
-int vr_miibus_readreg		__P((struct device *, int, int));
-void vr_miibus_writereg		__P((struct device *, int, int, int));
-void vr_miibus_statchg		__P((struct device *));
+void vr_mii_sync(struct vr_softc *);
+void vr_mii_send(struct vr_softc *, u_int32_t, int);
+int vr_mii_readreg(struct vr_softc *, struct vr_mii_frame *);
+int vr_mii_writereg(struct vr_softc *, struct vr_mii_frame *);
+int vr_miibus_readreg(struct device *, int, int);
+void vr_miibus_writereg(struct device *, int, int, int);
+void vr_miibus_statchg(struct device *);
 
-void vr_setcfg			__P((struct vr_softc *, int));
-u_int8_t vr_calchash		__P((u_int8_t *));
-void vr_setmulti		__P((struct vr_softc *));
-void vr_reset			__P((struct vr_softc *));
-int vr_list_rx_init		__P((struct vr_softc *));
-int vr_list_tx_init		__P((struct vr_softc *));
+void vr_setcfg(struct vr_softc *, int);
+u_int8_t vr_calchash(u_int8_t *);
+void vr_setmulti(struct vr_softc *);
+void vr_reset(struct vr_softc *);
+int vr_list_rx_init(struct vr_softc *);
+int vr_list_tx_init(struct vr_softc *);
 
 #define VR_SETBIT(sc, reg, x)				\
 	CSR_WRITE_1(sc, reg,				\
@@ -1290,7 +1290,7 @@ vr_start(ifp)
 	start_tx = sc->vr_cdata.vr_tx_free;
 
 	while(sc->vr_cdata.vr_tx_free->vr_mbuf == NULL) {
-		IFQ_DEQUEUE(&ifp->if_snd, m_head);
+		IFQ_POLL(&ifp->if_snd, m_head);
 		if (m_head == NULL)
 			break;
 
@@ -1300,7 +1300,6 @@ vr_start(ifp)
 
 		/* Pack the data into the descriptor. */
 		if (vr_encap(sc, cur_tx, m_head)) {
-			IF_PREPEND(&ifp->if_snd, m_head);
 			ifp->if_flags |= IFF_OACTIVE;
 			cur_tx = NULL;
 			break;
@@ -1308,6 +1307,9 @@ vr_start(ifp)
 
 		if (cur_tx != start_tx)
 			VR_TXOWN(cur_tx) = VR_TXSTAT_OWN;
+
+		/* now we are committed to transmit the packet */
+		IFQ_DEQUEUE(&ifp->if_snd, m_head);
 
 #if NBPFILTER > 0
 		/*

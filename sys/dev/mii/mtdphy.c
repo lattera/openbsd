@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mtdphy.c,v 1.4.2.1 2001/05/14 22:25:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mtdphy.c,v 1.4.2.2 2002/03/28 15:34:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999 Jason L. Wright (jason@thought.net)
@@ -51,8 +51,8 @@
 #include <dev/mii/miidevs.h>
 #include <dev/mii/mtdphyreg.h>
 
-int	mtdphymatch __P((struct device *, void *, void *));
-void	mtdphyattach __P((struct device *, struct device *, void *));
+int	mtdphymatch(struct device *, void *, void *);
+void	mtdphyattach(struct device *, struct device *, void *);
 
 struct cfattach mtdphy_ca = {
 	sizeof(struct mii_softc), mtdphymatch, mtdphyattach, mii_phy_detach,
@@ -63,7 +63,7 @@ struct cfdriver mtdphy_cd = {
 	NULL, "mtdphy", DV_DULL
 };
 
-int	mtdphy_service __P((struct mii_softc *, struct mii_data *, int));
+int	mtdphy_service(struct mii_softc *, struct mii_data *, int);
 
 int
 mtdphymatch(parent, match, aux)

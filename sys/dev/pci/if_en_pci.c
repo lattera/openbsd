@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_en_pci.c,v 1.6.10.2 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_en_pci.c,v 1.6.10.3 2002/03/28 15:35:57 niklas Exp $	*/
 
 /*
  *
@@ -110,11 +110,11 @@ struct en_pci_softc {
  */
 
 #ifdef __BROKEN_INDIRECT_CONFIG
-static	int en_pci_match __P((struct device *, void *, void *));
+static	int en_pci_match(struct device *, void *, void *);
 #else
-static	int en_pci_match __P((struct device *, struct cfdata *, void *));
+static	int en_pci_match(struct device *, struct cfdata *, void *);
 #endif
-static	void en_pci_attach __P((struct device *, struct device *, void *));
+static	void en_pci_attach(struct device *, struct device *, void *);
 
 /*
  * PCI autoconfig attachments
@@ -126,7 +126,7 @@ struct cfattach en_pci_ca = {
 
 #if !defined(MIDWAY_ENIONLY)
 
-static void adp_busreset __P((void *));
+static void adp_busreset(void *);
 
 /*
  * bus specific reset function [ADP only!]

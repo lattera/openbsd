@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/twe_pci.c,v 1.3.4.3 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/twe_pci.c,v 1.3.4.4 2002/03/28 15:35:59 niklas Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -51,8 +51,8 @@
 
 #define	TWE_BAR	0x10
 
-int	twe_pci_match __P((struct device *, void *, void *));
-void	twe_pci_attach __P((struct device *, struct device *, void *));
+int	twe_pci_match(struct device *, void *, void *);
+void	twe_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach twe_pci_ca = {
 	sizeof(struct twe_softc), twe_pci_match, twe_pci_attach

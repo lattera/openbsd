@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/aic_pcmcia.c,v 1.8.4.1 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/aic_pcmcia.c,v 1.8.4.2 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: aic_pcmcia.c,v 1.6 1998/07/19 17:28:15 christos Exp $	*/
 
 /*
@@ -50,8 +50,8 @@
 #include <dev/pcmcia/pcmciavar.h>
 #include <dev/pcmcia/pcmciadevs.h>
 
-int	aic_pcmcia_match __P((struct device *, void *, void *));
-void	aic_pcmcia_attach __P((struct device *, struct device *, void *));
+int	aic_pcmcia_match(struct device *, void *, void *);
+void	aic_pcmcia_attach(struct device *, struct device *, void *);
 
 struct aic_pcmcia_softc {
 	struct aic_softc sc_aic;		/* real "aic" softc */

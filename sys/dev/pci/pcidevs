@@ -1,4 +1,4 @@
-	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.9 2002/03/06 02:11:46 niklas Exp $
+	$OpenBSD: src/sys/dev/pci/pcidevs,v 1.218.2.10 2002/03/28 15:35:58 niklas Exp $
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
 /*
@@ -40,7 +40,7 @@
  *
  * There is a Vendor ID search engine available at:
  *
- *	http://www.pcisig.com/app/search/by_vendor_id/
+ *	http://www.pcisig.com/membership/vid_search/
  */
 
 /*
@@ -553,6 +553,7 @@ vendor SYBA		0x1592	Syba
 vendor EUMITCOM		0x1638	Eumitcom
 vendor NETSEC		0x1660	NetSec
 vendor GLOBALSUN	0x16ab	Global Sun
+vendor ALTIMA		0x173b	Altima
 vendor ANTARES		0x1754	Antares Microsystems
 vendor SYMPHONY2	0x1c1c	Symphony Labs
 vendor TEKRAM2		0x1de1	Tekram Technology
@@ -771,6 +772,9 @@ product ALTEON ACENIC		0x0001	Acenic
 product ALTEON ACENICT		0x0002	Acenic Copper
 product ALTEON BCM5700		0x0003	BCM5700 (Broadcom)
 product ALTEON BCM5701		0x0004	BCM5701 (Broadcom)
+
+/* Altima products */
+product ALTIMA AC100X		0x03e8	AC100X
 
 /* AMD products */
 product AMD PCNET_PCI		0x2000	79c970 PCnet-PCI LANCE
@@ -1254,6 +1258,8 @@ product INTEL 82452_SC		0x1001	PRO 1000SC
 product INTEL 82453		0x1001	PRO 1000F
 product INTEL 82453_CU		0x1004	PRO 1000T
 product INTEL 82544		0x1008	PRO 1000XT
+product INTEL 82544_SC		0x1009	PRO 1000XS
+product INTEL 82544_GC		0x100D	PRO 1000T
 product INTEL PRO_100_VE_0	0x1031	PRO/100 VE
 product INTEL PRO_100_VE_1	0x1032	PRO/100 VE
 product INTEL PRO_100_VM_0	0x1033	PRO/100 VM
@@ -1323,9 +1329,16 @@ product INTEL 82801BAM_IDE	0x244a	82801BAM IDE
 product INTEL 82801BA_IDE	0x244b	82801BA IDE
 product INTEL 82801BAM_LPC	0x244c	82801BAM LPC
 product INTEL 82801BA_AGP	0x244e	82801BA AGP
-product INTEL 82801CA_CAM	0x2485	82801CA AC97 Audio
+product INTEL 82801CA_LPC	0x2480	82801CA LPC
+product INTEL 82801CA_USB_1	0x2482	82801CA/CAM USB
+product INTEL 82801CA_SMB	0x2483	82801CA/CAM SMB
+product INTEL 82801CA_USB_2	0x2484	82801CA/CAM USB
+product INTEL 82801CA_ACA	0x2485	82801CA/CAM AC97 Audio
+product INTEL 82801CA_ACM	0x2486	82801CA/CAM Modem
+product INTEL 82801CA_USB_3	0x2487	82801CA/CAM USB
 product INTEL 82801CAM_IDE	0x248a	82801CAM IDE
 product INTEL 82801CA_IDE	0x248b	82801CA IDE
+product INTEL 82801CAM_LPC	0x248c	82801CAM LPC
 product INTEL 82820_MCH		0x2501	82820 MCH
 product INTEL 82820_AGP		0x250f	82820 AGP
 product INTEL 82850_HB		0x2530	82850 Host

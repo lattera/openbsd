@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.3 2001/10/31 03:22:45 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_an_pci.c,v 1.2.8.4 2002/03/28 15:35:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -80,8 +80,8 @@
 #define AN_PCI_PLX_LOIO		0x14	/* PLX chip iobase */
 #define AN_PCI_LOIO		0x18	/* Aironet iobase */
 
-int an_pci_match	__P((struct device *, void *, void *));
-void an_pci_attach	__P((struct device *, struct device *, void *));
+int an_pci_match(struct device *, void *, void *);
+void an_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach an_pci_ca = {
 	sizeof (struct an_softc), an_pci_match, an_pci_attach

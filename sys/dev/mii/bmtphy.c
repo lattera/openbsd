@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1.4.3 2001/10/31 03:22:44 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/bmtphy.c,v 1.1.4.4 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: nsphy.c,v 1.25 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*-
@@ -48,8 +48,8 @@
 
 #include <dev/mii/bmtphyreg.h>
 
-int	bmtphymatch __P((struct device *, void *, void *));
-void	bmtphyattach __P((struct device *, struct device *, void *));
+int	bmtphymatch(struct device *, void *, void *);
+void	bmtphyattach(struct device *, struct device *, void *);
 
 struct cfattach bmtphy_ca = {
 	sizeof(struct mii_softc), bmtphymatch, bmtphyattach, mii_phy_detach,
@@ -60,9 +60,9 @@ struct cfdriver bmtphy_cd = {
 	NULL, "bmtphy", DV_DULL
 };
 
-int	bmtphy_service __P((struct mii_softc *, struct mii_data *, int));
-void	bmtphy_status __P((struct mii_softc *));
-void	bmtphy_reset __P((struct mii_softc *));
+int	bmtphy_service(struct mii_softc *, struct mii_data *, int);
+void	bmtphy_status(struct mii_softc *);
+void	bmtphy_reset(struct mii_softc *);
 
 int
 bmtphymatch(parent, match, aux)

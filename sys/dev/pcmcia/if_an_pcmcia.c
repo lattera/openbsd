@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.4.4.2 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/if_an_pcmcia.c,v 1.4.4.3 2002/03/28 15:34:52 niklas Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -54,10 +54,10 @@
 #include <dev/ic/anvar.h>
 #include <dev/ic/anreg.h>
 
-int  an_pcmcia_match         __P((struct device *, void *, void *));
-void an_pcmcia_attach        __P((struct device *, struct device *, void *));
-int  an_pcmcia_detach        __P((struct device *, int));
-int  an_pcmcia_activate      __P((struct device *, enum devact));
+int  an_pcmcia_match(struct device *, void *, void *);
+void an_pcmcia_attach(struct device *, struct device *, void *);
+int  an_pcmcia_detach(struct device *, int);
+int  an_pcmcia_activate(struct device *, enum devact);
 
 struct an_pcmcia_softc {
 	struct an_softc sc_an;

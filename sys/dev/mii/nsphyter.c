@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/nsphyter.c,v 1.1.2.2 2001/05/14 22:25:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/nsphyter.c,v 1.1.2.3 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD: nsphyter.c,v 1.5 2000/02/02 23:34:57 thorpej Exp $	*/
 
 /*-
@@ -89,8 +89,8 @@
 
 #include <dev/mii/nsphyterreg.h>
 
-int	nsphytermatch __P((struct device *, void *, void *));
-void	nsphyterattach __P((struct device *, struct device *, void *));
+int	nsphytermatch(struct device *, void *, void *);
+void	nsphyterattach(struct device *, struct device *, void *);
 
 struct cfattach nsphyter_ca = {
 	sizeof(struct mii_softc), nsphytermatch, nsphyterattach,
@@ -101,8 +101,8 @@ struct cfdriver nsphyter_cd = {
 	NULL, "nsphyter", DV_DULL
 };
 
-int	nsphyter_service __P((struct mii_softc *, struct mii_data *, int));
-void	nsphyter_status __P((struct mii_softc *));
+int	nsphyter_service(struct mii_softc *, struct mii_data *, int);
+void	nsphyter_status(struct mii_softc *);
 
 int
 nsphytermatch(parent, match, aux)

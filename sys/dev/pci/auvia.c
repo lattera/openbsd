@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.6 2002/03/06 02:11:45 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/auvia.c,v 1.6.4.7 2002/03/28 15:35:57 niklas Exp $ */
 /*	$NetBSD: auvia.c,v 1.7 2000/11/15 21:06:33 jdolecek Exp $	*/
 
 /*-
@@ -112,7 +112,7 @@ int	auvia_trigger_output(void *, void *, void *, int, void (*)(void *),
 int	auvia_trigger_input(void *, void *, void *, int, void (*)(void *),
 	void *, struct audio_params *);
 
-int	auvia_intr __P((void *));
+int	auvia_intr(void *);
 
 struct  cfdriver auvia_cd = {
 	NULL, "auvia", DV_DULL

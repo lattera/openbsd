@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rln_pcmcia.c,v 1.9.2.2 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pcmcia/Attic/if_rln_pcmcia.c,v 1.9.2.3 2002/03/28 15:34:52 niklas Exp $	*/
 /*
  * David Leonard <d@openbsd.org>, 1999. Public domain.
  *
@@ -38,13 +38,12 @@ struct rln_pcmcia_softc {
 	void *psc_ih;				/* our interrupt handle */
 };
 
-static int	rln_pcmcia_match __P((struct device *, void *, void *));
-static struct	rln_pcmcia_product * rln_pcmcia_product_lookup
-     __P((struct pcmcia_attach_args *));
-static void	rln_pcmcia_attach __P((struct device *, struct device *, void *));
-static int	rln_pcmcia_detach __P((struct device *, int));
-static int	rln_pcmcia_activate __P((struct device *, enum devact));
-static int	rlnintr_pcmcia __P((void *arg));
+static int	rln_pcmcia_match(struct device *, void *, void *);
+static struct	rln_pcmcia_product * rln_pcmcia_product_lookup(struct pcmcia_attach_args *);
+static void	rln_pcmcia_attach(struct device *, struct device *, void *);
+static int	rln_pcmcia_detach(struct device *, int);
+static int	rln_pcmcia_activate(struct device *, enum devact);
+static int	rlnintr_pcmcia(void *arg);
 
 struct cfattach rln_pcmcia_ca = {
 	sizeof(struct rln_pcmcia_softc), rln_pcmcia_match, rln_pcmcia_attach,

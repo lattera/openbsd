@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.4 2002/03/06 02:11:45 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_dc_pci.c,v 1.13.4.5 2002/03/28 15:35:57 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -65,8 +65,6 @@
 #include <net/bpf.h>
 #endif
 
-#include <uvm/uvm_extern.h>              /* for vtophys */
-
 #include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
 
@@ -100,13 +98,13 @@ struct dc_type dc_devs[] = {
 	{ 0, 0 }
 };
 
-int dc_pci_match		__P((struct device *, void *, void *));
-void dc_pci_attach		__P((struct device *, struct device *, void *));
-void dc_pci_acpi		__P((struct device *, void *));
+int dc_pci_match(struct device *, void *, void *);
+void dc_pci_attach(struct device *, struct device *, void *);
+void dc_pci_acpi(struct device *, void *);
 
-extern void dc_eeprom_width	__P((struct dc_softc *));
-extern void dc_read_srom	__P((struct dc_softc *, int));
-extern void dc_parse_21143_srom	__P((struct dc_softc *));
+extern void dc_eeprom_width(struct dc_softc *);
+extern void dc_read_srom(struct dc_softc *, int);
+extern void dc_parse_21143_srom(struct dc_softc *);
 
 /*
  * Probe for a 21143 or clone chip. Check the PCI vendor and device
@@ -465,7 +463,7 @@ void dc_pci_attach(parent, self, aux)
 
 #ifdef __sparc64__
 	{
-		extern void myetheraddr __P((u_char *));
+		extern void myetheraddr(u_char *);
 		myetheraddr(sc->arpcom.ac_enaddr);
 		sc->sc_hasmac = 1;
 	}

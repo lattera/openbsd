@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/opl_yds.c,v 1.1.4.2 2001/10/31 03:22:46 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/opl_yds.c,v 1.1.4.3 2002/03/28 15:35:58 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*
@@ -63,8 +63,8 @@
 #include <dev/pci/ydsreg.h>
 #include <dev/pci/ydsvar.h>
 
-int	opl_yds_match __P((struct device *, void *, void *));
-void	opl_yds_attach __P((struct device *, struct device *, void *));
+int	opl_yds_match(struct device *, void *, void *);
+void	opl_yds_attach(struct device *, struct device *, void *);
 
 struct cfdriver opl_yds_cd = {
 	NULL, "opl_yds", DV_DULL

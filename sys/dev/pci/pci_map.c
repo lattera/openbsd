@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/pci/pci_map.c,v 1.2.4.2 2001/07/04 10:42:46 niklas Exp $     */
+/*      $OpenBSD: src/sys/dev/pci/pci_map.c,v 1.2.4.3 2002/03/28 15:35:58 niklas Exp $     */
 /*	$NetBSD: pci_map.c,v 1.7 2000/05/10 16:58:42 thorpej Exp $	*/
 
 /*-
@@ -49,10 +49,10 @@
 #include <dev/pci/pcivar.h>
 
 
-static int nbsd_pci_io_find __P((pci_chipset_tag_t, pcitag_t, int, pcireg_t,
-    bus_addr_t *, bus_size_t *, int *));
-static int nbsd_pci_mem_find __P((pci_chipset_tag_t, pcitag_t, int, pcireg_t,
-    bus_addr_t *, bus_size_t *, int *));
+static int nbsd_pci_io_find(pci_chipset_tag_t, pcitag_t, int, pcireg_t,
+    bus_addr_t *, bus_size_t *, int *);
+static int nbsd_pci_mem_find(pci_chipset_tag_t, pcitag_t, int, pcireg_t,
+    bus_addr_t *, bus_size_t *, int *);
 
 static int
 nbsd_pci_io_find(pc, tag, reg, type, basep, sizep, flagsp)

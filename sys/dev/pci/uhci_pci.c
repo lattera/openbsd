@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/uhci_pci.c,v 1.5.2.3 2001/10/31 03:22:48 nate Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/uhci_pci.c,v 1.5.2.4 2002/03/28 15:35:59 niklas Exp $	*/
 /*	$NetBSD: uhci_pci.c,v 1.14 2000/01/25 11:26:06 augustss Exp $	*/
 
 /*
@@ -57,9 +57,9 @@
 #include <dev/usb/uhcireg.h>
 #include <dev/usb/uhcivar.h>
 
-int	uhci_pci_match __P((struct device *, void *, void *));
-void	uhci_pci_attach __P((struct device *, struct device *, void *));
-int	uhci_pci_detach __P((device_ptr_t, int));
+int	uhci_pci_match(struct device *, void *, void *);
+void	uhci_pci_attach(struct device *, struct device *, void *);
+int	uhci_pci_detach(device_ptr_t, int);
 
 struct uhci_pci_softc {
 	uhci_softc_t		sc;

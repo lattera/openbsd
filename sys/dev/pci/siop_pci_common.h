@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.h,v 1.3.4.1 2001/05/14 22:25:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/siop_pci_common.h,v 1.3.4.2 2002/03/28 15:35:59 niklas Exp $ */
 /*	$NetBSD: siop_pci_common.h,v 1.2 2000/10/23 14:57:23 bouyer Exp $	*/
 
 /*
@@ -47,7 +47,7 @@ struct siop_product_desc {
 	int 	ram_size; /* size of RAM, if appropriate */
 };
 
-const struct siop_product_desc * siop_lookup_product __P((u_int32_t, int));
+const struct siop_product_desc * siop_lookup_product(u_int32_t, int);
 
 /* Driver internal state */
 struct siop_pci_softc {
@@ -58,6 +58,6 @@ struct siop_pci_softc {
 	const struct siop_product_desc *sc_pp; /* Adapter description */
 };
 
-int siop_pci_attach_common __P((struct siop_pci_softc *,
-	struct pci_attach_args *));
-void siop_pci_reset __P((struct siop_softc *));
+int siop_pci_attach_common(struct siop_pci_softc *,
+	struct pci_attach_args *);
+void siop_pci_reset(struct siop_softc *);

@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.490 2002/02/18 10:15:44 deraadt Exp 
+ *		OpenBSD: pcidevs,v 1.494 2002/03/19 15:26:59 mickey Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -45,7 +45,7 @@
  *
  * There is a Vendor ID search engine available at:
  *
- *	http://www.pcisig.com/app/search/by_vendor_id/
+ *	http://www.pcisig.com/membership/vid_search/
  */
 
 /*
@@ -558,6 +558,7 @@
 #define	PCI_VENDOR_EUMITCOM	0x1638		/* Eumitcom */
 #define	PCI_VENDOR_NETSEC	0x1660		/* NetSec */
 #define	PCI_VENDOR_GLOBALSUN	0x16ab		/* Global Sun */
+#define	PCI_VENDOR_ALTIMA	0x173b		/* Altima */
 #define	PCI_VENDOR_ANTARES	0x1754		/* Antares Microsystems */
 #define	PCI_VENDOR_SYMPHONY2	0x1c1c		/* Symphony Labs */
 #define	PCI_VENDOR_TEKRAM2	0x1de1		/* Tekram Technology */
@@ -776,6 +777,9 @@
 #define	PCI_PRODUCT_ALTEON_ACENICT	0x0002		/* Acenic Copper */
 #define	PCI_PRODUCT_ALTEON_BCM5700	0x0003		/* BCM5700 (Broadcom) */
 #define	PCI_PRODUCT_ALTEON_BCM5701	0x0004		/* BCM5701 (Broadcom) */
+
+/* Altima products */
+#define	PCI_PRODUCT_ALTIMA_AC100X	0x03e8		/* AC100X */
 
 /* AMD products */
 #define	PCI_PRODUCT_AMD_PCNET_PCI	0x2000		/* 79c970 PCnet-PCI LANCE */
@@ -1259,6 +1263,8 @@
 #define	PCI_PRODUCT_INTEL_82453	0x1001		/* PRO 1000F */
 #define	PCI_PRODUCT_INTEL_82453_CU	0x1004		/* PRO 1000T */
 #define	PCI_PRODUCT_INTEL_82544	0x1008		/* PRO 1000XT */
+#define	PCI_PRODUCT_INTEL_82544_SC	0x1009		/* PRO 1000XS */
+#define	PCI_PRODUCT_INTEL_82544_GC	0x100D		/* PRO 1000T */
 #define	PCI_PRODUCT_INTEL_PRO_100_VE_0	0x1031		/* PRO/100 VE */
 #define	PCI_PRODUCT_INTEL_PRO_100_VE_1	0x1032		/* PRO/100 VE */
 #define	PCI_PRODUCT_INTEL_PRO_100_VM_0	0x1033		/* PRO/100 VM */
@@ -1328,9 +1334,16 @@
 #define	PCI_PRODUCT_INTEL_82801BA_IDE	0x244b		/* 82801BA IDE */
 #define	PCI_PRODUCT_INTEL_82801BAM_LPC	0x244c		/* 82801BAM LPC */
 #define	PCI_PRODUCT_INTEL_82801BA_AGP	0x244e		/* 82801BA AGP */
-#define	PCI_PRODUCT_INTEL_82801CA_CAM	0x2485		/* 82801CA AC97 Audio */
+#define	PCI_PRODUCT_INTEL_82801CA_LPC	0x2480		/* 82801CA LPC */
+#define	PCI_PRODUCT_INTEL_82801CA_USB_1	0x2482		/* 82801CA/CAM USB */
+#define	PCI_PRODUCT_INTEL_82801CA_SMB	0x2483		/* 82801CA/CAM SMB */
+#define	PCI_PRODUCT_INTEL_82801CA_USB_2	0x2484		/* 82801CA/CAM USB */
+#define	PCI_PRODUCT_INTEL_82801CA_ACA	0x2485		/* 82801CA/CAM AC97 Audio */
+#define	PCI_PRODUCT_INTEL_82801CA_ACM	0x2486		/* 82801CA/CAM Modem */
+#define	PCI_PRODUCT_INTEL_82801CA_USB_3	0x2487		/* 82801CA/CAM USB */
 #define	PCI_PRODUCT_INTEL_82801CAM_IDE	0x248a		/* 82801CAM IDE */
 #define	PCI_PRODUCT_INTEL_82801CA_IDE	0x248b		/* 82801CA IDE */
+#define	PCI_PRODUCT_INTEL_82801CAM_LPC	0x248c		/* 82801CAM LPC */
 #define	PCI_PRODUCT_INTEL_82820_MCH	0x2501		/* 82820 MCH */
 #define	PCI_PRODUCT_INTEL_82820_AGP	0x250f		/* 82820 AGP */
 #define	PCI_PRODUCT_INTEL_82850_HB	0x2530		/* 82850 Host */

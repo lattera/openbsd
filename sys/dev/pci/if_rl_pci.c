@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_rl_pci.c,v 1.2.4.3 2001/11/13 21:10:02 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_rl_pci.c,v 1.2.4.4 2002/03/28 15:35:57 niklas Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -83,8 +83,8 @@
 
 #include <dev/ic/rtl81x9reg.h>
 
-int rl_pci_match	__P((struct device *, void *, void *));
-void rl_pci_attach	__P((struct device *, struct device *, void *));
+int rl_pci_match(struct device *, void *, void *);
+void rl_pci_attach(struct device *, struct device *, void *);
 
 struct cfattach rl_pci_ca = {
 	sizeof(struct rl_softc), rl_pci_match, rl_pci_attach,

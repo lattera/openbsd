@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/mii/mii_bitbang.h,v 1.1.4.1 2001/05/14 22:25:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/mii/mii_bitbang.h,v 1.1.4.2 2002/03/28 15:34:52 niklas Exp $	*/
 /*	$NetBSD$	*/
 
 /*-
@@ -46,14 +46,14 @@
 #define	MII_NBITS		5
 
 struct mii_bitbang_ops {
-	u_int32_t	(*mbo_read) __P((struct device *));
-	void		(*mbo_write) __P((struct device *, u_int32_t));
+	u_int32_t	(*mbo_read)(struct device *);
+	void		(*mbo_write)(struct device *, u_int32_t);
 	u_int32_t	mbo_bits[MII_NBITS];
 };
 
 typedef	const struct mii_bitbang_ops *mii_bitbang_ops_t;
 
-int	mii_bitbang_readreg __P((struct device *, mii_bitbang_ops_t,
-	    int, int));
-void	mii_bitbang_writereg __P((struct device *, mii_bitbang_ops_t,
-	    int, int, int));
+int	mii_bitbang_readreg(struct device *, mii_bitbang_ops_t,
+	    int, int);
+void	mii_bitbang_writereg(struct device *, mii_bitbang_ops_t,
+	    int, int, int);

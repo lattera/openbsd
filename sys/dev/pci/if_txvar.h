@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.3 2001/12/05 00:43:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_txvar.h,v 1.7.2.4 2002/03/28 15:35:57 niklas Exp $	*/
 /* $FreeBSD: src/sys/pci/if_txvar.h,v 1.8 2001/02/07 20:11:02 semenu Exp $ */
 
 /*-
@@ -373,7 +373,7 @@ struct epic_type {
 #if defined(__OpenBSD__)
 
 #define epic_dev(sc)		(*sc)
-#define epic_dev_ptr(sc)	(void*)(sc)
+#define epic_dev_ptr(sc)	(void *)(sc)
 
 #define epic_mii(sc)		(sc->miibus)
 #define epic_mii_ptr(sc)	(&sc->miibus)	

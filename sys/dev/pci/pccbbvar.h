@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/pccbbvar.h,v 1.5.2.2 2001/07/04 10:42:45 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/pccbbvar.h,v 1.5.2.3 2002/03/28 15:35:58 niklas Exp $ */
 /*	$NetBSD: pccbbvar.h,v 1.13 2000/06/08 10:28:29 haya Exp $	*/
 /*
  * Copyright (c) 1999 HAYAKAWA Koichi.  All rights reserved.
@@ -70,8 +70,8 @@ struct cbb_pcic_handle {
 	struct device *ph_parent;
 	bus_space_tag_t ph_base_t;
 	bus_space_handle_t ph_base_h;
-	u_int8_t (*ph_read) __P((struct cbb_pcic_handle *, int));
-	void (*ph_write) __P((struct cbb_pcic_handle *, int, u_int8_t));
+	u_int8_t (*ph_read)(struct cbb_pcic_handle *, int);
+	void (*ph_write)(struct cbb_pcic_handle *, int, u_int8_t);
 	int sock;
 
 	int vendor;
@@ -173,7 +173,7 @@ struct pccbb_softc {
  */
 
 struct pccbb_intrhand_list {
-	int (*pil_func) __P((void *));
+	int (*pil_func)(void *);
 	void *pil_arg;
 	int pil_level;
 	struct pccbb_intrhand_list *pil_next;
