@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.23.2.1 2000/07/12 13:53:33 jason Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ipsec_input.c,v 1.23.2.2 2000/09/18 17:02:51 jason Exp $	*/
 
 /*
  * The authors of this code are John Ioannidis (ji@tla.org),
@@ -128,6 +128,13 @@ ipsec_common_input(struct mbuf *m, int skip, int protoff, int af, int sproto)
         m_freem(m);
         IPSEC_ISTAT(espstat.esps_pdrops, ahstat.ahs_pdrops);
         return EOPNOTSUPP;
+    }
+
+    if (m->m_pkthdr.len - skip < 2 * sizeof(u_int32_t))
+    {
+        m_freem(m);
+        IPSEC_ISTAT(espstat.esps_hdrops, ahstat.ahs_hdrops);
+        return EINVAL;
     }
 
     /* Retrieve the SPI from the relevant IPsec header */
