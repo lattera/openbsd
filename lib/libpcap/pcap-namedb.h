@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libpcap/pcap-namedb.h,v 1.2 1996/03/04 15:47:26 mickey Exp $	*/
 /*	$NetBSD: pcap-namedb.h,v 1.2 1995/03/06 11:38:48 mycroft Exp $	*/
 
 /*
