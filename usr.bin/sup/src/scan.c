@@ -28,6 +28,9 @@
  **********************************************************************
  * HISTORY
  * $Log: scan.c,v $
+ * Revision 1.1  1995/12/16 11:46:50  deraadt
+ * add sup to the tree
+ *
  * Revision 1.4  1995/10/29 23:54:45  christos
  * - runio fails when result != 0 not only < 0
  * - print vis-encoded file in the scanner.
@@ -987,7 +990,7 @@ TREE *t;
 FILE **scanF;
 {
 	char fname[MAXPATHLEN*4+1];
-	strvis(fname, t->Tname, VIS_WHITE);
+	strcpy(fname, t->Tname);
 	fprintf(*scanF,"X%s\n",fname);
 	return (SCMOK);
 }
