@@ -1,0 +1,423 @@
+.\" $OpenBSD: src/usr.bin/file/file.1,v 1.19 2003/03/11 21:26:26 ian Exp $
+.\" $FreeBSD: src/usr.bin/file/file.1,v 1.16 2000/03/01 12:19:39 sheldonh Exp $
+.\"
+.\" Copyright (c) Ian F. Darwin 1986-1995.
+.\" Software written by Ian F. Darwin and others;
+.\" maintained 1995-present by Christos Zoulas and others.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice immediately at the beginning of the file, without modification,
+.\"    this list of conditions, and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"    This product includes software developed by Ian F. Darwin and others.
+.\" 4. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"  
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+.\" ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd July 30, 1997
+.Dt FILE 1
+.Os
+.Sh NAME
+.Nm file
+.Nd determine file type
+.Sh SYNOPSIS
+.Nm file
+.Op Fl vbczL
+.Op Fl f Ar namefile
+.Op Fl m Ar magicfiles
+.Ar file Op Ar ...
+.Sh DESCRIPTION
+This manual page documents version 3.22 of the
+.Nm
+command.
+.Nm
+tests each argument in an attempt to classify it.
+There are three sets of tests, performed in this order:
+filesystem tests, magic number tests, and language tests.
+The first test that succeeds causes the file type to be printed.
+.Pp
+The type printed will usually contain one of the words
+.Dq text
+(the file contains only
+.Tn ASCII
+characters and is probably safe to read on an
+.Tn ASCII
+terminal),
+.Dq executable
+(the file contains the result of compiling a program
+in a form understandable to some
+.Ux
+kernel or another),
+or
+.Dq data
+meaning anything else (data is usually binary or non-printable).
+.Pp
+Exceptions are well-known file formats (core files, tar archives)
+that are known to contain binary data.
+When modifying the file
+.Pa /etc/magic
+or the program itself,
+.Em "preserve these keywords" .
+.Pp
+People depend on knowing that all the readable files in a directory
+have the word
+.Dq text
+printed.
+Don't do as Berkeley did; change
+.Dq shell commands text
+to
+.Dq shell script .
+.Pp
+The filesystem tests are based on examining the return from a
+.Xr stat 2
+system call.
+The program checks to see if the file is empty,
+or if it's some sort of special file.
+Any known file types appropriate to the system you are running on
+(sockets, symbolic links, or named pipes (FIFOs) on those systems that
+implement them)
+are intuited if they are defined in
+the system header file
+.Aq Pa sys/stat.h .
+.Pp
+The magic number tests are used to check for files with data in
+particular fixed formats.
+The canonical example of this is a binary executable (compiled program)
+.Pa a.out
+file, whose format is defined in
+.Aq Pa a.out.h
+and possibly
+.Aq Pa exec.h
+in the standard include directory.
+These files have a
+.Dq magic number
+stored in a particular place
+near the beginning of the file that tells the
+.Ux
+operating system
+that the file is a binary executable, and which of several types thereof.
+.Pp
+The concept of magic number has been applied by extension to data files.
+Any file with some invariant identifier at a small fixed
+offset into the file can usually be described in this way.
+The information in these files is read from the magic file
+.Pa /etc/magic .
+.Pp
+If an argument appears to be an
+.Tn ASCII
+file,
+.Nm
+attempts to guess its language.
+The language tests look for particular strings (cf
+.Pa names.h )
+that can appear anywhere in the first few blocks of a file.
+For example, the keyword
+.Em .br
+indicates that the file is most likely a
+.Xr troff 1
+input file, just as the keyword
+.Li struct
+indicates a C program.
+These tests are less reliable than the previous
+two groups, so they are performed last.
+The language test routines also test for some miscellany
+(such as
+.Xr tar 1
+archives) and determine whether an unknown file should be
+labelled as
+.Dq ASCII text
+or
+.Dq data .
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Print the version of the program and exit.
+.It Fl m Ar list
+Specify an alternate
+.Ar list
+of files containing magic numbers.
+This can be a single file, or a colon-separated list of files.
+.It Fl z
+Try to look inside compressed files.
+.It Fl b
+Do not prepend filenames to output lines (brief mode).
+.It Fl c
+Cause a checking printout of the parsed form of the magic file.
+This is usually used in conjunction with
+.Fl m
+to debug a new magic file before installing it.
+.It Fl f Ar namefile
+Read the names of the files to be examined from
+.Ar namefile
+(one per line)
+before the argument list.
+Either
+.Ar namefile
+or at least one filename argument must be present;
+to test the standard input, use
+.Dq -
+as a filename argument.
+.It Fl L
+Cause symlinks to be followed, as the like-named option in
+.Xr ls 1 .
+(on systems that support symbolic links).
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width indent
+.It Ev MAGIC
+Default magic number files.
+.El
+.Sh FILES
+.Bl -tag -width /etc/magic -compact
+.It Pa /etc/magic
+default list of magic numbers
+.El
+.Sh SEE ALSO
+.Xr hexdump 1 ,
+.Xr od 1 ,
+.Xr strings 1 ,
+.Xr magic 5
+.Sh STANDARDS CONFORMANCE
+This program is believed to exceed the System V Interface Definition
+of FILE(CMD), as near as one can determine from the vague language
+contained therein.
+Its behaviour is mostly compatible with the System V program of the same name.
+This version knows more magic, however, so it will produce
+different (albeit more accurate) output in many cases.
+.Pp
+The one significant difference
+between this version and System V
+is that this version treats any white space
+as a delimiter, so that spaces in pattern strings must be escaped.
+For example,
+.Pp
+>10     string  language impress\       (imPRESS data)
+.Pp
+in an existing magic file would have to be changed to
+.Pp
+>10     string  language\e impress      (imPRESS data)
+.Pp
+In addition, in this version, if a pattern string contains a backslash,
+it must be escaped.
+For example
+.Pp
+0       string          \ebegindata     Andrew Toolkit document
+.Pp
+in an existing magic file would have to be changed to
+.Pp
+0       string          \e\ebegindata   Andrew Toolkit document
+.Pp
+SunOS releases 3.2 and later from Sun Microsystems include a
+.Xr file 1
+command derived from the System V one, but with some extensions.
+My version differs from Sun's only in minor ways.
+It includes the extension of the
+.Ql &
+operator, used as,
+for example,
+.Pp
+>16     long&0x7fffffff >0              not stripped
+.Sh MAGIC DIRECTORY
+The magic file entries have been collected from various sources,
+mainly USENET, and contributed by various authors.
+.An Christos Zoulas
+(address below) will collect additional
+or corrected magic file entries.
+A consolidation of magic file entries
+will be distributed periodically.
+The order of entries in the magic file is significant.
+Depending on what system you are using, the order that
+they are put together may be incorrect.
+If your old
+.Nm
+command uses a magic file,
+keep the old magic file around for comparison purposes
+(rename it to
+.Pa /etc/magic.orig ) .
+.Sh HISTORY
+There has been a
+.Nm
+command in every
+.Ux
+since at least Research Version 4
+(man page dated November, 1973).
+The System V version introduced one significant major change:
+the external list of magic number types.
+This slowed the program down slightly but made it a lot more flexible.
+.Pp
+This program, based on the System V version, was written by
+.An Ian F. Darwin Aq ian@darwinisys.com
+without looking at anybody else's source code.
+.Pp
+.An John Gilmore
+revised the code extensively, making it better than
+the first version.
+.An Geoff Collyer
+found several inadequacies
+and provided some magic file entries.
+.Pp
+Altered by
+.An Rob McMahon Aq cudcv@warwick.ac.uk ,
+1989, to extend the
+.Ql &
+operator from simple
+.Dq x&y != 0
+to
+.Dq x&y op z .
+.Pp
+Altered by
+.An Guy Harris Aq guy@auspex.com ,
+1993, to:
+.Bl -item -offset indent
+.It
+put the
+.Dq old-style
+.Ql &
+operator back the way it was, because
+.Bl -enum -offset indent
+.It
+Rob McMahon's change broke the
+previous style of usage,
+.It
+The SunOS
+.Dq new-style
+.Ql &
+operator, which this version of
+.Nm
+supports, also handles
+.Dq x&y op z ,
+.It
+Rob's change wasn't documented in any case;
+.El
+.It
+put in multiple levels of
+.Ql > ;
+.It
+put in
+.Dq beshort ,
+.Dq leshort ,
+etc. keywords to look at numbers in the
+file in a specific byte order, rather than in the native byte order of
+the process running
+.Nm file .
+.El
+.Pp
+Currently maintained by
+.An Christos Zoulas Aq christos@zoulas.com .
+.Sh LEGAL NOTICE
+Copyright (c) Ian F. Darwin, Toronto, Canada, 1986-1999.
+Covered by the standard Berkeley Software Distribution copyright; see the file
+LEGAL.NOTICE in the distribution.
+.Pp
+The files
+.Pa tar.h
+and
+.Pa is_tar.c
+were written by
+.An John Gilmore
+from his public-domain
+.Nm tar
+program.
+.Sh BUGS
+There must be a better way to automate the construction of the Magic
+file from all the glop in Magdir.
+What is it?
+Better yet, the magic file should be compiled into binary (say,
+.Xr ndbm 3
+or, better yet, fixed-length
+.Tn ASCII
+strings for use in heterogenous network environments) for faster startup.
+Then the program would run as fast as the Version 7 program of the same name,
+with the flexibility of the System V version.
+.Pp
+.Nm
+uses several algorithms that favor speed over accuracy;
+thus it can be misled about the contents of
+.Tn ASCII
+files.
+.Pp
+The support for
+.Tn ASCII
+files (primarily for programming languages)
+is simplistic, inefficient and requires recompilation to update.
+.Pp
+There should be an
+.Dq else
+clause to follow a series of continuation lines.
+.Pp
+The magic file and keywords should have regular expression support.
+Their use of
+.Tn ASCII TAB
+as a field delimiter is ugly and makes
+it hard to edit the files, but is entrenched.
+.Pp
+It might be advisable to allow upper-case letters in keywords
+for e.g.,
+.Xr troff 1
+commands vs man page macros.
+Regular expression support would make this easy.
+.Pp
+The program doesn't grok \s-2FORTRAN\s0.
+It should be able to figure \s-2FORTRAN\s0 by seeing some keywords which
+appear indented at the start of line.
+Regular expression support would make this easy.
+.Pp
+The list of keywords in
+.Em ascmagic
+probably belongs in the Magic file.
+This could be done by using some keyword like
+.Ql *
+for the offset value.
+.Pp
+Another optimization would be to sort
+the magic file so that we can just run down all the
+tests for the first byte, first word, first long, etc, once we
+have fetched it.
+Complain about conflicts in the magic file entries.
+Make a rule that the magic entries sort based on file offset rather
+than position within the magic file?
+.Pp
+The program should provide a way to give an estimate
+of
+.Dq how good
+a guess is.
+We end up removing guesses (e.g.,
+.Dq From\ 
+as first 5 chars of file) because
+they are not as good as other guesses (e.g.,
+.Dq Newsgroups:
+versus
+.Qq Return-Path: ) .
+Still, if the others don't pan out, it should be
+possible to use the first guess.
+.Pp
+This program is slower than some vendors'
+.Nm
+commands.
+.Pp
+This manual page, and particularly this section, is too long.
+.Sh AVAILABILITY
+You can obtain the original author's latest version by anonymous FTP
+on
+.Em ftp.astron.com
+in the directory
+.Pa /pub/file/file-X.YY.tar.gz
