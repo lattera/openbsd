@@ -18,7 +18,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: main.c,v 1.15 1995/08/17 12:03:57 paulus Exp $";
+static char rcsid[] = "$Id: main.c,v 1.1.1.1 1995/10/18 08:47:59 deraadt Exp $";
 #endif
 
 #include <stdio.h>
@@ -582,10 +582,13 @@ void
 close_fd()
 {
     disestablish_ppp();
+    sleep(1);
 
     /* drop dtr to hang up */
-    if (modem)
+    if (modem) {
 	setdtr(fd, FALSE);
+	sleep(1);
+    }
 
     if (initfdflags != -1 && fcntl(fd, F_SETFL, initfdflags) < 0)
 	syslog(LOG_WARNING, "Couldn't restore device fd flags: %m");
