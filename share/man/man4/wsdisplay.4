@@ -1,0 +1,216 @@
+.\" $OpenBSD: src/share/man/man4/wsdisplay.4,v 1.19 2003/03/09 02:39:26 miod Exp $
+.\" $NetBSD: wsdisplay.4,v 1.5 2000/05/13 15:22:19 mycroft Exp $
+.\"
+.\" Copyright (c) 1999 Matthias Drochner.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd March 6, 2003
+.Dt WSDISPLAY 4
+.Os
+.Sh NAME
+.Nm wsdisplay
+.Nd generic display device support in wscons
+.Sh SYNOPSIS
+.\".Cd wsdisplay* at ega? console ?
+.\"(EGA display on ISA)
+.Cd wsdisplay* at vga? console ?
+(VGA textmode display on ISA or PCI)
+.Cd wsdisplay* at pcdisplay? console ?
+(generic PC (ISA) display)
+.Cd wsdisplay* at vgafb? console ?
+(VGA graphics display on PCI, as found on macppc and sparc64 platforms)
+.Cd wsdisplay* at tga? console ?
+(DEC TGA display, alpha only)
+.\" .Cd wsdisplay* at nextdisplay? console ?
+.\" (NeXT display)
+.Cd wsdisplay* at sti? console ?
+(HP CRX and Visualize series framebuffers)
+.Cd wsdisplay* at agten? console ?
+.Cd wsdisplay* at bwtwo? console ?
+.Cd wsdisplay* at cgtwo? console ?
+.Cd wsdisplay* at cgthree? console ?
+.Cd wsdisplay* at cgfour? console ?
+.Cd wsdisplay* at cgsix? console ?
+.Cd wsdisplay* at cgeight? console ?
+.Cd wsdisplay* at cgtwelve? console ?
+.Cd wsdisplay* at cgfourteen? console ?
+.Cd wsdisplay* at pnozz? console ?
+.Cd wsdisplay* at tcx? console ?
+.Cd wsdisplay* at tvtwo? console ?
+.Cd wsdisplay* at vigra? console ?
+.Cd wsdisplay* at zx? console ?
+(sparc and/or sparc64 framebuffers)
+.Cd wsdisplay* at creator? console ?
+(sparc64 framebuffers)
+.Cd wsdisplay0 at smg? console ?
+(VAXstation small monochrome display)
+.Cd option WSDISPLAY_DEFAULTSCREENS=N
+.Sh DESCRIPTION
+The
+.Nm
+driver is an abstraction layer for display devices within the
+.Xr wscons 4
+framework.
+It attaches to the hardware specific display device driver and
+makes it available as text terminal or graphics interface.
+.Pp
+A display device can have the ability to display characters on it
+(without help of an X server), either directly by hardware or through
+software drawing pixel data into the display memory.
+Such displays are called
+.Dq emulating ,
+the
+.Nm
+driver will connect a terminal emulation module and provide a
+tty-like software interface.
+In contrary, non-emulating displays can only be used by special programs
+like X servers.
+.Pp
+The
+.Em console
+locator in the configuration line refers to the device's use as output
+part of the operating system console.
+A device specification containing a positive value here will only match
+if the device is in use as system console.
+(The console device selection in early system startup is not influenced.)
+This way, the console device can be connected to a known
+.Xr wsdisplay 4
+device instance.
+(Naturally, only
+.Dq emulating
+display devices are usable as console.)
+.Pp
+The logical unit of an independent contents displayed on a display
+(sometimes referred to as
+.Dq virtual terminal
+) is called a
+.Dq screen
+here.
+If the underlying device driver supports it, multiple screens can
+be used on one display.
+(As of this writing, only the
+.Xr vga 4
+and the
+.Tn VAX
+.Dq smg
+display drivers provide this ability.)
+Screens have different minor device numbers and separate tty instances.
+One screen possesses the
+.Dq focus ,
+this means it is displayed on the display and its tty device will get
+the keyboard input.
+(In some cases, if no screen is set up or if a screen
+was just deleted, it is possible that no focus is present at all.)
+The focus can be switched by either special keyboard input (typically
+CTL-ALT-Fn) or an ioctl command issued by a user program.
+Screens are set up or deleted through the
+.Pa /dev/ttyCcfg
+control device (preferably using the
+.Xr wsconscfg 8
+utility).
+Alternatively, the compile-time option
+.Cm WSDISPLAY_DEFAULTSCREENS=N
+will set up N screens of the display driver's default type and using
+the system's default terminal emulator at autoconfiguration time.
+.Pp
+In addition and with help from backend drivers the following features
+are also provided:
+.Bl -bullet
+.It
+Loading, deleting and listing the loaded fonts.
+.It
+Browsing backwards in the screen output, the size of the
+buffer for saved text is defined by the particular hardware driver.
+.It
+Blanking the screen by timing out on inactivity in the
+screen holding the input focus.
+Awakening activities consist of:
+.Pp
+.Bl -bullet -compact
+.It
+pressing any keys on the keyboard;
+.It
+moving or clicking the mouse;
+.It
+any output to the screen.
+.El
+.Pp
+Blanking the screen is usually done by disabling the horizontal sync
+signal on video output, but may also include blanking the vertical
+sync in which case most monitors go into power saving mode.
+See
+.Xr wsconsctl 8
+for controlling variables.
+.El
+.Pp
+Consult the back-end drivers' documentation for which features are supported
+for each particular hardware type.
+.Sh FILES
+.Bl -tag -width /usr/include/dev/wscons/wsconsio.h -compact
+.It Pa /dev/ttyC*
+terminal devices (per screen)
+.It Pa /dev/ttyCcfg
+control device
+.It Pa /usr/include/dev/wscons/wsconsio.h
+.El
+.Sh SEE ALSO
+.Xr agten 4 ,
+.Xr bwtwo 4 ,
+.Xr cgtwo 4 ,
+.Xr cgthree 4 ,
+.Xr cgfour 4 ,
+.Xr cgsix 4 ,
+.Xr cgeight 4 ,
+.Xr cgtwelve 4 ,
+.Xr cgfourteen 4 ,
+.Xr creator 4 ,
+.Xr intro 4 ,
+.Xr pcdisplay 4 ,
+.Xr pnozz 4 ,
+.Xr sti 4 ,
+.Xr tcx 4 ,
+.Xr tga 4 ,
+.Xr tvtwo 4 ,
+.Xr tty 4 ,
+.Xr vga 4 ,
+.Xr vgafb 4 ,
+.Xr vigra 4 ,
+.Xr wscons 4 ,
+.Xr zx 4 ,
+.Xr wsconscfg 8 ,
+.Xr wsconsctl 8 ,
+.Xr wsfontload 8
+.Sh BUGS
+The
+.Nm
+code currently limits the number of screens on one display to 8.
+.Pp
+The terms
+.Dq wscons
+and
+.Dq wsdisplay
+are not cleanly distinguished in the code and in manual pages.
+.Pp
+.Dq non-emulating
+display devices are not tested.
