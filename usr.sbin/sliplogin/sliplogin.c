@@ -39,7 +39,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)sliplogin.c	5.6 (Berkeley) 3/2/91";*/
-static char rcsid[] = "$Id: sliplogin.c,v 1.6 1996/12/15 05:57:20 bitblt Exp $";
+static char rcsid[] = "$Id: sliplogin.c,v 1.7 1998/01/21 00:25:26 deraadt Exp $";
 #endif /* not lint */
 
 /*
@@ -239,8 +239,15 @@ main(argc, argv)
 		 * and ensure that the slip line is our controlling terminal.
 		 */
 #ifdef POSIX
-		if (fork() > 0)
+		switch (fork()) {
+		case -1:
+			perror("fork");
+			exit(1);
+		case 0:
+			break;
+		default:
 			exit(0);
+		}
 		if (setsid() == -1)
 			perror("setsid");
 #else
