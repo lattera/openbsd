@@ -1,8 +1,11 @@
-/*	$OpenBSD: src/sys/arch/i386/boot/Attic/version.c,v 1.3 1996/05/13 09:13:07 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/version.c,v 1.3.2.1 1996/09/17 09:38:02 mickey Exp $	*/
 /*	$NetBSD: version.c,v 1.28 1995/12/23 17:21:23 perry Exp $	*/
 
 /*
  *	NOTE ANY CHANGES YOU MAKE TO THE BOOTBLOCKS HERE.
+ *
+ *	1.29 -> 1.30
+ *		works w/ os-bs as far as acting as a MBR. lots of cleanup.
  *
  *	1.28 -> 1.29
  *		adding program for booting from DOS file.
@@ -59,4 +62,4 @@
  *		look in boot.c revision logs
  */
 
-char version[] = "1.29";
+char version[] = "1.30";
