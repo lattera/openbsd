@@ -1,4 +1,4 @@
-#	$OpenBSD: src/lib/libz/Makefile,v 1.5 1998/08/08 20:57:04 millert Exp $
+#	$OpenBSD: src/lib/libz/Makefile,v 1.5.18.1 2003/03/05 03:51:31 margarida Exp $
 
 LIB=	z
 HDRS=	zconf.h zlib.h
@@ -6,7 +6,8 @@ SRCS=	adler32.c compress.c crc32.c deflate.c gzio.c infblock.c \
 	infcodes.c inffast.c inflate.c inftrees.c infutil.c trees.c \
 	uncompr.c zutil.c
 NOMAN=	noman
-CFLAGS+=-DHAVE_UNISTD_H -DHAVE_STRERROR -DHAVE_MEMCPY
+CFLAGS+=-DHAVE_UNISTD_H -DHAVE_STRERROR -DHAVE_MEMCPY -DHAS_vsnprintf \
+	-DHAS_snprintf
 
 includes:
 	@cd ${.CURDIR}; for i in $(HDRS); do \
