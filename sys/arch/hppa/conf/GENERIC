@@ -1,0 +1,21 @@
+#	$OpenBSD: src/sys/arch/hppa/conf/GENERIC,v 1.7 1999/04/20 20:32:18 mickey Exp $
+#
+# Generic kernel config (all that is supportted)
+#
+
+include	"arch/hppa/conf/generic.hppa"
+maxusers	8
+
+#option  GSCVERBOSE
+#option  EISAVERBOSE
+#option PCIVERBOSE
+
+config	bsd swap generic
+
+#atapibus* at wdc?
+#wd*	at wdc? drive ?
+#acd*	at atapibus? drive ?
+ 
+sd*	at scsibus? target ? lun ?
+#cd*	at scsibus? target ? lun ?
+
