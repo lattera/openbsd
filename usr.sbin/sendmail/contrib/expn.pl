@@ -6,19 +6,19 @@
 #       THIS PROGRAM IS ITS OWN MANUAL PAGE.  INSTALL IN man & bin.
 #
 
-# hardcoded constants, should work fine for BSD-based systems
-require 'sys/socket.ph';
-$sockaddr = 'S n a4 x8';
+use 5.001;
+use IO::Socket;
 
 # system requirements:
 # 	must have 'nslookup' and 'hostname' programs.
 
-# $Header: /cvs/src/usr.sbin/sendmail/contrib/expn.pl,v 1.3 1996/12/14 21:16:35 downsj Exp $
+# $Header: /home/muir/bin/RCS/expn,v 3.11 1997/09/10 08:14:02 muir Exp muir $
 
 # TODO:
 #	less magic should apply to command-line addresses
 #	less magic should apply to local addresses
 #	add magic to deal with cross-domain cnames
+#	disconnect & reconnect after 25 commands to the same sendmail 8.8.* host
 
 # Checklist: (hard addresses)
 #	250 Kimmo Suominen <"|/usr/local/mh/lib/slocal -user kim"@grendel.tac.nyc.ny.us>
