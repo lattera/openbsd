@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/vax/vax/Attic/random.s,v 1.3 1997/01/15 23:25:21 maja Exp $ */
 /*	$NetBSD: random.s,v 1.2 1994/10/26 08:03:24 cgd Exp $	*/
 
 /*
