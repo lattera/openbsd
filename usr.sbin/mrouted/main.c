@@ -33,7 +33,7 @@
 
 #ifndef lint
 static char rcsid[] =
-	"@(#) $Id: main.c,v 1.2 1995/12/14 01:45:26 deraadt Exp $";
+	"@(#) $Id: main.c,v 1.3 1995/12/19 17:48:04 deraadt Exp $";
 #endif
 
 extern char *configfilename;
@@ -112,12 +112,11 @@ main(argc, argv)
     int index, block;
 #endif
 
-    setlinebuf(stderr);
-
     if (geteuid() != 0) {
 	fprintf(stderr, "must be root\n");
 	exit(1);
     }
+    setlinebuf(stderr);
 
     argv++, argc--;
     while (argc > 0 && *argv[0] == '-') {
