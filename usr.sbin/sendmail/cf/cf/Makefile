@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/Makefile,v 1.13 1997/06/20 13:43:58 kstailey Exp $
+#	$OpenBSD: src/usr.sbin/sendmail/cf/cf/Attic/Makefile,v 1.14 1997/10/21 00:56:38 millert Exp $
 #	@(#)Makefile	8.19 (Berkeley) 1/14/97
 
 #
@@ -36,7 +36,7 @@ clean cleandir:
 depend install: 
 
 distribution: openbsd-proto.cf
-	${INSTALL} ${INSTALL_COPY} -o root -g wheel -m 444 openbsd-proto.cf \
+	${INSTALL} ${INSTALL_COPY} -o root -g wheel -m 644 openbsd-proto.cf \
 	    ${DESTDIR}/etc/sendmail.cf
 
 # this is overkill, but....
