@@ -17,7 +17,7 @@
 
 /* cron.h - header for vixie's cron
  *
- * $Id: cron.h,v 1.1.1.1 1995/10/18 08:47:30 deraadt Exp $
+ * $Id: cron.h,v 1.2 1997/12/22 08:10:41 deraadt Exp $
  *
  * vix 14nov88 [rest of log is in RCS]
  * vix 14jan87 [0 or 7 can be sunday; thanks, mwm@berkeley]
@@ -231,7 +231,7 @@ user		*load_user __P((int, struct passwd *, char *)),
 entry		*load_entry __P((FILE *, void (*)(),
 				 struct passwd *, char **));
 
-FILE		*cron_popen __P((char *, char *));
+FILE		*cron_popen __P((char *, char *, entry *));
 
 
 				/* in the C tradition, we only create
