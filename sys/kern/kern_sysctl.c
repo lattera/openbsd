@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.14 2004/02/19 10:56:37 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_sysctl.c,v 1.29.4.15 2004/03/14 22:08:21 niklas Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -1271,6 +1271,12 @@ fill_kproc2(struct proc *p, struct kinfo_proc2 *ki)
 			 &p->p_stats->p_cru.ru_stime, &ut);
 		ki->p_uctime_sec = ut.tv_sec;
 		ki->p_uctime_usec = ut.tv_usec;
+#ifdef MULTIPROCESSOR
+		if (p->p_cpu != NULL)
+			ki->p_cpuid = p->p_cpu->ci_cpuid;
+		else
+#endif
+			ki->p_cpuid = KI_NOCPU;
 		PRELE(p);
 	}
 }

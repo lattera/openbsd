@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpuvar.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpuvar.h,v 1.1.2.3 2004/03/14 22:08:21 niklas Exp $	*/
 /* $NetBSD: cpuvar.h,v 1.1.2.3 2000/02/21 18:54:07 sommerfeld Exp $ */
 
 /*-
@@ -72,9 +72,12 @@
  */
 
 struct cpu_functions {
-    int (*start) __P((struct cpu_info *));
-    int (*stop) __P((struct cpu_info *));
+    int (*start)(struct cpu_info *);
+    int (*stop)(struct cpu_info *);
+    void (*cleanup)(struct cpu_info *);
 };
+
+extern struct cpu_functions mp_cpu_funcs;
 
 #define CPU_ROLE_SP	0
 #define CPU_ROLE_BP	1

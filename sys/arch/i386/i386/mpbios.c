@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.8 2003/05/13 19:42:08 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.9 2004/03/14 22:08:20 niklas Exp $	*/
+/*	$NetBSD: mpbios.c,v 1.2 2002/10/01 12:56:57 fvdl Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -37,7 +38,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 /*
  * Copyright (c) 1999 Stefan Grefen
@@ -96,8 +96,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	$Id$
  */
 
 /*
@@ -127,9 +125,6 @@
 #include <machine/i82489reg.h>
 #include <machine/i82489var.h>
 #include <dev/isa/isareg.h>
-
-#include <dev/ic/mc146818reg.h>		/* for NVRAM POST */
-#include <i386/isa/nvram.h>		/* for NVRAM POST */
 
 #include <dev/eisa/eisavar.h>	/* for ELCR* def'ns */
 
@@ -202,8 +197,6 @@ int mp_verbose = 1;
 #else
 int mp_verbose = 0;
 #endif
-
-struct cpu_functions mpbios_cpu_funcs = { mpbios_cpu_start, NULL };
 
 int
 mp_print(aux, pnp)
@@ -604,11 +597,12 @@ static struct mpbios_baseentry mp_conf[] =
 };
 
 struct mp_bus *mp_busses;
+int mp_nbus;
 struct mp_intr_map *mp_intrs;
-extern struct ioapic_softc *ioapics[]; /* XXX */
 
 struct mp_intr_map *lapic_ints[2]; /* XXX */
 int mp_isa_bus = -1;		/* XXX */
+int mp_eisa_bus = -1;		/* XXX */
 
 static struct mp_bus extint_bus = {
 	"ExtINT",
@@ -686,16 +680,14 @@ mpbios_scan(self)
 	if (mp_fps->mpfb1 != 0) {
 		struct mpbios_proc pe;
 
-		extern int cpu_id, cpu_feature;	/* XXX */
-
 		printf("\n%s: MP default configuration %d\n",
 		    self->dv_xname, mp_fps->mpfb1);
 
 		/* use default addresses */
 		pe.apic_id = cpu_number();
 		pe.cpu_flags = PROCENTRY_FLAG_EN|PROCENTRY_FLAG_BP;
-		pe.cpu_signature = cpu_id;
-		pe.feature_flags = cpu_feature;
+		pe.cpu_signature = cpu_info_primary.ci_signature;
+		pe.feature_flags = cpu_info_primary.ci_feature_flags;
 
 		mpbios_cpu((u_int8_t *)&pe, self);
 
@@ -719,8 +711,8 @@ mpbios_scan(self)
 		if (mp_cth == NULL)
 			panic("mpbios_scan: no config (can't happen?)");
 
-		printf("\n%s: MP OEM %8.8s Product %12.12s\n",
-		    self->dv_xname, mp_cth->oem_id, mp_cth->product_id);
+		printf(" (%8.8s %12.12s)\n",
+		    mp_cth->oem_id, mp_cth->product_id);
 
 		/*
 		 * Walk the table once, counting items
@@ -741,16 +733,22 @@ mpbios_scan(self)
 				break;
 			}
 			mp_conf[type].count++;
+			if (type == MPS_MCT_BUS) {
+				const struct mpbios_bus *bp =
+				    (const struct mpbios_bus *)position;
+				if (bp->bus_id >= mp_nbus)
+					mp_nbus = bp->bus_id + 1;
+			}
 			/*
 			 * Count actual interrupt instances.
-			 * APIC id 0xff means "wired to all apics of this
-			 * type".
+			 * dst_apic_id of MPS_ALL_APICS means "wired to all
+			 * apics of this type".
 			 */
 			if ((type == MPS_MCT_IOINT) ||
 			    (type == MPS_MCT_LINT)) {
 				const struct mpbios_int *ie =
 				    (const struct mpbios_int *)position;
-				if (ie->dst_apic_id != 0xff)
+				if (ie->dst_apic_id != MPS_ALL_APICS)
 					intr_cnt++;
 				else if (type == MPS_MCT_IOINT)
 					intr_cnt +=
@@ -761,8 +759,9 @@ mpbios_scan(self)
 			position += mp_conf[type].length;
 		}
 
-		mp_busses = malloc(sizeof(struct mp_bus) *
-		    mp_conf[MPS_MCT_BUS].count, M_DEVBUF, M_NOWAIT);
+		mp_busses = malloc(sizeof(struct mp_bus) * mp_nbus,
+		    M_DEVBUF, M_NOWAIT);
+		memset(mp_busses, 0, sizeof(struct mp_bus) * mp_nbus);
 		mp_intrs = malloc(sizeof(struct mp_intr_map) * intr_cnt,
 		    M_DEVBUF, M_NOWAIT);
 
@@ -833,7 +832,8 @@ mpbios_cpu(ent, self)
 
 	caa.caa_name = "cpu";
 	caa.cpu_number = entry->apic_id;
-	caa.cpu_func = &mpbios_cpu_funcs;
+	caa.cpu_func = &mp_cpu_funcs;
+#if 1 /* XXX Will be removed when the real stuff is probed */
 	caa.cpu_signature = entry->cpu_signature;
 
 	/*
@@ -841,6 +841,7 @@ mpbios_cpu(ent, self)
 	 * of the flags on at least some MP bioses
 	 */
 	caa.feature_flags = entry->feature_flags;
+#endif
 
 	config_found_sm(self, &caa, mp_print, mp_match);
 }
@@ -1064,31 +1065,49 @@ mpbios_bus(ent, self)
 	struct device *self;
 {
 	const struct mpbios_bus *entry = (const struct mpbios_bus *)ent;
-	/* XXX should also add EISA support here. */
-	mp_busses[entry->bus_id].mb_intrs = NULL;
+	int bus_id = entry->bus_id;
+
+	printf("mpbios: bus %d is type %6.6s\n", bus_id, entry->bus_type);
+
+#ifdef DIAGNOSTIC
+	/*
+	 * This "should not happen" unless the table changes out
+	 * from underneath us
+	 */
+	if (bus_id >= mp_nbus) {
+		panic("mpbios: bus number %d out of range?? (type %6.6s)\n",
+		    bus_id, entry->bus_type);
+	}
+#endif
+
+	mp_busses[bus_id].mb_intrs = NULL;
 
 	if (memcmp(entry->bus_type, "PCI   ", 6) == 0) {
-		mp_busses[entry->bus_id].mb_name = "pci";
-		mp_busses[entry->bus_id].mb_idx = entry->bus_id;
-		mp_busses[entry->bus_id].mb_intr_print = mp_print_pci_intr;
-		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_pci_intr;
+		mp_busses[bus_id].mb_name = "pci";
+		mp_busses[bus_id].mb_idx = bus_id;
+		mp_busses[bus_id].mb_intr_print = mp_print_pci_intr;
+		mp_busses[bus_id].mb_intr_cfg = mp_cfg_pci_intr;
 	} else if (memcmp(entry->bus_type, "EISA  ", 6) == 0) {
-		mp_busses[entry->bus_id].mb_name = "eisa";
-		mp_busses[entry->bus_id].mb_idx = entry->bus_id;
-		mp_busses[entry->bus_id].mb_intr_print = mp_print_eisa_intr;
-		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_eisa_intr;
+		mp_busses[bus_id].mb_name = "eisa";
+		mp_busses[bus_id].mb_idx = bus_id;
+		mp_busses[bus_id].mb_intr_print = mp_print_eisa_intr;
+		mp_busses[bus_id].mb_intr_cfg = mp_cfg_eisa_intr;
 
-		mp_busses[entry->bus_id].mb_data =
-		    inb(ELCR0) | (inb(ELCR1) << 8);
+		mp_busses[bus_id].mb_data = inb(ELCR0) | (inb(ELCR1) << 8);
+
+		if (mp_eisa_bus != -1)
+			printf("oops: multiple eisa busses?\n");
+		else
+			mp_eisa_bus = bus_id;
 	} else if (memcmp(entry->bus_type, "ISA   ", 6) == 0) {
-		mp_busses[entry->bus_id].mb_name = "isa";
-		mp_busses[entry->bus_id].mb_idx = 0; /* XXX */
-		mp_busses[entry->bus_id].mb_intr_print = mp_print_isa_intr;
-		mp_busses[entry->bus_id].mb_intr_cfg = mp_cfg_isa_intr;
+		mp_busses[bus_id].mb_name = "isa";
+		mp_busses[bus_id].mb_idx = 0; /* XXX */
+		mp_busses[bus_id].mb_intr_print = mp_print_isa_intr;
+		mp_busses[bus_id].mb_intr_cfg = mp_cfg_isa_intr;
 		if (mp_isa_bus != -1)
 			printf("oops: multiple isa busses?\n");
 		else
-			mp_isa_bus = entry->bus_id;
+			mp_isa_bus = bus_id;
 	} else {
 		printf("%s: unsupported bus type %6.6s\n", self->dv_xname,
 		    entry->bus_type);
@@ -1177,11 +1196,12 @@ mpbios_int(ent, enttype, mpi)
 	(*mpb->mb_intr_cfg)(entry, &mpi->redir);
 
 	if (enttype == MPS_MCT_IOINT) {
-		/* XXX */
-		if (id == 0xff)
-			panic("can't deal with all-ioapics interrupt yet!");
+		sc = ioapic_find(id);
+		if (sc == NULL) {
+			printf("mpbios: can't find ioapic %d\n", id);
+			return;
+		}
 
-		sc = ioapics[id]; /* XXX XXX XXX */
 		mpi->ioapic = sc;
 		mpi->ioapic_pin = pin;
 
@@ -1198,7 +1218,7 @@ mpbios_int(ent, enttype, mpi)
 			sc->sc_pins[pin].ip_map = mpi;
 		}
 	} else {
-		if (id != 0xff)
+		if (id != MPS_ALL_APICS)
 			panic("can't deal with not-all-lapics interrupt yet!");
 		if (pin >= 2)
 			printf("pin %d of local apic doesn't exist!\n", pin);
@@ -1228,66 +1248,3 @@ mpbios_int(ent, enttype, mpi)
 		    bitmask_snprintf(flags, flagtype_fmt, buf, sizeof(buf)));
 	}
 }
-
-
-int
-mpbios_cpu_start(struct cpu_info *ci)
-{
-	int error;
-	unsigned short dwordptr[2];
-
-	/*
-	 * "The BSP must initialize CMOS shutdown code to 0Ah ..."
-	 */
-
-	outb(IO_RTC, NVRAM_RESET);
-	outb(IO_RTC + 1, NVRAM_RESET_SOFT);
-
-	/*
-	 * "and the warm reset vector (DWORD based at 40:67) to point
-	 * to the AP startup code ..."
-	 */
-
-	dwordptr[0] = 0;
-	dwordptr[1] = MP_TRAMPOLINE >> 4;
-
-#if 1
-	pmap_kenter_pa(0, 0, VM_PROT_READ|VM_PROT_WRITE);
-#else
-	pmap_enter(pmap_kernel(), 0, 0, VM_PROT_READ|VM_PROT_WRITE, TRUE,
-	    VM_PROT_READ|VM_PROT_WRITE);
-#endif
-	/* XXX magic constant.  */
-	memcpy((u_int8_t *)0x467, dwordptr, 4);
-#if 1
-	pmap_kremove(0, NBPG);
-#else
-	pmap_extract(pmap_kernel(), 0, NULL);
-#endif
-
-	/*
-	 * ... prior to executing the following sequence:"
-	 */
-
-	if (ci->ci_flags & CPUF_AP) {
-		if ((error = i386_ipi_init(ci->ci_cpuid)) != 0)
-			return (error);
-
-		delay(10000);
-
-		if (ci->ci_feature_flags & CPUID_APIC) {
-
-			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
-			    LAPIC_DLMODE_STARTUP)) != 0)
-				return (error);
-			delay(200);
-
-			if ((error = i386_ipi(MP_TRAMPOLINE/NBPG,ci->ci_cpuid,
-			    LAPIC_DLMODE_STARTUP)) != 0)
-				return (error);
-			delay(200);
-		}
-	}
-	return (0);
-}
-

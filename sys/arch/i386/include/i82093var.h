@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82093var.h,v 1.1.2.3 2001/07/16 21:39:06 niklas Exp $	*/
-/* $NetBSD: i82093var.h,v 1.1.2.3 2000/02/27 20:26:06 sommerfeld Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/include/i82093var.h,v 1.1.2.4 2004/03/14 22:08:21 niklas Exp $	*/
+/* $NetBSD: i82093var.h,v 1.1 2003/02/26 21:26:10 fvdl Exp $ */
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -51,11 +51,13 @@ struct ioapic_pin
 	struct mp_intr_map 	*ip_map;
 	int			ip_vector; /* IDT vector */
 	int			ip_type;
-	int			ip_level;
+	int			ip_minlevel;
+	int			ip_maxlevel;
 };
 
 struct ioapic_softc {
 	struct 			device sc_dev;	/* generic device glue */
+	struct ioapic_softc	*sc_next;
 	int			sc_apicid;
 	int			sc_apic_vers;
 	int			sc_apic_sz;	/* apic size*/
@@ -88,10 +90,14 @@ void	apic_intr_disestablish(void *);
 
 void	ioapic_print_redir(struct ioapic_softc *, char *, int);
 void	ioapic_format_redir(char *, char *, int, u_int32_t, u_int32_t);
+struct ioapic_softc *ioapic_find(int);
+struct ioapic_softc *ioapic_find_bybase(int);
 
 void	ioapic_enable(void);
 void	lapic_vectorset(void); /* XXX */
 
 extern int ioapic_bsp_id;
+extern int nioapics;
+extern struct ioapic_softc *ioapics;
 
 #endif /* !_I386_I82093VAR_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.11 2004/02/19 11:01:34 niklas Exp $	*/
+/*	$OpenBSD: src/sys/sys/sysctl.h,v 1.28.4.12 2004/03/14 22:08:21 niklas Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -334,6 +334,8 @@ struct kinfo_proc {
 #define	KI_MAXLOGNAME	32
 #define	KI_EMULNAMELEN	8
 
+#define KI_NOCPU	(~(u_int64_t)0)
+
 struct kinfo_proc2 {
 	u_int64_t p_forw;		/* PTR: linked run/sleep queue. */
 	u_int64_t p_back;
@@ -446,6 +448,7 @@ struct kinfo_proc2 {
 	u_int32_t p_svgid;		/* GID_T: saved group id */
 	char    p_emul[KI_EMULNAMELEN];	/* syscall emulation name */
 	u_int64_t p_rlim_rss_cur;	/* RLIM_T: soft limit for rss */
+	u_int64_t p_cpuid;		/* LONG: CPU id */
 };
 
 /*

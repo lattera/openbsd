@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.9 2003/05/17 19:15:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.1.2.10 2004/03/14 22:08:20 niklas Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -92,6 +92,7 @@
 #include <machine/specialreg.h>
 #include <machine/segments.h>
 #include <machine/gdt.h>
+#include <machine/pio.h>
 
 #if NLAPIC > 0
 #include <machine/apicvar.h>
@@ -103,8 +104,17 @@
 #include <machine/i82093var.h>
 #endif
 
+#include <dev/ic/mc146818reg.h>
+#include <i386/isa/nvram.h>
+#include <dev/isa/isareg.h>
+
 int     cpu_match __P((struct device *, void *, void *));
 void    cpu_attach __P((struct device *, struct device *, void *));
+
+int mp_cpu_start(struct cpu_info *); 
+void mp_cpu_start_cleanup(struct cpu_info *);
+struct cpu_functions mp_cpu_funcs =
+    { mp_cpu_start, NULL, mp_cpu_start_cleanup };
 
 /*
  * Statically-allocated CPU info for the primary CPU (or the only
@@ -204,7 +214,12 @@ cpu_attach(parent, self, aux)
 	cpu_info[cpunum] = ci;
 #endif
 
-	ci->ci_cpuid = caa->cpu_number;
+	ci->ci_apicid = caa->cpu_number;
+#ifdef MULTIPROCESSOR
+	ci->ci_cpuid = ci->ci_apicid;
+#else
+	ci->ci_cpuid = 0;	/* False for APs, so what, they're not used */
+#endif
 	ci->ci_signature = caa->cpu_signature;
 	ci->ci_feature_flags = caa->feature_flags;
 	ci->ci_func = caa->cpu_func;
@@ -506,6 +521,7 @@ cpu_set_tss_gates(struct cpu_info *ci)
 	    GSEL(GIPITSS_SEL, SEL_KPL));
 #endif
 }
+#endif
 
 int
 mp_cpu_start(struct cpu_info *ci)
@@ -530,9 +546,9 @@ mp_cpu_start(struct cpu_info *ci)
 	dwordptr[0] = 0;
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
 
-	pmap_kenter_pa (0, 0, VM_PROT_READ|VM_PROT_WRITE);
-	memcpy ((u_int8_t *) 0x467, dwordptr, 4);
-	pmap_kremove (0, PAGE_SIZE);
+	pmap_kenter_pa(0, 0, VM_PROT_READ|VM_PROT_WRITE);
+	memcpy((u_int8_t *)0x467, dwordptr, 4);
+	pmap_kremove(0, PAGE_SIZE);
 
 #if NLAPIC > 0
 	/*
@@ -540,28 +556,25 @@ mp_cpu_start(struct cpu_info *ci)
 	 */
 
 	if (ci->ci_flags & CPUF_AP) {
-		if ((error = x86_ipi_init(ci->ci_apicid)) != 0)
-			return error;
+		if ((error = i386_ipi_init(ci->ci_apicid)) != 0)
+			return (error);
 
 		delay(10000);
 
 		if (cpu_feature & CPUID_APIC) {
-
-			if ((error = x86_ipi(MP_TRAMPOLINE/PAGE_SIZE,
-					     ci->ci_apicid,
-					     LAPIC_DLMODE_STARTUP)) != 0)
-				return error;
+			if ((error = i386_ipi(MP_TRAMPOLINE / PAGE_SIZE,
+			    ci->ci_apicid, LAPIC_DLMODE_STARTUP)) != 0)
+				return (error);
 			delay(200);
 
-			if ((error = x86_ipi(MP_TRAMPOLINE/PAGE_SIZE,
-					     ci->ci_apicid,
-					     LAPIC_DLMODE_STARTUP)) != 0)
-				return error;
+			if ((error = i386_ipi(MP_TRAMPOLINE / PAGE_SIZE,
+			    ci->ci_apicid, LAPIC_DLMODE_STARTUP)) != 0)
+				return (error);
 			delay(200);
 		}
 	}
 #endif
-	return 0;
+	return (0);
 }
 
 void
@@ -574,4 +587,3 @@ mp_cpu_start_cleanup(struct cpu_info *ci)
 	outb(IO_RTC, NVRAM_RESET);
 	outb(IO_RTC+1, NVRAM_RESET_RST);
 }
-#endif
