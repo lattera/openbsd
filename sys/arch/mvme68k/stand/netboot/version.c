@@ -1,9 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/version.c,v 1.3 1996/04/28 10:49:26 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/netboot/version.c,v 1.4 1996/05/16 02:57:04 chuck Exp $ */
 
 /*
- *	NOTE ANY CHANGES YOU MAKE TO THE BOOTBLOCKS HERE.
- *
- *	1.1
+ * make a random change to this file when you want the bootblock
+ * revision to increase. like change this x to a z, or something.
  */
 
-char *version = "$Revision: 1.2 $";
+char *version = "$Revision: 1.3 $";
