@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-fddi.c,v 1.33 96/12/10 23:20:49 leres Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-fddi.c,v 1.5 1996/12/12 16:22:38 bitblt Exp $ (LBL)";
 #endif
 
 #ifdef HAVE_FDDI
@@ -31,7 +31,7 @@ static const char rcsid[] =
 #include <sys/file.h>
 #include <sys/ioctl.h>
 
-#if __STDC__
+#ifdef __STDC__
 struct mbuf;
 struct rtentry;
 #endif

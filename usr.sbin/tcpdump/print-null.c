@@ -21,7 +21,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /usr/src/usr.sbin/tcpdump/RCS/print-null.c,v 1.2 1997/07/20 17:16:38 denny Exp denny $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-null.c,v 1.6 1997/07/23 02:59:02 denny Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -30,7 +30,7 @@ static const char rcsid[] =
 #include <sys/file.h>
 #include <sys/ioctl.h>
 
-#if __STDC__
+#ifdef __STDC__
 struct mbuf;
 struct rtentry;
 #endif

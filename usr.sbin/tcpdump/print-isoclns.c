@@ -23,14 +23,14 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: print-isoclns.c,v 1.14 96/12/10 23:26:56 leres Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-isoclns.c,v 1.5 1996/12/12 16:22:34 bitblt Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
-#if __STDC__
+#ifdef __STDC__
 struct mbuf;
 struct rtentry;
 #endif

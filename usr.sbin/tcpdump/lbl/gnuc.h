@@ -1,8 +1,8 @@
-/* @(#) $Header: gnuc.h,v 1.3 95/10/09 02:47:01 leres Exp $ (LBL) */
+/* @(#) $Header: /cvs/src/usr.sbin/tcpdump/lbl/gnuc.h,v 1.1 1996/12/12 16:08:22 bitblt Exp $ (LBL) */
 
 /* Define __P() macro, if necessary */
 #ifndef __P
-#if __STDC__
+#ifdef __STDC__
 #define __P(protos) protos
 #else
 #define __P(protos) ()
