@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/1/93
-#	$Id: Makefile,v 1.1.1.1 1996/12/21 20:53:48 rahnds Exp $
+#	$Id: Makefile,v 1.2 1997/04/27 20:56:04 millert Exp $
 
 CFLAGS=		-DLIBC_SCCS
 OBJS=		crt0.o gcrt0.o crtbegin.o crtend.o
@@ -23,7 +23,7 @@ crtbegin.o: crtbegin.c
 	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
 	@rm -f ${.TARGET}.o
  
-crtend.o: crtend.s
+crtend.o: crtend.c
 	@echo ${CC} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 	@${CC} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}.o
 	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
