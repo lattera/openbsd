@@ -1,8 +1,6 @@
-#	$OpenBSD: src/distrib/i386/floppies/Attic/Makefile.inc,v 1.8 1997/04/22 10:34:39 deraadt Exp $
+#	$OpenBSD: src/distrib/i386/floppies/Attic/Makefile.inc,v 1.9 1997/10/01 22:16:11 deraadt Exp $
 
-# Revision is 2.1
-# all these private copies of the version number really lose.
-REV=	21
+REV=	22
 FLOPPY3=1
 
 .include <bsd.own.mk>
