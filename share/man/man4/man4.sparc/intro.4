@@ -1,0 +1,194 @@
+.\"     $OpenBSD: src/share/man/man4/man4.sparc/intro.4,v 1.28 2002/10/01 21:08:41 miod Exp $
+.\"	$NetBSD: intro.4,v 1.5 1998/02/06 06:07:00 perry Exp $
+.\"
+.\" Copyright (c) 1996 Jonathan Stone.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed by Jonathan Stone.
+.\" 3. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"
+.Dd August 13, 1997
+.Dt INTRO 4 sparc
+.Os
+.Sh NAME
+.Nm intro
+.Nd introduction to special files and hardware support
+.Sh DESCRIPTION
+The manual pages in section 4 describe the special files, 
+related driver functions, and networking support
+available in the system.
+In this part of the manual, the
+.Tn SYNOPSIS
+section of
+each configurable device gives a sample specification
+for use in constructing a system description for the
+.Xr config 8
+program.
+The
+.Tn DIAGNOSTICS
+section lists messages which may appear on the console
+and/or in the system error log
+.Pa /var/log/messages
+due to errors in device operation;
+see
+.Xr syslogd 8
+for more information.
+.Pp
+This section contains both devices
+which may be configured into the system
+and network related information.
+The networking support is introduced in
+.Xr netintro 4 .
+.Sh DEVICE SUPPORT
+This section describes the hardware supported on the SPARC
+platform.
+Software support for these devices comes in two forms.
+A hardware device may be supported with a character or block
+.Em device driver ,
+or it may be used within the networking subsystem and have a
+.Em network interface driver .
+Block and character devices are accessed through files in the file
+system of a special type; see
+.Xr mknod 8 .
+Network interfaces are indirectly accessed through the interprocess
+communication facilities provided by the system; see
+.Xr socket 2 .
+.Pp
+A hardware device is identified to the system at configuration time
+and the appropriate device or network interface driver is then compiled
+into the system.
+When the resultant system is booted, the autoconfiguration facilities
+in the system probe for the device and, if found, enable the software
+support for it.
+If a device does not respond at autoconfiguration
+time it is not accessible at any time afterwards.
+To enable a device which did not autoconfigure,
+the system will have to be rebooted.
+.Pp
+The autoconfiguration system is described in
+.Xr autoconf 4 .
+A list of the supported devices is given below.
+.Sh LIST OF DEVICES
+The devices listed below are supported in this incarnation of
+the system.
+Pseudo-devices are not listed.
+Devices are indicated by their functional interface.
+Not all supported devices are listed.
+.Pp
+.Bl -tag -width zs/zstty/zskbd(4) -compact -offset indent
+.It Xr audioamd 4
+AMD 79C30 obio (sun4c and SPARC Classic) audio controller.
+.It Xr audiocs 4
+CS4231 based audio found in some sun4c and sun4m models.
+.It Xr be 4
+10BaseT/100BaseTX SBus Ethernet controller.
+.It Xr bwtwo 4
+black and white SBus and obio (sun4) frame buffer.
+.It Xr cgeight 4
+24 bit VMEbus color frame buffer.
+.It Xr cgfour 4
+8 bit obio (sun4 P4 bus) color graphics frame buffer.
+.It Xr cgfourteen 4
+24 bit MBus color frame buffer.
+.It Xr cgsix 4
+8 bit SBus and obio (sun4c & sun4m) color graphics frame buffer.
+.It Xr cgthree 4
+8 bit VMEbus, SBus, and obio (sun4m) color graphics frame buffer.
+.It Xr cgtwelve 4
+24 bit SBus color frame buffer.
+.It Xr cgtwo 4
+8 bit VMEbus color frame buffer.
+.It Xr daadio 4
+MATRIX MD-DAADIO digital/analog and analog/digital parallel i/o board.
+.It Xr esp 4
+NCR53C90 ESP100 (Sun 4/300),
+.br
+ESP100A (sun4c),
+.br
+ESP200 (sun4m) SCSI controller,
+.br
+FSBE/S (X1053A, part # 501-2015) Fast SCSI-2/Buffered Ethernet SBus controller.
+.It Xr fd 4
+Intel 82072 obio (sun4c) or Intel 82077 obio (sun4m)
+floppy disk drive controller.
+.It Xr fga 4
+Force FGA5000 SBus/VME bridge.
+.It Xr hme 4
+SBus HME Ethernet controllers (SunSwift) and SBus QuadFastEthernet controllers.
+.It Xr ie 4
+Intel 82586 Ethernet controller (Sun 4/100 and 4/200).
+.It Xr isp 4
+Qlogic ISP SBus SCSI controller.
+.It Xr le/lebuffer 4
+AMD 7990 LANCE ethernet controller (Sun 4/300, sun4c, sun4m, SBus).
+.It Xr led 4
+diagnostic LED display on sun4 and sun4m (4/600) machines.
+.It Xr magma 4
+Magma serial/parallel communication boards.
+.It Xr openprom 4
+Sun Open boot PROM (what became IEEE 1275) configuration driver.
+.It Xr pnozz 4
+Weitek Power9100 frame buffer found on Tadpole SPARCbook 3GS and 3GX.
+.It Xr qe 4
+Quad 10BaseT SBus Ethernet controller.
+.It Xr qec 4
+Supported as a carrier for the
+.Nm be
+or
+.Nm qe
+Ethernet controllers.
+.It Xr scf 4
+Force CPU-5 system configuration registers.
+.It Xr si 4
+NCR5380 "SCSI-2" VMEbus (Sun 4/200, Sun 4/400) SCSI controller.
+.It Xr spif 4
+Sun SUNW,spif serial/parallel communication boards.
+.It Xr sw 4
+NCR5380 obio (Sun 4/100) "SCSI Weird" SCSI controller.
+.It Xr tctrl 4
+Tadpole microcontroller interface.
+.It Xr tcx 4
+8 or 24 bit SBus color graphics frame buffer.
+.It Xr vigra 4
+8 bit SBus color framebuffer with VGA-compatible modes and connector.
+.It Xr xbox 4
+SBus Expansion Subsystem.
+.It Xr xd 4
+Xylogics 753/7053 VMEbus SMD disk controller.
+.It Xr xy 4
+Xylogics 450/451 VMEbus SMD disk controller.
+.It Xr zs/zstty/zskbd 4
+Zilog 8530 serial controller (and serial keyboards).
+.El
+.Sh SEE ALSO
+.Xr autoconf 4 ,
+.Xr config 8
+.Sh HISTORY
+The
+sparc
+.Nm
+first appeared in
+.Ox 2.3 .
