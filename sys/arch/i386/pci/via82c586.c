@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/via82c586.c,v 1.2 2000/03/27 08:35:22 brad Exp $	*/
-/*	$NetBSD$	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/via82c586.c,v 1.3 2000/03/28 03:38:00 mickey Exp $	*/
+/*	$NetBSD: via82c586.c,v 1.1 1999/11/17 01:21:21 thorpej Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.

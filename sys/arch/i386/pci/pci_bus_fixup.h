@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/Attic/pci_bus_fixup.h,v 1.2 2000/03/27 08:35:21 brad Exp $	*/
-/*	$NetBSD$	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/Attic/pci_bus_fixup.h,v 1.3 2000/03/28 03:37:59 mickey Exp $	*/
+/*	$NetBSD: pci_bus_fixup.h,v 1.1 1999/11/17 07:32:58 thorpej Exp $  */
 
 /*
  * Copyright (c) 1999, by UCHIYAMA Yasushi
