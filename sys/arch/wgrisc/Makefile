@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/16/93
-#	$Id: Makefile,v 1.2 1996/05/15 07:09:06 pefo Exp $
+#	$Id: Makefile,v 1.1.1.1 1997/02/06 16:02:41 pefo Exp $
 
 # Makefile for pica links, tags file
 
@@ -24,5 +24,7 @@ tags::
 	    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3 \1 /^\2(\3\4$$/;" \
 		>> tags
 	sort -o tags tags
+
+obj:   _SUBDIRUSE
 
 .include <bsd.prog.mk>
