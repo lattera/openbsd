@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.24 2004/04/06 13:36:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.25 2004/06/06 18:21:15 grange Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -1407,7 +1407,9 @@ pmap_try_steal_pv(pvh, cpv, prevpv)
 	struct pv_entry *cpv, *prevpv;
 {
 	pt_entry_t *ptep, opte;
+#ifdef MULTIPROCESSOR
 	int32_t cpumask = 0;
+#endif
 
 	/*
 	 * we never steal kernel mappings or mappings from pmaps we can't lock
