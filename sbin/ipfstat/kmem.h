@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/ipfstat/Attic/kmem.h,v 1.10 2000/02/01 19:30:00 kjell Exp $	*/
+/*	$OpenBSD: src/sbin/ipfstat/Attic/kmem.h,v 1.11 2000/02/16 22:34:22 kjell Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.14 2000/02/01 19:30:01 kjell Exp $	*/
+/*	$OpenBSD: src/usr.sbin/ipftest/Attic/ipft_pc.c,v 1.15 2000/02/16 22:34:23 kjell Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.

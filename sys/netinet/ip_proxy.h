@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_proxy.h,v 1.5 2000/02/01 19:29:59 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_proxy.h,v 1.6 2000/02/16 22:34:19 kjell Exp $	*/
 
 /*
  * Copyright (C) 1997-1998 by Darren Reed.

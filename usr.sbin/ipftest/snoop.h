@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ipftest/Attic/snoop.h,v 1.7 2000/02/01 19:30:02 kjell Exp $	*/
+/*	$OpenBSD: src/usr.sbin/ipftest/Attic/snoop.h,v 1.8 2000/02/16 22:34:25 kjell Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.

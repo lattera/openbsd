@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/fil.c,v 1.20 2000/02/01 19:29:57 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/fil.c,v 1.21 2000/02/16 22:34:17 kjell Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
