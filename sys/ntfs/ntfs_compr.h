@@ -1,4 +1,4 @@
-/*	$Id$	*/
+/*	$OpenBSD: src/sys/ntfs/ntfs_compr.h,v 1.2 2003/05/20 03:23:11 mickey Exp $	*/
 /*	$NetBSD: ntfs_compr.h,v 1.1 2002/12/23 17:38:32 jdolecek Exp $	*/
 
 /*-
