@@ -1,4 +1,4 @@
-/*    $OpenBSD: src/sys/dev/isa/Attic/if_hp.c,v 1.5.6.4 2003/06/07 11:02:29 ho Exp $       */
+/*    $OpenBSD: src/sys/dev/isa/Attic/if_hp.c,v 1.5.6.5 2004/03/23 08:02:56 niklas Exp $       */
 /*    $NetBSD: if_hp.c,v 1.21 1995/12/24 02:31:31 mycroft Exp $       */
 
 /* XXX THIS DRIVER IS BROKEN.  IT WILL NOT EVEN COMPILE. */
@@ -86,7 +86,6 @@
 
 #include <i386/isa/isa_device.h>	/* XXX BROKEN */
 #include <dev/isa/if_nereg.h>
-#include <i386/isa/icu.h>		/* XXX BROKEN */
 
 int     hpprobe(), hpattach(), hpintr();
 int     hpstart(), hpinit(), ether_output(), hpioctl();

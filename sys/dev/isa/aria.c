@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/aria.c,v 1.5.6.4 2004/02/19 10:56:21 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/isa/Attic/aria.c,v 1.5.6.5 2004/03/23 08:02:56 niklas Exp $ */
 
 /*
  * Copyright (c) 1995, 1996 Roland C. Dowdeswell.  All rights reserved.
@@ -76,7 +76,6 @@
 #include <dev/mulaw.h>
 #include <dev/isa/isavar.h>
 #include <dev/isa/isadmavar.h>
-#include <i386/isa/icu.h>
 
 #include <dev/isa/ariareg.h>
 

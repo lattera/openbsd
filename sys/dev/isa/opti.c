@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/Attic/opti.c,v 1.5.14.2 2003/06/07 11:02:29 ho Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/Attic/opti.c,v 1.5.14.3 2004/03/23 08:02:56 niklas Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -41,7 +41,6 @@
 
 #include <machine/pio.h>
 
-#include <i386/isa/icu.h>
 #include <dev/isa/isavar.h>
 
 #include <dev/isa/opti.h>

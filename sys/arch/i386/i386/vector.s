@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vector.s,v 1.1.2.2 2004/03/22 23:48:40 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vector.s,v 1.1.2.3 2004/03/23 08:02:55 niklas Exp $	*/
 /*	$NetBSD: vector.s,v 1.32 1996/01/07 21:29:47 mycroft Exp $	*/
 
 /*
@@ -30,83 +30,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <i386/isa/icu.h>
+#include <machine/i8259.h>
 #include <dev/isa/isareg.h>
 
-#define ICU_HARDWARE_MASK
-
 #define MY_COUNT _C_LABEL(uvmexp)
-
-/*
- * These macros are fairly self explanatory.  If ICU_SPECIAL_MASK_MODE is
- * defined, we try to take advantage of the ICU's `special mask mode' by only
- * EOIing the interrupts on return.  This avoids the requirement of masking and
- * unmasking.  We can't do this without special mask mode, because the ICU
- * would also hold interrupts that it thinks are of lower priority.
- *
- * Many machines do not support special mask mode, so by default we don't try
- * to use it.
- */
-
-#define	IRQ_BIT(irq_num)	(1 << ((irq_num) % 8))
-#define	IRQ_BYTE(irq_num)	((irq_num) / 8)
-
-#ifdef ICU_SPECIAL_MASK_MODE
-
-#define	ACK1(irq_num)
-#define	ACK2(irq_num) \
-	movb	$(0x60|IRQ_SLAVE),%al	/* specific EOI for IRQ2 */	;\
-	outb	%al,$IO_ICU1
-#define	MASK(irq_num, icu)
-#define	UNMASK(irq_num, icu) \
-	movb	$(0x60|(irq_num%8)),%al	/* specific EOI */		;\
-	outb	%al,$icu
-
-#else /* ICU_SPECIAL_MASK_MODE */
-
-#ifndef	AUTO_EOI_1
-#define	ACK1(irq_num) \
-	movb	$(0x60|(irq_num%8)),%al	/* specific EOI */		;\
-	outb	%al,$IO_ICU1
-#else
-#define	ACK1(irq_num)
-#endif
-
-#ifndef AUTO_EOI_2
-#define	ACK2(irq_num) \
-	movb	$(0x60|(irq_num%8)),%al	/* specific EOI */		;\
-	outb	%al,$IO_ICU2		/* do the second ICU first */	;\
-	movb	$(0x60|IRQ_SLAVE),%al	/* specific EOI for IRQ2 */	;\
-	outb	%al,$IO_ICU1
-#else
-#define	ACK2(irq_num)
-#endif
-
-#ifdef ICU_HARDWARE_MASK
-
-#define	MASK(irq_num, icu) \
-	movb	_C_LABEL(imen) + IRQ_BYTE(irq_num),%al				;\
-	orb	$IRQ_BIT(irq_num),%al					;\
-	movb	%al,_C_LABEL(imen) + IRQ_BYTE(irq_num)				;\
-	FASTER_NOP							;\
-	outb	%al,$(icu+1)
-#define	UNMASK(irq_num, icu) \
-	cli								;\
-	movb	_C_LABEL(imen) + IRQ_BYTE(irq_num),%al				;\
-	andb	$~IRQ_BIT(irq_num),%al					;\
-	movb	%al,_C_LABEL(imen) + IRQ_BYTE(irq_num)				;\
-	FASTER_NOP							;\
-	outb	%al,$(icu+1)						;\
-	sti
-
-#else /* ICU_HARDWARE_MASK */
-
-#define	MASK(irq_num, icu)
-#define	UNMASK(irq_num, icu)
-
-#endif /* ICU_HARDWARE_MASK */
-
-#endif /* ICU_SPECIAL_MASK_MODE */
 
 /*
  * Macros for interrupt entry, call to handler, and exit.
@@ -156,7 +83,7 @@
  *
  * On exit, we jump to Xdoreti(), to process soft interrupts and ASTs.
  */
-#define	INTR(irq_num, icu, ack) \
+#define	INTR(irq_num, ack) \
 IDTVEC(recurse/**/irq_num)						;\
 	pushfl								;\
 	pushl	%cs							;\
@@ -167,7 +94,7 @@ _C_LABEL(Xintr)/**/irq_num/**/:						;\
 	pushl	$T_ASTFLT		/* trap # for doing ASTs */	;\
 	INTRENTRY							;\
 	MAKE_FRAME							;\
-	MASK(irq_num, icu)		/* mask it in hardware */	;\
+	i8259_asm_mask(irq_num)		/* mask it in hardware */	;\
 	ack(irq_num)			/* and allow other intrs */	;\
 	incl	MY_COUNT+V_INTR		/* statistical info */		;\
 	movl	_C_LABEL(iminlevel) + (irq_num) * 4, %eax		;\
@@ -201,7 +128,7 @@ Xresume/**/irq_num/**/:						;\
 	jnz	7b							;\
 	UNLOCK_KERNEL							;\
 	STRAY_TEST			/* see if it's a stray */	;\
-6:	UNMASK(irq_num, icu)		/* unmask it in hardware */	;\
+6:	i8259_asm_unmask(irq_num)	/* unmask it in hardware */	;\
 	jmp	_C_LABEL(Xdoreti)	/* lower spl and do ASTs */	;\
 IDTVEC(stray/**/irq_num)						;\
 	pushl	$irq_num						;\
@@ -233,22 +160,28 @@ IDTVEC(hold/**/irq_num)							;\
 #define	MAKE_FRAME
 #endif /* DDB */
 
-INTR(0, IO_ICU1, ACK1)
-INTR(1, IO_ICU1, ACK1)
-INTR(2, IO_ICU1, ACK1)
-INTR(3, IO_ICU1, ACK1)
-INTR(4, IO_ICU1, ACK1)
-INTR(5, IO_ICU1, ACK1)
-INTR(6, IO_ICU1, ACK1)
-INTR(7, IO_ICU1, ACK1)
-INTR(8, IO_ICU2, ACK2)
-INTR(9, IO_ICU2, ACK2)
-INTR(10, IO_ICU2, ACK2)
-INTR(11, IO_ICU2, ACK2)
-INTR(12, IO_ICU2, ACK2)
-INTR(13, IO_ICU2, ACK2)
-INTR(14, IO_ICU2, ACK2)
-INTR(15, IO_ICU2, ACK2)
+#define ICUADDR IO_ICU1
+
+INTR(0, i8259_asm_ack1)
+INTR(1, i8259_asm_ack1)
+INTR(2, i8259_asm_ack1)
+INTR(3, i8259_asm_ack1)
+INTR(4, i8259_asm_ack1)
+INTR(5, i8259_asm_ack1)
+INTR(6, i8259_asm_ack1)
+INTR(7, i8259_asm_ack1)
+
+#undef ICUADDR
+#define ICUADDR IO_ICU2
+
+INTR(8, i8259_asm_ack2)
+INTR(9, i8259_asm_ack2)
+INTR(10, i8259_asm_ack2)
+INTR(11, i8259_asm_ack2)
+INTR(12, i8259_asm_ack2)
+INTR(13, i8259_asm_ack2)
+INTR(14, i8259_asm_ack2)
+INTR(15, i8259_asm_ack2)
 
 /*
  * These tables are used by the ISA configuration code.

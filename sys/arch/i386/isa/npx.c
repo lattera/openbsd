@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.11 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/npx.c,v 1.16.6.12 2004/03/23 08:02:56 niklas Exp $	*/
 /*	$NetBSD: npx.c,v 1.57 1996/05/12 23:12:24 mycroft Exp $	*/
 
 #if 0
@@ -59,10 +59,10 @@
 #include <machine/pcb.h>
 #include <machine/trap.h>
 #include <machine/specialreg.h>
+#include <machine/i8259.h>
 
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
-#include <i386/isa/icu.h>
 
 /*
  * 387 and 287 Numeric Coprocessor Extension (NPX) Driver.

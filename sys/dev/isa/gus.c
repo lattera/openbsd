@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/isa/gus.c,v 1.21.4.4 2004/02/19 10:56:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/dev/isa/gus.c,v 1.21.4.5 2004/03/23 08:02:56 niklas Exp $	*/
 /*	$NetBSD: gus.c,v 1.51 1998/01/25 23:48:06 mycroft Exp $	*/
 
 /*-
@@ -119,7 +119,6 @@
 
 #include <dev/isa/isavar.h>
 #include <dev/isa/isadmavar.h>
-#include <i386/isa/icu.h>
 
 #include <dev/ic/ics2101reg.h>
 #include <dev/ic/cs4231reg.h>

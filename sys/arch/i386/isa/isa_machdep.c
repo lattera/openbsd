@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.14 2003/06/07 11:11:37 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/isa_machdep.c,v 1.34.4.15 2004/03/23 08:02:56 niklas Exp $	*/
 /*	$NetBSD: isa_machdep.c,v 1.22 1997/06/12 23:57:32 thorpej Exp $	*/
 
 #define ISA_DMA_STATS
@@ -135,12 +135,12 @@
 #include <machine/intr.h>
 #include <machine/pio.h>
 #include <machine/cpufunc.h>
+#include <machine/i8259.h>
 
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
 #include <dev/isa/isadmavar.h>
 #include <i386/isa/isa_machdep.h>
-#include <i386/isa/icu.h>
 
 #include "isadma.h"
 
