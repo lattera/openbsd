@@ -33,7 +33,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)setrgid.c	5.5 (Berkeley) 2/23/91";*/
-static char *rcsid = "$Id: setrgid.c,v 1.1.1.1 1995/10/18 08:41:46 deraadt Exp $";
+static char *rcsid = "$Id: setrgid.c,v 1.2 1996/03/25 21:22:10 tholo Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
@@ -51,5 +51,5 @@ setrgid(rgid)
 	gid_t rgid;
 #endif
 {
-	return (__setregid(rgid, -1));
+	return (__setregid(rgid, (gid_t)-1));
 }
