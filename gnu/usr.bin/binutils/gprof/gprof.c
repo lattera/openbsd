@@ -1,24 +1,37 @@
 /*
- * Copyright (c) 1983, 1998, 2001 Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1983, 1993, 1998, 2001, 2002
+ *      The Regents of the University of California.  All rights reserved.
  *
- * Redistribution and use in source and binary forms are permitted
- * provided that: (1) source distributions retain this entire copyright
- * notice and comment, and (2) distributions including binaries display
- * the following acknowledgement:  ``This product includes software
- * developed by the University of California, Berkeley and its contributors''
- * in the documentation or other materials provided with the distribution
- * and in all advertising materials mentioning features or use of this
- * software. Neither the name of the University nor the names of its
- * contributors may be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
-#include "getopt.h"
+
 #include "libiberty.h"
 #include "gprof.h"
+#include "search_list.h"
+#include "source.h"
+#include "symtab.h"
 #include "basic_blocks.h"
 #include "call_graph.h"
 #include "cg_arcs.h"
@@ -27,9 +40,12 @@
 #include "gmon_io.h"
 #include "hertz.h"
 #include "hist.h"
-#include "source.h"
 #include "sym_ids.h"
 #include "demangle.h"
+#include "getopt.h"
+
+static void usage PARAMS ((FILE *, int)) ATTRIBUTE_NORETURN;
+int main PARAMS ((int, char **));
 
 const char *whoami;
 const char *function_mapping_file;
@@ -42,19 +58,19 @@ long hz = HZ_WRONG;
 int debug_level = 0;
 int output_style = 0;
 int output_width = 80;
-bool bsd_style_output = FALSE;
-bool demangle = TRUE;
-bool discard_underscores = TRUE;
-bool ignore_direct_calls = FALSE;
-bool ignore_static_funcs = FALSE;
-bool ignore_zeros = TRUE;
-bool line_granularity = FALSE;
-bool print_descriptions = TRUE;
-bool print_path = FALSE;
-bool ignore_non_functions = FALSE;
+bfd_boolean bsd_style_output = FALSE;
+bfd_boolean demangle = TRUE;
+bfd_boolean discard_underscores = TRUE;
+bfd_boolean ignore_direct_calls = FALSE;
+bfd_boolean ignore_static_funcs = FALSE;
+bfd_boolean ignore_zeros = TRUE;
+bfd_boolean line_granularity = FALSE;
+bfd_boolean print_descriptions = TRUE;
+bfd_boolean print_path = FALSE;
+bfd_boolean ignore_non_functions = FALSE;
 File_Format file_format = FF_AUTO;
 
-bool first_output = TRUE;
+bfd_boolean first_output = TRUE;
 
 char copyright[] =
  "@(#) Copyright (c) 1983 Regents of the University of California.\n\
@@ -140,7 +156,9 @@ static struct option long_options[] =
 
 
 static void
-DEFUN (usage, (stream, status), FILE * stream AND int status)
+usage (stream, status)
+     FILE *stream;
+     int status;
 {
   fprintf (stream, _("\
 Usage: %s [-[abcDhilLsTvwxyz]] [-[ACeEfFJnNOpPqQZ][name]] [-I dirs]\n\
@@ -164,7 +182,9 @@ Usage: %s [-[abcDhilLsTvwxyz]] [-[ACeEfFJnNOpPqQZ][name]] [-I dirs]\n\
 
 
 int
-DEFUN (main, (argc, argv), int argc AND char **argv)
+main (argc, argv)
+     int argc;
+     char **argv;
 {
   char **sp, *str;
   Sym **cg = 0;
@@ -172,6 +192,9 @@ DEFUN (main, (argc, argv), int argc AND char **argv)
 
 #if defined (HAVE_SETLOCALE) && defined (HAVE_LC_MESSAGES)
   setlocale (LC_MESSAGES, "");
+#endif
+#if defined (HAVE_SETLOCALE)
+  setlocale (LC_CTYPE, "");
 #endif
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
@@ -489,9 +512,7 @@ This program is free software.  This program has absolutely no warranty.\n"));
     {
       sym_id_add (*sp, EXCL_TIME);
       sym_id_add (*sp, EXCL_GRAPH);
-#ifdef __alpha__
       sym_id_add (*sp, EXCL_FLAT);
-#endif
     }
 
   /*

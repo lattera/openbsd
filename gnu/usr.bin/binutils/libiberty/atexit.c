@@ -1,7 +1,20 @@
 /* Wrapper to implement ANSI C's atexit using SunOS's on_exit. */
 /* This function is in the public domain.  --Mike Stump. */
 
-#ifndef NEED_on_exit
+/*
+
+@deftypefn Supplemental int atexit (void (*@var{f})())
+
+Causes function @var{f} to be called at exit.  Returns 0.
+
+@end deftypefn
+
+*/
+
+#include "config.h"
+
+#ifdef HAVE_ON_EXIT
+
 int
 atexit(f)
      void (*f)();
@@ -11,4 +24,5 @@ atexit(f)
   on_exit (f, 0);
   return 0;
 }
+
 #endif
