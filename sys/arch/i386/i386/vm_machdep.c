@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.14 2004/06/06 18:42:07 grange Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.15 2004/06/06 19:01:37 grange Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -90,8 +90,15 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 
 	p2->p_md.md_flags = p1->p_md.md_flags;
 
-	/* Sync curpcb (which is presumably p1's PCB) and copy it to p2. */
-	savectx(curcpu()->ci_curpcb);
+	/* Copy pcb from proc p1 to p2. */
+	if (p1 == curproc) {
+		/* Sync the PCB before we copy it. */
+		savectx(curpcb);
+	}
+#ifdef DIAGNOSTIC
+	else if (p1 != &proc0)
+		panic("cpu_fork: curproc");
+#endif
 	*pcb = p1->p_addr->u_pcb;
 
 	/*
