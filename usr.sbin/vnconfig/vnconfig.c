@@ -114,7 +114,7 @@ config(dev, file, action)
 		err(4, "%s", rdev);
 	f = fopen(rdev, "rw");
 	if (f == NULL) {
-		warn(rdev);
+		warn("%s", rdev);
 		return (1);
 	}
 	vndio.vnd_file = file;

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/ypserv/revnetgroup/revnetgroup.c,v 1.1 1997/04/15 22:06:15 maja Exp $ */
+/* $OpenBSD: src/usr.sbin/ypserv/revnetgroup/revnetgroup.c,v 1.1.14.1 2000/10/06 21:24:22 jason Exp $ */
 /*
  * Copyright (c) 1995
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -47,7 +47,7 @@
 #include "hash.h"
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/revnetgroup/revnetgroup.c,v 1.1 1997/04/15 22:06:15 maja Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/revnetgroup/revnetgroup.c,v 1.1.14.1 2000/10/06 21:24:22 jason Exp $";
 #endif
 
 /* Default location of netgroup file. */
@@ -118,7 +118,7 @@ main(argc, argv)
 
 	if (strcmp(netgroup, "-")) {
 		if ((fp = fopen(netgroup, "r")) == NULL) {
-			err(1,netgroup);
+			err(1, "%s", netgroup);
 		}
 	} else {
 		fp = stdin;
