@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.6 2000/02/28 11:55:22 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/mld6.c,v 1.7 2001/02/16 08:22:06 itojun Exp $	*/
 /*	$KAME: mld6.c,v 1.16 2000/02/22 14:04:27 itojun Exp $	*/
 
 /*
@@ -339,7 +339,7 @@ mld6_input(m, off)
 void
 mld6_fasttimeo()
 {
-	register struct in6_multi *in6m;
+	struct in6_multi *in6m;
 	struct in6_multistep step;
 	int s;
 
