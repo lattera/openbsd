@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/mbr/Makefile,v 1.5 1997/06/23 23:45:18 kstailey Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/mbr/Makefile,v 1.6 1997/08/29 19:48:25 mickey Exp $
 #
 
 PROG=	mbr
@@ -24,7 +24,7 @@ ${PROG}: $(OBJS) $(DPADD)
 	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LDADD)
 	@size $(PROG)
 	@if [ -x ${.OBJDIR}/${PROG} ]; then \
-		dd if=${.OBJDIR}/${PROG} of=${.OBJDIR}/.tmp ibs=32 skip=1; \
+		dd if=${.OBJDIR}/${PROG} of=${.OBJDIR}/.tmp ibs=32 skip=1 2>/dev/null; \
 		mv -f ${.OBJDIR}/.tmp ${.OBJDIR}/${PROG}; \
 		ls -l ${.OBJDIR}/${PROG}; \
 	fi
