@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: tun.c,v 1.11 1999/01/28 01:56:34 brian Exp $
+ *	$Id: tun.c,v 1.3 1999/02/06 03:22:49 brian Exp $
  */
 
 #include <sys/param.h>
@@ -36,9 +36,9 @@
 #include <netinet/ip.h>
 #include <sys/un.h>
 
+#include <errno.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/errno.h>
 
 #include "mbuf.h"
 #include "log.h"
