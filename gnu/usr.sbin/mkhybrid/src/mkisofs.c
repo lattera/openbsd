@@ -20,7 +20,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-static char rcsid[] ="$Id: mkisofs.c,v 1.32 1999/03/07 21:48:49 eric Exp $";
+static char rcsid[] ="$Id: mkisofs.c,v 1.1 2000/10/10 20:40:19 beck Exp $";
 
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 12/3/99 */
 
@@ -57,7 +57,7 @@ static char rcsid[] ="$Id: mkisofs.c,v 1.32 1999/03/07 21:48:49 eric Exp $";
 
 #include "exclude.h"
 
-#ifdef __NetBSD__
+#if defined(__NetBSD__) || defined(__OpenBSD__) 
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
@@ -1129,7 +1129,7 @@ int FDECL2(main, int, argc, char **, argv){
 
 parse_input_files:
 
-#ifdef __NetBSD__
+#if defined(__NetBSD__) || defined(__OpenBSD__) 
     {
 	int resource;
     struct rlimit rlp;
