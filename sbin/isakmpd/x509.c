@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/x509.c,v 1.29 2000/10/07 07:00:34 niklas Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/x509.c,v 1.29.2.1 2000/12/11 05:25:41 jason Exp $	*/
 /*	$EOM: x509.c,v 1.43 2000/09/28 12:53:27 niklas Exp $	*/
 
 /*
@@ -315,7 +315,7 @@ x509_hash (u_int8_t *id, size_t len)
   u_int16_t bucket = 0;
 
   /* XXX We might resize if we are crossing a certain threshold.  */
-  for (i = 0; i < (len & ~1); i += 2)
+  for (i = 4; i < (len & ~1); i += 2)
     {
       /* Doing it this way avoids alignment problems.  */
       bucket ^= (id[i] + 1) * (id[i + 1] + 257);
@@ -379,11 +379,17 @@ x509_hash_find (u_int8_t *id, size_t len)
 
       id_found = 0;
       for (i = 0; i < n; i++)
-	if (clen[i] == len && memcmp (id, cid[i], len) == 0)
-	  {
-	    id_found++;
-	    break;
-	  }
+	{
+	  LOG_DBG_BUF ((LOG_CRYPTO, 70, "cert_cmp: ", id, len));
+	  LOG_DBG_BUF ((LOG_CRYPTO, 70, "cert_cmp: ", cid[i], clen[i]));
+	  /* XXX This identity predicate needs to be understood.  */
+	  if (clen[i] == len && id[0] == cid[i][0]
+	      && memcmp (id + 4, cid[i] + 4, len - 4) == 0)
+	    {
+	      id_found++;
+	      break;
+	    }
+	}
       cert_free_subjects (n, cid, clen);
       if (!id_found)
 	continue;
@@ -885,7 +891,8 @@ x509_check_subjectaltname (u_char *id, u_int id_len, X509 *scert)
     {
       LOG_DBG ((LOG_CRYPTO, 50,
 		"x509_check_subjectaltname: "
-		"our ID type does not match X509 cert ID type"));
+		"our ID type (%d) does not match X509 cert ID type (%d)",
+		idtype, type));
       return 0;
     }
 
