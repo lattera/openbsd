@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/diskrd.c,v 1.1 1996/05/07 11:25:07 deraadt Exp $ */
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.
@@ -7,13 +9,12 @@
 
 /* returns 0: success, nonzero: error */
 int
-mvmeprom_diskwr(arg)
+mvmeprom_diskrd(arg)
 	struct mvmeprom_dskio *arg;
 {
 	int ret;
 
-	asm volatile ("or r2,r0,%0": : "r" (arg) );
-	MVMEPROM_CALL(MVMEPROM_DSKWR);
-	asm volatile ("or %0,r0,r2" :  "=r" (ret));
-	return (!(ret & 0x4));
+	MVMEPROM_ARG1(arg);
+	MVMEPROM_CALL(MVMEPROM_DSKRD);
+	MVMEPROM_STATRET(ret);
 }

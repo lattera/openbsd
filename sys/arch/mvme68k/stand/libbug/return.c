@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/return.c,v 1.1 1996/05/07 11:25:11 deraadt Exp $ */
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.

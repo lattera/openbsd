@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/rtc_rd.c,v 1.1 1996/05/07 11:25:12 deraadt Exp $ */
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.
@@ -7,8 +9,8 @@
 
 void
 mvmeprom_rtc_rd(ptime)
-	struct mvmeprom_time *ptime)
+	struct mvmeprom_time *ptime;
 {
-	asm volatile ("or r2,r0,%0": : "r" (ptime));
+	MVMEPROM_ARG1(ptime);
 	MVMEPROM_CALL(MVMEPROM_RTC_RD);
 }

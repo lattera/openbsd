@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/m68k/Attic/instat.c,v 1.2 1996/04/28 10:48:43 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libbug/instat.c,v 1.1 1996/05/07 11:25:09 deraadt Exp $ */
 
 /*
  * bug routines -- assumes that the necessary sections of memory
@@ -11,9 +11,8 @@
 int
 mvmeprom_instat()
 {
-	u_short ret;
+	int ret;
 
 	MVMEPROM_CALL(MVMEPROM_INSTAT);
-	asm volatile ("movew ccr,%0": "=d" (ret));
-	return (!(ret & 0x4));
+	MVMEPROM_STATRET(ret);
 }
