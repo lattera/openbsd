@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.22 2004/03/30 09:08:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.23 2004/04/05 10:15:56 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -681,15 +681,20 @@ __inline static void
 pmap_exec_account(struct pmap *pm, vaddr_t va,
     pt_entry_t opte, pt_entry_t npte)
 {
-	int32_t cpumask = 0;
-
 	if (curproc == NULL || curproc->p_vmspace == NULL ||
 	    pm != vm_map_pmap(&curproc->p_vmspace->vm_map))
 		return;
 
 	if ((opte ^ npte) & PG_X) {
+#ifdef MULTIPROCESSOR
+		int32_t cpumask = 0;
+
 		pmap_tlb_shootdown(pm, va, opte, &cpumask);
 		pmap_tlb_shootnow(cpumask);
+#else
+		/* Don't bother deferring in the single CPU case. */
+		pmap_update_pg(va);
+#endif
 	}
 			
 	/*
@@ -791,8 +796,6 @@ pmap_kenter_pa(va, pa, prot)
  * => caller must dispose of any vm_page mapped in the va range
  * => note: not an inline function
  * => we assume the va is page aligned and the len is a multiple of PAGE_SIZE
- * => we assume kernel only unmaps valid addresses and thus don't bother
- *    checking the valid bit before doing TLB flushing
  */
 
 void
@@ -801,19 +804,31 @@ pmap_kremove(va, len)
 	vsize_t len;
 {
 	pt_entry_t *pte, opte;
+#ifdef MULTIPROCESSOR
 	int32_t cpumask = 0;
+#endif
 
 	len >>= PAGE_SHIFT;
-	for ( /* null */ ; len ; len--, va += NBPG) {
-		pte = vtopte(va);
+	for ( /* null */ ; len ; len--, va += PAGE_SIZE) {
+		if (va < VM_MIN_KERNEL_ADDRESS)
+			pte = vtopte(va);
+		else
+			pte = kvtopte(va);
 		opte = i386_atomic_testset_ul(pte, 0); /* zap! */
 #ifdef DIAGNOSTIC
 		if (opte & PG_PVLIST)
 			panic("pmap_kremove: PG_PVLIST mapping for 0x%lx", va);
 #endif
-		pmap_tlb_shootdown(pmap_kernel(), va, opte, &cpumask);
+		if ((opte & (PG_V | PG_U)) == (PG_V | PG_U))
+#ifdef MULTIPROCESSOR
+			pmap_tlb_shootdown(pmap_kernel(), va, opte, &cpumask);
+#else
+			pmap_update_pg(va);
+#endif
 	}
+#ifdef MULTIPROCESSOR
 	pmap_tlb_shootnow(cpumask);
+#endif
 }
 
 /*
@@ -1820,18 +1835,19 @@ pmap_steal_ptp(obj, offset)
 
 				pmaps_hand->pm_pdir[idx] = 0;	/* zap! */
 				pmaps_hand->pm_stats.resident_count--;
+#ifdef MULTIPROCESSOR
+/* XXX */
+printf("pmap_steal_ptp got something\n");
+				pmap_apte_flush(pmaps_hand);
+#else
 				if (pmap_is_curpmap(pmaps_hand))
 					pmap_apte_flush(pmaps_hand);
 				else if (pmap_valid_entry(*APDP_PDE) &&
-					 (*APDP_PDE & PG_FRAME) ==
-					 pmaps_hand->pm_pdirpa) {
-					/*
-					 * XXX How de we cope with this in
-					 * XXX MP cases?
-					 */
+				    (*APDP_PDE & PG_FRAME) ==
+				    pmaps_hand->pm_pdirpa)
 					pmap_update_pg(((vaddr_t)APTE_BASE) +
 						       ptp->offset);
-				}
+#endif
 
 				/* put it in our pmap! */
 				uvm_pagerealloc(ptp, obj, offset);
@@ -2380,10 +2396,16 @@ pmap_remove_ptes(pmap, ptp, ptpva, startva, endva, cpumaskp)
 			pmap->pm_stats.wired_count--;
 		pmap->pm_stats.resident_count--;
 
-		pmap_tlb_shootdown(pmap, startva, opte, cpumaskp);
+		if (opte & PG_U)
+			pmap_tlb_shootdown(pmap, startva, opte, cpumaskp);
 
-		if (ptp)
+		if (ptp) {
 			ptp->wire_count--;		/* dropping a PTE */
+			/* Make sure that the PDE is flushed */
+			if ((ptp->wire_count <= 1) && !(opte & PG_U))
+				pmap_tlb_shootdown(pmap, startva, opte,
+				    cpumaskp);
+		}
 
 		/*
 		 * if we are not on a pv_head list we are done.
@@ -2460,10 +2482,16 @@ pmap_remove_pte(pmap, ptp, pte, va, cpumaskp)
 		pmap->pm_stats.wired_count--;
 	pmap->pm_stats.resident_count--;
 
-	if (ptp)
-		ptp->wire_count--;		/* dropping a PTE */
+	if (opte & PG_U)
+		pmap_tlb_shootdown(pmap, va, opte, cpumaskp);
 
-	pmap_tlb_shootdown(pmap, va, opte, cpumaskp);
+	if (ptp) {
+		ptp->wire_count--;		/* dropping a PTE */
+		/* Make sure that the PDE is flushed */
+		if ((ptp->wire_count <= 1) && !(opte & PG_U))
+			pmap_tlb_shootdown(pmap, va, opte, cpumaskp);
+
+	}
 
 	/*
 	 * if we are not on a pv_head list we are done.
@@ -2753,7 +2781,10 @@ pmap_page_remove(pg)
 			pve->pv_pmap->pm_stats.wired_count--;
 		pve->pv_pmap->pm_stats.resident_count--;
 
-		pmap_tlb_shootdown(pve->pv_pmap, pve->pv_va, opte, &cpumask);
+		/* Shootdown only if referenced */
+		if (opte & PG_U)
+			pmap_tlb_shootdown(pve->pv_pmap, pve->pv_va, opte,
+			    &cpumask);
 
 		/* sync R/M bits */
 		vm_physmem[bank].pmseg.attrs[off] |= (opte & (PG_U|PG_M));
@@ -2762,6 +2793,14 @@ pmap_page_remove(pg)
 		if (pve->pv_ptp) {
 			pve->pv_ptp->wire_count--;
 			if (pve->pv_ptp->wire_count <= 1) {
+				/*
+				 * Do we have to shootdown the page just to
+				 * get the pte out of the TLB ?
+				 */
+				if(!(opte & PG_U))
+					pmap_tlb_shootdown(pve->pv_pmap,
+					    pve->pv_va, opte, &cpumask);
+
 				/* zap! */
 				opte = i386_atomic_testset_ul(
 				    &pve->pv_pmap->pm_pdir[pdei(pve->pv_va)],
