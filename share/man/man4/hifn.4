@@ -1,0 +1,80 @@
+.\"	$OpenBSD: src/share/man/man4/hifn.4,v 1.10 2000/06/30 05:26:34 millert Exp $
+.\"
+.\" Copyright (c) 2000 Theo de Raadt
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+.\" ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 16, 2000
+.Dt HIFN 4
+.Os
+.Sh NAME
+.Nm hifn
+.Nd Hi/fn 7751 symmetric encryption accelerator
+.Sh SYNOPSIS
+.Cd "hifn* at pci? dev ? function ?"
+.Sh DESCRIPTION
+The
+.Nm
+driver supports various cards containing the Hi/fn 7751 chipset, such as
+.Bl -tag -width namenamenamena -offset indent
+.It Invertex AEON
+No longer being made.  Came as 128KB SRAM model, or 2MB DRAM model.
+.It Hi/fn 7751
+Reference board with 512KB SRAM.
+.It PowerCrypt
+See
+.Pa www.powercrypt.com.
+Comes with 512KB SRAM.
+.It NetSec 7751
+See
+.Pa www.netsec.net.
+Supports the most IPSEC sessions, with 1MB SRAM.
+.El
+.Pp
+The
+.Nm
+driver registers itself to accelerate DES, Triple-DES, MD5-HMAC96,
+and SHA1-HMAC96 operations in
+.Xr ipsec 4 .
+.Sh BUGS
+The 7751 chip starts out at initialization by only supporting compression.
+A proprietary algorithm, which has been reverse engineered, is required to
+unlock the cryptographic functionality of the chip.  It is possible for
+vendors to make boards which have a lock ID not known to the driver, but
+all vendors currently just use the obvious ID which is 13 bytes of 0.
+.Sh SEE ALSO
+.Xr crypt 9 ,
+.Xr crypt 3 ,
+.Xr ipsec 4
+.Sh CAVEATS
+The Hi/fn 9751 shares the same PCI id.  This chip is basically a 7751, but
+with the cryptographic functions missing.  Instead, the 9751 is only capable
+of doing compression.  Since we do not currently attempt to use either of
+these chips to do any compression, the 9751-based cards are not useful.
+.Sh HISTORY
+The
+.Nm
+device driver appeared in
+.Ox 2.7 .
