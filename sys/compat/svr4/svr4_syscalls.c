@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscalls.c,v 1.30 2000/08/23 19:32:55 fgsch Exp $	*/
+/*	$OpenBSD: src/sys/compat/svr4/Attic/svr4_syscalls.c,v 1.31 2001/05/16 05:05:09 millert Exp $	*/
 
 /*
  * System call names.
