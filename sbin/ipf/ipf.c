@@ -34,7 +34,7 @@
 
 #ifndef	lint
 static	char	sccsid[] = "@(#)ipf.c	1.23 6/5/96 (C) 1993-1995 Darren Reed";
-static	char	rcsid[] = "$Id: ipf.c,v 1.7 1996/10/08 07:33:31 niklas Exp $";
+static	char	rcsid[] = "$Id: ipf.c,v 1.8 1997/01/17 07:12:16 millert Exp $";
 #endif
 
 #if	SOLARIS
@@ -55,7 +55,7 @@ int main(argc,argv)
 int argc;
 char *argv[];
 {
-	char	c;
+	int	c;
 
 	while ((c = getopt(argc, argv, "AsInopvdryf:F:l:EDzZ")) != -1) {
 		switch (c)
