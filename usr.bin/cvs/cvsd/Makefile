@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2004/11/25 18:30:12 jfb Exp $
+# $Id: Makefile,v 1.6 2004/12/06 18:57:10 xsa Exp $
 
 .PATH:	${.CURDIR}/..
 
@@ -10,6 +10,8 @@ MAN=cvsd.8 cvsd.conf.5
 
 CFLAGS+= -Wall -I${.CURDIR}/..
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS+= -Wmissing-declarations
+CFLAGS+= -Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+= -Wsign-compare
 CFLAGS+= -DCVSD
 

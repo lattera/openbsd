@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2004/11/18 15:48:53 jfb Exp $
+# $Id: Makefile,v 1.10 2004/11/26 16:23:50 jfb Exp $
 
 .PATH:	${.CURDIR}/..
 
@@ -17,6 +17,8 @@ BINMODE=555
 CFLAGS= -g -ggdb
 CFLAGS+= -Wall
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS+= -Wmissing-declarations
+CFLAGS+= -Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+= -Wsign-compare
 CFLAGS+= -DCVS
 
