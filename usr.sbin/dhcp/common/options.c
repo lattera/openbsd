@@ -42,7 +42,7 @@
 
 #ifndef lint
 static char copyright[] =
-"$Id: options.c,v 1.1.1.4 1998/05/18 06:53:55 mellon Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
+"$Id: options.c,v 1.1 1998/08/18 03:43:26 deraadt Exp $ Copyright (c) 1995, 1996 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
 #define DHCP_OPTION_DATA
@@ -152,7 +152,7 @@ void parse_option_buffer (packet, buffer, length)
 }
 
 /* cons options into a big buffer, and then split them out into the
-   three seperate buffers if needed.  This allows us to cons up a set
+   three separate buffers if needed.  This allows us to cons up a set
    of vendor options using the same routine. */
 
 int cons_options (inpacket, outpacket, options, overload, terminate, bootpp)

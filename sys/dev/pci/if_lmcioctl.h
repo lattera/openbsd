@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/dev/pci/if_lmcioctl.h,v 1.3 2000/02/01 18:01:42 chris Exp $ */
-/*	$Id: if_lmcioctl.h,v 1.2 1999/10/26 23:47:15 chris Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_lmcioctl.h,v 1.4 2000/11/10 15:33:09 provos Exp $ */
+/*	$Id: if_lmcioctl.h,v 1.3 2000/02/01 18:01:42 chris Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)
@@ -230,7 +230,7 @@ struct lmc___ctl {
 
 /*
  * Some of the MII16 bits are mirrored in the MII17 register as well,
- * but let's keep thing seperate for now, and get only the cable from
+ * but let's keep thing separate for now, and get only the cable from
  * the MII17.
  */
 #define LMC_MII17_SSI_CABLE_MASK	0x0038	/* mask to extract the cable type */
