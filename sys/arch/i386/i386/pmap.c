@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.21 2004/02/20 22:19:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.22 2004/03/30 09:08:38 niklas Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -297,7 +297,7 @@ struct pmap_tlb_shootdown_job *pmap_tlb_shootdown_job_get(
 void	pmap_tlb_shootdown_job_put(struct pmap_tlb_shootdown_q *,
     struct pmap_tlb_shootdown_job *);
 
-struct simplelock pmap_tlb_shootdown_job_lock;
+struct SIMPLELOCK pmap_tlb_shootdown_job_lock;
 struct pmap_tlb_shootdown_job *pj_page, *pj_free;
 
 /*
@@ -446,8 +446,7 @@ boolean_t	 pmap_remove_pte(struct pmap *, struct vm_page *, pt_entry_t *,
     vaddr_t, int32_t *);
 void		 pmap_remove_ptes(struct pmap *, struct vm_page *, vaddr_t,
     vaddr_t, vaddr_t, int32_t *);
-struct vm_page	*pmap_steal_ptp(struct uvm_object *,
-					     vaddr_t);
+struct vm_page	*pmap_steal_ptp(struct uvm_object *, vaddr_t);
 __inline static vaddr_t		 pmap_tmpmap_pa(paddr_t);
 __inline static pt_entry_t	*pmap_tmpmap_pvepte(struct pv_entry *);
 __inline static void		 pmap_tmpunmap_pa(void);
@@ -577,6 +576,41 @@ pmap_tmpunmap_pvepte(pve)
 	pmap_tmpunmap_pa();
 }
 
+__inline static void
+pmap_apte_flush(struct pmap *pmap)
+{
+#if defined(MULTIPROCESSOR)
+	struct pmap_tlb_shootdown_q *pq;
+	struct cpu_info *ci, *self = curcpu();
+	CPU_INFO_ITERATOR cii;
+	int s;
+#endif
+
+	tlbflush();		/* flush TLB on current processor */
+#if defined(MULTIPROCESSOR)
+	/*
+	 * Flush the APTE mapping from all other CPUs that
+	 * are using the pmap we are using (who's APTE space
+	 * is the one we've just modified).
+	 *
+	 * XXXthorpej -- find a way to defer the IPI.
+	 */
+	for (CPU_INFO_FOREACH(cii, ci)) {
+		if (ci == self)
+			continue;
+		if (pmap_is_active(pmap, ci->ci_cpuid)) {
+			pq = &pmap_tlb_shootdown_q[ci->ci_cpuid];
+			s = splipi();
+			SIMPLE_LOCK(&pq->pq_slock);
+			pq->pq_flushu++;
+			SIMPLE_UNLOCK(&pq->pq_slock);
+			splx(s);
+			i386_send_ipi(ci, I386_IPI_TLB);
+		}
+	}
+#endif
+}
+
 /*
  * pmap_map_ptes: map a pmap's PTEs into KVM and lock them in
  *
@@ -615,7 +649,7 @@ pmap_map_ptes(pmap)
 	if (!pmap_valid_entry(opde) || (opde & PG_FRAME) != pmap->pm_pdirpa) {
 		*APDP_PDE = (pd_entry_t) (pmap->pm_pdirpa | PG_RW | PG_V);
 		if (pmap_valid_entry(opde))
-			tlbflush();
+			pmap_apte_flush(pmap);
 	}
 	return(APTE_BASE);
 }
@@ -634,6 +668,10 @@ pmap_unmap_ptes(pmap)
 	if (pmap_is_curpmap(pmap)) {
 		simple_unlock(&pmap->pm_obj.vmobjlock);
 	} else {
+#if defined(MULTIPROCESSOR)
+		*APDP_PDE = 0;
+		pmap_apte_flush(curpcb->pcb_pmap);
+#endif
 		simple_unlock(&pmap->pm_obj.vmobjlock);
 		simple_unlock(&curpcb->pcb_pmap->pm_obj.vmobjlock);
 	}
@@ -999,7 +1037,7 @@ pmap_bootstrap(kva_start)
 	 * Initialize the TLB shootdown queues.
 	 */
 
-	simple_lock_init(&pmap_tlb_shootdown_job_lock);
+	SIMPLE_LOCK_INIT(&pmap_tlb_shootdown_job_lock);
 
 	for (i = 0; i < I386_MAXPROCS; i++) {
 		TAILQ_INIT(&pmap_tlb_shootdown_q[i].pq_head);
@@ -1783,11 +1821,7 @@ pmap_steal_ptp(obj, offset)
 				pmaps_hand->pm_pdir[idx] = 0;	/* zap! */
 				pmaps_hand->pm_stats.resident_count--;
 				if (pmap_is_curpmap(pmaps_hand))
-					/*
-					 * XXX How de we cope with this in
-					 * XXX MP cases?
-					 */
-					tlbflush();
+					pmap_apte_flush(pmaps_hand);
 				else if (pmap_valid_entry(*APDP_PDE) &&
 					 (*APDP_PDE & PG_FRAME) ==
 					 pmaps_hand->pm_pdirpa) {
@@ -3665,14 +3699,14 @@ pmap_tlb_shootdown_job_get(pq)
 	if (pq->pq_count >= PMAP_TLB_MAXJOBS)
 		return (NULL);
 
-	simple_lock(&pmap_tlb_shootdown_job_lock);
+	SIMPLE_LOCK(&pmap_tlb_shootdown_job_lock);
 	if (pj_free == NULL) {
-		simple_unlock(&pmap_tlb_shootdown_job_lock);
+		SIMPLE_UNLOCK(&pmap_tlb_shootdown_job_lock);
 		return NULL;
 	}
 	pj = pj_free;
 	pj_free = pj_free->pj_nextfree;
-	simple_unlock(&pmap_tlb_shootdown_job_lock);
+	SIMPLE_UNLOCK(&pmap_tlb_shootdown_job_lock);
 
 	pq->pq_count++;
 	return (pj);
@@ -3694,10 +3728,10 @@ pmap_tlb_shootdown_job_put(pq, pj)
 	if (pq->pq_count == 0)
 		panic("pmap_tlb_shootdown_job_put: queue length inconsistency");
 #endif
-	simple_lock(&pmap_tlb_shootdown_job_lock);
+	SIMPLE_LOCK(&pmap_tlb_shootdown_job_lock);
 	pj->pj_nextfree = pj_free;
 	pj_free = pj;
-	simple_unlock(&pmap_tlb_shootdown_job_lock);
+	SIMPLE_UNLOCK(&pmap_tlb_shootdown_job_lock);
 
 	pq->pq_count--;
 }
