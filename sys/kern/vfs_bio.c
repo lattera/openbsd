@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.26.2.6 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.26.2.7 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -105,8 +105,8 @@ struct pool bufpool;
 #define	binsheadfree(bp, dp)	TAILQ_INSERT_HEAD(dp, bp, b_freelist)
 #define	binstailfree(bp, dp)	TAILQ_INSERT_TAIL(dp, bp, b_freelist)
 
-static __inline struct buf *bio_doread __P((struct vnode *, daddr_t, int, int));
-int getnewbuf __P((int slpflag, int slptimeo, struct buf **));
+static __inline struct buf *bio_doread(struct vnode *, daddr_t, int, int);
+int getnewbuf(int slpflag, int slptimeo, struct buf **);
 
 /*
  * We keep a few counters to monitor the utilization of the buffer cache

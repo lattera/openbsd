@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.11 2002/03/06 02:13:22 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_main.c,v 1.46.2.12 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -95,10 +95,10 @@
 #endif
 
 #if defined(NFSSERVER) || defined(NFSCLIENT)
-extern void nfs_init __P((void));
+extern void nfs_init(void);
 #endif
 
-char	copyright[] =
+const char	copyright[] =
 "Copyright (c) 1982, 1986, 1989, 1991, 1993\n"
 "\tThe Regents of the University of California.  All rights reserved.\n"
 "Copyright (c) 1995-2002 OpenBSD. All rights reserved.  http://www.OpenBSD.org\n";
@@ -120,7 +120,7 @@ struct	proc *initproc;
 int	cmask = CMASK;
 extern	struct user *proc0paddr;
 
-void	(*md_diskconf) __P((void)) = NULL;
+void	(*md_diskconf)(void) = NULL;
 struct	vnode *rootvp, *swapdev_vp;
 int	boothowto;
 struct	timeval boottime;
@@ -128,13 +128,13 @@ struct	timeval runtime;
 int	ncpus =  1;
 
 /* XXX return int so gcc -Werror won't complain */
-int	main __P((void *));
-void	check_console __P((struct proc *));
-void	start_init __P((void *));
-void	start_cleaner __P((void *));
-void	start_update __P((void *));
-void	start_reaper __P((void *));
-void    start_crypto __P((void *));
+int	main(void *);
+void	check_console(struct proc *);
+void	start_init(void *);
+void	start_cleaner(void *);
+void	start_update(void *);
+void	start_reaper(void *);
+void    start_crypto(void *);
 
 extern char sigcode[], esigcode[];
 #ifdef SYSCALL_DEBUG
@@ -179,10 +179,10 @@ main(framep)
 	int s;
 	register_t rval[2];
 	extern struct pdevinit pdevinit[];
-	extern void scheduler_start __P((void));
-	extern void disk_init __P((void));
-	extern void endtsleep __P((void *));
-	extern void realitexpire __P((void *));
+	extern void scheduler_start(void);
+	extern void disk_init(void);
+	extern void endtsleep(void *);
+	extern void realitexpire(void *);
 
 	/*
 	 * Initialize the current process pointer (curproc) before

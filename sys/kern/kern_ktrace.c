@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.11.6.5 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_ktrace.c,v 1.11.6.6 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: kern_ktrace.c,v 1.23 1996/02/09 18:59:36 christos Exp $	*/
 
 /*
@@ -53,12 +53,12 @@
 
 #include <uvm/uvm_extern.h>
 
-void ktrinitheader __P((struct ktr_header *, struct proc *, int));
-int ktrops __P((struct proc *, struct proc *, int, int, struct vnode *));
-int ktrsetchildren __P((struct proc *, struct proc *, int, int,
-			struct vnode *));
-int ktrwrite __P((struct proc *, struct ktr_header *));
-int ktrcanset __P((struct proc *, struct proc *));
+void ktrinitheader(struct ktr_header *, struct proc *, int);
+int ktrops(struct proc *, struct proc *, int, int, struct vnode *);
+int ktrsetchildren(struct proc *, struct proc *, int, int,
+			struct vnode *);
+int ktrwrite(struct proc *, struct ktr_header *);
+int ktrcanset(struct proc *, struct proc *);
 
 /*
  * Change the trace vnode in a correct way (to avoid races).

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.2 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_lock.c,v 1.9.4.3 2002/03/28 11:43:04 niklas Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -46,8 +46,8 @@
 
 #include <machine/cpu.h>
 
-void record_stacktrace __P((int *, int));
-void playback_stacktrace __P((int *, int));
+void record_stacktrace(int *, int);
+void playback_stacktrace(int *, int);
 
 /*
  * Locking primitives implementation.
@@ -205,6 +205,13 @@ lockmgr(lkp, flags, interlkp, p)
 		if ((flags & LK_REENABLE) == 0)
 			lkp->lk_flags |= LK_DRAINED;
 	}
+
+	/*
+	 * Check if the caller is asking us to be schizophrenic.
+	 */
+	if ((lkp->lk_flags & (LK_CANRECURSE|LK_RECURSEFAIL)) ==
+	    (LK_CANRECURSE|LK_RECURSEFAIL))
+		panic("lockmgr: make up your mind");
 #endif /* DIAGNOSTIC */
 
 	switch (flags & LK_TYPE_MASK) {

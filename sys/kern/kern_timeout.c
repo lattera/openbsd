@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3.2.4 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_timeout.c,v 1.3.2.5 2002/03/28 11:43:04 niklas Exp $	*/
 /*
  * Copyright (c) 2001 Thomas Nordin <nordin@openbsd.org>
  * Copyright (c) 2000-2001 Artur Grabowski <art@openbsd.org>
@@ -262,7 +262,7 @@ softclock(void)
 }
 
 #ifdef DDB
-void db_show_callout_bucket __P((struct circq *));
+void db_show_callout_bucket(struct circq *);
 
 void
 db_show_callout_bucket(struct circq *bucket)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_pool.c,v 1.2.2.5 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_pool.c,v 1.2.2.6 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: subr_pool.c,v 1.61 2001/09/26 07:14:56 chs Exp $	*/
 
 /*-
@@ -1976,6 +1976,7 @@ pool_allocator_free(struct pool *pp, void *v)
 			pp->pr_flags &= ~PR_WANTED;
 			wakeup(pp);
 		}
+		simple_unlock(&pp->pr_slock);
 	}
 	wakeup(pa);
 	pa->pa_flags &= ~PA_WANT;

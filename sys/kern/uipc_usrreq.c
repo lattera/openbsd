@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_usrreq.c,v 1.11.4.4 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_usrreq.c,v 1.11.4.5 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: uipc_usrreq.c,v 1.18 1996/02/09 19:00:50 christos Exp $	*/
 
 /*
@@ -941,7 +941,7 @@ unp_dispose(m)
 void
 unp_scan(m0, op, discard)
 	struct mbuf *m0;
-	void (*op) __P((struct file *));
+	void (*op)(struct file *);
 	int discard;
 {
 	struct mbuf *m;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.14.10.2 2001/11/13 21:05:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/ddb/db_output.c,v 1.14.10.3 2002/03/28 11:43:03 niklas Exp $	*/
 /*	$NetBSD: db_output.c,v 1.13 1996/04/01 17:27:14 christos Exp $	*/
 
 /* 
@@ -83,7 +83,7 @@ int	db_max_width = DB_MAX_WIDTH;	/* output line width */
 int	db_radix = 16;			/* output numbers radix */
 
 #ifdef DDB
-static void db_more __P((void));
+static void db_more(void);
 #endif
 
 /*

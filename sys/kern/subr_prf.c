@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.7 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/subr_prf.c,v 1.26.2.8 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: subr_prf.c,v 1.45 1997/10/24 18:14:25 chuck Exp $	*/
 
 /*-
@@ -97,8 +97,8 @@ extern int uvm_doswapencrypt;
  * local prototypes
  */
 
-int	 kprintf __P((const char *, int, void *, char *, va_list));
-void	 putchar __P((int, int, struct tty *));
+int	 kprintf(const char *, int, void *, char *, va_list);
+void	 putchar(int, int, struct tty *);
 
 
 /*
@@ -137,7 +137,7 @@ int	db_console = 0;
  * [e.g. to a "virtual console"].
  */
 
-void (*v_putc) __P((int)) = cnputc;	/* start with cnputc (normal cons) */
+void (*v_putc)(int) = cnputc;	/* start with cnputc (normal cons) */
 
 
 /*
@@ -178,13 +178,7 @@ tablefull(tab)
  */
 
 void
-#ifdef __STDC__
 panic(const char *fmt, ...)
-#else
-panic(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	static char panicbuf[512];
 	int bootopt;
@@ -236,14 +230,7 @@ panic(fmt, va_alist)
  */
 
 void
-#ifdef __STDC__
 log(int level, const char *fmt, ...)
-#else
-log(level, fmt, va_alist)
-	int level;
-	char *fmt;
-	va_dcl
-#endif
 {
 	register int s;
 	va_list ap;
@@ -285,13 +272,7 @@ logpri(level)
  */
 
 int
-#ifdef __STDC__
 addlog(const char *fmt, ...)
-#else
-addlog(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	register int s;
 	va_list ap;
@@ -369,13 +350,7 @@ putchar(c, flags, tp)
  */
 
 void
-#ifdef __STDC__
 uprintf(const char *fmt, ...)
-#else
-uprintf(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	register struct proc *p = curproc;
 	va_list ap;
@@ -434,14 +409,7 @@ tprintf_close(sess)
  * => also sends message to /dev/klog
  */
 void
-#ifdef __STDC__
 tprintf(tpr_t tpr, const char *fmt, ...)
-#else
-tprintf(tpr, fmt, va_alist)
-	tpr_t tpr;
-	char *fmt;
-	va_dcl
-#endif
 {
 	register struct session *sess = (struct session *)tpr;
 	struct tty *tp = NULL;
@@ -468,14 +436,7 @@ tprintf(tpr, fmt, va_alist)
  *	use tprintf]
  */
 void
-#ifdef __STDC__
 ttyprintf(struct tty *tp, const char *fmt, ...)
-#else
-ttyprintf(tp, fmt, va_alist)
-	struct tty *tp;
-	char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
 
@@ -491,13 +452,7 @@ ttyprintf(tp, fmt, va_alist)
  */
 
 int
-#ifdef __STDC__
 db_printf(const char *fmt, ...)
-#else
-db_printf(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
 	int retval;
@@ -519,13 +474,7 @@ db_printf(fmt, va_alist)
  * printf: print a message to the console and the log
  */
 int
-#ifdef __STDC__
 printf(const char *fmt, ...)
-#else
-printf(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
 	int savintr, retval;
@@ -565,14 +514,7 @@ vprintf(fmt, ap)
  * sprintf: print a message to a buffer
  */
 int
-#ifdef __STDC__
 sprintf(char *buf, const char *fmt, ...)
-#else
-sprintf(buf, fmt, va_alist)
-	char *buf;
-	const char *cfmt;
-	va_dcl
-#endif
 {
 	int retval;
 	va_list ap;
@@ -612,15 +554,7 @@ vsprintf(buf, fmt, ap)
  * snprintf: print a message to a buffer
  */
 int
-#ifdef __STDC__
 snprintf(char *buf, size_t size, const char *fmt, ...)
-#else
-snprintf(buf, size, fmt, va_alist)
-	char *buf;
-	size_t size;
-	const char *cfmt;
-	va_dcl
-#endif
 {
 	int retval;
 	va_list ap;

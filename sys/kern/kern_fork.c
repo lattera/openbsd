@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.7 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_fork.c,v 1.27.2.8 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -151,8 +151,8 @@ fork1(p1, exitsig, flags, stack, stacksize, func, arg, retval)
 	int count;
 	vaddr_t uaddr;
 	int s;
-	extern void endtsleep __P((void *));
-	extern void realitexpire __P((void *));
+	extern void endtsleep(void *);
+	extern void realitexpire(void *);
 
 	/*
 	 * Although process entries are dynamically created, we still keep

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty_pty.c,v 1.7.10.2 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/tty_pty.c,v 1.7.10.3 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: tty_pty.c,v 1.33.4.1 1996/06/02 09:08:11 mrg Exp $	*/
 
 /*
@@ -76,10 +76,10 @@ int	npty;
 #define	PF_NOSTOP	0x40
 #define PF_UCNTL	0x80		/* user control mode */
 
-void	ptyattach __P((int));
-void	ptcwakeup __P((struct tty *, int));
-struct tty *ptytty __P((dev_t));
-void	ptsstart __P((struct tty *));
+void	ptyattach(int);
+void	ptcwakeup(struct tty *, int);
+struct tty *ptytty(dev_t);
+void	ptsstart(struct tty *);
 
 /*
  * Establish n (or default if n is 1) ptys in the system.
@@ -291,7 +291,7 @@ ptcwakeup(tp, flag)
 	}
 }
 
-int ptcopen __P((dev_t, int, int, struct proc *));
+int ptcopen(dev_t, int, int, struct proc *);
 
 /*ARGSUSED*/
 int

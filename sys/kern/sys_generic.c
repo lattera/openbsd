@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.5 2002/03/06 02:13:23 niklas Exp $	*/
+/*	$OpenBSD: src/sys/kern/sys_generic.c,v 1.22.2.6 2002/03/28 11:43:04 niklas Exp $	*/
 /*	$NetBSD: sys_generic.c,v 1.24 1996/03/29 00:25:32 cgd Exp $	*/
 
 /*
@@ -63,9 +63,11 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 
-int selscan __P((struct proc *, fd_set *, fd_set *, int, register_t *));
-int seltrue __P((dev_t, int, struct proc *));
-void pollscan __P((struct proc *, struct pollfd *, int, register_t *));
+#include <uvm/uvm_extern.h>
+
+int selscan(struct proc *, fd_set *, fd_set *, int, register_t *);
+int seltrue(dev_t, int, struct proc *);
+void pollscan(struct proc *, struct pollfd *, int, register_t *);
 
 /*
  * Read system call.
