@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/sbc_obio.c,v 1.7 2001/07/04 08:52:46 niklas Exp $	*/
 /*	$NetBSD: sbc_obio.c,v 1.1 1997/03/01 20:18:59 scottr Exp $	*/
 
 /*

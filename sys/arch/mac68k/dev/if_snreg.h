@@ -1,3 +1,4 @@
+/*      $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_snreg.h,v 1.4 2001/07/04 08:52:46 niklas Exp $    */
 /*      $NetBSD: if_snreg.h,v 1.3 1997/04/30 19:47:12 scottr Exp $    */
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/esp.c,v 1.14 2001/07/04 08:52:44 niklas Exp $	*/
 /*	$NetBSD: esp.c,v 1.59 1996/10/13 02:59:48 christos Exp $	*/
 
 /*
