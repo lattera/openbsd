@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* $Id: spi.h,v 1.3 1997/07/23 12:28:55 provos Exp $ */
+/* $Id: spi.h,v 1.1 1998/11/14 23:37:29 deraadt Exp $ */
 /*
  * spi.h: 
  * security paramter index creation.
@@ -51,6 +51,7 @@
 #define SPI_OWNER      1
 #define SPI_NOTIFY     2
 #define SPI_TUNNEL     4
+#define SPI_ESP	       8	       /* Is used for ESP */
 
 struct spiob {
      struct spiob *next;            /* Linked list */
