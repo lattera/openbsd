@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.11 2000/06/20 04:51:54 jason Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.12 2000/07/31 05:11:09 jason Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996, 1997
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ppp.c,v 1.10 2000/02/18 14:39:35 jason Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ppp.c,v 1.11 2000/06/20 04:51:54 jason Exp $ (LBL)";
 #endif
 
 #ifdef PPP
@@ -674,7 +674,7 @@ pppoe_if_print(ethertype, p, length, caplen)
 			default:
 				printf("Unknown(0x%04x)", t_type);
 			}
-			printf(", length %u", t_len);
+			printf(", length %u%s", t_len, t_len ? " " : "");
 
 			if (t_len) {
 				for (t_type = 0; t_type < t_len; t_type++) {
