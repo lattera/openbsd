@@ -7,7 +7,7 @@
 # This file is part of GNU GNATS.
 # Modified by Berliner for CVS.
 #
-#ident	"@(#)cvs/src:$Name:  $:$Id: cvsbug.sh,v 1.10 1995/11/15 00:18:00 woods Exp $"
+#ident	"@(#)cvs/src:$Name:  $:$Id: cvsbug.sh,v 1.11 1997/01/02 19:24:32 kingdon Exp $"
 #
 # GNU GNATS is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU GNATS; see the file COPYING.  If not, write to
-# the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 # The version of this send-pr.
 VERSION=3.2

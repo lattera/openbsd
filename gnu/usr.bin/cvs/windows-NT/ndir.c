@@ -11,11 +11,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-    $Header: /u/src/master/ccvs/windows-NT/ndir.c,v 1.3 1995/09/08 00:34:09 jimb Exp $
+    $Header: /u/src/master/ccvs/windows-NT/ndir.c,v 1.4 1997/01/02 19:02:54 kingdon Exp $
  */
 
 /* Everything non trivial in this code is from: @(#)msd_dir.c 1.4
