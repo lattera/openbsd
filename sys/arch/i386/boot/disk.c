@@ -33,6 +33,7 @@
 #include <sys/dkbad.h>
 #endif DO_BAD144
 #include <sys/disklabel.h>
+#include <stand.h>
 
 #define	BIOS_DEV_FLOPPY	0x0
 #define	BIOS_DEV_WIN	0x80
@@ -62,7 +63,7 @@ int dosdev, unit, part, maj, boff, poff, bnum, cnt;
 extern struct disklabel disklabel;
 extern char iobuf[];
 
-devopen()
+opendev()
 {
 	struct dos_partition *dptr;
 	struct disklabel *lp;

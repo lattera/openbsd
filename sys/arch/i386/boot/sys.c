@@ -31,18 +31,27 @@
 #include "boot.h"
 #include <sys/dirent.h>
 #include <sys/reboot.h>
+#include <stand.h>
 
 char mapbuf[MAXBSIZE], iobuf[MAXBSIZE], fsbuf[SBSIZE];
 int mapblock = 0;
 char pathname[MAXPATHLEN + 1];
 
-void bcopy(), pcpy();
+void bcpy(), pcpy();
 
-read(buffer, count)
+read1(buffer, count)
 	char *buffer;
 	int count;
 {
-	_read(buffer, count, bcopy);
+	_read(buffer, count, bcpy);
+}
+
+void
+bcpy(a,b,n)
+	void *a, *b;
+	size_t	n;
+{
+	bcopy(a,b,n);
 }
 
 xread(buffer, count)
@@ -115,7 +124,7 @@ loop:
 			bcopy(inode.i_shortlink, pathname, link_len);
 		else {
 			poff = 0;
-			read(pathname,link_len);
+			read1(pathname,link_len);
 		}
 		path = pathname;
 		if (*pathname == '/')
@@ -240,7 +249,7 @@ openrd()
 	* Now we know the disk unit and part,		*
 	* Load disk info, (open the device)		*
 	\***********************************************/
-	if (devopen())
+	if (opendev())
 		return 1;
 
 	/***********************************************\

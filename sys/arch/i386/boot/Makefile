@@ -62,7 +62,7 @@ machine-links:
 	ln -fs ${.CURDIR}/../include machine
 	ln -fs ${.CURDIR}/../include ${MACHINE_ARCH}
 
-boot:	${OBJS} ${SALIB}
+boot:	${OBJS} ${SALIB} version.o
 	${LD} -Bstatic -e _boot1 -N -T 0 -o ${.TARGET} ${OBJS} ${SALIB} version.o
 	cp boot boot.sym
 	@strip boot
