@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.5 1996/08/16 22:37:51 moj Exp $
+#	$OpenBSD: src/usr.sbin/mopd/Makefile,v 1.2 1996/09/21 18:24:56 maja Exp $
 
 SUBDIR=	mopd mopprobe moptrace mopchk mopa.out
 
