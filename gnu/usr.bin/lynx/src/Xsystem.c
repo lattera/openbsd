@@ -1,9 +1,25 @@
-/* $Id: Xsystem.c 1.10 Sun, 01 Apr 2001 17:51:46 -0700 dickey $
+/* $Id: Xsystem.c,v 1.1 2003/05/01 18:59:40 avsm Exp $
  *	like system("cmd") but return with exit code of "cmd"
  *	for Turbo-C/MS-C/LSI-C
  *  This code is in the public domain.
  *
- * $Log: xsystem.c,v $
+ * $Log: Xsystem.c,v $
+ * Revision 1.1  2003/05/01 18:59:40  avsm
+ * Update to lynx-2.8.4-rel1, patchset d, now with IPv6 as well
+ *
+ * Local patches we maintain to the distribution are:
+ * - replace unbounded fscanf with fgets (avsm)
+ * - spelling fixes (deraadt)
+ * - default to ftp passive (deraadt)
+ * - work with non-exec scripts (deraadt,hin,maja)
+ * - be more careful with rlogin username (art)
+ * - default to our webpage (deraadt)
+ * - install helpfiles locally (maja)
+ * - mkdtemp temp space directory (art)
+ * - install more recent config.guess (avsm)
+ *
+ * Tested by beck,millert,grange,fries,miod and others, deraadt@ ok
+ *
  *
  * Revision 1.14  1997/10/17 (Fri) 16:28:24  senshu
  * *** for Win32 version ***
