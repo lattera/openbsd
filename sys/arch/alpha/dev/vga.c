@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/common/Attic/vga.c,v 1.3 1997/07/06 16:13:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/dev/Attic/vga.c,v 1.1 1997/07/09 02:58:35 deraadt Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*
