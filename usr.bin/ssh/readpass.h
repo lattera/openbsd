@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/readpass.h,v 1.2.6.2 2002/03/09 00:20:44 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/readpass.h,v 1.2.6.3 2002/06/02 22:56:10 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -14,5 +14,6 @@
 
 #define RP_ECHO			0x0001
 #define RP_ALLOW_STDIN		0x0002
+#define RP_ALLOW_EOF		0x0004
 
 char	*read_passphrase(const char *, int);

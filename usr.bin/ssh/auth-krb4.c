@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.23.2.2 2002/03/09 00:20:43 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/auth-krb4.c,v 1.23.2.3 2002/06/02 22:56:09 miod Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -253,6 +253,7 @@ auth_krb4(Authctxt *authctxt, KTEXT auth, char **client)
 		log("Kerberos v4 .klogin authorization failed for %s to "
 		    "account %s", *client, authctxt->user);
 		xfree(*client);
+		*client = NULL;
 		return (0);
 	}
 	/* Increment the checksum, and return it encrypted with the

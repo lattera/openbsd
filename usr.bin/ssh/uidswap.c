@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/uidswap.c,v 1.16.2.2 2002/03/09 00:20:45 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/uidswap.c,v 1.16.2.3 2002/06/02 22:56:11 miod Exp $");
 
 #include "log.h"
 #include "uidswap.h"
@@ -71,7 +71,6 @@ temporarily_use_uid(struct passwd *pw)
 	/* Set the effective uid to the given (unprivileged) uid. */
 	if (setgroups(user_groupslen, user_groups) < 0)
 		fatal("setgroups: %.100s", strerror(errno));
-	pw->pw_gid = pw->pw_gid;
 	if (setegid(pw->pw_gid) < 0)
 		fatal("setegid %u: %.100s", (u_int) pw->pw_gid,
 		    strerror(errno));

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.62.2.2 2002/03/09 00:20:45 miod Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/ssh.h,v 1.62.2.3 2002/06/02 22:56:11 miod Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -84,5 +84,15 @@
 
 /* Used to identify ``EscapeChar none'' */
 #define SSH_ESCAPECHAR_NONE		-2
+
+/*
+ * unprivileged user when UsePrivilegeSeparation=yes;
+ * sshd will change its privileges to this user and its
+ * primary group.
+ */
+#define SSH_PRIVSEP_USER		"sshd"
+
+/* Minimum modulus size (n) for RSA keys. */
+#define SSH_RSA_MINIMUM_MODULUS_SIZE	768
 
 #endif				/* SSH_H */

@@ -24,7 +24,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.2 2002/03/24 17:53:16 stevesk Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.2.6.1 2002/06/02 22:56:10 miod Exp $");
 
 #include <sys/uio.h>
 

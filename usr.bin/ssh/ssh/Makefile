@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.30.2.2 2002/03/09 00:24:20 miod Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh/Makefile,v 1.30.2.3 2002/06/02 22:56:43 miod Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -20,7 +20,7 @@ SRCS=	ssh.c readconf.c clientloop.c sshtty.c \
 .if (${KERBEROS5:L} == "yes")
 CFLAGS+= -DKRB5 -I${DESTDIR}/usr/include/kerberosV
 LDADD+=  -lkrb5 -lasn1 -lcom_err
-DPADD+=  ${LIBKRB5} ${LIBASN1}
+DPADD+=  ${LIBKRB5} ${LIBASN1} ${LIBCOM_ERR}
 .endif # KERBEROS5
 
 .if (${KERBEROS:L} == "yes")
@@ -30,11 +30,11 @@ DPADD+=	 ${LIBKRB}
 .if (${AFS:L} == "yes")
 CFLAGS+= -DAFS
 LDADD+=  -lkafs
-DPADD+=  ${LIBKRBAFS}
+DPADD+=  ${LIBKAFS}
 .endif # AFS
 .endif # KERBEROS
 
 .include <bsd.prog.mk>
 
 LDADD+=	-lcrypto -lz -ldes
-DPADD+=	${LIBCRYPTO} ${LIBZ}
+DPADD+=	${LIBCRYPTO} ${LIBZ} ${LIBDES}

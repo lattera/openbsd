@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.56.2.4 2002/03/09 00:20:44 miod Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.56.2.5 2002/06/02 22:56:09 miod Exp $");
 
 #include <openssl/evp.h>
 
@@ -47,17 +47,18 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth2.c,v 1.56.2.4 2002/03/09 00:20:44 miod Exp
 #include "pathnames.h"
 #include "uidswap.h"
 #include "auth-options.h"
-#include "misc.h"
 #include "hostfile.h"
 #include "canohost.h"
 #include "match.h"
+#include "monitor_wrap.h"
+#include "atomicio.h"
 
 /* import */
 extern ServerOptions options;
 extern u_char *session_id2;
 extern int session_id2_len;
 
-static Authctxt	*x_authctxt = NULL;
+Authctxt *x_authctxt = NULL;
 static int one = 1;
 
 typedef struct Authmethod Authmethod;
@@ -75,8 +76,8 @@ static void input_userauth_request(int, u_int32_t, void *);
 /* helper */
 static Authmethod *authmethod_lookup(const char *);
 static char *authmethods_get(void);
-static int user_key_allowed(struct passwd *, Key *);
-static int hostbased_key_allowed(struct passwd *, const char *, char *, Key *);
+int user_key_allowed(struct passwd *, Key *);
+int hostbased_key_allowed(struct passwd *, const char *, char *, Key *);
 
 /* auth */
 static void userauth_banner(void);
@@ -109,7 +110,7 @@ Authmethod authmethods[] = {
  * loop until authctxt->success == TRUE
  */
 
-void
+Authctxt *
 do_authentication2(void)
 {
 	Authctxt *authctxt = authctxt_new();
@@ -123,7 +124,8 @@ do_authentication2(void)
 	dispatch_init(&dispatch_protocol_error);
 	dispatch_set(SSH2_MSG_SERVICE_REQUEST, &input_service_request);
 	dispatch_run(DISPATCH_BLOCK, &authctxt->success, authctxt);
-	do_authenticated(authctxt);
+
+	return (authctxt);
 }
 
 static void
@@ -181,19 +183,20 @@ input_userauth_request(int type, u_int32_t seq, void *ctxt)
 
 	if (authctxt->attempt++ == 0) {
 		/* setup auth context */
-		struct passwd *pw = NULL;
-		pw = getpwnam(user);
-		if (pw && allowed_user(pw) && strcmp(service, "ssh-connection")==0) {
-			authctxt->pw = pwcopy(pw);
+		authctxt->pw = PRIVSEP(getpwnamallow(user));
+		if (authctxt->pw && strcmp(service, "ssh-connection")==0) {
 			authctxt->valid = 1;
 			debug2("input_userauth_request: setting up authctxt for %s", user);
 		} else {
 			log("input_userauth_request: illegal user %s", user);
 		}
-		setproctitle("%s", pw ? user : "unknown");
+		setproctitle("%s%s", authctxt->pw ? user : "unknown",
+		    use_privsep ? " [net]" : "");
 		authctxt->user = xstrdup(user);
 		authctxt->service = xstrdup(service);
 		authctxt->style = style ? xstrdup(style) : NULL;
+		if (use_privsep)
+			mm_inform_authserv(service, style);
 	} else if (strcmp(user, authctxt->user) != 0 ||
 	    strcmp(service, authctxt->service) != 0) {
 		packet_disconnect("Change of username or service not allowed: "
@@ -259,25 +262,45 @@ userauth_finish(Authctxt *authctxt, int authenticated, char *method)
 	}
 }
 
-static void
-userauth_banner(void)
+char *
+auth2_read_banner(void)
 {
 	struct stat st;
 	char *banner = NULL;
 	off_t len, n;
 	int fd;
 
-	if (options.banner == NULL || (datafellows & SSH_BUG_BANNER))
-		return;
-	if ((fd = open(options.banner, O_RDONLY)) < 0)
-		return;
-	if (fstat(fd, &st) < 0)
-		goto done;
+	if ((fd = open(options.banner, O_RDONLY)) == -1)
+		return (NULL);
+	if (fstat(fd, &st) == -1) {
+		close(fd);
+		return (NULL);
+	}
 	len = st.st_size;
 	banner = xmalloc(len + 1);
-	if ((n = read(fd, banner, len)) < 0)
-		goto done;
+	n = atomicio(read, fd, banner, len);
+	close(fd);
+
+	if (n != len) {
+		free(banner);
+		return (NULL);
+	}
 	banner[n] = '\0';
+	
+	return (banner);
+}
+
+static void
+userauth_banner(void)
+{
+	char *banner = NULL;
+
+	if (options.banner == NULL || (datafellows & SSH_BUG_BANNER))
+		return;
+
+	if ((banner = PRIVSEP(auth2_read_banner())) == NULL)
+		goto done;
+
 	packet_start(SSH2_MSG_USERAUTH_BANNER);
 	packet_put_cstring(banner);
 	packet_put_cstring("");		/* language, unused */
@@ -286,7 +309,6 @@ userauth_banner(void)
 done:
 	if (banner)
 		xfree(banner);
-	close(fd);
 	return;
 }
 
@@ -299,7 +321,7 @@ userauth_none(Authctxt *authctxt)
 		m->enabled = NULL;
 	packet_check_eom();
 	userauth_banner();
-	return authctxt->valid ? auth_password(authctxt, "") : 0;
+	return (authctxt->valid ? PRIVSEP(auth_password(authctxt, "")) : 0);
 }
 
 static int
@@ -315,7 +337,7 @@ userauth_passwd(Authctxt *authctxt)
 	password = packet_get_string(&len);
 	packet_check_eom();
 	if (authctxt->valid &&
-	    auth_password(authctxt, password) == 1)
+	    PRIVSEP(auth_password(authctxt, password)) == 1)
 		authenticated = 1;
 	memset(password, 0, len);
 	xfree(password);
@@ -416,8 +438,10 @@ userauth_pubkey(Authctxt *authctxt)
 		buffer_dump(&b);
 #endif
 		/* test for correct signature */
-		if (user_key_allowed(authctxt->pw, key) &&
-		    key_verify(key, sig, slen, buffer_ptr(&b), buffer_len(&b)) == 1)
+		authenticated = 0;
+		if (PRIVSEP(user_key_allowed(authctxt->pw, key)) &&
+		    PRIVSEP(key_verify(key, sig, slen, buffer_ptr(&b),
+				buffer_len(&b))) == 1)
 			authenticated = 1;
 		buffer_clear(&b);
 		xfree(sig);
@@ -433,7 +457,7 @@ userauth_pubkey(Authctxt *authctxt)
 		 * if a user is not allowed to login. is this an
 		 * issue? -markus
 		 */
-		if (user_key_allowed(authctxt->pw, key)) {
+		if (PRIVSEP(user_key_allowed(authctxt->pw, key))) {
 			packet_start(SSH2_MSG_USERAUTH_PK_OK);
 			packet_put_string(pkalg, alen);
 			packet_put_string(pkblob, blen);
@@ -517,8 +541,10 @@ userauth_hostbased(Authctxt *authctxt)
 	buffer_dump(&b);
 #endif
 	/* test for allowed key and correct signature */
-	if (hostbased_key_allowed(authctxt->pw, cuser, chost, key) &&
-	    key_verify(key, sig, slen, buffer_ptr(&b), buffer_len(&b)) == 1)
+	authenticated = 0;
+	if (PRIVSEP(hostbased_key_allowed(authctxt->pw, cuser, chost, key)) &&
+	    PRIVSEP(key_verify(key, sig, slen, buffer_ptr(&b),
+			buffer_len(&b))) == 1)
 		authenticated = 1;
 
 	buffer_clear(&b);
@@ -675,7 +701,7 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
 }
 
 /* check whether given key is in .ssh/authorized_keys* */
-static int
+int
 user_key_allowed(struct passwd *pw, Key *key)
 {
 	int success;
@@ -695,7 +721,7 @@ user_key_allowed(struct passwd *pw, Key *key)
 }
 
 /* return 1 if given hostkey is allowed */
-static int
+int
 hostbased_key_allowed(struct passwd *pw, const char *cuser, char *chost,
     Key *key)
 {
