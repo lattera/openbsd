@@ -36,7 +36,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)info_file.c	8.1 (Berkeley) 6/6/93
- *	$Id: info_file.c,v 1.2 2002/07/18 00:50:23 pvalchev Exp $
+ *	$Id: info_file.c,v 1.3 2002/07/18 02:14:45 deraadt Exp $
  */
 
 /*
@@ -88,7 +88,7 @@ read_line(char *buf, int size, FILE *fp)
  */
 static int
 search_or_reload_file(FILE *fp, char *map, char *key, char **val, mnt_map *m,
-    void (*fn)(mnt_map *m, char*, char*))
+    void (*fn)(mnt_map *m, char *, char *))
 {
 	char key_val[MAX_LINE_LEN];
 	int chuck = 0;
