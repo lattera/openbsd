@@ -29,7 +29,7 @@
 
 #include <sys/types.h>
 #include <netinet/in_systm.h>
-/* #include <netdb.h> (auto-remove) */
+#include <netdb.h>
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>

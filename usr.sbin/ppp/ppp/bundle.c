@@ -30,7 +30,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <net/if.h>
-#include <net/if_tun.h>		/* For TUNSIFMODE & TUNSLMODE */
+#include <net/if_tun.h>
 #include <arpa/inet.h>
 #include <net/route.h>
 #include <netinet/in_systm.h>
@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/* #include <sys/ioctl.h> (auto-remove) */
+#include <sys/ioctl.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
 #include <termios.h>

@@ -28,7 +28,7 @@
 #include <sys/un.h>
 
 #include <stdio.h>
-/* #include <string.h> (auto-remove) */
+#include <string.h>
 #include <termios.h>
 
 #include "layer.h"

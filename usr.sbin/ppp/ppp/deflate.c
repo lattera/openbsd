@@ -37,6 +37,8 @@
 #include "mbuf.h"
 #include "log.h"
 #include "timer.h"
+#include "lqr.h"
+#include "hdlc.h"
 #include "fsm.h"
 #include "lcp.h"
 #include "ccp.h"
