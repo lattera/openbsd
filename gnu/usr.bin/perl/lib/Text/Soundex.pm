@@ -7,7 +7,7 @@ require Exporter;
 
 $VERSION = '1.01';
 
-# $Id: Soundex.pm,v 1.7 2003/12/03 03:02:41 millert Exp $
+# $Id: soundex.pl,v 1.2 1994/03/24 00:30:27 mike Exp $
 #
 # Implementation of soundex algorithm as described by Knuth in volume
 # 3 of The Art of Computer Programming, with ideas stolen from Ian
@@ -24,10 +24,7 @@ $VERSION = '1.01';
 # Lloyd, Ladd -> L300
 # Lukasiewicz, Lissajous -> L222
 #
-# $Log: Soundex.pm,v $
-# Revision 1.7  2003/12/03 03:02:41  millert
-# Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
-#
+# $Log: soundex.pl,v $
 # Revision 1.2  1994/03/24  00:30:27  mike
 # Subtle bug (any excuse :-) spotted by Rich Pinder <rpinder@hsc.usc.edu>
 # in the way I handles leasing characters which were different but had

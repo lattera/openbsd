@@ -1,6 +1,6 @@
 #!./perl
 
-# $RCSfile: tell.t,v $$Revision: 1.7 $$Date: 2003/12/03 03:02:48 $
+# $RCSfile: tell.t,v $$Revision$$Date$
 
 BEGIN {
     chdir 't' if -d 't';

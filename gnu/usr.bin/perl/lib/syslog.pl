@@ -1,10 +1,7 @@
 #
 # syslog.pl
 #
-# $Log: syslog.pl,v $
-# Revision 1.7  2003/12/03 03:02:36  millert
-# Resolve conflicts for perl 5.8.2, remove old files, and add OpenBSD-specific scaffolding
-#
+# $Log:	syslog.pl,v $
 # 
 # tom christiansen <tchrist@convex.com>
 # modified to use sockets by Larry Wall <lwall@jpl-devvax.jpl.nasa.gov>
