@@ -36,10 +36,6 @@ extern "C" {
 
 #include "ansidecl.h"
 
-#ifndef GTY
-#define GTY(X)
-#endif
-
 /* Use typedefs for the key and data types to facilitate changing
    these types, if necessary.  These types should be sufficiently wide
    that any pointer or scalar can be cast to these types, and then
@@ -69,7 +65,7 @@ typedef int (*splay_tree_foreach_fn) PARAMS((splay_tree_node, void*));
    node structures.  The first argument is the number of bytes needed;
    the second is a data pointer the splay tree functions pass through
    to the allocator.  This function must never return zero.  */
-typedef PTR (*splay_tree_allocate_fn) PARAMS((int, void *));
+typedef void *(*splay_tree_allocate_fn) PARAMS((int, void *));
 
 /* The type of a function used to free memory allocated using the
    corresponding splay_tree_allocate_fn.  The first argument is the
@@ -78,24 +74,24 @@ typedef PTR (*splay_tree_allocate_fn) PARAMS((int, void *));
 typedef void (*splay_tree_deallocate_fn) PARAMS((void *, void *));
 
 /* The nodes in the splay tree.  */
-struct splay_tree_node_s GTY(())
+struct splay_tree_node_s
 {
   /* The key.  */
-  splay_tree_key GTY ((use_param1 (""))) key;
+  splay_tree_key key;
 
   /* The value.  */
-  splay_tree_value GTY ((use_param2 (""))) value;
+  splay_tree_value value;
 
   /* The left and right children, respectively.  */
-  splay_tree_node GTY ((use_params (""))) left;
-  splay_tree_node GTY ((use_params (""))) right;
+  splay_tree_node left;
+  splay_tree_node right;
 };
 
 /* The splay tree itself.  */
-struct splay_tree_s GTY(())
+typedef struct splay_tree_s
 {
   /* The root of the tree.  */
-  splay_tree_node GTY ((use_params (""))) root;
+  splay_tree_node root;
 
   /* The comparision function.  */
   splay_tree_compare_fn comp;
@@ -109,10 +105,9 @@ struct splay_tree_s GTY(())
   /* Allocate/free functions, and a data pointer to pass to them.  */
   splay_tree_allocate_fn allocate;
   splay_tree_deallocate_fn deallocate;
-  PTR GTY((skip (""))) allocate_data;
+  void *allocate_data;
 
-};
-typedef struct splay_tree_s *splay_tree;
+} *splay_tree;
 
 extern splay_tree splay_tree_new        PARAMS((splay_tree_compare_fn,
 					        splay_tree_delete_key_fn,

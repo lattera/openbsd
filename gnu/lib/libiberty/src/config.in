@@ -1,4 +1,4 @@
-/* config.in.  Generated automatically from configure.in by autoheader.  */
+/* config.in.  Generated automatically from configure.in by autoheader 2.13.  */
 
 /* Define to empty if the keyword does not work.  */
 #undef const
@@ -105,9 +105,6 @@
 /* Define if you have the memmove function.  */
 #undef HAVE_MEMMOVE
 
-/* Define if you have the mempcpy function.  */
-#undef HAVE_MEMPCPY
-
 /* Define if you have the memset function.  */
 #undef HAVE_MEMSET
 
@@ -149,15 +146,6 @@
 
 /* Define if you have the sigsetmask function.  */
 #undef HAVE_SIGSETMASK
-
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
-/* Define if you have the stpcpy function.  */
-#undef HAVE_STPCPY
-
-/* Define if you have the stpncpy function.  */
-#undef HAVE_STPNCPY
 
 /* Define if you have the strcasecmp function.  */
 #undef HAVE_STRCASECMP
@@ -218,9 +206,6 @@
 
 /* Define if you have the vprintf function.  */
 #undef HAVE_VPRINTF
-
-/* Define if you have the vsnprintf function.  */
-#undef HAVE_VSNPRINTF
 
 /* Define if you have the vsprintf function.  */
 #undef HAVE_VSPRINTF
@@ -291,6 +276,9 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
+/* Define if you have the <malloc.h> header file.  */
+#undef HAVE_MALLOC_H
+
 /* Define if errno must be declared even when <errno.h> is included. */
 #undef NEED_DECLARATION_ERRNO
 
@@ -306,9 +294,6 @@
 /* Define if you have the sys_siglist variable. */
 #undef HAVE_SYS_SIGLIST
 
-/* Define if you have the _system_configuration variable. */
-#undef HAVE__SYSTEM_CONFIGURATION
-
 /* Define to one of _getb67, GETB67, getb67 for Cray-2 and Cray-YMP
    systems. This function is required for alloca.c support on those
    systems. */
@@ -320,6 +305,9 @@
         STACK_DIRECTION < 0 => grows toward lower addresses
         STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
+
+/* Define if you have the _system_configuration variable. */
+#undef HAVE__SYSTEM_CONFIGURATION
 
 /* Define if canonicalize_file_name is not declared in system header files. */
 #undef NEED_DECLARATION_CANONICALIZE_FILE_NAME

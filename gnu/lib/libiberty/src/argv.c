@@ -29,13 +29,13 @@ Boston, MA 02111-1307, USA.  */
 
 /*  Routines imported from standard C runtime libraries. */
 
-#ifdef ANSI_PROTOTYPES
+#ifdef __STDC__
 
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 
-#else	/* !ANSI_PROTOTYPES */
+#else	/* !__STDC__ */
 
 #if !defined _WIN32 || defined __GNUC__
 extern char *memcpy ();		/* Copy memory region */
@@ -46,7 +46,7 @@ extern void free ();		/* Free malloc'd memory */
 extern char *strdup ();		/* Duplicate a string */
 #endif
 
-#endif	/* ANSI_PROTOTYPES */
+#endif	/* __STDC__ */
 
 
 #ifndef NULL

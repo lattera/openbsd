@@ -68,7 +68,7 @@ function will be called to print an error message and terminate execution.
 
 #include <stdio.h>
 
-#ifdef ANSI_PROTOTYPES
+#ifdef __STDC__
 #include <stddef.h>
 #else
 #define size_t unsigned long

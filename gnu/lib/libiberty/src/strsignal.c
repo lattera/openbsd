@@ -42,7 +42,7 @@ extern PTR memset ();
 #undef sys_nsig
 
 #ifndef NULL
-#  ifdef ANSI_PROTOTYPES
+#  ifdef __STDC__
 #    define NULL (void *) 0
 #  else
 #    define NULL 0
