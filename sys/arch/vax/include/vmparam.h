@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/vmparam.h,v 1.8.12.4 2002/03/06 02:04:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/vmparam.h,v 1.8.12.5 2002/03/30 08:27:12 niklas Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.32 2000/03/07 00:05:59 matt Exp $	*/
 
 /*-
@@ -112,6 +112,7 @@
 #define	VM_NFREELIST		1
 #define	VM_FREELIST_DEFAULT	0
 
+#define __HAVE_PMAP_PHYSSEG
 struct pmap_physseg {
 	int	dummy;
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.5 2002/03/06 02:04:48 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/vax/vm_machdep.c,v 1.15.4.6 2002/03/30 08:27:12 niklas Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.67 2000/06/29 07:14:34 mrg Exp $	     */
 
 /*
@@ -249,11 +249,18 @@ cpu_coredump(p, vp, cred, chdr)
 
 /*
  * Kernel stack red zone need to be set when a process is swapped in.
+ * Be sure that all pages are valid.
  */
 void
 cpu_swapin(p)
 	struct proc *p;
 {
+	struct pte *pte;
+	int i;
+
+	pte = kvtopte((vaddr_t)p->p_addr);
+	for (i = 0; i < (USPACE/VAX_NBPG); i ++)
+		pte[i].pg_v = 1;
 	kvtopte((vaddr_t)p->p_addr + REDZONEADDR)->pg_v = 0;
 }
 

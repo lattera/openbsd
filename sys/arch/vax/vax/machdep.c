@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.7 2002/03/28 11:26:47 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/vax/vax/machdep.c,v 1.20.2.8 2002/03/30 08:27:12 niklas Exp $ */
 /* $NetBSD: machdep.c,v 1.108 2000/09/13 15:00:23 thorpej Exp $	 */
 
 /*
@@ -220,7 +220,7 @@ cpu_startup()
 	if (uvm_map(kernel_map, (vm_offset_t *) &buffers, round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
-			UVM_ADV_NORMAL, 0)) != KERN_SUCCESS)
+			UVM_ADV_NORMAL, 0)))
 		panic("cpu_startup: cannot allocate VM for buffers");
 
 	minaddr = (vm_offset_t) buffers;
@@ -498,6 +498,12 @@ void
 boot(howto)
 	register int howto;
 {
+	/* If system is cold, just halt. */
+	if (cold) {
+		howto |= RB_HALT;
+		goto haltsys;
+	}
+
 	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
 		waittime = 0;
 		vfs_shutdown();
@@ -508,12 +514,20 @@ boot(howto)
 		resettodr();
 	}
 	splhigh();		/* extreme priority */
+
+	/* If rebooting and a dump is requested, do it. */
+	if (howto & RB_DUMP)
+		dumpsys();
+
+	/* Run any shutdown hooks. */
+	doshutdownhooks();
+
+haltsys:
 	if (howto & RB_HALT) {
 		if (dep_call->cpu_halt)
 			(*dep_call->cpu_halt) ();
 		printf("halting (in tight loop); hit\n\t^P\n\tHALT\n\n");
-		for (;;)
-			;
+		for (;;) ;
 	} else {
 		showto = howto;
 #ifdef notyet
@@ -550,13 +564,6 @@ boot(howto)
 		");
 #endif
 
-		/* If rebooting and a dump is requested, do it. */
-		if (showto & RB_DUMP)
-			dumpsys();
-
-		/* Run any shutdown hooks. */
-		doshutdownhooks();
-
 		if (dep_call->cpu_reboot)
 			(*dep_call->cpu_reboot)(showto);
 
@@ -569,7 +576,8 @@ boot(howto)
 	asm("movl %0, r5":: "g" (showto)); /* How to boot */
 	asm("movl %0, r11":: "r"(showto)); /* ??? */
 	asm("halt");
-	panic("Halt sket sej");
+	for (;;) ;
+	/* NOTREACHED */
 }
 
 void
@@ -780,6 +788,9 @@ allocsys(v)
 {
 
 #ifdef SYSVSHM
+    shminfo.shmmax = shmmaxpgs;
+    shminfo.shmall = shmmaxpgs;
+    shminfo.shmseg = shmseg;
     VALLOC(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
 #ifdef SYSVSEM

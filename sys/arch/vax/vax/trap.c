@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.11.6.5 2002/03/28 11:26:47 niklas Exp $     */
+/*	$OpenBSD: src/sys/arch/vax/vax/trap.c,v 1.11.6.6 2002/03/30 08:27:12 niklas Exp $     */
 /*	$NetBSD: trap.c,v 1.47 1999/08/21 19:26:20 matt Exp $     */
 /*
  * Copyright (c) 1994 Ludd, University of Lule}, Sweden.
@@ -145,7 +145,7 @@ arithflt(frame)
 	u_int	rv, addr, umode;
 	struct	proc *p = curproc;
 	u_quad_t oticks = 0;
-	vm_map_t map;
+	struct vm_map *map;
 	vm_prot_t ftype;
 	int typ;
 	union sigval sv;
@@ -231,13 +231,13 @@ if(faultdebug)printf("trap accflt type %lx, code %lx, pc %lx, psl %lx\n",
 			ftype = VM_PROT_READ;
 
 		rv = uvm_fault(map, addr, 0, ftype);
-		if (rv != KERN_SUCCESS) {
+		if (rv) {
 			if (umode == 0) {
 				FAULTCHK;
 				panic("Segv in kernel mode: pc %x addr %x",
 				    (u_int)frame->pc, (u_int)frame->code);
 			}
-			if (rv == KERN_RESOURCE_SHORTAGE) {
+			if (rv == ENOMEM) {
 				printf("UVM: pid %d (%s), uid %d killed: "
 				       "out of swap\n",
 				       p->p_pid, p->p_comm,
