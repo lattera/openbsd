@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/tcfs/Attic/tcfsrmuser.c,v 1.6 2000/06/19 23:06:25 aaron Exp $	*/
+/*	$OpenBSD: src/usr.bin/tcfs/Attic/tcfsrmuser.c,v 1.7 2000/06/20 06:45:16 fgsch Exp $	*/
 
 /*
  *	Transparent Cryptographic File System (TCFS) for NetBSD 
@@ -53,7 +53,7 @@ rmuser_main(int argn, char *argv[])
 			have_user = TRUE;
 			break;
 		case 'h':
-			show_usage(rmuser_usage, argv[0]);
+			printf(rmuser_usage, argv[0]);
 			exit(OK);
 			break;
 		case 'v':
