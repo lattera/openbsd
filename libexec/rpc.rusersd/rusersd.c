@@ -27,15 +27,20 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: rusersd.c,v 1.1.1.1 1995/10/18 08:43:21 deraadt Exp $";
+static char rcsid[] = "$Id: rusersd.c,v 1.2 1996/09/22 08:41:33 tholo Exp $";
 #endif /* not lint */
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
-#include <rpc/rpc.h>
 #include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <syslog.h>
+#include <rpc/rpc.h>
 #include <rpcsvc/rusers.h>	/* New version */
 #include <rpcsvc/rnusers.h>	/* Old version */
+#include <rpc/pmap_clnt.h>
 
 extern void rusers_service();
 
@@ -50,6 +55,7 @@ cleanup()
 	exit(0);
 }
 
+int
 main(argc, argv)
 	int argc;
 	char *argv[];
