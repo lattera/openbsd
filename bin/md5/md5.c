@@ -1,5 +1,5 @@
 /*
- * $OpenBSD: src/sbin/md5/Attic/md5.c,v 1.1 1996/06/03 22:08:27 niklas Exp $
+ * $OpenBSD: src/bin/md5/md5.c,v 1.1 1996/06/11 10:37:38 deraadt Exp $
  *
  * Derived from:
  */

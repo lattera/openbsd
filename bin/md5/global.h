@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/md5/Attic/global.h,v 1.1 1996/06/03 22:08:26 niklas Exp $	*/
+/*	$OpenBSD: src/bin/md5/Attic/global.h,v 1.1 1996/06/11 10:37:35 deraadt Exp $	*/
 
 /* GLOBAL.H - RSAREF types and constants
  */
