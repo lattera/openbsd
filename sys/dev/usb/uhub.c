@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/uhub.c,v 1.6.2.7 2004/02/19 10:56:34 niklas Exp $ */
+/*	$OpenBSD: src/sys/dev/usb/uhub.c,v 1.6.2.8 2004/06/13 08:50:14 niklas Exp $ */
 /*	$NetBSD: uhub.c,v 1.64 2003/02/08 03:32:51 ichiro Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/uhub.c,v 1.18 1999/11/17 22:33:43 n_hibma Exp $	*/
 
@@ -292,6 +292,7 @@ USB_ATTACH(uhub)
 			up->power = USB_MAX_POWER;
 		else
 			up->power = USB_MIN_POWER;
+		up->restartcnt = 0;
 	}
 
 	/* XXX should check for none, individual, or ganged power? */

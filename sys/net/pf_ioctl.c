@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50.4.5 2004/06/05 23:11:24 niklas Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.50.4.6 2004/06/13 08:50:17 niklas Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -1512,11 +1512,11 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			if ((!psk->psk_af || state->af == psk->psk_af)
 			    && (!psk->psk_proto || psk->psk_proto ==
 			    state->proto) &&
-			    PF_MATCHA(psk->psk_src.not,
+			    PF_MATCHA(psk->psk_src.neg,
 			    &psk->psk_src.addr.v.a.addr,
 			    &psk->psk_src.addr.v.a.mask,
 			    &state->lan.addr, state->af) &&
-			    PF_MATCHA(psk->psk_dst.not,
+			    PF_MATCHA(psk->psk_dst.neg,
 			    &psk->psk_dst.addr.v.a.addr,
 			    &psk->psk_dst.addr.v.a.mask,
 			    &state->ext.addr, state->af) &&

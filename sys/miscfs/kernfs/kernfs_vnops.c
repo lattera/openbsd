@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.11 2004/06/05 23:13:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/miscfs/kernfs/Attic/kernfs_vnops.c,v 1.17.2.12 2004/06/13 08:50:16 niklas Exp $	*/
 /*	$NetBSD: kernfs_vnops.c,v 1.43 1996/03/16 23:52:47 christos Exp $	*/
 
 /*
@@ -69,7 +69,7 @@
 static int	byteorder = BYTE_ORDER;
 static int	posix = _POSIX_VERSION;
 static int	osrev = OpenBSD;
-static int	ncpu = 1;	/* XXX */
+extern int	ncpus;
 extern char machine[], cpu_model[];
 
 #ifdef IPSEC
@@ -92,7 +92,7 @@ const struct kern_target kern_targets[] = {
      { DT_REG, N("machine"),   machine,      KTT_STRING,   VREG, READ_MODE  },
      { DT_REG, N("model"),     cpu_model,    KTT_STRING,   VREG, READ_MODE  },
      { DT_REG, N("msgbuf"),    0,	     KTT_MSGBUF,   VREG, READ_MODE  },
-     { DT_REG, N("ncpu"),      &ncpu,        KTT_INT,      VREG, READ_MODE  },
+     { DT_REG, N("ncpu"),      &ncpus,       KTT_INT,      VREG, READ_MODE  },
      { DT_REG, N("ostype"),    (void*)&ostype,KTT_STRING,   VREG, READ_MODE  },
      { DT_REG, N("osrelease"), (void*)&osrelease,KTT_STRING,VREG, READ_MODE  },
      { DT_REG, N("osrev"),     &osrev,	     KTT_INT,      VREG, READ_MODE  },

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.9 2004/06/05 23:11:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.h,v 1.10.2.10 2004/06/13 08:50:18 niklas Exp $	*/
 /*	$KAME: in6.h,v 1.83 2001/03/29 02:55:07 jinmei Exp $	*/
 
 /*
@@ -407,7 +407,10 @@ struct route_in6 {
 #endif
 #define IPV6_FAITH		29 /* bool; accept FAITH'ed connections */
 
-/* 30-52, 57-59: reserved */
+/* 30-41: reserved */
+#define IPV6_USE_MIN_MTU	42 /* bool; send packets at the minimum MTU */
+
+/* 43-52, 57-59: reserved */
 #define IPV6_AUTH_LEVEL		53   /* int; authentication used */
 #define IPV6_ESP_TRANS_LEVEL	54   /* int; transport encryption */
 #define IPV6_ESP_NETWORK_LEVEL	55   /* int; full-packet encryption */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.35.2.2 2004/06/05 23:11:25 niklas Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.35.2.3 2004/06/13 08:50:18 niklas Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.
@@ -693,6 +693,7 @@ carp_clone_destroy(struct ifnet *ifp)
 	bpfdetach(ifp);
 #endif
 	if_detach(ifp);
+	free(sc, M_DEVBUF);
 
 	return (0);
 }
@@ -1320,7 +1321,7 @@ carp_set_addr(struct carp_softc *sc, struct sockaddr_in *sin)
 			goto cleanup;
 		}
 
-		bzero(cif, sizeof(cif));
+		bzero(cif, sizeof(*cif));
 		cif->vhif_ifp = ifp;
 		TAILQ_INIT(&cif->vhif_vrs);
 		ifp->if_carp = (caddr_t)cif;
@@ -1491,7 +1492,7 @@ carp_set_addr6(struct carp_softc *sc, struct sockaddr_in6 *sin6)
 			goto cleanup;
 		}
 
-		bzero(cif, sizeof(cif));
+		bzero(cif, sizeof(*cif));
 		cif->vhif_ifp = ifp;
 		TAILQ_INIT(&cif->vhif_vrs);
 		ifp->if_carp = (caddr_t)cif;
