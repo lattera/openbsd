@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.153.2.1 2001/11/14 03:24:39 jason Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.153.2.2 2001/12/05 19:31:48 jason Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -1006,6 +1006,9 @@ logging in using this key.
 Environment variables set this way
 override other default environment values.
 Multiple options of this type are permitted.
+This option is automatically disabled if
+.Cm UseLogin
+is enabled.
 .It Cm no-port-forwarding
 Forbids TCP/IP forwarding when this key is used for authentication.
 Any port forward requests by the client will return an error.
