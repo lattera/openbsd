@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/m88k/sys/brk.S,v 1.5 2003/01/07 22:01:35 miod Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/m88k/sys/brk.S,v 1.5.2.1 2004/01/16 01:05:17 brad Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -39,29 +39,28 @@
 
 #if defined(LIBC_SCCS)
 	.data
-	.string "$OpenBSD: src/lib/libc/arch/m88k/sys/brk.S,v 1.5 2003/01/07 22:01:35 miod Exp $"
+	.string "$OpenBSD: src/lib/libc/arch/m88k/sys/brk.S,v 1.5.2.1 2004/01/16 01:05:17 brad Exp $"
 #endif /* LIBC_SCCS */
 
 #include "SYS.h"
 
 	.globl	_end
-	.globl	minbrk
 	.globl	__curbrk
 
 	.data
 	.align 8
-minbrk:	.long	_end
-	.text
+ASGLOBAL(minbrk)
+	.long	_end
 
 ENTRY(brk)
 	or.u	r5,r0,hi16(minbrk)
 	ld	r5,r5,lo16(minbrk)
 	cmp	r3,r5,r2
-	bb1	le,r3,1f	/* r2 should be > minbrk; can't go below end */
+	bb1	ls,r3,1f	/* r2 should be > minbrk; can't go below end */
 	or	r2,r5,0		/* otherwise, set r2 to minbrk */
 1:
 	or	r4,r2,0
-	or	r13,r0,SYS_break
+	or	r13,r0,__SYSCALLNAME(SYS_,break)
 	tb0	0,r0,128
 	br	__cerror
 	or.u	r5,r0,hi16(__curbrk)

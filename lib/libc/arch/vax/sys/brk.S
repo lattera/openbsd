@@ -33,19 +33,16 @@
 
 #if defined(SYSLIBC_SCCS)
 	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/vax/sys/brk.S,v 1.4 2002/11/05 00:37:09 miod Exp $"
+	.asciz "$OpenBSD: src/lib/libc/arch/vax/sys/brk.S,v 1.4.2.1 2004/01/16 01:05:17 brad Exp $"
 #endif /* SYSLIBC_SCCS */
 
 #include "SYS.h"
 
 	.globl	__curbrk
 	.globl	minbrk
-ENTRY(_brk, 0)
-	jbr	ok
-
 ENTRY(brk, 0)
-	cmpl	4(ap),minbrk
-	bgeq	ok
+	cmpl	minbrk,4(ap)
+	blequ	ok
 	movl	minbrk,4(ap)
 ok:
 	chmk	$ SYS_break
