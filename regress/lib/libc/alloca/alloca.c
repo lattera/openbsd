@@ -1,11 +1,11 @@
-/*	$OpenBSD: src/regress/lib/libc/alloca/alloca.c,v 1.3 2003/07/31 03:23:41 mickey Exp $	*/
+/*	$OpenBSD: src/regress/lib/libc/alloca/alloca.c,v 1.4 2003/07/31 21:48:02 deraadt Exp $	*/
 
 /*	Written by Michael Shalayeff, 2003, Public Domain.	*/
 
 #include <stdio.h>
 
 int
-main()
+main(int argc, char *argv[])
 {
 	char *q, *p;
 
