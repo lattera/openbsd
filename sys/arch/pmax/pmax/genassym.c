@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/genassym.c,v 1.4 1996/12/22 15:18:29 graichen Exp $	*/
+/*	$OpenBSD: src/sys/arch/pmax/pmax/Attic/genassym.c,v 1.5 1996/12/22 15:22:30 graichen Exp $	*/
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
