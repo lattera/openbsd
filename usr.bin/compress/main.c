@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/compress/main.c,v 1.47 2003/09/05 21:03:36 henning Exp $	*/
+/*	$OpenBSD: src/usr.bin/compress/main.c,v 1.47.2.1 2004/01/31 04:17:53 brad Exp $	*/
 
 static const char copyright[] =
 "@(#) Copyright (c) 1992, 1993\n\
@@ -37,7 +37,7 @@ static const char license[] =
 #if 0
 static char sccsid[] = "@(#)compress.c	8.2 (Berkeley) 1/7/94";
 #else
-static const char main_rcsid[] = "$OpenBSD: src/usr.bin/compress/main.c,v 1.47 2003/09/05 21:03:36 henning Exp $";
+static const char main_rcsid[] = "$OpenBSD: src/usr.bin/compress/main.c,v 1.47.2.1 2004/01/31 04:17:53 brad Exp $";
 #endif
 #endif /* not lint */
 
@@ -389,9 +389,11 @@ main(int argc, char *argv[])
 			if (decomp) {
 				if (set_outfile(infile, outfile,
 				    sizeof outfile) == NULL) {
-					if (!recurse)
+					if (!recurse) {
 						warnx("%s: unknown suffix: "
 						    "ignored", infile);
+						rc = rc ? rc : WARNING;
+					}
 					continue;
 				}
 			} else {
@@ -399,6 +401,7 @@ main(int argc, char *argv[])
 				    "%s%s", infile, suffix) >= sizeof(outfile)) {
 					warnx("%s%s: name too long",
 					    infile, suffix);
+					rc = rc ? rc : WARNING;
 					continue;
 				}
 			}
