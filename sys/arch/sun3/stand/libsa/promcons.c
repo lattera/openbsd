@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/promcons.c,v 1.2 2001/07/04 08:33:51 niklas Exp $	*/
+
 
 #include <stdarg.h>
 #include <sys/types.h>

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/gets.c,v 1.2 2001/07/04 08:33:49 niklas Exp $	*/
 /*	$NetBSD: gets.c,v 1.1.1.2 1995/06/01 20:37:58 gwr Exp $	*/
 
 /*-

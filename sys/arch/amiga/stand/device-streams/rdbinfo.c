@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amiga/stand/device-streams/Attic/rdbinfo.c,v 1.2 2001/07/04 08:44:58 niklas Exp $	*/
+
 /* -------------------------------------------------- 
  |  NAME
  |    rdbinfo

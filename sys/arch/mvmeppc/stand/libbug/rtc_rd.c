@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libbug/Attic/rtc_rd.c,v 1.2 2001/07/04 08:31:37 niklas Exp $	*/
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amiga/stand/device-streams/Attic/util.h,v 1.2 2001/07/04 08:44:59 niklas Exp $	*/
+
 /* -------------------------------------------------- 
  |  NAME
  |    util

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/powerpc/mac/Attic/mesh.c,v 1.2 2001/07/04 08:38:51 niklas Exp $	*/
 /*	$NetBSD: mesh.c,v 1.1 1999/02/19 13:06:03 tsubai Exp $	*/
 
 /*-

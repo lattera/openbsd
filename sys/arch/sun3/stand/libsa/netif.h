@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/libsa/Attic/netif.h,v 1.3 2001/07/04 08:33:50 niklas Exp $	*/
+
 
 #include "iodesc.h"
 

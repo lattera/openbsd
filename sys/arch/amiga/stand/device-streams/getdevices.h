@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amiga/stand/device-streams/Attic/getdevices.h,v 1.2 2001/07/04 08:44:58 niklas Exp $	*/
+
 /* -------------------------------------------------- 
  |  NAME
  |    getdevices

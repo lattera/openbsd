@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/ufsboot/Attic/boot.c,v 1.3 2001/07/04 08:33:58 niklas Exp $	*/
+
 
 
 /*-

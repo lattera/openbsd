@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/sun3/stand/ufsboot/Attic/conf.c,v 1.2 2001/07/04 08:33:58 niklas Exp $	*/
 /*	$NetBSD: conf.c,v 1.1.1.1 1995/06/01 20:38:08 gwr Exp $	*/
 
 #include <stand.h>
