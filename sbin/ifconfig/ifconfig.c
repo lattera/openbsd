@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/ifconfig/ifconfig.c,v 1.40 2000/08/03 07:34:41 angelos Exp $	*/
+/*	$OpenBSD: src/sbin/ifconfig/ifconfig.c,v 1.40.2.1 2001/01/02 20:09:42 jason Exp $	*/
 /*      $NetBSD: ifconfig.c,v 1.40 1997/10/01 02:19:43 enami Exp $      */
 
 /*
@@ -81,7 +81,7 @@ static char copyright[] =
 #if 0
 static char sccsid[] = "@(#)ifconfig.c	8.2 (Berkeley) 2/16/94";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/ifconfig/ifconfig.c,v 1.40 2000/08/03 07:34:41 angelos Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/ifconfig/ifconfig.c,v 1.40.2.1 2001/01/02 20:09:42 jason Exp $";
 #endif
 #endif /* not lint */
 
@@ -1086,12 +1086,13 @@ setifnwid(val, d)
 	char *val;
 	int d;
 {
-	u_int8_t nwid[IEEE80211_NWID_LEN];
+	struct ieee80211_nwid nwid;
 
 	memset(&nwid, 0, sizeof(nwid));
-	(void)strncpy(nwid, val, sizeof(nwid));
+	(void)strncpy(nwid.i_nwid, val, sizeof(nwid.i_nwid));
+	nwid.i_len = sizeof(nwid.i_nwid);
 	(void)strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
-	ifr.ifr_data = (caddr_t)nwid;
+	ifr.ifr_data = (caddr_t)&nwid;
 	if (ioctl(s, SIOCS80211NWID, (caddr_t)&ifr) < 0)
 		warn("SIOCS80211NWID");
 }
@@ -1099,14 +1100,17 @@ setifnwid(val, d)
 void
 ieee80211_status()
 {
-	u_int8_t nwid[IEEE80211_NWID_LEN + 1];
+	struct ieee80211_nwid nwid;
+	char buf[IEEE80211_NWID_LEN + 1];
 
 	memset(&ifr, 0, sizeof(ifr));
-	ifr.ifr_data = (caddr_t)nwid;
+	ifr.ifr_data = (caddr_t)&nwid;
 	(void)strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
-	nwid[IEEE80211_NWID_LEN] = 0;
-	if (ioctl(s, SIOCG80211NWID, (caddr_t)&ifr) == 0)
-		printf("\tnwid %s\n", nwid);
+	if (ioctl(s, SIOCG80211NWID, (caddr_t)&ifr) == 0) {
+		strncpy(buf, nwid.i_nwid, sizeof(buf) - 1);
+		buf[IEEE80211_NWID_LEN] = '\0';
+		printf("\tnwid %s\n", nwid.i_nwid);
+	}
 }
 
 void
