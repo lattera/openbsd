@@ -13,7 +13,7 @@
  * precision integers.
  */
 
-/* RCSID("$Id: mpaux.h,v 1.5 1999/11/24 19:53:48 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/mpaux.h,v 1.7 2000/06/20 01:39:42 markus Exp $"); */
 
 #ifndef MPAUX_H
 #define MPAUX_H

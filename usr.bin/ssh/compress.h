@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: compress.h,v 1.3 1999/11/24 19:53:46 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/compress.h,v 1.5 2000/06/20 01:39:40 markus Exp $"); */
 
 #ifndef COMPRESS_H
 #define COMPRESS_H

@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* RCSID("$Id: compat.h,v 1.7 2000/05/08 17:42:24 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/compat.h,v 1.9 2000/06/20 01:39:40 markus Exp $"); */
 
 #ifndef COMPAT_H
 #define COMPAT_H

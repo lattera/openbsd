@@ -28,7 +28,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: compat.c,v 1.15 2000/06/18 03:00:27 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.17 2000/06/20 01:39:40 markus Exp $");
 
 #include "ssh.h"
 #include "packet.h"

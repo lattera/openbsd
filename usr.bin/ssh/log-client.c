@@ -15,7 +15,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: log-client.c,v 1.7 2000/02/27 18:50:09 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/log-client.c,v 1.9 2000/06/20 01:39:42 markus Exp $");
 
 #include "xmalloc.h"
 #include "ssh.h"

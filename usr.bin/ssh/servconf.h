@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: servconf.h,v 1.23 2000/05/31 06:36:40 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/servconf.h,v 1.25 2000/06/20 01:39:44 markus Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H

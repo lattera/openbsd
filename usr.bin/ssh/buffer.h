@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: buffer.h,v 1.3 1999/11/24 19:53:44 markus Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.5 2000/06/20 01:39:39 markus Exp $"); */
 
 #ifndef BUFFER_H
 #define BUFFER_H

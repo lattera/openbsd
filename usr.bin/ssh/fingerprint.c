@@ -28,7 +28,7 @@
  */
 
 #include "includes.h"
-RCSID("$Id: fingerprint.c,v 1.5 2000/03/16 20:56:14 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/Attic/fingerprint.c,v 1.7 2000/06/20 01:39:41 markus Exp $");
 
 #include "ssh.h"
 #include "xmalloc.h"

@@ -13,7 +13,7 @@
  *
  */
 
-/* RCSID("$Id: getput.h,v 1.2 1999/11/24 00:26:02 deraadt Exp $"); */
+/* RCSID("$OpenBSD: src/usr.bin/ssh/Attic/getput.h,v 1.4 2000/06/20 01:39:41 markus Exp $"); */
 
 #ifndef GETPUT_H
 #define GETPUT_H
