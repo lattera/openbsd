@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/lpr/common_source/rmjob.c,v 1.12 2002/02/16 21:28:03 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/lpr/common_source/rmjob.c,v 1.12.2.1 2003/03/05 19:53:44 miod Exp $	*/
 
 /*
  * Copyright (c) 1983, 1993
@@ -37,7 +37,7 @@
 #if 0
 static const char sccsid[] = "@(#)rmjob.c	8.2 (Berkeley) 4/28/95";
 #else
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/common_source/rmjob.c,v 1.12 2002/02/16 21:28:03 millert Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/common_source/rmjob.c,v 1.12.2.1 2003/03/05 19:53:44 miod Exp $";
 #endif
 #endif /* not lint */
 
@@ -322,6 +322,7 @@ rmremote()
 {
 	char *cp;
 	int i, rem;
+	size_t n;
 	char buf[BUFSIZ];
 
 	if (!remote)
@@ -333,18 +334,26 @@ rmremote()
 	 */
 	fflush(stdout);
 
-	(void)snprintf(buf, sizeof(buf)-2, "\5%s %s", RP, all ? "-all" : person);
-	cp = buf + strlen(buf);
-	for (i = 0; i < users && cp-buf+1+strlen(user[i]) < sizeof buf - 2; i++) {
-		cp += strlen(cp);
+	/* the trailing space will be replaced with a newline later */
+	n = snprintf(buf, sizeof(buf), "\5%s %s ", RP, all ? "-all" : person);
+	if (n == -1 || n >= sizeof(buf))
+		goto bad;
+	cp = buf + n;
+	for (i = 0; i < users; i++) {
+		n = strlcpy(cp, user[i], sizeof(buf) - (cp - buf + 1));
+		if (n >= sizeof(buf) - (cp - buf + 1))
+			goto bad;
+		cp += n;
 		*cp++ = ' ';
-		strcpy(cp, user[i]);
 	}
-	for (i = 0; i < requests && cp-buf+10 < sizeof(buf) - 2; i++) {
-		cp += strlen(cp);
-		(void) sprintf(cp, " %d", requ[i]);
+	*cp = '\0';
+	for (i = 0; i < requests; i++) {
+		n = snprintf(cp, sizeof(buf) - (cp - buf), "%d ", requ[i]);
+		if (n == -1 || n >= sizeof(buf) - (cp - buf))
+			goto bad;
+		cp += n;
 	}
-	strcat(cp, "\n");
+	cp[-1] = '\n';		/* replace space with newline, leave the NUL */
 	rem = getport(RM, 0);
 	if (rem < 0) {
 		if (from != host)
@@ -358,6 +367,10 @@ rmremote()
 			(void) fwrite(buf, 1, i, stdout);
 		(void) close(rem);
 	}
+	return;
+bad:
+	printf("remote buffer too large\n");
+	return;
 }
 
 /*
