@@ -3150,6 +3150,8 @@ struct bincl_file
 {
   /* The next N_BINCL file.  */
   struct bincl_file *next;
+  /* The next N_BINCL on the stack.  */
+  struct bincl_file *next_stack;
   /* The file name.  */
   const char *name;
   /* The hash value.  */
@@ -3171,10 +3173,13 @@ push_bincl (info, name, hash)
   struct bincl_file *n;
 
   n = (struct bincl_file *) xmalloc (sizeof *n);
-  n->next = info->bincl_stack;
+  n->next = info->bincl_list;
+  n->next_stack = info->bincl_stack;
   n->name = name;
   n->hash = hash;
   n->file = info->files;
+  n->file_types = NULL;
+  info->bincl_list = n;
   info->bincl_stack = n;
 
   ++info->files;
@@ -3197,12 +3202,9 @@ pop_bincl (info)
   o = info->bincl_stack;
   if (o == NULL)
     return info->main_filename;
-  info->bincl_stack = o->next;
+  info->bincl_stack = o->next_stack;
 
   o->file_types = info->file_types[o->file];
-
-  o->next = info->bincl_list;
-  info->bincl_list = o;
 
   if (info->bincl_stack == NULL)
     return info->main_filename;
@@ -3230,7 +3232,7 @@ find_excl (info, name, hash)
       break;
   if (l == NULL)
     {
-      warn_stab ("N_EXCL", "Undefined N_EXCL");
+      warn_stab (name, "Undefined N_EXCL");
       info->file_types[info->files - 1] = NULL;
       return true;
     }

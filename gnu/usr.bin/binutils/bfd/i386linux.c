@@ -1,5 +1,5 @@
 /* BFD back-end for linux flavored i386 a.out binaries.
-   Copyright (C) 1992, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define N_SHARED_LIB(x) 0
 #define BYTES_IN_WORD 4
 
+#define MACHTYPE_OK(mtype) ((mtype) == M_386 || (mtype) == M_UNKNOWN)
+
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
@@ -44,6 +46,9 @@ extern const bfd_target MY(vec);
 
 static void MY_final_link_callback
   PARAMS ((bfd *, file_ptr *, file_ptr *, file_ptr *));
+static boolean i386linux_bfd_final_link
+  PARAMS ((bfd *, struct bfd_link_info *));
+static boolean i386linux_write_object_contents PARAMS ((bfd *));
 
 static boolean
 i386linux_bfd_final_link (abfd, info)

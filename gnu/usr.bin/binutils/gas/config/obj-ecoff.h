@@ -1,5 +1,5 @@
 /* ECOFF object file format header file.
-   Copyright (C) 1993, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
    Written by Ian Lance Taylor <ian@cygnus.com>.
 
@@ -67,3 +67,4 @@ extern void ecoff_frob_file PARAMS ((void));
 #define obj_sec_sym_ok_for_reloc(SEC)	1
 
 #define obj_ecoff_set_ext ecoff_set_ext
+extern void obj_ecoff_set_ext PARAMS ((struct symbol *, EXTR *));

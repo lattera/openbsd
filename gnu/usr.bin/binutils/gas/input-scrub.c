@@ -1,5 +1,6 @@
 /* input_scrub.c - Break up input buffers into whole numbers of lines.
-   Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +15,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA. */
 
 #include <errno.h>		/* Need this to make errno declaration right */
 #include "as.h"
@@ -72,7 +74,7 @@ static int sb_index = -1;
 static sb from_sb;
 
 /* The number of nested sb structures we have included.  */
-static int macro_nest;
+int macro_nest;
 
 /* We can have more than one source file open at once, though the info for all
    but the latest one are saved off in a struct input_save.  These files remain
@@ -291,6 +293,7 @@ input_scrub_next_buffer (bufp)
       if (sb_index >= from_sb.len)
 	{
 	  sb_kill (&from_sb);
+	  cond_finish_check (macro_nest);
 	  --macro_nest;
 	  partial_where = NULL;
 	  if (next_saved_file != NULL)
@@ -320,12 +323,37 @@ input_scrub_next_buffer (bufp)
     {
       register char *p;		/* Find last newline. */
 
-      for (p = limit; *--p != '\n';);;
+      for (p = limit - 1; *p != '\n'; --p)
+	;
       ++p;
-      if (p <= buffer_start + BEFORE_SIZE)
+
+      while (p <= buffer_start + BEFORE_SIZE)
 	{
-	  as_fatal ("Source line too long. Please change file %s then rebuild assembler.", __FILE__);
+	  int limoff;
+
+	  limoff = limit - buffer_start;
+	  buffer_length += input_file_buffer_size ();
+	  buffer_start = xrealloc (buffer_start,
+				   (BEFORE_SIZE
+				    + 2 * buffer_length
+				    + AFTER_SIZE));
+	  *bufp = buffer_start + BEFORE_SIZE;
+	  limit = input_file_give_next_buffer (buffer_start + limoff);
+
+	  if (limit == NULL)
+	    {
+	      as_warn ("partial line at end of file ignored");
+	      partial_where = NULL;
+	      if (next_saved_file)
+		*bufp = input_scrub_pop (next_saved_file);
+	      return NULL;
+	    }
+
+	  for (p = limit - 1; *p != '\n'; --p)
+	    ;
+	  ++p;
 	}
+
       partial_where = p;
       partial_size = limit - p;
       memcpy (save_source, partial_where, (int) AFTER_SIZE);

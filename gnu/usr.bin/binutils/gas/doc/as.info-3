@@ -1,4 +1,4 @@
-This is Info file as.info, produced by Makeinfo-1.55 from the input
+This is Info file as.info, produced by Makeinfo-1.64 from the input
 file ./as.texinfo.
 
 START-INFO-DIR-ENTRY
@@ -7,8 +7,8 @@ END-INFO-DIR-ENTRY
 
    This file documents the GNU Assembler "as".
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation,
-Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
+Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,6 +24,263 @@ manual into another language, under the above conditions for modified
 versions.
 
 
+File: as.info,  Node: Nolist,  Next: Octa,  Prev: MRI,  Up: Pseudo Ops
+
+`.nolist'
+=========
+
+   Control (in conjunction with the `.list' directive) whether or not
+assembly listings are generated.  These two directives maintain an
+internal counter (which is zero initially).   `.list' increments the
+counter, and `.nolist' decrements it.  Assembly listings are generated
+whenever the counter is greater than zero.
+
+
+File: as.info,  Node: Octa,  Next: Org,  Prev: Nolist,  Up: Pseudo Ops
+
+`.octa BIGNUMS'
+===============
+
+   This directive expects zero or more bignums, separated by commas.
+For each bignum, it emits a 16-byte integer.
+
+   The term "octa" comes from contexts in which a "word" is two bytes;
+hence *octa*-word for 16 bytes.
+
+
+File: as.info,  Node: Org,  Next: P2align,  Prev: Octa,  Up: Pseudo Ops
+
+`.org NEW-LC , FILL'
+====================
+
+   Advance the location counter of the current section to NEW-LC.
+NEW-LC is either an absolute expression or an expression with the same
+section as the current subsection.  That is, you can't use `.org' to
+cross sections: if NEW-LC has the wrong section, the `.org' directive
+is ignored.  To be compatible with former assemblers, if the section of
+NEW-LC is absolute, `as' issues a warning, then pretends the section of
+NEW-LC is the same as the current subsection.
+
+   `.org' may only increase the location counter, or leave it
+unchanged; you cannot use `.org' to move the location counter backwards.
+
+   Because `as' tries to assemble programs in one pass, NEW-LC may not
+be undefined.  If you really detest this restriction we eagerly await a
+chance to share your improved assembler.
+
+   Beware that the origin is relative to the start of the section, not
+to the start of the subsection.  This is compatible with other people's
+assemblers.
+
+   When the location counter (of the current subsection) is advanced,
+the intervening bytes are filled with FILL which should be an absolute
+expression.  If the comma and FILL are omitted, FILL defaults to zero.
+
+
+File: as.info,  Node: P2align,  Next: Psize,  Prev: Org,  Up: Pseudo Ops
+
+`.p2align[wl] ABS-EXPR, ABS-EXPR, ABS-EXPR'
+===========================================
+
+   Pad the location counter (in the current subsection) to a particular
+storage boundary.  The first expression (which must be absolute) is the
+number of low-order zero bits the location counter must have after
+advancement.  For example `.p2align 3' advances the location counter
+until it a multiple of 8.  If the location counter is already a
+multiple of 8, no change is needed.
+
+   The second expression (also absolute) gives the fill value to be
+stored in the padding bytes.  It (and the comma) may be omitted.  If it
+is omitted, the padding bytes are normally zero.  However, on some
+systems, if the section is marked as containing code and the fill value
+is omitted, the space is filled with no-op instructions.
+
+   The third expression is also absolute, and is also optional.  If it
+is present, it is the maximum number of bytes that should be skipped by
+this alignment directive.  If doing the alignment would require
+skipping more bytes than the specified maximum, then the alignment is
+not done at all.  You can omit the fill value (the second argument)
+entirely by simply using two commas after the required alignment; this
+can be useful if you want the alignment to be filled with no-op
+instructions when appropriate.
+
+   The `.p2alignw' and `.p2alignl' directives are variants of the
+`.p2align' directive.  The `.p2alignw' directive treats the fill
+pattern as a two byte word value.  The `.p2alignl' directives treats the
+fill pattern as a four byte longword value.  For example, `.p2alignw
+2,0x368d' will align to a multiple of 4.  If it skips two bytes, they
+will be filled in with the value 0x368d (the exact placement of the
+bytes depends upon the endianness of the processor).  If it skips 1 or
+3 bytes, the fill value is undefined.
+
+
+File: as.info,  Node: Psize,  Next: Quad,  Prev: P2align,  Up: Pseudo Ops
+
+`.psize LINES , COLUMNS'
+========================
+
+   Use this directive to declare the number of lines--and, optionally,
+the number of columns--to use for each page, when generating listings.
+
+   If you do not use `.psize', listings use a default line-count of 60.
+You may omit the comma and COLUMNS specification; the default width is
+200 columns.
+
+   `as' generates formfeeds whenever the specified number of lines is
+exceeded (or whenever you explicitly request one, using `.eject').
+
+   If you specify LINES as `0', no formfeeds are generated save those
+explicitly specified with `.eject'.
+
+
+File: as.info,  Node: Quad,  Next: Rept,  Prev: Psize,  Up: Pseudo Ops
+
+`.quad BIGNUMS'
+===============
+
+   `.quad' expects zero or more bignums, separated by commas.  For each
+bignum, it emits an 8-byte integer.  If the bignum won't fit in 8
+bytes, it prints a warning message; and just takes the lowest order 8
+bytes of the bignum.
+
+   The term "quad" comes from contexts in which a "word" is two bytes;
+hence *quad*-word for 8 bytes.
+
+
+File: as.info,  Node: Rept,  Next: Sbttl,  Prev: Quad,  Up: Pseudo Ops
+
+`.rept COUNT'
+=============
+
+   Repeat the sequence of lines between the `.rept' directive and the
+next `.endr' directive COUNT times.
+
+   For example, assembling
+
+             .rept   3
+             .long   0
+             .endr
+
+   is equivalent to assembling
+
+             .long   0
+             .long   0
+             .long   0
+
+
+File: as.info,  Node: Sbttl,  Next: Scl,  Prev: Rept,  Up: Pseudo Ops
+
+`.sbttl "SUBHEADING"'
+=====================
+
+   Use SUBHEADING as the title (third line, immediately after the title
+line) when generating assembly listings.
+
+   This directive affects subsequent pages, as well as the current page
+if it appears within ten lines of the top of a page.
+
+
+File: as.info,  Node: Scl,  Next: Section,  Prev: Sbttl,  Up: Pseudo Ops
+
+`.scl CLASS'
+============
+
+   Set the storage-class value for a symbol.  This directive may only be
+used inside a `.def'/`.endef' pair.  Storage class may flag whether a
+symbol is static or external, or it may record further symbolic
+debugging information.
+
+   The `.scl' directive is primarily associated with COFF output; when
+configured to generate `b.out' output format, `as' accepts this
+directive but ignores it.
+
+
+File: as.info,  Node: Section,  Next: Set,  Prev: Scl,  Up: Pseudo Ops
+
+`.section NAME'
+===============
+
+   Use the `.section' directive to assemble the following code into a
+section named NAME.
+
+   This directive is only supported for targets that actually support
+arbitrarily named sections; on `a.out' targets, for example, it is not
+accepted, even with a standard `a.out' section name.
+
+   For COFF targets, the `.section' directive is used in one of the
+following ways:
+     .section NAME[, "FLAGS"]
+     .section NAME[, SUBSEGMENT]
+
+   If the optional argument is quoted, it is taken as flags to use for
+the section.  Each flag is a single character.  The following flags are
+recognized:
+`b'
+     bss section (uninitialized data)
+
+`n'
+     section is not loaded
+
+`w'
+     writable section
+
+`d'
+     data section
+
+`r'
+     read-only section
+
+`x'
+     executable section
+
+   If no flags are specified, the default flags depend upon the section
+name.  If the section name is not recognized, the default will be for
+the section to be loaded and writable.
+
+   If the optional argument to the `.section' directive is not quoted,
+it is taken as a subsegment number (*note Sub-Sections::.).
+
+   For ELF targets, the `.section' directive is used like this:
+     .section NAME[, "FLAGS"[, @TYPE]]
+   The optional FLAGS argument is a quoted string which may contain any
+combintion of the following characters:
+`a'
+     section is allocatable
+
+`w'
+     section is writable
+
+`x'
+     section is executable
+
+   The optional TYPE argument may contain one of the following
+constants:
+`@progbits'
+     section contains data
+
+`@nobits'
+     section does not contain data (i.e., section only occupies space)
+
+   If no flags are specified, the default flags depend upon the section
+name.  If the section name is not recognized, the default will be for
+the section to have none of the above flags: it will not be allocated
+in memory, nor writable, nor executable.  The section will contain data.
+
+   For ELF targets, the assembler supports another type of `.section'
+directive for compatibility with the Solaris assembler:
+     .section "NAME"[, FLAGS...]
+   Note that the section name is quoted.  There may be a sequence of
+comma separated flags:
+`#alloc'
+     section is allocatable
+
+`#write'
+     section is writable
+
+`#execinstr'
+     section is executable
+
+
 File: as.info,  Node: Set,  Next: Short,  Prev: Section,  Up: Pseudo Ops
 
 `.set SYMBOL, EXPRESSION'
@@ -31,7 +288,7 @@ File: as.info,  Node: Set,  Next: Short,  Prev: Section,  Up: Pseudo Ops
 
    Set the value of SYMBOL to EXPRESSION.  This changes SYMBOL's value
 and type to conform to EXPRESSION.  If SYMBOL was flagged as external,
-it remains flagged. (*Note Symbol Attributes::.)
+it remains flagged (*note Symbol Attributes::.).
 
    You may `.set' a symbol many times in the same assembly.
 
@@ -63,7 +320,7 @@ numbers emitted depends on how `as' is configured.  *Note Machine
 Dependencies::.
 
 
-File: as.info,  Node: Size,  Next: Space,  Prev: Single,  Up: Pseudo Ops
+File: as.info,  Node: Size,  Next: Skip,  Prev: Single,  Up: Pseudo Ops
 
 `.size'
 =======
@@ -76,14 +333,24 @@ debugging information in the symbol table.  It is only permitted inside
 `as' is generating `b.out', it accepts this directive but ignores it.
 
 
-File: as.info,  Node: Space,  Next: Stab,  Prev: Size,  Up: Pseudo Ops
+File: as.info,  Node: Skip,  Next: Space,  Prev: Size,  Up: Pseudo Ops
+
+`.skip SIZE , FILL'
+===================
+
+   This directive emits SIZE bytes, each of value FILL.  Both SIZE and
+FILL are absolute expressions.  If the comma and FILL are omitted, FILL
+is assumed to be zero.  This is the same as `.space'.
+
+
+File: as.info,  Node: Space,  Next: Stab,  Prev: Skip,  Up: Pseudo Ops
 
 `.space SIZE , FILL'
 ====================
 
    This directive emits SIZE bytes, each of value FILL.  Both SIZE and
 FILL are absolute expressions.  If the comma and FILL are omitted, FILL
-is assumed to be zero.
+is assumed to be zero.  This is the same as `.skip'.
 
      *Warning:* `.space' has a completely different meaning for HPPA
      targets; use `.block' as a substitute.  See `HP9000 Series 800
@@ -152,7 +419,7 @@ earlier assemblers!
      All five fields are specified.
 
 
-File: as.info,  Node: String,  Next: Tag,  Prev: Stab,  Up: Pseudo Ops
+File: as.info,  Node: String,  Next: Symver,  Prev: Stab,  Up: Pseudo Ops
 
 `.string' "STR"
 ===============
@@ -164,7 +431,38 @@ string with a 0 byte.  You can use any of the escape sequences
 described in *Note Strings: Strings.
 
 
-File: as.info,  Node: Tag,  Next: Text,  Prev: String,  Up: Pseudo Ops
+File: as.info,  Node: Symver,  Next: Tag,  Prev: String,  Up: Pseudo Ops
+
+`.symver'
+=========
+
+   Use the `.symver' directive to bind symbols to specific version nodes
+within a source file.  This is only supported on ELF platforms, and is
+typically used when assembling files to be linked into a shared library.
+There are cases where it may make sense to use this in objects to be
+bound into an application itself so as to override a versioned symbol
+from a shared library.
+
+   For ELF targets, the `.symver' directive is used like this:
+     .symver NAME, NAME2@NODENAME
+   In this case, the symbol NAME must exist and be defined within the
+file being assembled.  The `.versym' directive effectively creates a
+symbol alias with the name NAME2@NODENAME, and in fact the main reason
+that we just don't try and create a regular alias is that the @
+character isn't permitted in symbol names.  The NAME2 part of the name
+is the actual name of the symbol by which it will be externally
+referenced.  The name NAME itself is merely a name of convenience that
+is used so that it is possible to have definitions for multiple
+versions of a function within a single source file, and so that the
+compiler can unambiguously know which version of a function is being
+mentioned.  The NODENAME portion of the alias should be the name of a
+node specified in the version script supplied to the linker when
+building a shared library.  If you are attempting to override a
+versioned symbol from a shared library, then NODENAME should correspond
+to the nodename of the symbol you are trying to override.
+
+
+File: as.info,  Node: Tag,  Next: Text,  Prev: Symver,  Up: Pseudo Ops
 
 `.tag STRUCTNAME'
 =================
@@ -275,7 +573,7 @@ compatibility with older assemblers.
 .app-file
 .line
 
-File: as.info,  Node: Machine Dependencies,  Next: Acknowledgements,  Prev: Pseudo Ops,  Up: Top
+File: as.info,  Node: Machine Dependencies,  Next: Reporting Bugs,  Prev: Pseudo Ops,  Up: Top
 
 Machine Dependent Features
 **************************
@@ -294,9 +592,9 @@ subject, see the hardware manufacturer's manual.
 * Menu:
 
 
-* Vax-Dependent::               VAX Dependent Features
-
 * AMD29K-Dependent::            AMD 29K Dependent Features
+
+* D10V-Dependent::              D10V Dependent Features
 
 * H8/300-Dependent::            Hitachi H8/300 Dependent Features
 
@@ -304,281 +602,24 @@ subject, see the hardware manufacturer's manual.
 
 * HPPA-Dependent::              HPPA Dependent Features
 
-* SH-Dependent::                Hitachi SH Dependent Features
+* i386-Dependent::              Intel 80386 Dependent Features
 
 * i960-Dependent::              Intel 80960 Dependent Features
 
 * M68K-Dependent::              M680x0 Dependent Features
 
+* MIPS-Dependent::              MIPS Dependent Features
+
+* SH-Dependent::                Hitachi SH Dependent Features
+
 * Sparc-Dependent::             SPARC Dependent Features
 
 * Z8000-Dependent::             Z8000 Dependent Features
 
-* MIPS-Dependent::              MIPS Dependent Features
-
-* i386-Dependent::              80386 Dependent Features
+* Vax-Dependent::               VAX Dependent Features
 
 
-File: as.info,  Node: Vax-Dependent,  Next: AMD29K-Dependent,  Up: Machine Dependencies
-
-VAX Dependent Features
-======================
-
-* Menu:
-
-* Vax-Opts::                    VAX Command-Line Options
-* VAX-float::                   VAX Floating Point
-* VAX-directives::              Vax Machine Directives
-* VAX-opcodes::                 VAX Opcodes
-* VAX-branch::                  VAX Branch Improvement
-* VAX-operands::                VAX Operands
-* VAX-no::                      Not Supported on VAX
-
-
-File: as.info,  Node: Vax-Opts,  Next: VAX-float,  Up: Vax-Dependent
-
-VAX Command-Line Options
-------------------------
-
-   The Vax version of `as' accepts any of the following options, gives
-a warning message that the option was ignored and proceeds.  These
-options are for compatibility with scripts designed for other people's
-assemblers.
-
-``-D' (Debug)'
-``-S' (Symbol Table)'
-``-T' (Token Trace)'
-     These are obsolete options used to debug old assemblers.
-
-``-d' (Displacement size for JUMPs)'
-     This option expects a number following the `-d'.  Like options
-     that expect filenames, the number may immediately follow the `-d'
-     (old standard) or constitute the whole of the command line
-     argument that follows `-d' (GNU standard).
-
-``-V' (Virtualize Interpass Temporary File)'
-     Some other assemblers use a temporary file.  This option commanded
-     them to keep the information in active memory rather than in a
-     disk file.  `as' always does this, so this option is redundant.
-
-``-J' (JUMPify Longer Branches)'
-     Many 32-bit computers permit a variety of branch instructions to
-     do the same job.  Some of these instructions are short (and fast)
-     but have a limited range; others are long (and slow) but can
-     branch anywhere in virtual memory.  Often there are 3 flavors of
-     branch: short, medium and long.  Some other assemblers would emit
-     short and medium branches, unless told by this option to emit
-     short and long branches.
-
-``-t' (Temporary File Directory)'
-     Some other assemblers may use a temporary file, and this option
-     takes a filename being the directory to site the temporary file.
-     Since `as' does not use a temporary disk file, this option makes
-     no difference.  `-t' needs exactly one filename.
-
-   The Vax version of the assembler accepts two options when compiled
-for VMS.  They are `-h', and `-+'.  The `-h' option prevents `as' from
-modifying the symbol-table entries for symbols that contain lowercase
-characters (I think).  The `-+' option causes `as' to print warning
-messages if the FILENAME part of the object file, or any symbol name is
-larger than 31 characters.  The `-+' option also inserts some code
-following the `_main' symbol so that the object file is compatible with
-Vax-11 "C".
-
-
-File: as.info,  Node: VAX-float,  Next: VAX-directives,  Prev: Vax-Opts,  Up: Vax-Dependent
-
-VAX Floating Point
-------------------
-
-   Conversion of flonums to floating point is correct, and compatible
-with previous assemblers.  Rounding is towards zero if the remainder is
-exactly half the least significant bit.
-
-   `D', `F', `G' and `H' floating point formats are understood.
-
-   Immediate floating literals (*e.g.* `S`$6.9') are rendered
-correctly.  Again, rounding is towards zero in the boundary case.
-
-   The `.float' directive produces `f' format numbers.  The `.double'
-directive produces `d' format numbers.
-
-
-File: as.info,  Node: VAX-directives,  Next: VAX-opcodes,  Prev: VAX-float,  Up: Vax-Dependent
-
-Vax Machine Directives
-----------------------
-
-   The Vax version of the assembler supports four directives for
-generating Vax floating point constants.  They are described in the
-table below.
-
-`.dfloat'
-     This expects zero or more flonums, separated by commas, and
-     assembles Vax `d' format 64-bit floating point constants.
-
-`.ffloat'
-     This expects zero or more flonums, separated by commas, and
-     assembles Vax `f' format 32-bit floating point constants.
-
-`.gfloat'
-     This expects zero or more flonums, separated by commas, and
-     assembles Vax `g' format 64-bit floating point constants.
-
-`.hfloat'
-     This expects zero or more flonums, separated by commas, and
-     assembles Vax `h' format 128-bit floating point constants.
-
-
-File: as.info,  Node: VAX-opcodes,  Next: VAX-branch,  Prev: VAX-directives,  Up: Vax-Dependent
-
-VAX Opcodes
------------
-
-   All DEC mnemonics are supported.  Beware that `case...' instructions
-have exactly 3 operands.  The dispatch table that follows the `case...'
-instruction should be made with `.word' statements.  This is compatible
-with all unix assemblers we know of.
-
-
-File: as.info,  Node: VAX-branch,  Next: VAX-operands,  Prev: VAX-opcodes,  Up: Vax-Dependent
-
-VAX Branch Improvement
-----------------------
-
-   Certain pseudo opcodes are permitted.  They are for branch
-instructions.  They expand to the shortest branch instruction that
-reaches the target.  Generally these mnemonics are made by substituting
-`j' for `b' at the start of a DEC mnemonic.  This feature is included
-both for compatibility and to help compilers.  If you do not need this
-feature, avoid these opcodes.  Here are the mnemonics, and the code
-they can expand into.
-
-`jbsb'
-     `Jsb' is already an instruction mnemonic, so we chose `jbsb'.
-    (byte displacement)
-          `bsbb ...'
-
-    (word displacement)
-          `bsbw ...'
-
-    (long displacement)
-          `jsb ...'
-
-`jbr'
-`jr'
-     Unconditional branch.
-    (byte displacement)
-          `brb ...'
-
-    (word displacement)
-          `brw ...'
-
-    (long displacement)
-          `jmp ...'
-
-`jCOND'
-     COND may be any one of the conditional branches `neq', `nequ',
-     `eql', `eqlu', `gtr', `geq', `lss', `gtru', `lequ', `vc', `vs',
-     `gequ', `cc', `lssu', `cs'.  COND may also be one of the bit tests
-     `bs', `bc', `bss', `bcs', `bsc', `bcc', `bssi', `bcci', `lbs',
-     `lbc'.  NOTCOND is the opposite condition to COND.
-    (byte displacement)
-          `bCOND ...'
-
-    (word displacement)
-          `bNOTCOND foo ; brw ... ; foo:'
-
-    (long displacement)
-          `bNOTCOND foo ; jmp ... ; foo:'
-
-`jacbX'
-     X may be one of `b d f g h l w'.
-    (word displacement)
-          `OPCODE ...'
-
-    (long displacement)
-               OPCODE ..., foo ;
-               brb bar ;
-               foo: jmp ... ;
-               bar:
-
-`jaobYYY'
-     YYY may be one of `lss leq'.
-
-`jsobZZZ'
-     ZZZ may be one of `geq gtr'.
-    (byte displacement)
-          `OPCODE ...'
-
-    (word displacement)
-               OPCODE ..., foo ;
-               brb bar ;
-               foo: brw DESTINATION ;
-               bar:
-
-    (long displacement)
-               OPCODE ..., foo ;
-               brb bar ;
-               foo: jmp DESTINATION ;
-               bar:
-
-`aobleq'
-`aoblss'
-`sobgeq'
-`sobgtr'
-    (byte displacement)
-          `OPCODE ...'
-
-    (word displacement)
-               OPCODE ..., foo ;
-               brb bar ;
-               foo: brw DESTINATION ;
-               bar:
-
-    (long displacement)
-               OPCODE ..., foo ;
-               brb bar ;
-               foo: jmp DESTINATION ;
-               bar:
-
-
-File: as.info,  Node: VAX-operands,  Next: VAX-no,  Prev: VAX-branch,  Up: Vax-Dependent
-
-VAX Operands
-------------
-
-   The immediate character is `$' for Unix compatibility, not `#' as
-DEC writes it.
-
-   The indirect character is `*' for Unix compatibility, not `@' as DEC
-writes it.
-
-   The displacement sizing character is ``' (an accent grave) for Unix
-compatibility, not `^' as DEC writes it.  The letter preceding ``' may
-have either case.  `G' is not understood, but all other letters (`b i l
-s w') are understood.
-
-   Register names understood are `r0 r1 r2 ... r15 ap fp sp pc'.  Upper
-and lower case letters are equivalent.
-
-   For instance
-     tstb *w`$4(r5)
-
-   Any expression is permitted in an operand.  Operands are comma
-separated.
-
-
-File: as.info,  Node: VAX-no,  Prev: VAX-operands,  Up: Vax-Dependent
-
-Not Supported on VAX
---------------------
-
-   Vax bit fields can not be assembled with `as'.  Someone can add the
-required code if they really need it.
-
-
-File: as.info,  Node: AMD29K-Dependent,  Next: H8/300-Dependent,  Prev: Vax-Dependent,  Up: Machine Dependencies
+File: as.info,  Node: AMD29K-Dependent,  Next: D10V-Dependent,  Up: Machine Dependencies
 
 AMD 29K Dependent Features
 ==========================
@@ -731,7 +772,272 @@ pseudo-instructions are needed on this family.
 User's Manual', Advanced Micro Devices, Inc.
 
 
-File: as.info,  Node: H8/300-Dependent,  Next: H8/500-Dependent,  Prev: AMD29K-Dependent,  Up: Machine Dependencies
+File: as.info,  Node: D10V-Dependent,  Next: H8/300-Dependent,  Prev: AMD29K-Dependent,  Up: Machine Dependencies
+
+D10V Dependent Features
+=======================
+
+* Menu:
+
+* D10V-Opts::                   D10V Options
+* D10V-Syntax::                 Syntax
+* D10V-Float::                  Floating Point
+* D10V-Opcodes::                Opcodes
+
+
+File: as.info,  Node: D10V-Opts,  Next: D10V-Syntax,  Up: D10V-Dependent
+
+D10V Options
+------------
+
+   The Mitsubishi D10V version of `as' has a few machine dependent
+options.
+
+`-O'
+     The D10V can often execute two sub-instructions in parallel. When
+     this option is used, `as' will attempt to optimize its output by
+     detecting when instructions can be executed in parallel.
+
+
+File: as.info,  Node: D10V-Syntax,  Next: D10V-Float,  Prev: D10V-Opts,  Up: D10V-Dependent
+
+Syntax
+------
+
+   The D10V syntax is based on the syntax in Mitsubishi's D10V
+architecture manual.  The differences are detailed below.
+
+* Menu:
+
+* D10V-Size::                 Size Modifiers
+* D10V-Subs::                 Sub-Instructions
+* D10V-Chars::                Special Characters
+* D10V-Regs::                 Register Names
+* D10V-Addressing::           Addressing Modes
+* D10V-Word::                 @WORD Modifier
+
+
+File: as.info,  Node: D10V-Size,  Next: D10V-Subs,  Up: D10V-Syntax
+
+Size Modifiers
+..............
+
+   The D10V version of `as' uses the instruction names in the D10V
+Architecture Manual.  However, the names in the manual are sometimes
+ambiguous.  There are instruction names that can assemble to a short or
+long form opcode.  How does the assembler pick the correct form?  `as'
+will always pick the smallest form if it can.  When dealing with a
+symbol that is not defined yet when a line is being assembled, it will
+always use the long form.  If you need to force the assembler to use
+either the short or long form of the instruction, you can append either
+`.s' (short) or `.l' (long) to it.  For example, if you are writing an
+assembly program and you want to do a branch to a symbol that is
+defined later in your program, you can write `bra.s   foo'.  Objdump
+and GDB will always append `.s' or `.l' to instructions which have both
+short and long forms.
+
+
+File: as.info,  Node: D10V-Subs,  Next: D10V-Chars,  Prev: D10V-Size,  Up: D10V-Syntax
+
+Sub-Instructions
+................
+
+   The D10V assembler takes as input a series of instructions, either
+one-per-line, or in the special two-per-line format described in the
+next section.  Some of these instructions will be short-form or
+sub-instructions.  These sub-instructions can be packed into a single
+instruction.  The assembler will do this automatically.  It will also
+detect when it should not pack instructions.  For example, when a label
+is defined, the next instruction will never be packaged with the
+previous one.  Whenever a branch and link instruction is called, it
+will not be packaged with the next instruction so the return address
+will be valid.  Nops are automatically inserted when necessary.
+
+   If you do not want the assembler automatically making these
+decisions, you can control the packaging and execution type (parallel
+or sequential) with the special execution symbols described in the next
+section.
+
+
+File: as.info,  Node: D10V-Chars,  Next: D10V-Regs,  Prev: D10V-Subs,  Up: D10V-Syntax
+
+Special Characters
+..................
+
+   `;' and `#' are the line comment characters.  Sub-instructions may
+be executed in order, in reverse-order, or in parallel.  Instructions
+listed in the standard one-per-line format will be executed
+sequentially.  To specify the executing order, use the following
+symbols:
+`->'
+     Sequential with instruction on the left first.
+
+`<-'
+     Sequential with instruction on the right first.
+
+`||'
+     Parallel The D10V syntax allows either one instruction per line,
+one instruction per line with the execution symbol, or two instructions
+per line.  For example
+`abs       a1      ->      abs     r0'
+     Execute these sequentially.  The instruction on the right is in
+     the right container and is executed second.
+
+`abs       r0      <-      abs     a1'
+     Execute these reverse-sequentially.  The instruction on the right
+     is in the right container, and is executed first.
+
+`ld2w    r2,@r8+         ||      mac     a0,r0,r7'
+     Execute these in parallel.
+
+`ld2w    r2,@r8+         ||'
+`mac     a0,r0,r7'
+     Two-line format. Execute these in parallel.
+
+`ld2w    r2,@r8+'
+`mac     a0,r0,r7'
+     Two-line format. Execute these sequentially.  Assembler will put
+     them in the proper containers.
+
+`ld2w    r2,@r8+         ->'
+`mac     a0,r0,r7'
+     Two-line format. Execute these sequentially.  Same as above but
+     second instruction will always go into right container.  Since `$'
+has no special meaning, you may use it in symbol names.
+
+
+File: as.info,  Node: D10V-Regs,  Next: D10V-Addressing,  Prev: D10V-Chars,  Up: D10V-Syntax
+
+Register Names
+..............
+
+   You can use the predefined symbols `r0' through `r15' to refer to
+the D10V registers.  You can also use `sp' as an alias for `r15'.  The
+accumulators are `a0' and `a1'.  There are special register-pair names
+that may optionally be used in opcodes that require even-numbered
+registers. Register names are not case sensitive.
+
+   Register Pairs
+`r0-r1'
+`r2-r3'
+`r4-r5'
+`r6-r7'
+`r8-r9'
+`r10-r11'
+`r12-r13'
+`r14-r15'
+   The D10V also has predefined symbols for these control registers and
+status bits:
+`psw'
+     Processor Status Word
+
+`bpsw'
+     Backup Processor Status Word
+
+`pc'
+     Program Counter
+
+`bpc'
+     Backup Program Counter
+
+`rpt_c'
+     Repeat Count
+
+`rpt_s'
+     Repeat Start address
+
+`rpt_e'
+     Repeat End address
+
+`mod_s'
+     Modulo Start address
+
+`mod_e'
+     Modulo End address
+
+`iba'
+     Instruction Break Address
+
+`f0'
+     Flag 0
+
+`f1'
+     Flag 1
+
+`c'
+     Carry flag
+
+
+File: as.info,  Node: D10V-Addressing,  Next: D10V-Word,  Prev: D10V-Regs,  Up: D10V-Syntax
+
+Addressing Modes
+................
+
+   `as' understands the following addressing modes for the D10V.  `RN'
+in the following refers to any of the numbered registers, but *not* the
+control registers.
+`RN'
+     Register direct
+
+`@RN'
+     Register indirect
+
+`@RN+'
+     Register indirect with post-increment
+
+`@RN-'
+     Register indirect with post-decrement
+
+`@-SP'
+     Register indirect with pre-decrement
+
+`@(DISP, RN)'
+     Register indirect with displacement
+
+`ADDR'
+     PC relative address (for branch or rep).
+
+`#IMM'
+     Immediate data (the `#' is optional and ignored)
+
+
+File: as.info,  Node: D10V-Word,  Prev: D10V-Addressing,  Up: D10V-Syntax
+
+@WORD Modifier
+..............
+
+   Any symbol followed by `@word' will be replaced by the symbol's value
+shifted right by 2.  This is used in situations such as loading a
+register with the address of a function (or any other code fragment).
+For example, if you want to load a register with the location of the
+function `main' then jump to that function, you could do it as follws:
+     ldi     r2, main@word
+     jmp     r2
+
+
+File: as.info,  Node: D10V-Float,  Next: D10V-Opcodes,  Prev: D10V-Syntax,  Up: D10V-Dependent
+
+Floating Point
+--------------
+
+   The D10V has no hardware floating point, but the `.float' and
+`.double' directives generates IEEE floating-point numbers for
+compatibility with other development tools.
+
+
+File: as.info,  Node: D10V-Opcodes,  Prev: D10V-Float,  Up: D10V-Dependent
+
+Opcodes
+-------
+
+   For detailed information on the D10V machine instruction set, see
+`D10V Architecture: A VLIW Microprocessor for Multimedia Applications'
+(Mitsubishi Electric Corp.).  `as' implements all the standard D10V
+opcodes.  The only changes are those described in the section on size
+modifiers
+
+
+File: as.info,  Node: H8/300-Dependent,  Next: H8/500-Dependent,  Prev: D10V-Dependent,  Up: Machine Dependencies
 
 H8/300 Dependent Features
 =========================
@@ -1188,206 +1494,4 @@ H8/500 Machine Directives
    `as' has no machine-dependent directives for the H8/500.  However,
 on this platform the `.int' and `.word' directives generate 16-bit
 numbers.
-
-
-File: as.info,  Node: H8/500 Opcodes,  Prev: H8/500 Directives,  Up: H8/500-Dependent
-
-Opcodes
--------
-
-   For detailed information on the H8/500 machine instruction set, see
-`H8/500 Series Programming Manual' (Hitachi M21T001).
-
-   `as' implements all the standard H8/500 opcodes.  No additional
-pseudo-instructions are needed on this family.
-
-   The following table summarizes H8/500 opcodes and their operands:
-
-     Legend:
-     abs8      8-bit absolute address
-     abs16     16-bit absolute address
-     abs24     24-bit absolute address
-     crb       `ccr', `br', `ep', `dp', `tp', `dp'
-     disp8     8-bit displacement
-     ea        `rn', `@rn', `@(d:8, rn)', `@(d:16, rn)',
-               `@-rn', `@rn+', `@aa:8', `@aa:16',
-               `#xx:8', `#xx:16'
-     ea_mem    `@rn', `@(d:8, rn)', `@(d:16, rn)',
-               `@-rn', `@rn+', `@aa:8', `@aa:16'
-     ea_noimm  `rn', `@rn', `@(d:8, rn)', `@(d:16, rn)',
-               `@-rn', `@rn+', `@aa:8', `@aa:16'
-     fp        r6
-     imm4      4-bit immediate data
-     imm8      8-bit immediate data
-     imm16     16-bit immediate data
-     pcrel8    8-bit offset from program counter
-     pcrel16   16-bit offset from program counter
-     qim       `-2', `-1', `1', `2'
-     rd        any register
-     rs        a register distinct from rd
-     rlist     comma-separated list of registers in parentheses;
-               register ranges `rd-rs' are allowed
-     sp        stack pointer (`r7')
-     sr        status register
-     sz        size; `.b' or `.w'.  If omitted, default `.w'
-     
-     ldc[.b] ea,crb                 bcc[.w] pcrel16
-     ldc[.w] ea,sr                  bcc[.b] pcrel8
-     add[:q] sz qim,ea_noimm        bhs[.w] pcrel16
-     add[:g] sz ea,rd               bhs[.b] pcrel8
-     adds sz ea,rd                  bcs[.w] pcrel16
-     addx sz ea,rd                  bcs[.b] pcrel8
-     and sz ea,rd                   blo[.w] pcrel16
-     andc[.b] imm8,crb              blo[.b] pcrel8
-     andc[.w] imm16,sr              bne[.w] pcrel16
-     bpt                            bne[.b] pcrel8
-     bra[.w] pcrel16                beq[.w] pcrel16
-     bra[.b] pcrel8                 beq[.b] pcrel8
-     bt[.w] pcrel16                 bvc[.w] pcrel16
-     bt[.b] pcrel8                  bvc[.b] pcrel8
-     brn[.w] pcrel16                bvs[.w] pcrel16
-     brn[.b] pcrel8                 bvs[.b] pcrel8
-     bf[.w] pcrel16                 bpl[.w] pcrel16
-     bf[.b] pcrel8                  bpl[.b] pcrel8
-     bhi[.w] pcrel16                bmi[.w] pcrel16
-     bhi[.b] pcrel8                 bmi[.b] pcrel8
-     bls[.w] pcrel16                bge[.w] pcrel16
-     bls[.b] pcrel8                 bge[.b] pcrel8
-     
-     blt[.w] pcrel16                mov[:g][.b] imm8,ea_mem
-     blt[.b] pcrel8                 mov[:g][.w] imm16,ea_mem
-     bgt[.w] pcrel16                movfpe[.b] ea,rd
-     bgt[.b] pcrel8                 movtpe[.b] rs,ea_noimm
-     ble[.w] pcrel16                mulxu sz ea,rd
-     ble[.b] pcrel8                 neg sz ea
-     bclr sz imm4,ea_noimm          nop
-     bclr sz rs,ea_noimm            not sz ea
-     bnot sz imm4,ea_noimm          or sz ea,rd
-     bnot sz rs,ea_noimm            orc[.b] imm8,crb
-     bset sz imm4,ea_noimm          orc[.w] imm16,sr
-     bset sz rs,ea_noimm            pjmp abs24
-     bsr[.b] pcrel8                 pjmp @rd
-     bsr[.w] pcrel16                pjsr abs24
-     btst sz imm4,ea_noimm          pjsr @rd
-     btst sz rs,ea_noimm            prtd imm8
-     clr sz ea                      prtd imm16
-     cmp[:e][.b] imm8,rd            prts
-     cmp[:i][.w] imm16,rd           rotl sz ea
-     cmp[:g].b imm8,ea_noimm        rotr sz ea
-     cmp[:g][.w] imm16,ea_noimm     rotxl sz ea
-     Cmp[:g] sz ea,rd               rotxr sz ea
-     dadd rs,rd                     rtd imm8
-     divxu sz ea,rd                 rtd imm16
-     dsub rs,rd                     rts
-     exts[.b] rd                    scb/f rs,pcrel8
-     extu[.b] rd                    scb/ne rs,pcrel8
-     jmp @rd                        scb/eq rs,pcrel8
-     jmp @(imm8,rd)                 shal sz ea
-     jmp @(imm16,rd)                shar sz ea
-     jmp abs16                      shll sz ea
-     jsr @rd                        shlr sz ea
-     jsr @(imm8,rd)                 sleep
-     jsr @(imm16,rd)                stc[.b] crb,ea_noimm
-     jsr abs16                      stc[.w] sr,ea_noimm
-     ldm @sp+,(rlist)               stm (rlist),@-sp
-     link fp,imm8                   sub sz ea,rd
-     link fp,imm16                  subs sz ea,rd
-     mov[:e][.b] imm8,rd            subx sz ea,rd
-     mov[:i][.w] imm16,rd           swap[.b] rd
-     mov[:l][.w] abs8,rd            tas[.b] ea
-     mov[:l].b abs8,rd              trapa imm4
-     mov[:s][.w] rs,abs8            trap/vs
-     mov[:s].b rs,abs8              tst sz ea
-     mov[:f][.w] @(disp8,fp),rd     unlk fp
-     mov[:f][.w] rs,@(disp8,fp)     xch[.w] rs,rd
-     mov[:f].b @(disp8,fp),rd       xor sz ea,rd
-     mov[:f].b rs,@(disp8,fp)       xorc.b imm8,crb
-     mov[:g] sz rs,ea_mem           xorc.w imm16,sr
-     mov[:g] sz ea,rd
-
-
-File: as.info,  Node: HPPA-Dependent,  Next: SH-Dependent,  Prev: H8/500-Dependent,  Up: Machine Dependencies
-
-HPPA Dependent Features
-=======================
-
-* Menu:
-
-* HPPA Notes::                Notes
-* HPPA Options::              Options
-* HPPA Syntax::               Syntax
-* HPPA Floating Point::       Floating Point
-* HPPA Directives::           HPPA Machine Directives
-* HPPA Opcodes::              Opcodes
-
-
-File: as.info,  Node: HPPA Notes,  Next: HPPA Options,  Up: HPPA-Dependent
-
-Notes
------
-
-   As a back end for GNU CC `as' has been throughly tested and should
-work extremely well.  We have tested it only minimally on hand written
-assembly code and no one has tested it much on the assembly output from
-the HP compilers.
-
-   The format of the debugging sections has changed since the original
-`as' port (version 1.3X) was released; therefore, you must rebuild all
-HPPA objects and libraries with the new assembler so that you can debug
-the final executable.
-
-   The HPPA `as' port generates a small subset of the relocations
-available in the SOM and ELF object file formats.  Additional relocation
-support will be added as it becomes necessary.
-
-
-File: as.info,  Node: HPPA Options,  Next: HPPA Syntax,  Prev: HPPA Notes,  Up: HPPA-Dependent
-
-Options
--------
-
-   `as' has no machine-dependent command-line options for the HPPA.
-
-
-File: as.info,  Node: HPPA Syntax,  Next: HPPA Floating Point,  Prev: HPPA Options,  Up: HPPA-Dependent
-
-Syntax
-------
-
-   The assembler syntax closely follows the HPPA instruction set
-reference manual; assembler directives and general syntax closely
-follow the HPPA assembly language reference manual, with a few
-noteworthy differences.
-
-   First, a colon may immediately follow a label definition.  This is
-simply for compatibility with how most assembly language programmers
-write code.
-
-   Some obscure expression parsing problems may affect hand written
-code which uses the `spop' instructions, or code which makes significant
-use of the `!' line separator.
-
-   `as' is much less forgiving about missing arguments and other
-similar oversights than the HP assembler.  `as' notifies you of missing
-arguments as syntax errors; this is regarded as a feature, not a bug.
-
-   Finally, `as' allows you to use an external symbol without
-explicitly importing the symbol.  *Warning:* in the future this will be
-an error for HPPA targets.
-
-   Special characters for HPPA targets include:
-
-   `;' is the line comment character.
-
-   `!' can be used instead of a newline to separate statements.
-
-   Since `$' has no special meaning, you may use it in symbol names.
-
-
-File: as.info,  Node: HPPA Floating Point,  Next: HPPA Directives,  Prev: HPPA Syntax,  Up: HPPA-Dependent
-
-Floating Point
---------------
-
-   The HPPA family uses IEEE floating-point numbers.
 

@@ -1,5 +1,5 @@
 /* Select disassembly routine for specified architecture.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,11 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define ARCH_a29k
 #define ARCH_alpha
 #define ARCH_arm
+#define ARCH_d10v
 #define ARCH_h8300
 #define ARCH_h8500
 #define ARCH_hppa
 #define ARCH_i386
 #define ARCH_i960
+#define ARCH_m32r
 #define ARCH_m68k
 #define ARCH_m88k
 #define ARCH_mips
@@ -71,6 +73,11 @@ disassembler (abfd)
 	disassemble = print_insn_little_arm;
       break;
 #endif
+#ifdef ARCH_d10v
+    case bfd_arch_d10v:
+      disassemble = print_insn_d10v;
+      break;
+#endif
 #ifdef ARCH_h8300
     case bfd_arch_h8300:
       if (bfd_get_mach(abfd) == bfd_mach_h8300h)
@@ -99,6 +106,11 @@ disassembler (abfd)
 #ifdef ARCH_i960
     case bfd_arch_i960:
       disassemble = print_insn_i960;
+      break;
+#endif
+#ifdef ARCH_m32r
+    case bfd_arch_m32r:
+      disassemble = print_insn_m32r;
       break;
 #endif
 #ifdef ARCH_m68k

@@ -1,5 +1,5 @@
 /* ELF object file format.
-   Copyright (C) 1992, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -34,9 +34,23 @@
 #define BYTES_IN_WORD 4		/* for now */
 #include "bfd/elf-bfd.h"
 
-/* Use this to keep track of .size expressions that involve differences
-   that we can't compute yet.  */
-#define OBJ_SYMFIELD_TYPE expressionS *
+/* Additional information we keep for each symbol.  */
+
+/* FIXME: For some reason, this structure is needed both here and in
+   obj-multi.h.  */
+#ifndef OBJ_SYMFIELD_TYPE
+struct elf_obj_sy
+{
+  /* Use this to keep track of .size expressions that involve
+     differences that we can't compute yet.  */
+  expressionS *size;
+
+  /* The name specified by the .symver directive.  */
+  char *versioned_name;
+};
+#endif
+
+#define OBJ_SYMFIELD_TYPE struct elf_obj_sy
 
 /* Symbol fields used by the ELF back end.  */
 #define ELF_TARGET_SYMBOL_FIELDS int local:1;
@@ -65,6 +79,10 @@ extern void elf_begin PARAMS ((void));
 #define S_SET_ALIGN(S,V) \
   (elf_symbol ((S)->bsym)->internal_elf_sym.st_value = (V))
 
+#define S_GET_OTHER(S) (elf_symbol ((S)->bsym)->internal_elf_sym.st_other)
+#define S_SET_OTHER(S,V) \
+  (elf_symbol ((S)->bsym)->internal_elf_sym.st_other = (V))
+
 extern asection *gdb_section;
 
 #define obj_frob_file  elf_frob_file
@@ -75,6 +93,8 @@ extern void elf_frob_file_after_relocs PARAMS ((void));
 
 #define obj_app_file elf_file_symbol
 extern void elf_file_symbol PARAMS ((char *));
+
+extern void obj_elf_section_change_hook PARAMS ((void));
 
 extern void obj_elf_section PARAMS ((int));
 extern void obj_elf_previous PARAMS ((int));
@@ -87,8 +107,13 @@ extern void obj_elf_version PARAMS ((int));
 /* When setting one symbol equal to another, by default we probably
    want them to have the same "size", whatever it means in the current
    context.  */
-#define OBJ_COPY_SYMBOL_ATTRIBUTES(DEST,SRC) \
-  S_SET_SIZE ((DEST), S_GET_SIZE (SRC))
+#define OBJ_COPY_SYMBOL_ATTRIBUTES(DEST,SRC)		\
+do							\
+  {							\
+    S_SET_SIZE ((DEST), S_GET_SIZE (SRC));		\
+    S_SET_OTHER ((DEST), S_GET_OTHER (SRC));		\
+  }							\
+while (0)
 
 /* Stabs go in a separate section.  */
 #define SEPARATE_STAB_SECTIONS 1
@@ -139,7 +164,10 @@ extern void elf_pop_insert PARAMS ((void));
 
 #ifndef OBJ_MAYBE_ELF
 #define obj_ecoff_set_ext elf_ecoff_set_ext
-extern void elf_ecoff_set_ext ();
+#ifdef ANSI_PROTOTYPES
+struct ecoff_extr;
+#endif
+extern void elf_ecoff_set_ext PARAMS ((struct symbol *, struct ecoff_extr *));
 #endif
 
 #endif /* _OBJ_ELF_H */

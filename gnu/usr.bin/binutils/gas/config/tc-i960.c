@@ -1,5 +1,5 @@
 /* tc-i960.c - All the i80960-specific stuff
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS.
@@ -1206,7 +1206,7 @@ brtab_emit ()
     }
 
   subseg_set (data_section, 0);	/*      .data */
-  frag_align (2, 0);		/*      .align 2 */
+  frag_align (2, 0, 0);		/*      .align 2 */
   record_alignment (now_seg, 2);
   colon (BR_TAB_NAME);		/* BR_TAB_NAME: */
   emit (0);			/*      .word 0 #link to next table */
@@ -3115,7 +3115,7 @@ tc_set_bal_of_call (callP, balP)
 
 #ifdef OBJ_COFF
 
-  callP->sy_symbol.ost_auxent[1].x_bal.x_balntry = (int) balP;
+  callP->sy_tc = balP;
   S_SET_NUMBER_AUXILIARY (callP, 2);
 
 #else /* ! OBJ_COFF */
@@ -3136,8 +3136,8 @@ tc_set_bal_of_call (callP, balP)
 #endif /* ! OBJ_COFF */
 }
 
-char *
-_tc_get_bal_of_call (callP)
+symbolS *
+tc_get_bal_of_call (callP)
      symbolS *callP;
 {
   symbolS *retval;
@@ -3145,7 +3145,7 @@ _tc_get_bal_of_call (callP)
   know (TC_S_IS_CALLNAME (callP));
 
 #ifdef OBJ_COFF
-  retval = (symbolS *) (callP->sy_symbol.ost_auxent[1].x_bal.x_balntry);
+  retval = callP->sy_tc;
 #else
 #ifdef OBJ_ABOUT
   retval = symbol_next (callP);
@@ -3155,7 +3155,7 @@ _tc_get_bal_of_call (callP)
 #endif /* ! OBJ_COFF */
 
   know (TC_S_IS_BALNAME (retval));
-  return ((char *) retval);
+  return retval;
 }				/* _tc_get_bal_of_call() */
 
 void

@@ -1,6 +1,6 @@
 /* libbfd.h -- Declarations used by bfd library *implementation*.
    (This include file is not for users of the library.)
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 ** NOTE: libbfd.h is a GENERATED file.  Don't change it; instead,
@@ -87,15 +87,11 @@ extern PTR bfd_zmalloc PARAMS ((size_t));
 
 extern bfd_error_handler_type _bfd_error_handler;
 
-/* These routines allocate and free things on the BFD's obstack.  */
+/* These routines allocate and free things on the BFD's objalloc.  */
 
-PTR	bfd_alloc PARAMS ((bfd *abfd, size_t size));
-PTR	bfd_zalloc PARAMS ((bfd *abfd, size_t size));
-void	bfd_alloc_grow PARAMS ((bfd *abfd, PTR thing, size_t size));
-PTR	bfd_alloc_finish PARAMS ((bfd *abfd));
-PTR	bfd_alloc_by_size_t PARAMS ((bfd *abfd, size_t wanted));
-
-#define	bfd_release(x,y) (void) obstack_free(&(x->memory),y)
+extern PTR bfd_alloc PARAMS ((bfd *, size_t));
+extern PTR bfd_zalloc PARAMS ((bfd *, size_t));
+extern void bfd_release PARAMS ((bfd *, PTR));
 
 bfd *	_bfd_create_empty_archive_element_shell PARAMS ((bfd *obfd));
 bfd *	_bfd_look_for_bfd_in_cache PARAMS ((bfd *arch_bfd, file_ptr index));
@@ -259,8 +255,8 @@ extern boolean _bfd_archive_coff_construct_extended_name_table
   ((void (*) PARAMS ((bfd *, PTR, asymbol *, bfd_print_symbol_type))) bfd_void)
 #define _bfd_nosymbols_get_symbol_info \
   ((void (*) PARAMS ((bfd *, asymbol *, symbol_info *))) bfd_void)
-#define _bfd_nosymbols_bfd_is_local_label \
-  ((boolean (*) PARAMS ((bfd *, asymbol *))) bfd_false)
+#define _bfd_nosymbols_bfd_is_local_label_name \
+  ((boolean (*) PARAMS ((bfd *, const char *))) bfd_false)
 #define _bfd_nosymbols_get_lineno \
   ((alent *(*) PARAMS ((bfd *, asymbol *))) bfd_nullvoidptr)
 #define _bfd_nosymbols_find_nearest_line \
@@ -339,7 +335,7 @@ extern boolean _bfd_generic_set_section_contents
 
 /* Generic routine to determine of the given symbol is a local
    label.  */
-extern boolean bfd_generic_is_local_label PARAMS ((bfd *, asymbol *));
+extern boolean bfd_generic_is_local_label_name PARAMS ((bfd *, const char *));
 
 /* Generic minisymbol routines.  */
 extern long _bfd_generic_read_minisymbols
@@ -433,11 +429,17 @@ extern boolean _bfd_link_section_stabs
 /* Write out the .stab section when linking stabs in sections.  */
 
 extern boolean _bfd_write_section_stabs
-  PARAMS ((bfd *, asection *, PTR *, bfd_byte *));
+  PARAMS ((bfd *, PTR *, asection *, PTR *, bfd_byte *));
 
 /* Write out the .stabstr string table when linking stabs in sections.  */
 
 extern boolean _bfd_write_stab_strings PARAMS ((bfd *, PTR *));
+
+/* Find an offset within a .stab section when linking stabs in
+   sections.  */
+
+extern bfd_vma _bfd_stab_section_offset
+  PARAMS ((bfd *, PTR *, asection *, PTR *, bfd_vma));
 
 /* Create a string table.  */
 extern struct bfd_strtab_hash *_bfd_stringtab_init PARAMS ((void));
@@ -486,7 +488,7 @@ extern bfd *bfd_last_cache;
 /* List of supported target vectors, and the default vector (if
    bfd_default_vector[0] is NULL, there is no default).  */
 extern const bfd_target * const bfd_target_vector[];
-extern const bfd_target * const bfd_default_vector[];
+extern const bfd_target *bfd_default_vector[];
 
 /* Functions shared by the ECOFF and MIPS ELF backends, which have no
    other common header files.  */
@@ -548,6 +550,7 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
   "BFD_RELOC_64",
   "BFD_RELOC_32",
   "BFD_RELOC_26",
+  "BFD_RELOC_24",
   "BFD_RELOC_16",
   "BFD_RELOC_14",
   "BFD_RELOC_8",
@@ -635,7 +638,10 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
   "BFD_RELOC_ALPHA_LITUSE",
   "BFD_RELOC_ALPHA_HINT",
   "BFD_RELOC_ALPHA_LINKAGE",
+  "BFD_RELOC_ALPHA_CODEADDR",
   "BFD_RELOC_MIPS_JMP",
+  "BFD_RELOC_MIPS16_JMP",
+  "BFD_RELOC_MIPS16_GPREL",
   "BFD_RELOC_HI16",
   "BFD_RELOC_HI16_S",
   "BFD_RELOC_LO16",
@@ -735,9 +741,23 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
   "BFD_RELOC_SH_DATA",
   "BFD_RELOC_SH_LABEL",
 
+  "BFD_RELOC_D10V_10_PCREL_R",
+  "BFD_RELOC_D10V_10_PCREL_L",
+  "BFD_RELOC_D10V_18",
+  "BFD_RELOC_D10V_18_PCREL",
 
 
+  "BFD_RELOC_M32R_24",
+  "BFD_RELOC_M32R_10_PCREL",
+  "BFD_RELOC_M32R_18_PCREL",
+  "BFD_RELOC_M32R_26_PCREL",
+  "BFD_RELOC_M32R_HI16_ULO",
+  "BFD_RELOC_M32R_HI16_SLO",
+  "BFD_RELOC_M32R_LO16",
+  "BFD_RELOC_M32R_SDA16",
 
+  "BFD_RELOC_MN10300_32_PCREL",
+  "BFD_RELOC_MN10300_16_PCREL",
  "@@overflow: BFD_RELOC_UNUSED@@",
 };
 #endif

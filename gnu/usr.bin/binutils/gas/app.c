@@ -1,5 +1,5 @@
 /* This is the Assembler Pre-Processor
-   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -15,8 +15,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 /* Modified by Allen Wirfs-Brock, Instantiations Inc 2/90 */
 /* App, the assembler pre-processor.  This pre-processor strips out excess
@@ -52,7 +53,6 @@ static const char symbol_chars[] =
 #define LEX_IS_COMMENT_START		4
 #define LEX_IS_LINE_COMMENT_START	5
 #define	LEX_IS_TWOCHAR_COMMENT_1ST	6
-#define	LEX_IS_TWOCHAR_COMMENT_2ND	7
 #define	LEX_IS_STRINGQUOTE		8
 #define	LEX_IS_COLON			9
 #define	LEX_IS_NEWLINE			10
@@ -126,16 +126,11 @@ do_scrub_begin (m68k_mri)
       lex[(unsigned char) *p] = LEX_IS_LINE_SEPARATOR;
     }				/* declare line separators */
 
-  /* Only allow slash-star comments if slash is not in use */
+  /* Only allow slash-star comments if slash is not in use.
+     FIXME: This isn't right.  We should always permit them.  */
   if (lex['/'] == 0)
     {
       lex['/'] = LEX_IS_TWOCHAR_COMMENT_1ST;
-    }
-  /* FIXME-soon.  This is a bad hack but otherwise, we can't do
-     c-style comments when '/' is a line comment char. xoxorich. */
-  if (lex['*'] == 0)
-    {
-      lex['*'] = LEX_IS_TWOCHAR_COMMENT_2ND;
     }
 
   if (m68k_mri)
@@ -404,7 +399,7 @@ do_scrub_chars (get, tostart, tolen)
 	    }
 
 	  state = old_state;
-	  PUT (' ');
+	  UNGET (' ');
 	  continue;
 
 	case 4:
@@ -759,7 +754,7 @@ do_scrub_chars (get, tostart, tolen)
 
 	case LEX_IS_TWOCHAR_COMMENT_1ST:
 	  ch2 = GET ();
-	  if (ch2 != EOF && lex[ch2] == LEX_IS_TWOCHAR_COMMENT_2ND)
+	  if (ch2 == '*')
 	    {
 	      for (;;)
 		{
@@ -769,20 +764,19 @@ do_scrub_chars (get, tostart, tolen)
 		      if (ch2 != EOF && IS_NEWLINE (ch2))
 			add_newlines++;
 		    }
-		  while (ch2 != EOF &&
-			 (lex[ch2] != LEX_IS_TWOCHAR_COMMENT_2ND));
+		  while (ch2 != EOF && ch2 != '*');
 
-		  while (ch2 != EOF &&
-			 (lex[ch2] == LEX_IS_TWOCHAR_COMMENT_2ND))
-		    {
-		      ch2 = GET ();
-		    }
+		  while (ch2 == '*')
+		    ch2 = GET ();
 
-		  if (ch2 == EOF
-		      || lex[ch2] == LEX_IS_TWOCHAR_COMMENT_1ST)
+		  if (ch2 == EOF || ch2 == '/')
 		    break;
+
+		  /* This UNGET will ensure that we count newlines
+                     correctly.  */
 		  UNGET (ch2);
 		}
+
 	      if (ch2 == EOF)
 		as_warn ("end of file in multiline comment");
 
@@ -906,6 +900,7 @@ do_scrub_chars (get, tostart, tolen)
 	      ch2 = GET ();
 	      if (ch2 == '*')
 		{
+		  old_state = 3;
 		  state = -2;
 		  break;
 		}

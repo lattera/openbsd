@@ -1,5 +1,5 @@
 /* COFF specific linker code.
-   Copyright 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -34,6 +34,10 @@ static boolean coff_link_check_archive_element
 static boolean coff_link_check_ar_symbols
   PARAMS ((bfd *, struct bfd_link_info *, boolean *));
 static boolean coff_link_add_symbols PARAMS ((bfd *, struct bfd_link_info *));
+static char *dores_com PARAMS ((char *, bfd *, int));
+static char *get_name PARAMS ((char *, char **));
+static int process_embedded_commands
+  PARAMS ((bfd *, struct bfd_link_info *, bfd *));
 
 /* Create an entry in a COFF linker hash table.  */
 
@@ -378,6 +382,13 @@ coff_link_add_symbols (abfd, info)
 		  (struct bfd_link_hash_entry **) sym_hash)))
 	    goto error_return;
 
+	  if (section == bfd_com_section_ptr
+	      && (*sym_hash)->root.type == bfd_link_hash_common
+	      && ((*sym_hash)->root.u.c.p->alignment_power
+		  > bfd_coff_default_section_alignment_power (abfd)))
+	    (*sym_hash)->root.u.c.p->alignment_power
+	      = bfd_coff_default_section_alignment_power (abfd);
+
 	  if (info->hash->creator->flavour == bfd_get_flavour (abfd))
 	    {
 	      if (((*sym_hash)->class == C_NULL
@@ -533,7 +544,10 @@ _bfd_coff_final_link (abfd, info)
 
   /* Compute the file positions for all the sections.  */
   if (! abfd->output_has_begun)
-    bfd_coff_compute_section_file_positions (abfd);
+    {
+      if (! bfd_coff_compute_section_file_positions (abfd))
+	goto error_return;
+    }
 
   /* Count the line numbers and relocation entries required for the
      output file.  Set the file positions for the relocs.  */
@@ -838,7 +852,7 @@ _bfd_coff_final_link (abfd, info)
       finfo.outsyms = NULL;
     }
 
-  if (info->relocateable)
+  if (info->relocateable && max_output_reloc_count > 0)
     {
       /* Now that we have written out all the global symbols, we know
 	 the symbol indices to use for relocs against them, and we can
@@ -1258,8 +1272,7 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 				    false) == NULL))
 	      || (! global
 		  && finfo->info->discard == discard_l
-		  && strncmp (name, finfo->info->lprefix,
-			      finfo->info->lprefix_len) == 0))
+		  && bfd_is_local_label_name (input_bfd, name)))
 	    skip = true;
 	}
 
@@ -2087,8 +2100,9 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	}
       else
 	{
-	  if (! _bfd_write_section_stabs (output_bfd, o, &secdata->stab_info,
-					  contents))
+	  if (! (_bfd_write_section_stabs
+		 (output_bfd, &coff_hash_table (finfo->info)->stab_info,
+		  o, &secdata->stab_info, contents)))
 	    return false;
 	}
     }
@@ -2423,6 +2437,18 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
       if (howto == NULL)
 	return false;
 
+      /* If we are doing a relocateable link, then we can just ignore
+         a PC relative reloc that is pcrel_offset.  It will already
+         have the correct value.  If this is not a relocateable link,
+         then we should ignore the symbol value.  */
+      if (howto->pc_relative && howto->pcrel_offset)
+	{
+	  if (info->relocateable)
+	    continue;
+	  if (sym != NULL && sym->n_scnum != 0)
+	    addend += sym->n_value;
+	}
+
       val = 0;
 
       if (h == NULL)
@@ -2495,6 +2521,13 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	  abort ();
 	case bfd_reloc_ok:
 	  break;
+	case bfd_reloc_outofrange:
+	  (*_bfd_error_handler)
+	    ("%s: bad reloc address 0x%lx in section `%s'",
+	     bfd_get_filename (input_bfd),
+	     (unsigned long) rel->r_vaddr,
+	     bfd_get_section_name (input_bfd, input_section));
+	  return false;
 	case bfd_reloc_overflow:
 	  {
 	    const char *name;

@@ -1,5 +1,5 @@
 /* frags.c - manage frags -
-   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -15,8 +15,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #include "as.h"
 #include "subsegs.h"
@@ -203,7 +204,7 @@ frag_var (type, max_chars, var, subtype, symbol, offset, opcode)
      int var;
      relax_substateT subtype;
      symbolS *symbol;
-     long offset;
+     offsetT offset;
      char *opcode;
 {
   register char *retval;
@@ -217,9 +218,10 @@ frag_var (type, max_chars, var, subtype, symbol, offset, opcode)
   frag_now->fr_symbol = symbol;
   frag_now->fr_offset = offset;
   frag_now->fr_opcode = opcode;
-  /* default these to zero. */
-  frag_now->fr_pcrel_adjust = 0;
-  frag_now->fr_bsr = 0;
+  /* Default these to zero.  Only the ns32k uses these but they can't be
+     conditionally included in `struct frag'.  See as.h.  */
+  frag_now->fr_targ.ns32k.pcrel_adjust = 0;
+  frag_now->fr_targ.ns32k.bsr = 0;
   as_where (&frag_now->fr_file, &frag_now->fr_line);
   frag_new (max_chars);
   return (retval);
@@ -231,7 +233,6 @@ frag_var (type, max_chars, var, subtype, symbol, offset, opcode)
  * OVE: This variant of frag_var assumes that space for the tail has been
  *      allocated by caller.
  *      No call to frag_grow is done.
- *      Two new arguments have been added.
  */
 
 char *
@@ -241,7 +242,7 @@ frag_variant (type, max_chars, var, subtype, symbol, offset, opcode)
      int var;
      relax_substateT subtype;
      symbolS *symbol;
-     long offset;
+     offsetT offset;
      char *opcode;
 {
   register char *retval;
@@ -253,9 +254,10 @@ frag_variant (type, max_chars, var, subtype, symbol, offset, opcode)
   frag_now->fr_symbol = symbol;
   frag_now->fr_offset = offset;
   frag_now->fr_opcode = opcode;
-  /* default these to zero. */
-  frag_now->fr_pcrel_adjust = 0;
-  frag_now->fr_bsr = 0;
+  /* Default these to zero.  Only the ns32k uses these but they can't be
+     conditionally included in `struct frag'.  See as.h.  */
+  frag_now->fr_targ.ns32k.pcrel_adjust = 0;
+  frag_now->fr_targ.ns32k.bsr = 0;
   as_where (&frag_now->fr_file, &frag_now->fr_line);
   frag_new (max_chars);
   return (retval);
@@ -278,22 +280,31 @@ frag_wane (fragP)
 /* Make an alignment frag.  The size of this frag will be adjusted to
    force the next frag to have the appropriate alignment.  ALIGNMENT
    is the power of two to which to align.  FILL_CHARACTER is the
-   character to use to fill in any bytes which are skipped.  */
+   character to use to fill in any bytes which are skipped.  MAX is
+   the maximum number of characters to skip when doing the alignment,
+   or 0 if there is no maximum.  */
 
 void 
-frag_align (alignment, fill_character)
+frag_align (alignment, fill_character, max)
      int alignment;
      int fill_character;
+     int max;
 {
   if (now_seg == absolute_section)
-    abs_section_offset = ((abs_section_offset + alignment - 1)
-			  &~ ((1 << alignment) - 1));
+    {
+      addressT new_off;
+
+      new_off = ((abs_section_offset + alignment - 1)
+		 &~ ((1 << alignment) - 1));
+      if (max == 0 || new_off - abs_section_offset <= max)
+	abs_section_offset = new_off;
+    }
   else
     {
       char *p;
 
-      p = frag_var (rs_align, 1, 1, (relax_substateT) 0,
-		    (symbolS *) 0, (long) alignment, (char *) 0);
+      p = frag_var (rs_align, 1, 1, (relax_substateT) max,
+		    (symbolS *) 0, (offsetT) alignment, (char *) 0);
       *p = fill_character;
     }
 }
@@ -302,17 +313,20 @@ frag_align (alignment, fill_character)
    pattern rather than a single byte.  ALIGNMENT is the power of two
    to which to align.  FILL_PATTERN is the fill pattern to repeat in
    the bytes which are skipped.  N_FILL is the number of bytes in
-   FILL_PATTERN.  */
+   FILL_PATTERN.  MAX is the maximum number of characters to skip when
+   doing the alignment, or 0 if there is no maximum.  */
 
 void 
-frag_align_pattern (alignment, fill_pattern, n_fill)
+frag_align_pattern (alignment, fill_pattern, n_fill, max)
      int alignment;
      const char *fill_pattern;
      int n_fill;
+     int max;
 {
   char *p;
-  p = frag_var (rs_align, n_fill, n_fill, (relax_substateT) 0,
-		(symbolS *) 0, (long) alignment, (char *) 0);
+
+  p = frag_var (rs_align, n_fill, n_fill, (relax_substateT) max,
+		(symbolS *) 0, (offsetT) alignment, (char *) 0);
   memcpy (p, fill_pattern, n_fill);
 }
 

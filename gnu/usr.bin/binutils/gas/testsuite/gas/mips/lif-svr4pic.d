@@ -1,6 +1,6 @@
 #objdump: -dr --prefix-addresses
 #name: MIPS lifloat-svr4pic
-#as: -mips1 -KPIC
+#as: -mips1 -KPIC -EB
 #source: lifloat.s
 
 # Test the li.d and li.s macros with -KPIC.

@@ -1,5 +1,5 @@
 /* tc-sparc.h - Macros and type defines for the sparc.
-   Copyright (C) 1989, 90-95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 90-96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -18,14 +18,19 @@
    to the Free Software Foundation, 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#ifndef TC_SPARC
 #define TC_SPARC 1
+
+#ifdef ANSI_PROTOTYPES
+struct frag;
+#endif
+
+/* This is used to set the default value for `target_big_endian'.  */
+#define TARGET_BYTES_BIG_ENDIAN 1
 
 #define LOCAL_LABELS_FB 1
 
 #define TARGET_ARCH bfd_arch_sparc
-
-/* This is used to set the default value for `target_big_endian'.  */
-#define TARGET_BYTES_BIG_ENDIAN 1
 
 #ifdef OBJ_AOUT
 #ifdef TE_NetBSD
@@ -51,7 +56,6 @@ extern int target_big_endian;
 #else
 #define TARGET_FORMAT "elf32-sparc"
 #endif
-#define LOCAL_LABEL(name)	(((name)[0] == '.' && (name)[1] == 'L') || !strncmp ((name), "_.L_", 4))
 #endif
 #define WORKING_DOT_WORD
 
@@ -60,7 +64,6 @@ extern int target_big_endian;
 #define md_create_short_jump(p,f,t,fr,s) as_fatal("sparc_create_short_jump")
 #define md_estimate_size_before_relax(f,s) \
 			(as_fatal("estimate_size_before_relax called"),1)
-void tc_aout_pre_write_hook ();
 
 #define LISTING_HEADER "SPARC GAS "
 
@@ -70,7 +73,7 @@ extern int sparc_pic_code;
 #define md_cons_align(nbytes) sparc_cons_align (nbytes)
 extern void sparc_cons_align PARAMS ((int));
 #define HANDLE_ALIGN(fragp) sparc_handle_align (fragp)
-extern void sparc_handle_align ();
+extern void sparc_handle_align PARAMS ((struct frag *));
 
 #if defined (OBJ_ELF) || defined (OBJ_AOUT)
 
@@ -108,6 +111,7 @@ extern void sparc_handle_align ();
 #define RELOC_REQUIRES_SYMBOL
 #endif
 
+#define MD_APPLY_FIX3
 #define TC_HANDLES_FX_DONE
 
 #ifdef OBJ_ELF
@@ -139,5 +143,7 @@ extern void sparc_handle_align ();
 
 extern void sparc_md_end PARAMS ((void));
 #define md_end() sparc_md_end ()
+
+#endif
 
 /* end of tc-sparc.h */

@@ -13,7 +13,7 @@ END-INFO-DIR-ENTRY
 @end ifinfo
 
 @ifinfo
-Copyright @copyright{} 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+Copyright @copyright{} 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -41,7 +41,7 @@ into another language, under the above conditions for modified versions.
 @c This file documents the GNU binary utilities "ar", "ld", "objcopy",
 @c  "objdump", "nm", "size", "strings", "strip", and "ranlib".
 @c
-@c Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+@c Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 @c 
 @c This text may be freely distributed under the terms of the GNU
 @c General Public License.
@@ -66,7 +66,7 @@ into another language, under the above conditions for modified versions.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+Copyright @copyright{} 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -117,6 +117,9 @@ Discard symbols
 @item c++filt
 Demangle encoded C++ symbols
 
+@item addr2line
+Convert addresses into file names and line numbers
+
 @item nlmconv
 Convert object code into a Netware Loadable Module
 @end table
@@ -132,6 +135,7 @@ Convert object code into a Netware Loadable Module
 * strings::                     List printable strings from files
 * strip::                       Discard symbols
 * c++filt::			Filter to demangle encoded C++ symbols
+* addr2line::			Convert addresses to file and line
 * nlmconv::                     Converts object code into an NLM
 * Selecting The Target System:: How these utilities determine the target.
 * Reporting Bugs::              Reporting Bugs
@@ -693,7 +697,7 @@ The same as @samp{--format=bsd} (for compatibility with the MIPS @code{nm}).
 
 @item -C
 @itemx --demangle
-@cindex demangling C++ symbols
+@cindex demangling in nm
 Decode (@dfn{demangle}) low-level symbol names into user-level names.
 Besides removing any initial underscore prepended by the system, this
 makes C++ function names readable.  @xref{c++filt}, for more information
@@ -809,7 +813,7 @@ objcopy [ -F @var{bfdname} | --target=@var{bfdname} ]
         [ -b @var{byte} | --byte=@var{byte} ]
         [ -i @var{interleave} | --interleave=@var{interleave} ]
         [ -R @var{sectionname} | --remove-section=@var{sectionname} ]
-        [ --debugging ]
+        [ -p | --preserve-dates ] [ --debugging ]
         [ --gap-fill=@var{val} ] [ --pad-to=@var{address} ]
         [ --set-start=@var{val} ] [ --adjust-start=@var{incr} ]
         [ --adjust-vma=@var{incr} ]
@@ -818,6 +822,7 @@ objcopy [ -F @var{bfdname} | --target=@var{bfdname} ]
         [ --set-section-flags=@var{section}=@var{flags} ]
         [ --add-section=@var{sectionname}=@var{filename} ]
         [ --change-leading-char ] [ --remove-leading-char ]
+        [ --weaken ]
         [ -v | --verbose ] [ -V | --version ]  [ --help ]
         @var{infile} [@var{outfile}]
 @end smallexample
@@ -927,6 +932,11 @@ copy with the @var{-b} or @samp{--byte} option.  The default is 4.
 @code{objcopy} ignores this option if you do not specify either @samp{-b} or
 @samp{--byte}.
 
+@item -p
+@itemx --preserve-dates
+Set the access and modification dates of the output file to be the same
+as those of the input file.
+
 @item --debugging
 Convert debugging information, if possible.  This is not the default
 because only certain debugging formats are supported, and the
@@ -1008,6 +1018,12 @@ different conventions for symbol names.  This is different from
 when appropriate, regardless of the object file format of the output
 file.
 
+@item --weaken
+Change all global symbols in the file to be weak.  This can be useful
+when building an object which will be linked against other objects using
+the @code{-R} option to the linker.  This option is only effective when
+using an object file format which supports weak symbols.
+
 @item -V
 @itemx --version
 Show the version number of @code{objcopy}.
@@ -1030,7 +1046,8 @@ Show a summary of the options to @code{objcopy}.
 @smallexample
 objdump [ -a | --archive-headers ] 
         [ -b @var{bfdname} | --target=@var{bfdname} ] [ --debugging ]
-        [ -d | --disassemble ]  [ -D | --disassemble-all ] 
+        [ -C | --demangle ] [ -d | --disassemble ]
+        [ -D | --disassemble-all ] [ --disassemble-zeroes ]
         [ -EB | -EL | --endian=@{big | little @} ]
         [ -f | --file-headers ]
         [ -h | --section-headers | --headers ]  [ -i | --info ]
@@ -1042,7 +1059,8 @@ objdump [ -a | --archive-headers ]
         [ -t | --syms ] [ -T | --dynamic-syms ] [ -x | --all-headers ]
         [ -w | --wide ] [ --start-address=@var{address} ]
         [ --stop-address=@var{address} ]
-        [ --prefix-addresses] [ --show-raw-insn ]
+        [ --prefix-addresses] [ --[no-]show-raw-insn ]
+        [ --adjust-vma=@var{offset} ]
         [ --version ]  [ --help ]
         @var{objfile}@dots{}
 @end smallexample
@@ -1069,6 +1087,15 @@ header information (in a format similar to @samp{ls -l}).  Besides the
 information you could list with @samp{ar tv}, @samp{objdump -a} shows
 the object file format of each archive member.
 
+@item --adjust-vma=@var{offset}
+@cindex section addresses in objdump
+@cindex VMA in objdump
+When dumping information, first add @var{offset} to all the section
+addresses.  This is useful if the section addresses do not correspond to
+the symbol table, which can happen when putting sections at particular
+addresses when using a format which can not represent section addresses,
+such as a.out.
+
 @item -b @var{bfdname}
 @itemx --target=@var{bfdname}
 @cindex object code format
@@ -1087,6 +1114,14 @@ file in the format produced by Oasys compilers.  You can list the
 formats available with the @samp{-i} option.
 @xref{Target Selection}, for more information.
 
+@item -C
+@itemx --demangle
+@cindex demangling in objdump
+Decode (@dfn{demangle}) low-level symbol names into user-level names.
+Besides removing any initial underscore prepended by the system, this
+makes C++ function names readable.  @xref{c++filt}, for more information
+on demangling.
+
 @item --debugging
 Display debugging information.  This attempts to parse debugging
 information stored in the file and print it out using a C like syntax.
@@ -1104,6 +1139,15 @@ expected to contain instructions.
 @itemx --disassemble-all
 Like @samp{-d}, but disassemble the contents of all sections, not just
 those expected to contain instructions.
+
+@item --prefix-addresses
+When disassembling, print the complete address on each line.  This is
+the older disassembly format.
+
+@item --disassemble-zeroes
+Normally the disassembly output will skip blocks of zeroes.  This
+option directs the disassembler to disassemble those blocks, just like
+any other data.
 
 @item -EB
 @itemx -EL
@@ -1167,10 +1211,6 @@ can be useful when disasembling object files which do not describe
 architecture information, such as S-records.  You can list the available
 architectures with the @samp{-i} option.
 
-@item --prefix-addresses
-When disassembling, print the complete address on each line.  This is
-the older disassembly format.
-
 @item -r
 @itemx --reloc
 @cindex relocation entries, in object file
@@ -1202,6 +1242,10 @@ Display source code intermixed with disassembly, if possible.  Implies
 When disassembling instructions, print the instruction in hex as well as
 in symbolic form.  This is the default except when
 @code{--prefix-addresses} is used.
+
+@item --no-show-raw-insn
+When disassembling instructions, do not print the instruction bytes.
+This is the default when @code{--prefix-addresses} is used.
 
 @item --stabs
 @cindex stab
@@ -1466,7 +1510,7 @@ strip [ -F @var{bfdname} | --target=@var{bfdname} | --target=@var{bfdname} ]
       [ -N @var{symbolname} | --strip-symbol=@var{symbolname} ]
       [ -x | --discard-all ] [ -X | --discard-locals ]
       [ -R @var{sectionname} | --remove-section=@var{sectionname} ]
-      [ -o @var{file} ]
+      [ -o @var{file} ] [ -p | --preserve-dates ]
       [ -v | --verbose ]  [ -V | --version ]  [ --help ]
       @var{objfile}@dots{}
 @end smallexample
@@ -1532,6 +1576,10 @@ given more than once, and may be combined with strip options other than
 Put the stripped output in @var{file}, rather than replacing the
 existing file.  When this argument is used, only one @var{objfile}
 argument may be specified.
+
+@item -p
+@itemx --preserve-dates
+Preserve the access and modification dates of the file.
 
 @item -x
 @itemx --discard-all
@@ -1639,6 +1687,82 @@ may in a future release become
 c++filt @var{option} @var{symbol}
 @end example
 @end quotation
+
+@node addr2line
+@chapter addr2line
+
+@kindex addr2line
+@cindex address to file name and line number
+
+@smallexample
+addr2line [ -b @var{bfdname} | --target=@var{bfdname} ]
+          [ -C | --demangle ]
+          [ -e @var{filename} | --exe=@var{filename} ]
+          [ -f | --functions ] [ -s | --basename ]
+          [ -H | --help ] [ -V | --version ]
+          [ addr addr ... ]
+@end smallexample
+
+@code{addr2line} translates program addresses into file names and line
+numbers.  Given an address and an executable, it uses the debugging
+information in the executable to figure out which file name and line
+number are associated with a given address.
+
+The executable to use is specified with the @code{-e} option.  The
+default is @file{a.out}.
+
+@code{addr2line} has two modes of operation.
+
+In the first, hexadecimal addresses are specified on the command line,
+and @code{addr2line} displays the file name and line number for each
+address.
+
+In the second, @code{addr2line} reads hexadecimal addresses from
+standard input, and prints the file name and line number for each
+address on standard output.  In this mode, @code{addr2line} may be used
+in a pipe to convert dynamically chosen addresses.
+
+The format of the output is @samp{FILENAME:LINENO}.  The file name and
+line number for each address is printed on a separate line.  If the
+@code{-f} option is used, then each @samp{FILENAME:LINENO} line is
+preceded by a @samp{FUNCTIONNAME} line which is the name of the function
+containing the address.
+
+If the file name or function name can not be determined,
+@code{addr2line} will print two question marks in their place.  If the
+line number can not be determined, @code{addr2line} will print 0.
+
+The long and short forms of options, shown here as alternatives, are
+equivalent.
+
+@table @code
+@item -b @var{bfdname}
+@itemx --target=@var{bfdname}
+@cindex object code format
+Specify that the object-code format for the object files is
+@var{bfdname}.
+
+@item -C
+@itemx --demangle
+@cindex demangling in objdump
+Decode (@dfn{demangle}) low-level symbol names into user-level names.
+Besides removing any initial underscore prepended by the system, this
+makes C++ function names readable.  @xref{c++filt}, for more information
+on demangling.
+
+@item -e @var{filename}
+@itemx --exe=@var{filename}
+Specify the name of the executable for which addresses should be
+translated.  The default file is @file{a.out}.
+
+@item -f
+@itemx --functions
+Display function names as well as file and line number information.
+
+@item -s
+@itemx --basenames
+Display only the base of each file name.
+@end table
 
 @node nlmconv
 @chapter nlmconv

@@ -1,5 +1,5 @@
 /* symbols.h -
-   Copyright (C) 1987, 1990, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1987, 90, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +14,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 extern struct obstack notes;	/* eg FixS live here. */
 
@@ -48,6 +49,11 @@ void symbol_begin PARAMS ((void));
 void symbol_print_statistics PARAMS ((FILE *));
 void symbol_table_insert PARAMS ((symbolS * symbolP));
 void resolve_symbol_value PARAMS ((symbolS *));
+
+void print_symbol_value PARAMS ((symbolS *));
+void print_expr PARAMS ((expressionS *));
+void print_expr_1 PARAMS ((FILE *, expressionS *));
+void print_symbol_value_1 PARAMS ((FILE *, symbolS *));
 
 int dollar_label_defined PARAMS ((long l));
 void dollar_label_clear PARAMS ((void));

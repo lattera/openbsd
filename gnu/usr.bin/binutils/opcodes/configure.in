@@ -97,6 +97,7 @@ AC_SUBST(PICFLAG)
 AC_SUBST(SHLIB)
 AC_SUBST(SHLIB_CC)
 AC_SUBST(SHLIB_CFLAGS)
+AC_SUBST(SHLIB_LIBS)
 if test "${commonbfdlib}" = "true"; then
   COMMON_SHLIB=yes
   # Rebuild the shared library if libiberty or libbfd changes.
@@ -113,7 +114,7 @@ AC_SUBST(BFD_PICLIST)
 AC_SUBST(SHLINK)
 AC_SUBST(INSTALL_SHLIB)
 
-AC_CHECK_HEADERS(string.h strings.h)
+AC_CHECK_HEADERS(string.h strings.h stdlib.h)
 
 # target-specific stuff:
 
@@ -121,7 +122,7 @@ AC_CHECK_HEADERS(string.h strings.h)
 if test -n "$enable_targets" ; then
     for targ in `echo $enable_targets | sed 's/,/ /g'`
     do
-	result=`$ac_config_sub $targ 2>/dev/null`
+	result=`${CONFIG_SHELL-/bin/sh} $ac_config_sub $targ 2>/dev/null`
 	if test -n "$result" ; then
 	    canon_targets="$canon_targets $result"
 	else
@@ -143,6 +144,10 @@ do
     fi
 done	
 
+# Utility var, documents generic cgen support files.
+
+cgen_files="cgen-opc.o cgen-asm.o cgen-dis.o"
+
 # We don't do any links based on the target system, just makefile config.
 
 if test x${all_targets} = xfalse ; then
@@ -160,17 +165,19 @@ if test x${all_targets} = xfalse ; then
 	bfd_alpha_arch)		ta="$ta alpha-dis.o alpha-opc.o" ;;
 	bfd_arm_arch)		ta="$ta arm-dis.o" ;;
 	bfd_convex_arch)	;;
+	bfd_d10v_arch)		ta="$ta d10v-dis.o d10v-opc.o" ;;
 	bfd_h8300_arch)		ta="$ta h8300-dis.o" ;;
 	bfd_h8500_arch)		ta="$ta h8500-dis.o" ;;
 	bfd_hppa_arch)		ta="$ta hppa-dis.o" ;;
 	bfd_i386_arch)		ta="$ta i386-dis.o" ;;
 	bfd_i860_arch)		;;
 	bfd_i960_arch)		ta="$ta i960-dis.o" ;;
+	bfd_m32r_arch)		ta="$ta $cgen_files m32r-opc.o m32r-asm.o m32r-dis.o" ;;
 	bfd_m68k_arch)		ta="$ta m68k-dis.o m68k-opc.o" ;;
 	bfd_m88k_arch)		ta="$ta m88k-dis.o" ;;
-	bfd_mips_arch)		ta="$ta mips-dis.o mips-opc.o" ;;
-	bfd_mn10200_arch)	ta="$ta mn10200-dis.o mn10200-opc.o" ;;
-	bfd_mn10300_arch)	ta="$ta mn10300-dis.o mn10300-opc.o" ;;
+	bfd_mips_arch)		ta="$ta mips-dis.o mips-opc.o mips16-opc.o" ;;
+	bfd_mn10200_arch)	ta="$ta m10200-dis.o m10200-opc.o" ;;
+	bfd_mn10300_arch)	ta="$ta m10300-dis.o m10300-opc.o" ;;
 	bfd_ns32k_arch)		ta="$ta ns32k-dis.o" ;;
 	bfd_powerpc_arch)	ta="$ta ppc-dis.o ppc-opc.o" ;;
 	bfd_pyramid_arch)	;;

@@ -1,3 +1,20 @@
+Tue Apr  8 12:49:46 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* Makefile.in (install-info): Permit info files to be in srcdir.
+	(stamp-*): Add a stamp-X target for each X.texi target.
+	(*.texi): Just depend upon stamp-X.
+	(clean): Remove stamp-*.
+	(distclean): Depend upon mostlyclean.  Remove stamp-*.  Don't
+	remove $(DOCFILES).
+
+Mon Apr  7 15:23:26 1997  Ian Lance Taylor  <ian@cygnus.com>
+
+	* Makefile.in (distclean): Don't remove *.info files.
+
+Thu Feb 13 20:50:02 1997  Klaus Kaempf  (kkaempf@progis.de)
+
+	* makefile.vms: New file.
+
 Tue Jun 18 18:32:28 1996  Ian Lance Taylor  <ian@cygnus.com>
 
 	* chew.c (kill_bogus_lines): Reset sl when not at the start of a

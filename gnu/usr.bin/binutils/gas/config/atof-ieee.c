@@ -1,5 +1,5 @@
 /* atof_ieee.c - turn a Flonum into an IEEE floating point number
-   Copyright (C) 1987, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1987, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,16 +14,18 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #include "as.h"
 
-extern FLONUM_TYPE generic_floating_point_number;	/* Flonums returned here. */
+/* Flonums returned here.  */
+extern FLONUM_TYPE generic_floating_point_number;
 
-#ifndef NULL
-#define NULL (0)
-#endif
+static int next_bits PARAMS ((int));
+static void unget_bits PARAMS ((int));
+static void make_invalid_floating_point_number PARAMS ((LITTLENUM_TYPE *));
 
 extern const char EXP_CHARS[];
 /* Precision in LittleNums. */

@@ -1,5 +1,5 @@
 /* ECOFF object file format.
-   Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
    This file was put together by Ian Lance Taylor <ian@cygnus.com>.
 
@@ -16,8 +16,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #define OBJ_HEADER "obj-ecoff.h"
 #include "as.h"
@@ -28,6 +29,10 @@
 /* Almost all of the ECOFF support is actually in ecoff.c in the main
    gas directory.  This file mostly just arranges to call that one at
    the right times.  */
+
+static int ecoff_sec_sym_ok_for_reloc PARAMS ((asection *));
+static void obj_ecoff_frob_symbol PARAMS ((symbolS *, int *));
+static void ecoff_pop_insert PARAMS ((void));
 
 /* These are the pseudo-ops we support in this file.  Only those
    relating to debugging information are supported here.

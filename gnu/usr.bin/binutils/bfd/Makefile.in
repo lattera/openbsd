@@ -1,5 +1,5 @@
 #    Makefile template for Configure for the BFD library.
-#    Copyright (C) 1990, 91, 92, 93, 94, 95, 1996
+#    Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
 #    Free Software Foundation, Inc.
 #    Written by Cygnus Support.
 # 
@@ -64,6 +64,7 @@ PICFLAG = @PICFLAG@
 SHLIB = @SHLIB@
 SHLIB_CC = @SHLIB_CC@
 SHLIB_CFLAGS = @SHLIB_CFLAGS@
+SHLIB_LIBS = @SHLIB_LIBS@
 COMMON_SHLIB = @COMMON_SHLIB@
 SHLINK = @SHLINK@
 
@@ -113,17 +114,19 @@ ALL_MACHINES = \
 	cpu-a29k.o \
 	cpu-alpha.o \
 	cpu-arm.o \
+	cpu-d10v.o \
 	cpu-h8300.o \
 	cpu-h8500.o \
 	cpu-hppa.o \
 	cpu-i386.o \
 	cpu-i860.o \
 	cpu-i960.o \
+	cpu-m32r.o \
 	cpu-m68k.o \
 	cpu-m88k.o \
 	cpu-mips.o \
-	cpu-mn10200.o \
-	cpu-mn10300.o \
+	cpu-m10200.o \
+	cpu-m10300.o \
 	cpu-ns32k.o \
 	cpu-powerpc.o \
 	cpu-rs6000.o \
@@ -144,11 +147,12 @@ ALL_MACHINES_CFILES = \
 	cpu-i386.c \
 	cpu-i860.c \
 	cpu-i960.c \
+	cpu-m32r.c \
 	cpu-m68k.c \
 	cpu-m88k.c \
 	cpu-mips.c \
-	cpu-mn10200.c \
-	cpu-mn10300.c \
+	cpu-m10200.c \
+	cpu-m10300.c \
 	cpu-ns32k.c \
 	cpu-powerpc.c \
 	cpu-rs6000.c \
@@ -189,6 +193,7 @@ BFD32_BACKENDS = \
 	coff-rs6000.o \
 	coff-sh.o \
 	coff-sparc.o \
+	coff-svm68k.o \
 	coff-u68k.o \
 	coff-we32k.o \
 	coff-w65.o \
@@ -196,15 +201,17 @@ BFD32_BACKENDS = \
 	cofflink.o \
 	ecoff.o \
 	ecofflink.o \
+	elf32-d10v.o \
 	elf32-gen.o \
 	elf32-hppa.o \
 	elf32-i386.o \
 	elf32-i860.o \
+	elf32-m32r.o \
 	elf32-m68k.o \
 	elf32-m88k.o \
 	elf32-mips.o \
-	elf32-mn10200.o \
-	elf32-mn10300.o \
+	elf-m10200.o \
+	elf-m10300.o \
 	elf32-ppc.o \
 	elf32-sh.o \
 	elf32-sparc.o \
@@ -248,6 +255,7 @@ BFD32_BACKENDS = \
 	ppcboot.o \
 	reloc16.o \
 	riscix.o \
+	sparclinux.o \
 	sparclynx.o \
 	sparcnetbsd.o \
 	sunos.o \
@@ -283,6 +291,7 @@ BFD32_BACKENDS_CFILES = \
 	coff-rs6000.c \
 	coff-sh.c \
 	coff-sparc.c \
+	coff-svm68k.c \
 	coff-u68k.c \
 	coff-we32k.c \
 	coff-w65.c \
@@ -294,11 +303,12 @@ BFD32_BACKENDS_CFILES = \
 	elf32-hppa.c \
 	elf32-i386.c \
 	elf32-i860.c \
+	elf32-m32r.c \
 	elf32-m68k.c \
 	elf32-m88k.c \
 	elf32-mips.c \
-	elf32-mn10200.c \
-	elf32-mn10300.c \
+	elf-m10200.c \
+	elf-m10300.c \
 	elf32-ppc.c \
 	elf32-sh.c \
 	elf32-sparc.c \
@@ -342,6 +352,7 @@ BFD32_BACKENDS_CFILES = \
 	ppcboot.c \
 	reloc16.c \
 	riscix.c \
+	sparclinux.c \
 	sparclynx.c \
 	sparcnetbsd.c \
 	sunos.c \
@@ -428,7 +439,7 @@ FLAGS_TO_PASS = \
 	"INSTALL_DATA=$(INSTALL_DATA)" \
 	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)"
 
-ALL_CFLAGS=@HDEFINES@ @COREFLAG@ @TDEFINES@ $(CSEARCH) $(CSWITCHES) $(CFLAGS)
+ALL_CFLAGS=-D_GNU_SOURCE @HDEFINES@ @COREFLAG@ @TDEFINES@ $(CSEARCH) $(CSWITCHES) $(CFLAGS)
 .c.o:
 	if [ -n "$(PICFLAG)" ]; then \
 	  $(CC) -c $(PICFLAG) $(ALL_CFLAGS) $< -o pic/$@; \
@@ -498,7 +509,7 @@ stamp-ofiles: Makefile
 	  esac ; \
 	done ; \
 	echo $$f > tofiles
-	$(srcdir)/../move-if-change tofiles ofiles
+	$(SHELL) $(srcdir)/../move-if-change tofiles ofiles
 	touch stamp-ofiles
 
 ofiles: stamp-ofiles ; @true
@@ -516,14 +527,14 @@ stamp-piclist: ofiles
 	else \
 	  cp ofiles tpiclist; \
 	fi
-	$(srcdir)/../move-if-change tpiclist piclist
+	$(SHELL) $(srcdir)/../move-if-change tpiclist piclist
 	touch stamp-piclist
 
 piclist: stamp-piclist ; @true
 
 $(SHLIB): stamp-picdir $(OFILES) piclist
 	rm -f $(SHLIB)
-	$(SHLIB_CC) $(SHLIB_CFLAGS) -o $(SHLIB) `cat piclist`
+	$(SHLIB_CC) $(SHLIB_CFLAGS) -o $(SHLIB) `cat piclist` $(SHLIB_LIBS)
 
 # We make a link from libbfd.so to libbfd.so.VERSION for linking, and
 # also a link from libTARGET-bfd.so.VERSION for running.
@@ -531,10 +542,10 @@ $(SHLINK): $(SHLIB)
 	ts=lib`echo $(SHLIB) | sed -e 's/^lib//' | sed -e '$(program_transform_name)'`; \
 	if [ "$$ts" != "$(SHLIB)" ]; then \
 	  rm -f $$ts; \
-	  ln -sf $(SHLIB) $$ts; \
+	  ln -s $(SHLIB) $$ts; \
 	else true; fi
 	rm -f $(SHLINK)
-	ln -sf $(SHLIB) $(SHLINK)
+	ln -s $(SHLIB) $(SHLINK)
 
 # This target creates libTARGET-bfd.so.VERSION as a symlink to
 # libbfd.so.VERSION.  It is used on SunOS, which does not have SONAME.
@@ -542,7 +553,7 @@ stamp-tshlink: $(SHLIB)
 	tf=lib`echo $(SHLIB) | sed -e 's/^lib//' | sed '$(program_transform_name)'`; \
 	if [ "$$tf" != "$(SHLIB)" ]; then \
 	  rm -f $$tf; \
-	  ln -sf $(SHLIB) $$tf; \
+	  ln -s $(SHLIB) $$tf; \
 	else true; fi
 	touch stamp-tshlink
 
@@ -603,8 +614,13 @@ do_distclean: do_clean
 	rm -f Makefile config.status config.cache config.h config.log \
 		stamp-h bfd-in3.h
 	rm -rf pic stamp-picdir
+
+# do_maintainer_clean really should remove bfd-in2.h, since it is a
+# generated file.  However, the GNU standards say that
+# maintainer-clean should not delete anything which needs to exist in
+# order to run configure, and bfd-in2.h is used by configure.
 do_maintainer_clean: do_distclean
-	rm -f $(srcdir)/bfd-in2.h $(srcdir)/libbfd.h $(srcdir)/libcoff.h
+	rm -f $(srcdir)/libbfd.h $(srcdir)/libcoff.h
 
 mostlyclean: do_mostlyclean
 	$(MAKE) subdir_do DO=mostlyclean "DODIRS=$(SUBDIRS)" $(FLAGS_TO_PASS)
@@ -619,7 +635,7 @@ clobber maintainer-clean realclean:
 	$(MAKE) subdir_do DO=maintainer-clean "DODIRS=$(SUBDIRS)" $(FLAGS_TO_PASS)
 	$(MAKE) do_maintainer_clean
 
-BFD_H_DEPS= $(INCDIR)/ansidecl.h $(INCDIR)/obstack.h
+BFD_H_DEPS= $(INCDIR)/ansidecl.h
 LOCAL_H_DEPS= libbfd.h sysdep.h config.h
 $(BFD_LIBS): $(BFD_H) $(BFD_H_DEPS) $(LOCAL_H_DEPS)
 $(BFD_MACHINES): $(BFD_H) $(BFD_H_DEPS) $(LOCAL_H_DEPS)
@@ -687,7 +703,7 @@ install: $(ALLLIBS)
 	  rm -f $(libdir)/$$tf; \
 	  if [ "$$f" = "$(SHLINK)" ]; then \
 	    ts=lib`echo $(SHLIB) | sed -e 's/^lib//' | sed '$(program_transform_name)'`; \
-	    ln -sf $$ts $(libdir)/$$tf; \
+	    ln -s $$ts $(libdir)/$$tf; \
 	  elif [ "$$f" = "$(SHLIB)" ]; then \
 	    @INSTALL_SHLIB@ \
 	  else \
@@ -702,15 +718,13 @@ install: $(ALLLIBS)
 	$(INSTALL_DATA) $(BFD_H) $(includedir)/bfd.h
 	$(INSTALL_DATA) $(INCDIR)/ansidecl.h $(includedir)/ansidecl.h
 	$(INSTALL_DATA) $(INCDIR)/bfdlink.h $(includedir)/bfdlink.h
-	$(INSTALL_DATA) $(INCDIR)/obstack.h $(includedir)/obstack.h
 	-if test -z "$(oldincludedir)"; then true; else \
 	test -d $(oldincludedir) || mkdir $(oldincludedir); \
 	$(INSTALL_DATA) $(BFD_H) $(oldincludedir)/bfd.h; \
 	$(INSTALL_DATA) $(INCDIR)/ansidecl.h $(oldincludedir)/ansidecl.h; \
 	$(INSTALL_DATA) $(INCDIR)/bfdlink.h $(oldincludedir)/bfdlink.h; \
-	$(INSTALL_DATA) $(INCDIR)/obstack.h $(oldincludedir)/obstack.h; \
-	$(MAKE) subdir_do DO=install "DODIRS=$(SUBDIRS)" $(FLAGS_TO_PASS); \
 	fi
+	$(MAKE) subdir_do DO=install "DODIRS=$(SUBDIRS)" $(FLAGS_TO_PASS)
 
 Makefile: Makefile.in config.status
 	CONFIG_FILES=Makefile CONFIG_HEADERS= $(SHELL) ./config.status
@@ -740,7 +754,7 @@ config.status: configure configure.host config.bfd VERSION
 	$(DEP) -f .dep2a $(ALL_CFLAGS) $?
 	sed -e '/DO NOT DELETE/d' -e '/^$$/d' < .dep2a >> .dep2
 	rm -f .dep2a
-	$(srcdir)/../move-if-change .dep2 .dep1
+	$(SHELL) $(srcdir)/../move-if-change .dep2 .dep1
 
 dep.sed: dep-in.sed config.status
 	sed <$(srcdir)/dep-in.sed >dep.sed	\
@@ -751,12 +765,12 @@ dep.sed: dep-in.sed config.status
 dep: .dep
 	sed -e '/^..DO NOT DELETE THIS LINE/,$$d' < Makefile > tmp-Makefile
 	cat .dep >> tmp-Makefile
-	$(srcdir)/../move-if-change tmp-Makefile Makefile
+	$(SHELL) $(srcdir)/../move-if-change tmp-Makefile Makefile
 
 dep-in: .dep
 	sed -e '/^..DO NOT DELETE THIS LINE/,$$d' < $(srcdir)/Makefile.in > tmp-Makefile.in
 	cat .dep >> tmp-Makefile.in
-	$(srcdir)/../move-if-change tmp-Makefile.in $(srcdir)/Makefile.in
+	$(SHELL) $(srcdir)/../move-if-change tmp-Makefile.in $(srcdir)/Makefile.in
 
 host-aout.o: Makefile
 
@@ -774,7 +788,7 @@ $(BFD_H): stmp-bfd.h ; @true
 stmp-bfd.h: bfd-in3.h
 	rm -f bfd-tmp.h
 	cp bfd-in3.h bfd-tmp.h
-	$(srcdir)/../move-if-change bfd-tmp.h $(BFD_H)
+	$(SHELL) $(srcdir)/../move-if-change bfd-tmp.h $(BFD_H)
 	rm -f bfd-tmp.h
 	touch stmp-bfd.h
 
@@ -785,26 +799,26 @@ bfd-in3.h: bfd-in2.h config.status
 headers:
 	(cd $(docdir); $(MAKE) protos $(FLAGS_TO_PASS))
 	cp $(docdir)/bfd.h bfd-in2.h-new
-	$(srcdir)/../move-if-change bfd-in2.h-new $(srcdir)/bfd-in2.h
+	$(SHELL) $(srcdir)/../move-if-change bfd-in2.h-new $(srcdir)/bfd-in2.h
 	cp $(docdir)/libbfd.h libbfd.h-new
-	$(srcdir)/../move-if-change libbfd.h-new $(srcdir)/libbfd.h
+	$(SHELL) $(srcdir)/../move-if-change libbfd.h-new $(srcdir)/libbfd.h
 	cp $(docdir)/libcoff.h libcoff.h-new
-	$(srcdir)/../move-if-change libcoff.h-new $(srcdir)/libcoff.h
+	$(SHELL) $(srcdir)/../move-if-change libcoff.h-new $(srcdir)/libcoff.h
 
 # The rules for the generated header files are here so that people can
 # type `make bfd-in2.h' if they remove it.  They are not run by default.
 $(srcdir)/bfd-in2.h:
 	(cd $(docdir); $(MAKE) bfd.h $(FLAGS_TO_PASS))
 	cp $(docdir)/bfd.h bfd-in2.h-new
-	$(srcdir)/../move-if-change bfd-in2.h-new $(srcdir)/bfd-in2.h
+	$(SHELL) $(srcdir)/../move-if-change bfd-in2.h-new $(srcdir)/bfd-in2.h
 $(srcdir)/libbfd.h:
 	(cd $(docdir); $(MAKE) libbfd.h $(FLAGS_TO_PASS))
 	cp $(docdir)/libbfd.h libbfd.h-new
-	$(srcdir)/../move-if-change libbfd.h-new $(srcdir)/libbfd.h
+	$(SHELL) $(srcdir)/../move-if-change libbfd.h-new $(srcdir)/libbfd.h
 $(srcdir)/libcoff.h:
 	(cd $(docdir); $(MAKE) libcoff.h $(FLAGS_TO_PASS))
 	cp $(docdir)/libcoff.h libcoff.h-new
-	$(srcdir)/../move-if-change libcoff.h-new $(srcdir)/libcoff.h
+	$(SHELL) $(srcdir)/../move-if-change libcoff.h-new $(srcdir)/libcoff.h
 
 bfd.info:
 	(cd $(docdir); $(MAKE) bfd.info $(FLAGS_TO_PASS))
@@ -815,6 +829,10 @@ bfd.dvi:
 bfd.ps: 
 	(cd $(docdir); $(MAKE) bfd.ps $(FLAGS_TO_PASS))
 
+
+elf32-d10v.o: elf32-d10v.c elf-bfd.h $(INCDIR)/elf/common.h \
+  $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
+  elf32-target.h
 
 
 
@@ -833,10 +851,10 @@ stamp-picdir:
 # DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
 archive.o: archive.c $(INCDIR)/aout/ar.h $(INCDIR)/aout/ranlib.h
 archures.o: archures.c
-bfd.o: bfd.c $(INCDIR)/bfdlink.h $(INCDIR)/coff/internal.h \
-  $(INCDIR)/coff/sym.h libcoff.h libecoff.h $(INCDIR)/coff/ecoff.h \
-  elf-bfd.h $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h \
-  $(INCDIR)/elf/external.h
+bfd.o: bfd.c $(INCDIR)/libiberty.h $(INCDIR)/bfdlink.h \
+  $(INCDIR)/coff/internal.h $(INCDIR)/coff/sym.h libcoff.h \
+  libecoff.h $(INCDIR)/coff/ecoff.h elf-bfd.h $(INCDIR)/elf/common.h \
+  $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h
 cache.o: cache.c
 coffgen.o: coffgen.c $(INCDIR)/coff/internal.h libcoff.h \
   $(INCDIR)/bfdlink.h
@@ -844,13 +862,13 @@ corefile.o: corefile.c
 format.o: format.c
 init.o: init.c
 libbfd.o: libbfd.c
-opncls.o: opncls.c
+opncls.o: opncls.c $(INCDIR)/objalloc.h
 reloc.o: reloc.c $(INCDIR)/bfdlink.h
 section.o: section.c
 syms.o: syms.c $(INCDIR)/bfdlink.h $(INCDIR)/aout/stab_gnu.h \
   $(INCDIR)/aout/stab.def
 targets.o: targets.c $(INCDIR)/fnmatch.h targmatch.h
-hash.o: hash.c
+hash.o: hash.c $(INCDIR)/objalloc.h
 linker.o: linker.c $(INCDIR)/bfdlink.h genlink.h
 elf.o: elf.c $(INCDIR)/bfdlink.h elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h
@@ -870,11 +888,12 @@ cpu-hppa.o: cpu-hppa.c
 cpu-i386.o: cpu-i386.c
 cpu-i860.o: cpu-i860.c
 cpu-i960.o: cpu-i960.c
+cpu-m32r.o: cpu-m32r.c
 cpu-m68k.o: cpu-m68k.c
 cpu-m88k.o: cpu-m88k.c
 cpu-mips.o: cpu-mips.c
-cpu-mn10200.o: cpu-mn10200.c
-cpu-mn10300.o: cpu-mn10300.c
+cpu-m10200.o: cpu-m10200.c
+cpu-m10300.o: cpu-m10300.c
 cpu-ns32k.o: cpu-ns32k.c ns32k.h
 cpu-powerpc.o: cpu-powerpc.c
 cpu-rs6000.o: cpu-rs6000.c
@@ -954,6 +973,9 @@ coff-sh.o: coff-sh.c $(INCDIR)/bfdlink.h $(INCDIR)/coff/sh.h \
   $(INCDIR)/coff/internal.h libcoff.h coffcode.h coffswap.h
 coff-sparc.o: coff-sparc.c $(INCDIR)/coff/sparc.h $(INCDIR)/coff/internal.h \
   libcoff.h $(INCDIR)/bfdlink.h coffcode.h coffswap.h
+coff-svm68k.o: coff-svm68k.c coff-m68k.c $(INCDIR)/coff/m68k.h \
+  $(INCDIR)/coff/internal.h libcoff.h $(INCDIR)/bfdlink.h \
+  coffcode.h coffswap.h
 coff-u68k.o: coff-u68k.c coff-m68k.c $(INCDIR)/coff/m68k.h \
   $(INCDIR)/coff/internal.h libcoff.h $(INCDIR)/bfdlink.h \
   coffcode.h coffswap.h
@@ -970,9 +992,10 @@ ecoff.o: ecoff.c $(INCDIR)/bfdlink.h $(INCDIR)/aout/ar.h \
   libaout.h $(INCDIR)/aout/aout64.h $(INCDIR)/coff/internal.h \
   $(INCDIR)/coff/sym.h $(INCDIR)/coff/symconst.h $(INCDIR)/coff/ecoff.h \
   libcoff.h libecoff.h
-ecofflink.o: ecofflink.c $(INCDIR)/bfdlink.h $(INCDIR)/aout/stab_gnu.h \
-  $(INCDIR)/aout/stab.def $(INCDIR)/coff/internal.h $(INCDIR)/coff/sym.h \
-  $(INCDIR)/coff/symconst.h $(INCDIR)/coff/ecoff.h
+ecofflink.o: ecofflink.c $(INCDIR)/bfdlink.h $(INCDIR)/objalloc.h \
+  $(INCDIR)/aout/stab_gnu.h $(INCDIR)/aout/stab.def $(INCDIR)/coff/internal.h \
+  $(INCDIR)/coff/sym.h $(INCDIR)/coff/symconst.h $(INCDIR)/coff/ecoff.h \
+  libcoff.h libecoff.h
 elf32-gen.o: elf32-gen.c elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
   elf32-target.h
@@ -986,6 +1009,9 @@ elf32-i386.o: elf32-i386.c $(INCDIR)/bfdlink.h elf-bfd.h \
 elf32-i860.o: elf32-i860.c elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
   elf32-target.h
+elf32-m32r.o: elf32-m32r.c elf-bfd.h $(INCDIR)/elf/common.h \
+  $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
+  $(INCDIR)/elf/m32r.h elf32-target.h
 elf32-m68k.o: elf32-m68k.c $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
   elf32-target.h
@@ -998,10 +1024,10 @@ elf32-mips.o: elf32-mips.c $(INCDIR)/bfdlink.h genlink.h \
   $(INCDIR)/coff/symconst.h $(INCDIR)/coff/internal.h \
   $(INCDIR)/coff/ecoff.h $(INCDIR)/coff/mips.h ecoffswap.h \
   elf32-target.h
-elf32-mn10200.o: elf32-mn10200.c elf-bfd.h $(INCDIR)/elf/common.h \
+elf-m10200.o: elf-m10200.c elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
   elf32-target.h
-elf32-mn10300.o: elf32-mn10300.c elf-bfd.h $(INCDIR)/elf/common.h \
+elf-m10300.o: elf-m10300.c elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h \
   elf32-target.h
 elf32-ppc.o: elf32-ppc.c $(INCDIR)/bfdlink.h elf-bfd.h \
@@ -1015,7 +1041,7 @@ elf32-sparc.o: elf32-sparc.c $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/sparc.h elf32-target.h
 elf32.o: elf32.c elfcode.h $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
-  elfcore.h elflink.h
+  $(INCDIR)/fnmatch.h elfcore.h elflink.h
 elflink.o: elflink.c $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h
 hp300bsd.o: hp300bsd.c libaout.h $(INCDIR)/bfdlink.h \
@@ -1120,6 +1146,9 @@ reloc16.o: reloc16.c $(INCDIR)/bfdlink.h genlink.h \
 riscix.o: riscix.c libaout.h $(INCDIR)/bfdlink.h $(INCDIR)/aout/aout64.h \
   aout-target.h $(INCDIR)/aout/stab_gnu.h $(INCDIR)/aout/stab.def \
   $(INCDIR)/aout/ar.h
+sparclinux.o: sparclinux.c $(INCDIR)/aout/aout64.h \
+  $(INCDIR)/aout/stab_gnu.h $(INCDIR)/aout/stab.def $(INCDIR)/aout/ar.h \
+  libaout.h $(INCDIR)/bfdlink.h aout-target.h
 sparclynx.o: sparclynx.c $(INCDIR)/aout/sun4.h libaout.h \
   $(INCDIR)/bfdlink.h $(INCDIR)/aout/aout64.h $(INCDIR)/aout/stab_gnu.h \
   $(INCDIR)/aout/stab.def $(INCDIR)/aout/ar.h aout-target.h
@@ -1162,7 +1191,7 @@ elf64-sparc.o: elf64-sparc.c elf-bfd.h $(INCDIR)/elf/common.h \
   $(INCDIR)/elf/sparc.h elf64-target.h
 elf64.o: elf64.c elfcode.h $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
-  elfcore.h elflink.h
+  $(INCDIR)/fnmatch.h elfcore.h elflink.h
 evax-alpha.o: evax-alpha.c $(INCDIR)/bfdlink.h evax.h
 evax-egsd.o: evax-egsd.c $(INCDIR)/bfdlink.h evax.h
 evax-etir.o: evax-etir.c $(INCDIR)/bfdlink.h evax.h

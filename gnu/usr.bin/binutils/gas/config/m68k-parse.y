@@ -1,5 +1,5 @@
 /* m68k.y -- bison grammar for m68k operand parsing
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 96, 1997 Free Software Foundation, Inc.
    Written by Ken Raeburn and Ian Lance Taylor, Cygnus Support
 
    This file is part of GAS, the GNU Assembler.
@@ -82,7 +82,7 @@
 /* Internal functions.  */
 
 static enum m68k_register m68k_reg_parse PARAMS ((char **));
-static int yylex PARAMS (());
+static int yylex PARAMS ((void));
 static void yyerror PARAMS ((const char *));
 
 /* The parser sets fields pointed to by this global variable.  */
@@ -259,6 +259,12 @@ motorola_operand:
 		  op->reg = $5;
 		  op->disp = $2;
 		  op->index = $4;
+		}
+	| '(' zdireg ',' EXPR ')'
+		{
+		  op->mode = BASE;
+		  op->disp = $4;
+		  op->index = $2;
 		}
 	| EXPR '(' zapc ',' zireg ')'
 		{

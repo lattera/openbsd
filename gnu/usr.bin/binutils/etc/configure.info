@@ -1,4 +1,4 @@
-This is Info file configure.info, produced by Makeinfo-1.55 from the
+This is Info file configure.info, produced by Makeinfo-1.64 from the
 input file ./configure.texi.
 
 START-INFO-DIR-ENTRY
@@ -24,41 +24,41 @@ translation approved by Cygnus Support.
 
 Indirect:
 configure.info-1: 968
-configure.info-2: 50440
+configure.info-2: 50426
 
 Tag Table:
 (Indirect)
 Node: Top968
-Node: What configure does1463
-Node: Invoking configure4783
-Node: Using configure11838
-Node: What configure really does13103
-Node: Build variables18380
-Node: Build directories20582
-Node: Makefile generation23984
-Node: config.guess25515
-Node: config.status26405
-Node: configure.in26962
-Node: configure variables28632
-Node: Minimal36798
-Node: Declarations37608
-Node: per-host38082
-Node: per-target38819
-Node: post-target39642
-Node: Example40225
-Node: Install locations40932
-Node: prefix41733
-Node: exec_prefix42626
-Node: Install details44431
-Node: Host49368
-Node: Target50004
-Node: Makefile fragments50440
-Node: Makefile extensions52056
-Node: Porting55783
-Node: Programs56235
-Node: Hosts and targets61089
-Node: Sites62752
-Node: Variables Index63452
-Node: Concept Index66624
+Node: What configure does1449
+Node: Invoking configure4769
+Node: Using configure11824
+Node: What configure really does13089
+Node: Build variables18366
+Node: Build directories20568
+Node: Makefile generation23970
+Node: config.guess25501
+Node: config.status26391
+Node: configure.in26948
+Node: configure variables28618
+Node: Minimal36784
+Node: Declarations37594
+Node: per-host38068
+Node: per-target38805
+Node: post-target39628
+Node: Example40211
+Node: Install locations40918
+Node: prefix41719
+Node: exec_prefix42612
+Node: Install details44417
+Node: Host49354
+Node: Target49990
+Node: Makefile fragments50426
+Node: Makefile extensions52042
+Node: Porting55769
+Node: Programs56221
+Node: Hosts and targets61075
+Node: Sites62738
+Node: Variables Index63438
+Node: Concept Index66610
 
 End Tag Table

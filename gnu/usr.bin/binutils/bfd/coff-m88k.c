@@ -1,5 +1,5 @@
 /* BFD back-end for Motorola 88000 COFF "Binary Compatability Standard" files.
-   Copyright 1990, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -22,11 +22,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/m88k.h"
 #include "coff/internal.h"
 #include "libcoff.h"
 
+static boolean m88k_is_local_label_name PARAMS ((bfd *, const char *));
 static bfd_reloc_status_type m88k_special_reloc
   PARAMS ((bfd *, arelent *, asymbol *, PTR, asection *, bfd *, char **));
 static void rtype2howto PARAMS ((arelent *, struct internal_reloc *));
@@ -34,6 +34,18 @@ static void reloc_processing
   PARAMS ((arelent *, struct internal_reloc *, asymbol **, bfd *, asection *));
 
 #define COFF_DEFAULT_SECTION_ALIGNMENT_POWER (3)
+
+/* On coff-m88k, local labels start with '@'.  */
+
+#define coff_bfd_is_local_label_name m88k_is_local_label_name
+
+static boolean
+m88k_is_local_label_name (abfd, name)
+     bfd *abfd;
+     const char *name;
+{
+  return name[0] == '@';
+}
 
 static bfd_reloc_status_type 
 m88k_special_reloc (abfd, reloc_entry, symbol, data,

@@ -1,5 +1,5 @@
 /* BFD back-end for oasys objects.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support, <sac@cygnus.com>.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -1458,7 +1458,7 @@ oasys_sizeof_headers (abfd, exec)
 #define oasys_get_elt_at_index _bfd_generic_get_elt_at_index
 #define oasys_update_armap_timestamp bfd_true
 
-#define oasys_bfd_is_local_label bfd_generic_is_local_label
+#define oasys_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define oasys_get_lineno _bfd_nosymbols_get_lineno
 #define oasys_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol
 #define oasys_read_minisymbols _bfd_generic_read_minisymbols

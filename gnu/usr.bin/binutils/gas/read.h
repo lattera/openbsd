@@ -95,7 +95,7 @@ extern void add_include_dir PARAMS ((char *path));
 extern void cons PARAMS ((int nbytes));
 extern void demand_empty_rest_of_line PARAMS ((void));
 extern void emit_expr PARAMS ((expressionS *exp, unsigned int nbytes));
-extern void equals PARAMS ((char *sym_name));
+extern void equals PARAMS ((char *sym_name, int reassign));
 extern void float_cons PARAMS ((int float_type));
 extern void ignore_rest_of_line PARAMS ((void));
 extern void pseudo_set PARAMS ((symbolS * symbolP));

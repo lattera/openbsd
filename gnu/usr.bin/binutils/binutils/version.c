@@ -35,7 +35,7 @@ print_version (name)
 {
   /* This output is intended to follow the GNU standards document.  */
   printf ("GNU %s %s\n", name, program_version);
-  printf ("Copyright 1996 Free Software Foundation, Inc.\n");
+  printf ("Copyright 1997 Free Software Foundation, Inc.\n");
   printf ("\
 This program is free software; you may redistribute it under the terms of\n\
 the GNU General Public License.  This program has absolutely no warranty.\n");

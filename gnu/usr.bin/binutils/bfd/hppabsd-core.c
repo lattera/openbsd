@@ -1,5 +1,5 @@
 /* BFD back-end for HPPA BSD core files.
-   Copyright 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 1997 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -235,7 +235,8 @@ hppabsd_core_core_file_matches_executable_p (core_bfd, exec_bfd)
 #define hppabsd_core_get_symtab _bfd_nosymbols_get_symtab
 #define hppabsd_core_print_symbol _bfd_nosymbols_print_symbol
 #define hppabsd_core_get_symbol_info _bfd_nosymbols_get_symbol_info
-#define hppabsd_core_bfd_is_local_label _bfd_nosymbols_bfd_is_local_label
+#define hppabsd_core_bfd_is_local_label_name \
+  _bfd_nosymbols_bfd_is_local_label_name
 #define hppabsd_core_get_lineno _bfd_nosymbols_get_lineno
 #define hppabsd_core_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define hppabsd_core_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

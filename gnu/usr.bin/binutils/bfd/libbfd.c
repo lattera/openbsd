@@ -1,5 +1,5 @@
 /* Assorted BFD support routines, only used internally.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -307,6 +307,12 @@ bfd_init_window (windowp)
   windowp->i = 0;
   windowp->size = 0;
 }
+
+/* Currently, if USE_MMAP is undefined, none if the window stuff is
+   used.  Okay, so it's mis-named.  At least the command-line option
+   "--without-mmap" is more obvious than "--without-windows" or some
+   such.  */
+#ifdef USE_MMAP
 
 #undef HAVE_MPROTECT /* code's not tested yet */
 
@@ -320,12 +326,6 @@ bfd_init_window (windowp)
 #endif
 
 static int debug_windows;
-
-/* Currently, if USE_MMAP is undefined, none if the window stuff is
-   used.  Okay, so it's mis-named.  At least the command-line option
-   "--without-mmap" is more obvious than "--without-windows" or some
-   such.  */
-#ifdef USE_MMAP
 
 void
 bfd_free_window (windowp)
@@ -363,7 +363,6 @@ bfd_free_window (windowp)
   /* There should be no more references to i at this point.  */
   free (i);
 }
-#endif
 
 static int ok_to_map = 1;
 
@@ -378,10 +377,6 @@ bfd_get_file_window (abfd, offset, size, windowp, writable)
   static size_t pagesize;
   bfd_window_internal *i = windowp->i;
   size_t size_to_alloc = size;
-
-#ifndef USE_MMAP
-  abort ();
-#endif
 
   if (debug_windows)
     fprintf (stderr, "bfd_get_file_window (%p, %6ld, %6ld, %p<%p,%lx,%p>, %d)",
@@ -515,6 +510,8 @@ bfd_get_file_window (abfd, offset, size, windowp, writable)
   return true;
 }
 
+#endif /* USE_MMAP */
+
 bfd_size_type
 bfd_write (ptr, size, nitems, abfd)
      CONST PTR ptr;
@@ -1182,12 +1179,12 @@ bfd_log2(x)
 }
 
 boolean
-bfd_generic_is_local_label (abfd, sym)
+bfd_generic_is_local_label_name (abfd, name)
      bfd *abfd;
-     asymbol *sym;
+     const char *name;
 {
   char locals_prefix = (bfd_get_symbol_leading_char (abfd) == '_') ? 'L' : '.';
 
-  return (sym->name[0] == locals_prefix);
+  return (name[0] == locals_prefix);
 }
 

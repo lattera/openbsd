@@ -129,5 +129,5 @@ fi
 
 test "$DEFAULT_EMULATION" = "$EMULATION_NAME" && COMPILE_IN=true
 
-# Generate em_${EMULATION_NAME}.c.
+# Generate e${EMULATION_NAME}.c.
 . ${srcdir}/emultempl/${TEMPLATE_NAME-generic}.em

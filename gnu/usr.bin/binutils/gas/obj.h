@@ -69,6 +69,7 @@ struct format_ops {
 
 extern const struct format_ops elf_format_ops;
 extern const struct format_ops ecoff_format_ops;
+extern const struct format_ops coff_format_ops;
 
 #ifndef this_format
 COMMON const struct format_ops *this_format;

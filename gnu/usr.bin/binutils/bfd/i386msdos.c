@@ -1,5 +1,5 @@
 /* BFD back-end for MS-DOS executables.
-   Copyright 1990, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Bryan Ford of the University of Utah.
 
    Contributed by the Center for Software Science at the
@@ -180,7 +180,7 @@ msdos_set_section_contents (abfd, section, location, offset, count)
 #define msdos_get_symbol_info _bfd_nosymbols_get_symbol_info
 #define msdos_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define msdos_get_lineno _bfd_nosymbols_get_lineno
-#define msdos_bfd_is_local_label _bfd_nosymbols_bfd_is_local_label
+#define msdos_bfd_is_local_label_name _bfd_nosymbols_bfd_is_local_label_name
 #define msdos_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol
 #define msdos_read_minisymbols _bfd_nosymbols_read_minisymbols
 #define msdos_minisymbol_to_symbol _bfd_nosymbols_minisymbol_to_symbol

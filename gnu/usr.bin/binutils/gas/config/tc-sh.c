@@ -1,5 +1,5 @@
 /* tc-sh.c -- Assemble code for the Hitachi Super-H
-   Copyright (C) 1993, 94, 95, 1996 Free Software Foundation.
+   Copyright (C) 1993, 94, 95, 96, 1997 Free Software Foundation.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -1535,10 +1535,11 @@ md_convert_frag (headers, seg, fragP)
     }
 
   if (donerelax && !sh_relax)
-    as_warn ("Offset doesn't fit at 0x%lx, trying to get to %s+0x%lx",
-	     (unsigned long) fragP->fr_address,
-	     fragP->fr_symbol ? S_GET_NAME(fragP->fr_symbol): "",
-	     (unsigned long) fragP->fr_offset);
+    as_warn_where (fragP->fr_file, fragP->fr_line,
+		   "overflow in branch to %s; converted into longer instruction sequence",
+		   (fragP->fr_symbol != NULL
+		    ? S_GET_NAME (fragP->fr_symbol)
+		    : ""));
 }
 
 valueT
@@ -1872,12 +1873,13 @@ tc_coff_sizemachdep (frag)
 /* When we align the .text section, insert the correct NOP pattern.  */
 
 int
-sh_do_align (n, fill, len)
+sh_do_align (n, fill, len, max)
      int n;
      const char *fill;
      int len;
+     int max;
 {
-  if ((fill == NULL || (*fill == 0 && len == 1))
+  if (fill == NULL
 #ifdef BFD_ASSEMBLER
       && (now_seg->flags & SEC_CODE) != 0
 #else
@@ -1891,11 +1893,12 @@ sh_do_align (n, fill, len)
 
       /* First align to a 2 byte boundary, in case there is an odd
          .byte.  */
-      frag_align (1, 0);
+      frag_align (1, 0, 0);
       if (target_big_endian)
-	frag_align_pattern (n, big_nop_pattern, sizeof big_nop_pattern);
+	frag_align_pattern (n, big_nop_pattern, sizeof big_nop_pattern, max);
       else
-	frag_align_pattern (n, little_nop_pattern, sizeof little_nop_pattern);
+	frag_align_pattern (n, little_nop_pattern, sizeof little_nop_pattern,
+			    max);
       return 1;
     }
 
@@ -2063,9 +2066,7 @@ tc_gen_reloc (section, fixp)
   arelent *rel;
   bfd_reloc_code_real_type r_type;
 
-  rel = (arelent *) bfd_alloc_by_size_t (stdoutput, sizeof (arelent));
-  if (rel == NULL)
-    as_fatal ("Out of memory");
+  rel = (arelent *) xmalloc (sizeof (arelent));
   rel->sym_ptr_ptr = &fixp->fx_addsy->bsym;
   rel->address = fixp->fx_frag->fr_address + fixp->fx_where;
 

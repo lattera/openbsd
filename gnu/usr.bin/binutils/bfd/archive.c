@@ -1,5 +1,5 @@
 /* BFD back-end for archive files (libraries).
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.  Mostly Gumby Henkel-Wallace's fault.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -142,12 +142,9 @@ extern int errno;
 #define BFD_GNU960_ARMAG(abfd)	(BFD_COFF_FILE_P((abfd)) ? ARMAG : ARMAGB)
 #endif
 
-/* Can't define this in hosts/foo.h, because (e.g. in gprof) the hosts file
-   is included, then obstack.h, which thinks if offsetof is defined, it
-   doesn't need to include stddef.h.  */
 /* Define offsetof for those systems which lack it */
 
-#if !defined (offsetof)
+#ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((unsigned long) &((TYPE *)0)->MEMBER)
 #endif
 
@@ -780,7 +777,7 @@ do_slurp_bsd_armap (abfd)
   ardata->first_file_filepos += (ardata->first_file_filepos) % 2;
   /* FIXME, we should provide some way to free raw_ardata when
      we are done using the strings from it.  For now, it seems
-     to be allocated on an obstack anyway... */
+     to be allocated on an objalloc anyway... */
   bfd_has_map (abfd) = true;
   return true;
 }
@@ -1042,7 +1039,7 @@ bfd_slurp_bsd_armap_f2 (abfd)
   ardata->first_file_filepos += (ardata->first_file_filepos) % 2;
   /* FIXME, we should provide some way to free raw_ardata when
      we are done using the strings from it.  For now, it seems
-     to be allocated on an obstack anyway... */
+     to be allocated on an objalloc anyway... */
   bfd_has_map (abfd) = true;
   return true;
 }
@@ -1125,7 +1122,7 @@ _bfd_slurp_extended_name_table (abfd)
 	(bfd_ardata (abfd)->first_file_filepos) % 2;
 
       /* FIXME, we can't release namedata here because it was allocated
-	 below extended_names on the obstack... */
+	 below extended_names on the objalloc... */
       /* bfd_release (abfd, namedata); */
     }
   return true;
@@ -1728,7 +1725,7 @@ _bfd_compute_and_write_armap (arch, elength)
   if (map == NULL)
     goto error_return;
 
-  /* We put the symbol names on the arch obstack, and then discard
+  /* We put the symbol names on the arch objalloc, and then discard
      them when done.  */
   first_name = bfd_alloc (arch, 1);
   if (first_name == NULL)

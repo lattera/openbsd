@@ -1,5 +1,5 @@
 /* symbols.c -symbol table-
-   Copyright (C) 1987, 1990, 1991, 1992, 1993, 1994, 1995, 1996
+   Copyright (C) 1987, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -15,8 +15,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 /* #define DEBUG_SYMS / * to debug symbol list maintenance */
 
@@ -52,6 +53,8 @@ symbolS abs_symbol;
 struct obstack notes;
 
 static void fb_label_init PARAMS ((void));
+static long dollar_label_instance PARAMS ((long));
+static long fb_label_instance PARAMS ((long));
 
 /* symbol_new()
   
@@ -84,7 +87,6 @@ symbol_new (name, segment, valu, frag)
   }
 #endif
   symbol_append (symbolP, symbol_lastP, &symbol_rootP, &symbol_lastP);
-  debug_verify_symchain (symbol_rootP, symbol_lastP);
 
   return symbolP;
 }
@@ -173,8 +175,19 @@ colon (sym_name)		/* just seen "x:" - rattle symbols & frags */
 
   /* Sun local labels go out of scope whenever a non-local symbol is
      defined.  */
-  if (LOCAL_LABELS_DOLLAR && ! LOCAL_LABEL (sym_name))
-    dollar_label_clear ();
+  if (LOCAL_LABELS_DOLLAR)
+    {
+      int local;
+
+#ifdef BFD_ASSEMBLER
+      local = bfd_is_local_label_name (stdoutput, sym_name);
+#else
+      local = LOCAL_LABEL (sym_name);
+#endif
+
+      if (! local)
+	dollar_label_clear ();
+    }
 
 #ifndef WORKING_DOT_WORD
   if (new_broken_words)
@@ -195,7 +208,7 @@ colon (sym_name)		/* just seen "x:" - rattle symbols & frags */
 			      possible_bytes,
 			      (relax_substateT) 0,
 			      (symbolS *) broken_words,
-			      0L,
+			      (offsetT) 0,
 			      NULL);
 
       /* We want to store the pointer to where to insert the jump table in the
@@ -223,7 +236,7 @@ colon (sym_name)		/* just seen "x:" - rattle symbols & frags */
       /*
        *	Now check for undefined symbols
        */
-      if (!S_IS_DEFINED (symbolP))
+      if (!S_IS_DEFINED (symbolP) || S_IS_COMMON (symbolP))
 	{
 	  if (S_GET_VALUE (symbolP) == 0)
 	    {
@@ -252,7 +265,7 @@ colon (sym_name)		/* just seen "x:" - rattle symbols & frags */
 	       */
 
 	      if (((!S_IS_DEBUG (symbolP)
-		    && !S_IS_DEFINED (symbolP)
+		    && (!S_IS_DEFINED (symbolP) || S_IS_COMMON (symbolP))
 		    && S_IS_EXTERNAL (symbolP))
 		   || S_GET_SEGMENT (symbolP) == bss_section)
 		  && (now_seg == data_section
@@ -339,6 +352,9 @@ colon (sym_name)		/* just seen "x:" - rattle symbols & frags */
 
 #ifdef tc_frob_label
   tc_frob_label (symbolP);
+#endif
+#ifdef obj_frob_label
+  obj_frob_label (symbolP);
 #endif
 
   return symbolP;
@@ -479,6 +495,10 @@ symbol_append (addme, target, rootPP, lastPP)
     {
       know (*rootPP == NULL);
       know (*lastPP == NULL);
+      addme->sy_next = NULL;
+#ifdef SYMBOLS_NEED_BACKPOINTERS
+      addme->sy_previous = NULL;
+#endif
       *rootPP = addme;
       *lastPP = addme;
       return;
@@ -502,6 +522,8 @@ symbol_append (addme, target, rootPP, lastPP)
 #ifdef SYMBOLS_NEED_BACKPOINTERS
   addme->sy_previous = target;
 #endif /* SYMBOLS_NEED_BACKPOINTERS */
+
+  debug_verify_symchain (symbol_rootP, symbol_lastP);
 }
 
 /* Set the chain pointers of SYMBOL to null. */
@@ -586,7 +608,7 @@ verify_symbol_chain (rootP, lastP)
   for (; symbol_next (symbolP) != NULL; symbolP = symbol_next (symbolP))
     {
 #ifdef SYMBOLS_NEED_BACKPOINTERS
-      know (symbolP->sy_next->sy_previous == symbolP);
+      assert (symbolP->sy_next->sy_previous == symbolP);
 #else
       /* Walk the list anyways, to make sure pointers are still good.  */
       ;
@@ -696,22 +718,30 @@ resolve_symbol_value (symp)
 	  if (symp->sy_value.X_add_number == 0)
 	    copy_symbol_attributes (symp, symp->sy_value.X_add_symbol);
 
-	  S_SET_VALUE (symp,
-		       (symp->sy_value.X_add_number
-			+ symp->sy_frag->fr_address
-			+ S_GET_VALUE (symp->sy_value.X_add_symbol)));
-	  if (S_GET_SEGMENT (symp) == expr_section
-	      || S_GET_SEGMENT (symp) == undefined_section)
-	    S_SET_SEGMENT (symp,
-			   S_GET_SEGMENT (symp->sy_value.X_add_symbol));
-
 	  /* If we have equated this symbol to an undefined symbol, we
-             keep X_op set to O_symbol.  This permits the routine
-             which writes out relocation to detect this case, and
-             convert the relocation to be against the symbol to which
-             this symbol is equated.  */
-	  if (! S_IS_DEFINED (symp) || S_IS_COMMON (symp))
-	    symp->sy_value.X_op = O_symbol;
+             keep X_op set to O_symbol, and we don't change
+             X_add_number.  This permits the routine which writes out
+             relocation to detect this case, and convert the
+             relocation to be against the symbol to which this symbol
+             is equated.  */
+	  if (! S_IS_DEFINED (symp->sy_value.X_add_symbol)
+	      || S_IS_COMMON (symp->sy_value.X_add_symbol))
+	    {
+	      symp->sy_value.X_op = O_symbol;
+	      S_SET_SEGMENT (symp,
+			     S_GET_SEGMENT (symp->sy_value.X_add_symbol));
+	    }
+	  else
+	    {
+	      S_SET_VALUE (symp,
+			   (symp->sy_value.X_add_number
+			    + symp->sy_frag->fr_address
+			    + S_GET_VALUE (symp->sy_value.X_add_symbol)));
+	      if (S_GET_SEGMENT (symp) == expr_section
+		  || S_GET_SEGMENT (symp) == undefined_section)
+		S_SET_SEGMENT (symp,
+			       S_GET_SEGMENT (symp->sy_value.X_add_symbol));
+	    }
 
 	  resolved = symp->sy_value.X_add_symbol->sy_resolved;
 	  break;
@@ -778,26 +808,30 @@ resolve_symbol_value (symp)
 
 	      if (expr_symbol_where (symp, &file, &line))
 		{
-		  if (seg_left == undefined_section
-		      || seg_right == undefined_section)
+		  if (seg_left == undefined_section)
 		    as_bad_where (file, line,
 				  "undefined symbol %s in operation",
-				  (seg_left == undefined_section
-				   ? S_GET_NAME (symp->sy_value.X_add_symbol)
-				   : S_GET_NAME (symp->sy_value.X_op_symbol)));
-		  else
+				  S_GET_NAME (symp->sy_value.X_add_symbol));
+		  if (seg_right == undefined_section)
+		    as_bad_where (file, line,
+				  "undefined symbol %s in operation",
+				  S_GET_NAME (symp->sy_value.X_op_symbol));
+		  if (seg_left != undefined_section
+		      && seg_right != undefined_section)
 		    as_bad_where (file, line, "invalid section for operation");
 		}
 	      else
 		{
-		  if (seg_left == undefined_section
-		      || seg_right == undefined_section)
+		  if (seg_left == undefined_section)
 		    as_bad ("undefined symbol %s in operation setting %s",
-			    (seg_left == undefined_section
-			     ? S_GET_NAME (symp->sy_value.X_add_symbol)
-			     : S_GET_NAME (symp->sy_value.X_op_symbol)),
+			    S_GET_NAME (symp->sy_value.X_add_symbol),
 			    S_GET_NAME (symp));
-		  else
+		  if (seg_right == undefined_section)
+		    as_bad ("undefined symbol %s in operation setting %s",
+			    S_GET_NAME (symp->sy_value.X_op_symbol),
+			    S_GET_NAME (symp));
+		  if (seg_left != undefined_section
+		      && seg_right != undefined_section)
 		    as_bad ("invalid section for operation setting %s",
 			    S_GET_NAME (symp));
 		}
@@ -888,7 +922,7 @@ dollar_label_defined (label)
   return 0;
 }				/* dollar_label_defined() */
 
-static int 
+static long
 dollar_label_instance (label)
      long label;
 {
@@ -1339,7 +1373,7 @@ S_IS_LOCAL (s)
 	  && (strchr (name, '\001')
 	      || strchr (name, '\002')
 	      || (! flag_keep_locals
-		  && (LOCAL_LABEL (name)
+		  && (bfd_is_local_label (stdoutput, s->bsym)
 		      || (flag_mri
 			  && name[0] == '?'
 			  && name[1] == '?')))));
@@ -1459,9 +1493,6 @@ indent ()
 }
 
 #endif
-
-void print_expr_1 PARAMS ((FILE *, expressionS *));
-void print_symbol_value_1 PARAMS ((FILE *, symbolS *));
 
 void
 print_symbol_value_1 (file, sym)

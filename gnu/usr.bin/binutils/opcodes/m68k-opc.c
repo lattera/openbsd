@@ -1,5 +1,5 @@
-/* Opcode table for m680[01234]0/m6888[12]/m68851.
-   Copyright 1989, 91, 92, 93, 94, 95, 1996 Free Software Foundation.
+/* Opcode table for m680[012346]0/m6888[12]/m68851/mcf5200.
+   Copyright 1989, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation.
 
 This file is part of GDB, GAS, and the GNU binutils.
 
@@ -36,9 +36,10 @@ const struct m68k_opcode m68k_opcodes[] =
 {"addaw",	one(0150300),	one(0170700), "*wAd", m68000up },
 {"addal",	one(0150700),	one(0170700), "*lAd", m68000up | mcf5200 },
 
-{"addib",	one(0003000),	one(0177700), "#b$b", m68000up },
-{"addiw",	one(0003100),	one(0177700), "#w$w", m68000up },
-{"addil",	one(0003200),	one(0177700), "#l$l", m68000up | mcf5200 },
+{"addib",	one(0003000),	one(0177700), "#b$s", m68000up },
+{"addiw",	one(0003100),	one(0177700), "#w$s", m68000up },
+{"addil",	one(0003200),	one(0177700), "#l$s", m68000up },
+{"addil",	one(0003200),	one(0177700), "#lDs", mcf5200 },
 
 {"addqb",	one(0050000),	one(0170700), "Qd$b", m68000up },
 {"addqw",	one(0050100),	one(0170700), "Qd%w", m68000up },
@@ -46,16 +47,17 @@ const struct m68k_opcode m68k_opcodes[] =
 
 /* The add opcode can generate the adda, addi, and addq instructions.  */
 {"addb",	one(0050000),	one(0170700), "Qd$b", m68000up },
-{"addb",	one(0003000),	one(0177700), "#b$b", m68000up },
+{"addb",	one(0003000),	one(0177700), "#b$s", m68000up },
 {"addb",	one(0150000),	one(0170700), ";bDd", m68000up },
 {"addb",	one(0150400),	one(0170700), "Dd~b", m68000up },
 {"addw",	one(0050100),	one(0170700), "Qd%w", m68000up },
 {"addw",	one(0150300),	one(0170700), "*wAd", m68000up },
-{"addw",	one(0003100),	one(0177700), "#w$w", m68000up },
+{"addw",	one(0003100),	one(0177700), "#w$s", m68000up },
 {"addw",	one(0150100),	one(0170700), "*wDd", m68000up },
 {"addw",	one(0150500),	one(0170700), "Dd~w", m68000up },
 {"addl",	one(0050200),	one(0170700), "Qd%l", m68000up | mcf5200 },
-{"addl",	one(0003200),	one(0177700), "#l$l", m68000up | mcf5200 },
+{"addl",	one(0003200),	one(0177700), "#l$s", m68000up },
+{"addl",	one(0003200),	one(0177700), "#lDs", mcf5200 },
 {"addl",	one(0150700),	one(0170700), "*lAd", m68000up | mcf5200 },
 {"addl",	one(0150200),	one(0170700), "*lDd", m68000up | mcf5200 },
 {"addl",	one(0150600),	one(0170700), "Dd~l", m68000up | mcf5200 },
@@ -67,30 +69,32 @@ const struct m68k_opcode m68k_opcodes[] =
 {"addxl",	one(0150600),	one(0170770), "DsDd", m68000up | mcf5200 },
 {"addxl",	one(0150610),	one(0170770), "-s-d", m68000up },
 
-{"andib",	one(0001000),	one(0177700), "#b$b", m68000up },
-{"andib",	one(0001074),	one(0177777), "#bCb", m68000up },
-{"andiw",	one(0001100),	one(0177700), "#w$w", m68000up },
-{"andiw",	one(0001174),	one(0177777), "#wSw", m68000up },
-{"andil",	one(0001200),	one(0177700), "#l$l", m68000up | mcf5200 },
-{"andi",	one(0001100),	one(0177700), "#w$w", m68000up },
-{"andi",	one(0001074),	one(0177777), "#bCb", m68000up },
-{"andi",	one(0001174),	one(0177777), "#wSw", m68000up },
+{"andib",	one(0001000),	one(0177700), "#b$s", m68000up },
+{"andib",	one(0001074),	one(0177777), "#bCs", m68000up },
+{"andiw",	one(0001100),	one(0177700), "#w$s", m68000up },
+{"andiw",	one(0001174),	one(0177777), "#wSs", m68000up },
+{"andil",	one(0001200),	one(0177700), "#l$s", m68000up },
+{"andil",	one(0001200),	one(0177700), "#lDs", mcf5200 },
+{"andi",	one(0001100),	one(0177700), "#w$s", m68000up },
+{"andi",	one(0001074),	one(0177777), "#bCs", m68000up },
+{"andi",	one(0001174),	one(0177777), "#wSs", m68000up },
 
 /* The and opcode can generate the andi instruction.  */
-{"andb",	one(0001000),	one(0177700), "#b$b", m68000up },
-{"andb",	one(0001074),	one(0177777), "#bCb", m68000up },
+{"andb",	one(0001000),	one(0177700), "#b$s", m68000up },
+{"andb",	one(0001074),	one(0177777), "#bCs", m68000up },
 {"andb",	one(0140000),	one(0170700), ";bDd", m68000up },
 {"andb",	one(0140400),	one(0170700), "Dd~b", m68000up },
-{"andw",	one(0001100),	one(0177700), "#w$w", m68000up },
-{"andw",	one(0001174),	one(0177777), "#wSw", m68000up },
+{"andw",	one(0001100),	one(0177700), "#w$s", m68000up },
+{"andw",	one(0001174),	one(0177777), "#wSs", m68000up },
 {"andw",	one(0140100),	one(0170700), ";wDd", m68000up },
 {"andw",	one(0140500),	one(0170700), "Dd~w", m68000up },
-{"andl",	one(0001200),	one(0177700), "#l$l", m68000up | mcf5200 },
+{"andl",	one(0001200),	one(0177700), "#l$s", m68000up },
+{"andl",	one(0001200),	one(0177700), "#lDs", mcf5200 },
 {"andl",	one(0140200),	one(0170700), ";lDd", m68000up | mcf5200 },
 {"andl",	one(0140600),	one(0170700), "Dd~l", m68000up | mcf5200 },
 {"and",		one(0001100),	one(0177700), "#w$w", m68000up },
-{"and",		one(0001074),	one(0177777), "#bCb", m68000up },
-{"and",		one(0001174),	one(0177777), "#wSw", m68000up },
+{"and",		one(0001074),	one(0177777), "#bCs", m68000up },
+{"and",		one(0001174),	one(0177777), "#wSs", m68000up },
 {"and",		one(0140100),	one(0170700), ";wDd", m68000up },
 {"and",		one(0140500),	one(0170700), "Dd~w", m68000up },
 
@@ -249,25 +253,27 @@ const struct m68k_opcode m68k_opcodes[] =
 {"cmpaw",	one(0130300),	one(0170700), "*wAd", m68000up },
 {"cmpal",	one(0130700),	one(0170700), "*lAd", m68000up | mcf5200 },
 
-{"cmpib",	one(0006000),	one(0177700), "#b;b", m68000up },
-{"cmpiw",	one(0006100),	one(0177700), "#w;w", m68000up },
-{"cmpil",	one(0006200),	one(0177700), "#l;l", m68000up | mcf5200 },
+{"cmpib",	one(0006000),	one(0177700), "#b;s", m68000up },
+{"cmpiw",	one(0006100),	one(0177700), "#w;s", m68000up },
+{"cmpil",	one(0006200),	one(0177700), "#l;s", m68000up },
+{"cmpil",	one(0006200),	one(0177700), "#lDs", mcf5200 },
 
 {"cmpmb",	one(0130410),	one(0170770), "+s+d", m68000up },
 {"cmpmw",	one(0130510),	one(0170770), "+s+d", m68000up },
-{"cmpml",	one(0130610),	one(0170770), "+s+d", m68000up | mcf5200 },
+{"cmpml",	one(0130610),	one(0170770), "+s+d", m68000up },
 
 /* The cmp opcode can generate the cmpa, cmpm, and cmpi instructions.  */
-{"cmpb",	one(0006000),	one(0177700), "#b;b", m68000up },
+{"cmpb",	one(0006000),	one(0177700), "#b;s", m68000up },
 {"cmpb",	one(0130410),	one(0170770), "+s+d", m68000up },
 {"cmpb",	one(0130000),	one(0170700), ";bDd", m68000up },
 {"cmpw",	one(0130300),	one(0170700), "*wAd", m68000up },
-{"cmpw",	one(0006100),	one(0177700), "#w;w", m68000up },
+{"cmpw",	one(0006100),	one(0177700), "#w;s", m68000up },
 {"cmpw",	one(0130510),	one(0170770), "+s+d", m68000up },
 {"cmpw",	one(0130100),	one(0170700), "*wDd", m68000up },
 {"cmpl",	one(0130700),	one(0170700), "*lAd", m68000up | mcf5200 },
-{"cmpl",	one(0006200),	one(0177700), "#l;l", m68000up | mcf5200 },
-{"cmpl",	one(0130610),	one(0170770), "+s+d", m68000up | mcf5200 },
+{"cmpl",	one(0006200),	one(0177700), "#l;s", m68000up },
+{"cmpl",	one(0006200),	one(0177700), "#lDs", mcf5200 },
+{"cmpl",	one(0130610),	one(0170770), "+s+d", m68000up },
 {"cmpl",	one(0130200),	one(0170700), "*lDd", m68000up | mcf5200 },
 
 {"dbcc",	one(0052310),	one(0177770), "DsBw", m68000up },
@@ -307,7 +313,8 @@ const struct m68k_opcode m68k_opcodes[] =
 {"eorib",	one(0005074),	one(0177777), "#bCs", m68000up },
 {"eoriw",	one(0005100),	one(0177700), "#w$s", m68000up },
 {"eoriw",	one(0005174),	one(0177777), "#wSs", m68000up },
-{"eoril",	one(0005200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"eoril",	one(0005200),	one(0177700), "#l$s", m68000up },
+{"eoril",	one(0005200),	one(0177700), "#lDs", mcf5200 },
 {"eori",	one(0005074),	one(0177777), "#bCs", m68000up },
 {"eori",	one(0005174),	one(0177777), "#wSs", m68000up },
 {"eori",	one(0005100),	one(0177700), "#w$s", m68000up },
@@ -319,7 +326,8 @@ const struct m68k_opcode m68k_opcodes[] =
 {"eorw",	one(0005100),	one(0177700), "#w$s", m68000up },
 {"eorw",	one(0005174),	one(0177777), "#wSs", m68000up },
 {"eorw",	one(0130500),	one(0170700), "Dd$s", m68000up },
-{"eorl",	one(0005200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"eorl",	one(0005200),	one(0177700), "#l$s", m68000up },
+{"eorl",	one(0005200),	one(0177700), "#lDs", mcf5200 },
 {"eorl",	one(0130600),	one(0170700), "Dd$s", m68000up | mcf5200 },
 {"eor",		one(0005074),	one(0177777), "#bCs", m68000up },
 {"eor",		one(0005174),	one(0177777), "#wSs", m68000up },
@@ -877,11 +885,9 @@ const struct m68k_opcode m68k_opcodes[] =
 {"fremx",	two(0xF000, 0x0025), two(0xF1C0, 0xE07F), "IiF8F7", mfloat },
 {"fremx",	two(0xF000, 0x4825), two(0xF1C0, 0xFC7F), "Ii;xF7", mfloat },
 
-{"frestore",	one(0xF140),		one(0xF1C0), "Id&s", mfloat },
-{"frestore",	one(0xF158),		one(0xF1F8), "Id+s", mfloat },
+{"frestore",	one(0xF140),		one(0xF1C0), "Id<s", mfloat },
 
-{"fsave",	one(0xF100),		one(0xF1C0), "Id&s", mfloat },
-{"fsave",	one(0xF120),		one(0xF1F8), "Id-s", mfloat },
+{"fsave",	one(0xF100),		one(0xF1C0), "Id>s", mfloat },
 
 {"fscaleb",	two(0xF000, 0x5826), two(0xF1C0, 0xFC7F), "Ii;bF7", mfloat },
 {"fscaled",	two(0xF000, 0x5426), two(0xF1C0, 0xFC7F), "Ii;FF7", mfloat },
@@ -1224,6 +1230,23 @@ const struct m68k_opcode m68k_opcodes[] =
 {"lsrl",	one(0160210),	one(0170770), "QdDs", m68000up | mcf5200 },
 {"lsrl",	one(0160250),	one(0170770), "DdDs", m68000up | mcf5200 },
 
+/* NOTE: The mcf5200 family programmer's reference manual does not 
+   indicate the byte form of the movea instruction is invalid (as it
+   is on 68000 family cpus).  However, experiments on the 5202 yeild
+   unexpected results.  The value is copied, but it is not sign extended
+   (as is done with movea.w) and the top three bytes in the address 
+   register are not disturbed.  I don't know if this is the intended
+   behavior --- it could be a hole in instruction decoding (Motorola
+   decided not to trap all invalid instructions for performance reasons)
+   --- but I suspect that it is not.   
+
+   I reported this to Motorola ISD Technical Communications Support, 
+   which replied that other coldfire assemblers reject movea.b.  For 
+   this reason I've decided to not allow moveab. 
+
+	jtc@cygnus.com - 97/01/24
+ */
+
 {"moveal",	one(0020100),	one(0170700), "*lAd", m68000up | mcf5200 },
 {"moveaw",	one(0030100),	one(0170700), "*wAd", m68000up | mcf5200 },
 
@@ -1234,20 +1257,23 @@ const struct m68k_opcode m68k_opcodes[] =
 
 {"movemw",	one(0044200),	one(0177700), "Lw&s", m68000up },
 {"movemw",	one(0044240),	one(0177770), "lw-s", m68000up },
-{"movemw",	one(0046200),	one(0177700), "!sLw", m68000up },
-{"movemw",	one(0046230),	one(0177770), "+sLw", m68000up },
-{"movemw",	one(0044200),	one(0177700), "#w&s", m68000up },
-{"movemw",	one(0044240),	one(0177770), "#w-s", m68000up },
-{"movemw",	one(0046200),	one(0177700), "!s#w", m68000up },
-{"movemw",	one(0046230),	one(0177770), "+s#w", m68000up },
-{"moveml",	one(0044300),	one(0177700), "Lw&s", m68000up | mcf5200 },
-{"moveml",	one(0044340),	one(0177770), "lw-s", m68000up | mcf5200 },
-{"moveml",	one(0046300),	one(0177700), "!sLw", m68000up | mcf5200 },
-{"moveml",	one(0046330),	one(0177770), "+sLw", m68000up | mcf5200 },
-{"moveml",	one(0044300),	one(0177700), "#w&s", m68000up | mcf5200 },
-{"moveml",	one(0044340),	one(0177770), "#w-s", m68000up | mcf5200 },
-{"moveml",	one(0046300),	one(0177700), "!s#w", m68000up | mcf5200 },
-{"moveml",	one(0046330),	one(0177770), "+s#w", m68000up | mcf5200 },
+{"movemw",	one(0044200),	one(0177700), "#w>s", m68000up },
+{"movemw",	one(0046200),	one(0177700), "<sLw", m68000up },
+{"movemw",	one(0046200),	one(0177700), "<s#w", m68000up },
+{"moveml",	one(0044300),	one(0177700), "Lw&s", m68000up },
+{"moveml",	one(0044340),	one(0177770), "lw-s", m68000up },
+{"moveml",	one(0044300),	one(0177700), "#w>s", m68000up },
+{"moveml",	one(0046300),	one(0177700), "<sLw", m68000up },
+{"moveml",	one(0046300),	one(0177700), "<s#w", m68000up },
+/* FIXME: need specifier for mode 2 and 5 to simplify below insn patterns */
+{"moveml",	one(0044320),	one(0177770), "Lwas", mcf5200 },
+{"moveml",	one(0044320),	one(0177770), "#was", mcf5200 },
+{"moveml",	one(0044350),	one(0177770), "Lwds", mcf5200 },
+{"moveml",	one(0044350),	one(0177770), "#wds", mcf5200 },
+{"moveml",	one(0046320),	one(0177770), "asLw", mcf5200 },
+{"moveml",	one(0046320),	one(0177770), "as#w", mcf5200 },
+{"moveml",	one(0046350),	one(0177770), "dsLw", mcf5200 },
+{"moveml",	one(0046350),	one(0177770), "ds#w", mcf5200 },
 
 {"movepw",	one(0000410),	one(0170770), "dsDd", m68000up },
 {"movepw",	one(0000610),	one(0170770), "Ddds", m68000up },
@@ -1255,36 +1281,54 @@ const struct m68k_opcode m68k_opcodes[] =
 {"movepl",	one(0000710),	one(0170770), "Ddds", m68000up },
 
 {"moveq",	one(0070000),	one(0170400), "MsDd", m68000up | mcf5200 },
+{"moveq",	one(0070000),	one(0170400), "#BDd", m68000up | mcf5200 },
 
 /* The move opcode can generate the movea and moveq instructions.  */
-{"moveb",	one(0010000),	one(0170000), ";b$d", m68000up | mcf5200 },
-{"movew",	one(0030000),	one(0170000), "*w$d", m68000up | mcf5200 },
-{"movew",	one(0030100),	one(0170700), "*wAd", m68000up | mcf5200 },
+{"moveb",	one(0010000),	one(0170000), ";b$d", m68000up },
+{"moveb",	one(0010000),	one(0170000), "ms%d", mcf5200 },
+{"moveb",	one(0010000),	one(0170000), "nspd", mcf5200 },
+{"moveb",	one(0010000),	one(0170000), "obmd", mcf5200 },
 
-{"movew",	one(0040300),	one(0177770), "SsDs", mcf5200 },
-{"movew",	one(0041300),	one(0177770), "CsDs", mcf5200 },
+{"movew",	one(0030000),	one(0170000), "*w%d", m68000up },
+{"movew",	one(0030000),	one(0170000), "ms%d", mcf5200 },
+{"movew",	one(0030000),	one(0170000), "nspd", mcf5200 },
+{"movew",	one(0030000),	one(0170000), "owmd", mcf5200 },
 {"movew",	one(0040300),	one(0177700), "Ss$s", m68000up },
+{"movew",	one(0040300),	one(0177770), "SsDs", mcf5200 },
 {"movew",	one(0041300),	one(0177700), "Cs$s", m68010up },
-{"movew",	one(0042300),	one(0177700), ";wCd", m68000up | mcf5200 },
-{"movew",	one(0043300),	one(0177700), ";wSd", m68000up | mcf5200 },
+{"movew",	one(0041300),	one(0177770), "CsDs", mcf5200 },
+{"movew",	one(0042300),	one(0177700), ";wCd", m68000up },
+{"movew",	one(0042300),	one(0177700), "DsCd", mcf5200 },
+{"movew",	one(0042300),	one(0177700), "#wCd", mcf5200 },
+{"movew",	one(0043300),	one(0177700), ";wSd", m68000up },
+{"movew",	one(0043300),	one(0177700), "DsSd", mcf5200 },
+{"movew",	one(0043300),	one(0177700), "#wSd", mcf5200 },
 
 {"movel",	one(0070000),	one(0170400), "MsDd", m68000up | mcf5200 },
-{"movel",	one(0020000),	one(0170000), "*l$d", m68000up | mcf5200 },
-{"movel",	one(0020100),	one(0170700), "*lAd", m68000up | mcf5200 },
-{"movel",	one(0047140),	one(0177770), "AsUd", m68000up | mcf5200 },
-{"movel",	one(0047150),	one(0177770), "UdAs", m68000up | mcf5200 },
-{"move",	one(0030000),	one(0170000), "*w$d", m68000up | mcf5200 },
-{"move",	one(0030100),	one(0170700), "*wAd", m68000up | mcf5200 },
+{"movel",	one(0020000),	one(0170000), "*l%d", m68000up },
+{"movel",	one(0020000),	one(0170000), "ms%d", mcf5200 },
+{"movel",	one(0020000),	one(0170000), "nspd", mcf5200 },
+{"movel",	one(0020000),	one(0170000), "olmd", mcf5200 },
+{"movel",	one(0047140),	one(0177770), "AsUd", m68000up },
+{"movel",	one(0047150),	one(0177770), "UdAs", m68000up },
 
-{"move",	one(0040300),	one(0177770), "SsDs", mcf5200 },
-{"move",	one(0041300),	one(0177770), "CsDs", mcf5200 },
+{"move",	one(0030000),	one(0170000), "*w%d", m68000up },
+{"move",	one(0030000),	one(0170000), "ms%d", mcf5200 },
+{"move",	one(0030000),	one(0170000), "nspd", mcf5200 },
+{"move",	one(0030000),	one(0170000), "owmd", mcf5200 },
 {"move",	one(0040300),	one(0177700), "Ss$s", m68000up },
+{"move",	one(0040300),	one(0177770), "SsDs", mcf5200 },
 {"move",	one(0041300),	one(0177700), "Cs$s", m68010up },
-{"move",	one(0042300),	one(0177700), ";wCd", m68000up | mcf5200 },
-{"move",	one(0043300),	one(0177700), ";wSd", m68000up | mcf5200 },
+{"move",	one(0041300),	one(0177770), "CsDs", mcf5200 },
+{"move",	one(0042300),	one(0177700), ";wCd", m68000up },
+{"move",	one(0042300),	one(0177700), "DsCd", mcf5200 },
+{"move",	one(0042300),	one(0177700), "#wCd", mcf5200 },
+{"move",	one(0043300),	one(0177700), ";wSd", m68000up },
+{"move",	one(0043300),	one(0177700), "DsSd", mcf5200 },
+{"move",	one(0043300),	one(0177700), "#wSd", mcf5200 },
 
-{"move",	one(0047140),	one(0177770), "AsUd", m68000up | mcf5200 },
-{"move",	one(0047150),	one(0177770), "UdAs", m68000up | mcf5200 },
+{"move",	one(0047140),	one(0177770), "AsUd", m68000up },
+{"move",	one(0047150),	one(0177770), "UdAs", m68000up },
 
 {"movesb",	two(0007000, 0),     two(0177700, 07777), "~sR1", m68010up },
 {"movesb",	two(0007000, 04000), two(0177700, 07777), "R1~s", m68010up },
@@ -1300,34 +1344,48 @@ const struct m68k_opcode m68k_opcodes[] =
 {"move16",	one(0xf618),		one(0xfff8), "_Las", m68040up },
 
 {"mulsw",	one(0140700),		one(0170700), ";wDd", m68000up|mcf5200 },
-{"mulsl",	two(0046000,004000), two(0177700,0107770), ";lD1", m68020up|cpu32|mcf5200 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), ";lD1", m68020up|cpu32 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), "DsD1", mcf5200 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), "asD1", mcf5200 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), "+sD1", mcf5200 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), "-sD1", mcf5200 },
+{"mulsl",	two(0046000,004000), two(0177700,0107770), "dsD1", mcf5200 },
 {"mulsl",	two(0046000,006000), two(0177700,0107770), ";lD3D1",m68020up|cpu32 },
 
 {"muluw",	one(0140300),		one(0170700), ";wDd", m68000up|mcf5200 },
-{"mulul",	two(0046000,000000), two(0177700,0107770), ";lD1", m68020up|cpu32|mcf5200 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), ";lD1", m68020up|cpu32 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), "DsD1", mcf5200 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), "asD1", mcf5200 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), "+sD1", mcf5200 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), "-sD1", mcf5200 },
+{"mulul",	two(0046000,000000), two(0177700,0107770), "dsD1", mcf5200 },
 {"mulul",	two(0046000,002000), two(0177700,0107770), ";lD3D1",m68020up|cpu32 },
 
 {"nbcd",	one(0044000),	one(0177700), "$s", m68000up },
 
 {"negb",	one(0042000),	one(0177700), "$s", m68000up },
 {"negw",	one(0042100),	one(0177700), "$s", m68000up },
-{"negl",	one(0042200),	one(0177700), "$s", m68000up | mcf5200},
+{"negl",	one(0042200),	one(0177700), "$s", m68000up },
+{"negl",	one(0042200),	one(0177700), "Ds", mcf5200},
 
 {"negxb",	one(0040000),	one(0177700), "$s", m68000up },
 {"negxw",	one(0040100),	one(0177700), "$s", m68000up },
-{"negxl",	one(0040200),	one(0177700), "$s", m68000up | mcf5200},
+{"negxl",	one(0040200),	one(0177700), "$s", m68000up },
+{"negxl",	one(0040200),	one(0177700), "Ds", mcf5200},
 
 {"nop",		one(0047161),	one(0177777), "", m68000up | mcf5200},
 
 {"notb",	one(0043000),	one(0177700), "$s", m68000up },
 {"notw",	one(0043100),	one(0177700), "$s", m68000up },
-{"notl",	one(0043200),	one(0177700), "$s", m68000up | mcf5200},
+{"notl",	one(0043200),	one(0177700), "$s", m68000up },
+{"notl",	one(0043200),	one(0177700), "Ds", mcf5200},
 
 {"orib",	one(0000000),	one(0177700), "#b$s", m68000up },
 {"orib",	one(0000074),	one(0177777), "#bCs", m68000up },
 {"oriw",	one(0000100),	one(0177700), "#w$s", m68000up },
 {"oriw",	one(0000174),	one(0177777), "#wSs", m68000up },
-{"oril",	one(0000200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"oril",	one(0000200),	one(0177700), "#l$s", m68000up },
+{"oril",	one(0000200),	one(0177700), "#lDs", mcf5200 },
 {"ori",		one(0000074),	one(0177777), "#bCs", m68000up },
 {"ori",		one(0000100),	one(0177700), "#w$s", m68000up },
 {"ori",		one(0000174),	one(0177777), "#wSs", m68000up },
@@ -1341,7 +1399,8 @@ const struct m68k_opcode m68k_opcodes[] =
 {"orw",		one(0000174),	one(0177777), "#wSs", m68000up },
 {"orw",		one(0100100),	one(0170700), ";wDd", m68000up },
 {"orw",		one(0100500),	one(0170700), "Dd~s", m68000up },
-{"orl",		one(0000200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"orl",		one(0000200),	one(0177700), "#l$s", m68000up },
+{"orl",		one(0000200),	one(0177700), "#lDs", mcf5200 },
 {"orl",		one(0100200),	one(0170700), ";lDd", m68000up | mcf5200 },
 {"orl",		one(0100600),	one(0170700), "Dd~s", m68000up | mcf5200 },
 {"or",		one(0000074),	one(0177777), "#bCs", m68000up },
@@ -1460,11 +1519,9 @@ const struct m68k_opcode m68k_opcodes[] =
 {"pmovefd",	two(0xf000, 0x4100),	two(0xffc0, 0xe3ff), "|sW8", m68030 },
 {"pmovefd",	two(0xf000, 0x0900),	two(0xffc0, 0xfbff), "*l38", m68030 },
 
-{"prestore",	one(0xf140),		one(0xffc0), "&s", m68851 },
-{"prestore",	one(0xf158),		one(0xfff8), "+s", m68851 },
+{"prestore",	one(0xf140),		one(0xffc0), "<s", m68851 },
 
-{"psave",	one(0xf100),		one(0xffc0), "&s", m68851 },
-{"psave",	one(0xf120),		one(0xfff8), "-s", m68851 },
+{"psave",	one(0xf100),		one(0xffc0), ">s", m68851 },
 
 {"psac",	two(0xf040, 0x0007),	two(0xffc0, 0xffff), "$s", m68851 },
 {"psas",	two(0xf040, 0x0006),	two(0xffc0, 0xffff), "$s", m68851 },
@@ -1568,6 +1625,7 @@ const struct m68k_opcode m68k_opcodes[] =
 {"pvalid",	two(0xf000, 0x2800),	two(0xffc0, 0xffff), "Vs&s", m68851 },
 {"pvalid",	two(0xf000, 0x2c00),	two(0xffc0, 0xfff8), "A3&s", m68851 },
 
+
 {"reset",	one(0047160),		one(0177777), "", m68000up },
 
 {"rolb",	one(0160430),		one(0170770), "QdDs", m68000up },
@@ -1596,9 +1654,9 @@ const struct m68k_opcode m68k_opcodes[] =
 
 {"roxrb",	one(0160020),		one(0170770), "QdDs", m68000up },
 {"roxrb",	one(0160060),		one(0170770), "DdDs", m68000up },
-{"roxrw",	one(0160120),		one(0170770),"QdDs", m68000up },
+{"roxrw",	one(0160120),		one(0170770), "QdDs", m68000up },
 {"roxrw",	one(0160160),		one(0170770), "DdDs", m68000up },
-{"roxrw",	one(0162300),		one(0177700),"~s",   m68000up },
+{"roxrw",	one(0162300),		one(0177700), "~s",   m68000up },
 {"roxrl",	one(0160220),		one(0170770), "QdDs", m68000up },
 {"roxrl",	one(0160260),		one(0170770), "DdDs", m68000up },
 
@@ -1615,22 +1673,39 @@ const struct m68k_opcode m68k_opcodes[] =
 {"sbcd",	one(0100400),		one(0170770), "DsDd", m68000up },
 {"sbcd",	one(0100410),		one(0170770), "-s-d", m68000up },
 
-{"scc",		one(0052300),	one(0177700), "$s", m68000up | mcf5200 },
-{"scs",		one(0052700),	one(0177700), "$s", m68000up | mcf5200 },
-{"seq",		one(0053700),	one(0177700), "$s", m68000up | mcf5200 },
-{"sf",		one(0050700),	one(0177700), "$s", m68000up | mcf5200 },
-{"sge",		one(0056300),	one(0177700), "$s", m68000up | mcf5200 },
-{"sgt",		one(0057300),	one(0177700), "$s", m68000up | mcf5200 },
-{"shi",		one(0051300),	one(0177700), "$s", m68000up | mcf5200 },
-{"sle",		one(0057700),	one(0177700), "$s", m68000up | mcf5200 },
-{"sls",		one(0051700),	one(0177700), "$s", m68000up | mcf5200 },
-{"slt",		one(0056700),	one(0177700), "$s", m68000up | mcf5200 },
-{"smi",		one(0055700),	one(0177700), "$s", m68000up | mcf5200 },
-{"sne",		one(0053300),	one(0177700), "$s", m68000up | mcf5200 },
-{"spl",		one(0055300),	one(0177700), "$s", m68000up | mcf5200 },
-{"st",		one(0050300),	one(0177700), "$s", m68000up | mcf5200 },
-{"svc",		one(0054300),	one(0177700), "$s", m68000up | mcf5200 },
-{"svs",		one(0054700),	one(0177700), "$s", m68000up | mcf5200 },
+
+{"scc",		one(0052300),	one(0177700), "$s", m68000up },
+{"scc",		one(0052300),	one(0177700), "Ds", mcf5200 },
+{"scs",		one(0052700),	one(0177700), "$s", m68000up },
+{"scs",		one(0052700),	one(0177700), "Ds", mcf5200 },
+{"seq",		one(0053700),	one(0177700), "$s", m68000up },
+{"seq",		one(0053700),	one(0177700), "Ds", mcf5200 },
+{"sf",		one(0050700),	one(0177700), "$s", m68000up },
+{"sf",		one(0050700),	one(0177700), "Ds", mcf5200 },
+{"sge",		one(0056300),	one(0177700), "$s", m68000up },
+{"sge",		one(0056300),	one(0177700), "Ds", mcf5200 },
+{"sgt",		one(0057300),	one(0177700), "$s", m68000up },
+{"sgt",		one(0057300),	one(0177700), "Ds", mcf5200 },
+{"shi",		one(0051300),	one(0177700), "$s", m68000up },
+{"shi",		one(0051300),	one(0177700), "Ds", mcf5200 },
+{"sle",		one(0057700),	one(0177700), "$s", m68000up },
+{"sle",		one(0057700),	one(0177700), "Ds", mcf5200 },
+{"sls",		one(0051700),	one(0177700), "$s", m68000up },
+{"sls",		one(0051700),	one(0177700), "Ds", mcf5200 },
+{"slt",		one(0056700),	one(0177700), "$s", m68000up },
+{"slt",		one(0056700),	one(0177700), "Ds", mcf5200 },
+{"smi",		one(0055700),	one(0177700), "$s", m68000up },
+{"smi",		one(0055700),	one(0177700), "Ds", mcf5200 },
+{"sne",		one(0053300),	one(0177700), "$s", m68000up },
+{"sne",		one(0053300),	one(0177700), "Ds", mcf5200 },
+{"spl",		one(0055300),	one(0177700), "$s", m68000up },
+{"spl",		one(0055300),	one(0177700), "Ds", mcf5200 },
+{"st",		one(0050300),	one(0177700), "$s", m68000up },
+{"st",		one(0050300),	one(0177700), "Ds", mcf5200 },
+{"svc",		one(0054300),	one(0177700), "$s", m68000up },
+{"svc",		one(0054300),	one(0177700), "Ds", mcf5200 },
+{"svs",		one(0054700),	one(0177700), "$s", m68000up },
+{"svs",		one(0054700),	one(0177700), "Ds", mcf5200 },
 
 {"stop",	one(0047162),	one(0177777), "#w", m68000up | mcf5200 },
 
@@ -1639,7 +1714,8 @@ const struct m68k_opcode m68k_opcodes[] =
 
 {"subib",	one(0002000),	one(0177700), "#b$s", m68000up },
 {"subiw",	one(0002100),	one(0177700), "#w$s", m68000up },
-{"subil",	one(0002200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"subil",	one(0002200),	one(0177700), "#l$s", m68000up },
+{"subil",	one(0002200),	one(0177700), "#lDs", mcf5200 },
 
 {"subqb",	one(0050400),	one(0170700), "Qd%s", m68000up },
 {"subqw",	one(0050500),	one(0170700), "Qd%s", m68000up },
@@ -1656,7 +1732,8 @@ const struct m68k_opcode m68k_opcodes[] =
 {"subw",	one(0110100),	one(0170700), "*wDd", m68000up },
 {"subw",	one(0110500),	one(0170700), "Dd~s", m68000up },
 {"subl",	one(0050600),	one(0170700), "Qd%s", m68000up | mcf5200 },
-{"subl",	one(0002200),	one(0177700), "#l$s", m68000up | mcf5200 },
+{"subl",	one(0002200),	one(0177700), "#l$s", m68000up },
+{"subl",	one(0002200),	one(0177700), "#lDs", mcf5200 },
 {"subl",	one(0110700),	one(0170700), "*lAd", m68000up | mcf5200 },
 {"subl",	one(0110200),	one(0170700), "*lDd", m68000up | mcf5200 },
 {"subl",	one(0110600),	one(0170700), "Dd~s", m68000up | mcf5200 },
@@ -1669,6 +1746,15 @@ const struct m68k_opcode m68k_opcodes[] =
 {"subxl",	one(0110610),	one(0170770), "-s-d", m68000up },
 
 {"swap",	one(0044100),	one(0177770), "Ds", m68000up | mcf5200 },
+
+/* swbeg and swbegl are magic constants used on sysV68.  The compiler
+   generates them before a switch table.  They tell the debugger and
+   disassembler that a switch table follows.  The parameter is the
+   number of elements in the table.  swbeg means that the entries in
+   the table are word (2 byte) sized, and swbegl means that the
+   entries in the table are longword (4 byte) sized.  */
+{"swbeg",	one(0045374),	one(0177777), "#w",   m68000up | mcf5200 },
+{"swbegl",	one(0045375),	one(0177777), "#l",   m68000up | mcf5200 },
 
 {"tas",		one(0045300),		one(0177700), "$s", m68000up },
 
@@ -1739,9 +1825,12 @@ TBL("tblunb", "tblunw", "tblunl", 0, 0),
 
 {"trapv",	one(0047166),	one(0177777), "", m68000up },
 
-{"tstb",	one(0045000),	one(0177700), ";b", m68000up | mcf5200 },
-{"tstw",	one(0045100),	one(0177700), "*w", m68000up | mcf5200 },
-{"tstl",	one(0045200),	one(0177700), "*l", m68000up | mcf5200 },
+{"tstb",	one(0045000),	one(0177700), ";b", m68020up | mcf5200 },
+{"tstb",	one(0045000),	one(0177700), "@b", m68000up },
+{"tstw",	one(0045100),	one(0177700), "*w", m68020up | mcf5200 },
+{"tstw",	one(0045100),	one(0177700), "@w", m68000up },
+{"tstl",	one(0045200),	one(0177700), "*l", m68020up | mcf5200 },
+{"tstl",	one(0045200),	one(0177700), "@l", m68000up },
 
 {"unlk",	one(0047130),	one(0177770), "As", m68000up | mcf5200 },
 
@@ -1809,6 +1898,11 @@ const struct m68k_opcode_alias m68k_opcode_aliases[] =
   { "bhsb",	"bccs" },
   { "bhsw",	"bccw" },
   { "bhsl",	"bccl" },
+  { "blo",	"bcsw" },
+  { "blos",	"bcss" },
+  { "blob",	"bcss" },
+  { "blow",	"bcsw" },
+  { "blol",	"bcsl" },
   { "br",	"braw", },
   { "brs",	"bras", },
   { "brb",	"bras", },

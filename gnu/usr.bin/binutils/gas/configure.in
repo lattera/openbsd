@@ -34,6 +34,13 @@ AC_ARG_ENABLE(shared,
   *opcodes*) shared=true shared_opcodes=true ;;
   *) shared=false ;;
 esac])dnl
+AC_ARG_ENABLE(commonbfdlib,
+[  --enable-commonbfdlib   build shared BFD/opcodes/libiberty library],
+[case "${enableval}" in
+  yes) commonbfdlib=true ;;
+  no)  commonbfdlib=false ;;
+  *)   AC_MSG_ERROR([bad value ${enableval} for BFD commonbfdlib option]) ;;
+esac])dnl
 
 # Generate a header file -- gets more post-processing by Makefile later.
 AC_CONFIG_HEADER(conf)
@@ -48,7 +55,7 @@ te_file=generic
 canon_targets=""
 if test -n "$enable_targets" ; then
   for t in `echo $enable_targets | sed 's/,/ /g'`; do
-    result=`$ac_config_sub $t 2>/dev/null`
+    result=`${CONFIG_SHELL-/bin/sh} $ac_config_sub $t 2>/dev/null`
     if test -n "$result" ; then
       canon_targets="$canon_targets $result"
 #    else
@@ -79,7 +86,7 @@ changequote(,)dnl
       m683??)		cpu_type=m68k ;;
 changequote([,])dnl
       m8*)		cpu_type=m88k ;;
-      mips*el)		cpu_type=mips endian=little;;
+      mips*el)		cpu_type=mips endian=little ;;
       mips*)		cpu_type=mips endian=big ;;
       powerpcle*)	cpu_type=ppc endian=little ;;
       powerpc*)		cpu_type=ppc endian=big ;;
@@ -111,6 +118,7 @@ changequote([,])dnl
 
       alpha-*-*vms*)	    fmt=evax ;;
       alpha-*-netware*)     fmt=ecoff ;;
+      alpha-*-openbsd*)     fmt=ecoff ;;
       alpha-*-osf*)         fmt=ecoff ;;
       alpha-*-linuxecoff*)  fmt=ecoff ;;
       alpha-*-linux*)       fmt=elf em=linux ;;
@@ -127,10 +135,12 @@ changequote([,])dnl
       arm-*-riscix*)        fmt=aout ;;
       arm-*-pe)             fmt=coff targ=armcoff em=pe ;;
 
+      d10v-*-*)		    fmt=elf bfd_gas=yes ;;
 
       hppa-*-*elf*)         fmt=elf em=hppa ;;
       hppa-*-lites*)        fmt=elf em=hppa ;;
       hppa-*-osf*)          fmt=som em=hppa ;;
+      hppa-*-rtems*)        fmt=elf em=hppa ;;
       hppa-*-hpux*)         fmt=som em=hppa ;;
       hppa-*-bsd*)          fmt=som em=hppa ;;
       hppa-*-hiux*)         fmt=som em=hppa ;;
@@ -139,9 +149,11 @@ changequote([,])dnl
 
       i386-ibm-aix*)        fmt=coff targ=i386coff
 			     em=i386aix ;;
+      i386-sequent-bsd*)    fmt=aout em=dynix bfd_gas=yes ;;
       i386-*-bsd*)          fmt=aout em=386bsd ;;
       i386-*-netbsd0.8)     fmt=aout em=386bsd ;;
       i386-*-netbsd*)       fmt=aout em=nbsd bfd_gas=yes;;
+      i386-*-openbsd*)      fmt=aout em=nbsd bfd_gas=yes;;
       i386-*-linux*aout* | i386-*-linuxoldld)   fmt=aout em=linux ;;
       i386-*-linux*coff*)   fmt=coff em=linux
 			     targ=i386coff ;;
@@ -173,13 +185,16 @@ changequote([,])dnl
       i960-*-vxworks5.*)    fmt=coff em=ic960 targ=ic960coff ;;
       i960-*-vxworks*)      fmt=bout ;;
 
+      m32r-*-*)		    fmt=elf bfd_gas=yes ;;
+
       m68k-*-vxworks* | m68k-ericsson-ose | m68k-*-sunos*)
 			    fmt=aout em=sun3 ;;
       m68k-motorola-sysv*)  fmt=coff targ=m68kcoff em=delta ;;
       m68k-bull-sysv3*)     fmt=coff targ=m68kcoff em=dpx2 ;;
       m68k-apollo-*)        fmt=coff targ=apollo em=apollo ;;
-      m68k-*-sysv4 | m68k-*-elf) # must be before -sysv*
-			    fmt=elf ;;
+      m68k-*-sysv4*) # must be before -sysv*
+			    fmt=elf em=svr4 ;;
+      m68k-*-elf*)	    fmt=elf ;;
       m68k-*-coff | m68k-*-sysv* | m68k-*-rtems*)
 			    fmt=coff targ=m68kcoff ;;
       m68k-*-hpux*)         fmt=hp300 em=hp300 ;;
@@ -188,6 +203,7 @@ changequote([,])dnl
       m68k-*-lynxos*)       fmt=coff targ=m68kcoff
 			     em=lynx ;;
       m68k-*-netbsd*)       fmt=aout em=nbsd bfd_gas=yes ;;
+      m68k-*-openbsd*)      fmt=aout em=nbsd bfd_gas=yes ;;
       m68k-apple-aux*)      fmt=coff targ=m68kcoff em=aux ;;
       m68k-*-psos*)         fmt=elf em=psos;;
 
@@ -196,6 +212,7 @@ changequote([,])dnl
 
       # don't change em like *-*-bsd does
       mips-dec-netbsd*)	    fmt=elf targ=mips-lit endian=little ;;
+      mips-dec-openbsd*)    fmt=elf targ=mips-lit endian=little ;;
       mips-dec-bsd*)        fmt=aout targ=mips-lit ;;
       mips-sony-bsd*)       fmt=ecoff targ=mips-big ;;
       mips-*-bsd*)          AC_MSG_ERROR(Unknown vendor for mips-bsd configuration.) ;;
@@ -208,18 +225,13 @@ changequote([,])dnl
 			    esac
 			    ;;
       mips-*-ecoff*)        fmt=ecoff targ=mips-big ;;
-      mips-*-gnu*)          fmt=aout
-			    case "$endian" in
-			    big) targ=mips-big ;;
-			    *)   targ=mips-lit ;;
-			    esac
-			    ;;
       mips-*-irix6*)	    fmt=elf targ=mips-big ;;
       mips-*-irix5*)        fmt=elf targ=mips-big ;;
       mips-*-irix*)         fmt=ecoff targ=mips-big ;;
+      mips-*-lnews*)        fmt=ecoff targ=mips-lit em=lnews ;;
       mips-*-riscos*)       fmt=ecoff targ=mips-big ;;
       mips-*-sysv*)         fmt=ecoff targ=mips-big ;;
-      mips-*-elf* | mips-*-rtems*)
+      mips-*-elf* | mips-*-rtems* | mips-*-linux* | mips-*-gnu* | mips-*-openbsd*)
 			    fmt=elf 
 			    case "$endian" in
 			    big) targ=mips-big ;;
@@ -236,7 +248,8 @@ changequote([,])dnl
 			    esac
                             ;;
       ppc-*-aix*)           fmt=coff ;;
-      ppc-*-elf* | ppc-*-eabi* | ppc-*-sysv4*)
+      ppc-*-beos*)          fmt=coff ;;
+      ppc-*-*bsd* | ppc-*-elf* | ppc-*-eabi* | ppc-*-sysv4*)
 			    fmt=elf
 			    case "$endian" in
 			    big)  targ=ppc-big ;;
@@ -271,19 +284,21 @@ changequote([,])dnl
 
       ns32k-pc532-mach* | ns32k-pc532-ux*)    fmt=aout em=pc532mach ;;
       ns32k-pc532-netbsd* | ns32k-pc532-lites*)  fmt=aout em=nbsd532 ;;
+      ns32k-pc532-openbsd*) fmt=aout em=nbsd532 ;;
 
       sparc-*-rtems*)       fmt=aout ;;
       sparc-*-sunos4*)      fmt=aout em=sun3 ;;
       sparc-*-aout | sparc*-*-vxworks*)
 			    fmt=aout em=sparcaout ;;
       sparc-*-coff)         fmt=coff ;;
+      sparc-*-linux*aout*)  fmt=aout em=linux ;;
+      sparc-*-linux*)	    fmt=elf em=linux ;;
       sparc-*-lynxos*)      fmt=coff em=lynx ;;
       sparc-fujitsu-none)   fmt=aout ;;
       sparc-*-elf | sparc-*-sysv4* | sparc-*-solaris*)
 			    fmt=elf ;;
       sparc-*-netbsd*)      fmt=aout em=nbsd bfd_gas=yes ;;
-
-      v850-*-*)		    fmt=elf bfd_gas=yes ;;
+      sparc-*-openbsd*)     fmt=aout em=nbsd bfd_gas=yes ;;
 
       vax-*-bsd* | vax-*-ultrix*)
 			    fmt=aout ;;
@@ -347,11 +362,40 @@ changequote([,])dnl
     esac
 
     case ${cpu_type} in
+      m32r)
+	case ${extra_objects} in
+	*cgen.o*) ;;
+	*) extra_objects="$extra_objects cgen.o"
+	   AC_DEFINE(USING_CGEN)
+	   ;;
+	esac
+	;;
+
       m68k)
 	case ${extra_objects} in
 	*m68k-parse.o*) ;;
 	*) extra_objects="$extra_objects m68k-parse.o" ;;
 	esac
+	;;
+
+      mips)
+	echo ${extra_objects} | grep -s "itbl-parse.o" 
+	if test $? -ne 0 ; then
+	  extra_objects="$extra_objects itbl-parse.o"
+	fi
+
+	echo ${extra_objects} | grep -s "itbl-lex.o" 
+	if test $? -ne 0 ; then
+	  extra_objects="$extra_objects itbl-lex.o"
+	fi
+
+	echo ${extra_objects} | grep -s "itbl-ops.o" 
+	if test $? -ne 0 ; then
+	  extra_objects="$extra_objects itbl-ops.o"
+	fi
+	;;
+
+      *)
 	;;
     esac
 
@@ -376,6 +420,11 @@ changequote([,])dnl
 
     case ${generic_target}-${fmt} in
       mips-*-irix5*-*)	emulation="mipsbelf mipslelf mipself mipsbecoff mipslecoff mipsecoff" ;;
+      mips-*-linux*-*)	case "$endian" in
+			big)	emulation="mipsbelf mipslelf mipself mipsbecoff mipslecoff mipsecoff" ;;
+			*)	emulation="mipslelf mipsbelf mipself mipslecoff mipsbecoff mipsecoff" ;;
+			esac ;;
+      mips-*-lnews*-ecoff) ;;
       mips-*-*-ecoff)	case "$endian" in
 			big)	emulation="mipsbecoff mipslecoff mipsecoff" ;;
 			*)	emulation="mipslecoff mipsbecoff mipsecoff" ;;
@@ -383,6 +432,10 @@ changequote([,])dnl
       mips-*-*-elf)	case "$endian" in
 			big)	emulation="mipsbelf mipslelf mipself" ;;
 			*)	emulation="mipslelf mipsbelf mipself" ;;
+      # Uncommenting the next line will turn on support for i386 COFF
+      # in any i386 ELF configuration.  This probably doesn't work
+      # correctly.
+      # i386-*-*-elf)	emulation="i386coff i386elf" ;;
 			esac ;;
     esac
 
@@ -477,6 +530,10 @@ for em in . $emulations ; do
 	fmt=elf   file=mipself ;;
     mipsbecoff | mipslecoff)
 	fmt=ecoff file=mipsecoff ;;
+    i386coff)
+	fmt=coff  file=i386coff ;;
+    i386elf)
+	fmt=elf   file=i386elf ;;
   esac
   formats="$formats $fmt"
   emfiles="$emfiles e-$file.o"
@@ -512,13 +569,6 @@ AC_SUBST(extra_objects)
 AC_DEFINE_UNQUOTED(EMULATIONS, $EMULATIONS)
 AC_DEFINE_UNQUOTED(DEFAULT_EMULATION, "$DEFAULT_EMULATION")
 
-files="config/tc-${target_cpu_type}.c config/tc-${target_cpu_type}.h \
-	config/obj-${obj_format}.h config/obj-${obj_format}.c \
-	config/te-${te_file}.h config/atof-${atof}.c \
-	$extra_files"
-links="targ-cpu.c targ-cpu.h obj-format.h obj-format.c targ-env.h atof-targ.c \
-	$extra_links"
-
 case ${primary_bfd_gas}-${target_cpu_type}-${obj_format} in
   yes-*-coff)	need_bfd=yes ;;
   no-*-coff)	need_bfd=yes
@@ -535,10 +585,9 @@ esac
 
 AC_SUBST(target_cpu_type)
 AC_SUBST(obj_format)
+AC_SUBST(te_file)
 AC_SUBST(atof)
 dnl AC_SUBST(emulation)
-
-AC_LINK_FILES($files, $links)
 
 case "${primary_bfd_gas}" in
   yes)	AC_DEFINE(BFD_ASSEMBLER)
@@ -575,8 +624,6 @@ yes)
   esac
   ;;
 esac
-AC_SUBST(OPCODES_DEP)
-AC_SUBST(OPCODES_LIB)
 
 case "${need_bfd}" in
 yes)
@@ -606,10 +653,20 @@ yes)
     fi
     ;;
   esac
+
+  if test "${commonbfdlib}" = "true"; then
+    # when a shared libbfd is built with --enable-commonbfdlib,
+    # all of libopcodes is available in libbfd.so
+    OPCODES_LIB=
+  fi
   ;;
 esac
+
 AC_SUBST(BFDDEP)
 AC_SUBST(BFDLIB)
+AC_SUBST(OPCODES_DEP)
+AC_SUBST(OPCODES_LIB)
+
 AC_SUBST(ALL_OBJ_DEPS)
 
 AC_DEFINE_UNQUOTED(TARGET_ALIAS,	"${target_alias}")
@@ -737,4 +794,22 @@ AC_SUBST(HLDENV)
 AC_SUBST(RPATH_ENVVAR)
 
 dnl This must come last.
-AC_OUTPUT(Makefile doc/Makefile .gdbinit:gdbinit.in)
+
+dnl We used to make symlinks to files in the source directory, but now
+dnl we just use the right name for .c files, and create .h files in
+dnl the build directory which include the right .h file.  Make sure
+dnl the old symlinks don't exist, so that a reconfigure in an existing
+dnl directory behaves reasonably.
+
+AC_OUTPUT(Makefile doc/Makefile .gdbinit:gdbinit.in,
+[rm -f targ-cpu.c targ-cpu.h obj-format.h obj-format.c targ-env.h atof-targ.c itbl-cpu.h
+ echo '#include "tc-'"${target_cpu_type}"'.h"' > targ-cpu.h
+ echo '#include "obj-'"${obj_format}"'.h"' > obj-format.h
+ echo '#include "te-'"${te_file}"'.h"' > targ-env.h
+ echo '#include "itbl-'"${target_cpu_type}"'.h"' > itbl-cpu.h
+ case ${target_cpu_type} in
+ m32r) echo '#include "opcodes/'"${target_cpu_type}"'-opc.h"' > cgen-opc.h ;;
+ esac],
+[target_cpu_type=${target_cpu_type}
+ obj_format=${obj_format}
+ te_file=${te_file}])

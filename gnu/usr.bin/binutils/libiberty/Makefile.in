@@ -1,6 +1,6 @@
 #
 # Makefile
-#   Copyright (C) 1990, 1991, 1992, 1995, 1996 Free Software Foundation
+#   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation
 #
 # This file is part of the libiberty library.
 # Libiberty is free software; you can redistribute it and/or
@@ -147,7 +147,7 @@ CFILES = alloca.c argv.c atexit.c basename.c bcmp.c bcopy.c bzero.c \
 	 choose-temp.c clock.c concat.c cplus-dem.c fdmatch.c fnmatch.c \
 	 getcwd.c getopt.c getopt1.c getpagesize.c getruntime.c \
          floatformat.c hex.c index.c insque.c \
-	 memchr.c memcmp.c memcpy.c memmove.c memset.c \
+	 memchr.c memcmp.c memcpy.c memmove.c memset.c objalloc.c \
          obstack.c random.c rename.c rindex.c sigsetmask.c spaces.c \
 	 strcasecmp.c strncasecmp.c \
          strchr.c strdup.c strerror.c strrchr.c strsignal.c \
@@ -157,8 +157,8 @@ CFILES = alloca.c argv.c atexit.c basename.c bcmp.c bcopy.c bzero.c \
 # These are always included in the library.
 REQUIRED_OFILES = argv.o basename.o choose-temp.o concat.o cplus-dem.o \
   fdmatch.o fnmatch.o getopt.o getopt1.o getruntime.o hex.o \
-  floatformat.o obstack.o spaces.o strerror.o strsignal.o \
-  vasprintf.o xatexit.o xexit.o xmalloc.o xstrdup.o xstrerror.o
+  floatformat.o objalloc.o obstack.o spaces.o strerror.o strsignal.o \
+  xatexit.o xexit.o xmalloc.o xstrdup.o xstrerror.o
 
 # Do we want/need any config overrides?
 #	 
@@ -198,7 +198,7 @@ lneeded-list: $(EXTRA_OFILES) needed.awk errors
 	  esac ; \
 	done ; \
 	case $$f in \
-	    *alloca.o*) f="$$f xmalloc.o" ;; \
+	    *alloca.o*) f="$$f xmalloc.o xexit.o" ;; \
 	esac ; \
 	echo $$f >>lneeded-list
 
@@ -289,7 +289,7 @@ mostlyclean:
 	rm -f $(CONFIG_H) $(NEEDED_LIST) stamp-picdir
 	@$(MULTICLEAN) multi-clean DO=mostlyclean
 clean: mostlyclean
-	rm -f *.a required-list
+	rm -f *.a required-list tmpmulti.out
 	@$(MULTICLEAN) multi-clean DO=clean
 distclean: clean
 	rm -f *~ Makefile config.status alloca-conf.h xhost-mkfrag TAGS multilib.out
@@ -312,6 +312,7 @@ getopt1.o: $(INCDIR)/getopt.h
 getruntime.o: $(INCDIR)/libiberty.h
 hex.o: $(INCDIR)/libiberty.h
 floatformat.o: $(INCDIR)/floatformat.h
+objalloc.o: $(INCDIR)/objalloc.h
 obstack.o: $(INCDIR)/obstack.h
 spaces.o: $(INCDIR)/libiberty.h
 strerror.o: $(INCDIR)/libiberty.h

@@ -1,5 +1,5 @@
 /* rddbg.c -- Read debugging information into a generic form.
-   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1995, 96, 1997 Free Software Foundation, Inc.
    Written by Ian Lance Taylor <ian@cygnus.com>.
 
    This file is part of GNU Binutils.
@@ -436,7 +436,13 @@ free_saved_stabs ()
   int i;
 
   for (i = 0; i < SAVE_STABS_COUNT; i++)
-    if (saved_stabs[i].string != NULL)
-      free (saved_stabs[i].string);
+    {
+      if (saved_stabs[i].string != NULL)
+	{
+	  free (saved_stabs[i].string);
+	  saved_stabs[i].string = NULL;
+	}
+    }
+
   saved_stabs_index = 0;
 }

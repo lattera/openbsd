@@ -92,6 +92,14 @@ typedef struct disassemble_info {
       the same value in order to get reasonable looking output.  */
   int bytes_per_line;
 
+  /* the next two variables control the way objdump displays the raw data */
+  /* For example, if bytes_per_line is 8 and bytes_per_chunk is 4, the */
+  /* output will look like this:
+     00:   00000000 00000000
+     with the chunks displayed according to "display_endian". */
+  int bytes_per_chunk;
+  enum bfd_endian display_endian;
+
   /* Results from instruction decoders.  Not all decoders yet support
      this information.  This info is set each time an instruction is
      decoded, and is only valid for the last such instruction.
@@ -136,6 +144,7 @@ extern int print_insn_i960		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_sh		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_shl		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_hppa		PARAMS ((bfd_vma, disassemble_info*));
+extern int print_insn_m32r		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_m88k		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_mn10200		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_mn10300		PARAMS ((bfd_vma, disassemble_info*));
@@ -144,6 +153,7 @@ extern int print_insn_big_powerpc	PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_little_powerpc	PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_rs6000		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_w65		PARAMS ((bfd_vma, disassemble_info*));
+extern int print_insn_d10v		PARAMS ((bfd_vma, disassemble_info*));
 
 /* Fetch the disassembler for a given BFD, if that support is available.  */
 extern disassembler_ftype disassembler	PARAMS ((bfd *));
@@ -194,6 +204,8 @@ extern void generic_print_address
   (INFO).print_address_func = generic_print_address, \
   (INFO).flags = 0, \
   (INFO).bytes_per_line = 0, \
+  (INFO).bytes_per_chunk = 0, \
+  (INFO).display_endian = BFD_ENDIAN_UNKNOWN, \
   (INFO).insn_info_valid = 0
 
 #endif /* ! defined (DIS_ASM_H) */

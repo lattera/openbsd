@@ -1,7 +1,7 @@
 /* m88k.h -- Assembler for the Motorola 88000
    Contributed by Devon Bowen of Buffalo University
    and Torbjorn Granlund of the Swedish Institute of Computer Science.
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
@@ -17,8 +17,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GAS; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+along with GAS; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #define TC_M88K
 
@@ -61,9 +62,12 @@ struct reloc_info_m88k
 
 /* The m88k uses '@' to start local labels.  */
 #define LEX_AT (LEX_BEGIN_NAME | LEX_NAME)
+
+#ifndef BFD_ASSEMBLER
 #define LOCAL_LABEL(name) \
   ((name[0] =='@' && (name [1] == 'L' || name [1] == '.')) \
    || (name[0] == 'L' && name[1] == '0' && name[2] == '\001'))
+#endif
 
 /* The m88k uses pseudo-ops with no leading period.  */
 #define NO_PSEUDO_DOT
@@ -98,7 +102,7 @@ struct reloc_info_m88k
 
 /* We use a special alignment function to insert the correct nop
    pattern in .init.  */
-extern int m88k_do_align PARAMS ((int, const char *, int));
-#define md_do_align(n,fill,len,l) if (m88k_do_align(n,fill,len)) goto l
+extern int m88k_do_align PARAMS ((int, const char *, int, int));
+#define md_do_align(n,fill,len,max,l) if (m88k_do_align(n,fill,max,len)) goto l
 
 #endif /* M88KCOFF */

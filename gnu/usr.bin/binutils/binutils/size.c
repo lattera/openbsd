@@ -1,5 +1,5 @@
 /* size.c -- report size of various sections of an executable file.
-   Copyright 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Binutils.
 
@@ -53,15 +53,21 @@ int return_code = 0;
 /* IMPORTS */
 extern char *target;
 
-/* Forward declarations */
+/* Static declarations */
 
+static void usage PARAMS ((FILE *, int));
 static void display_file PARAMS ((char *filename));
-
+static void display_bfd PARAMS ((bfd *));
+static void display_archive PARAMS ((bfd *));
+static void lprint_number PARAMS ((int, bfd_size_type));
+static void rprint_number PARAMS ((int, bfd_size_type));
+static void print_berkeley_format PARAMS ((bfd *));
+static void sysv_internal_printer PARAMS ((bfd *, asection *, PTR));
+static void print_sysv_format PARAMS ((bfd *));
 static void print_sizes PARAMS ((bfd * file));
-
 static void berkeley_sum PARAMS ((bfd *, sec_ptr, PTR));
 
-void
+static void
 usage (stream, status)
      FILE *stream;
      int status;
@@ -102,6 +108,7 @@ main (argc, argv)
   xmalloc_set_program_name (program_name);
 
   bfd_init ();
+  set_default_bfd_target ();
 
   while ((c = getopt_long (argc, argv, "ABVdox", long_options,
 			   (int *) 0)) != EOF)
@@ -191,7 +198,7 @@ main (argc, argv)
 
 /* Display stats on file or archive member ABFD.  */
 
-void
+static void
 display_bfd (abfd)
      bfd *abfd;
 {
@@ -296,7 +303,7 @@ display_file (filename)
 
 /* This is what lexical functions are for.  */
 
-void
+static void
 lprint_number (width, num)
      int width;
      bfd_size_type num;
@@ -306,7 +313,7 @@ lprint_number (width, num)
 	  width, (unsigned long) num);
 }
 
-void
+static void
 rprint_number (width, num)
      int width;
      bfd_size_type num;
@@ -326,18 +333,23 @@ berkeley_sum (abfd, sec, ignore)
      sec_ptr sec;
      PTR ignore;
 {
+  flagword flags;
   bfd_size_type size;
 
+  flags = bfd_get_section_flags (abfd, sec);
+  if ((flags & SEC_ALLOC) == 0)
+    return;
+
   size = bfd_get_section_size_before_reloc (sec);
-  if (bfd_get_section_flags (abfd, sec) & SEC_CODE)
+  if ((flags & SEC_CODE) != 0 || (flags & SEC_READONLY) != 0)
     textsize += size;
-  else if (bfd_get_section_flags (abfd, sec) & SEC_DATA)
+  else if ((flags & SEC_HAS_CONTENTS) != 0)
     datasize += size;
-  else if (bfd_get_section_flags (abfd, sec) & SEC_ALLOC)
+  else
     bsssize += size;
 }
 
-void 
+static void 
 print_berkeley_format (abfd)
      bfd *abfd;
 {
@@ -376,7 +388,7 @@ print_berkeley_format (abfd)
 /* I REALLY miss lexical functions! */
 bfd_size_type svi_total = 0;
 
-void
+static void
 sysv_internal_printer (file, sec, ignore)
      bfd *file;
      sec_ptr sec;
@@ -397,7 +409,7 @@ sysv_internal_printer (file, sec, ignore)
     }
 }
 
-void
+static void
 print_sysv_format (file)
      bfd *file;
 {

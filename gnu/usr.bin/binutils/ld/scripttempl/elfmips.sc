@@ -21,12 +21,13 @@
 # when specifying the start address of the next.
 #
 
-# We use a start address of __start for Irix 5, _start for other
-# targets.  This is for compatibility with Irix 5, and with old MIPS
-# ELF toolchains.
+# We use a start address of __start for Irix 5 and GNU/Linux/MIPS,
+# _start for other targets.  This is for compatibility with Irix 5,
+# and with old MIPS ELF toolchains.
 if [ -z "$ENTRY" ]; then
   case "${target}" in
   mips*-*-irix5*) ENTRY=__start ;;
+  mips*-*-linux*) ENTRY=__start ;;
   *) ENTRY=_start ;;
   esac
 fi
@@ -67,12 +68,18 @@ SECTIONS
   .dynstr      ${RELOCATING-0} : { *(.dynstr)		}
   .dynsym      ${RELOCATING-0} : { *(.dynsym)		}
   .hash        ${RELOCATING-0} : { *(.hash)		}
-  .rel.text    ${RELOCATING-0} : { *(.rel.text)		}
-  .rela.text   ${RELOCATING-0} : { *(.rela.text) 	}
-  .rel.data    ${RELOCATING-0} : { *(.rel.data)		}
-  .rela.data   ${RELOCATING-0} : { *(.rela.data) 	}
-  .rel.rodata  ${RELOCATING-0} : { *(.rel.rodata) 	}
-  .rela.rodata ${RELOCATING-0} : { *(.rela.rodata) 	}
+  .rel.text    ${RELOCATING-0} :
+    { *(.rel.text) *(.rel.gnu.linkonce.t*) }
+  .rela.text   ${RELOCATING-0} :
+    { *(.rela.text) *(.rela.gnu.linkonce.t*) }
+  .rel.data    ${RELOCATING-0} :
+    { *(.rel.data) *(.rel.gnu.linkonce.d*) }
+  .rela.data   ${RELOCATING-0} :
+    { *(.rela.data) *(.rela.gnu.linkonce.d*) }
+  .rel.rodata  ${RELOCATING-0} :
+    { *(.rel.rodata) *(.rel.gnu.linkonce.r*) }
+  .rela.rodata ${RELOCATING-0} :
+    { *(.rela.rodata) *(.rela.gnu.linkonce.r*) }
   .rel.got     ${RELOCATING-0} : { *(.rel.got)		}
   .rela.got    ${RELOCATING-0} : { *(.rela.got)		}
   .rel.ctors   ${RELOCATING-0} : { *(.rel.ctors)	}
@@ -87,7 +94,7 @@ SECTIONS
   .rela.bss    ${RELOCATING-0} : { *(.rela.bss)		}
   .rel.plt     ${RELOCATING-0} : { *(.rel.plt)		}
   .rela.plt    ${RELOCATING-0} : { *(.rela.plt)		}
-  .rodata  ${RELOCATING-0} : { *(.rodata)  }
+  .rodata  ${RELOCATING-0} : { *(.rodata) *(.gnu.linkonce.r*) }
   .rodata1 ${RELOCATING-0} : { *(.rodata1) }
   .init        ${RELOCATING-0} : { *(.init)	} =${NOP-0}
   .text    ${RELOCATING-0} :
@@ -97,6 +104,9 @@ SECTIONS
     *(.stub)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
+    ${RELOCATING+*(.gnu.linkonce.t*)}
+    ${RELOCATING+*(.mips16.fn.*)}
+    ${RELOCATING+*(.mips16.call.*)}
   } =${NOP-0}
   ${RELOCATING+_etext = .;}
   ${RELOCATING+PROVIDE (etext = .);}
@@ -118,12 +128,14 @@ SECTIONS
      important than losing a page of the virtual address space (note
      that no actual memory is lost; the page which is skipped can not
      be referenced).  */
-  ${RELOCATING+. += ${DATA_ADDR} - ${TEXT_START_ADDR};}
-  ${RELOCATING+. += 0x10000;}
+  ${CREATE_SHLIB-${RELOCATING+. += ${DATA_ADDR} - ${TEXT_START_ADDR};}}
+  ${CREATE_SHLIB-${RELOCATING+. += 0x10000;}}
+  ${CREATE_SHLIB+${RELOCATING+. = ALIGN(${MAXPAGESIZE}) + (ALIGN(8) & (${MAXPAGESIZE} - 1));}}
   .data  ${RELOCATING-0} :
   {
     ${RELOCATING+${DATA_START_SYMBOLS}}
     *(.data)
+    *(.gnu.linkonce.d*)
     ${CONSTRUCTING+CONSTRUCTORS}
   }
   .data1 ${RELOCATING-0} : { *(.data1) }
@@ -159,19 +171,35 @@ SECTIONS
   .stabstr 0 : { *(.stabstr) }
 
   /* DWARF debug sections.
-     Symbols in the .debug DWARF section are relative to the beginning of the
-     section so we begin .debug at 0.  It's not clear yet what needs to happen
-     for the others.   */
+     Symbols in the DWARF debugging sections are relative to the beginning
+     of the section so we begin them at 0.  */
+
+  /* DWARF 1 */
   .debug          0 : { *(.debug) }
+  .line           0 : { *(.line) }
+
+  /* GNU DWARF 1 extensions */
+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
+  .debug_sfnames  0 : { *(.debug_sfnames) }
+
+  /* DWARF 1.1 and DWARF 2 */
+  .debug_aranges  0 : { *(.debug_aranges) }
+  .debug_pubnames 0 : { *(.debug_pubnames) }
+
+  /* DWARF 2 */
   .debug_info     0 : { *(.debug_info) }
   .debug_abbrev   0 : { *(.debug_abbrev) }
   .debug_line     0 : { *(.debug_line) }
   .debug_frame    0 : { *(.debug_frame) }
-  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-  .debug_aranges  0 : { *(.debug_aranges) }
-  .debug_pubnames 0 : { *(.debug_pubnames) }
-  .debug_sfnames  0 : { *(.debug_sfnames) }
-  .line           0 : { *(.line) }
+  .debug_str      0 : { *(.debug_str) }
+  .debug_loc      0 : { *(.debug_loc) }
+  .debug_macinfo  0 : { *(.debug_macinfo) }
+
+  /* SGI/MIPS DWARF 2 extensions */
+  .debug_weaknames 0 : { *(.debug_weaknames) }
+  .debug_funcnames 0 : { *(.debug_funcnames) }
+  .debug_typenames 0 : { *(.debug_typenames) }
+  .debug_varnames  0 : { *(.debug_varnames) }
 
   /* These must appear regardless of ${RELOCATING}.  */
   ${OTHER_SECTIONS}

@@ -53,9 +53,12 @@ SECTIONS
   .hash		${RELOCATING-0} : { *(.hash)		}
   .dynsym	${RELOCATING-0} : { *(.dynsym)		}
   .dynstr	${RELOCATING-0} : { *(.dynstr)		}
-  .rela.text	${RELOCATING-0} : { *(.rela.text) 	}
-  .rela.data	${RELOCATING-0} : { *(.rela.data) 	}
-  .rela.rodata	${RELOCATING-0} : { *(.rela.rodata) 	}
+  .rela.text   ${RELOCATING-0} :
+    { *(.rela.text) *(.rela.gnu.linkonce.t*) }
+  .rela.data   ${RELOCATING-0} :
+    { *(.rela.data) *(.rela.gnu.linkonce.d*) }
+  .rela.rodata ${RELOCATING-0} :
+    { *(.rela.rodata) *(.rela.gnu.linkonce.r*) }
   .rela.got	${RELOCATING-0} : { *(.rela.got)	}
   .rela.got1	${RELOCATING-0} : { *(.rela.got1)	}
   .rela.got2	${RELOCATING-0} : { *(.rela.got2)	}
@@ -76,10 +79,11 @@ SECTIONS
     *(.text)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
+    *(.gnu.linkonce.t*)
   } =${NOP-0}
   .init		${RELOCATING-0} : { *(.init)		} =${NOP-0}
   .fini		${RELOCATING-0} : { *(.fini)		} =${NOP-0}
-  .rodata	${RELOCATING-0} : { *(.rodata)  }
+  .rodata	${RELOCATING-0} : { *(.rodata) *(.gnu.linkonce.r*) }
   .rodata1	${RELOCATING-0} : { *(.rodata1) }
   ${RELOCATING+_etext = .;}
   ${RELOCATING+PROVIDE (etext = .);}
@@ -107,6 +111,7 @@ SECTIONS
   {
     ${RELOCATING+${DATA_START_SYMBOLS}}
     *(.data)
+    *(.gnu.linkonce.d*)
     ${CONSTRUCTING+CONSTRUCTORS}
   }
   .data1 ${RELOCATING-0} : { *(.data1) }
@@ -173,19 +178,35 @@ SECTIONS
   .stabstr 0 : { *(.stabstr) }
 
   /* DWARF debug sections.
-     Symbols in the .debug DWARF section are relative to the beginning of the
-     section so we begin .debug at 0.  It's not clear yet what needs to happen
-     for the others.   */
+     Symbols in the DWARF debugging sections are relative to the beginning
+     of the section so we begin them at 0.  */
+
+  /* DWARF 1 */
   .debug          0 : { *(.debug) }
+  .line           0 : { *(.line) }
+
+  /* GNU DWARF 1 extensions */
+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
+  .debug_sfnames  0 : { *(.debug_sfnames) }
+
+  /* DWARF 1.1 and DWARF 2 */
+  .debug_aranges  0 : { *(.debug_aranges) }
+  .debug_pubnames 0 : { *(.debug_pubnames) }
+
+  /* DWARF 2 */
   .debug_info     0 : { *(.debug_info) }
   .debug_abbrev   0 : { *(.debug_abbrev) }
   .debug_line     0 : { *(.debug_line) }
   .debug_frame    0 : { *(.debug_frame) }
-  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-  .debug_aranges  0 : { *(.debug_aranges) }
-  .debug_pubnames 0 : { *(.debug_pubnames) }
-  .debug_sfnames  0 : { *(.debug_sfnames) }
-  .line           0 : { *(.line) }
+  .debug_str      0 : { *(.debug_str) }
+  .debug_loc      0 : { *(.debug_loc) }
+  .debug_macinfo  0 : { *(.debug_macinfo) }
+
+  /* SGI/MIPS DWARF 2 extensions */
+  .debug_weaknames 0 : { *(.debug_weaknames) }
+  .debug_funcnames 0 : { *(.debug_funcnames) }
+  .debug_typenames 0 : { *(.debug_typenames) }
+  .debug_varnames  0 : { *(.debug_varnames) }
 
   /* These must appear regardless of ${RELOCATING}.  */
   ${OTHER_SECTIONS}

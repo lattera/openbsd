@@ -14,7 +14,8 @@ struct external_filehdr {
 };
 
 /* Magic numbers are defined in coff/ecoff.h.  */
-#define ALPHA_ECOFF_BADMAG(x) ((x).f_magic!=ALPHA_MAGIC)
+#define ALPHA_ECOFF_BADMAG(x) \
+  ((x).f_magic != ALPHA_MAGIC && (x).f_magic != ALPHA_MAGIC_BSD)
 
 /* The object type is encoded in the f_flags.  */
 #define F_ALPHA_OBJECT_TYPE_MASK	0x3000
@@ -123,6 +124,9 @@ struct external_reloc {
 #define ALPHA_R_GPRELHIGH      17
 #define ALPHA_R_GPRELLOW       18
 #define ALPHA_R_IMMED          19
+
+/* Overloaded reloc value used by Net- and OpenBSD.  */
+#define ALPHA_R_LITERALSLEAZY  17
 
 /* With ALPHA_R_LITUSE, the r_size field is one of the following values.  */
 #define ALPHA_R_LU_BASE         1

@@ -1,7 +1,5 @@
-#define show_allnames 0
-
 /* dlltool.c -- tool to generate stuff for PE style DLLs 
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 96, 1997 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -201,6 +199,16 @@
 
    .idata$7 = dll name (eg: "kernel32.dll"). (.idata$6 for ppc)
 */
+
+/* AIX requires this to be the first thing in the file.  */
+/* AIX requires this to be the first thing in the file.  */
+#ifndef __GNUC__
+# ifdef _AIX
+ #pragma alloca
+#endif
+#endif
+
+#define show_allnames 0
 
 #define PAGE_SIZE 4096
 #define PAGE_MASK (-PAGE_SIZE)
@@ -1075,7 +1083,7 @@ gen_exp_file ()
       fseek (base_file, 0, SEEK_END);
       numbytes = ftell (base_file);
       fseek (base_file, 0, SEEK_SET);
-      copy = malloc (numbytes);
+      copy = xmalloc (numbytes);
       fread (copy, 1, numbytes, base_file);
       num_entries = numbytes / sizeof (long);
 
@@ -1132,7 +1140,7 @@ xlate (char *name)
 {
   if (add_underscore)
     {
-      char *copy = malloc (strlen (name) + 2);
+      char *copy = xmalloc (strlen (name) + 2);
       copy[0] = '_';
       strcpy (copy + 1, name);
       name = copy;
@@ -2028,7 +2036,7 @@ fill_ordinals (d_export_vec)
 
   /* fill in the unset ordinals with ones from our range */
 
-  ptr = (char *) malloc (size);
+  ptr = (char *) xmalloc (size);
 
   memset (ptr, 0, size);
 

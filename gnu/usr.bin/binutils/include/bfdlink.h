@@ -1,5 +1,5 @@
 /* bfdlink.h -- header file for BFD link routines
-   Copyright 1993 Free Software Foundation, Inc.
+   Copyright 1993, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain and Ian Lance Taylor, Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -35,7 +35,7 @@ enum bfd_link_strip
 enum bfd_link_discard
 {
   discard_none,		/* Don't discard any locals.  */
-  discard_l,		/* Discard locals with a certain prefix.  */
+  discard_l,		/* Discard local temporary symbols.  */
   discard_all		/* Discard all locals.  */
 };
 
@@ -194,9 +194,6 @@ struct bfd_link_info
   enum bfd_link_strip strip;
   /* Which local symbols to discard.  */
   enum bfd_link_discard discard;
-  /* The local symbol prefix to discard if using discard_l.  */
-  unsigned int lprefix_len;
-  const char *lprefix;
   /* true if symbols should be retained in memory, false if they
      should be freed and reread.  */
   boolean keep_memory;
@@ -456,5 +453,52 @@ struct bfd_link_order_reloc
 
 /* Allocate a new link_order for a section.  */
 extern struct bfd_link_order *bfd_new_link_order PARAMS ((bfd *, asection *));
+
+/* These structures are used to describe version information for the
+   ELF linker.  These structures could be manipulated entirely inside
+   BFD, but it would be a pain.  Instead, the regular linker sets up
+   these structures, and then passes them into BFD.  */
+
+/* Regular expressions for a version.  */
+
+struct bfd_elf_version_expr
+{
+  /* Next regular expression for this version.  */
+  struct bfd_elf_version_expr *next;
+  /* Regular expression.  */
+  const char *match;
+};
+
+/* Version dependencies.  */
+
+struct bfd_elf_version_deps
+{
+  /* Next dependency for this version.  */
+  struct bfd_elf_version_deps *next;
+  /* The version which this version depends upon.  */
+  struct bfd_elf_version_tree *version_needed;
+};
+
+/* A node in the version tree.  */
+
+struct bfd_elf_version_tree
+{
+  /* Next version.  */
+  struct bfd_elf_version_tree *next;
+  /* Name of this version.  */
+  const char *name;
+  /* Version number.  */
+  unsigned int vernum;
+  /* Regular expressions for global symbols in this version.  */
+  struct bfd_elf_version_expr *globals;
+  /* Regular expressions for local symbols in this version.  */
+  struct bfd_elf_version_expr *locals;
+  /* List of versions which this version depends upon.  */
+  struct bfd_elf_version_deps *deps;
+  /* Index of the version name.  This is used within BFD.  */
+  unsigned int name_indx;
+  /* Whether this version tree was used.  This is used within BFD.  */
+  int used;
+};
 
 #endif

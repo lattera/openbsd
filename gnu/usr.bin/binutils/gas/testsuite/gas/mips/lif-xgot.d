@@ -1,6 +1,6 @@
 #objdump: -dr --prefix-addresses
 #name: MIPS lifloat-xgot
-#as: -mips1 -KPIC -xgot
+#as: -mips1 -KPIC -xgot -EB
 #source: lifloat.s
 
 # Test the li.d and li.s macros with -KPIC -xgot.

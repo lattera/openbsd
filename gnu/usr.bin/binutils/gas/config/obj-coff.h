@@ -1,5 +1,6 @@
 /* coff object file format
-   Copyright (C) 1989, 90, 91, 92, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 90, 91, 92, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
 
    This file is part of GAS.
 
@@ -128,6 +129,7 @@
 #define TARGET_FORMAT "coff-w65"
 #endif
 
+
 /* Targets may also set this.  Also, if BFD_ASSEMBLER is defined, this
    will already have been defined.  */
 #undef SYMBOLS_NEED_BACKPOINTERS
@@ -136,6 +138,12 @@
 #ifndef OBJ_COFF_MAX_AUXENTRIES
 #define OBJ_COFF_MAX_AUXENTRIES 1
 #endif /* OBJ_COFF_MAX_AUXENTRIES */
+
+extern void coff_obj_symbol_new_hook PARAMS ((struct symbol *));
+#define obj_symbol_new_hook coff_obj_symbol_new_hook
+
+extern void coff_obj_read_begin_hook PARAMS ((void));
+#define obj_read_begin_hook coff_obj_read_begin_hook
 
 /* ***********************************************************************
 
@@ -198,7 +206,6 @@
 #define SYM_AUXENT(S)	(&coffsymbol ((S)->bsym)->native[1].u.auxent)
 
 #define DO_NOT_STRIP	0
-#define DO_STRIP	1
 
 extern void obj_coff_section PARAMS ((int));
 
@@ -403,7 +410,6 @@ typedef struct
 
 #ifndef DO_NOT_STRIP
 #define DO_NOT_STRIP	0
-#define DO_STRIP	1
 #endif
 /* Symbol table macros and constants */
 
@@ -441,7 +447,7 @@ typedef struct
 /* A symbol name whose name includes ^A is a gas internal pseudo symbol */
 #define S_IS_LOCAL(s) \
   ((s)->sy_symbol.ost_entry.n_scnum == C_REGISTER_SECTION \
-   || (S_LOCAL_NAME(s) && !flag_keep_locals) \
+   || (S_LOCAL_NAME(s) && ! flag_keep_locals && ! S_IS_DEBUG (s)) \
    || strchr (S_GET_NAME (s), '\001') != NULL \
    || strchr (S_GET_NAME (s), '\002') != NULL)
 /* True if a symbol is not defined in this file */

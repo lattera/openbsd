@@ -1,4 +1,4 @@
-This is Info file as.info, produced by Makeinfo-1.55 from the input
+This is Info file as.info, produced by Makeinfo-1.64 from the input
 file ./as.texinfo.
 
 START-INFO-DIR-ENTRY
@@ -7,8 +7,8 @@ END-INFO-DIR-ENTRY
 
    This file documents the GNU Assembler "as".
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation,
-Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
+Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -26,8 +26,8 @@ versions.
 
 File: as.info,  Node: Ld Sections,  Next: As Sections,  Prev: Secs Background,  Up: Sections
 
-ld Sections
-===========
+Linker Sections
+===============
 
    `ld' deals with just four kinds of sections, summarized below.
 
@@ -87,8 +87,8 @@ addresses are on the horizontal axis.
 
 File: as.info,  Node: As Sections,  Next: Sub-Sections,  Prev: Ld Sections,  Up: Sections
 
-as Internal Sections
-====================
+Assembler Internal Sections
+===========================
 
    These sections are meant only for the internal use of `as'.  They
 have no meaning at run-time.  You do not really need to know about these
@@ -178,10 +178,17 @@ allocate address space in the bss section, but you may not dictate data
 to load into it before your program executes.  When your program starts
 running, all the contents of the bss section are zeroed bytes.
 
-   Addresses in the bss section are allocated with special directives;
-you may not assemble anything directly into the bss section.  Hence
-there are no bss subsections. *Note `.comm': Comm, *note `.lcomm':
-Lcomm..
+   The `.lcomm' pseudo-op defines a symbol in the bss section; see
+*Note `.lcomm': Lcomm.
+
+   The `.comm' pseudo-op may be used to declare a common symbol, which
+is another form of uninitialized symbol; see *Note `.comm': Comm.
+
+   When assembling for a target which supports multiple sections, such
+as ELF or COFF, you may switch into the `.bss' section and define
+symbols as usual; see *Note `.section': Section.  You may only assemble
+zero values into the section.  Typically the section will only contain
+symbol definitions and `.skip' directives (*note `.skip': Skip.).
 
 
 File: as.info,  Node: Symbols,  Next: Expressions,  Prev: Sections,  Up: Top
@@ -291,7 +298,7 @@ parts:
      If the label is written `0:' then the digit is `0'.  If the label
      is written `1:' then the digit is `1'.  And so on up through `9:'.
 
-A'
+``C-A''
      This unusual character is included so you do not accidentally
      invent a symbol of the same name.  The character has ASCII value
      `\001'.
@@ -301,8 +308,8 @@ parts:
      `0:' gets the number `1'; The 15th `0:' gets the number `15';
      *etc.*.  Likewise for the other labels `1:' through `9:'.
 
-   For instance, the first `1:' is named `LA1', the 44th `3:' is named
-`LA44'.
+   For instance, the first `1:' is named `L1`C-A'1', the 44th `3:' is
+named `L3`C-A'44'.
 
 
 File: as.info,  Node: Dot,  Next: Symbol Attributes,  Prev: Symbol Names,  Up: Symbols
@@ -646,6 +653,8 @@ Dependencies::.
 
 * Endif::                       `.endif'
 * Equ::                         `.equ SYMBOL, EXPRESSION'
+* Equiv::                       `.equiv SYMBOL, EXPRESSION'
+* Err::				`.err'
 * Extern::                      `.extern'
 
 * File::                        `.file STRING'
@@ -666,10 +675,12 @@ Dependencies::.
 * Line::                        `.line LINE-NUMBER'
 
 * Ln::                          `.ln LINE-NUMBER'
+* Linkonce::			`.linkonce [TYPE]'
 * List::                        `.list'
 * Long::                        `.long EXPRESSIONS'
 
 * Macro::			`.macro NAME ARGS'...
+* MRI::				`.mri VAL'
 
 * Nolist::                      `.nolist'
 * Octa::                        `.octa BIGNUMS'
@@ -690,11 +701,14 @@ Dependencies::.
 
 * Size::                        `.size'
 
+* Skip::                        `.skip SIZE , FILL'
 * Space::                       `.space SIZE , FILL'
 
 * Stab::                        `.stabd, .stabn, .stabs'
 
 * String::                      `.string "STR"'
+
+* Symver::                      `.symver NAME,NAME2@NODENAME'
 
 * Tag::                         `.tag STRUCTNAME'
 
@@ -734,18 +748,30 @@ ignores it.
 
 File: as.info,  Node: Align,  Next: App-File,  Prev: ABORT,  Up: Pseudo Ops
 
-`.align ABS-EXPR , ABS-EXPR'
-============================
+`.align ABS-EXPR, ABS-EXPR, ABS-EXPR'
+=====================================
 
    Pad the location counter (in the current subsection) to a particular
 storage boundary.  The first expression (which must be absolute) is the
-alignment required, as described below.  The second expression (also
-absolute) gives the value to be stored in the padding bytes.  It (and
-the comma) may be omitted.  If it is omitted, the padding bytes are
-zero.
+alignment required, as described below.
+
+   The second expression (also absolute) gives the fill value to be
+stored in the padding bytes.  It (and the comma) may be omitted.  If it
+is omitted, the padding bytes are normally zero.  However, on some
+systems, if the section is marked as containing code and the fill value
+is omitted, the space is filled with no-op instructions.
+
+   The third expression is also absolute, and is also optional.  If it
+is present, it is the maximum number of bytes that should be skipped by
+this alignment directive.  If doing the alignment would require
+skipping more bytes than the specified maximum, then the alignment is
+not done at all.  You can omit the fill value (the second argument)
+entirely by simply using two commas after the required alignment; this
+can be useful if you want the alignment to be filled with no-op
+instructions when appropriate.
 
    The way the required alignment is specified varies from system to
-system.  For the a29k, hppa, m86k, m88k, w65, sparc, and Hitachi SH,
+system.  For the a29k, hppa, m68k, m88k, w65, sparc, and Hitachi SH,
 and i386 using ELF format, the first expression is the alignment
 request in bytes.  For example `.align 8' advances the location counter
 until it is a multiple of 8.  If the location counter is already a
@@ -798,8 +824,8 @@ zero byte.  The "z" in `.asciz' stands for "zero".
 
 File: as.info,  Node: Balign,  Next: Byte,  Prev: Asciz,  Up: Pseudo Ops
 
-`.balign ABS-EXPR , ABS-EXPR'
-=============================
+`.balign[wl] ABS-EXPR, ABS-EXPR, ABS-EXPR'
+==========================================
 
    Pad the location counter (in the current subsection) to a particular
 storage boundary.  The first expression (which must be absolute) is the
@@ -807,9 +833,29 @@ alignment request in bytes.  For example `.balign 8' advances the
 location counter until it is a multiple of 8.  If the location counter
 is already a multiple of 8, no change is needed.
 
-   The second expression (also absolute) gives the value to be stored in
-the padding bytes.  It (and the comma) may be omitted.  If it is
-omitted, the padding bytes are zero.
+   The second expression (also absolute) gives the fill value to be
+stored in the padding bytes.  It (and the comma) may be omitted.  If it
+is omitted, the padding bytes are normally zero.  However, on some
+systems, if the section is marked as containing code and the fill value
+is omitted, the space is filled with no-op instructions.
+
+   The third expression is also absolute, and is also optional.  If it
+is present, it is the maximum number of bytes that should be skipped by
+this alignment directive.  If doing the alignment would require
+skipping more bytes than the specified maximum, then the alignment is
+not done at all.  You can omit the fill value (the second argument)
+entirely by simply using two commas after the required alignment; this
+can be useful if you want the alignment to be filled with no-op
+instructions when appropriate.
+
+   The `.balignw' and `.balignl' directives are variants of the
+`.balign' directive.  The `.balignw' directive treats the fill pattern
+as a two byte word value.  The `.balignl' directives treats the fill
+pattern as a four byte longword value.  For example, `.balignw
+4,0x368d' will align to a multiple of 4.  If it skips two bytes, they
+will be filled in with the value 0x368d (the exact placement of the
+bytes depends upon the endianness of the processor).  If it skips 1 or
+3 bytes, the fill value is undefined.
 
 
 File: as.info,  Node: Byte,  Next: Comm,  Prev: Balign,  Up: Pseudo Ops
@@ -826,13 +872,24 @@ File: as.info,  Node: Comm,  Next: Data,  Prev: Byte,  Up: Pseudo Ops
 `.comm SYMBOL , LENGTH '
 ========================
 
-   `.comm' declares a named common area in the bss section.  Normally
-`ld' reserves memory addresses for it during linking, so no partial
-program defines the location of the symbol.  Use `.comm' to tell `ld'
-that it must be at least LENGTH bytes long.  `ld' allocates space for
-each `.comm' symbol that is at least as long as the longest `.comm'
-request in any of the partial programs linked.  LENGTH is an absolute
-expression.
+   `.comm' declares a common symbol named SYMBOL.  When linking, a
+common symbol in one object file may be merged with a defined or common
+symbol of the same name in another object file.  If `ld' does not see a
+definition for the symbol-just one or more common symbols-then it will
+allocate LENGTH bytes of uninitialized memory.  LENGTH must be an
+absolute expression.  If `ld' sees multiple common symbols with the
+same name, and they do not all have the same size, it will allocate
+space using the largest size.
+
+   When using ELF, the `.comm' directive takes an optional third
+argument.  This is the desired alignment of the symbol, specified as a
+byte boundary (for example, an alignment of 16 means that the least
+significant 4 bits of the address should be zero).  The alignment must
+be an absolute expression, and it must be a power of two.  If `ld'
+allocates uninitialized memory for the common symbol, it will use the
+alignment when placing the symbol.  If no alignment is specified, `as'
+will set the alignment to the largest power of two less than or equal
+to the size of the symbol, up to a maximum of 16.
 
    The syntax for `.comm' differs slightly on the HPPA.  The syntax is
 `SYMBOL .comm, LENGTH'; SYMBOL is optional.
@@ -940,7 +997,7 @@ marks the end of a block of code that is only assembled conditionally.
 *Note `.if': If.
 
 
-File: as.info,  Node: Equ,  Next: Extern,  Prev: Endif,  Up: Pseudo Ops
+File: as.info,  Node: Equ,  Next: Equiv,  Prev: Endif,  Up: Pseudo Ops
 
 `.equ SYMBOL, EXPRESSION'
 =========================
@@ -951,7 +1008,33 @@ synonymous with `.set'; *note `.set': Set..
    The syntax for `equ' on the HPPA is `SYMBOL .equ EXPRESSION'.
 
 
-File: as.info,  Node: Extern,  Next: File,  Prev: Equ,  Up: Pseudo Ops
+File: as.info,  Node: Equiv,  Next: Err,  Prev: Equ,  Up: Pseudo Ops
+
+`.equiv SYMBOL, EXPRESSION'
+===========================
+
+   The `.equiv' directive is like `.equ' and `.set', except that the
+assembler will signal an error if SYMBOL is already defined.
+
+   Except for the contents of the error message, this is roughly
+equivalent to
+     .ifdef SYM
+     .err
+     .endif
+     .equ SYM,VAL
+
+
+File: as.info,  Node: Err,  Next: Extern,  Prev: Equiv,  Up: Pseudo Ops
+
+`.err'
+======
+
+   If `as' assembles a `.err' directive, it will print an error message
+and, unless the `-Z' option was used, it will not generate an object
+file.  This can be used to signal error an conditionally compiled code.
+
+
+File: as.info,  Node: Extern,  Next: File,  Prev: Err,  Up: Pseudo Ops
 
 `.extern'
 =========
@@ -1059,7 +1142,7 @@ considered part of the source program being assembled if the argument
 (which must be an ABSOLUTE EXPRESSION) is non-zero.  The end of the
 conditional section of code must be marked by `.endif' (*note `.endif':
 Endif.); optionally, you may include code for the alternative
-condition, flagged by `.else' (*note `.else': Else..
+condition, flagged by `.else' (*note `.else': Else.).
 
    The following variants of `.if' are also supported:
 `.ifdef SYMBOL'
@@ -1067,7 +1150,7 @@ condition, flagged by `.else' (*note `.else': Else..
      has been defined.
 
 `.ifndef SYMBOL'
-`ifnotdef SYMBOL'
+`.ifnotdef SYMBOL'
      Assembles the following section of code if the specified SYMBOL
      has not been defined.  Both spelling variants are equivalent.
 
@@ -1160,6 +1243,10 @@ new local common.  The addresses are allocated in the bss section, so
 that at run-time the bytes start off zeroed.  SYMBOL is not declared
 global (*note `.global': Global.), so is normally not visible to `ld'.
 
+   Some targets permit a third argument to be used with `.lcomm'.  This
+argument specifies the desired alignment of the symbol in the bss
+section.
+
    The syntax for `.lcomm' differs slightly on the HPPA.  The syntax is
 `SYMBOL .lcomm, LENGTH'; SYMBOL is optional.
 
@@ -1197,7 +1284,42 @@ it is found outside a `.def'/`.endef' pair.
 compilers to generate auxiliary symbol information for debugging.
 
 
-File: as.info,  Node: Ln,  Next: List,  Prev: Line,  Up: Pseudo Ops
+File: as.info,  Node: Linkonce,  Next: List,  Prev: Ln,  Up: Pseudo Ops
+
+`.linkonce [TYPE]'
+==================
+
+   Mark the current section so that the linker only includes a single
+copy of it.  This may be used to include the same section in several
+different object files, but ensure that the linker will only include it
+once in the final output file.  The `.linkonce' pseudo-op must be used
+for each instance of the section.  Duplicate sections are detected
+based on the section name, so it should be unique.
+
+   This directive is only supported by a few object file formats; as of
+this writing, the only object file format which supports it is the
+Portable Executable format used on Windows NT.
+
+   The TYPE argument is optional.  If specified, it must be one of the
+following strings.  For example:
+     .linkonce same_size
+   Not all types may be supported on all object file formats.
+
+`discard'
+     Silently discard duplicate sections.  This is the default.
+
+`one_only'
+     Warn if there are duplicate sections, but still keep only one copy.
+
+`same_size'
+     Warn if any of the duplicates have different sizes.
+
+`same_contents'
+     Warn if any of the duplicates do not have exactly the same
+     contents.
+
+
+File: as.info,  Node: Ln,  Next: Linkonce,  Prev: Line,  Up: Pseudo Ops
 
 `.ln LINE-NUMBER'
 =================
@@ -1205,7 +1327,18 @@ File: as.info,  Node: Ln,  Next: List,  Prev: Line,  Up: Pseudo Ops
    `.ln' is a synonym for `.line'.
 
 
-File: as.info,  Node: List,  Next: Long,  Prev: Ln,  Up: Pseudo Ops
+File: as.info,  Node: MRI,  Next: Nolist,  Prev: Macro,  Up: Pseudo Ops
+
+`.mri VAL'
+==========
+
+   If VAL is non-zero, this tells `as' to enter MRI mode.  If VAL is
+zero, this tells `as' to exit MRI mode.  This change affects code
+assembled until the next `.mri' directive, or until the end of the
+file.  *Note MRI mode: M.
+
+
+File: as.info,  Node: List,  Next: Long,  Prev: Linkonce,  Up: Pseudo Ops
 
 `.list'
 =======
@@ -1229,7 +1362,7 @@ File: as.info,  Node: Long,  Next: Macro,  Prev: List,  Up: Pseudo Ops
    `.long' is the same as `.int', *note `.int': Int..
 
 
-File: as.info,  Node: Macro,  Next: Nolist,  Prev: Long,  Up: Pseudo Ops
+File: as.info,  Node: Macro,  Next: MRI,  Prev: Long,  Up: Pseudo Ops
 
 `.macro'
 ========
@@ -1295,170 +1428,4 @@ With that definition, `SUM 0,5' is equivalent to this assembly input:
      `as' maintains a counter of how many macros it has executed in
      this pseudo-variable; you can copy that number to your output with
      `\@', but *only within a macro definition*.
-
-
-File: as.info,  Node: Nolist,  Next: Octa,  Prev: Macro,  Up: Pseudo Ops
-
-`.nolist'
-=========
-
-   Control (in conjunction with the `.list' directive) whether or not
-assembly listings are generated.  These two directives maintain an
-internal counter (which is zero initially).   `.list' increments the
-counter, and `.nolist' decrements it.  Assembly listings are generated
-whenever the counter is greater than zero.
-
-
-File: as.info,  Node: Octa,  Next: Org,  Prev: Nolist,  Up: Pseudo Ops
-
-`.octa BIGNUMS'
-===============
-
-   This directive expects zero or more bignums, separated by commas.
-For each bignum, it emits a 16-byte integer.
-
-   The term "octa" comes from contexts in which a "word" is two bytes;
-hence *octa*-word for 16 bytes.
-
-
-File: as.info,  Node: Org,  Next: P2align,  Prev: Octa,  Up: Pseudo Ops
-
-`.org NEW-LC , FILL'
-====================
-
-   Advance the location counter of the current section to NEW-LC.
-nEW-LC is either an absolute expression or an expression with the same
-section as the current subsection.  That is, you can't use `.org' to
-cross sections: if NEW-LC has the wrong section, the `.org' directive
-is ignored.  To be compatible with former assemblers, if the section of
-NEW-LC is absolute, `as' issues a warning, then pretends the section of
-NEW-LC is the same as the current subsection.
-
-   `.org' may only increase the location counter, or leave it
-unchanged; you cannot use `.org' to move the location counter backwards.
-
-   Because `as' tries to assemble programs in one pass, NEW-LC may not
-be undefined.  If you really detest this restriction we eagerly await a
-chance to share your improved assembler.
-
-   Beware that the origin is relative to the start of the section, not
-to the start of the subsection.  This is compatible with other people's
-assemblers.
-
-   When the location counter (of the current subsection) is advanced,
-the intervening bytes are filled with FILL which should be an absolute
-expression.  If the comma and FILL are omitted, FILL defaults to zero.
-
-
-File: as.info,  Node: P2align,  Next: Psize,  Prev: Org,  Up: Pseudo Ops
-
-`.p2align ABS-EXPR , ABS-EXPR'
-==============================
-
-   Pad the location counter (in the current subsection) to a particular
-storage boundary.  The first expression (which must be absolute) is the
-number of low-order zero bits the location counter must have after
-advancement.  For example `.p2align 3' advances the location counter
-until it a multiple of 8.  If the location counter is already a
-multiple of 8, no change is needed.
-
-   The second expression (also absolute) gives the value to be stored in
-the padding bytes.  It (and the comma) may be omitted.  If it is
-omitted, the padding bytes are zero.
-
-
-File: as.info,  Node: Psize,  Next: Quad,  Prev: P2align,  Up: Pseudo Ops
-
-`.psize LINES , COLUMNS'
-========================
-
-   Use this directive to declare the number of lines--and, optionally,
-the number of columns--to use for each page, when generating listings.
-
-   If you do not use `.psize', listings use a default line-count of 60.
-You may omit the comma and COLUMNS specification; the default width is
-200 columns.
-
-   `as' generates formfeeds whenever the specified number of lines is
-exceeded (or whenever you explicitly request one, using `.eject').
-
-   If you specify LINES as `0', no formfeeds are generated save those
-explicitly specified with `.eject'.
-
-
-File: as.info,  Node: Quad,  Next: Rept,  Prev: Psize,  Up: Pseudo Ops
-
-`.quad BIGNUMS'
-===============
-
-   `.quad' expects zero or more bignums, separated by commas.  For each
-bignum, it emits an 8-byte integer.  If the bignum won't fit in 8
-bytes, it prints a warning message; and just takes the lowest order 8
-bytes of the bignum.
-
-   The term "quad" comes from contexts in which a "word" is two bytes;
-hence *quad*-word for 8 bytes.
-
-
-File: as.info,  Node: Rept,  Next: Sbttl,  Prev: Quad,  Up: Pseudo Ops
-
-`.rept COUNT'
-=============
-
-   Repeat the sequence of lines between the `.rept' directive and the
-next `.endr' directive COUNT times.
-
-   For example, assembling
-
-             .rept   3
-             .long   0
-             .endr
-
-   is equivalent to assembling
-
-             .long   0
-             .long   0
-             .long   0
-
-
-File: as.info,  Node: Sbttl,  Next: Scl,  Prev: Rept,  Up: Pseudo Ops
-
-`.sbttl "SUBHEADING"'
-=====================
-
-   Use SUBHEADING as the title (third line, immediately after the title
-line) when generating assembly listings.
-
-   This directive affects subsequent pages, as well as the current page
-if it appears within ten lines of the top of a page.
-
-
-File: as.info,  Node: Scl,  Next: Section,  Prev: Sbttl,  Up: Pseudo Ops
-
-`.scl CLASS'
-============
-
-   Set the storage-class value for a symbol.  This directive may only be
-used inside a `.def'/`.endef' pair.  Storage class may flag whether a
-symbol is static or external, or it may record further symbolic
-debugging information.
-
-   The `.scl' directive is primarily associated with COFF output; when
-configured to generate `b.out' output format, `as' accepts this
-directive but ignores it.
-
-
-File: as.info,  Node: Section,  Next: Set,  Prev: Scl,  Up: Pseudo Ops
-
-`.section NAME, SUBSECTION'
-===========================
-
-   Assemble the following code into end of subsection numbered
-SUBSECTION in the COFF named section NAME.  If you omit SUBSECTION,
-`as' uses subsection number zero.  `.section .text' is equivalent to
-the `.text' directive; `.section .data' is equivalent to the `.data'
-directive.  This directive is only supported for targets that actually
-support arbitrarily named sections; on `a.out' targets, for example, it
-is not accepted, even with a standard `a.out' section name as its
-parameter.
 

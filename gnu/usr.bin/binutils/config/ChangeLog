@@ -1,3 +1,22 @@
+Thu Mar 27 15:52:40 1997  Geoffrey Noer  <noer@cygnus.com>
+
+	* mh-cygwin32: override CXXFLAGS, setting to -O2 only
+	(no debug)
+
+Tue Mar 25 18:16:43 1997  Geoffrey Noer  <noer@cygnus.com>
+
+	* mh-cygwin32: override LIBGCC2_DEBUG_CFLAGS so debug info
+	isn't included in cygwin32-hosted libgcc2.a by default
+
+Wed Jan  8 19:56:43 1997  Geoffrey Noer  <noer@cygnus.com>
+
+        * mh-cygwin32: override CFLAGS so debug info isn't included
+        in cygwin32-hosted tools by default
+
+Tue Dec 31 16:04:26 1996  Ian Lance Taylor  <ian@cygnus.com>
+
+	* mh-linux: Remove.
+
 Mon Nov 11 10:29:51 1996  Michael Meissner  <meissner@tiktok.cygnus.com>
 
 	* mt-ppc: Delete file, options moved to newlib configure.
@@ -44,7 +63,6 @@ Fri Jul  5 11:49:02 1996  Ian Lance Taylor  <ian@cygnus.com>
 Sun Jun 23 22:59:25 1996  Geoffrey Noer  <noer@cygnus.com>
 
 	* mh-cygwin32: new file.  Like mh-go32 without the CFLAGS entry.
-	* .Sanitize: listed new file
 
 Tue Mar 26 14:10:41 1996  Ian Lance Taylor  <ian@cygnus.com>
 

@@ -1,5 +1,5 @@
 /* mips.h.  Mips opcode list for GDB, the GNU debugger.
-   Copyright 1993 Free Software Foundation, Inc.
+   Copyright 1993, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
    Contributed by Ralph Campbell and OSF
    Commented and modified by Ian Lance Taylor, Cygnus Support
 
@@ -69,6 +69,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  *
 #define L1	INSN_4010
 #define V1      INSN_4100
 
+
+
+
 /* The order of overloaded instructions matters.  Label arguments and
    register arguments look the same. Instructions that can have either
    for arguments must apear in the correct order in this table for the
@@ -79,10 +82,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  *
    Many instructions are short hand for other instructions (i.e., The
    jal <register> instruction is short for jalr <register>).  */
 
-const struct mips_opcode mips_opcodes[] = {
+const struct mips_opcode mips_builtin_opcodes[] = {
 /* These instructions appear first so that the disassembler will find
    them first.  The assemblers uses a hash table based on the
    instruction name anyhow.  */
+/* name,	args,	mask,		match,	pinfo */
 {"nop",     "",		0x00000000, 0xffffffff,	0		},
 {"li",      "t,j",      0x24000000, 0xffe00000, WR_t		}, /* addiu */
 {"li",	    "t,i",	0x34000000, 0xffe00000, WR_t		}, /* ori */
@@ -284,6 +288,9 @@ const struct mips_opcode mips_opcodes[] = {
 {"daddiu",  "t,r,j",	0x64000000, 0xfc000000, WR_t|RD_s|I3	},
 {"daddu",   "d,v,t",	0x0000002d, 0xfc0007ff, WR_d|RD_s|RD_t|I3},
 {"daddu",   "t,r,I",	3,    (int) M_DADDU_I,	INSN_MACRO	},
+/* dctr and dctw are used on the r5000.  */
+{"dctr",    "o(b)",	0xbc050000, 0xfc1f0000, RD_b|I3 	},
+{"dctw",    "o(b)",	0xbc090000, 0xfc1f0000, RD_b|I3 	},
 /* For ddiv, see the comments about div.  */
 {"ddiv",    "z,s,t",	0x0000001e, 0xfc00ffff, RD_s|RD_t|WR_HI|WR_LO|I3 },
 {"ddiv",    "d,v,t",	3,    (int) M_DDIV_3,	INSN_MACRO	},
@@ -380,6 +387,7 @@ const struct mips_opcode mips_opcodes[] = {
    assembler, but will never match user input (because the line above
    will match first).  */
 {"jal",     "a",	0x0c000000, 0xfc000000,	UBD|WR_31	},
+{"jalx",    "a",	0x74000000, 0xfc000000, UBD|WR_31	},
 {"la",      "t,A(b)",	0,    (int) M_LA_AB,	INSN_MACRO	},
 {"lb",      "t,o(b)",	0x80000000, 0xfc000000,	LDD|RD_b|WR_t	},
 {"lb",      "t,A(b)",	0,    (int) M_LB_AB,	INSN_MACRO	},
@@ -496,7 +504,9 @@ const struct mips_opcode mips_opcodes[] = {
 {"mulou",   "d,v,t",	0,    (int) M_MULOU,	INSN_MACRO	},
 {"mulou",   "d,v,I",	0,    (int) M_MULOU_I,	INSN_MACRO	},
 {"mult",    "s,t",	0x00000018, 0xfc00ffff,	RD_s|RD_t|WR_HI|WR_LO	},
+{"mult",    "d,s,t",	0x00000018, 0xfc0007ff,	RD_s|RD_t|WR_HI|WR_LO|WR_d },
 {"multu",   "s,t",	0x00000019, 0xfc00ffff,	RD_s|RD_t|WR_HI|WR_LO	},
+{"multu",   "d,s,t",	0x00000019, 0xfc0007ff,	RD_s|RD_t|WR_HI|WR_LO|WR_d },
 {"neg",     "d,w",	0x00000022, 0xffe007ff,	WR_d|RD_t	}, /* sub 0 */
 {"negu",    "d,w",	0x00000023, 0xffe007ff,	WR_d|RD_t	}, /* subu 0 */
 {"neg.d",   "D,V",	0x46200007, 0xffff003f,	WR_D|RD_S	},
@@ -512,8 +522,12 @@ const struct mips_opcode mips_opcodes[] = {
 {"or",      "d,v,t",	0x00000025, 0xfc0007ff,	WR_d|RD_s|RD_t	},
 {"or",      "t,r,I",	0,    (int) M_OR_I,	INSN_MACRO	},
 {"ori",     "t,r,i",	0x34000000, 0xfc000000,	WR_t|RD_s	},
+
+
 {"pref",    "k,o(b)",	0xcc000000, 0xfc000000, RD_b|I4		},
 {"prefx",   "h,t(b)",	0x4c00000f, 0xfc0007ff, RD_b|RD_t|I4	},
+
+
 {"recip.d", "D,S",	0x46200015, 0xffff003f, WR_D|RD_S|I4	},
 {"recip.s", "D,S",	0x46000015, 0xffff003f, WR_D|RD_S|I4	},
 {"rem",     "z,s,t",	0x0000001a, 0xfc00ffff,	RD_s|RD_t|WR_HI|WR_LO },
@@ -682,6 +696,7 @@ const struct mips_opcode mips_opcodes[] = {
 {"xor",     "d,v,t",	0x00000026, 0xfc0007ff,	WR_d|RD_s|RD_t	},
 {"xor",     "t,r,I",	0,    (int) M_XOR_I,	INSN_MACRO	},
 {"xori",    "t,r,i",	0x38000000, 0xfc000000,	WR_t|RD_s	},
+{"wait",    "",		0x42000020, 0xffffffff,	TRAP|I3		},
 {"waiti",   "",		0x42000020, 0xffffffff,	TRAP|L1		},
 {"wb", 	    "o(b)",	0xbc040000, 0xfc1f0000, SM|RD_b|L1	},
 /* No hazard protection on coprocessor instructions--they shouldn't
@@ -692,7 +707,19 @@ const struct mips_opcode mips_opcodes[] = {
 {"c1",      "C",	0x46000000, 0xfe000000,	0		},
 {"c2",      "C",	0x4a000000, 0xfe000000,	0		},
 {"c3",      "C",	0x4e000000, 0xfe000000,	0		},
+{"cop0",     "C",	0,    (int) M_COP0,	    INSN_MACRO	},
+{"cop1",     "C",	0,    (int) M_COP1,	    INSN_MACRO	},
+{"cop2",     "C",	0,    (int) M_COP2,	    INSN_MACRO	},
+{"cop3",     "C",	0,    (int) M_COP3,	    INSN_MACRO	},
 };
 
-const int bfd_mips_num_opcodes =
-  ((sizeof mips_opcodes) / (sizeof (mips_opcodes[0])));
+#define MIPS_NUM_OPCODES \
+	((sizeof mips_builtin_opcodes) / (sizeof (mips_builtin_opcodes[0])))
+const int bfd_mips_num_builtin_opcodes = MIPS_NUM_OPCODES;
+
+/* const removed from the following to allow for dynamic extensions to the 
+ * built-in instruction set. */
+struct mips_opcode *mips_opcodes =
+  (struct mips_opcode *) mips_builtin_opcodes;
+int bfd_mips_num_opcodes = MIPS_NUM_OPCODES;
+#undef MIPS_NUM_OPCODES

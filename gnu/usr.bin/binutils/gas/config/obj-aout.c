@@ -388,7 +388,7 @@ obj_aout_weak (ignore)
   demand_empty_rest_of_line ();
 }
 
-/* Handle .type.  On NetBSD, this is used to set the n_other field,
+/* Handle .type.  On {Net,Open}BSD, this is used to set the n_other field,
    which is then apparently used when doing dynamic linking.  Older
    versions ogas ignored the .type pseudo-op, so we also ignore it if
    we can't parse it.  */

@@ -1,5 +1,5 @@
 /* BFD backend for MIPS BSD (a.out) binaries.
-   Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
    Written by Ralph Campbell.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -376,6 +376,7 @@ MY(canonicalize_reloc)(abfd, section, relptr, symbols)
 static CONST struct aout_backend_data MY(backend_data) = {
   0,				/* zmagic contiguous */
   1,				/* text incl header */
+  0,				/* entry is text address */
   0,				/* exec_hdr_flags */
   TARGET_PAGE_SIZE,			/* text vma */
   MY_set_sizes,

@@ -58,7 +58,8 @@ AR = ar
 AR_FLAGS = qv
 BISON = bison
 MAKEINFO = makeinfo
-TEXI2DVI = TEXINPUTS=$(srcdir):$(TEXIDIR):$$TEXINPUTS texi2dvi
+TEXI2DVI = texi2dvi
+DVIPS = dvips
 RANLIB = ranlib
 
 # What version of the manual you want; "all" includes everything
@@ -75,6 +76,7 @@ install:
 
 info: as.info gasp.info
 dvi: as.dvi gasp.dvi
+ps: as.ps gasp.ps
 
 asconfig.texi: $(CONFIG).texi
 	rm -f asconfig.texi
@@ -109,20 +111,33 @@ install-info-gasp: gasp.info
 	done
 
 as.dvi:	$(srcdir)/as.texinfo asconfig.texi
+	TEXINPUTS=$(srcdir):$(TEXIDIR):$$TEXINPUTS MAKEINFO='$(MAKEINFO) -I$(srcdir)' \
 	$(TEXI2DVI) $(srcdir)/as.texinfo
 
+as.ps:	as.dvi
+	$(DVIPS) -o $@ $?
+
 gasp.dvi: $(srcdir)/gasp.texi
+	TEXINPUTS=$(srcdir):$(TEXIDIR):$$TEXINPUTS MAKEINFO='$(MAKEINFO) -I$(srcdir)' \
 	$(TEXI2DVI) $(srcdir)/gasp.texi
 
+gasp.ps: gasp.dvi
+	$(DVIPS) -o $@ $?
+
 # This one isn't ready for prime time yet.  Not even a little bit.
+
 internals.info: $(srcdir)/internals.texi
-	$(MAKEINFO) -o internals.info $(srcdir)/internals.texi
+	$(MAKEINFO) -o $@ $?
+
 internals.dvi: $(srcdir)/internals.texi
+	TEXINPUTS=$(srcdir):$(TEXIDIR):$$TEXINPUTS MAKEINFO='$(MAKEINFO) -I$(srcdir)' \
 	$(TEXI2DVI) $(srcdir)/internals.texi
+
 internals.ps: internals.dvi
-	dvips internals.dvi -o internals.ps
+	$(DVIPS) -o $@ $?
+
 internals.ps4: internals.ps
-	psnup -4 < internals.ps > internals.ps4
+	psnup -4 <$? >$@
 
 # ROFF doc targets as.ms, as.mm, as.me
 # (we don't use a variable because we don't trust all makes to handle
@@ -156,15 +171,16 @@ as.me: $(srcdir)/as.texinfo asconfig.texi
 	texi2roff -me >as.me 
 
 clean mostlyclean: clean-dvi clean-info
-	rm -f asconfig.texi
+	rm -f asconfig.texi core *~
 
 distclean:
 	rm -f Makefile config.status asconfig.texi \
 		as.?? as.??s as.aux as.log as.toc \
+		internals.?? internals.??s internals.aux internals.log internals.toc \
 		gasp.?? gasp.??s gasp.aux gasp.log gasp.toc
 
 clean-dvi:
-	rm -f as.?? as.??? gasp.?? gasp.???
+	rm -f as.?? as.??? gasp.?? gasp.??? internals.?? internals.???
 
 clean-info:
 	rm -f as.info* gasp.info*

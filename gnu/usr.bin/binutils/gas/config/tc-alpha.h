@@ -1,5 +1,5 @@
 /* This file is tc-alpha.h
-   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
    Written by Ken Raeburn <raeburn@cygnus.com>.
 
    This file is part of GAS, the GNU Assembler.
@@ -20,6 +20,8 @@
    02111-1307, USA.  */
 
 #define TC_ALPHA
+
+#define TARGET_BYTES_BIG_ENDIAN 0
 
 #define TARGET_ARCH			bfd_arch_alpha
 
@@ -50,18 +52,10 @@ extern valueT alpha_gp_value;
 #define md_create_short_jump(p,f,t,fr,s) as_fatal("alpha_create_short_jump")
 #define md_estimate_size_before_relax(f,s) \
 			(as_fatal("estimate_size_before_relax called"),1)
-#define md_operand(x)			((void) (0))
+#define md_operand(x)
 
-#ifdef OBJ_ECOFF
-#define LOCAL_LABEL(name) ((name)[0] == 'L')
-#endif
-#ifdef OBJ_ELF
-#define LOCAL_LABEL(name) ((name)[0] == '$')
-#define FAKE_LABEL_NAME "$L0\001"
-#endif
 #ifdef OBJ_EVAX
-#define LOCAL_LABEL(name) ((name)[0] == '$')
-#define FAKE_LABEL_NAME "$L0\001"
+
 /* This field keeps the symbols position in the link section.  */
 #define OBJ_SYMFIELD_TYPE valueT
 
@@ -84,3 +78,7 @@ extern void alpha_define_label PARAMS ((struct symbol *));
 #define md_cons_align(nbytes) alpha_cons_align (nbytes)
 extern void alpha_cons_align PARAMS ((int));
 
+#ifdef OBJ_ECOFF
+#define tc_frob_file_before_adjust() alpha_frob_file_before_adjust ()
+extern void alpha_frob_file_before_adjust PARAMS ((void));
+#endif

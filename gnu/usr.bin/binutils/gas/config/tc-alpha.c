@@ -1,10 +1,10 @@
 /* tc-alpha.c - Processor-specific code for the DEC Alpha AXP CPU.
-   Copyright (C) 1989, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Contributed by Carnegie Mellon University, 1993.
    Written by Alessandro Forin, based on earlier gas-1.38 target CPU files.
    Modified by Ken Raeburn for gas-2.x and ECOFF support.
    Modified by Richard Henderson for ELF support.
-   Modified by Klaus Kaempf for EVAX (openVMS/Alpha) support.
+   Modified by Klaus K"ampf for EVAX (openVMS/Alpha) support.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -204,6 +204,9 @@ static void s_alpha_sdata PARAMS ((int));
 #ifdef OBJ_ELF
 static void s_alpha_section PARAMS ((int));
 #endif
+#ifdef OBJ_EVAX
+static void s_alpha_section PARAMS ((int));
+#endif
 static void s_alpha_gprel32 PARAMS ((int));
 static void s_alpha_float_cons PARAMS ((int));
 static void s_alpha_proc PARAMS ((int));
@@ -317,6 +320,8 @@ static segT alpha_lit4_section;
 #endif
 #ifdef OBJ_EVAX
 static segT alpha_link_section;
+static segT alpha_ctors_section;
+static segT alpha_dtors_section;
 #endif
 static segT alpha_lit8_section;
 
@@ -327,6 +332,8 @@ static symbolS *alpha_lit4_symbol;
 #endif
 #ifdef OBJ_EVAX
 static symbolS *alpha_link_symbol;
+static symbolS *alpha_ctors_symbol;
+static symbolS *alpha_dtors_symbol;
 #endif
 static symbolS *alpha_lit8_symbol;
 
@@ -365,6 +372,9 @@ static int alpha_current_align;
 /* These are exported to ECOFF code.  */
 unsigned long alpha_gprmask, alpha_fprmask;
 
+/* Whether the debugging option was seen.  */
+static int alpha_debug;
+
 #ifdef OBJ_EVAX
 /* Collect information about current procedure here.  */
 static struct {
@@ -383,21 +393,10 @@ static struct {
 
 static int alpha_flag_hash_long_names = 0;		/* -+ */
 static int alpha_flag_show_after_trunc = 0;		/* -H */
-static int alpha_flag_no_hash_mixed_case = 0;		/* -h NUM */
 
-/* Flag that determines how we map names.  This takes several values, and
- * is set with the -h switch.  A value of zero implies names should be
- * upper case, and the presence of the -h switch inhibits the case hack.
- * No -h switch at all sets alpha_vms_name_mapping to 0, and allows case hacking.
- * A value of 2 (set with -h2) implies names should be
- * all lower case, with no case hack.  A value of 3 (set with -h3) implies
- * that case should be preserved.  */
-
-/* If the -+ switch is given, then the hash is appended to any name that is
- * longer than 31 characters, regardless of the setting of the -h switch.
+/* If the -+ switch is given, then a hash is appended to any name that is
+ * longer than 64 characters, else longer symbol names are truncated.
  */
-
-static char alpha_vms_name_mapping = 0;
 
 static int alpha_basereg_clobbered;
 #endif
@@ -810,6 +809,8 @@ md_section_align (seg, size)
 /* Equal to MAX_PRECISION in atof-ieee.c */
 #define MAX_LITTLENUMS 6
 
+extern char *vax_md_atof PARAMS ((int, char *, int *));
+
 char *
 md_atof (type, litP, sizeP)
      char type;
@@ -820,7 +821,6 @@ md_atof (type, litP, sizeP)
   LITTLENUM_TYPE words[MAX_LITTLENUMS];
   LITTLENUM_TYPE *wordP;
   char *t;
-  char *atof_ieee (), *vax_md_atof ();
 
   switch (type)
     {
@@ -887,9 +887,7 @@ md_parse_option (c, arg)
       break;
 
     case 'g':
-      /* Ignore `-g' so gcc can provide this option to the Digital
-	 UNIX assembler, which otherwise would throw away info that
-	 mips-tfile needs.  */
+      alpha_debug = 1;
       break;
 
     case 'm':
@@ -939,8 +937,8 @@ md_parse_option (c, arg)
       }
       break;
 
-#if OBJ_EVAX
-    case '+':			/* For g++.  Hash any name > 31 chars long. */
+#ifdef OBJ_EVAX
+    case '+':			/* For g++.  Hash any name > 63 chars long. */
       alpha_flag_hash_long_names = 1;
       break;
 
@@ -948,11 +946,7 @@ md_parse_option (c, arg)
       alpha_flag_show_after_trunc = 1;
       break;
 
-    case 'h':			/* No hashing of mixed-case names */
-      {
-	alpha_vms_name_mapping = atoi (arg);
-	alpha_flag_no_hash_mixed_case = 1;
-      }
+    case 'h':			/* for gnu-c/vax compatibility.  */
       break;
 #endif
 
@@ -980,10 +974,8 @@ Alpha options:\n\
 #ifdef OBJ_EVAX
   fputs ("\
 VMS options:\n\
--+			hash encode names longer than 31 characters\n\
--H			show new symbol after hash truncation\n\
--h NUM			don't hash mixed-case names, and adjust case:\n\
-			0 = upper, 2 = lower, 3 = preserve case\n",
+-+			hash encode (don't truncate) names longer than 64 characters\n\
+-H			show new symbol after hash truncation\n",
 	stream);
 #endif
 }
@@ -1121,6 +1113,7 @@ md_apply_fix (fixP, valueP)
 #endif
 #ifdef OBJ_EVAX
     case BFD_RELOC_ALPHA_LINKAGE:
+    case BFD_RELOC_ALPHA_CODEADDR:
       return 1;
 #endif
 
@@ -1128,7 +1121,7 @@ md_apply_fix (fixP, valueP)
       {
 	const struct alpha_operand *operand;
 
-	if ((int)fixP->fx_r_type <= 0)
+	if ((int)fixP->fx_r_type >= 0)
 	  as_fatal ("unhandled relocation type %s",
 		    bfd_get_reloc_code_name (fixP->fx_r_type));
 
@@ -1156,7 +1149,7 @@ md_apply_fix (fixP, valueP)
   else
     {
       as_warn_where(fixP->fx_file, fixP->fx_line,
-		    "type %d reloc done?\n", fixP->fx_r_type);
+		    "type %d reloc done?\n", (int)fixP->fx_r_type);
       goto done;
     }
 
@@ -1279,6 +1272,7 @@ alpha_force_relocation (f)
     case BFD_RELOC_GPREL32:
 #ifdef OBJ_EVAX
     case BFD_RELOC_ALPHA_LINKAGE:
+    case BFD_RELOC_ALPHA_CODEADDR:
 #endif
       return 1;
 
@@ -1310,10 +1304,37 @@ alpha_fix_adjustable (f)
      but we can adjust the values contained within it?  */
   switch (f->fx_r_type)
     {
-    case BFD_RELOC_GPREL32:
+    case BFD_RELOC_ALPHA_GPDISP_HI16:
+    case BFD_RELOC_ALPHA_GPDISP_LO16:
+    case BFD_RELOC_ALPHA_GPDISP:
+      return 0;
+
+#ifdef OBJ_ECOFF
+    case BFD_RELOC_ALPHA_LITERAL:
+#endif
+#ifdef OBJ_ELF
+    case BFD_RELOC_ALPHA_ELF_LITERAL:
+#endif
+#ifdef OBJ_EVAX
+    case BFD_RELOC_ALPHA_LINKAGE:
+    case BFD_RELOC_ALPHA_CODEADDR:
+#endif
       return 1;
+
+    case BFD_RELOC_ALPHA_LITUSE:
+      return 0;
+
+    case BFD_RELOC_GPREL32:
+    case BFD_RELOC_23_PCREL_S2:
+    case BFD_RELOC_32:
+    case BFD_RELOC_64:
+    case BFD_RELOC_ALPHA_HINT:
+      return 1;
+
     default:
-      return !alpha_force_relocation (f);
+      assert ((int)f->fx_r_type < 0
+	      && - (int)f->fx_r_type < alpha_num_operands);
+      return 1;
     }
   /*NOTREACHED*/
 }
@@ -1328,7 +1349,7 @@ tc_gen_reloc (sec, fixp)
 {
   arelent *reloc;
 
-  reloc = (arelent *) bfd_alloc_by_size_t (stdoutput, sizeof (arelent));
+  reloc = (arelent *) xmalloc (sizeof (arelent));
   reloc->sym_ptr_ptr = &fixp->fx_addsy->bsym;
   reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
 
@@ -1407,6 +1428,24 @@ found:
   return framereg;
 }
 
+/* This is called before the symbol table is processed.  In order to
+   work with gcc when using mips-tfile, we must keep all local labels.
+   However, in other cases, we want to discard them.  If we were
+   called with -g, but we didn't see any debugging information, it may
+   mean that gcc is smuggling debugging information through to
+   mips-tfile, in which case we must generate all local labels.  */
+
+#ifdef OBJ_ECOFF
+
+void
+alpha_frob_file_before_adjust ()
+{
+  if (alpha_debug != 0
+      && ! ecoff_debugging_seen)
+    flag_keep_locals = 1;
+}
+
+#endif /* OBJ_ECOFF */
 
 /* Parse the arguments to an opcode.  */
 
@@ -1842,7 +1881,7 @@ emit_insn (insn)
       fixS *fixP;
 
       /* Some fixups are only used internally and so have no howto */
-      if (fixup->reloc < 0)
+      if ((int)fixup->reloc < 0)
 	size = 4, pcrel = 0;
 #ifdef OBJ_ELF
       /* These relocation types are only used internally. */
@@ -2550,7 +2589,7 @@ emit_ir_load (tok, ntok, opname)
     }
 
   emit_insn (&insn);
-#if OBJ_EVAX
+#ifdef OBJ_EVAX
     /* special hack. If the basereg is clobbered for a call
        all lda's before the call don't have a basereg.  */
   if ((tok[0].X_op == O_register)
@@ -3198,7 +3237,7 @@ emit_jsrjmp (tok, ntok, vopname)
 
   emit_insn (&insn);
 
-#if OBJ_EVAX
+#ifdef OBJ_EVAX
   alpha_basereg_clobbered = 0;
 
   /* reload PV from 0(FP) if it is our current base register.  */
@@ -3277,7 +3316,7 @@ s_alpha_data (i)
   alpha_current_align = 0;
 }
 
-#ifndef OBJ_ELF
+#ifdef OBJ_ECOFF
 
 /* Handle the OSF/1 .comm pseudo quirks.  */
 
@@ -3317,33 +3356,12 @@ s_alpha_comm (ignore)
   symbolP = symbol_find_or_make (name);
   *p = c;
 
-  if (S_IS_DEFINED (symbolP))
+  if (S_IS_DEFINED (symbolP) && ! S_IS_COMMON (symbolP))
     {
       as_bad ("Ignoring attempt to re-define symbol");
       ignore_rest_of_line ();
       return;
     }
-
-#if OBJ_EVAX
-  {
-    /* Fill common area with zeros.  */
-    char *pfrag;
-    segT current_seg = now_seg;
-    subsegT current_subseg = now_subseg;
-
-    subseg_set (bss_section, 1);
-    frag_align (3, 0);
-
-    symbolP->sy_frag = frag_now;
-    pfrag = frag_var (rs_org, 1, 1, (relax_substateT)0, symbolP,
-		      temp, (char *)0);
-
-    *pfrag = 0;
-    S_SET_SEGMENT (symbolP, bss_section);
-
-    subseg_set (current_seg, current_subseg);
-  }
-#endif
 
   if (S_GET_VALUE (symbolP))
     {
@@ -3359,16 +3377,14 @@ s_alpha_comm (ignore)
       S_SET_EXTERNAL (symbolP);
     }
 
-#ifndef OBJ_EVAX
   know (symbolP->sy_frag == &zero_address_frag);
-#endif
 
   demand_empty_rest_of_line ();
 }
 
 #endif /* ! OBJ_ELF */
 
-#if defined (OBJ_ECOFF) || defined (OBJ_EVAX)
+#ifdef OBJ_ECOFF
 
 /* Handle the .rdata pseudo-op.  This is like the usual one, but it
    clears alpha_insn_label and restores auto alignment.  */
@@ -3428,14 +3444,26 @@ s_alpha_section (ignore)
 #endif
 
 #ifdef OBJ_EVAX
+  
+/* Handle the section specific pseudo-op.  */
+  
 static void
-s_alpha_link (ignore)
-     int ignore;
+s_alpha_section (secid)
+     int secid;
 {
   int temp;
+#define EVAX_SECTION_COUNT 6
+  static char *section_name[EVAX_SECTION_COUNT+1] =
+    { "NULL", ".rdata", ".comm", ".link", ".ctors", ".dtors", ".lcomm" };
 
+  if ((secid <= 0) || (secid > EVAX_SECTION_COUNT))
+    {
+      as_fatal ("Unknown section directive");
+      demand_empty_rest_of_line ();
+      return;
+    }
   temp = get_absolute_expression ();
-  subseg_new (".link", 0);
+  subseg_new (section_name[secid], 0);
   demand_empty_rest_of_line ();
   alpha_insn_label = NULL;
   alpha_auto_align_on = 1;
@@ -3610,7 +3638,7 @@ s_alpha_pdesc (ignore)
   md_flush_pending_output ();
 #endif
 
-  frag_align (3, 0);
+  frag_align (3, 0, 0);
   p = frag_more (16);
   fixp = fix_new (frag_now, p - frag_now->fr_literal, 8, 0, 0, 0, 0);
   fixp->fx_done = 1;
@@ -3681,6 +3709,47 @@ s_alpha_pdesc (ignore)
 }
 
 
+/* Support for crash debug on vms.  */
+
+static void
+s_alpha_name (ignore)
+     int ignore;
+{
+  register char *p;
+  expressionS exp;
+  segment_info_type *seginfo = seg_info (alpha_link_section);
+
+  if (now_seg != alpha_link_section)
+    {
+      as_bad (".name directive not in link (.link) section");
+      demand_empty_rest_of_line ();
+      return;
+    }
+
+  expression (&exp);
+  if (exp.X_op != O_symbol)
+    {
+      as_warn (".name directive has no symbol");
+      demand_empty_rest_of_line ();
+      return;
+    }
+
+  demand_empty_rest_of_line ();
+
+#ifdef md_flush_pending_output
+  md_flush_pending_output ();
+#endif
+
+  frag_align (3, 0, 0);
+  p = frag_more (8);
+  seginfo->literal_pool_size += 8;
+
+  fix_new_exp (frag_now, p-frag_now->fr_literal, 8, &exp, 0, BFD_RELOC_64);
+
+  return;
+}
+
+
 static void
 s_alpha_linkage (ignore)
      int ignore;
@@ -3703,6 +3772,35 @@ s_alpha_linkage (ignore)
       memset (p, 0, LKP_S_K_SIZE);
       fix_new_exp (frag_now, p - frag_now->fr_literal, LKP_S_K_SIZE, &exp, 0,\
 		   BFD_RELOC_ALPHA_LINKAGE);
+    }
+  demand_empty_rest_of_line ();
+
+  return;
+}
+
+
+static void
+s_alpha_code_address (ignore)
+     int ignore;
+{
+  expressionS exp;
+  char *p;
+
+#ifdef md_flush_pending_output
+  md_flush_pending_output ();
+#endif
+
+  expression (&exp);
+  if (exp.X_op != O_symbol)
+    {
+      as_fatal ("No symbol after .code_address");
+    }
+  else
+    {
+      p = frag_more (8);
+      memset (p, 0, 8);
+      fix_new_exp (frag_now, p - frag_now->fr_literal, 8, &exp, 0,\
+		   BFD_RELOC_ALPHA_CODEADDR);
     }
   demand_empty_rest_of_line ();
 
@@ -3791,11 +3889,8 @@ s_alpha_file (ignore)
 
   extern char *demand_copy_string PARAMS ((int *lenP));
 
-  sprintf (case_hack, "<CASE:%01d%01d%01d%01d>",
-	    alpha_flag_hash_long_names,
-	    alpha_flag_show_after_trunc,
-	    alpha_flag_no_hash_mixed_case,
-	    alpha_vms_name_mapping);
+  sprintf (case_hack, "<CASE:%01d%01d>",
+	    alpha_flag_hash_long_names, alpha_flag_show_after_trunc);
 
   s = symbol_find_or_make (case_hack);
   s->bsym->flags |= BSF_FILE;
@@ -4100,19 +4195,48 @@ alpha_cons_align (size)
   alpha_insn_label = NULL;
 }
 
+
+#ifdef DEBUG1
+/* print token expression with alpha specific extension.  */
+
+static void
+alpha_print_token(f, exp)
+    FILE *f;
+    const expressionS *exp;
+{
+  switch (exp->X_op)
+    {
+      case O_cpregister:
+	putc (',', f);
+	/* FALLTHRU */
+      case O_pregister:
+	putc ('(', f);
+	{
+	  expressionS nexp = *exp;
+	  nexp.X_op = O_register;
+	  print_expr (f, &nexp);
+	}
+	putc (')', f);
+	break;
+      default:
+	print_expr (f, exp);
+	break;
+    }
+  return;
+}
+#endif
+
 /* The target specific pseudo-ops which we support.  */
 
 const pseudo_typeS md_pseudo_table[] =
 {
   {"common", s_comm, 0},	/* is this used? */
-#ifndef OBJ_ELF
+#ifdef OBJ_ECOFF
   {"comm", s_alpha_comm, 0},	/* osf1 compiler does this */
+  {"rdata", s_alpha_rdata, 0},
 #endif
   {"text", s_alpha_text, 0},
   {"data", s_alpha_data, 0},
-#if defined (OBJ_ECOFF) || defined (OBJ_EVAX)
-  {"rdata", s_alpha_rdata, 0},
-#endif
 #ifdef OBJ_ECOFF
   {"sdata", s_alpha_sdata, 0},
 #endif
@@ -4124,15 +4248,22 @@ const pseudo_typeS md_pseudo_table[] =
 #endif
 #ifdef OBJ_EVAX
   { "pdesc", s_alpha_pdesc, 0},
+  { "name", s_alpha_name, 0},
   { "linkage", s_alpha_linkage, 0},
+  { "code_address", s_alpha_code_address, 0},
   { "ent", s_alpha_ent, 0},
   { "frame", s_alpha_frame, 0},
   { "fp_save", s_alpha_fp_save, 0},
   { "mask", s_alpha_mask, 0},
   { "fmask", s_alpha_fmask, 0},
-  { "link", s_alpha_link, 0},
   { "end", s_alpha_end, 0},
   { "file", s_alpha_file, 0},
+  { "rdata", s_alpha_section, 1},
+  { "comm", s_alpha_section, 2},
+  { "link", s_alpha_section, 3},
+  { "ctors", s_alpha_section, 4},
+  { "dtors", s_alpha_section, 5},
+  { "lcomm", s_alpha_section, 6},
 #endif
   {"gprel32", s_alpha_gprel32, 0},
   {"t_floating", s_alpha_float_cons, 'd'},
@@ -4269,14 +4400,14 @@ alpha_align (n, pfill, label)
 	     no-op instructions.  This will zero-fill, then nop-fill
 	     with proper alignment.  */
 	  if (alpha_current_align < 2)
-	    frag_align (2, 0);
-	  frag_align_pattern (n, nop, sizeof nop);
+	    frag_align (2, 0, 0);
+	  frag_align_pattern (n, nop, sizeof nop, 0);
 	}
       else
-	frag_align (n, 0);
+	frag_align (n, 0, 0);
     }
   else
-    frag_align (n, *pfill);
+    frag_align (n, *pfill, 0);
 
   alpha_current_align = n;
 

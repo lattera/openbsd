@@ -25,6 +25,9 @@ Boston, MA 02111-1307, USA.  */
 #include "ansidecl.h"
 #include "libiberty.h"
 
+#ifdef isspace
+#undef isspace
+#endif
 #define isspace(ch) ((ch) == ' ' || (ch) == '\t')
 
 /*  Routines imported from standard C runtime libraries. */

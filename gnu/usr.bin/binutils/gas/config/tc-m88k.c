@@ -1,7 +1,7 @@
 /* m88k.c -- Assembler for the Motorola 88000
    Contributed by Devon Bowen of Buffalo University
    and Torbjorn Granlund of the Swedish Institute of Computer Science.
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 1996
+   Copyright (C) 1989, 90, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
 This file is part of GAS, the GNU Assembler.
@@ -17,8 +17,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GAS; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+along with GAS; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include <ctype.h>
 #include "as.h"
@@ -1073,7 +1074,6 @@ md_atof (type, litP, sizeP)
   LITTLENUM_TYPE words[MAX_LITTLENUMS];
   LITTLENUM_TYPE *wordP;
   char *t;
-  char *atof_ieee ();
 
   switch (type)
     {
@@ -1291,7 +1291,7 @@ s_bss ()
 	  subseg_set (SEG_BSS, 1); /* switch to bss	*/
 
 	  if (bss_align)
-	    frag_align (bss_align, 0);
+	    frag_align (bss_align, 0, 0);
 
 	  /* detach from old frag */
 	  if (symbolP->sy_type == N_BSS && symbolP->sy_frag != NULL)
@@ -1299,7 +1299,7 @@ s_bss ()
 
 	  symbolP->sy_frag  = frag_now;
 	  p = frag_var (rs_org, 1, 1, (relax_substateT)0, symbolP,
-			temp, (char *)0);
+			(offsetT) temp, (char *)0);
 	  *p = 0;
 	  S_SET_SEGMENT (symbolP, SEG_BSS);
 
@@ -1433,16 +1433,17 @@ md_pcrel_from (fixp)
 /* When we align the .init section, insert the correct NOP pattern.  */
 
 int
-m88k_do_align (n, fill, len)
+m88k_do_align (n, fill, max, len)
      int n;
      const char *fill;
      int len;
+     int max;
 {
-  if ((fill == NULL || (*fill == 0 && len == 1))
+  if (fill == NULL
       && strcmp (obj_segment_name (now_seg), ".init") == 0)
     {
       static const unsigned char nop_pattern[] = { 0xf4, 0x00, 0x58, 0x00 };
-      frag_align_pattern (n, nop_pattern, sizeof (nop_pattern));
+      frag_align_pattern (n, nop_pattern, sizeof (nop_pattern), max);
       return 1;
     }
   return 0;

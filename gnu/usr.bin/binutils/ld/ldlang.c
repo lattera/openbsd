@@ -1,5 +1,5 @@
 /* Linker command language support.
-   Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
 
 This file is part of GLD, the Gnu Linker.
 
@@ -21,6 +21,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "bfd.h"
 #include "sysdep.h"
 #include "libiberty.h"
+#include "obstack.h"
 #include "bfdlink.h"
 
 #include "ld.h"
@@ -101,6 +102,7 @@ static void print_assignment
   PARAMS ((lang_assignment_statement_type *assignment,
 	   lang_output_section_statement_type *output_section));
 static void print_input_statement PARAMS ((lang_input_statement_type *statm));
+static boolean print_one_symbol PARAMS ((struct bfd_link_hash_entry *, PTR));
 static void print_input_section PARAMS ((lang_input_section_type *in));
 static void print_fill_statement PARAMS ((lang_fill_statement_type *fill));
 static void print_data_statement PARAMS ((lang_data_statement_type *data));
@@ -668,6 +670,7 @@ section_already_linked (abfd, sec, data)
   if (entry->just_syms_flag)
     {
       sec->output_section = bfd_abs_section_ptr;
+      sec->output_offset = sec->vma;
       return;
     }
 
@@ -2686,8 +2689,10 @@ lang_one_common (h, info)
   /* Increase the size of the section.  */
   section->_raw_size += size;
 
-  /* Make sure the section is allocated in memory.  */
+  /* Make sure the section is allocated in memory, and make sure that
+     it is no longer a common section.  */
   section->flags |= SEC_ALLOC;
+  section->flags &= ~ SEC_IS_COMMON;
 
   if (config.map_file != NULL)
     {
@@ -3078,6 +3083,13 @@ lang_process ()
 
   ldemul_after_open ();
 
+  /* Make sure that we're not mixing architectures.  We call this
+     after all the input files have been opened, but before we do any
+     other processing, so that any operations merge_private_bfd_data
+     does on the output file will be known during the rest of the
+     link.  */
+  lang_check ();
+
   /* Build all sets based on the information gathered from the input
      files.  */
   ldctor_build_sets ();
@@ -3085,14 +3097,14 @@ lang_process ()
   /* Size up the common data */
   lang_common ();
 
-  /* Run through the contours of the script and attatch input sections
+  /* Run through the contours of the script and attach input sections
      to the correct output sections
      */
   map_input_to_output_sections (statement_list.head, (char *) NULL,
 				(lang_output_section_statement_type *) NULL);
 
 
-  /* Find any sections not attatched explicitly and handle them */
+  /* Find any sections not attached explicitly and handle them */
   lang_place_orphans ();
 
   ldemul_before_allocation ();
@@ -3152,10 +3164,6 @@ lang_process ()
   lang_do_assignments (statement_list.head,
 		       abs_output_section,
 		       (fill_type) 0, (bfd_vma) 0);
-
-  /* Make sure that we're not mixing architectures */
-
-  lang_check ();
 
   /* Final stuffs */
 
@@ -3827,4 +3835,144 @@ lang_leave_overlay (fill, memspec, phdrs)
   overlay_nocrossrefs = 0;
   overlay_list = NULL;
   overlay_max = NULL;
+}
+
+/* Version handling.  This is only useful for ELF.  */
+
+/* This global variable holds the version tree that we build.  */
+
+struct bfd_elf_version_tree *lang_elf_version_info;
+
+/* This is called for each variable name or match expression.  */
+
+struct bfd_elf_version_expr *
+lang_new_vers_regex (orig, new)
+     struct bfd_elf_version_expr *orig;
+     const char *new;
+{
+  struct bfd_elf_version_expr *ret;
+
+  ret = (struct bfd_elf_version_expr *) xmalloc (sizeof *ret);
+  ret->next = orig;
+  ret->match = new;
+  return ret;
+}
+
+/* This is called for each set of variable names and match
+   expressions.  */
+
+struct bfd_elf_version_tree *
+lang_new_vers_node (globals, locals)
+     struct bfd_elf_version_expr *globals;
+     struct bfd_elf_version_expr *locals;
+{
+  struct bfd_elf_version_tree *ret;
+
+  ret = (struct bfd_elf_version_tree *) xmalloc (sizeof *ret);
+  ret->next = NULL;
+  ret->name = NULL;
+  ret->vernum = 0;
+  ret->globals = globals;
+  ret->locals = locals;
+  ret->deps = NULL;
+  ret->name_indx = (unsigned int) -1;
+  ret->used = 0;
+  return ret;
+}
+
+/* This static variable keeps track of version indices.  */
+
+static int version_index;
+
+/* This is called when we know the name and dependencies of the
+   version.  */
+
+void
+lang_register_vers_node (name, version, deps)
+     const char *name;
+     struct bfd_elf_version_tree *version;
+     struct bfd_elf_version_deps *deps;
+{
+  struct bfd_elf_version_tree *t, **pp;
+  struct bfd_elf_version_expr *e1;
+
+  /* Make sure this node has a unique name.  */
+  for (t = lang_elf_version_info; t != NULL; t = t->next)
+    if (strcmp (t->name, name) == 0)
+      einfo ("%X%P: duplicate version tag `%s'\n", name);
+
+  /* Check the global and local match names, and make sure there
+     aren't any duplicates.  */
+
+  for (e1 = version->globals; e1 != NULL; e1 = e1->next)
+    {
+      for (t = lang_elf_version_info; t != NULL; t = t->next)
+	{
+	  struct bfd_elf_version_expr *e2;
+
+	  for (e2 = t->globals; e2 != NULL; e2 = e2->next)
+	    if (strcmp (e1->match, e2->match) == 0)
+	      einfo ("%X%P: duplicate expression `%s' in version information\n",
+		     e1->match);
+
+	  for (e2 = t->locals; e2 != NULL; e2 = e2->next)
+	    if (strcmp (e1->match, e2->match) == 0)
+	      einfo ("%X%P: duplicate expression `%s' in version information\n",
+		     e1->match);
+	}
+    }
+
+  for (e1 = version->locals; e1 != NULL; e1 = e1->next)
+    {
+      for (t = lang_elf_version_info; t != NULL; t = t->next)
+	{
+	  struct bfd_elf_version_expr *e2;
+
+	  for (e2 = t->globals; e2 != NULL; e2 = e2->next)
+	    if (strcmp (e1->match, e2->match) == 0)
+	      einfo ("%X%P: duplicate expression `%s' in version information\n",
+		     e1->match);
+
+	  for (e2 = t->locals; e2 != NULL; e2 = e2->next)
+	    if (strcmp (e1->match, e2->match) == 0)
+	      einfo ("%X%P: duplicate expression `%s' in version information\n",
+		     e1->match);
+	}
+    }
+
+  version->deps = deps;
+  version->name = name;
+  ++version_index;
+  version->vernum = version_index;
+
+  for (pp = &lang_elf_version_info; *pp != NULL; pp = &(*pp)->next)
+    ;
+  *pp = version;
+}
+
+/* This is called when we see a version dependency.  */
+
+struct bfd_elf_version_deps *
+lang_add_vers_depend (list, name)
+     struct bfd_elf_version_deps *list;
+     const char *name;
+{
+  struct bfd_elf_version_deps *ret;
+  struct bfd_elf_version_tree *t;
+
+  ret = (struct bfd_elf_version_deps *) xmalloc (sizeof *ret);
+  ret->next = list;
+
+  for (t = lang_elf_version_info; t != NULL; t = t->next)
+    {
+      if (strcmp (t->name, name) == 0)
+	{
+	  ret->version_needed = t;
+	  return ret;
+	}
+    }
+
+  einfo ("%X%P: unable to find version dependency `%s'\n", name);
+
+  return ret;
 }

@@ -184,6 +184,9 @@ cisco_core_file_p (abfd)
 	  /* NAN                 */
 	case 54: abfd->tdata.cisco_core_data->sig = SIGFPE;  break;
 	default:
+#ifndef SIGEMT
+#define SIGEMT SIGTRAP
+#endif
 	  /* "software generated"*/
 	  abfd->tdata.cisco_core_data->sig = SIGEMT;
 	}

@@ -1,6 +1,5 @@
 /* BFD backend for Extended Tektronix Hex Format  objects.
-   Copyright (C) 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
-
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support <sac@cygnus.com>.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -100,6 +99,8 @@ static char sum_block[256];
 (d)[0] = digs[((x)>>4)&0xf];
 #define	ISHEX(x)  hex_p(x)
 
+static void tekhex_init PARAMS ((void));
+static bfd_vma getvalue PARAMS ((char **));
 static void tekhex_print_symbol
  PARAMS ((bfd *, PTR, asymbol *, bfd_print_symbol_type));
 static void tekhex_get_symbol_info PARAMS ((bfd *, asymbol *, symbol_info *));
@@ -986,7 +987,7 @@ tekhex_print_symbol (ignore_abfd, filep, symbol, how)
 #define tekhex_bfd_free_cached_info _bfd_generic_bfd_free_cached_info
 #define tekhex_new_section_hook _bfd_generic_new_section_hook
 
-#define tekhex_bfd_is_local_label bfd_generic_is_local_label
+#define tekhex_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define tekhex_get_lineno _bfd_nosymbols_get_lineno
 #define tekhex_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define tekhex_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

@@ -1,5 +1,5 @@
 /* ldwrite.c -- write out the linked file
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain sac@cygnus.com
 
 This file is part of GLD, the Gnu Linker.
@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "ldmain.h"
 
 static void build_link_order PARAMS ((lang_statement_union_type *));
+static asection *clone_section PARAMS ((bfd *, asection *, int *));
+static void split_sections PARAMS ((bfd *, struct bfd_link_info *));
 
 /* Build link_order structures for the BFD linker.  */
 
@@ -360,8 +362,7 @@ sanity_check (abfd)
 #define dump(a, b, c)
 #endif
 
-
-void 
+static void 
 split_sections (abfd, info)
      bfd *abfd;
      struct bfd_link_info *info;

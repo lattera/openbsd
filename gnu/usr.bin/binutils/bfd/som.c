@@ -1,5 +1,5 @@
 /* bfd back-end for HP PA-RISC SOM objects.
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
    Free Software Foundation, Inc.
 
    Contributed by the Center for Software Science at the
@@ -174,7 +174,7 @@ static boolean som_bfd_copy_private_section_data PARAMS ((bfd *, asection *,
 static boolean som_bfd_copy_private_bfd_data PARAMS ((bfd *, bfd *));
 #define som_bfd_merge_private_bfd_data _bfd_generic_bfd_merge_private_bfd_data
 #define som_bfd_set_private_flags _bfd_generic_bfd_set_private_flags
-static boolean som_bfd_is_local_label PARAMS ((bfd *, asymbol *));
+static boolean som_bfd_is_local_label_name PARAMS ((bfd *, const char *));
 static boolean som_set_section_contents PARAMS ((bfd *, sec_ptr, PTR,
 						 file_ptr, bfd_size_type));
 static boolean som_get_section_contents PARAMS ((bfd *, sec_ptr, PTR,
@@ -1448,8 +1448,8 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 {
   int *final_type, **final_types;
 
-  final_types = (int **) bfd_alloc_by_size_t (abfd, sizeof (int *) * 6);
-  final_type = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+  final_types = (int **) bfd_alloc (abfd, sizeof (int *) * 6);
+  final_type = (int *) bfd_alloc (abfd, sizeof (int));
   if (!final_types || !final_type)
     return NULL;
 
@@ -1473,7 +1473,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
       case e_tsel:
       case e_ltsel:
       case e_rtsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	if (field == e_tsel)
@@ -1489,7 +1489,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 
       case e_lssel:
       case e_rssel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_S_MODE;
@@ -1500,7 +1500,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 
       case e_lsel:
       case e_rsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_N_MODE;
@@ -1511,7 +1511,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 
       case e_ldsel:
       case e_rdsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_D_MODE;
@@ -1522,7 +1522,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 
       case e_lrsel:
       case e_rrsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_R_MODE;
@@ -1532,7 +1532,7 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 	break;
 
       case e_nsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_N1SEL;
@@ -1543,11 +1543,11 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
 
       case e_nlsel:
       case e_nlrsel:
-	final_types[0] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[0] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[0])
 	  return NULL;
 	*final_types[0] = R_N0SEL;
-	final_types[1] = (int *) bfd_alloc_by_size_t (abfd, sizeof (int));
+	final_types[1] = (int *) bfd_alloc (abfd, sizeof (int));
 	if (!final_types[1])
 	  return NULL;
 	if (field == e_nlsel)
@@ -1566,10 +1566,10 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
       /* The difference of two symbols needs *very* special handling.  */
       if (sym_diff)
 	{
-	  final_types[0] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[1] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[2] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[3] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
+	  final_types[0] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[1] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[2] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[3] = (int *)bfd_alloc (abfd, sizeof (int));
 	  if (!final_types[0] || !final_types[1] || !final_types[2])
             return NULL;
 	  if (field == e_fsel)
@@ -1644,10 +1644,10 @@ hppa_som_gen_reloc_type (abfd, base_type, format, field, sym_diff, sym)
       /* The difference of two symbols needs *very* special handling.  */
       if (sym_diff)
 	{
-	  final_types[0] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[1] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[2] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
-	  final_types[3] = (int *)bfd_alloc_by_size_t (abfd, sizeof (int));
+	  final_types[0] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[1] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[2] = (int *)bfd_alloc (abfd, sizeof (int));
+	  final_types[3] = (int *)bfd_alloc (abfd, sizeof (int));
 	  if (!final_types[0] || !final_types[1] || !final_types[2])
             return NULL;
 	  if (field == e_fsel)
@@ -2014,18 +2014,24 @@ setup_sections (abfd, file_hdr)
 	    goto error_return;
 	}
 
-      /* Yow! there is no subspace within the space which actually 
-         has initialized information in it; this should never happen
-         as far as I know.  */
+      /* This can happen for a .o which defines symbols in otherwise
+         empty subspaces.  */
       if (!save_subspace.file_loc_init_value)
-	goto error_return;
-
-      /* Setup the sizes for the space section based upon the info in the
-         last subspace of the space.  */
-      space_asect->_cooked_size = save_subspace.subspace_start
-	- space_asect->vma + save_subspace.subspace_length;
-      space_asect->_raw_size = save_subspace.file_loc_init_value
-	- space_asect->filepos + save_subspace.initialization_length;
+	{
+	  space_asect->_cooked_size = 0;
+	  space_asect->_raw_size = 0;
+	}
+      else
+	{
+	  /* Setup the sizes for the space section based upon the info in the
+	     last subspace of the space.  */
+	  space_asect->_cooked_size = (save_subspace.subspace_start
+				       - space_asect->vma
+				       + save_subspace.subspace_length);
+	  space_asect->_raw_size = (save_subspace.file_loc_init_value
+				    - space_asect->filepos
+				    + save_subspace.initialization_length);
+	}
     }
   /* Now that we've read in all the subspace records, we need to assign
      a target index to each subspace.  */
@@ -4243,11 +4249,11 @@ som_print_symbol (ignore_abfd, afile, symbol, how)
 }
 
 static boolean
-som_bfd_is_local_label (abfd, sym)
+som_bfd_is_local_label_name (abfd, name)
      bfd *abfd;
-     asymbol *sym;
+     const char *name;
 {
-  return (sym->name[0] == 'L' && sym->name[1] == '$');
+  return (name[0] == 'L' && name[1] == '$');
 }
 
 /* Count or process variable-length SOM fixup records.

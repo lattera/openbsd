@@ -1,5 +1,6 @@
 /* Object file "section" support for the BFD library.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -297,6 +298,12 @@ CODE_FRAGMENT
 .	   contents.  *}
 .#define SEC_LINK_DUPLICATES_SAME_CONTENTS 0x600000
 .
+.	{* This section was created by the linker as part of dynamic
+.	   relocation or other arcane processing.  It is skipped when
+.	   going through the first-pass output, trusting that someone
+.	   else up the line will take care of it later.  *}
+.#define SEC_LINKER_CREATED 0x800000
+.
 .	{*  End of section flags.  *}
 .
 .	{* Some internal packed boolean fields.  *}
@@ -552,7 +559,7 @@ DESCRIPTION
 	o <<bfd_error_invalid_operation>> -
 	If output has already started for this BFD.
 	o <<bfd_error_no_memory>> -
-	If obstack alloc fails.
+	If memory allocation fails.
 
 */
 
@@ -584,7 +591,7 @@ DESCRIPTION
 
    Return <<NULL>> and set <<bfd_error>> on error; possible errors are:
    o <<bfd_error_invalid_operation>> - If output has already started for @var{abfd}.
-   o <<bfd_error_no_memory>> - If obstack alloc fails.
+   o <<bfd_error_no_memory>> - If memory allocation fails.
 */
 
 sec_ptr

@@ -1,5 +1,5 @@
 /* BFD semi-generic back-end for a.out binaries.
-   Copyright 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -136,6 +136,9 @@ static boolean translate_from_native_sym_flags
   PARAMS ((bfd *, aout_symbol_type *));
 static boolean translate_to_native_sym_flags
   PARAMS ((bfd *, asymbol *, struct external_nlist *));
+static void adjust_o_magic PARAMS ((bfd *, struct internal_exec *));
+static void adjust_z_magic PARAMS ((bfd *, struct internal_exec *));
+static void adjust_n_magic PARAMS ((bfd *, struct internal_exec *));
 
 /*
 SUBSECTION
@@ -582,9 +585,20 @@ NAME(aout,some_aout_object_p) (abfd, execp, callback_to_real_object_p)
      guess at whether the file is executable.  If the entry point
      is within the text segment, assume it is.  (This makes files
      executable even if their entry point address is 0, as long as
-     their text starts at zero.).  */
-  if ((execp->a_entry >= obj_textsec(abfd)->vma) &&
-      (execp->a_entry < obj_textsec(abfd)->vma + obj_textsec(abfd)->_raw_size))
+     their text starts at zero.).
+
+     This test had to be changed to deal with systems where the text segment
+     runs at a different location than the default.  The problem is that the
+     entry address can appear to be outside the text segment, thus causing an
+     erroneous conclusion that the file isn't executable.
+
+     To fix this, we now accept any non-zero entry point as an indication of
+     executability.  This will work most of the time, since only the linker
+     sets the entry point, and that is likely to be non-zero for most systems. */
+
+  if (execp->a_entry != 0
+      || (execp->a_entry >= obj_textsec(abfd)->vma
+	  && execp->a_entry < obj_textsec(abfd)->vma + obj_textsec(abfd)->_raw_size))
     abfd->flags |= EXEC_P;
 #ifdef STAT_FOR_EXEC
   else
@@ -1236,7 +1250,7 @@ aout_get_external_symbols (abfd)
       syms = (struct external_nlist *) obj_aout_sym_window (abfd).data;
 #else
       /* We allocate using malloc to make the values easy to free
-	 later on.  If we put them on the obstack it might not be
+	 later on.  If we put them on the objalloc it might not be
 	 possible to free them.  */
       syms = ((struct external_nlist *)
 	      bfd_malloc ((size_t) count * EXTERNAL_NLIST_SIZE));
@@ -1941,6 +1955,9 @@ NAME(aout,get_symtab) (abfd, location)
 /* Standard reloc stuff */
 /* Output standard relocation information to a file in target byte order. */
 
+extern void  NAME(aout,swap_std_reloc_out)
+  PARAMS ((bfd *, arelent *, struct reloc_std_external *));
+
 void
 NAME(aout,swap_std_reloc_out) (abfd, g, natptr)
      bfd *abfd;
@@ -2035,6 +2052,9 @@ NAME(aout,swap_std_reloc_out) (abfd, g, natptr)
 
 /* Extended stuff */
 /* Output extended relocation information to a file in target byte order. */
+
+extern void NAME(aout,swap_ext_reloc_out)
+  PARAMS ((bfd *, arelent *, struct reloc_ext_external *));
 
 void
 NAME(aout,swap_ext_reloc_out) (abfd, g, natptr)
@@ -4262,10 +4282,8 @@ aout_link_write_symbols (finfo, input_bfd)
 		case discard_none:
 		  break;
 		case discard_l:
-		  if (*name == *finfo->info->lprefix
-		      && (finfo->info->lprefix_len == 1
-			  || strncmp (name, finfo->info->lprefix,
-				      finfo->info->lprefix_len) == 0))
+		  if ((type & N_STAB) == 0
+		      && bfd_is_local_label_name (input_bfd, name))
 		    skip = true;
 		  break;
 		case discard_all:

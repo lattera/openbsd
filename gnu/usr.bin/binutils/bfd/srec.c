@@ -1,5 +1,5 @@
 /* BFD back-end for s-record objects.
-   Copyright 1990, 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support <sac@cygnus.com>.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -109,6 +109,7 @@ DESCRIPTION
 #include "libiberty.h"
 #include <ctype.h>
 
+static void srec_get_symbol_info PARAMS ((bfd *, asymbol *, symbol_info *));
 static void srec_print_symbol
  PARAMS ((bfd *, PTR, asymbol *, bfd_print_symbol_type));
 static void srec_init PARAMS ((void));
@@ -333,6 +334,7 @@ srec_scan (abfd)
   bfd_byte *buf = NULL;
   size_t bufsize = 0;
   asection *sec = NULL;
+  char *symbuf = NULL;
 
   if (bfd_seek (abfd, (file_ptr) 0, SEEK_SET) != 0)
     goto error_return;
@@ -375,7 +377,8 @@ srec_scan (abfd)
 	case ' ':
 	  do
 	    {
-	      char *symname;
+	      unsigned int alc;
+	      char *p, *symname;
 	      bfd_vma symval;
 
 	      /* Starting a symbol definition.  */
@@ -392,23 +395,46 @@ srec_scan (abfd)
 		  goto error_return;
 		}
 
-	      obstack_1grow (&abfd->memory, c);
+	      alc = 10;
+	      symbuf = (char *) bfd_malloc (alc + 1);
+	      if (symbuf == NULL)
+		goto error_return;
+
+	      p = symbuf;
+
+	      *p++ = c;
 	      while ((c = srec_get_byte (abfd, &error)) != EOF
 		     && ! isspace (c))
-		obstack_1grow (&abfd->memory, c);
+		{
+		  if (p - symbuf >= alc)
+		    {
+		      char *n;
+
+		      alc *= 2;
+		      n = (char *) bfd_realloc (symbuf, alc + 1);
+		      if (n == NULL)
+			goto error_return;
+		      p = n + (p - symbuf);
+		      symbuf = n;
+		    }
+
+		  *p++ = c;
+		}
+
 	      if (c == EOF)
 		{
 		  srec_bad_byte (abfd, lineno, c, error);
 		  goto error_return;
 		}
 
-	      symname = obstack_finish (&abfd->memory);
+	      *p++ = '\0';
+	      symname = bfd_alloc (abfd, p - symbuf);
 	      if (symname == NULL)
-		{
-		  bfd_set_error (bfd_error_no_memory);
-		  goto error_return;
-		}
-      
+		goto error_return;
+	      strcpy (symname, symbuf);
+	      free (symbuf);
+	      symbuf = NULL;
+
 	      while ((c = srec_get_byte (abfd, &error)) != EOF
 		     && (c == ' ' || c == '\t'))
 		;
@@ -585,6 +611,8 @@ srec_scan (abfd)
   return true;
 
  error_return:
+  if (symbuf != NULL)
+    free (symbuf);
   if (buf != NULL)
     free (buf);
   return false;
@@ -1190,7 +1218,7 @@ srec_get_symtab (abfd, alocation)
 }
 
 /*ARGSUSED*/
-void
+static void
 srec_get_symbol_info (ignore_abfd, symbol, ret)
      bfd *ignore_abfd;
      asymbol *symbol;
@@ -1226,7 +1254,7 @@ srec_print_symbol (ignore_abfd, afile, symbol, how)
 #define srec_bfd_free_cached_info _bfd_generic_bfd_free_cached_info
 #define srec_new_section_hook _bfd_generic_new_section_hook
 
-#define srec_bfd_is_local_label bfd_generic_is_local_label
+#define srec_bfd_is_local_label_name bfd_generic_is_local_label_name
 #define srec_get_lineno _bfd_nosymbols_get_lineno
 #define srec_find_nearest_line _bfd_nosymbols_find_nearest_line
 #define srec_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol

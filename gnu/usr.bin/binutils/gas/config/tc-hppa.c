@@ -1,5 +1,5 @@
 /* tc-hppa.c -- Assemble for the PA
-   Copyright (C) 1989, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1996, 1997 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -418,7 +418,7 @@ struct default_space_dict
 struct hppa_fix_struct
   {
     /* The field selector.  */
-    enum hppa_reloc_field_selector_type fx_r_field;
+    enum hppa_reloc_field_selector_type_alt fx_r_field;
 
     /* Type of fixup.  */
     int fx_r_type;
@@ -544,14 +544,17 @@ static int is_end_of_statement PARAMS ((void));
 static int reg_name_search PARAMS ((char *));
 static int pa_chk_field_selector PARAMS ((char **));
 static int is_same_frag PARAMS ((fragS *, fragS *));
-static void pa_build_unwind_subspace PARAMS ((struct call_info *));
 static void process_exit PARAMS ((void));
 static sd_chain_struct *pa_parse_space_stmt PARAMS ((char *, int));
 static int log2 PARAMS ((int));
 static int pa_next_subseg PARAMS ((sd_chain_struct *));
 static unsigned int pa_stringer_aux PARAMS ((char *));
 static void pa_spaces_begin PARAMS ((void));
+
+#ifdef OBJ_ELF
 static void hppa_elf_mark_end_of_function PARAMS ((void));
+static void pa_build_unwind_subspace PARAMS ((struct call_info *));
+#endif
 
 /* File and gloally scoped variable declarations.  */
 
@@ -1196,7 +1199,7 @@ fix_new_hppa (frag, where, size, add_symbol, offset, exp, pcrel,
      expressionS *exp;
      int pcrel;
      bfd_reloc_code_real_type r_type;
-     enum hppa_reloc_field_selector_type r_field;
+     enum hppa_reloc_field_selector_type_alt r_field;
      int r_format;
      long arg_reloc;
      int* unwind_bits;
@@ -2619,8 +2622,7 @@ tc_gen_reloc (section, fixp)
   assert (hppa_fixp != 0);
   assert (section != 0);
 
-  reloc = (arelent *) bfd_alloc_by_size_t (stdoutput, sizeof (arelent));
-  assert (reloc != 0);
+  reloc = (arelent *) xmalloc (sizeof (arelent));
 
   reloc->sym_ptr_ptr = &fixp->fx_addsy->bsym;
   codes = (bfd_reloc_code_real_type **) hppa_gen_reloc_type (stdoutput,
@@ -2633,15 +2635,8 @@ tc_gen_reloc (section, fixp)
   for (n_relocs = 0; codes[n_relocs]; n_relocs++)
     ;
 
-  relocs = (arelent **)
-    bfd_alloc_by_size_t (stdoutput, sizeof (arelent *) * n_relocs + 1);
-  assert (relocs != 0);
-
-  reloc = (arelent *) bfd_alloc_by_size_t (stdoutput,
-					   sizeof (arelent) * n_relocs);
-  if (n_relocs > 0)
-    assert (reloc != 0);
-
+  relocs = (arelent **) xmalloc (sizeof (arelent *) * n_relocs + 1);
+  reloc = (arelent *) xmalloc (sizeof (arelent) * n_relocs);
   for (i = 0; i < n_relocs; i++)
     relocs[i] = &reloc[i];
 
@@ -2917,7 +2912,7 @@ md_apply_fix (fixP, valp)
 {
   char *buf = fixP->fx_where + fixP->fx_frag->fr_literal;
   struct hppa_fix_struct *hppa_fixP;
-  long new_val, result;
+  long new_val, result = 0;
   unsigned int w1, w2, w, resulti;
 
   hppa_fixP = (struct hppa_fix_struct *) fixP->tc_fix_data;
@@ -4049,7 +4044,7 @@ pa_block (z)
   temp_fill = 0;
 
   p = frag_var (rs_fill, (int) temp_size, (int) temp_size,
-		(relax_substateT) 0, (symbolS *) 0, 1, NULL);
+		(relax_substateT) 0, (symbolS *) 0, (offsetT) 1, NULL);
   bzero (p, temp_size);
 
   /* Convert 2 bytes at a time.  */
@@ -6115,6 +6110,7 @@ pa_subspace_start (space, quadrant)
      sd_chain_struct *space;
      int quadrant;
 {
+#ifdef OBJ_SOM
   /* FIXME.  Assumes everyone puts read/write data at 0x4000000, this
      is not correct for the PA OSF1 port.  */
   if ((strcmp (SPACE_NAME (space), "$PRIVATE$") == 0) && quadrant == 1)
@@ -6123,6 +6119,8 @@ pa_subspace_start (space, quadrant)
     return 0x40000000;
   else
     return 0;
+#endif
+  return 0;
 }
 
 /* FIXME.  Needs documentation.  */

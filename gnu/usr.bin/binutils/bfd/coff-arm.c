@@ -1,5 +1,5 @@
 /* BFD back-end for ARM COFF files.
-   Copyright 1990, 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright 1990, 91, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 
 #include "coff/arm.h"
 
@@ -296,6 +295,37 @@ coff_arm_rtype_to_howto (abfd, sec, rel, h, sym, addendp)
     {
       *addendp -= pe_data(sec->output_section->owner)->pe_opthdr.ImageBase;
     }
+
+  /* The relocation_section function will skip pcrel_offset relocs
+     when doing a relocateable link.  However, we want to convert
+     ARM26 to ARM26D relocs if possible.  We return a fake howto in
+     this case without pcrel_offset set, and adjust the addend to
+     compensate.  */
+  if (rel->r_type == 3
+      && h != NULL
+      && (h->root.type == bfd_link_hash_defined
+	  || h->root.type == bfd_link_hash_defweak)
+      && h->root.u.def.section->output_section == sec->output_section)
+    {
+      static reloc_howto_type fake_arm26_reloc = 
+	HOWTO (3,
+	       2,
+	       2,
+	       26,
+	       true,
+	       0,
+	       complain_overflow_signed,
+	       aoutarm_fix_pcrel_26 ,
+	       "ARM26",
+	       false,
+	       0x00ffffff,
+	       0x00ffffff, 
+	       false);
+
+      *addendp -= rel->r_vaddr - sec->vma;
+      return &fake_arm26_reloc;
+    }
+
   return howto;
 
 }
@@ -434,7 +464,16 @@ coff_arm_adjust_symndx (obfd, info, ibfd, sec, irel, adjustedp)
      boolean *adjustedp;
 {
   if (irel->r_type == 3)
-    irel->r_type = 7;
+    {
+      struct coff_link_hash_entry *h;
+
+      h = obj_coff_sym_hashes (ibfd)[irel->r_symndx];
+      if (h != NULL
+	  && (h->root.type == bfd_link_hash_defined
+	      || h->root.type == bfd_link_hash_defweak)
+	  && h->root.u.def.section->output_section == sec->output_section)
+	irel->r_type = 7;
+    }
   *adjustedp = false;
   return true;
 }

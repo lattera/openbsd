@@ -1,5 +1,5 @@
 /* Main program of GNU linker.
-   Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
    Written by Steve Chamberlain steve@cygnus.com
 
 This file is part of GLD, the Gnu Linker.
@@ -86,6 +86,7 @@ args_type command_line;
 
 ld_config_type config;
 
+static void remove_output PARAMS ((void));
 static boolean check_for_scripts_dir PARAMS ((char *dir));
 static boolean add_archive_element PARAMS ((struct bfd_link_info *, bfd *,
 					    const char *));
@@ -172,6 +173,16 @@ main (argc, argv)
 
   xatexit (remove_output);
 
+  /* Set the default BFD target based on the configured target.  Doing
+     this permits the linker to be configured for a particular target,
+     and linked against a shared BFD library which was configured for
+     a different target.  The macro TARGET is defined by Makefile.  */
+  if (! bfd_set_default_target (TARGET))
+    {
+      einfo ("%X%P: can't set BFD default target to `%s': %E\n", TARGET);
+      xexit (1);
+    }
+
   /* Initialize the data about options.  */
   trace_files = trace_file_tries = version_printed = false;
   whole_archive = false;
@@ -189,8 +200,6 @@ main (argc, argv)
   link_info.traditional_format = false;
   link_info.strip = strip_none;
   link_info.discard = discard_none;
-  link_info.lprefix_len = 1;
-  link_info.lprefix = "L";
   link_info.keep_memory = true;
   link_info.input_bfds = NULL;
   link_info.create_object_symbols_section = NULL;
@@ -387,7 +396,7 @@ main (argc, argv)
 		    }
 		}
 	      fclose (src);
-	      if (!fclose (dst))
+	      if (fclose (dst) == EOF)
 		{
 		  einfo ("%P: Error closing file `%s'\n", dst_name);
 		}
@@ -433,7 +442,7 @@ get_emulation (argc, argv)
   char *emulation;
   int i;
 
-  emulation = (char *) getenv (EMULATION_ENVIRON);
+  emulation = getenv (EMULATION_ENVIRON);
   if (emulation == NULL)
     emulation = DEFAULT_EMULATION;
 
@@ -796,8 +805,10 @@ multiple_definition (info, name, obfd, osec, oval, nbfd, nsec, nval)
      FIXME: It would be cleaner to somehow ignore symbols defined in
      sections which are being discarded.  */
   if ((osec->output_section != NULL
+       && ! bfd_is_abs_section (osec)
        && bfd_is_abs_section (osec->output_section))
       || (nsec->output_section != NULL
+	  && ! bfd_is_abs_section (nsec)
 	  && bfd_is_abs_section (nsec->output_section)))
     return true;
 

@@ -1,9 +1,7 @@
-/* tc-arm.c  All the arm specific stuff in one convenient, huge,
-   slow to compile, easy to find file.
+/* tc-arm.c -- Assemble for the ARM
+   Copyright (C) 1994, 95, 96, 1997 Free Software Foundation, Inc.
    Contributed by Richard Earnshaw (rwe@pegasus.esprit.ec.org)
 	Modified by David Taylor (dtaylor@armltd.co.uk)
-
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -18,8 +16,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #include <ctype.h>
 #include <string.h>
@@ -1033,7 +1032,7 @@ s_even (ignore)
      int ignore;
 {
   if (!need_pass_2)		/* Never make frag if expect extra pass. */
-    frag_align (1, 0);
+    frag_align (1, 0, 0);
   record_alignment (now_seg, 1);
   demand_empty_rest_of_line ();
 }
@@ -1056,7 +1055,7 @@ s_ltorg (internal)
   /* Align pool as you have word accesses */
   /* Only make a frag if we have to ... */
   if (!need_pass_2)
-    frag_align (2, 0);
+    frag_align (2, 0, 0);
 
   record_alignment (now_seg, 2);
 
@@ -1085,7 +1084,7 @@ arm_align (power, fill)
 {
   /* Only make a frag if we HAVE to ... */
   if (power && !need_pass_2)
-    frag_align (power, fill);
+    frag_align (power, fill, 0);
 
   record_alignment (now_seg, power);
 }
@@ -1121,7 +1120,7 @@ s_align (unused)	/* Same as s_align_ptwo but align 0 => align 2 */
 
   /* Only make a frag if we HAVE to. . . */
   if (temp && !need_pass_2)
-    frag_align (temp, (int) temp_fill);
+    frag_align (temp, (int) temp_fill, 0);
   demand_empty_rest_of_line ();
 
   record_alignment (now_seg, temp);
@@ -1152,7 +1151,7 @@ opcode_select (width)
 	    as_bad ("selected processor does not support ARM opcodes");
 	  thumb_mode = 0;
           if (!need_pass_2)
-            frag_align (2, 0);
+            frag_align (2, 0, 0);
           record_alignment (now_seg, 1);
 	}
       break;
@@ -5222,8 +5221,7 @@ tc_gen_reloc (section, fixp)
   arelent *reloc;
   bfd_reloc_code_real_type code;
 
-  reloc = (arelent *) bfd_alloc_by_size_t (stdoutput, sizeof (arelent));
-  assert (reloc != 0);
+  reloc = (arelent *) xmalloc (sizeof (arelent));
 
   reloc->sym_ptr_ptr = &fixp->fx_addsy->bsym;
   reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
@@ -5832,22 +5830,8 @@ fix_new_arm (frag, where, size, exp, pc_rel, reloc)
       break;
 
     default:
-      {
-	const char *fake;
-	symbolS *symbolP;
-	
-	/* FIXME: This should be something which decode_local_label_name
-	   will handle.  */
-	fake = FAKE_LABEL_NAME;
-
-	/* Putting constant symbols in absolute_section rather than
-	   expr_section is convenient for the old a.out code, for which
-	   S_GET_SEGMENT does not always retrieve the value put in by
-	   S_SET_SEGMENT.  */
-	symbolP = symbol_new (fake, expr_section, 0, &zero_address_frag);
-	symbolP->sy_value = *exp;
-	new_fix = fix_new (frag, where, size, symbolP, 0, pc_rel, reloc);
-      }
+      new_fix = fix_new (frag, where, size, make_expr_symbol (exp), 0,
+			 pc_rel, reloc);
       break;
     }
 

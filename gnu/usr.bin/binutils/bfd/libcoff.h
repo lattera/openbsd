@@ -1,5 +1,6 @@
 /* BFD COFF object file private structure.
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 1997
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 ** NOTE: libcoff.h is a GENERATED file.  Don't change it; instead,
@@ -296,6 +297,7 @@ extern void coff_print_symbol PARAMS ((bfd *, PTR filep, asymbol *,
 				       bfd_print_symbol_type how));
 extern void coff_get_symbol_info PARAMS ((bfd *, asymbol *,
 					  symbol_info *ret));
+extern boolean _bfd_coff_is_local_label_name PARAMS ((bfd *, const char *));
 extern asymbol *coff_bfd_make_debug_symbol PARAMS ((bfd *, PTR,
 						    unsigned long));
 extern boolean coff_find_nearest_line PARAMS ((bfd *,
@@ -505,6 +507,13 @@ extern boolean _bfd_ppc_xcoff_relocate_section
   PARAMS ((bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
 	   struct internal_reloc *, struct internal_syment *, asection **));
 
+/* Functions in coff-ppc.c.  FIXME: These are called be pe.em in the
+   linker, and so should start with bfd and be declared in bfd.h.  */
+
+extern boolean ppc_allocate_toc_section PARAMS ((struct bfd_link_info *));
+extern boolean ppc_process_before_allocation
+  PARAMS ((bfd *, struct bfd_link_info *));
+
 /* And more taken from the source .. */
 
 typedef struct coff_ptr_struct
@@ -630,6 +639,7 @@ typedef struct
  unsigned int _bfd_linesz;
  boolean _bfd_coff_long_filenames;
  boolean _bfd_coff_long_section_names;
+ unsigned int _bfd_coff_default_section_alignment_power;
  void (*_bfd_coff_swap_filehdr_in) PARAMS ((
        bfd     *abfd,
        PTR     ext,
@@ -699,7 +709,7 @@ typedef struct
  boolean (*_bfd_coff_sym_is_global) PARAMS ((
        bfd *abfd,
        struct internal_syment *));
- void (*_bfd_coff_compute_section_file_positions) PARAMS ((
+ boolean (*_bfd_coff_compute_section_file_positions) PARAMS ((
        bfd *abfd));
  boolean (*_bfd_coff_start_final_link) PARAMS ((
        bfd *output_bfd,
@@ -783,6 +793,8 @@ typedef struct
 #define bfd_coff_long_filenames(abfd) (coff_backend_info (abfd)->_bfd_coff_long_filenames)
 #define bfd_coff_long_section_names(abfd) \
         (coff_backend_info (abfd)->_bfd_coff_long_section_names)
+#define bfd_coff_default_section_alignment_power(abfd) \
+	 (coff_backend_info (abfd)->_bfd_coff_default_section_alignment_power)
 #define bfd_coff_swap_filehdr_in(abfd, i,o) \
         ((coff_backend_info (abfd)->_bfd_coff_swap_filehdr_in) (abfd, i, o))
 

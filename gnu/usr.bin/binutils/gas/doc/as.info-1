@@ -1,4 +1,4 @@
-This is Info file as.info, produced by Makeinfo-1.55 from the input
+This is Info file as.info, produced by Makeinfo-1.64 from the input
 file ./as.texinfo.
 
 START-INFO-DIR-ENTRY
@@ -7,8 +7,8 @@ END-INFO-DIR-ENTRY
 
    This file documents the GNU Assembler "as".
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation,
-Inc.
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
+Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -24,7 +24,7 @@ manual into another language, under the above conditions for modified
 versions.
 
 
-File: as.info,  Node: Top,  Next: Overview,  Prev: (DIR),  Up: (DIR)
+File: as.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 Using as
 ********
@@ -41,6 +41,7 @@ Using as
 * Expressions::                 Expressions
 * Pseudo Ops::                  Assembler Directives
 * Machine Dependencies::        Machine Dependent Features
+* Reporting Bugs::              Reporting Bugs
 * Acknowledgements::            Who Did What
 * Index::                       Index
 
@@ -53,11 +54,14 @@ Overview
    Here is a brief summary of how to invoke `as'.  For details, *note
 Comand-Line Options: Invoking..
 
-     as [ -a[dhlns][=file] ] [ -D ]  [ --defsym SYM=VAL ]
+     as [ -a[cdhlns][=file] ] [ -D ]  [ --defsym SYM=VAL ]
       [ -f ] [ --help ] [ -I DIR ] [ -J ] [ -K ] [ -L ]
       [ -o OBJFILE ] [ -R ] [ --statistics ] [ -v ] [ -version ]
       [ --version ] [ -W ] [ -w ] [ -x ] [ -Z ]
-      [ -Av6 | -Av7 | -Av8 | -Av9 | -Asparclite | -bump ]
+      [ -O ]
+     
+      [ -Av6 | -Av7 | -Av8 | -Asparclet | -Asparclite | -Av9 | -Av9a ]
+      [ -xarch=v8plus | -xarch=v8plusa ] [ -bump ]
       [ -ACA | -ACA_A | -ACB | -ACC | -AKA | -AKB | -AKC | -AMC ]
       [ -b ] [ -no-relax ]
       [ -l ] [ -m68000 | -m68010 | -m68020 | ... ]
@@ -99,7 +103,7 @@ Comand-Line Options: Invoking..
 
 `--defsym SYM=VALUE'
      Define the symbol SYM to be VALUE before assembling the input file.
-     vALUE must be an integer constant.  As in C, a leading `0x'
+     VALUE must be an integer constant.  As in C, a leading `0x'
      indicates a hexadecimal value, and a leading `0' indicates an
      octal value.
 
@@ -155,6 +159,11 @@ Comand-Line Options: Invoking..
 `-- | FILES ...'
      Standard input, or source files to assemble.
 
+   The following options are available when as is configured for a D10V
+processor.
+`-O'
+     Optimize output by parallelizing instructions.
+
    The following options are available when as is configured for the
 Intel 80960 processor.
 
@@ -175,8 +184,8 @@ Motorola 68000 series.
      Shorten references to undefined symbols, to one word instead of
      two.
 
-`-m68000 | -m68008 | -m68010 | -m68020 | -m68030 | -m68040'
-`| -m68302 | -m68331 | -m68332 | -m68333 | -m68340 | -mcpu32'
+`-m68000 | -m68008 | -m68010 | -m68020 | -m68030 | -m68040 | -m68060'
+`| -m68302 | -m68331 | -m68332 | -m68333 | -m68340 | -mcpu32 | -m5200'
      Specify what processor in the 68000 family is the target.  The
      default is normally the 68020, but this can be changed at
      configuration time.
@@ -197,8 +206,12 @@ Motorola 68000 series.
    The following options are available when `as' is configured for the
 SPARC architecture:
 
-`-Av6 | -Av7 | -Av8 | -Av9 | -Asparclite'
+`-Av6 | -Av7 | -Av8 | -Asparclet | -Asparclite | -Av9 | -Av9a'
      Explicitly select a variant of the SPARC architecture.
+
+`-xarch=v8plus | -xarch=v8plusa'
+     For compatibility with the Solaris v9 assembler.  These options are
+     equivalent to -Av9 and -Av9a, respectively.
 
 `-bump'
      Warn when the assembler switches to another architecture.
@@ -278,7 +291,7 @@ processor.
 * Menu:
 
 * Manual::                      Structure of this Manual
-* GNU Assembler::               as, the GNU Assembler
+* GNU Assembler::               The GNU Assembler
 * Object Formats::              Object File Formats
 * Command Line::                Command Line
 * Input Files::                 Input Files
@@ -310,8 +323,8 @@ machine architecture manual for this information.
 
 File: as.info,  Node: GNU Assembler,  Next: Object Formats,  Prev: Manual,  Up: Overview
 
-as, the GNU Assembler
-=====================
+The GNU Assembler
+=================
 
    GNU `as' is really a family of assemblers.  If you use (or have
 used) the GNU assembler on one architecture, you should find a fairly
@@ -498,7 +511,7 @@ pass, including the assembler.)
 
 * Menu:
 
-* a::             -a[dhlns] enable listings
+* a::             -a[cdhlns] enable listings
 * D::             -D for compatibility
 * f::             -f to work faster
 * I::             -I for .include search path
@@ -517,8 +530,8 @@ pass, including the assembler.)
 
 File: as.info,  Node: a,  Next: D,  Up: Invoking
 
-Enable Listings: `-a[dhlns]'
-============================
+Enable Listings: `-a[cdhlns]'
+=============================
 
    These options enable listing output from the assembler.  By itself,
 `-a' requests high-level, assembly, and symbols listing.  You can use
@@ -527,6 +540,11 @@ high-level language listing, `-al' requests an output-program assembly
 listing, and `-as' requests a symbol table listing.  High-level
 listings require that a compiler debugging option like `-g' be used,
 and that assembly listings (`-al') be requested also.
+
+   Use the `-ac' option to omit false conditionals from a listing.  Any
+lines which are not assembled because of a false `.if' (or `.ifdef', or
+any other conditional), or a true `.if' followed by an `.else', will be
+omitted from the listing.
 
    Use the `-ad' option to omit debugging directives from the listing.
 
@@ -620,8 +638,9 @@ changes the syntax and pseudo-op handling of `as' to make it compatible
 with the `ASM68K' or the `ASM960' (depending upon the configured
 target) assembler from Microtec Research.  The exact nature of the MRI
 syntax will not be documented here; see the MRI manuals for more
-information.  The purpose of this option is to permit assembling
-existing MRI assembler code using `as'.
+information.  Note in particular that the handling of macros and macro
+arguments is somewhat different.  The purpose of this option is to
+permit assembling existing MRI assembler code using `as'.
 
    The MRI compatibility is not complete.  Certain operations of the
 MRI assembler depend upon its object file format, and can not be
@@ -912,11 +931,11 @@ you may not nest these comments.
      /* This sort of comment does not nest. */
 
    Anything from the "line comment" character to the next newline is
-considered a comment and is ignored.  The line comment character is `#'
-on the Vax; `#' on the i960; `!' on the SPARC; `|' on the 680x0; `;'
+considered a comment and is ignored.  The line comment character is `;'
 for the AMD 29K family; `;' for the H8/300 family; `!' for the H8/500
-family; `;' for the HPPA; `!' for the Hitachi SH; `!' for the Z8000;
-see *Note Machine Dependencies::.
+family; `;' for the HPPA; `#' on the i960; `!' for the Hitachi SH; `!'
+on the SPARC; `|' on the 680x0; `#' on the Vax; `!' for the Z8000; see
+*Note Machine Dependencies::.
 
    On some machines there are two different line comment characters.
 One character only begins a comment if it is the first non-whitespace
@@ -1074,8 +1093,8 @@ of escapes follows.
      digits: for example, `\008' has the value 010, and `\009' the
      value 011.
 
-`\`x' HEX-DIGIT HEX-DIGIT'
-     A hex character code.  The numeric code is 2 hexadecimal digits.
+`\`x' HEX-DIGITS...'
+     A hex character code.  All trailing hex digits are combined.
      Either upper or lower case `x' works.
 
 `\\'
@@ -1225,8 +1244,8 @@ Sections and Relocation
 * Menu:
 
 * Secs Background::             Background
-* Ld Sections::                 ld Sections
-* As Sections::                 as Internal Sections
+* Ld Sections::                 Linker Sections
+* As Sections::                 Assembler Internal Sections
 * Sub-Sections::                Sub-Sections
 * bss::                         bss Section
 

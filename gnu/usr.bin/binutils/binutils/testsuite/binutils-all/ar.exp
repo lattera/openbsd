@@ -1,4 +1,4 @@
-#   Copyright (C) 1995 Free Software Foundation, Inc.
+#   Copyright (C) 1995, 1997 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,14 +38,35 @@ proc long_filenames { } {
     set n2 "abcdefghijklmnopqrstuvwxyz2"
 
     binutils_remove tmpdir/$n1
-    set f [open tmpdir/$n1 w]
+    set status [catch "set f [open tmpdir/$n1 w]" errs]
+    if { $status != 0 } {
+	verbose -log "open tmpdir/$n1 returned $errs"
+	unsupported $testname
+	return
+    }
     puts $f "first"
     close $f
 
     binutils_remove tmpdir/$n2
-    set f [open tmpdir/$n2 w]
+    set status [catch "set f [open tmpdir/$n2 w]" errs]
+    if { $status != 0 } {
+	verbose -log "open tmpdir/$n2 returned $errs"
+	unsupported $testname
+	return
+    }
     puts $f "second"
     close $f
+
+    # Some file systems truncate file names at 14 characters, which
+    # makes it impossible to run this test.  Check for that now.
+    set f [open tmpdir/$n1 r]
+    gets $f string
+    close $f
+    if ![string match "first" $string] {
+	verbose -log "reading tmpdir/$n1 returned $string"
+	unsupported $testname
+	return
+    }
 
     binutils_remove tmpdir/artest.a
     set got [binutils_run $AR "rc tmpdir/artest.a tmpdir/$n1 tmpdir/$n2"]
@@ -63,9 +84,9 @@ proc long_filenames { } {
 	return
     }
 
-    verbose -log "cd tmpdir; $AR x artest.a"
-    catch "exec /bin/sh -c \"cd tmpdir; $AR x artest.a\"" exec_output
-    set exec_output [prune_system_crud $host_triplet $exec_output]
+    verbose -log "cd ./tmpdir; $AR x artest.a"
+    catch "exec /bin/sh -c \"cd ./tmpdir; $AR x artest.a\"" exec_output
+    set exec_output [prune_warnings $exec_output]
     if ![string match "" $exec_output] {
 	verbose -log $exec_output
 	fail $testname

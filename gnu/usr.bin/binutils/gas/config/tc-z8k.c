@@ -1,5 +1,5 @@
 /* tc-z8k.c -- Assemble code for the Zilog Z800n
-   Copyright (C) 1992 Free Software Foundation.
+   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,8 +14,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 /*
   Written By Steve Chamberlain
@@ -71,7 +72,7 @@ static
 void
 even ()
 {
-  frag_align (1, 0);
+  frag_align (1, 0, 0);
   record_alignment (now_seg, 1);
 }
 

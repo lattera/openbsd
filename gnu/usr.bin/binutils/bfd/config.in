@@ -54,9 +54,6 @@
 /* Define if you have the sysconf function.  */
 #undef HAVE_SYSCONF
 
-/* Define if you have the valloc function.  */
-#undef HAVE_VALLOC
-
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
