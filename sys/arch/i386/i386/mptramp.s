@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mptramp.s,v 1.1.2.2 2001/07/16 23:05:35 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mptramp.s,v 1.1.2.3 2001/10/27 22:43:48 niklas Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -190,17 +190,21 @@ _TRMP_LABEL(mp_startup)
 #endif
 	HALT(0x7)
 	movw    $((NGDT*8) - 1), ngdt_table	# prepare segment descriptor
-	movl    _C_LABEL(gdt), %eax		# for real gdt
+	leal    _C_LABEL(gdt), %eax		# for real gdt
 	movl    %eax, ngdt_table+2
+	HALTT(0x8, %eax)	
 	lgdt	ngdt_table
-	HALT(0x8)	
+	HALT(0x9)	
 	jmp	1f
 	nop
 1:	
-	HALT(0x12)
+	HALT(0xa)
 	movl    $GSEL(GDATA_SEL, SEL_KPL),%eax 	#switch to new segment
+	HALTT(0x10, %eax)
 	movl    %ax,%ds
+	HALT(0x11)
 	movl    %ax,%es
+	HALT(0x12)
 	movl    %ax,%ss
 	HALT(0x13)
 	pushl   $GSEL(GCODE_SEL, SEL_KPL)
@@ -216,7 +220,7 @@ _TRMP_LABEL(gdt_desc)
 	.word   0x17             # limit 3 entries
 	.long   gdt_table              # where is is gdt
 _TRMP_LABEL(ngdt_table)   
-	.long  0		# filled in after paging in enabled
+	.word  0		# filled in after paging in enabled
 	.long  0
 	.align 4,0x0
 _C_LABEL(cpu_spinup_trampoline_end):	#end of code copied to MP_TRAMPOLINE
