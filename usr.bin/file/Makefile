@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.6 1994/12/22 12:29:47 cgd Exp $
+#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:45:08 deraadt Exp $
 
 MAGIC=		/etc/magic
 MAGICOWN=	bin
@@ -16,7 +16,7 @@ all:		file magic
 
 MAGFILES=	$(.CURDIR)/magdir/Header\
 		$(.CURDIR)/magdir/Localstuff\
-		$(.CURDIR)/magdir/NetBSD\
+		$(.CURDIR)/magdir/OpenBSD\
 		$(.CURDIR)/magdir/[a-z]*
 magic:		$(MAGFILES)
 	cat $(MAGFILES) > $(.TARGET)
