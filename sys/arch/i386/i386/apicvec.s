@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/arch/i386/i386/apicvec.s,v 1.1.2.2 2001/07/16 21:39:06 niklas Exp $ */	
 /* $NetBSD: apicvec.s,v 1.1.2.2 2000/02/21 21:54:01 sommerfeld Exp $ */	
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/i82093var.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/i82093var.h,v 1.1.2.3 2001/07/16 21:39:06 niklas Exp $	*/
 /* $NetBSD: i82093var.h,v 1.1.2.3 2000/02/27 20:26:06 sommerfeld Exp $ */
 
 /*-
@@ -83,14 +83,14 @@ struct ioapic_softc {
 #define APIC_IRQ_APIC(x) ((x & APIC_INT_APIC_MASK) >> APIC_INT_APIC_SHIFT)
 #define APIC_IRQ_PIN(x) ((x & APIC_INT_PIN_MASK) >> APIC_INT_PIN_SHIFT)
 
-void *apic_intr_establish __P((int, int, int, int (*)(void *), void *)); 
-void apic_intr_disestablish __P((void *));
+void   *apic_intr_establish(int, int, int, int (*)(void *), void *, char *); 
+void	apic_intr_disestablish(void *);
 
-void ioapic_print_redir (struct ioapic_softc *, char *, int);
-void ioapic_format_redir (char *, char *, int, u_int32_t, u_int32_t);
+void	ioapic_print_redir(struct ioapic_softc *, char *, int);
+void	ioapic_format_redir(char *, char *, int, u_int32_t, u_int32_t);
 
-void ioapic_enable __P((void));
-void lapic_vectorset __P((void)); /* XXX */
+void	ioapic_enable(void);
+void	lapic_vectorset(void); /* XXX */
 
 extern int ioapic_bsp_id;
 

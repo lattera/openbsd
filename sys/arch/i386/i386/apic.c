@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apic.c,v 1.1.2.2 2001/07/15 15:10:54 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apic.c,v 1.1.2.3 2001/07/16 21:39:06 niklas Exp $	*/
 /* $NetBSD: apic.c,v 1.1.2.2 2000/02/21 18:51:00 sommerfeld Exp $ */
 
 /*-
@@ -64,7 +64,8 @@ const char redirhifmt[] = "\177\20"
 /* XXX; currently put in mpbios.c. Move or rewrite. */
 char *bitmask_snprintf(u_quad_t, const char *, char *, size_t);
 
-void apic_format_redir (where1, where2, idx, redirhi, redirlo)
+void
+apic_format_redir(where1, where2, idx, redirhi, redirlo)
 	char *where1;
 	char *where2;
 	int idx;
