@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.9 2004/03/14 22:08:20 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.10 2004/06/09 15:45:08 deraadt Exp $	*/
 /*	$NetBSD: mpbios.c,v 1.2 2002/10/01 12:56:57 fvdl Exp $	*/
 
 /*-
@@ -156,9 +156,6 @@ struct mp_map
 	int		psize;
 };
 
-/* XXX */
-char   *bitmask_snprintf(u_quad_t, const char *, char *, size_t);
-
 int	mp_print(void *, const char *);
 int	mp_match(struct device *, void *, void *);
 int	mpbios_cpu_start(struct cpu_info *);
@@ -223,149 +220,10 @@ mp_match(parent, cfv, aux)
 	return ((*cf->cf_attach->ca_match)(parent, cf, aux));
 }
 
-/* -------------- XXX XXX XXX - rewrite ! */
-
-char *
-bitmask_snprintf(val, p, buf, buflen)
-        u_quad_t val;
-        const char *p;
-        char *buf;
-        size_t buflen;
-{
-        char *bp, *q;
-        size_t left;
-#define KPRINTF_BUFSIZE              (sizeof(quad_t) * NBBY / 3 + 2)
-        char *sbase, snbuf[KPRINTF_BUFSIZE];
-        int base, bit, ch, len, sep;
-        u_quad_t field;
-
-        bp = buf;
-        memset(buf, 0, buflen);
-
-        /*
-         * Always leave room for the trailing NULL.
-         */
-        left = buflen - 1;
-
-        /*
-         * Print the value into the buffer.  Abort if there's not
-         * enough room.
-         */
-        if (buflen < KPRINTF_BUFSIZE)
-                return (buf);
-
-        ch = *p++;
-        base = ch != '\177' ? ch : *p++;
-        sbase = base == 8 ? "%qo" : base == 10 ? "%qd" : base == 16 ? "%qx" : 0;
-        if (sbase == 0)
-                return (buf);   /* punt if not oct, dec, or hex */
-
-        snprintf(snbuf, sizeof snbuf, sbase, val);
-        for (q = snbuf ; *q ; q++) {
-                *bp++ = *q;
-                left--;
-        }
-
-        /*
-         * If the value we printed was 0 and we're using the old-style format,
-         * or if we don't have room for "<x>", we're done.
-         */
-        if (((val == 0) && (ch != '\177')) || left < 3)
-                return (buf);
-
-#define PUTBYTE(b, c, l)        \
-        *(b)++ = (c);           \
-        if (--(l) == 0)         \
-                goto out;
-#define PUTSTR(b, p, l) do {            \
-        int c;                          \
-        while ((c = *(p)++) != 0) {     \
-                *(b)++ = c;             \
-                if (--(l) == 0)         \
-                        goto out;       \
-        }                               \
-} while (0)
-
-        /*
-         * Chris Torek's new style %b format is identified by a leading \177
-         */
-        sep = '<';
-        if (ch != '\177') {
-                /* old (standard) %b format. */
-                for (;(bit = *p++) != 0;) {
-                        if (val & (1 << (bit - 1))) {
-                                PUTBYTE(bp, sep, left);
-                                for (; (ch = *p) > ' '; ++p) {
-                                        PUTBYTE(bp, ch, left);
-                                }
-                                sep = ',';
-                        } else
-                                for (; *p > ' '; ++p)
-                                        continue;
-                }
-        } else {
-                /* new quad-capable %b format; also does fields. */
-                field = val;
-                while ((ch = *p++) != '\0') {
-                        bit = *p++;     /* now 0-origin */
-                        switch (ch) {
-                        case 'b':
-                                if (((u_int)(val >> bit) & 1) == 0)
-                                        goto skip;
-                                PUTBYTE(bp, sep, left);
-                                PUTSTR(bp, p, left);
-                                sep = ',';
-                                break;
-                        case 'f':
-                        case 'F':
-                                len = *p++;     /* field length */
-                                field = (val >> bit) & ((1ULL << len) - 1);
-                                if (ch == 'F')  /* just extract */
-                                        break;
-                                PUTBYTE(bp, sep, left);
-                                sep = ',';
-                                PUTSTR(bp, p, left);
-                                PUTBYTE(bp, '=', left);
-                                snprintf(snbuf, sizeof snbuf, sbase, field);
-                                q = snbuf; PUTSTR(bp, q, left);
-                                break;
-                        case '=':
-                        case ':':
-                                /*
-                                 * Here "bit" is actually a value instead,
-                                 * to be compared against the last field.
-                                 * This only works for values in [0..255],
-                                 * of course.
-                                 */
-                                if ((int)field != bit)
-                                        goto skip;
-                                if (ch == '=')
-                                        PUTBYTE(bp, '=', left);
-                                PUTSTR(bp, p, left);
-                                break;
-                        default:
-                        skip:
-                                while (*p++ != '\0')
-                                        continue;
-                                break;
-                        }
-                }
-        }
-        if (sep != '<')
-                PUTBYTE(bp, '>', left);
-
-out:
-        return (buf);
-
-#undef PUTBYTE
-#undef PUTSTR
-}
-
 /*
  * Map a chunk of memory read-only and return an appropriately
  * const'ed pointer.
  */
-
 const void *
 mpbios_map(pa, len, handle)
 	paddr_t pa;
@@ -1229,8 +1087,6 @@ mpbios_int(ent, enttype, mpi)
 		}
 	}
 	if (mp_verbose) {
-		char buf[256];
-
 		printf("%s: int%d attached to %s",
 		    sc ? sc->sc_dev.dv_xname : "local apic", pin,
 		    mpb->mb_name);
@@ -1241,10 +1097,7 @@ mpbios_int(ent, enttype, mpi)
 
 		(*(mpb->mb_intr_print))(dev);
 
-		printf(" (type %s",
-		    bitmask_snprintf(type, inttype_fmt, buf, sizeof(buf)));
-
-		printf(" flags %s)\n",
-		    bitmask_snprintf(flags, flagtype_fmt, buf, sizeof(buf)));
+		printf(" (type %b flags %b)\n", type, inttype_fmt,
+		    flags, flagtype_fmt);
 	}
 }
