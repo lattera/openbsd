@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/powerpc/ramdisk/Attic/install.md,v 1.25 2001/06/23 19:44:54 deraadt Exp $
+#	$OpenBSD: src/distrib/macppc/ramdisk/install.md,v 1.1 2001/09/01 16:47:03 drahn Exp $
 #
 #
 # Copyright rc) 1996 The NetBSD Foundation, Inc.

@@ -1,4 +1,4 @@
-#       $OpenBSD: src/distrib/powerpc/ramdisk/Attic/dot.profile,v 1.6 2001/06/23 19:44:54 deraadt Exp $
+#       $OpenBSD: src/distrib/macppc/ramdisk/Attic/dot.profile,v 1.1 2001/09/01 16:47:03 drahn Exp $
 #
 # Copyright (c) 1994 Christopher G. Demetriou
 # All rights reserved.

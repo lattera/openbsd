@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/powerpc/ramdisk/Attic/Makefile,v 1.18 2001/07/11 05:23:58 drahn Exp $
+#	$OpenBSD: src/distrib/macppc/ramdisk/Makefile,v 1.1 2001/09/01 16:47:03 drahn Exp $
 
 TOP=		${.CURDIR}/..
 
