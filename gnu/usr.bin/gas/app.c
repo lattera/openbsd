@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/app.c,v 1.2 1998/02/15 18:48:40 niklas Exp $	*/
+
 /* This is the Assembler Pre-Processor
    Copyright (C) 1987, 1990, 1991, 1992, 1994 Free Software Foundation, Inc.
 
@@ -24,7 +26,7 @@
    pair.  This needs better error-handling.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: app.c,v 1.6 1994/08/24 20:12:01 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/app.c,v 1.2 1998/02/15 18:48:40 niklas Exp $";
 #endif
 
 #include <stdio.h>

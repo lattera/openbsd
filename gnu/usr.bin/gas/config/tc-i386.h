@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/tc-i386.h,v 1.2 1998/02/15 18:49:35 niklas Exp $	*/
+
 /* tc-i386.h -- Header file for tc-i386.c
    Copyright (C) 1989, 1992 Free Software Foundation.
    
@@ -16,10 +18,6 @@
    You should have received a copy of the GNU General Public License
    along with GAS; see the file COPYING.  If not, write to
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-
-/*
- * $Id: tc-i386.h,v 1.3 1994/08/24 20:04:35 pk Exp $
- */
 
 #ifndef TC_I386
 #define TC_I386 1

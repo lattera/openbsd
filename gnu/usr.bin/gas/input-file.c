@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/input-file.c,v 1.2 1998/02/15 18:48:51 niklas Exp $	*/
+
 /* input_file.c - Deal with Input Files -
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -25,7 +27,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: input-file.c,v 1.3 1993/10/02 20:57:37 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/input-file.c,v 1.2 1998/02/15 18:48:51 niklas Exp $";
 #endif
 
 #ifdef USG

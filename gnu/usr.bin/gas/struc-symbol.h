@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/struc-symbol.h,v 1.2 1998/02/15 18:48:59 niklas Exp $	*/
+
 /* struct_symbol.h - Internal symbol structure
    Copyright (C) 1987, 1992 Free Software Foundation, Inc.
    
@@ -16,10 +18,6 @@
    oYou should have received a copy of the GNU General Public License
    along with GAS; see the file COPYING.  If not, write to
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-/*
- * $Id: struc-symbol.h,v 1.8 1994/12/18 16:12:45 pk Exp $
- */
-
 
 #ifndef __struc_symbol_h__
 #define __struc_symbol_h__

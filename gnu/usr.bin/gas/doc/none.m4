@@ -1,5 +1,5 @@
 _divert__(-1)
-<$Id: none.m4,v 1.1 1993/10/02 21:00:24 pk Exp $>
+<$OpenBSD: src/gnu/usr.bin/gas/doc/Attic/none.m4,v 1.2 1998/02/15 18:49:59 niklas Exp $>
 
 Switches:
 

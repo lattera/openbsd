@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/hex-value.c,v 1.2 1998/02/15 18:48:50 niklas Exp $	*/
+
 /* hex_value.c - char=>radix-value -
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -23,7 +25,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: hex-value.c,v 1.3 1993/10/02 20:57:36 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/hex-value.c,v 1.2 1998/02/15 18:48:50 niklas Exp $";
 #endif
 
 #define __ (42)			/* blatently illegal digit value */

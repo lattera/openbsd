@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/debug.c,v 1.2 1998/02/15 18:48:44 niklas Exp $	*/
+
 /* This file is debug.c
 
    Copyright (C) 1987-1992 Free Software Foundation, Inc.
@@ -21,7 +23,7 @@
 /* Routines for debug use only.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: debug.c,v 1.1 1993/10/02 20:57:24 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/debug.c,v 1.2 1998/02/15 18:48:44 niklas Exp $";
 #endif
 
 #include "as.h"

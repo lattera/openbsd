@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/xrealloc.c,v 1.2 1998/02/15 18:49:03 niklas Exp $	*/
+
 /* xrealloc.c - new memory or bust
 
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
@@ -43,7 +45,7 @@
   */
 
 #ifndef lint
-static char rcsid[] = "$Id: xrealloc.c,v 1.3 1993/10/02 20:58:03 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/xrealloc.c,v 1.2 1998/02/15 18:49:03 niklas Exp $";
 #endif
 
 

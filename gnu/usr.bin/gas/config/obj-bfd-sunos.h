@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/obj-bfd-sunos.h,v 1.2 1998/02/15 18:49:24 niklas Exp $	*/
+
 /*
   Copyright (C) 1987, 1992 Free Software Foundation, Inc.
   

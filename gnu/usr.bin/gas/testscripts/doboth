@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: doboth,v 1.1 1993/10/02 21:01:07 pk Exp $
+# $OpenBSD: src/gnu/usr.bin/gas/testscripts/Attic/doboth,v 1.2 1998/02/15 18:50:11 niklas Exp $
 
 x=$1 ; shift
 y=$1 ; shift

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/tc-h8300.h,v 1.2 1998/02/15 18:49:35 niklas Exp $	*/
+
 /* This file is tc-h8300.h
 
    Copyright (C) 1987-1992 Free Software Foundation, Inc.

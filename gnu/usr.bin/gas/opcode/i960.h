@@ -1,3 +1,4 @@
+/* $OpenBSD: src/gnu/usr.bin/gas/opcode/Attic/i960.h,v 1.2 1998/02/15 18:50:03 niklas Exp $ */
 /* Basic 80960 instruction formats.
  *
  * The 'COJ' instructions are actually COBR instructions with the 'b' in
@@ -18,7 +19,6 @@
  * appropriate.
  */ 
 
-/* $Id: i960.h,v 1.1 1993/10/02 21:00:44 pk Exp $ */
 
 #define CTRL	0
 #define COBR	1

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/tc-vax.h,v 1.3 1998/02/15 18:49:47 niklas Exp $	*/
+
 /*
  * This file is tc-vax.h.
  */

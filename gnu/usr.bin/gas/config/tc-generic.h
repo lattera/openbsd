@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/tc-generic.h,v 1.2 1998/02/15 18:49:34 niklas Exp $	*/
+
 /* This file is tc-generic.h
 
    Copyright (C) 1987-1992 Free Software Foundation, Inc.

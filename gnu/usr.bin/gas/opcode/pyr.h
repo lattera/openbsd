@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/opcode/Attic/pyr.h,v 1.2 1998/02/15 18:50:08 niklas Exp $	*/
+
 /* pyramid.opcode.h -- gdb initial attempt. */
 
 /* pyramid opcode table: wot to do with this

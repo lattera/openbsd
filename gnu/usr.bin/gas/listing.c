@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/listing.c,v 1.2 1998/02/15 18:48:53 niklas Exp $	*/
+
 /* listing.c - mainting assembly listings
    Copyright (C) 1991, 1992 Free Software Foundation, Inc.
 
@@ -92,7 +94,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. */
 */
 
 #ifndef lint
-static char rcsid[] = "$Id: listing.c,v 1.3 1994/08/25 07:36:26 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/listing.c,v 1.2 1998/02/15 18:48:53 niklas Exp $";
 #endif
 
 #include <ctype.h>

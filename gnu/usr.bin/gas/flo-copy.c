@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/flo-copy.c,v 1.2 1998/02/15 18:48:47 niklas Exp $	*/
+
 /* flonum_copy.c - copy a flonum
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -18,7 +20,7 @@
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: flo-copy.c,v 1.1 1993/10/02 20:57:29 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/flo-copy.c,v 1.2 1998/02/15 18:48:47 niklas Exp $";
 #endif
 
 #include "as.h"

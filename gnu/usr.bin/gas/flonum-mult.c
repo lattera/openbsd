@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/flonum-mult.c,v 1.2 1998/02/15 18:48:47 niklas Exp $	*/
+
 /* flonum_mult.c - multiply two flonums
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -19,7 +21,7 @@
    notice and this notice must be preserved on all copies.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: flonum-mult.c,v 1.3 1993/10/02 20:57:30 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/flonum-mult.c,v 1.2 1998/02/15 18:48:47 niklas Exp $";
 #endif
 
 #include "flonum.h"

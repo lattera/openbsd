@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/xmalloc.c,v 1.2 1998/02/15 18:49:03 niklas Exp $	*/
+
 /* xmalloc.c - get memory or bust
 
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
@@ -42,7 +44,7 @@
   */
 
 #ifndef lint
-static char rcsid[] = "$Id: xmalloc.c,v 1.3 1993/10/02 20:58:02 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/xmalloc.c,v 1.2 1998/02/15 18:49:03 niklas Exp $";
 #endif
 
 #include <stdio.h>

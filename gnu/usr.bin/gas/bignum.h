@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/bignum.h,v 1.2 1998/02/15 18:48:42 niklas Exp $	*/
+
 /* bignum.h-arbitrary precision integers
    Copyright (C) 1987, 1992 Free Software Foundation, Inc.
    
@@ -16,10 +18,6 @@
    You should have received a copy of the GNU General Public License
    along with GAS; see the file COPYING.  If not, write to
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-
-/*
- * $Id: bignum.h,v 1.3 1993/10/02 20:57:19 pk Exp $
- */
 
 /***********************************************************************\
  *									*

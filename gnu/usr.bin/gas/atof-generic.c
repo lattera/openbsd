@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/atof-generic.c,v 1.2 1998/02/15 18:48:41 niklas Exp $	*/
+
 /* atof_generic.c - turn a string of digits into a Flonum
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -18,7 +20,7 @@
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: atof-generic.c,v 1.3 1993/10/02 20:57:17 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/atof-generic.c,v 1.2 1998/02/15 18:48:41 niklas Exp $";
 #endif
 
 #include <ctype.h>

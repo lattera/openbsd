@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/config/Attic/ho-i386.h,v 1.2 1998/02/15 18:49:15 niklas Exp $	*/
+
 /* ho-i386.h  i386 specific header file.
    Copyright (C) 1987, 1991, 1992 Free Software Foundation, Inc.
    
@@ -16,10 +18,6 @@
    You should have received a copy of the GNU General Public License
    along with GAS; see the file COPYING.  If not, write to
    the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
-/*
- * $Id: ho-i386.h,v 1.1 1993/10/02 20:58:36 pk Exp $
- */
-
 
 #define HO_I386 1
 

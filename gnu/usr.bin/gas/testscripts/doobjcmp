@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: doobjcmp,v 1.1 1993/10/02 21:01:08 pk Exp $
+# $OpenBSD: src/gnu/usr.bin/gas/testscripts/Attic/doobjcmp,v 1.2 1998/02/15 18:50:12 niklas Exp $
 # compare two object files, in depth.
 
 x=$1
