@@ -1,7 +1,5 @@
-#
+#	$OpenBSD: src/etc/etc.pmax/Attic/Makefile.inc,v 1.9 1997/09/21 11:50:34 deraadt Exp $
 #	etc.pmax/Makefile.inc -- pmax-specific etc Makefile targets
-#
-#	$Id: Makefile.inc,v 1.7 1997/05/14 07:37:08 graichen Exp $
 
 .ifdef DESTDIR
 

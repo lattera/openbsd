@@ -1,7 +1,6 @@
+#	$OpenBSD: src/etc/etc.sun3/Attic/Makefile.inc,v 1.3 1997/09/21 11:50:40 deraadt Exp $
 #
 #	etc.sun3/Makefile.inc -- sun3-specific etc Makefile targets
-#
-#	$Id: Makefile.inc,v 1.1.1.1 1995/10/18 08:38:02 deraadt Exp $
 
 .ifdef DESTDIR
 snap_md: bsd-gen bsd-dl

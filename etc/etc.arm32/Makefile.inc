@@ -1,7 +1,5 @@
-#
+#	$OpenBSD: src/etc/etc.arm32/Attic/Makefile.inc,v 1.2 1997/09/21 11:50:19 deraadt Exp $
 #	etc.arm32/Makefile.inc -- arm32-specific etc Makefile targets
-#
-#	$Id: Makefile.inc,v 1.1 1996/02/02 16:10:17 mark Exp $
 
 .ifdef DESTDIR
 snap_md: netbsd-gen

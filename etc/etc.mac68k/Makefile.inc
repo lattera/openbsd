@@ -1,5 +1,4 @@
-#
-#	$OpenBSD: src/etc/etc.mac68k/Attic/Makefile.inc,v 1.2 1997/05/11 02:37:43 gene Exp $
+#	$OpenBSD: src/etc/etc.mac68k/Attic/Makefile.inc,v 1.3 1997/09/21 11:50:28 deraadt Exp $
 #	etc.mac68k/Makefile.inc -- mac68k-specific etc Makefile targets
 
 .ifdef DESTDIR
