@@ -1,9 +1,7 @@
 #	from: @(#)Makefile	5.3 (Berkeley) 5/11/90
-#	$Id: Makefile,v 1.6 1994/12/22 11:41:06 cgd Exp $
+#	$OpenBSD: src/usr.sbin/rwhod/Makefile,v 1.2 1997/03/26 00:45:56 deraadt Exp $
 
 PROG=	rwhod
 MAN=	rwhod.8
-DPADD=	${LIBKVM}
-LDADD=	-lkvm
 
 .include <bsd.prog.mk>
