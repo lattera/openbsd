@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/atomic.h,v 1.1.2.2 2001/07/15 15:13:28 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/atomic.h,v 1.1.2.3 2003/04/05 20:40:16 niklas Exp $	*/
 /* $NetBSD: atomic.h,v 1.1.2.2 2000/02/21 18:54:07 sommerfeld Exp $ */
 
 /*-
@@ -57,12 +57,12 @@ i386_atomic_testset_i (volatile int *ptr, unsigned long val) {
 }
 
 static __inline void 
-i386_atomic_setbits_l (u_int32_t *ptr, unsigned long bits) {
+i386_atomic_setbits_l (volatile u_int32_t *ptr, unsigned long bits) {
     __asm __volatile("lock ; orl %1,%0" :  "=m" (*ptr) : "ir" (bits));
 }
 
 static __inline void 
-i386_atomic_clearbits_l (u_int32_t *ptr, unsigned long bits) {
+i386_atomic_clearbits_l (volatile u_int32_t *ptr, unsigned long bits) {
     bits = ~bits;
     __asm __volatile("lock ; and %1,%0" :  "=m" (*ptr) : "ir" (bits));
 }
