@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.12.2.2 2002/06/11 03:32:04 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfsnode.h,v 1.12.2.3 2002/10/29 18:31:52 art Exp $	*/
 /*	$NetBSD: nfsnode.h,v 1.16 1996/02/18 11:54:04 fvdl Exp $	*/
 
 /*
@@ -121,6 +121,7 @@ struct nfsnode {
 	nfsfh_t			n_fh;		/* Small File Handle */
 	struct ucred		*n_rcred;
 	struct ucred		*n_wcred;
+	struct lock		n_lock;
 	off_t			n_pushedlo;     /* 1st blk in commited range */
 	off_t			n_pushedhi;     /* Last block in range */
 	off_t			n_pushlo;       /* 1st block in commit range */
@@ -201,9 +202,9 @@ int	nfs_readdir(void *);
 int	nfs_readlink(void *);
 int	nfs_inactive(void *);
 int	nfs_reclaim(void *);
-#define nfs_lock ((int (*)(void *))vop_generic_lock)
-#define nfs_unlock ((int (*)(void *))vop_generic_unlock)
-#define nfs_islocked ((int (*)(void *))vop_generic_islocked)
+int	nfs_lock(void *);
+int	nfs_unlock(void *);
+int 	nfs_islocked(void *);
 int	nfs_bmap(void *);
 int	nfs_strategy(void *);
 int	nfs_print(void *);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.41.2.2 2002/06/11 03:32:04 art Exp $	*/
+/*	$OpenBSD: src/sys/nfs/nfs_vfsops.c,v 1.41.2.3 2002/10/29 18:31:51 art Exp $	*/
 /*	$NetBSD: nfs_vfsops.c,v 1.46.4.1 1996/05/25 22:40:35 fvdl Exp $	*/
 
 /*
@@ -178,7 +178,7 @@ nfs_statfs(mp, sbp, p)
 	}
 	strncpy(&sbp->f_fstypename[0], mp->mnt_vfc->vfc_name, MFSNAMELEN);
 	nfsm_reqdone;
-	vrele(vp);
+	vput(vp);
 	crfree(cred);
 	return (error);
 }
