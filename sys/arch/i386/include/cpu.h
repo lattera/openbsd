@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.24 2004/06/05 23:09:00 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.25 2004/06/06 18:43:16 grange Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -181,11 +181,7 @@ extern struct cpu_info *cpu_info_list;
 #define CPU_STOP(_ci)		((_ci)->ci_func->stop(_ci))
 #define CPU_START_CLEANUP(_ci)	((_ci)->ci_func->cleanup(_ci))
 
-#ifdef MULTIPROCESSOR
 #define cpu_number()		(i82489_readreg(LAPIC_ID)>>LAPIC_ID_SHIFT)
-#else
-#define cpu_number()		0
-#endif
 #define curcpu()		(cpu_info[cpu_number()])
 #define curpcb			curcpu()->ci_curpcb
 
@@ -210,15 +206,10 @@ extern void cpu_init_idle_pcbs __P((void));
  */
 extern void need_resched __P((struct cpu_info *));
 
-extern void (*delay_func) __P((int));
-struct timeval;
-extern void (*microtime_func) __P((struct timeval *));
-
-#define	DELAY(x)	(*delay_func)(x)
-#define delay(x)	(*delay_func)(x)
-#define microtime(tv)	(*microtime_func)(tv)
-
 #else /* MULTIPROCESSOR */
+
+#define I386_MAXPROCS		1
+
 /*
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
@@ -227,12 +218,7 @@ int	want_resched;		/* resched() was called */
 #define	need_resched(ci)	(want_resched = 1, setsoftast())
 
 #define cpu_number()		0
-
-/*
- * We need a machine-independent name for this.
- */
-#define	DELAY(x)		delay(x)
-void	delay(int);
+#define	curcpu()		(&cpu_info_primary)
 
 /*
  * definitions of cpu-dependent requirements
@@ -241,7 +227,7 @@ void	delay(int);
 #define	cpu_swapin(p)			/* nothing */
 #define	cpu_wait(p)			/* nothing */
 
-#endif /* MULTIPROCESSOR */
+#endif /* !MULTIPROCESSOR */
 
 #define	CLKF_USERMODE(frame)	USERMODE((frame)->if_cs, (frame)->if_eflags)
 #define	CLKF_PC(frame)		((frame)->if_eip)
@@ -259,6 +245,17 @@ void	delay(int);
  * process as soon as possible.
  */
 #define	signotify(p)		setsoftast()
+
+/*
+ * We need a machine-independent name for this.
+ */
+extern void (*delay_func)(int);
+struct timeval;
+extern void (*microtime_func)(struct timeval *);
+
+#define	DELAY(x)		(*delay_func)(x)
+#define delay(x)		(*delay_func)(x)
+#define microtime(tv)		(*microtime_func)(tv)
 
 #if defined(I586_CPU) || defined(I686_CPU)
 /*
