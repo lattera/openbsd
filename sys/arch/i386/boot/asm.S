@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/boot/Attic/asm.S,v 1.2.2.2 1996/09/26 12:11:29 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/boot/Attic/asm.S,v 1.2.2.3 1996/09/26 12:15:45 mickey Exp $	*/
 /*	$NetBSD: asm.S,v 1.12 1995/03/12 00:10:53 mycroft Exp $	*/
 
 /*
@@ -122,8 +122,6 @@ boot2:
 
 	movzbl	%dl, %edx	/* discard head (%dh) and random high bits */
 	pushl	%edx
-	movl	$0xB7000, %eax
-	movw	$0x55aa, %es:(%eax)
 
 	ljmp	$0x18, $_C_LABEL(boot)
 

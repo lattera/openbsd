@@ -79,11 +79,7 @@ boot(drive)
 	int loadflags, currname = 0;
 	char *t;
 		
-
-	/*
 	gateA20(1);
-	*/
-	*((short *)0xb7002) = 0x44bb;
 loadstart:
 	/***************************************************************\
 	* As a default set it to the first partition of the first	*
