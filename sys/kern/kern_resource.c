@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.14.2.1 2002/10/13 20:56:46 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_resource.c,v 1.14.2.2 2002/11/06 22:11:19 miod Exp $	*/
 /*	$NetBSD: kern_resource.c,v 1.38 1996/10/23 07:19:38 matthias Exp $	*/
 
 /*-
@@ -209,7 +209,7 @@ sys_setrlimit(p, v, retval)
 	register_t *retval;
 {
 	register struct sys_setrlimit_args /* {
-		syscallarg(u_int) which;
+		syscallarg(int) which;
 		syscallarg(struct rlimit *) rlp;
 	} */ *uap = v;
 	struct rlimit alim;
