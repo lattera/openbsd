@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.9 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.31.6.10 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -325,9 +325,12 @@ trap(frame)
 			goto out;
 		}
 #endif
-		sv.sival_int = rcr2();
-		trapsignal(p, SIGSEGV, vftype, SEGV_MAPERR, sv);
-		goto out;
+		if (ftype == VM_PROT_READ) {
+			ftype |= VM_PROT_EXECUTE;
+			/* XXX force %cr2 register have fault address */
+			__asm __volatile("movl %0,%%cr2" :: "r" (frame.tf_eip));
+		}
+		goto page_fault;
 
 	case T_TSSFLT|T_USER:
 		sv.sival_int = frame.tf_eip;
@@ -411,7 +414,7 @@ trap(frame)
 			goto we_re_toast;
 #endif
 		/* FALLTHROUGH */
-
+	page_fault:
 	case T_PAGEFLT|T_USER: {	/* page fault */
 		vaddr_t va, fa;
 		struct vmspace *vm = p->p_vmspace;

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/boot/Makefile,v 1.24.4.1 2001/04/18 16:08:39 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/boot/Makefile,v 1.24.4.2 2003/05/13 19:42:09 ho Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -15,7 +15,7 @@ LDFLAGS+=-nostdlib -Bstatic
 CLEANFILES+=	srt0.o
 SRCS=	crt0.c
 .else
-LDFLAGS+=-Ttext $(LINKADDR) -z -x
+LDFLAGS+=-Ttext $(LINKADDR) -N -x -noinhibit-exec
 CLEANFILES+=	crt0.o
 SRCS=	srt0.S
 .endif
@@ -29,9 +29,12 @@ DPADD=	${LIBSA} ${LIBZ}
 
 .PATH:	${S}/stand/boot
 
+boot.bin: boot
+	objcopy -v -O binary ${PROG} boot.bin
+
 ${PROG}: $(OBJS) $(DPADD)
-	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LDADD)
-	@$(SIZE) $(PROG)
+	$(LD) $(LDFLAGS) -o ${PROG} $(OBJS) $(LDADD)
+	@$(SIZE) ${PROG}
 
 .else
 NOPROG=
@@ -40,6 +43,7 @@ NOPROG=
 .include <bsd.prog.mk>
 
 CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS}
+CPPFLAGS+=-DLINKADDR=${LINKADDR}
 CFLAGS+=$(SACFLAGS)
 #AFLAGS+=-Wa,-R
 # AFLAGS+=-Wa,-a

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.9 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.10 2003/05/13 19:42:07 ho Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -397,7 +397,7 @@ bios32_service(service, e, ei)
 		return 0;
 
 	base = 0;
-	__asm __volatile("lcall (%4)"
+	__asm __volatile("lcall *(%4)"
 	    : "+a" (service), "+b" (base), "=c" (count), "=d" (off)
 	    : "D" (&bios32_entry)
 	    : "%esi", "cc", "memory");

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.7 2003/03/27 23:26:55 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/linux_machdep.c,v 1.12.8.8 2003/05/13 19:42:07 ho Exp $	*/
 /*	$NetBSD: linux_machdep.c,v 1.29 1996/05/03 19:42:11 christos Exp $	*/
 
 /*
@@ -112,6 +112,7 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	union sigval val;
 {
 	struct proc *p = curproc;
+	struct pmap *pmap = vm_map_pmap(&p->p_vmspace->vm_map);
 	struct trapframe *tf;
 	struct linux_sigframe *fp, frame;
 	struct sigacts *psp = p->p_sigacts;
@@ -149,8 +150,8 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	} else
 #endif
 	{
-		__asm("movl %%gs,%w0" : "=r" (frame.sf_sc.sc_gs));
-		__asm("movl %%fs,%w0" : "=r" (frame.sf_sc.sc_fs));
+		__asm("movl %%gs,%k0" : "=r" (frame.sf_sc.sc_gs));
+		__asm("movl %%fs,%k0" : "=r" (frame.sf_sc.sc_fs));
 		frame.sf_sc.sc_es = tf->tf_es;
 		frame.sf_sc.sc_ds = tf->tf_ds;
 		frame.sf_sc.sc_eflags = tf->tf_eflags;
@@ -184,7 +185,8 @@ linux_sendsig(catcher, sig, mask, code, type, val)
 	tf->tf_es = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_ds = GSEL(GUDATA_SEL, SEL_UPL);
 	tf->tf_eip = p->p_sigcode;
-	tf->tf_cs = GSEL(GUCODE_SEL, SEL_UPL);
+	tf->tf_cs = pmap->pm_nxpages > 0?
+	    GSEL(GUCODE1_SEL, SEL_UPL) : GSEL(GUCODE_SEL, SEL_UPL);
 	tf->tf_eflags &= ~(PSL_T|PSL_VM|PSL_AC);
 	tf->tf_esp = (int)fp;
 	tf->tf_ss = GSEL(GUDATA_SEL, SEL_UPL);
@@ -295,6 +297,9 @@ linux_read_ldt(p, uap, retval)
 	caddr_t sg;
 	char *parms;
 
+	if (user_ldt_enable == 0)
+		return (ENOSYS);
+
 	sg = stackgap_init(p->p_emul);
 
 	gl.start = 0;
@@ -340,6 +345,9 @@ linux_write_ldt(p, uap, retval)
 	int error;
 	caddr_t sg;
 	char *parms;
+
+	if (user_ldt_enable == 0)
+		return (ENOSYS);
 
 	if (SCARG(uap, bytecount) != sizeof(ldt_info))
 		return (EINVAL);

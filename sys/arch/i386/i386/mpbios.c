@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.7 2001/11/13 21:00:52 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.8 2003/05/13 19:42:08 ho Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -267,7 +267,7 @@ bitmask_snprintf(val, p, buf, buflen)
         if (sbase == 0)
                 return (buf);   /* punt if not oct, dec, or hex */
 
-        sprintf(snbuf, sbase, val);
+        snprintf(snbuf, sizeof snbuf, sbase, val);
         for (q = snbuf ; *q ; q++) {
                 *bp++ = *q;
                 left--;
@@ -333,7 +333,7 @@ bitmask_snprintf(val, p, buf, buflen)
                                 sep = ',';
                                 PUTSTR(bp, p, left);
                                 PUTBYTE(bp, '=', left);
-                                sprintf(snbuf, sbase, field);
+                                snprintf(snbuf, sizeof snbuf, sbase, field);
                                 q = snbuf; PUTSTR(bp, q, left);
                                 break;
                         case '=':

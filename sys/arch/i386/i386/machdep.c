@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.15 2003/04/11 16:12:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.16 2003/05/13 19:42:07 ho Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -197,6 +197,10 @@ char machine_arch[] = "i386";		/* machine == machine_arch */
 int	cpu_apmhalt = 0;	/* sysctl'd to 1 for halt -p hack */
 #endif
 
+#ifdef USER_LDT
+int	user_ldt_enable = 0;	/* sysctl'd to 1 to enable */
+#endif
+
 #ifdef	NBUF
 int	nbuf = NBUF;
 #else
@@ -313,6 +317,7 @@ int allowaperture = 0;
 #endif
 
 void	winchip_cpu_setup(const char *, int, int);
+void	amd_family5_setup(const char *, int, int);
 void	cyrix3_cpu_setup(const char *, int, int);
 void	cyrix6x86_cpu_setup(const char *, int, int);
 void	natsem6x86_cpu_setup(const char *, int, int);
@@ -788,7 +793,7 @@ const struct cpu_cpuid_nameclass i386_cpuid_cpus[] = {
 				"K6-2+/III+", 0, 0,
 				"K5 or K6"		/* Default */
 			},
-			NULL
+			amd_family5_setup
 		},
 		/* Family 6 */
 		{
@@ -1023,23 +1028,22 @@ winchip_cpu_setup(cpu_device, model, step)
  * Note, the VIA C3 Nehemia provides 4 internal 8-byte buffers, which
  * store random data, and can be accessed a lot quicker than waiting
  * for new data to be generated.  As we are using every 8th bit only
- * due to whitening, we only pull off 4 bytes worth of data here, to
- * help prevent stalling, and allow the RNG to generate new data in
- * parallel with anything else going on.
+ * due to whitening. Since the RNG generates in excess of 21KB/s at
+ * it's worst, collecting 64 bytes worth of entropy should not affect
+ * things significantly.
  *
- * Note, due to some weirdness in the RNG, we need at last 7 bytes
+ * Note, due to some weirdness in the RNG, we need at least 7 bytes
  * extra on the end of our buffer.  Also, there is an outside chance
  * that the VIA RNG can "wedge", as the generated bit-rate is variable.
- * Since the RNG generates in excess of 21KB/s at it's worst, this is
- * still significantly faster than the rate at which we are collecting
- * from it.  We could do all sorts of startup testing and things, but
- * frankly, I don't really see the point.
+ * We could do all sorts of startup testing and things, but
+ * frankly, I don't really see the point.  If the RNG wedges, then the
+ * chances of you having a defective CPU are very high.  Let it wedge.
  *
  * Adding to the whole confusion, in order to access the RNG, we need
  * to have FXSR support enabled, and the correct FPU enable bits must
- * be there to enable the FPU.  It would be nice if all this mumbo-
- * jumbo was not needed in order to use the RNG.  Oh well, life does
- * go on...
+ * be there to enable the FPU in kernel.  It would be nice if all this
+ * mumbo-jumbo was not needed in order to use the RNG.  Oh well, life
+ * does go on...
  */
 #define VIAC3_RNG_BUFSIZ	16		/* 32bit words */
 struct timeout viac3_rnd_tmo;
@@ -1203,6 +1207,29 @@ intel586_cpu_setup(cpu_device, model, step)
 	printf("%s: F00F bug workaround installed\n", 
 	       curcpu()->ci_dev.dv_xname);
 #endif
+}
+
+void
+amd_family5_setup(cpu_device, model, step)
+	const char *cpu_device;
+	int model, step;
+{
+	switch (model) {
+	case 0:         /* AMD-K5 Model 0 */
+		/*
+		 * According to the AMD Processor Recognition App Note,
+		 * the AMD-K5 Model 0 uses the wrong bit to indicate
+		 * support for global PTEs, instead using bit 9 (APIC)
+		 * rather than bit 13 (i.e. "0x200" vs. 0x2000".  Oops!).
+		 */
+		if (cpu_feature & CPUID_APIC)
+			cpu_feature = (cpu_feature & ~CPUID_APIC) | CPUID_PGE;
+		/*
+		 * XXX But pmap_pg_g is already initialized -- need to kick
+		 * XXX the pmap somehow.  How does the MP branch do this?
+		 */
+		break;
+	}
 }
 
 void
@@ -1431,12 +1458,14 @@ identifycpu(struct cpu_info *ci)
 	}
 
 	if (cachesize > -1) {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
+		snprintf(cpu_model, sizeof(cpu_model),
+			"%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
 			vendorname, modifier, name,
 			((*token) ? "\"" : ""), ((*token) ? token : ""),
 			((*token) ? "\" " : ""), classnames[class], cachesize);
 	} else {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class)",
+		snprintf(cpu_model, sizeof(cpu_model),
+			"%s %s%s (%s%s%s%s-class)",
 			vendorname, modifier, name,
 			((*token) ? "\"" : ""), ((*token) ? token : ""),
 			((*token) ? "\" " : ""), classnames[class]);
@@ -1660,15 +1689,17 @@ old_identifycpu()
 	}
 
 	if (cachesize > -1) {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class], cachesize);
+		snprintf(cpu_model, sizeof(cpu_model),
+		    "%s %s%s (%s%s%s%s-class, %dKB L2 cache)",
+		    vendorname, modifier, name,
+		    ((*token) ? "\"" : ""), ((*token) ? token : ""),
+		    ((*token) ? "\" " : ""), classnames[class], cachesize);
 	} else {
-		sprintf(cpu_model, "%s %s%s (%s%s%s%s-class)",
-			vendorname, modifier, name,
-			((*token) ? "\"" : ""), ((*token) ? token : ""),
-			((*token) ? "\" " : ""), classnames[class]);
+		snprintf(cpu_model, sizeof(cpu_model),
+		    "%s %s%s (%s%s%s%s-class)",
+		    vendorname, modifier, name,
+		    ((*token) ? "\"" : ""), ((*token) ? token : ""),
+		    ((*token) ? "\" " : ""), classnames[class]);
 	}
 
 	/* configure the CPU if needed */
@@ -2475,8 +2506,7 @@ init386(paddr_t first_avail)
 	    0, 0);
 	setsegment(&gdt[GUCODE1_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
-	setsegment(&gdt[GUCODE_SEL].sd, 0,
-	    i386_btop(VM_MAXUSER_ADDRESS - MAXSSIZ) - 1,
+	setsegment(&gdt[GUCODE_SEL].sd, 0, i386_btop(I386_MAX_EXE_ADDR) - 1,
 	    SDT_MEMERA, SEL_UPL, 1, 1);
 	setsegment(&gdt[GUDATA_SEL].sd, 0, i386_btop(VM_MAXUSER_ADDRESS) - 1,
 	    SDT_MEMRWA, SEL_UPL, 1, 1);
@@ -2770,9 +2800,6 @@ consinit()
 	cninit();
 }
 
-#include <dev/ic/mc146818reg.h>                /* for NVRAM POST */
-#include <i386/isa/nvram.h>            /* for NVRAM POST */
-
 #if (NPCKBC > 0) && (NPCKBD == 0)
 /*
  * glue code to support old console code with the
@@ -2958,6 +2985,11 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		else
 			return (sysctl_int(oldp, oldlenp, newp, newlen, 
 			    &kbd_reset));
+#ifdef USER_LDT
+	case CPU_USERLDT:
+		return (sysctl_int(oldp, oldlenp, newp, newlen,
+		    &user_ldt_enable));
+#endif
 	default:
 		return EOPNOTSUPP;
 	}

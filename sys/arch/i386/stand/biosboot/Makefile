@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/biosboot/Makefile,v 1.18.4.1 2001/04/18 16:08:38 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/biosboot/Makefile,v 1.18.4.2 2003/05/13 19:42:09 ho Exp $
 
 MAN=	biosboot.8
 
@@ -15,7 +15,7 @@ ${PROG}: $(OBJS) $(DPADD)
 	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LDADD)
 	@size $(PROG)
 
-CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DBOOTMAGIC=$(BOOTMAGIC)
+CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
 CPPFLAGS+=${DEBUGFLAGS}
 #AFLAGS+=-Wa,-a
 .else

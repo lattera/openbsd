@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.6 2001/11/13 21:00:51 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/ioapic.c,v 1.1.2.7 2003/05/13 19:42:07 ho Exp $	*/
 /* $NetBSD: ioapic.c,v 1.1.2.4 2000/06/25 20:46:08 sommerfeld Exp $ */
 
 /*-
@@ -440,16 +440,19 @@ ioapic_enable(void)
 
 	ioapic_cold = 0;
 
-#if NISA > 0
-	isa_nodefaultirq();
-#endif
-
 	lapic_set_softvectors();
 	lapic_set_lvt();
 
 	for (a = 0; a < 16; a++) {
 		struct ioapic_softc *sc = ioapics[a];
 		if (sc != NULL) {
+#if NISA > 0
+			static int found_one = 0;
+
+			if (!found_one++)
+				isa_nodefaultirq();
+#endif
+
 			printf("%s: enabling\n", sc->sc_dev.dv_xname);
 
 			if (!did_imcr &&

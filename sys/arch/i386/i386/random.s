@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/Attic/random.s,v 1.2.16.1 2001/10/31 03:01:12 nate Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/random.s,v 1.2.16.2 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: random.s,v 1.5 1995/01/15 23:20:33 mycroft Exp $	*/
 
 /*
@@ -45,20 +45,20 @@
 #include <machine/asm.h>
 
 	.data
-	.globl	__randseed
-__randseed:
+	.globl	_C_LABEL(_randseed)
+_C_LABEL(_randseed):
 	.long	1
 	.text
 ENTRY(random)
 	movl	$16807,%eax
-	imull	__randseed
+	imull	_C_LABEL(_randseed)
 	shld	$1,%eax,%edx
 	andl	$0x7fffffff,%eax
 	addl	%edx,%eax
 	js	1f
-	movl	%eax,__randseed
+	movl	%eax,_C_LABEL(_randseed)
 	ret
 1:
 	subl	$0x7fffffff,%eax
-	movl	%eax,__randseed
+	movl	%eax,_C_LABEL(_randseed)
 	ret

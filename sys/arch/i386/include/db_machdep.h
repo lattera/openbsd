@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.3 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/db_machdep.h,v 1.4.12.4 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.9 1996/05/03 19:23:59 christos Exp $	*/
 
 /* 
@@ -97,6 +97,8 @@ boolean_t	db_phys_eq(task_t, vaddr_t, task_t, vaddr_t);
 #define DB_TASK_NAME_TITLE	"COMMAND                "
 #define DB_TASK_NAME_LEN	23
 #define DB_NULL_TASK_NAME	"?                      "
+#define DB_ELF_SYMBOLS
+#define DB_ELFSIZE		32
 
 /*
  * Constants for KGDB.

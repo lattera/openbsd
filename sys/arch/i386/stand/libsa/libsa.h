@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.5 2003/03/27 23:26:56 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/libsa.h,v 1.29.4.6 2003/05/13 19:42:09 ho Exp $	*/
 
 /*
  * Copyright (c) 1996-1999 Michael Shalayeff
@@ -34,9 +34,9 @@
 #include <lib/libsa/stand.h>
 #include <machine/biosvar.h>
 
-#define	EXEC_AOUT
+#define	EXEC_ELF
 
-#define	DEFAULT_KERNEL_ADDRESS	0x100000
+#define	DEFAULT_KERNEL_ADDRESS	0
 
 void gateA20(int);
 

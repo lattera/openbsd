@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.9 2003/04/11 16:12:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm_machdep.c,v 1.17.4.10 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.61 1996/05/03 19:42:35 christos Exp $	*/
 
 /*-
@@ -162,12 +162,6 @@ cpu_exit(p)
 #if NNPX > 0
 	/* If we were using the FPU, forget about it. */
 	npxdrop(p);
-#endif
-
-#ifdef USER_LDT
-	pcb = &p->p_addr->u_pcb;
-	if (pcb->pcb_flags & PCB_USER_LDT)
-		i386_user_cleanup(pcb);
 #endif
 
 	uvmexp.swtch++;

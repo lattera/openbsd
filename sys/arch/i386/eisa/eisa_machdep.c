@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/eisa/eisa_machdep.c,v 1.3.6.4 2002/03/28 10:31:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/eisa/eisa_machdep.c,v 1.3.6.5 2003/05/13 19:42:07 ho Exp $	*/
 /*	$NetBSD: eisa_machdep.c,v 1.10.22.2 2000/06/25 19:36:58 sommerfeld Exp $	*/
 
 /*-
@@ -189,7 +189,7 @@ eisa_intr_string(ec, ih)
 	}
 #endif
 
-	sprintf(irqstr, "irq %d", ih);
+	snprintf(irqstr, sizeof irqstr, "irq %d", ih);
 	return (irqstr);
 	
 }

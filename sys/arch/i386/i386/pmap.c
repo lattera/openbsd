@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.14 2003/04/15 03:53:47 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.34.2.15 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -646,7 +646,7 @@ pmap_nxstack_account(struct pmap *pmap, vaddr_t va,
 	int needs_update = 0;
 
 	if (((opte ^ npte) & PG_X) &&
-	    va < VM_MAXUSER_ADDRESS && va >= VM_MAXUSER_ADDRESS - MAXSSIZ) {
+	    va < VM_MAXUSER_ADDRESS && va >= I386_MAX_EXE_ADDR) {
 		struct trapframe *tf = curproc->p_md.md_regs;
 		struct vm_map *map = &curproc->p_vmspace->vm_map;
 
@@ -1257,7 +1257,8 @@ pmap_alloc_pvpage(pmap, mode)
 	 * pmap is already locked!  (...but entering the mapping is safe...)
 	 */
 
-	pmap_kenter_pa(pv_cachedva, VM_PAGE_TO_PHYS(pg), VM_PROT_ALL);
+	pmap_kenter_pa(pv_cachedva, VM_PAGE_TO_PHYS(pg),
+	    VM_PROT_READ|VM_PROT_WRITE);
 	pvpage = (struct pv_page *) pv_cachedva;
 	pv_cachedva = 0;
 	return(pmap_add_pvpage(pvpage, mode != ALLOCPV_NONEED));

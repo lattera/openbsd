@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.10 2003/04/11 16:12:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.11 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -337,6 +337,7 @@ int	math_emulate(struct trapframe *);
 
 #ifdef USER_LDT
 /* sys_machdep.h */
+extern int user_ldt_enable;
 void	i386_user_cleanup(struct pcb *);
 int	i386_get_ldt(struct proc *, void *, register_t *);
 int	i386_set_ldt(struct proc *, void *, register_t *);
@@ -379,7 +380,8 @@ void	setconf(void);
 #define CPU_APMWARN		9	/* APM battery warning percentage */
 #define CPU_KBDRESET		10	/* keyboard reset under pcvt */
 #define CPU_APMHALT		11	/* halt -p hack */
-#define	CPU_MAXID		12	/* number of valid machdep ids */
+#define CPU_USERLDT		12
+#define	CPU_MAXID		13	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
@@ -394,6 +396,7 @@ void	setconf(void);
 	{ "apmwarn", CTLTYPE_INT }, \
 	{ "kbdreset", CTLTYPE_INT }, \
 	{ "apmhalt", CTLTYPE_INT }, \
+	{ "userldt", CTLTYPE_INT }, \
 }
 
 #endif /* !_I386_CPU_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.10 2001/12/05 00:39:10 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.11 2003/05/13 19:42:08 ho Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -138,12 +138,12 @@ IDTVEC(doreti)
 
 IDTVEC(softtty)
 #if NPCCOM > 0
-	movl	$IPL_SOFTTTY(%ebx),%eax
+	movl	IPL_SOFTTTY(%ebx),%eax
 	movl	%eax,CPL
 	call	_C_LABEL(comsoft)
 	movl	%ebx,CPL
 #endif
-	jmp	%esi
+	jmp	*%esi
 
 #define DONETISR(s, c) \
 	.globl  _C_LABEL(c)	;\
@@ -159,7 +159,7 @@ IDTVEC(softnet)
 	xchgl	_C_LABEL(netisr),%edi
 #include <net/netisr_dispatch.h>
  	movl	%ebx,CPL
-	jmp	%esi
+	jmp	*%esi
 #undef DONETISR
 
 IDTVEC(softclock)
@@ -167,5 +167,5 @@ IDTVEC(softclock)
 	movl	%eax,CPL
 	call	_C_LABEL(softclock)
 	movl	%ebx,CPL
-	jmp	%esi
+	jmp	*%esi
 
