@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.2 2001/07/14 10:02:47 ho Exp $	*/
+/*	$OpenBSD: src/sys/sys/lock.h,v 1.5.6.3 2001/07/15 13:34:19 ho Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -175,11 +175,11 @@ void    lockmgr_printinfo __P((struct lock *));
 int	lockstatus __P((struct lock *));
 
 #if defined(MULTIPROCESSOR) || defined(LOCKDEBUG)
-#define spinlockinit(lkp, name, flags)
-#define spinlockmgr(lkp, flags, intrlk)
+#define spinlockinit(lkp, name, flags)	lockinit(lkp, 0, name, 0, flags)
+#define spinlockmgr(lkp, flags, intrlk)	lockmgr(lkp, flags, intrlk, curproc)
 #else
-#define spinlockinit(lkp, name, flags)          (void)(lkp)
-#define spinlockmgr(lkp, flags, intrlk)         (0)
+#define spinlockinit(lkp, name, flags)	(void)(lkp)
+#define spinlockmgr(lkp, flags, intrlk)	(0)
 #endif
 
 #endif /* !_LOCK_H_ */
