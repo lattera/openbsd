@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/biosboot/biosboot.S,v 1.27 1998/04/18 07:39:35 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/biosboot/biosboot.S,v 1.28 1998/07/04 08:56:41 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff, Tobias Weingartner
@@ -64,6 +64,7 @@
 	.globl	start
 start:
 	jmp	1f
+	nop
 
 	. = start + 3
 	.asciz	"OpenBSD"
