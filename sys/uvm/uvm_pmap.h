@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/uvm/uvm_pmap.h,v 1.6.2.3 2002/11/04 18:02:33 art Exp $	*/
+/*	$OpenBSD: src/sys/uvm/uvm_pmap.h,v 1.6.2.4 2004/02/22 23:51:52 tedu Exp $	*/
 /*	$NetBSD: uvm_pmap.h,v 1.11 2002/09/22 07:17:25 chs Exp $	*/
 
 /*
@@ -87,9 +87,7 @@ struct pmap_statistics {
 };
 typedef struct pmap_statistics	*pmap_statistics_t;
 
-#ifdef _KERNEL
 #include <machine/pmap.h>
-#endif
 
 /*
  * Flags passed to pmap_enter().  Note the bottom 3 bits are VM_PROT_*
