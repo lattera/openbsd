@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29 2000/01/31 16:06:58 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/sparc/locore.s,v 1.29.2.1 2000/02/20 11:56:53 niklas Exp $	*/
 /*	$NetBSD: locore.s,v 1.73 1997/09/13 20:36:48 pk Exp $	*/
 
 /*
@@ -1734,9 +1734,7 @@ memfault_sun4:
 	/* memory error = death for now XXX */
 	clr	%o3
 	clr	%o4
-	set     CPUINFO_VA+CPUINFO_MEMERR, %o0
-	ld      [%o0], %o0
-	jmpl    %o0, %o7		! memerr(0, ser, sva, 0, 0)
+	call	_memerr4_4c
 	 clr	%o0
 	call	_callrom
 	 nop
@@ -1836,10 +1834,7 @@ memfault_sun4c:
 	 * If memerr() returns, return from the trap.
 	 */
 	wr	%l0, PSR_ET, %psr
-	nop
-	set     CPUINFO_VA+CPUINFO_MEMERR, %o0
-	ld      [%o0], %o0
-	jmpl    %o0, %o7		! memerr(0, ser, sva, 0, 0)
+	call	_memerr4_4c
 	 clr	%o0
 
 	ld	[%sp + CCFSZ + 20], %g1	! restore g1 through g7
@@ -1859,9 +1854,7 @@ memfault_sun4c:
 	 * %o1 through %o4 still hold the error reg contents.
 	 */
 1:
-	set     CPUINFO_VA+CPUINFO_MEMERR, %o0
-	ld      [%o0], %o0
-	jmpl    %o0, %o7		! memerr(0, ser, sva, 0, 0)
+	call	_memerr4_4c
 	 mov	1, %o0
 
 	ld	[%sp + CCFSZ + 20], %g1	! restore g1 through g7
@@ -2566,9 +2559,7 @@ nmi_sun4c:
 
 nmi_common:
 	! and call C code
-	set     CPUINFO_VA+CPUINFO_MEMERR, %o0
-	ld      [%o0], %o0
-	jmpl    %o0, %o7		! memerr(0, ser, sva, 0, 0)
+	call	_memerr4_4c
 	 clr	%o0
 
 	mov	%l5, %g1		! restore g1 through g7
@@ -4671,8 +4662,18 @@ Lsw_havectx:
 #endif
 1:
 #if defined(SUN4M)
+        /*
+	 * Flush caches that need to be flushed on context switch.
+	 * We know this is currently only necessary on the sun4m hypersparc.
+	 */
+	set	CPUINFO_VA+CPUINFO_PURE_VCACHE_FLS, %o2
+	ld	[%o2], %o2
+	mov	%o7, %g7	! save return address
+	jmpl	%o2, %o7	! this function must not clobber %o0 and %g7
+	 nop
+
 	set	SRMMU_CXR, %o1
-	retl
+	jmp	%g7 + 8		! (retl, but we saved the ret address in g7)
 	 sta	%o0, [%o1] ASI_SRMMU	! setcontext(vm->vm_pmap.pm_ctxnum);
 #endif
 
@@ -5767,9 +5768,9 @@ ENTRY(raise)
  *	    %o3 == async fault status, %o4 == async fault address
  */
 ALTENTRY(srmmu_get_fltstatus)
-	set	SRMMU_SFADDR, %o2
+	set	SRMMU_SFAR, %o2
 	lda	[%o2] ASI_SRMMU, %o2	! sync virt addr; must be read first
-	set	SRMMU_SFSTAT, %o1
+	set	SRMMU_SFSR, %o1
 	lda	[%o1] ASI_SRMMU, %o1	! get sync fault status register
 
 	 clr	%o3			! clear %o3 and %o4
@@ -5781,10 +5782,10 @@ ALTENTRY(viking_get_fltstatus)
 	be,a	1f
 	 mov	%l1, %o2		! use PC if type == T_TEXTFAULT
 
-	set	SRMMU_SFADDR, %o2
+	set	SRMMU_SFAR, %o2
 	lda	[%o2] ASI_SRMMU, %o2	! sync virt addr; must be read first
 1:
-	set	SRMMU_SFSTAT, %o1
+	set	SRMMU_SFSR, %o1
 	lda	[%o1] ASI_SRMMU, %o1	! get sync fault status register
 
 	 clr	%o3			! clear %o3 and %o4
@@ -5798,10 +5799,10 @@ ALTENTRY(turbosparc_get_fltstatus)
 	be,a	1f
 	 mov	%l1, %o2		! use PC if type == T_TEXTFAULT
 
-	set	SRMMU_SFADDR, %o2
+	set	SRMMU_SFAR, %o2
 	lda	[%o2] ASI_SRMMU, %o2	! sync virt addr; must be read first
 1:
-	set	SRMMU_SFSTAT, %o1
+	set	SRMMU_SFSR, %o1
 	lda	[%o1] ASI_SRMMU, %o1	! get sync fault status register
 
 	 clr	%o3			! clear %o3 and %o4
@@ -5813,30 +5814,38 @@ ALTENTRY(cypress_get_fltstatus)
 	be,a	1f
 	 mov	%l1, %o2		! use PC if type == T_TEXTFAULT
 
-	set	SRMMU_SFADDR, %o2
+	set	SRMMU_SFAR, %o2
 	lda	[%o2] ASI_SRMMU, %o2	! sync virt addr; must be read first
 1:
-	set	SRMMU_SFSTAT, %o1
+	set	SRMMU_SFSR, %o1
 	lda	[%o1] ASI_SRMMU, %o1	! get sync fault status register
 
-	set	SRMMU_AFSTAT, %o3	! must read status before fault on HS
+	set	SRMMU_AFSR, %o3		! must read status before fault on HS
 	lda	[%o3] ASI_SRMMU, %o3	! get async fault status
-	set	SRMMU_AFADDR, %o4
+	set	SRMMU_AFAR, %o4
 	retl
 	 lda	[%o4] ASI_SRMMU, %o4	! get async fault address
 
 ALTENTRY(hypersparc_get_fltstatus)
-	set	SRMMU_SFADDR, %o2
+	set	SRMMU_SFAR, %o2
 	lda	[%o2] ASI_SRMMU, %o2	! sync virt addr; must be read first
-	set	SRMMU_SFSTAT, %o1
+	set	SRMMU_SFSR, %o1
 	lda	[%o1] ASI_SRMMU, %o1	! get sync fault status register
 
-	set	SRMMU_AFSTAT, %o3	! must read status before fault on HS
+	set	SRMMU_AFSR, %o3		! must read status before fault on HS
 	lda	[%o3] ASI_SRMMU, %o3	! get async fault status
-	set	SRMMU_AFADDR, %o4
+	set	SRMMU_AFAR, %o4
 	retl
 	 lda	[%o4] ASI_SRMMU, %o4	! get async fault address
 
+ALTENTRY(hypersparc_pure_vcache_flush)
+	/*
+	 * Flush entire on-chip instruction cache, which is
+	 * a pure vitually-indexed/virtually-tagged cache.
+	 */
+	retl
+	 sta    %g0, [%g0] ASI_HICACHECLR
+	
 #endif /* SUN4M */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.1 2000/02/20 10:30:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/biosvar.h,v 1.32.2.2 2000/02/20 11:56:48 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -138,7 +138,11 @@ typedef struct _bios_pciinfo {
 	u_int32_t	pci_lastbus;	/* Number of last PCI bus */
 } bios_pciinfo_t;
 
-#define	BOOTARG_CONSDEV	5		/* dev_t */
+#define	BOOTARG_CONSDEV	5
+typedef struct _bios_consdev {
+	dev_t	consdev;
+	int	conspeed;
+} bios_consdev_t;
 
 #define BOOTARG_SMPINFO 6		/* struct mp_float[] */
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5 1999/12/08 00:38:08 aaron Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/if_ste.c,v 1.5.2.1 2000/02/20 11:57:05 niklas Exp $ */
 /*
  * Copyright (c) 1997, 1998, 1999
  *	Bill Paul <wpaul@ctr.columbia.edu>.  All rights reserved.
@@ -1349,8 +1349,18 @@ int ste_ioctl(ifp, command, data)
 		break;
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
-		ste_setmulti(sc);
-		error = 0;
+		error = (command == SIOCADDMULTI) ?
+		    ether_addmulti(ifr, &sc->arpcom) :
+		    ether_delmulti(ifr, &sc->arpcom);
+
+		if (error == ENETRESET) {
+			/*
+			 * Multicast list has changed; set the hardware
+			 * filter accordingly.
+			 */
+			ste_setmulti(sc);
+			error = 0;
+		}
 		break;
 	case SIOCGIFMEDIA:
 	case SIOCSIFMEDIA:

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_fil.c,v 1.29 2000/02/01 19:29:58 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_fil.c,v 1.29.2.1 2000/02/20 11:57:23 niklas Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.
@@ -9,7 +9,7 @@
  */
 #if !defined(lint)
 static const char sccsid[] = "@(#)ip_fil.c	2.41 6/5/96 (C) 1993-1995 Darren Reed";
-static const char rcsid[] = "@(#)$IPFilter: ip_fil.c,v 2.4.2.16 2000/01/16 10:12:42 darrenr Exp $";
+static const char rcsid[] = "@(#)$IPFilter: ip_fil.c,v 2.4.2.17 2000/02/10 01:47:28 darrenr Exp $";
 #endif
 
 #ifndef	SOLARIS
@@ -164,11 +164,7 @@ static int	write_output __P((struct ifnet *, struct mbuf *,
 				  struct sockaddr *, struct rtentry *));
 # endif
 #endif
-#if defined(IPFILTER_LKM)
-int	fr_running = 1;
-#else
 int	fr_running = 0;
-#endif
 
 #if (__FreeBSD_version >= 300000) && defined(_KERNEL)
 struct callout_handle ipfr_slowtimer_ch;
@@ -267,6 +263,7 @@ int iplattach()
 	bzero((char *)frcache, sizeof(frcache));
 	fr_savep = fr_checkp;
 	fr_checkp = fr_check;
+	fr_running = 1;
 
 	SPL_X(s);
 	if (fr_pass & FR_PASS)
@@ -276,6 +273,7 @@ int iplattach()
 	else
 		defpass = "no-match -> block";
 
+#if !defined(__OpenBSD__)
 	printf("IP Filter: initialized.  Default = %s all, Logging = %s\n",
 		defpass,
 # ifdef	IPFILTER_LOG
@@ -284,6 +282,8 @@ int iplattach()
 		"disabled");
 # endif
 	printf("%s\n", ipfilter_version);
+#endif
+
 #ifdef	_KERNEL
 # if (__FreeBSD_version >= 300000) && defined(_KERNEL)
 	ipfr_slowtimer_ch = timeout(ipfr_slowtimer, NULL, hz/2);
@@ -291,7 +291,6 @@ int iplattach()
 	timeout(ipfr_slowtimer, NULL, hz/2);
 # endif
 #endif
-	fr_running = 1;
 	return 0;
 }
 

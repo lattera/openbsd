@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_ftp_pxy.c,v 1.6 2000/02/01 19:29:58 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_ftp_pxy.c,v 1.6.2.1 2000/02/20 11:57:26 niklas Exp $	*/
 
 /*
  * Simple FTP transparent proxy for in-kernel use.  For use with the NAT

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.1 2000/02/20 10:30:44 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.2 2000/02/20 11:56:47 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997-1999 Michael Shalayeff
@@ -214,9 +214,14 @@ bios_getopt()
 			break;
 #endif
 		case BOOTARG_CONSDEV:
-			cnset(*(dev_t *)q->ba_arg);
+			if (q->ba_size >= sizeof(bios_consdev_t))
+			{
+				bios_consdev_t *cdp = (bios_consdev_t*)q->ba_arg;
+				extern int comdefaultrate; /* ic/com.c */
+				comdefaultrate = cdp->conspeed;
+				cnset(cdp->consdev);
+			}
 			break;
-
 #ifdef SMP
 		case BOOTARG_SMPINFO:
 			bios_smpinfo = q->ba_arg;

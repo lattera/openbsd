@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_auth.h,v 1.5 2000/02/01 19:29:58 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_auth.h,v 1.5.2.1 2000/02/20 11:57:23 niklas Exp $	*/
 
 /*
  * Copyright (C) 1997-1998 by Darren Reed & Guido Van Rooij.

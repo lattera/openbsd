@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_fil.h,v 1.15 2000/02/01 19:29:58 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_fil.h,v 1.15.2.1 2000/02/20 11:57:24 niklas Exp $	*/
 
 /*
  * Copyright (C) 1993-1998 by Darren Reed.

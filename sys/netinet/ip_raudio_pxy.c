@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/Attic/ip_raudio_pxy.c,v 1.4 2000/02/01 19:29:59 kjell Exp $	*/
+/*	$OpenBSD: src/sys/netinet/Attic/ip_raudio_pxy.c,v 1.4.2.1 2000/02/20 11:57:29 niklas Exp $	*/
 
 #if SOLARIS && defined(_KERNEL)
 extern	kmutex_t	ipf_rw;

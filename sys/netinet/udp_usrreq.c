@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.38 2000/02/07 06:09:09 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/udp_usrreq.c,v 1.38.2.1 2000/02/20 11:57:31 niklas Exp $	*/
 /*	$NetBSD: udp_usrreq.c,v 1.28 1996/03/16 23:54:03 christos Exp $	*/
 
 /*
@@ -618,7 +618,7 @@ udp_saveopt(p, size, type)
 		return ((struct mbuf *) NULL);
 	cp = (struct cmsghdr *) mtod(m, struct cmsghdr *);
 	bcopy(p, CMSG_DATA(cp), size);
-	size += sizeof(*cp);
+	size = CMSG_LEN(size);
 	m->m_len = size;
 	cp->cmsg_len = size;
 	cp->cmsg_level = IPPROTO_IP;

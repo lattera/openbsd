@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_tireg.h,v 1.5 2000/01/18 05:26:25 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_tireg.h,v 1.5.2.1 2000/02/20 11:57:07 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -137,7 +137,7 @@
  */
 #define TI_FIRMWARE_MAJOR		0xc
 #define TI_FIRMWARE_MINOR		0x3
-#define TI_FIRMWARE_FIX			0xf
+#define TI_FIRMWARE_FIX			0x12
 
 /*
  * Miscelaneous Local Control register.

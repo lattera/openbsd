@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9 2000/01/18 05:26:25 jason Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/Attic/if_ti.c,v 1.9.2.1 2000/02/20 11:57:06 niklas Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -2292,8 +2292,8 @@ int ti_ioctl(ifp, command, data)
 	caddr_t			data;
 {
 	struct ti_softc		*sc = ifp->if_softc;
-	struct ifreq		*ifr = (struct ifreq *) data;
-	struct ifaddr		*ifa = (struct ifaddr *) data;
+	struct ifreq		*ifr = (struct ifreq *)data;
+	struct ifaddr		*ifa = (struct ifaddr *)data;
 	int			s, error = 0;
 	struct ti_cmd_desc	cmd;
 
