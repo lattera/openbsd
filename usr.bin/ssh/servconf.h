@@ -13,7 +13,7 @@ Definitions for server configuration data and for the functions reading it.
 
 */
 
-/* RCSID("$Id: servconf.h,v 1.6 1999/05/04 11:59:10 bg Exp $"); */
+/* RCSID("$Id: servconf.h,v 1.1 1999/09/26 20:53:37 deraadt Exp $"); */
 
 #ifndef SERVCONF_H
 #define SERVCONF_H
@@ -36,6 +36,7 @@ typedef struct
   int fascist_logging;		/* Perform very verbose logging. */
   int print_motd;		/* If true, print /etc/motd. */
   int x11_forwarding;		/* If true, permit inet (spoofing) X11 fwd. */
+  int x11_display_offset;	/* What DISPLAY number to start searching at */
   int strict_modes;		/* If true, require string home dir modes. */
   int keepalives;		/* If true, set SO_KEEPALIVE. */
   SyslogFacility log_facility;	/* Facility for system logging. */
