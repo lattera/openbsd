@@ -1,4 +1,5 @@
- * $OpenBSD: src/usr.sbin/pkg_install/lib/Attic/ftp.c,v 1.1 1996/06/04 07:56:12 niklas Exp $
+/*	$OpenBSD: src/usr.sbin/pkg_install/lib/Attic/ftp.c,v 1.2 1996/06/04 08:43:42 niklas Exp $	*/
+
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):

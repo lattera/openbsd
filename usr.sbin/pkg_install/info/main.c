@@ -1,6 +1,7 @@
-#	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.1 1996/06/04 07:56:09 niklas Exp $
+/*	$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.2 1996/06/04 08:43:39 niklas Exp $	*/
+
 #ifndef lint
-static char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.1 1996/06/04 07:56:09 niklas Exp $";
+static char *rcsid = "$OpenBSD: src/usr.sbin/pkg_install/info/Attic/main.c,v 1.2 1996/06/04 08:43:39 niklas Exp $";
 #endif
 
 /*
