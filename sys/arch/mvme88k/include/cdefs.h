@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cdefs.h,v 1.5.6.1 2001/04/18 16:11:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cdefs.h,v 1.5.6.2 2001/10/31 03:01:18 nate Exp $ */
 /*	$NetBSD: cdefs.h,v 1.2 1995/03/23 20:10:48 jtc Exp $	*/
 
 /*
@@ -9,11 +9,7 @@
 #ifndef	__MACHINE_CDEFS_H__
 #define	__MACHINE_CDEFS_H__
 
-#ifdef __STDC__
-#define _C_LABEL(x)	_STRING(_ ## x)
-#else
-#define _C_LABEL(x)	_STRING(_/**/x)
-#endif
+#include <machine/asm.h>
 
 #ifdef __GNUC__
 #ifdef __STDC__
@@ -33,4 +29,4 @@
 #endif
 #endif
 
-#endif __MACHINE_CDEFS_H__
+#endif /* __MACHINE_CDEFS_H__ */

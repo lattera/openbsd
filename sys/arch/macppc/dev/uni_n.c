@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/uni_n.c,v 1.1 2001/09/01 15:50:00 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/uni_n.c,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
 
 /*
  * Copyright (c) 1998-2001 Dale Rahn. All rights reserved.

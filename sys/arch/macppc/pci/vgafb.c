@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3 2001/09/17 15:10:36 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/vgafb.c,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: vga.c,v 1.3 1996/12/02 22:24:54 cgd Exp $	*/
 
 /*

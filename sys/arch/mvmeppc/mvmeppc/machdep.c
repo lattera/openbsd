@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2 2001/06/27 04:32:46 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/machdep.c,v 1.2.2.1 2001/10/31 03:01:21 nate Exp $	*/
 /*	$NetBSD: machdep.c,v 1.4 1996/10/16 19:33:11 ws Exp $	*/
 
 /*
@@ -52,7 +52,7 @@
 #include <sys/user.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
+#include <uvm/uvm_extern.h>
 
 #ifdef SYSVSHM
 #include <sys/shm.h>
@@ -89,7 +89,6 @@ struct pmap *curpm;
 struct proc *fpuproc;
 
 extern struct user *proc0paddr;
-extern int cold;
 
 /* 
  *  XXX this is to fake out the console routines, while 
@@ -169,7 +168,6 @@ static int devio_malloc_safe = 0;
 int segment8_mapped = 0;
 int segment0_mapped = 0;
 int segmentC_mapped = 0;
-unsigned char fw_vectors[0x3000];
 
 extern int where;
 
@@ -203,7 +201,6 @@ initppc(startkernel, endkernel, args)
 	proc0.p_addr = proc0paddr;
 	bzero(proc0.p_addr, sizeof *proc0.p_addr);
 		
-	bcopy((void *)0, &fw_vectors[0], 0x3000);
 	fw = &ppc1_firmware; /*  Just PPC1-Bug for now... */
 	/*
 	 * XXX We use the page just above the interrupt vector as
@@ -218,9 +215,7 @@ initppc(startkernel, endkernel, args)
 
 	/* startup fake console driver.  It will be replaced by consinit() */
 	cn_tab = &bootcons;
-#ifdef STEVE_DEBUG
-	printf("initmsgbuf() done.\n");
-#endif 
+	
 	/*
 	 * Initialize BAT registers to unmapped to not generate
 	 * overlapping mappings below.
@@ -306,10 +301,6 @@ initppc(startkernel, endkernel, args)
 	__asm__ volatile ("mtdbatl 3,%0; mtdbatu 3,%1"
 		      :: "r"(battable[0x3].batl), "r"(battable[0x3].batu));
 #endif
-#ifdef STEVE_DEBUG
-	printf("bats mapped.\n");
-#endif 
-#if 1
 	/*
 	 * Set up trap vectors
 	 */
@@ -323,7 +314,6 @@ initppc(startkernel, endkernel, args)
 			 * This one is (potentially) installed during autoconf
 			 */
 			break;
-#if 1
 		case EXC_DSI:
 			bcopy(&dsitrap, (void *)EXC_DSI, (size_t)&dsisize);
 			break;
@@ -333,7 +323,6 @@ initppc(startkernel, endkernel, args)
 		case EXC_ALI:
 			bcopy(&alitrap, (void *)EXC_ALI, (size_t)&alisize);
 			break;
-#endif
 		case EXC_DECR:
 			bcopy(&decrint, (void *)EXC_DECR, (size_t)&decrsize);
 			break;
@@ -360,38 +349,16 @@ initppc(startkernel, endkernel, args)
 		}
 
 	syncicache((void *)EXC_RST, EXC_LAST - EXC_RST + 0x100);
-#endif
-#ifdef STEVE_DEBUG
-	printf("vectors set.\n");
-#endif 
 
 	uvmexp.pagesize = 4096;
 	uvm_setpagesize();
 	
-#ifdef STEVE_DEBUG
-	printf("page size set.\n");
-#endif 
 	/*
 	 * Initialize pmap module.
 	 */
 	pmap_bootstrap(startkernel, endkernel);
 
-	/*(fw->vmon)();*/
 	ppc_vmon();
-
-#ifdef STEVE_DEBUG
-	printf("pmap_bootstrap() done.\n");
-	/* mvmeprom_return(); */
-#endif 
-	msr = ppc_get_msr();
-	msr &= ~PSL_IP;
-	ppc_set_msr(msr);
-#ifdef STEVE_DEBUG
-	printf("msr == 0x%08x\n", msr);
-	printf("bit == %032b\n", msr);
-	printf("made it!\n");
-	/* mvmeprom_return(); */
-#endif 
 
 	/*
 	 * Now enable translation (and machine checks/recoverable interrupts).
@@ -401,9 +368,6 @@ initppc(startkernel, endkernel, args)
 	__asm__ volatile ("eieio; mfmsr %0; ori %0,%0,%1; mtmsr %0; sync;isync"
 		      : "=r"(scratch) : "K"(PSL_IR|PSL_DR|PSL_ME|PSL_RI));
 
-#if 1 /*def STEVE_DEBUG*/
-	printf("translation enabled.\n");
-#endif 
 	/*                                                              
 	 * Look at arguments passed to us and compute boothowto.      
 	 * Default to SINGLE and ASKNAME if no args or
@@ -443,12 +407,7 @@ initppc(startkernel, endkernel, args)
 			}
 		}
 	}			
-#if 0
-	ddb_init((int)(esym - (&_end)), &_end, esym);
-#endif
-#ifdef STEVE_DEBUG
-	printf("boothowto == %d\n", boothowto);
-#endif 
+	
 	/*
 	 * Set up extents for pci mappings
 	 * Is this too late?
@@ -467,28 +426,16 @@ initppc(startkernel, endkernel, args)
 	 * 0xf0000000 - kernel map segment (user space mapped here)
 	 */
 
-#ifdef STEVE_DEBUG
-	printf("before extent_create()\n");
-#endif 
 	prep_bus_space_init();	
 	devio_ex = extent_create("devio", 0x80000000, 0xffffffff, M_DEVBUF,
 		(caddr_t)devio_ex_storage, sizeof(devio_ex_storage),
 		EX_NOCOALESCE|EX_NOWAIT);
 
-#ifdef STEVE_DEBUG
-	printf("extent_create() done.\n");
-#endif 
 	/*
 	 * Now we can set up the console as mapping is enabled.
-         */
-#ifdef STEVE_DEBUG
-	printf("before consinit()\n");
-#endif 
+    */
 	consinit();
-#ifdef STEVE_DEBUG
-	printf("consinit() done.\n");
-#endif 
-	/* while using openfirmware, run userconfig */
+	
 	if (boothowto & RB_CONFIG) {
 #ifdef BOOT_CONFIG
 		user_config();
@@ -500,9 +447,6 @@ initppc(startkernel, endkernel, args)
 	 * Replace with real console.
 	 */
 	cninit();
-#ifdef STEVE_DEBUG
-	printf("cninit() done.\n");
-#endif 
 #ifdef OWF
 	ofwconprobe();
 #endif 
@@ -522,15 +466,6 @@ initppc(startkernel, endkernel, args)
 #endif
 #endif
 
-	/*
-	 * Figure out ethernet address.
-	 */
-#if 0
-	(void)power4e_get_eth_addr();
-#endif 
-#ifdef STEVE_DEBUG
-	printf("return to locore.\n");
-#endif 
 }
 
 void
@@ -627,24 +562,19 @@ cpu_startup()
 	 * limits the number of processes exec'ing at any time.
 	 */
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr, 16 * NCARGS,
-	    TRUE, FALSE, NULL);
+	    VM_MAP_PAGEABLE, FALSE, NULL);
 
 	/*
 	 * Allocate a submap for physio
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_PHYS_SIZE, TRUE, FALSE, NULL);
+	    VM_PHYS_SIZE, 0, FALSE, NULL);
 	ppc_malloc_ok = 1;
 	
 
-	mb_map = uvm_km_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
-	    VM_MBUF_SIZE, FALSE, FALSE, NULL);
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
+	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
-	/*
-	 * Initialize timeouts.
-	 */
-	timeout_init();
-	
 	printf("avail mem = %d\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n", nbuf,
 	    bufpages * PAGE_SIZE);
@@ -669,7 +599,6 @@ allocsys(v)
 #define	valloc(name, type, num) \
 	v = (caddr_t)(((name) = (type *)v) + (num))
 
-	valloc(timeouts, struct timeout, ntimeout);
 #ifdef	SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -969,10 +898,7 @@ boot(howto)
 	if (!cold && !(howto & RB_NOSYNC) && !syncing) {
 		syncing = 1;
 		vfs_shutdown();		/* sync */
-#if 0
-		/* resettodr does not currently do anything, address
-		 * this later
-		 */
+		
 		/*
 		 * If we've been adjusting the clock, the todr
 		 * will be out of synch; adjust it now unless
@@ -983,25 +909,18 @@ boot(howto)
 		} else {
 			printf("WARNING: not updating battery clock\n");
 		}
-#endif
 	}
 	splhigh();
 	if (howto & RB_HALT) {
 		doshutdownhooks();
 		printf("halted\n\n");
 		ppc_exit();
-		/*
-		(fw->exit)();
-		*/
 	}
 	if (!cold && (howto & RB_DUMP))
 		dumpsys();
 	doshutdownhooks();
 	printf("rebooting\n\n");
 	ppc_boot(str);
-	/*
-        (fw->boot)();
-	*/
 	while(1) /* forever */;
 }
 
@@ -1289,7 +1208,7 @@ bus_mem_add_mapping(bpa, size, cacheable, bshp)
 #else
 		pmap_enter(pmap_kernel(), vaddr, spa,
 #endif
-			VM_PROT_READ | VM_PROT_WRITE, TRUE, 0/* XXX */);
+			VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED /* XXX */);
 		spa += NBPG;
 		vaddr += NBPG;
 	}
@@ -1327,7 +1246,7 @@ mapiodev(pa, len)
 #else
 		pmap_enter(pmap_kernel(), vaddr, spa,
 #endif
-			VM_PROT_READ | VM_PROT_WRITE, TRUE, 0/* XXX */);
+			VM_PROT_READ | VM_PROT_WRITE, PMAP_WIRED/* XXX */);
 		spa += NBPG;
 		vaddr += NBPG;
 	}

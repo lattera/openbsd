@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.3 2001/07/04 10:20:06 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/autoconf.c,v 1.6.4.4 2001/10/31 03:01:19 nate Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -65,7 +65,10 @@ void	dumpconf __P((void));
 int	findblkmajor __P((struct device *));
 struct device	*getdisk __P((char *, int, int, dev_t *));
 
-int cold;   /* 1 if still booting */
+int cold = 1;   /* 1 if still booting */
+
+void *bootaddr;
+int bootpart;
 
 /*
  * called at boot time, configure all devices on the system.
@@ -155,7 +158,7 @@ getdisk(str, len, defpart, devp)
 		for (dv = alldevs.tqh_first; dv != NULL;
 		    dv = dv->dv_list.tqe_next) {
 			if (dv->dv_class == DV_DISK)
-				printf(" %s[a-h]", dv->dv_xname);
+				printf(" %s[a-p]", dv->dv_xname);
 #ifdef NFSCLIENT
 			if (dv->dv_class == DV_IFNET)
 				printf(" %s", dv->dv_xname);

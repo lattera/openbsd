@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/asm.h,v 1.3.10.1 2001/04/18 16:07:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/asm.h,v 1.3.10.2 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: asm.h,v 1.7 1994/10/27 04:15:56 cgd Exp $	*/
 
 /*-
@@ -48,7 +48,7 @@
 	call	1f;	\
 1:			\
 	popl	%ebx;	\
-	addl	$_GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
+	addl	$__GLOBAL_OFFSET_TABLE_+[.-1b], %ebx
 #define PIC_EPILOGUE	\
 	popl	%ebx
 #define PIC_PLT(x)	x@PLT

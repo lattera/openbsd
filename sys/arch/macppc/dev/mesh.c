@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/mesh.c,v 1.2 2001/09/15 01:51:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/mesh.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: mesh.c,v 1.1 1999/02/19 13:06:03 tsubai Exp $	*/
 
 /*-

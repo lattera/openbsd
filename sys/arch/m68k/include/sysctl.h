@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/m68k/include/Attic/sysctl.h,v 1.3.14.1 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.1 1996/12/17 19:26:51 gwr Exp $	*/
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/prtvid/prtvid.c,v 1.3.16.1 2001/10/31 03:01:18 nate Exp $	*/
+
 #include <stdio.h>
 #define __DBINTERFACE_PRIVATE
 #include <db.h>

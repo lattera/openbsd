@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/wscons_machdep.c,v 1.1 2001/09/01 15:44:20 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/macppc/wscons_machdep.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $ */
 
 /*
  * Copyright (c) 2001 Aaron Campbell

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.2 2001/07/04 10:20:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cpu.h,v 1.6.4.3 2001/10/31 03:01:18 nate Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * Copyright (c) 1992, 1993
@@ -48,10 +48,12 @@
 /*
  * CTL_MACHDEP definitinos.
  */
-#define	CPU_MAXID	1	/* no valid machdep ids */
+#define	CPU_CONSDEV	1	/* dev_t: console terminal device */
+#define	CPU_MAXID	2	/* number of valid machdep ids */
 
 #define	CTL_MACHDEP_NAMES { \
 	{ 0, 0 }, \
+	{ "console_device", CTLTYPE_STRUCT }, \
 }
 
 #ifdef _KERNEL
@@ -201,4 +203,4 @@ int badvaddr __P((vm_offset_t va, int size));
 void nmihand __P((void *framep));
 
 #endif /* _KERNEL */
-#endif __MACHINE_CPU_H__
+#endif /* __MACHINE_CPU_H__ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.2 2001/07/04 10:20:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/pmap.h,v 1.9.4.3 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991 Carnegie Mellon University
@@ -16,11 +16,9 @@
 #define _MACHINE_PMAP_H_
 #define OMRON_PMAP
 
-#include <machine/psl.h>		/* get standard goodies		*/
-#include <vm/vm_param.h>
-#include <vm/vm_prot.h>			/* vm_prot_t 			*/
 #include <machine/mmu.h>		/* batc_template_t, BATC_MAX, etc.*/
 #include <machine/pcb.h>		/* pcb_t, etc.*/
+#include <machine/psl.h>		/* get standard goodies		*/
 
 typedef struct sdt_entry *sdt_ptr_t;
 
@@ -70,6 +68,7 @@ typedef  struct pv_entry {
 #ifdef	_KERNEL
 
 extern struct pmap	kernel_pmap_store;
+extern caddr_t vmmap;
 
 #define	pmap_kernel()		(&kernel_pmap_store)
 #define pmap_resident_count(pmap) ((pmap)->stats.resident_count)
@@ -92,9 +91,6 @@ extern struct pmap	kernel_pmap_store;
 /**************************************************************************/
 /*** Prototypes for public functions defined in pmap.c ********************/
 /**************************************************************************/
-
-void pmap_activate(struct proc *p);
-void pmap_deactivate(struct proc *p);
 
 vm_offset_t pmap_map(
 		vm_offset_t virt,

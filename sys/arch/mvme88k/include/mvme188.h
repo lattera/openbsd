@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/mvme188.h,v 1.1.4.1 2001/04/18 16:11:23 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/mvme188.h,v 1.1.4.2 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -52,13 +52,13 @@
  */
 #ifndef UDEFINED
 #if defined(_LOCORE)
-#	define U(num)	num
+#define U(num)	num
 #else
-#  if defined(__STDC__)
-#	define U(num)	num ## U
-#  else
-#	define U(num)	num/**/U
-#  endif
+#if defined(__STDC__)
+#define U(num)	num ## U
+#else
+#define U(num)	num/**/U
+#endif
 #endif
 #endif
 
@@ -385,6 +385,6 @@ extern volatile unsigned int *int_mask_reg[MAX_CPUS];
 #define M188_IACK		U(0xFFF85000)
 #define M188_IVEC		0x40	/* vector returned upon MVME188 int */
 
-#endif	__MACHINE_MVME188_H__
+#endif /* __MACHINE_MVME188_H__ */
 
 

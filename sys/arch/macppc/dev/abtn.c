@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2 2001/09/01 17:43:08 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/abtn.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: abtn.c,v 1.1 1999/07/12 17:48:26 tsubai Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_bmreg.h,v 1.2 2001/09/16 03:19:30 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_bmreg.h,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: if_bmreg.h,v 1.2 2000/01/25 14:38:50 tsubai Exp $	*/
 
 /*

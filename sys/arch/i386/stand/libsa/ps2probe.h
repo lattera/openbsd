@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/ps2probe.h,v 1.2 2001/08/21 15:46:24 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/Attic/ps2probe.h,v 1.2.4.1 2001/10/31 03:01:13 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Michael Shalayeff

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/ofwmagic.S,v 1.1 2001/09/01 15:39:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/ofwmagic.S,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: ofwmagic.S,v 1.1 1997/04/16 21:19:00 thorpej Exp $	*/
 
 /*-

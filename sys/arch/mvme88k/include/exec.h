@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7.4.1 2001/04/18 16:11:17 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/exec.h,v 1.7.4.2 2001/10/31 03:01:18 nate Exp $ */
 #ifndef __MACHINE_EXEC_H__
 #define __MACHINE_EXEC_H__
 
@@ -29,4 +29,4 @@ struct relocation_info_m88k {
 #define _KERN_DO_AOUT
 #define _KERN_DO_ELF
 
-#endif __MACHINE_EXEC_H__
+#endif /* __MACHINE_EXEC_H__ */

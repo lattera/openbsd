@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/vid.h,v 1.3.14.2 2001/10/31 03:01:19 nate Exp $	*/
+
 #ifndef __MACHINE_VID_H__
 #define __MACHINE_VID_H__
 
@@ -57,4 +59,4 @@ struct cfg {
 	unsigned char	cfg_4[196];
 };
 #endif
-#endif __MACHINE_VID_H__
+#endif /* __MACHINE_VID_H__ */

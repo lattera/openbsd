@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/adb_direct.c,v 1.2 2001/09/01 17:43:08 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/adb_direct.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: adb_direct.c,v 1.14 2000/06/08 22:10:45 tsubai Exp $	*/
 
 /* From: adb_direct.c 2.02 4/18/97 jpw */

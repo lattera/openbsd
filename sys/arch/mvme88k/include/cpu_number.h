@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/cpu_number.h,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $	*/
+
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -37,7 +39,7 @@ static unsigned cpu_number __P((void));
 static __inline__ unsigned cpu_number(void)
 {
 	register unsigned cpu;
-	extern int cputyp;
+
 	if (cputyp != CPU_188 || number_cpus == 1) return 0;
 	__asm__ ("ldcr %0, cr18" : "=r" (cpu));
 	return (cpu & 3);

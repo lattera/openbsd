@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/meshreg.h,v 1.1 2001/09/01 15:50:00 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/meshreg.h,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: meshreg.h,v 1.1 1999/02/19 13:06:03 tsubai Exp $	*/
 
 /*-

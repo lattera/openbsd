@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5 2001/07/01 20:14:18 angelos Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/conf.c,v 1.5.2.1 2001/10/31 03:01:21 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom
@@ -44,7 +44,6 @@
 bdev_decl(wd);
 #include "sd.h"
 bdev_decl(sd);
-bdev_decl(sw);
 #include "cd.h"
 bdev_decl(cd);
 
@@ -99,7 +98,6 @@ cdev_decl(pts);
 #define	ptcioctl	ptyioctl
 cdev_decl(ptc);
 cdev_decl(log);
-cdev_decl(sw);
 
 #include "bugtty.h"
 cdev_decl(bugtty);
@@ -148,6 +146,8 @@ cdev_decl(lkm);
 
 #include "ksyms.h"
 cdev_decl(ksyms);
+
+#include "pf.h"
 
 #include <altq/altqconf.h>
 

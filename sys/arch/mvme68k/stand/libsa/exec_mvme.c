@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/exec_mvme.c,v 1.2.16.1 2001/10/31 03:01:18 nate Exp $ */
 /*	$NetBSD: exec_sun.c,v 1.5 1996/01/29 23:41:06 gwr Exp $ */
 
 /*-

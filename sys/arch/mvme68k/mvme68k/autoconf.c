@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.1 2001/07/04 10:19:33 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/autoconf.c,v 1.11.2.2 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -297,7 +297,7 @@ getdisk(str, len, defpart, devp)
 		for (dv = alldevs.tqh_first; dv != NULL;
 		    dv = dv->dv_list.tqe_next) {
 			if (dv->dv_class == DV_DISK)
-				printf(" %s[a-h]", dv->dv_xname);
+				printf(" %s[a-p]", dv->dv_xname);
 #ifdef NFSCLIENT
 			if (dv->dv_class == DV_IFNET)
 				printf(" %s", dv->dv_xname);

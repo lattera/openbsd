@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.4 2001/07/04 10:18:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/machdep.c,v 1.64.2.5 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: machdep.c,v 1.207 1998/07/08 04:39:34 thorpej Exp $	*/
 
 /*
@@ -130,13 +130,6 @@ void netintr __P((void));
 
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
 #include <vm/vm.h>
-#include <vm/vm_param.h>
-#include <vm/pmap.h>
-#include <vm/vm_map.h>
-#include <vm/vm_object.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_page.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <sys/sysctl.h>
@@ -354,8 +347,8 @@ cpu_startup(void)
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
 		pmap_enter(pmap_kernel(), (vm_offset_t)msgbufp,
 		    high[numranges - 1] + i * NBPG,
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -402,10 +395,6 @@ again:
 	    (name) = (type *)v; v = (caddr_t)((name)+(num))
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
-#ifdef REAL_CLISTS
-	valloc(cfree, struct cblock, nclist);
-#endif
-	valloc(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -495,8 +484,8 @@ again:
 				panic("cpu_startup: not enough memory for "
 				    "buffer cache");
 			pmap_enter(kernel_map->pmap, curbuf,
-			    VM_PAGE_TO_PHYS(pg), VM_PROT_ALL, TRUE,
-			    VM_PROT_ALL);
+			    VM_PAGE_TO_PHYS(pg), VM_PROT_ALL,
+			    VM_PROT_ALL|PMAP_WIRED);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
@@ -506,21 +495,16 @@ again:
 	 * limits the number of processes exec'ing at any time.
 	 */
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    16 * NCARGS, TRUE, FALSE, NULL);
+	    16 * NCARGS, VM_MAP_PAGEABLE, FALSE, NULL);
 
 	/*
 	 * Allocate a submap for physio
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
-	    VM_PHYS_SIZE, TRUE, FALSE, NULL);
+	    VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
-	    VM_MBUF_SIZE, FALSE, FALSE, NULL);
-
-	/*
-	 * Initialize timeouts
-	 */
-	timeout_init();
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
+	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
 
 	printf("avail mem = %ld\n", ptoa(uvmexp.free));
 	printf("using %d buffers containing %d bytes of memory\n",
@@ -721,7 +705,7 @@ boot(howto)
 
 	/* Map the last physical page VA = PA for doboot() */
 	pmap_enter(pmap_kernel(), (vm_offset_t)maxaddr, (vm_offset_t)maxaddr,
-	    VM_PROT_ALL, TRUE, VM_PROT_ALL);
+	    VM_PROT_ALL, VM_PROT_ALL|PMAP_WIRED);
 
 
 	printf("rebooting...\n");
@@ -913,7 +897,7 @@ dumpsys()
 			maddr = h->ram_segs[seg].start;
 		}
 		pmap_enter(pmap_kernel(), (vm_offset_t)vmmap, maddr,
-		    VM_PROT_READ, TRUE, VM_PROT_READ);
+		    VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
 
 		error = (*dump)(dumpdev, blkno, vmmap, NBPG);
  bad:
@@ -1153,7 +1137,7 @@ nmihand(frame)
 
 	if (nmihanddeep++)
 		return;
-/*	regdump(&frame, 128);
+/*	regdump(&(frame.F_t), 128);
 	dumptrace(); */
 #ifdef DIAGNOSTIC
 	printf("Panic switch: PC is 0x%x.\n", frame.f_pc);
@@ -1163,68 +1147,6 @@ nmihand(frame)
 		Debugger();
 #endif
 	nmihanddeep = 0;
-}
-
-void	dumpmem __P((u_int *, int));
-
-void
-regdump(frame, sbytes)
-	struct frame *frame;
-	int sbytes;
-{
-	static int doingdump = 0;
-	register int i;
-	int s;
-
-	if (doingdump)
-		return;
-	s = splhigh();
-	doingdump = 1;
-	printf("pid = %d, pc = 0x%08x, ", curproc->p_pid, frame->f_pc);
-	printf("ps = 0x%08x, ", frame->f_sr);
-	printf("sfc = 0x%08x, ", getsfc());
-	printf("dfc = 0x%08x\n", getdfc());
-	printf("Registers:\n     ");
-	for (i = 0; i < 8; i++)
-		printf("        %d", i);
-	printf("\ndreg:");
-	for (i = 0; i < 8; i++)
-		printf(" %08x", frame->f_regs[i]);
-	printf("\nareg:");
-	for (i = 0; i < 8; i++)
-		printf(" %08x", frame->f_regs[i + 8]);
-	if (sbytes > 0) {
-		if (1) {	/* (frame->f_sr & PSL_S) *//* BARF - BG */
-			printf("\n\nKernel stack (%08x):",
-			    (int) (((int *)frame) - 1));
-			dumpmem(((int *)frame) - 1, sbytes);
-		} else {
-			printf("\n\nUser stack (%08x):", frame->f_regs[15]);
-			dumpmem((int *)frame->f_regs[15], sbytes);
-		}
-	}
-	doingdump = 0;
-	splx(s);
-}
-
-void	dumpmem __P((u_int *, int));
-
-void
-dumpmem(ptr, sz)
-	register u_int *ptr;
-	int sz;
-{
-	register int i;
-
-	sz /= 4;
-	for (i = 0; i < sz; i++) {
-		if ((i & 7) == 0)
-			printf("\n%08x: ", (u_int) ptr);
-		else
-			printf(" ");
-		printf("%08x ", *ptr++);
-	}
-	printf("\n");
 }
 
 /*

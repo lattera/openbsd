@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/in_cksum.s,v 1.1.16.3 2001/10/31 03:01:12 nate Exp $	*/
+
 /*
  * Copyright (c) 1996 Dave Richards <richards@zso.dec.com>
  * All rights reserved.

@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.3 2001/07/04 10:19:50 niklas Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/conf/Makefile.mvme88k,v 1.7.4.4 2001/10/31 03:01:18 nate Exp $
 #
 # Makefile for OpenBSD
 #
@@ -21,6 +21,8 @@
 # DEBUG is set to -g by config if debugging is requested (config -g).
 # PROF is set to -pg by config if profiling is requested (config -p).
 
+.include <bsd.own.mk>
+
 AS?= 	as
 CC?=    cc
 CPP?=   cpp
@@ -38,8 +40,8 @@ MVME88K=	$S/arch/mvme88k
 
 INCLUDES=	-nostdinc -I. -I$S/arch -I$S
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -Dmvme88k -Dm88k
-CWARNFLAGS=	-Wall -Wmissing-prototypes \
-		-Wno-uninitialized -Wno-format -Wno-main # -Wstrict-prototypes
+CWARNFLAGS=	-Wall -Werror -Wmissing-prototypes \
+		-Wno-uninitialized -Wno-format -Wno-main -Wstrict-prototypes
 CMACHFLAGS=
 COPTS?=		-O
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS}
@@ -181,5 +183,17 @@ locore.o machdep.o: Makefile
 
 locore.o: ${MVME88K}/mvme88k/locore.S assym.h
 	${NORMAL_S}
+
+# The install target can be redefined by putting a
+# install-kernel-${MACHINE_NAME} target into /etc/mk.conf
+MACHINE_NAME!=  uname -n
+install: install-kernel-${MACHINE_NAME}
+.if !target(install-kernel-${MACHINE_NAME}})
+install-kernel-${MACHINE_NAME}:
+	rm -f /obsd
+	ln /bsd /obsd
+	cp bsd /nbsd
+	mv /nbsd /bsd
+.endif
 
 %RULES

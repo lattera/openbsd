@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/vm86.c,v 1.10.10.2 2001/07/15 15:10:55 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/vm86.c,v 1.10.10.3 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: vm86.c,v 1.15 1996/05/03 19:42:33 christos Exp $	*/
 
 /*-

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/pmap_table.c,v 1.1.4.3 2001/10/31 03:01:20 nate Exp $	*/
+
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -31,7 +33,6 @@
 #include <sys/param.h>
 #include <machine/m882xx.h>		/* CMMU stuff */
 #include <vm/vm.h>
-#include <vm/vm_kern.h>			/* vm/vm_kern.h */
 #include <machine/pmap_table.h>		/* pmap_table.h*/
 
 #define R VM_PROT_READ
@@ -91,9 +92,6 @@ pmap_table_build(endoftext)
 		bt = m197_board_table;
 		break;
 #endif 
-	default:
-		panic("pmap_table_build: Unknown CPU type.");
-		/* NOT REACHED */
 	}
 
 	/* round off all entries to nearest segment */

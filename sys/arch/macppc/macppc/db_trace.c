@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/db_trace.c,v 1.5 2001/09/15 21:15:03 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/Attic/db_trace.c,v 1.5.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: db_trace.c,v 1.15 1996/02/22 23:23:41 gwr Exp $	*/
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/bootst/dev_tape.h,v 1.1.16.1 2001/10/31 03:01:17 nate Exp $	*/
+
 
 int	tape_open __P((struct open_file *, ...));
 int	tape_close __P((struct open_file *));

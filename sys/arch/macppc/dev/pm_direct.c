@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.c,v 1.4 2001/10/03 14:45:37 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/pm_direct.c,v 1.4.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: pm_direct.c,v 1.9 2000/06/08 22:10:46 tsubai Exp $	*/
 
 /*

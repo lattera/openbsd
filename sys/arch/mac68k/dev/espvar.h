@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/espvar.h,v 1.3.14.1 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: espvar.h,v 1.16 1996/10/13 02:59:50 christos Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/pmap.h,v 1.3 2001/09/10 17:48:09 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/pmap.h,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
 
 #include <powerpc/pmap.h>
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.3 2001/07/04 10:20:19 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/pmap.c,v 1.12.4.4 2001/10/31 03:01:19 nate Exp $	*/
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -57,16 +57,15 @@
 #include <sys/user.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>			/* vm/vm_kern.h */
 #include <uvm/uvm.h>
 
 #include <machine/asm_macro.h>
-#include <machine/assert.h>
 #include <machine/board.h>
 #include <machine/cmmu.h>
 #include <machine/cpu_number.h>
 #include <machine/m882xx.h>		/* CMMU stuff */
 #include <machine/pmap_table.h>
+#include <machine/pte.h>
 
 #include <mvme88k/dev/pcctworeg.h>
 #include <mvme88k/dev/clreg.h>
@@ -74,7 +73,7 @@
 /*
  *  VM externals
  */
-extern vm_offset_t      avail_start, avail_next, avail_end;
+extern vm_offset_t      avail_start, avail_end;
 extern vm_offset_t      virtual_avail, virtual_end;
 
 /*
@@ -331,6 +330,15 @@ extern vm_offset_t bugromva;
 extern vm_offset_t sramva;
 extern vm_offset_t obiova;
 
+void flush_atc_entry __P((long, vm_offset_t, int));
+unsigned int m88k_protection __P((pmap_t, vm_prot_t));
+pt_entry_t *pmap_expand_kmap __P((vm_offset_t, vm_prot_t));
+void pmap_free_tables __P((pmap_t));
+void pmap_remove_range __P((pmap_t, vm_offset_t, vm_offset_t));
+void pmap_copy_on_write __P((vm_offset_t));
+void pmap_expand __P((pmap_t, vm_offset_t));
+void cache_flush_loop __P((int, vm_offset_t, int));
+
 /*
  * Rooutine:	FLUSH_ATC_ENTRY
  *
@@ -549,7 +557,7 @@ pmap_map(vm_offset_t virt, vm_offset_t start, vm_offset_t end, vm_prot_t prot)
 	pt_entry_t	*pte;
 	pte_template_t	template;
 #ifdef MVME197
-	static m197_atc_initialized = FALSE;
+	static int m197_atc_initialized = FALSE;
 #endif
 	/*
 	 * cache mode is passed in the top 16 bits.
@@ -625,7 +633,6 @@ pmap_map(vm_offset_t virt, vm_offset_t start, vm_offset_t end, vm_prot_t prot)
  * Calls:
  *	m88k_protection
  *	BATC_BLK_ALIGNED
- *	cmmu_store
  *	pmap_pte
  *	pmap_expand_kmap
  *
@@ -1041,8 +1048,6 @@ pmap_bootstrap(vm_offset_t load_start,
 		      0x10000,
 		      (VM_PROT_WRITE | VM_PROT_READ)|(CACHE_INH <<16));
 
-	assert(vaddr == trunc_page((unsigned)&kernelstart));
-
 	/*  map the kernel text read only */
 	vaddr = PMAPER(
 		      (vm_offset_t)trunc_page(((unsigned)&kernelstart)),
@@ -1271,7 +1276,6 @@ pmap_bootstrap(vm_offset_t load_start,
 		printf("running virtual - avail_next 0x%x\n", *phys_start);
 	}
 #endif
-	avail_next = *phys_start;
 } /* pmap_bootstrap() */
 
 
@@ -1452,20 +1456,14 @@ pmap_zero_page(vm_offset_t phys)
  *
  *  This routines allocates a pmap structure.
  */
-pmap_t
-pmap_create(vm_size_t size)
+struct pmap *
+pmap_create(void)
 {
-	pmap_t      p;
-
-	/*
-	 * A software use-only map doesn't even need a map.
-	 */
-	if (size != 0)
-		return (PMAP_NULL);
+	struct pmap *p;
 
 	CHECK_PMAP_CONSISTENCY("pmap_create");
 
-	p = (pmap_t)malloc(sizeof(*p), M_VMPMAP, M_WAITOK);
+	p = (struct pmap *)malloc(sizeof(*p), M_VMPMAP, M_WAITOK);
 
 	bzero(p, sizeof(*p));
 	pmap_pinit(p);
@@ -1606,11 +1604,11 @@ pmap_free_tables(pmap_t pmap)
 	sdttbl = pmap->sdt_vaddr;    /* addr of segment table */
 	/* 
 	  This contortion is here instead of the natural loop 
-	  because of integer overflow/wraparound if VM_MAX_USER_ADDRESS 
+	  because of integer overflow/wraparound if VM_MAX_ADDRESS 
 	  is near 0xffffffff
 	*/
-	i = VM_MIN_USER_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
-	j = VM_MAX_USER_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
+	i = VM_MIN_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
+	j = VM_MAX_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
 	if ( j < 1024 )	j++;
 
 	/* Segment table Loop */
@@ -1765,7 +1763,6 @@ pmap_reference(pmap_t p)
  *	free
  *	invalidate_pte
  *	flush_atc_entry
- *	vm_page_set_modified
  *	PHYS_TO_VM_PAGE
  *
  * Special Assumptions:
@@ -1778,10 +1775,9 @@ pmap_reference(pmap_t p)
  * nothing need be done.
  *
  *  If the PTE is valid, the routine must invalidated the entry. The
- * 'modified' bit, if on, is referenced to the VM through the
- * 'vm_page_set_modified' macro, and into the appropriate entry in the
- * pmap_modify_list. Next, the function must find the PV list entry
- * associated with this pmap/va (if it doesn't exist - the function
+ * 'modified' bit, if on, is referenced to the VM, and into the appropriate
+ * entry in the pmap_modify_list. Next, the function must find the PV list
+ * entry associated with this pmap/va (if it doesn't exist - the function
  * panics). The PV list entry is unlinked from the list, and returned to
  * its zone.
  */
@@ -1914,9 +1910,11 @@ pmap_remove_range(pmap_t pmap, vm_offset_t s, vm_offset_t e)
 		flush_atc_entry(users, tva, kflush);
 
 		if (opte.pte.modified) {
-			if (IS_VM_PHYSADDR(pa)) {
-				vm_page_set_modified(
-				    PHYS_TO_VM_PAGE(opte.bits & ~PAGE_MASK));
+			if (vm_physseg_find(atop(pa), NULL) != -1) {
+				struct vm_page *pg;
+
+				pg = PHYS_TO_VM_PAGE(opte.bits & ~PAGE_MASK);
+				pg->flags &= ~PG_CLEAN;
 			}
 			/* keep track ourselves too */
 			if (PMAP_MANAGED(pa))
@@ -2001,7 +1999,6 @@ pmap_remove(pmap_t map, vm_offset_t s, vm_offset_t e)
  *	simple_lock
  *	PDT_VALID
  *	pmap_pte
- *	vm_page_set_modified
  *	PHYS_TO_VM_PAGE
  *	free
  *
@@ -2105,7 +2102,10 @@ remove_all_Retry:
 		flush_atc_entry(users, va, kflush);
 
 		if (opte.pte.modified) {
-			vm_page_set_modified((vm_page_t)PHYS_TO_VM_PAGE(phys));
+			struct vm_page *pg;
+
+			pg = PHYS_TO_VM_PAGE(phys);
+			pg->flags &= ~PG_CLEAN;
 			/* keep track ourselves too */
 			SET_ATTRIB(phys, 1);
 		}
@@ -2552,10 +2552,10 @@ pmap_expand(pmap_t map, vm_offset_t v)
  *	}
  *
  */
-void
+int
 pmap_enter(pmap_t pmap, vm_offset_t va, vm_offset_t pa,
-	   vm_prot_t prot, boolean_t wired,
-	   vm_prot_t access_type)
+	   vm_prot_t prot,
+	   int flags)
 {
 	int		ap;
 	int		spl, spl_sav;
@@ -2567,10 +2567,7 @@ pmap_enter(pmap_t pmap, vm_offset_t va, vm_offset_t pa,
 	register unsigned	users;
 	register pte_template_t	opte;
 	int		kflush;
-
-	if (pmap == PMAP_NULL) {
-		panic("pmap_enter: pmap is NULL");
-	}
+	boolean_t wired = (flags & PMAP_WIRED) != 0;
 
 	CHECK_PAGE_ALIGN (va, "pmap_entry - VA");
 	CHECK_PAGE_ALIGN (pa, "pmap_entry - PA");
@@ -2771,6 +2768,7 @@ Retry:
 	if (pv_e != PV_ENTRY_NULL)
 		free((caddr_t) pv_e, M_VMPVENT);
 
+	return (KERN_SUCCESS);
 } /* pmap_enter */
 
 /*
@@ -3027,17 +3025,17 @@ pmap_collect(pmap_t pmap)
 
 	/* 
 	  This contortion is here instead of the natural loop 
-	  because of integer overflow/wraparound if VM_MAX_USER_ADDRESS 
+	  because of integer overflow/wraparound if VM_MAX_ADDRESS 
 	  is near 0xffffffff
 	*/
 
-	i = VM_MIN_USER_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
-	j = VM_MAX_USER_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
+	i = VM_MIN_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
+	j = VM_MAX_ADDRESS / PDT_TABLE_GROUP_VA_SPACE;
 	if ( j < 1024 )	j++;
 
 	/* Segment table loop */
 	for ( ; i < j; i++, sdtp += PDT_TABLE_GROUP_SIZE) {
-		sdt_va = VM_MIN_USER_ADDRESS + PDT_TABLE_GROUP_VA_SPACE*i;
+		sdt_va = VM_MIN_ADDRESS + PDT_TABLE_GROUP_VA_SPACE*i;
 
 		gdttbl = pmap_pte(pmap, (vm_offset_t)sdt_va);
 
@@ -3060,9 +3058,9 @@ pmap_collect(pmap_t pmap)
 
 		/* figure out end of range. Watch for wraparound */
 
-		sdt_vt = sdt_va <= VM_MAX_USER_ADDRESS-PDT_TABLE_GROUP_VA_SPACE ?
+		sdt_vt = sdt_va <= VM_MAX_ADDRESS-PDT_TABLE_GROUP_VA_SPACE ?
 			 sdt_va+PDT_TABLE_GROUP_VA_SPACE : 
-			 VM_MAX_USER_ADDRESS;
+			 VM_MAX_ADDRESS;
 
 		/* invalidate all maps in this range */
 		pmap_remove_range (pmap, (vm_offset_t)sdt_va,(vm_offset_t)sdt_vt);
@@ -3300,7 +3298,7 @@ pmap_copy_page(vm_offset_t src, vm_offset_t dst)
  *		Clear the modify bits on the specified physical page.
  *
  *	Parameters:
- *		phys	physical address of page
+ *		pg	vm_page
  *
  *	Extern/Global:
  *		pv_head_table, pv_lists
@@ -3315,14 +3313,14 @@ pmap_copy_page(vm_offset_t src, vm_offset_t dst)
  *		pmap_pte
  *		panic
  *
- *	For managed pages, the modify_list entry corresponding to the
+ *	The modify_list entry corresponding to the
  * page's frame index will be zeroed. The PV list will be traversed.
  * For each pmap/va the hardware 'modified' bit in the page descripter table
  * entry inspected - and turned off if  necessary. If any of the
  * inspected bits were found on, an TLB flush will be performed.
  */
-void
-pmap_clear_modify(vm_offset_t phys)
+boolean_t
+pmap_clear_modify(struct vm_page *pg)
 {
 	pv_entry_t    pvl;
 	pv_entry_t    pvep;
@@ -3333,14 +3331,16 @@ pmap_clear_modify(vm_offset_t phys)
 	unsigned      users;
 	pte_template_t   opte;
 	int        kflush;
+	paddr_t		phys = VM_PAGE_TO_PHYS(pg);
+	boolean_t	ret;
 
+	ret = pmap_is_modified(pg);
+
+#ifdef DIAGNOSTIC
 	if (!PMAP_MANAGED(phys)) {
-#ifdef DEBUG
-		if (pmap_con_dbg & CD_CMOD)
-			printf("(pmap_clear_modify :%x) phys addr 0x%x not managed \n", curproc, phys);
-#endif
-		return;
+		panic("pmap_clear_modify: not managed?");
 	}
+#endif
 
 	SPLVM(spl);
 
@@ -3359,12 +3359,11 @@ clear_modify_Retry:
 #endif
 		UNLOCK_PVH(phys);
 		SPLX(spl);
-		return;
+		return (ret);
 	}
 
 	/* for each listed pmap, turn off the page modified bit */
-	pvep = pvl;
-	while (pvep != PV_ENTRY_NULL) {
+	for (pvep = pvl; pvep != PV_ENTRY_NULL; pvep = pvep->next) {
 		pmap = pvep->pmap;
 		va = pvep->va;
 		if (!simple_lock_try(&pmap->lock)) {
@@ -3395,10 +3394,11 @@ clear_modify_Retry:
 		splx(spl_sav);
 
 		simple_unlock(&pmap->lock);
-		pvep = pvep->next;
 	}
 	UNLOCK_PVH(phys);
 	SPLX(spl);
+
+	return (ret);
 } /* pmap_clear_modify() */
 
 /*
@@ -3410,7 +3410,7 @@ clear_modify_Retry:
  *		stored data into the page.
  *
  *	Parameters:
- *		phys		physical address og a page
+ *		pg		vm_page
  *
  *	Extern/Global:
  *		pv_head_array, pv lists
@@ -3423,9 +3423,6 @@ clear_modify_Retry:
  *		PA_TO_PVH
  *		pmap_pte
  *
- *	If the physical address specified is not a managed page, this
- * routine simply returns TRUE (looks like it is returning FALSE XXX).
- *
  *	If the entry in the modify list, corresponding to the given page,
  * is TRUE, this routine return TRUE. (This means at least one mapping
  * has been invalidated where the MMU had set the modified bit in the
@@ -3437,21 +3434,20 @@ clear_modify_Retry:
  * immediately (doesn't need to walk remainder of list).
  */
 boolean_t
-pmap_is_modified(vm_offset_t phys)
+pmap_is_modified(struct vm_page *pg)
 {
 	pv_entry_t  pvl;
 	pv_entry_t  pvep;
 	pt_entry_t  *ptep;
 	int      spl;
 	boolean_t   modified_flag;
+	paddr_t phys = VM_PAGE_TO_PHYS(pg);
 
+#ifdef DIAGNOSTIC
 	if (!PMAP_MANAGED(phys)) {
-#ifdef DEBUG
-		if (pmap_con_dbg & CD_IMOD)
-			printf("(pmap_is_modified :%x) phys addr 0x%x not managed\n", curproc, phys);
-#endif
-		return (FALSE);
+		panic("pmap_is_modified: not managed?");
 	}
+#endif
 
 	SPLVM(spl);
 
@@ -3524,7 +3520,7 @@ is_mod_Retry:
  *		Clear the reference bits on the specified physical page.
  *
  *	Parameters:
- *		phys		physical address of page
+ *		pg		vm_page
  *
  *	Calls:
  *		PMAP_MANAGED
@@ -3538,32 +3534,33 @@ is_mod_Retry:
  *	Extern/Global:
  *		pv_head_array, pv lists
  *
- *	For managed pages, the coressponding PV list will be traversed.
  * For each pmap/va the hardware 'used' bit in the page table entry
  * inspected - and turned off if necessary. If any of the inspected bits
  * were found on, a TLB flush will be performed.
  */
-void
-pmap_clear_reference(vm_offset_t phys)
+boolean_t
+pmap_clear_reference(struct vm_page *pg)
 {
-	pv_entry_t    pvl;
-	pv_entry_t    pvep;
-	pt_entry_t    *pte;
-	pmap_t     pmap;
-	int        spl, spl_sav;
-	vm_offset_t      va;
-	unsigned      users;
-	pte_template_t   opte;
-	int        kflush;
+	pv_entry_t	pvl;
+	pv_entry_t	pvep;
+	pt_entry_t	*pte;
+	pmap_t		pmap;
+	int		spl, spl_sav;
+	vm_offset_t	va;
+	unsigned	users;
+	pte_template_t	opte;
+	int		kflush;
+	paddr_t		phys;
+	boolean_t	ret;
 
+	phys = VM_PAGE_TO_PHYS(pg);
+
+#ifdef DIAGNOSTIC
 	if (!PMAP_MANAGED(phys)) {
-#ifdef DEBUG
-		if (pmap_con_dbg & CD_CREF) {
-			printf("(pmap_clear_reference :%x) phys addr 0x%x not managed\n", curproc,phys);
-		}
-#endif
-		return;
+		panic("pmap_clear_reference: not managed?");
 	}
+#endif
+	ret = pmap_is_referenced(pg);
 
 	SPLVM(spl);
 
@@ -3580,7 +3577,7 @@ pmap_clear_reference(vm_offset_t phys)
 #endif
 		UNLOCK_PVH(phys);
 		SPLX(spl);
-		return;
+		return (ret);
 	}
 
 	/* for each listed pmap, turn off the page refrenced bit */
@@ -3620,6 +3617,8 @@ pmap_clear_reference(vm_offset_t phys)
 	}
 	UNLOCK_PVH(phys);
 	SPLX(spl);
+
+	return (ret);
 } /* pmap_clear_reference() */
 
 /*
@@ -3630,7 +3629,7 @@ pmap_clear_reference(vm_offset_t phys)
  *	any physical maps. That is, whether the hardware has touched the page.
  *
  * Parameters:
- *	phys		physical address of a page
+ *	pg		vm_page
  *
  * Extern/Global:
  *	pv_head_array, pv lists
@@ -3643,25 +3642,25 @@ pmap_clear_reference(vm_offset_t phys)
  *	simple_lock
  *	pmap_pte
  *
- *	If the physical address specified is not a managed page, this
- * routine simply returns TRUE.
- *
- *	Otherwise, this routine walks the PV list corresponding to the
+ *	This routine walks the PV list corresponding to the
  * given page. For each pmap/va/ pair, the page descripter table entry is
  * examined. If a used bit is found on, the function returns TRUE
  * immediately (doesn't need to walk remainder of list).
  */
 
 boolean_t
-pmap_is_referenced(vm_offset_t phys)
+pmap_is_referenced(struct vm_page *pg)
 {
 	pv_entry_t pvl;
 	pv_entry_t pvep;
 	pt_entry_t *ptep;
 	int     spl;
+	paddr_t phys = VM_PAGE_TO_PHYS(pg);
 
+#ifdef DIAGNOSTIC
 	if (!PMAP_MANAGED(phys))
-		return (FALSE);
+		panic("pmap_is_referenced: not managed?");
+#endif
 
 	SPLVM(spl);
 
@@ -3711,13 +3710,16 @@ is_ref_Retry:
  *	Lower the permission for all mappings to a given page.
  */
 void
-pmap_page_protect(vm_offset_t phys, vm_prot_t prot)
+pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
+	paddr_t phys = VM_PAGE_TO_PHYS(pg);
+
 	switch (prot) {
 	case VM_PROT_READ:
 	case VM_PROT_READ|VM_PROT_EXECUTE:
 		pmap_copy_on_write(phys);
 		break;
+	case VM_PROT_READ|VM_PROT_WRITE:
 	case VM_PROT_ALL:
 		break;
 	default:
@@ -4167,7 +4169,7 @@ check_pmap_consistency(char *who)
 			printf("check_pmap_consistency: pmap struct loop error.\n");
 			panic(who);
 		}
-		check_map(p, VM_MIN_USER_ADDRESS, VM_MAX_USER_ADDRESS, who);
+		check_map(p, VM_MIN_ADDRESS, VM_MAX_ADDRESS, who);
 	}
 
 	/* run through all managed paes, check pv_list for each one */
@@ -4361,8 +4363,6 @@ pmap_range_add(pmap_range_t *ranges, vm_offset_t start, vm_offset_t end)
 	range->start = start;
 
 start_overlaps:
-	assert((range->start <= start) && (start <= range->end));
-
 	/* delete redundant ranges */
 
 	while ((range->next != 0) && (range->next->start <= end)) {
@@ -4424,3 +4424,29 @@ pmap_range_remove(pmap_range_t *ranges, vm_offset_t start, vm_offset_t end)
 		range->start = end;
 }
 #endif /* FUTURE_MAYBE */
+
+void
+pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
+{
+	pmap_enter(pmap_kernel(), va, pa, prot, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+}
+
+void
+pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs)
+{
+	int i;
+
+	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
+		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
+			VM_PROT_READ|VM_PROT_WRITE,
+			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+	}
+}
+
+void
+pmap_kremove(vaddr_t va, vsize_t len)
+{
+	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
+		pmap_remove(pmap_kernel(), va, va + PAGE_SIZE);
+	}
+}

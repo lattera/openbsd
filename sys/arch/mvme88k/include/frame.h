@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/frame.h,v 1.2.6.1 2001/04/18 16:11:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/frame.h,v 1.2.6.2 2001/10/31 03:01:19 nate Exp $	*/
 /*	$NetBSD: frame.h,v 1.15 1997/05/03 12:49:05 mycroft Exp $	*/
 
 /*
@@ -49,13 +49,5 @@
 struct frame {
 	struct m88100_saved_state  __attribute__((__packed__)) F_t;
 };
-
-
-/* common frame size */
-#define	CFSIZE		(sizeof(struct frame))
-
-#define	V_BUSERR	0x008
-#define	V_ADDRERR	0x00C
-#define	V_TRAP1		0x084
 
 #endif	/* _M88K_FRAME_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pci_addr_fixup.c,v 1.9.2.2 2001/07/04 10:18:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/pci_addr_fixup.c,v 1.9.2.3 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: pci_addr_fixup.c,v 1.7 2000/08/03 20:10:45 nathanw Exp $	*/
 
 /*-
@@ -291,7 +291,7 @@ pciaddr_do_resource_allocate(sc, pc, tag, mapreg, ex, type, addr, size)
 		PCIBIOS_PRINTV(("No available resources. fixup failed\n"));
 		return (1);
 	}
-	error = extent_alloc_subregion(ex, start, ex->ex_end, size, size, 0,
+	error = extent_alloc_subregion(ex, start, ex->ex_end, size, size, 0, 0,
 	    EX_FAST|EX_NOWAIT|EX_MALLOCOK, addr);
 	if (error) {
 		PCIBIOS_PRINTV(("No available resources. fixup failed\n"));

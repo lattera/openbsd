@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/reg.h,v 1.5.4.1 2001/04/18 16:11:26 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/reg.h,v 1.5.4.2 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -32,8 +32,6 @@
  */
 #ifndef _M88K_REG_H_
 #define _M88K_REG_H_
-
-#define r_
 
 /* This must always be an even number of words long */
 struct reg {

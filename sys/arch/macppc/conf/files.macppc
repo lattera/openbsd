@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/conf/files.macppc,v 1.4 2001/10/03 14:45:37 drahn Exp $
+#	$OpenBSD: src/sys/arch/macppc/conf/files.macppc,v 1.4.4.1 2001/10/31 03:01:15 nate Exp $
 
 #
 # macppc-specific configuration info

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/mappedcopy.c,v 1.2.4.1 2001/07/04 10:18:21 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/mappedcopy.c,v 1.2.4.2 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: mappedcopy.c,v 1.1 1997/02/02 06:54:10 thorpej Exp $	*/
 
 /*
@@ -52,7 +52,6 @@
 #include <sys/proc.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <machine/cpu.h>
 
@@ -111,8 +110,8 @@ mappedcopyin(fromp, top, count)
 		if (pmap_extract(upmap, trunc_page((vaddr_t)fromp), &upa) == FALSE)
 			panic("mappedcopyin: null page frame");
 		len = min(count, (PAGE_SIZE - off));
-		pmap_enter(pmap_kernel(), kva, upa, VM_PROT_READ, TRUE,
-			   VM_PROT_READ);
+		pmap_enter(pmap_kernel(), kva, upa, VM_PROT_READ,
+			   VM_PROT_READ|PMAP_WIRED);
 		if (len == PAGE_SIZE && alignable && off == 0)
 			copypage((caddr_t)kva, top);
 		else
@@ -163,8 +162,8 @@ mappedcopyout(fromp, top, count)
 			panic("mappedcopyout: null page frame");
 		len = min(count, (PAGE_SIZE - off));
 		pmap_enter(pmap_kernel(), kva, upa,
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 		if (len == PAGE_SIZE && alignable && off == 0)
 			copypage(fromp, (caddr_t)kva);
 		else

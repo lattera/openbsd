@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gmreg.h,v 1.2 2001/09/05 16:54:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gmreg.h,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: if_gmreg.h,v 1.1 2000/02/27 18:00:55 tsubai Exp $	*/
 
 /*-

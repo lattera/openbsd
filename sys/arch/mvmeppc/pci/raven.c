@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/pci/Attic/raven.c,v 1.1 2001/06/26 21:57:57 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/pci/Attic/raven.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $ */
 
 /*
  * Copyright (c) 2001 Steve Murphree, Jr.
@@ -55,8 +55,6 @@
 #include <mvmeppc/pci/pcibrvar.h>
 #include <mvmeppc/pci/ravenreg.h>
 
-extern vm_map_t phys_map;
-
 int	 mpcpcibrmatch __P((struct device *, void *, void *));
 void	 mpcpcibrattach __P((struct device *, struct device *, void *));
 
@@ -70,6 +68,7 @@ void	 mpc_conf_write __P((void *, pcitag_t, int, pcireg_t));
 
 int      mpc_intr_map __P((void *, pcitag_t, int, int, pci_intr_handle_t *));
 const char *mpc_intr_string __P((void *, pci_intr_handle_t));
+int	 mpc_intr_line __P((void *, pci_intr_handle_t));
 void     *mpc_intr_establish __P((void *, pci_intr_handle_t,
             int, int (*func)(void *), void *, char *));
 void     mpc_intr_disestablish __P((void *, void *));
@@ -177,6 +176,7 @@ mpcpcibrattach(parent, self, aux)
 	lcp->lc_pc.pc_intr_v = lcp;
 	lcp->lc_pc.pc_intr_map = mpc_intr_map;
 	lcp->lc_pc.pc_intr_string = mpc_intr_string;
+	lcp->lc_pc.pc_intr_line = mpc_intr_line;
 	lcp->lc_pc.pc_intr_establish = mpc_intr_establish;
 	lcp->lc_pc.pc_intr_disestablish = mpc_intr_disestablish;
 
@@ -215,8 +215,8 @@ mpcpcibrprint(aux, pnp)
 }
 
 /*
- *  Get PCI physical address from given viritual address.
- *  XXX Note that cross page boundarys are *not* garantueed to work!
+ *  Get PCI physical address from given virtual address.
+ *  XXX Note that cross page boundaries are *not* guaranteed to work!
  */
 
 vm_offset_t
@@ -473,6 +473,14 @@ mpc_intr_string(lcv, ih)
 
 	sprintf(str, "irq %d", ih);
 	return(str);
+}
+
+int
+mpc_intr_string(lcv, ih)
+	void *lcv;
+	pci_intr_handle_t ih;
+{
+	return (ih);
 }
 
 typedef void     *(intr_establish_t) __P((void *, pci_intr_handle_t,

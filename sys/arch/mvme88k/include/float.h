@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/float.h,v 1.3.6.1 2001/04/18 16:11:18 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/float.h,v 1.3.6.2 2001/10/31 03:01:18 nate Exp $	*/
 
 /*
  * Copyright (c) 1989 Regents of the University of California.
@@ -77,4 +77,4 @@ __END_DECLS
 #define LDBL_MAX	DBL_MAX
 #define LDBL_MAX_10_EXP	DBL_MAX_10_EXP
 
-#endif __M88K_FLOAT_H__
+#endif /* __M88K_FLOAT_H__ */

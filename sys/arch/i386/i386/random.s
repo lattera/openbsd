@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/random.s,v 1.2.16.1 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: random.s,v 1.5 1995/01/15 23:20:33 mycroft Exp $	*/
 
 /*

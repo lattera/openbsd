@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/locore.S,v 1.1 2001/09/01 15:57:06 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/locore.S,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: locore.S,v 1.2 1996/10/16 19:33:09 ws Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/stand/bootsd/Attic/boot.c,v 1.1 2001/06/26 21:57:59 smurph Exp $ */
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/bootsd/Attic/boot.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $ */
 /*	$NetBSD: boot.c,v 1.2 1995/09/23 03:42:52 gwr Exp $ */
 
 /*-
@@ -63,7 +63,7 @@ main()
 
 	bootdev_type = BUGDEV_DISK;
 	
-	printf("\n>> OpenBSD/mvme88k bootsd [%s]\n", version);
+	printf("\n>> OpenBSD/mvmeppc bootsd [%s]\n", version);
 
 	ret = parse_args(&file, &flag);
 	if (flag & RB_ASKKERN) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/boot/conf.c,v 1.13.8.2 2001/07/04 10:18:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/boot/conf.c,v 1.13.8.3 2001/10/31 03:01:13 nate Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -48,7 +48,7 @@
 #include <dev/cons.h>
 #include <lib/libsa/exec.h>
 
-const char version[] = "1.27";
+const char version[] = "1.28";
 int	debug = 1;
 
 const struct x_sw execsw[] = {

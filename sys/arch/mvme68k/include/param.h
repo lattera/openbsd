@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.2 2001/07/04 10:19:31 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/param.h,v 1.7.2.3 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -94,7 +94,7 @@
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
  */
-#define	MSIZE		128		/* size of an mbuf */
+#define	MSIZE		256		/* size of an mbuf */
 #define	MCLSHIFT	11
 #define	MCLBYTES	(1 << MCLSHIFT)	/* large enough for ether MTU */
 #define	MCLOFSET	(MCLBYTES - 1)

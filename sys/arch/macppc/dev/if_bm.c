@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.4 2001/09/16 03:19:30 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/if_bm.c,v 1.4.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: if_bm.c,v 1.1 1999/01/01 01:27:52 tsubai Exp $	*/
 
 /*-

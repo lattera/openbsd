@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.5 2001/07/04 10:16:32 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bios.c,v 1.25.2.6 2001/10/31 03:01:12 nate Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
@@ -44,7 +44,7 @@
 #include <sys/extent.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
+#include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
 
 #include <dev/cons.h>
@@ -353,6 +353,7 @@ bios_getopt()
 			printf(" unsupported arg (%d) %p", q->ba_type,
 			    q->ba_arg);
 #endif
+			break;
 		}
 	}
 	printf("\n");
@@ -417,14 +418,14 @@ bios32_service(service, e, ei)
 	     va += i386_trunc_page(BIOS32_START);
 	     pa < endpa; pa += NBPG, va += NBPG) {
 		pmap_enter(pmap_kernel(), va, pa,
-		    VM_PROT_READ | VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ | VM_PROT_WRITE);
+		    VM_PROT_READ | VM_PROT_WRITE,
+		    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 
 		/* for all you, broken hearted */
 		if (pa >= i386_trunc_page(base)) {
 			pmap_enter(pmap_kernel(), sva, pa,
-			    VM_PROT_READ | VM_PROT_WRITE, TRUE,
-			    VM_PROT_READ | VM_PROT_WRITE);
+			    VM_PROT_READ | VM_PROT_WRITE,
+			    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 			sva += NBPG;
 		}
 	}

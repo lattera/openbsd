@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vme.h,v 1.3.4.1 2001/04/18 16:11:06 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vme.h,v 1.3.4.2 2001/10/31 03:01:18 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -380,4 +380,4 @@ int vmeintr_establish __P((int vec, struct intrhand *ih));
 int vme_findvec __P((void));
 int vmescan __P((struct device *, void *, void *, int));
 
-#endif __MVEME88K_DEV_VME_H__
+#endif /* __MVEME88K_DEV_VME_H__ */

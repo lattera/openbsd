@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshdma.c,v 1.3.2.2 2001/07/04 10:19:57 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/sshdma.c,v 1.3.2.3 2001/10/31 03:01:18 nate Exp $	*/
 
 /*
  * Copyright (c) 1996 Nivas Madhur
@@ -43,7 +43,9 @@
 #include <sys/kernel.h>
 #include <sys/device.h>
 
+#include <vm/vm.h>
 #include <vm/pmap.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
 #include <machine/board.h>
@@ -61,9 +63,6 @@
 #include <mvme88k/dev/pcctwofunc.h>
 #include <mvme88k/dev/pcctworeg.h>
 #endif
-
-extern struct pmap	kernel_pmap_store;
-#define	pmap_kernel()		(&kernel_pmap_store)
 
 int	afscmatch	__P((struct device *, void *, void *));
 void	afscattach	__P((struct device *, struct device *, void *));

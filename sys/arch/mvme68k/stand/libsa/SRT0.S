@@ -1,3 +1,4 @@
+|	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/SRT0.S,v 1.6.16.1 2001/10/31 03:01:18 nate Exp $
 |	$NetBSD: SRT0.S,v 1.2 1995/08/12 18:38:55 gwr Exp $
 
 | Copyright (c) 1995 Gordon W. Ross

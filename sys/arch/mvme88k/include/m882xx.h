@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/m882xx.h,v 1.5.4.1 2001/04/18 16:11:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/m882xx.h,v 1.5.4.2 2001/10/31 03:01:19 nate Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -135,30 +135,23 @@
 /*
  * Prototypes from "mvme88k/mvme88k/m18x_cmmu.c"
  */
-#if DDB
+#ifdef DDB
 void m18x_cmmu_show_translation(unsigned, unsigned, unsigned, int);
 void m18x_cmmu_cache_state(unsigned, unsigned);
 void m18x_show_cmmu_info(unsigned);
 #endif 
 
 #ifdef CMMU_DEBUG
- void m18x_show_apr(unsigned value);
- void m18x_show_sctr(unsigned value);
+void m18x_show_apr(unsigned value);
+void m18x_show_sctr(unsigned value);
 #endif
 
 unsigned m18x_cmmu_cpu_number(void);
-#if !DDB
-static
-#endif /* !DDB */
 unsigned m18x_cmmu_remote_get(unsigned cpu, unsigned r, unsigned data);
 unsigned m18x_cmmu_get_idr(unsigned data);
 void m18x_cmmu_init(void);
 void m18x_cmmu_shutdown_now(void);
 void m18x_cmmu_parity_enable(void);
-#if !DDB
-static
-#endif /* !DDB */
-int m18x_cmmu_alive(int mmu);
 void m18x_setup_board_config(void);
 void m18x_setup_cmmu_config(void);
 void m18x_cmmu_dump_config(void);

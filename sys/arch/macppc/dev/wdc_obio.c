@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3 2001/09/15 01:51:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/wdc_obio.c,v 1.3.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: wdc_obio.c,v 1.15 2001/07/25 20:26:33 bouyer Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/* $OpenBSD */
+/*	$OpenBSD: src/sys/arch/i386/isa/lms.c,v 1.13.2.2 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: lms.c,v 1.38 2000/01/08 02:57:25 takemura Exp $	*/
 
 /*-

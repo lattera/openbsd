@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/ppc1_machdep.c,v 1.1 2001/06/26 21:57:54 smurph Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/ppc1_machdep.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*
@@ -44,7 +44,6 @@
 #include <sys/systm.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 
 #include <machine/powerpc.h>
 #include <machine/autoconf.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/ieee.h,v 1.2.6.1 2001/04/18 16:11:20 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/ieee.h,v 1.2.6.2 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -143,4 +143,4 @@ struct ieee_ext {
 #define	SNG_EXP_BIAS	127
 #define	DBL_EXP_BIAS	1023
 #define	EXT_EXP_BIAS	16383
-#endif __MACHINE_IEEE_H__
+#endif /* __MACHINE_IEEE_H__ */

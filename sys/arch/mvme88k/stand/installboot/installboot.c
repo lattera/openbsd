@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/installboot/installboot.c,v 1.3.4.1 2001/10/31 03:01:20 nate Exp $ */
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*

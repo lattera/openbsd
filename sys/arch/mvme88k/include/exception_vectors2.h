@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/exception_vectors2.h,v 1.1.4.1 2001/04/18 16:11:17 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/exception_vectors2.h,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1991, 1992 Carnegie Mellon University
@@ -164,4 +164,4 @@
 /* vector 0x82 (#130) */  word   _m197_break
 /* vector 0x83 (#131) */  word   _m197_trace
 /* vector 0x84 (#132) */  word   _m197_entry
-#endif __MACHINE_EXECPTION_VECTORS2_H__
+#endif /* __MACHINE_EXECPTION_VECTORS2_H__ */

@@ -1,7 +1,7 @@
 #	from: @(#)Makefile	8.1 (Berkeley) 6/10/93
-#	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/Makefile,v 1.5 1999/09/27 03:04:07 smurph Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/bootxx/Makefile,v 1.5.4.1 2001/10/31 03:01:17 nate Exp $
 
-RELOC=0x1F0000 
+RELOC=0x10000 
 
 S=	${.CURDIR}/../../../..
 DEFS= 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccomvar.h,v 1.9.2.1 2001/04/18 16:07:54 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/Attic/pccomvar.h,v 1.9.2.2 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: comvar.h,v 1.5 1996/05/05 19:50:47 christos Exp $	*/
 
 /*
@@ -126,6 +126,7 @@ int	comparam	__P((struct tty *, struct termios *));
 void	comstart	__P((struct tty *));
 void	comsoft		__P((void));
 int	comhwiflow	__P((struct tty *, int));
+void	com_raisedtr	__P((void *));
 
 struct consdev;
 void	comcnprobe	__P((struct consdev *));

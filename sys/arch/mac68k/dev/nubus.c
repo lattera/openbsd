@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.14.4.1 2001/07/04 10:18:28 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/nubus.c,v 1.14.4.2 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: nubus.c,v 1.35 1997/04/22 20:20:32 scottr Exp $	*/
 
 /*
@@ -38,9 +38,6 @@
 #include <sys/dmap.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_map.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/autoconf.h>
@@ -831,7 +828,7 @@ nubus_mapin(paddr, sz)
 #else
 	do {
 		pmap_enter(pmap_kernel(), va, pa | pmt,
-			   VM_PROT_READ|VM_PROT_WRITE, FALSE, 0);
+			   VM_PROT_READ|VM_PROT_WRITE, 0);
 		va += NBPG;
 		pa += NBPG;
 	} while ((sz -= NBPG) > 0);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/zs.c,v 1.4 2001/09/28 04:13:12 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/zs.c,v 1.4.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: zs.c,v 1.17 2001/06/19 13:42:15 wiz Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/dev_i386.c,v 1.22.4.1 2001/04/18 16:08:43 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/dev_i386.c,v 1.22.4.2 2001/10/31 03:01:13 nate Exp $	*/
 
 /*
  * Copyright (c) 1996-1999 Michael Shalayeff
@@ -41,7 +41,7 @@ extern int debug;
 /* XXX use slot for 'rd' for 'hd' pseudo-device */
 const char bdevs[][4] = {
 	"wd", "", "fd", "wt", "sd", "st", "cd", "mcd",
-	"", "", "", "", "", "", "", "scd", "", "hd", "acd"
+	"", "", "", "", "", "", "", "scd", "", "hd", ""
 };
 const int nbdevs = NENTS(bdevs);
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/pmap.c,v 1.14.2.2 2001/07/04 10:19:40 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/Attic/pmap.c,v 1.14.2.3 2001/10/31 03:01:17 nate Exp $ */
 
 /* 
  * Copyright (c) 1995 Theo de Raadt
@@ -132,7 +132,6 @@
 #include <machine/pte.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
 #include <uvm/uvm.h>
@@ -657,7 +656,7 @@ pmap_map(va, spa, epa, prot)
 #endif
 
 	while (spa < epa) {
-		pmap_enter(pmap_kernel(), va, spa, prot, FALSE, prot);
+		pmap_enter(pmap_kernel(), va, spa, prot, prot);
 		va += NBPG;
 		spa += NBPG;
 	}
@@ -676,29 +675,17 @@ pmap_map(va, spa, epa, prot)
  *	the map will be used in software only, and
  *	is bounded by that size.
  */
-pmap_t
-pmap_create(size)
-	vm_size_t	size;
+struct pmap *
+pmap_create(void)
 {
-	register pmap_t pmap;
+	struct pmap *pmap;
 
 #ifdef DEBUG
 	if (pmapdebug & (PDB_FOLLOW|PDB_CREATE))
 		printf("pmap_create(%x)\n", size);
 #endif
 
-	/*
-	 * Software use map does not need a pmap
-	 */
-	if (size)
-		return (NULL);
-
-	/* XXX: is it ok to wait here? */
-	pmap = (pmap_t) malloc(sizeof *pmap, M_VMPMAP, M_WAITOK);
-#ifdef notifwewait
-	if (pmap == NULL)
-		panic("pmap_create: cannot allocate a pmap");
-#endif
+	pmap = (struct pmap *) malloc(sizeof *pmap, M_VMPMAP, M_WAITOK);
 	bzero(pmap, sizeof(*pmap));
 	pmap_pinit(pmap);
 	return (pmap);
@@ -901,11 +888,10 @@ pmap_remove(pmap, sva, eva)
  *	Lower the permission for all mappings to a given page.
  */
 void
-pmap_page_protect(pa, prot)
-	vm_offset_t	pa;
-	vm_prot_t	prot;
+pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
-	register struct pv_entry *pv;
+	paddr_t pa = VM_PAGE_TO_PHYS(pg);
+	struct pv_entry *pv;
 	int s;
 
 #ifdef DEBUG
@@ -1043,28 +1029,26 @@ pmap_protect(pmap, sva, eva, prot)
  *	insert this page into the given map NOW.
  */
 
-void
-pmap_enter(pmap, va, pa, prot, wired, access_type)
-	register pmap_t pmap;
+int
+pmap_enter(pmap, va, pa, prot, flags)
+	pmap_t pmap;
 	vaddr_t va;
-	register paddr_t pa;
+	paddr_t pa;
 	vm_prot_t prot;
-	boolean_t wired;
-   vm_prot_t access_type;
+	int flags;
 {
 	register pt_entry_t *pte;
 	register int npte;
 	vm_offset_t opa;
 	boolean_t cacheable = TRUE;
 	boolean_t checkpv = TRUE;
+	boolean_t wired = (flags & PMAP_WIRED) != 0;
 
 #ifdef DEBUG
 	if (pmapdebug & (PDB_FOLLOW|PDB_ENTER))
-		printf("pmap_enter(%x, %x, %x, %x, %x, %x)\n",
-		       pmap, va, pa, prot, wired, access_type);
+		printf("pmap_enter(%x, %x, %x, %x, %x)\n",
+		       pmap, va, pa, prot, flags);
 #endif
-	if (pmap == NULL)
-		return;
 
 	/*
 	 * For user mapping, allocate kernel VM resources if necessary.
@@ -1246,6 +1230,8 @@ validate:
 	if ((pmapdebug & PDB_WIRING) && pmap != pmap_kernel())
 		pmap_check_wiring("enter", trunc_page(pmap_pte(pmap, va)));
 #endif
+
+	return (KERN_SUCCESS);
 }
 
 /*
@@ -1540,7 +1526,7 @@ pmap_zero_page(phys)
 		printf("pmap_zero_page(%x)\n", phys);
 #endif
 	kva = (vm_offset_t) CADDR1;
-	pmap_enter(pmap_kernel(), kva, phys, VM_PROT_READ|VM_PROT_WRITE, TRUE, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_enter(pmap_kernel(), kva, phys, VM_PROT_READ|VM_PROT_WRITE, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	zeropage((caddr_t)kva);
 	pmap_remove_mapping(pmap_kernel(), kva, PT_ENTRY_NULL,
 			    PRM_TFLUSH|PRM_CFLUSH);
@@ -1572,8 +1558,8 @@ pmap_copy_page(src, dst)
 #endif
 	skva = (vm_offset_t) CADDR1;
 	dkva = (vm_offset_t) CADDR2;
-	pmap_enter(pmap_kernel(), skva, src, VM_PROT_READ, TRUE, VM_PROT_READ);
-	pmap_enter(pmap_kernel(), dkva, dst, VM_PROT_READ|VM_PROT_WRITE, TRUE, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_enter(pmap_kernel(), skva, src, VM_PROT_READ, VM_PROT_READ|PMAP_WIRED);
+	pmap_enter(pmap_kernel(), dkva, dst, VM_PROT_READ|VM_PROT_WRITE, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	copypage((caddr_t)skva, (caddr_t)dkva);
 	/* CADDR1 and CADDR2 are virtually contiguous */
 	pmap_remove(pmap_kernel(), skva, skva + (2 * NBPG));
@@ -1583,15 +1569,21 @@ pmap_copy_page(src, dst)
  *	Clear the modify bits on the specified physical page.
  */
 
-void
-pmap_clear_modify(pa)
-	vm_offset_t	pa;
+boolean_t
+pmap_clear_modify(struct vm_page *pg)
 {
+	paddr_t pa = VM_PAGE_TO_PHYS(pg);
+	boolean_t ret;
+
+	ret = pmap_is_modified(pg);
+
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW)
 		printf("pmap_clear_modify(%x)\n", pa);
 #endif
 	pmap_changebit(pa, PG_M, FALSE);
+
+	return (ret);
 }
 
 /*
@@ -1600,14 +1592,21 @@ pmap_clear_modify(pa)
  *	Clear the reference bit on the specified physical page.
  */
 
-void pmap_clear_reference(pa)
-	vm_offset_t	pa;
+boolean_t
+pmap_clear_reference(struct vm_page *pg)
 {
+	paddr_t pa = VM_PAGE_TO_PHYS(pg);
+	boolean_t ret;
+
+	ret = pmap_is_referenced(pg);
+
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW)
 		printf("pmap_clear_reference(%x)\n", pa);
 #endif
 	pmap_changebit(pa, PG_U, FALSE);
+
+	return (ret);
 }
 
 /*
@@ -1618,9 +1617,10 @@ void pmap_clear_reference(pa)
  */
 
 boolean_t
-pmap_is_referenced(pa)
-	vm_offset_t	pa;
+pmap_is_referenced(struct vm_page *pg)
 {
+	paddr_t pa = VM_PAGE_TO_PHYS(pg);
+
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW) {
 		boolean_t rv = pmap_testbit(pa, PG_U);
@@ -1639,9 +1639,9 @@ pmap_is_referenced(pa)
  */
 
 boolean_t
-pmap_is_modified(pa)
-	vm_offset_t	pa;
+pmap_is_modified(struct vm_page *pg)
 {
+	paddr_t pa = VM_PAGE_TO_PHYS(pg);
 #ifdef DEBUG
 	if (pmapdebug & PDB_FOLLOW) {
 		boolean_t rv = pmap_testbit(pa, PG_M);
@@ -2191,7 +2191,7 @@ pmap_enter_ptpage(pmap, va)
 		kpt_used_list = kpt;
 		ptpa = kpt->kpt_pa;
 		bzero((caddr_t)kpt->kpt_va, NBPG);
-		pmap_enter(pmap, va, ptpa, VM_PROT_DEFAULT, TRUE, VM_PROT_DEFAULT);
+		pmap_enter(pmap, va, ptpa, VM_PROT_DEFAULT, VM_PROT_DEFAULT|PMAP_WIRED);
 #if defined(M68060)
 		if (mmutype == MMU_68060) {
 			pmap_changebit(ptpa, PG_CCB, 0);
@@ -2410,3 +2410,29 @@ pmap_check_wiring(str, va)
 		       str, va, entry->wired_count, count);
 }
 #endif
+
+void
+pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
+{
+	pmap_enter(pmap_kernel(), va, pa, prot, VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+}
+
+void
+pmap_kenter_pgs(vaddr_t va, struct vm_page **pgs, int npgs)
+{
+	int i;
+
+	for (i = 0; i < npgs; i++, va += PAGE_SIZE) {
+		pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pgs[i]),
+			VM_PROT_READ|VM_PROT_WRITE,
+			VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+	}
+}
+
+void
+pmap_kremove(vaddr_t va, vsize_t len)
+{
+	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
+		pmap_remove(pmap_kernel(), va, va + PAGE_SIZE);
+	}
+}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/mainbus.c,v 1.2 2001/09/21 17:55:39 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/mainbus.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Carnegie-Mellon University.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/mpcpcibus.c,v 1.2 2001/09/21 02:11:58 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/mpcpcibus.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom

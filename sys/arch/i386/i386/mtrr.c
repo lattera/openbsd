@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/i386/mtrr.c,v 1.2 1999/11/20 13:50:15 matthieu Exp $ */
+/* $OpenBSD: src/sys/arch/i386/i386/mtrr.c,v 1.2.2.1 2001/10/31 03:01:12 nate Exp $ */
 /*-
  * Copyright (c) 1999 Michael Smith <msmith@freebsd.org>
  * Copyright (c) 1999 Brian Fundakowski Feldman
@@ -29,6 +29,7 @@
 
 #include <sys/param.h>
 #include <sys/memrange.h>
+#include <sys/systm.h>
 
 #include <machine/specialreg.h>
 

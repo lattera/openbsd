@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gm.c,v 1.3 2001/09/05 16:54:01 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/if_gm.c,v 1.3.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: if_gm.c,v 1.14 2001/07/22 11:29:46 wiz Exp $	*/
 
 /*-

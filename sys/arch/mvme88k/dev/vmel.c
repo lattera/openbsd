@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.2 2001/07/04 10:19:57 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vmel.c,v 1.2.6.3 2001/10/31 03:01:18 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -58,6 +58,14 @@ struct cfattach vmel_ca = {
 struct cfdriver vmel_cd = {
         NULL, "vmel", DV_DULL, 0
 };
+
+int vmelscan __P((struct device *, void *, void*));
+int vmelopen __P((dev_t, int, int));
+int vmelclose __P((dev_t, int, int));
+int vmelioctl __P((dev_t, int, caddr_t, int, struct proc *));
+int vmelread __P((dev_t, struct uio *, int));
+int vmelwrite __P((dev_t, struct uio *, int));
+int vmelmmap __P((dev_t, int, int));
 
 int
 vmelmatch(parent, cf, args)

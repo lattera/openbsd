@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/i386/isa/mms.c,v 1.11.2.1 2001/04/18 16:07:53 niklas Exp $ */
+/* $OpenBSD: src/sys/arch/i386/isa/mms.c,v 1.11.2.2 2001/10/31 03:01:12 nate Exp $ */
 /*	$NetBSD: mms.c,v 1.35 2000/01/08 02:57:25 takemura Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/ieee.h,v 1.1 2001/09/06 00:07:09 millert Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/include/ieee.h,v 1.1.4.1 2001/10/31 03:01:12 nate Exp $ */
 /*	$NetBSD: ieee.h,v 1.1 1996/09/30 16:34:25 ws Exp $ */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.7 2001/10/30 19:37:04 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/isa/icu.s,v 1.12.2.8 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: icu.s,v 1.45 1996/01/07 03:59:34 mycroft Exp $	*/
 
 /*-
@@ -33,30 +33,30 @@
 #include <net/netisr.h>
 
 	.data
-	.globl	_imen,_ipending,_netisr
+	.globl	_C_LABEL(imen),_C_LABEL(ipending),_C_LABEL(netisr)
 #ifndef MULTIPROCESSOR
-	.globl	_astpending
+	.globl	_C_LABEL(astpending)
 #endif
-_imen:
+_C_LABEL(imen):
 	.long	0xffff		# interrupt mask enable (all off)
 
 	.text
 
 #if defined(PROF) || defined(GPROF)
-	.globl	_splhigh, _splx
+	.globl	_C_LABEL(splhigh), _C_LABEL(splx)
 
 	ALIGN_TEXT
-_splhigh:
+_C_LABEL(splhigh):
 	movl	$IPL_HIGH,%eax
 	xchgl	%eax,CPL
 	ret
 
 	ALIGN_TEXT
-_splx:
+_C_LABEL(splx):
 	movl	4(%esp),%eax
 	movl	%eax,CPL
 	testl	%eax,%eax
-	jnz	_Xspllower
+	jnz	_C_LBALE(Xspllower)
 	ret
 #endif /* PROF || GPROF */
 	
@@ -76,13 +76,13 @@ IDTVEC(spllower)
 	movl	$1f,%esi		# address to resume loop at
 1:	movl	%ebx,%eax		# get cpl
 	shrl	$4,%eax			# find its mask.
-	movl	_iunmask(,%eax,4),%eax
-	andl	_ipending,%eax		# any non-masked bits left?
+	movl	_C_LABEL(iunmask)(,%eax,4),%eax
+	andl	_C_LABEL(ipending),%eax		# any non-masked bits left?
 	jz	2f
 	bsfl	%eax,%eax
-	btrl	%eax,_ipending
+	btrl	%eax,_C_LABEL(ipending)
 	jnc	1b
-	jmp	*_Xrecurse(,%eax,4)
+	jmp	*_C_LABEL(Xrecurse)(,%eax,4)
 2:	popl	%edi
 	popl	%esi
 	popl	%ebx
@@ -102,13 +102,14 @@ IDTVEC(doreti)
 	movl	$1f,%esi		# address to resume loop at
 1:	movl	%ebx,%eax
 	shrl	$4,%eax
-	movl	_iunmask(,%eax,4),%eax
-	andl	_ipending,%eax
+	movl	_C_LABEL(iunmask)(,%eax,4),%eax
+	andl	_C_LABEL(ipending),%eax
 	jz	2f
 	bsfl    %eax,%eax               # slow, but not worth optimizing
-	btrl    %eax,_ipending
+	btrl    %eax,_C_LABEL(ipending)
 	jnc     1b			# some intr cleared the in-memory bit
-	jmp	*_Xresume(,%eax,4)
+	cli
+	jmp	*_C_LABEL(Xresume)(,%eax,4)
 2:	/* Check for ASTs on exit to user mode. */
 	CHECK_ASTPENDING(%ecx)
 	cli
@@ -123,7 +124,7 @@ IDTVEC(doreti)
 	sti
 	movl	$T_ASTFLT,TF_TRAPNO(%esp)	/* XXX undo later. */
 	/* Pushed T_ASTFLT into tf_trapno on entry. */
-	call	_trap
+	call	_C_LABEL(trap)
 	cli
 	jmp	2b
 3:	INTRFASTEXIT
@@ -139,7 +140,7 @@ IDTVEC(softtty)
 #if NPCCOM > 0
 	leal	SIR_TTYMASK(%ebx),%eax
 	movl	%eax,CPL
-	call	_comsoft
+	call	_C_LABEL(comsoft)
 	movl	%ebx,CPL
 #endif
 	jmp	%esi
@@ -155,7 +156,7 @@ IDTVEC(softnet)
 	leal	SIR_NETMASK(%ebx),%eax
 	movl	%eax,CPL
 	xorl	%edi,%edi
-	xchgl	_netisr,%edi
+	xchgl	_C_LABEL(netisr),%edi
 #include <net/netisr_dispatch.h>
  	movl	%ebx,CPL
 	jmp	%esi
@@ -164,6 +165,7 @@ IDTVEC(softnet)
 IDTVEC(softclock)
 	leal	SIR_CLOCKMASK(%ebx),%eax
 	movl	%eax,CPL
-	call	_softclock
+	call	_C_LABEL(softclock)
 	movl	%ebx,CPL
 	jmp	%esi
+

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.2 2001/07/04 10:19:34 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/conf.c,v 1.19.8.3 2001/10/31 03:01:17 nate Exp $ */
 
 /*-
  * Copyright (c) 1995 Theo de Raadt
@@ -74,7 +74,6 @@
 
 int	ttselect	__P((dev_t, int, struct proc *));
 
-bdev_decl(sw);
 #include "st.h"
 #include "sd.h"
 #include "cd.h"
@@ -115,7 +114,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #define mmread  mmrw
 #define mmwrite mmrw
 cdev_decl(mm);
-cdev_decl(sw);
 
 #include "sram.h"
 cdev_decl(sram);
@@ -179,7 +177,6 @@ dev_decl(filedesc,open);
 #include "tun.h"
 
 #include "pf.h"
-cdev_decl(pf);
 
 #include <altq/altqconf.h>
 

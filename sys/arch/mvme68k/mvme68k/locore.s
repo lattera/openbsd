@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.20.2.2 2001/07/04 10:19:38 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/locore.s,v 1.20.2.3 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -76,6 +76,7 @@
 #include "ksyms.h"
 #include <machine/asm.h>
 #include <machine/prom.h>
+#include <machine/trap.h>
 
 /*
  * Macro to relocate a symbol, used before MMU is enabled.
@@ -1721,12 +1722,6 @@ LmotommuB:
 #endif
 	movl	#DC_CLEAR,d0
 	movc	d0,cacr			| invalidate on-chip d-cache
-	rts
-
-ENTRY(ecacheon)
-	rts
-
-ENTRY(ecacheoff)
 	rts
 
 ENTRY(getsfc)

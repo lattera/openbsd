@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.2 2001/07/04 10:20:19 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/mem.c,v 1.5.2.3 2001/10/31 03:01:19 nate Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -57,6 +57,12 @@
 #include <uvm/uvm_extern.h>
 
 caddr_t zeropage;
+
+int mmopen __P((dev_t, int, int));
+int mmclose __P((dev_t, int, int));
+int mmrw __P((dev_t, struct uio *, int));
+int mmmmap __P((dev_t, int, int));
+int mmioctl __P((dev_t, u_long, caddr_t, int, struct proc *));
 
 /*ARGSUSED*/
 int
@@ -132,7 +138,7 @@ mmrw(dev, uio, flags)
 			}
 			pmap_enter(pmap_kernel(), (vm_offset_t)vmmap,
 			    trunc_page(v), uio->uio_rw == UIO_READ ?
-			    VM_PROT_READ : VM_PROT_WRITE, TRUE, 0);
+			    VM_PROT_READ : VM_PROT_WRITE, PMAP_WIRED);
 			o = uio->uio_offset & PGOFSET;
 			c = min(uio->uio_resid, (int)(NBPG - o));
 			error = uiomove((caddr_t)vmmap + o, c, uio);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/autoconf.h,v 1.2 2001/09/15 01:42:55 mickey Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/include/autoconf.h,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.3 2001/07/04 10:16:33 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/conf.c,v 1.57.4.4 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: conf.c,v 1.75 1996/05/03 19:40:20 christos Exp $	*/
 
 /*
@@ -45,7 +45,6 @@
 
 #include "wd.h"
 bdev_decl(wd);
-bdev_decl(sw);
 #include "fdc.h"
 #include "fd.h"
 bdev_decl(fd);
@@ -117,6 +116,13 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 	(dev_type_stop((*))) enodev, 0, seltrue, \
 	(dev_type_mmap((*))) enodev }
 
+/* open, close, ioctl -- XXX should be a generic device */
+#define cdev_oci_init(c,n) { \
+        dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
+        (dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
+        (dev_type_stop((*))) enodev, 0,  seltrue, \
+        (dev_type_mmap((*))) enodev, 0 }
+
 /* open, close, ioctl, select -- XXX should be a generic device */
 #define cdev_ocis_init(c,n) { \
         dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
@@ -142,7 +148,6 @@ int	nblkdev = sizeof(bdevsw) / sizeof(bdevsw[0]);
 #define	mmwrite	mmrw
 cdev_decl(mm);
 cdev_decl(wd);
-cdev_decl(sw);
 cdev_decl(crypto);
 #include "pty.h"
 #include "com.h"
@@ -188,6 +193,7 @@ cdev_decl(svr4_net);
 #include "apm.h"
 #include "pctr.h"
 #include "bios.h"
+#include "iop.h"
 #ifdef XFS
 #include <xfs/nxfs.h>
 cdev_decl(xfs_dev);
@@ -212,6 +218,8 @@ cdev_decl(urio);
 cdev_decl(ucom);
 #include "cz.h"
 cdev_decl(cztty);
+#include "radio.h"
+cdev_decl(radio);
 
 /* XXX -- this needs to be supported by config(8)! */
 #if (NCOM > 0) && (NPCCOM > 0)
@@ -230,7 +238,6 @@ cdev_decl(pci);
 #endif
 
 #include "pf.h"
-cdev_decl(pf);
 
 #include <altq/altqconf.h>
 
@@ -266,7 +273,7 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(NCCD,ccd),	/* 18: concatenated disk driver */
 	cdev_ss_init(NSS,ss),           /* 19: SCSI scanner */
 	cdev_uk_init(NUK,uk),		/* 20: unknown SCSI */
-	cdev_ocis_init(NAPM,apm),	/* 21: Advancded Power Management */
+	cdev_apm_init(NAPM,apm),	/* 21: Advancded Power Management */
 	cdev_fd_init(1,filedesc),	/* 22: file descriptor pseudo-device */
 	cdev_bpftun_init(NBPFILTER,bpf),/* 23: Berkeley packet filter */
 	cdev_ses_init(NSES,ses),	/* 24: SES/SAF-TE SCSI */
@@ -339,6 +346,8 @@ struct cdevsw	cdevsw[] =
 #endif
 	cdev_pf_init(NPF,pf),		/* 73: packet filter */
 	cdev_altq_init(NALTQ,altq),	/* 74: ALTQ control interface */
+	cdev_iop_init(NIOP,iop),	/* 75: I2O IOP control interface */
+	cdev_radio_init(NRADIO, radio), /* 76: generic radio I/O */
 };
 int	nchrdev = sizeof(cdevsw) / sizeof(cdevsw[0]);
 

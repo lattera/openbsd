@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/hfs.c,v 1.1 2001/09/01 15:39:02 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/hfs.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: hfs.c,v 1.1 2000/11/14 11:25:35 tsubai Exp $	*/
 
 /*-

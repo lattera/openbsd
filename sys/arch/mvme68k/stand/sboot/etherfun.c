@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/etherfun.c,v 1.4 1997/01/29 07:58:37 deraadt Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/sboot/etherfun.c,v 1.4.14.1 2001/10/31 03:01:18 nate Exp $ */
 
 /*
  *
@@ -163,7 +163,7 @@ do_get_file()
 	do_send_tftp(READ);
 	while (1) {
 		if (le_get(buf, sizeof(buf), 5) == 0) {
-			/* timeout occured */
+			/* timeout occurred */
 			if (last_ack)
 				do_send_tftp(last_ack);
 			else

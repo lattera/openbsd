@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK_CD,v 1.11.2.3 2001/07/04 10:16:25 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISK_CD,v 1.11.2.4 2001/10/31 03:01:11 nate Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -16,9 +16,6 @@ option		GPL_MATH_EMULATE	# floating point emulation
 maxusers	4		# estimated number of users
 option		TIMEZONE=0	# time zone to adjust RTC time by
 option		DST=0		# daylight saving time used by RTC
-
-option		SWAPPAGER	# paging; REQUIRED
-option		DEVPAGER	# mmap() of devices
 
 #makeoptions	DEBUG="-g"	# compile full symbol table
 
@@ -283,6 +280,9 @@ skc*	at pci? dev ? function ?		# SysKonnect GEnesis 984x
 sk*	at skc?					#  each port of above
 wx*	at pci? dev ? function ?		# Intel Pro/1000 ethernet
 txp*	at pci? dev ? function ?		# 3com 3CR990
+nge*	at pci? dev ? function ?		# NS DP83820/DP83821 GigE
+bge*	at pci? dev ? function ?		# Broadcom BCM570x (aka Tigon3)
+#lge*	at pci? dev ? function ?		# Level1 LXT1001 GigE
 
 # Wireless network cards
 wi*	at pcmcia? function ?			# WaveLAN IEEE 802.11DS
@@ -315,6 +315,5 @@ ukphy*	at mii? phy ?				# "unknown" PHYs
 pseudo-device	loop	1		# network loopback
 #pseudo-device	sl	1		# CSLIP
 #pseudo-device	ppp	1		# PPP
-#pseudo-device	pty	16		# pseudo-terminals
 pseudo-device	bpfilter 1		# packet filter
 pseudo-device	rd	1		# ramdisk

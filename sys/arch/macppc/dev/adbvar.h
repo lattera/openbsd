@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/adbvar.h,v 1.2 2001/10/03 14:45:37 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/adbvar.h,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: adbvar.h,v 1.3 2000/06/08 22:10:46 tsubai Exp $	*/
 
 /*-

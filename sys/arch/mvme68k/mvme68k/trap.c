@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.2 2001/07/04 10:19:42 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/trap.c,v 1.23.2.3 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -184,7 +184,7 @@ userret(p, fp, oticks, faultaddr, fromtrap)
 	u_int faultaddr;
 	int fromtrap;
 {
-	int sig, s;
+	int sig;
 #if defined(M68040) || defined(M68060)
 	int beenhere = 0;
 
@@ -196,18 +196,9 @@ again:
 	p->p_priority = p->p_usrpri;
 	if (want_resched) {
 		/*
-		 * Since we are curproc, clock will normally just change
-		 * our priority without moving us from one queue to another
-		 * (since the running process is not on a queue.)
-		 * If that happened after we put ourselves on the run queue
-		 * but before we mi_switch()'ed, we might not be on the queue
-		 * indicated by our priority.
+		 * We're being preempted.
 		 */
-		s = splstatclock();
-		setrunqueue(p);
-		p->p_stats->p_ru.ru_nivcsw++;
-		mi_switch();
-		splx(s);
+		preempt(NULL);
 		while ((sig = CURSIG(p)) != 0)
 			postsig(sig);
 	}
@@ -295,7 +286,7 @@ dopanic:
 		if (kdb_trap(type, &frame))
 			return;
 #endif
-		regdump(&frame, 128);
+		regdump(&(frame.F_t), 128);
 		type &= ~T_USER;
 		if ((unsigned)type < trap_types)
 			panic(trap_type[type]);
@@ -725,7 +716,7 @@ writeback(fp, docachepush)
 			paddr_t pa;
 
 			pmap_enter(pmap_kernel(), (vm_offset_t)vmmap,
-						  trunc_page(f->f_fa), VM_PROT_WRITE, TRUE, VM_PROT_WRITE);
+						  trunc_page(f->f_fa), VM_PROT_WRITE, VM_PROT_WRITE|PMAP_WIRED);
 			fa = (u_int)&vmmap[(f->f_fa & PGOFSET) & ~0xF];
 			bcopy((caddr_t)&f->f_pd0, (caddr_t)fa, 16);
 			pmap_extract(pmap_kernel(), (vm_offset_t)fa, &pa);

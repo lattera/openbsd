@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/board.h,v 1.6.4.1 2001/04/18 16:11:13 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/board.h,v 1.6.4.2 2001/10/31 03:01:18 nate Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -53,13 +53,11 @@
  * it'll be unsigned in both ANSI and traditional.
  */
 #if defined(_LOCORE)
-#	define U(num)	num
+#define U(num)	num
+#elif defined(__STDC__)
+#define U(num)	num ## U
 #else
-#  if defined(__STDC__)
-#	define U(num)	num ## U
-#  else
-#	define U(num)	num/**/U
-#  endif
+#define U(num)	num/**/U
 #endif
 #define UDEFINED
 
@@ -118,6 +116,6 @@
 #include <machine/mvme188.h>
 #endif
 
-#endif __MACHINE_BOARD_H__
+#endif /* __MACHINE_BOARD_H__ */
 
 

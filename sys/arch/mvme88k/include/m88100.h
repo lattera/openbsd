@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/m88100.h,v 1.4.6.1 2001/04/18 16:11:21 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/m88100.h,v 1.4.6.2 2001/10/31 03:01:19 nate Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -52,7 +52,7 @@
 #define	DMT_VALID	0x00000001	/* Valid Transaction Bit */
 
 #ifndef	_LOCORE
-#include "sys/types.h"
+#include <sys/types.h>
 
 /* dmt_skip is never set by the cpu.  It is used to 
  * mark 'known' transactions so that they don't get 
@@ -73,4 +73,4 @@ struct dmt_reg {
 };
 #endif 
 
-#endif __MACHINE_M88100_H__
+#endif /* __MACHINE_M88100_H__ */

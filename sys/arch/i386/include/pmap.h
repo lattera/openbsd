@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.2 2001/07/04 10:16:49 niklas Exp $	*/
-/*	$NetBSD: pmap.h,v 1.43 2000/02/11 07:00:13 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/pmap.h,v 1.12.4.3 2001/10/31 03:01:12 nate Exp $	*/
+/*	$NetBSD: pmap.h,v 1.44 2000/04/24 17:18:18 thorpej Exp $	*/
 
 /*
  *
@@ -47,7 +47,7 @@
 #include <machine/cpufunc.h>
 #include <machine/pte.h>
 #include <machine/segments.h>
-#include <vm/pglist.h>
+#include <uvm/uvm_pglist.h>
 #include <uvm/uvm_object.h>
 
 /*
@@ -391,10 +391,8 @@ extern int pmap_pg_g;			/* do we support PG_G? */
  * prototypes
  */
 
-void		pmap_activate __P((struct proc *));
 void		pmap_bootstrap __P((vaddr_t));
 boolean_t	pmap_change_attrs __P((struct vm_page *, int, int));
-void		pmap_deactivate __P((struct proc *));
 static void	pmap_page_protect __P((struct vm_page *, vm_prot_t));
 void		pmap_page_remove  __P((struct vm_page *));
 static void	pmap_protect __P((struct pmap *, vaddr_t,
@@ -411,6 +409,12 @@ void		pmap_write_protect __P((struct pmap *, vaddr_t,
 vaddr_t reserve_dumppages __P((vaddr_t)); /* XXX: not a pmap fn */
 
 #define PMAP_GROWKERNEL		/* turn on pmap_growkernel interface */
+
+/*
+ * Do idle page zero'ing uncached to avoid polluting the cache.
+ */
+void		pmap_zero_page_uncached __P((paddr_t));
+#define	PMAP_PAGEIDLEZERO(pa)	pmap_zero_page_uncached((pa))
 
 /*
  * inline functions

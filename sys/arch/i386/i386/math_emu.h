@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/Attic/math_emu.h,v 1.1.1.1.16.1 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: math_emu.h,v 1.5 1995/05/03 00:17:16 mycroft Exp $	*/
 
 /*

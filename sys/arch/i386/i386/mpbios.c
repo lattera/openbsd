@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.5 2001/07/16 21:40:24 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/mpbios.c,v 1.1.2.6 2001/10/31 03:01:12 nate Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -97,7 +97,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: mpbios.c,v 1.1.2.4 2001/07/15 15:10:55 ho Exp $
+ *	$Id$
  */
 
 /*
@@ -116,8 +116,6 @@
 #include <vm/vm.h>
 #include <vm/vm_param.h>
 #include <vm/pmap.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_extern.h>
 #include <machine/specialreg.h>
 #include <machine/cputypes.h>
 #include <machine/cpuvar.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.4 2001/07/16 21:40:38 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.29.2.5 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -241,7 +241,6 @@ extern u_quad_t pentium_base_tsc;
 	} while (0)
 #endif
 #endif
-void	delay __P((int));
 
 /*
  * pull in #defines for kinds of processors
@@ -296,7 +295,6 @@ void fix_f00f __P((void));
 void	dkcsumattach __P((void));
 
 /* machdep.c */
-/* XXX MULTIPROCESSOR void	delay __P((int)); */
 void	dumpconf __P((void));
 void	cpu_reset __P((void));
 void	i386_proc0_tss_ldt_init __P((void));

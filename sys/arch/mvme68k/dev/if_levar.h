@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/if_levar.h,v 1.2.2.1 2001/10/31 03:01:17 nate Exp $	*/
 /*	$NetBSD: if_levar.h,v 1.5 1996/05/07 01:27:32 thorpej Exp $	*/
 
 /*-

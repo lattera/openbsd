@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/sbcvar.h,v 1.1.14.1 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: sbcvar.h,v 1.1 1997/03/01 20:19:00 scottr Exp $	*/
 
 /*

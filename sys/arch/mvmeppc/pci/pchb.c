@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvmeppc/pci/Attic/pchb.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $	*/
 /*	$NetBSD: pchb.c,v 1.4 2000/01/25 07:19:11 tsubai Exp $	*/
 
 /*-

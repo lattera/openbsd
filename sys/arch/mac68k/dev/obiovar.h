@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/obiovar.h,v 1.2.14.1 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: obiovar.h,v 1.3 1997/02/13 19:01:08 scottr Exp $	*/
 
 /*

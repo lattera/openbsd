@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/ali1543.c,v 1.1 2001/10/25 19:03:49 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/ali1543.c,v 1.1.2.1 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: ali1543.c,v 1.1 2001/08/27 08:21:21 haya Exp $	*/
 
 /*

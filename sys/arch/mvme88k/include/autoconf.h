@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/autoconf.h,v 1.6.4.1 2001/04/18 16:11:13 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/autoconf.h,v 1.6.4.2 2001/10/31 03:01:18 nate Exp $ */
 /*
  * Copyright (c) 1999, Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -64,10 +64,8 @@ int always_match __P((struct device *, struct cfdata *, void *));
 #define CFDATA_LOC(cfdata) (cfdata->cf_loc)
 
 /* the following are from the prom/bootblocks */
-void	*bootaddr;	/* PA of boot device */
-int	bootctrllun;	/* ctrl_lun of boot device */
-int	bootdevlun;	/* dev_lun of boot device */
-int	bootpart;	/* boot partition (disk) */
+extern void	*bootaddr;	/* PA of boot device */
+extern int	bootpart;	/* boot partition (disk) */
 
 struct	device *bootdv; /* boot device */
 

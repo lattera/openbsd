@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.3 2001/07/04 10:20:04 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/param.h,v 1.10.4.4 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1988 University of Utah.
@@ -40,7 +40,7 @@
  * from: Utah $Hdr: machparam.h 1.11 89/08/14$
  *
  *	@(#)param.h	7.8 (Berkeley) 6/28/91
- *	$Id: param.h,v 1.10.4.2 2001/04/18 16:11:23 niklas Exp $
+ *	$Id: param.h,v 1.10.4.3 2001/07/04 10:20:04 niklas Exp $
  */
 #ifndef _MACHINE_PARAM_H_
 #define _MACHINE_PARAM_H_
@@ -48,7 +48,6 @@
 #ifdef _KERNEL
 #ifndef _LOCORE
 #include <machine/cpu.h>
-#include <machine/psl.h>
 #endif	/* _LOCORE */
 #endif
 
@@ -57,6 +56,8 @@
 #define  _MACHINE_ARCH  m88k
 #define  MACHINE_ARCH   "m88k"
 #define  MID_MACHINE    MID_M88K
+/* Older value for MID_MACHINE */
+#define	OLD_MID_MACHINE	151
 
 /*
  * Round p (pointer or byte index) down to a correctly-aligned value
@@ -78,11 +79,11 @@
 #define	PAGE_SIZE	(1 << PAGE_SHIFT)
 #define	PAGE_MASK	(PAGE_SIZE - 1)
 
-#define NPTEPG		(NBPG/(sizeof(u_int)))
+#define NPTEPG		(PAGE_SIZE / (sizeof(u_int)))
 
-#define NBSEG		(1<<22)		/* bytes/segment */
-#define SEGOFSET	(NBSEG-1)	/* byte offset into segment */
-#define SEGSHIFT	22	/* LOG2(NBSEG) */
+#define SEGSHIFT	22		/* LOG2(NBSEG) */
+#define NBSEG		(1 << SEGSHIFT)	/* bytes/segment */
+#define SEGOFSET	(NBSEG - 1)	/* byte offset into segment */
 
 /*
  * 187 Bug uses the bottom 64k. We allocate ptes to map this into the
@@ -120,7 +121,7 @@
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
  */
-#define MSIZE		128		/* size of an mbuf */
+#define MSIZE		256		/* size of an mbuf */
 #define MCLSHIFT	11		/* convert bytes to m_buf clusters */
 #define MCLBYTES	(1 << MCLSHIFT)	/* size of a m_buf cluster */
 #define MCLOFSET	(MCLBYTES - 1)	/* offset within a m_buf cluster */
@@ -140,18 +141,18 @@
 #define NKMEMCLUSTERS	(4096*1024/PAGE_SIZE)
 #endif
 
-#define MSGBUFSIZE	4096
+#define MSGBUFSIZE	PAGE_SIZE
 
 /* pages ("clicks") to disk blocks */
-#define ctod(x)			((x)<<(PGSHIFT-DEV_BSHIFT))
-#define dtoc(x)			((x)>>(PGSHIFT-DEV_BSHIFT))
-#define dtob(x)			((x)<<DEV_BSHIFT)
+#define ctod(x)			((x) << (PGSHIFT - DEV_BSHIFT))
+#define dtoc(x)			((x) >> (PGSHIFT - DEV_BSHIFT))
+#define dtob(x)			((x) << DEV_BSHIFT)
 
 /* pages to bytes */
-#define ctob(x)			((x)<<PGSHIFT)
+#define ctob(x)			((x) << PGSHIFT)
 
 /* bytes to pages */
-#define btoc(x)			(((unsigned)(x)+(NBPG-1))>>PGSHIFT)
+#define btoc(x)			(((unsigned)(x) + PAGE_MASK) >> PGSHIFT)
 
 #define btodb(bytes)         /* calculates (bytes / DEV_BSIZE) */ \
 	((unsigned)(bytes) >> DEV_BSHIFT)
@@ -167,27 +168,19 @@
 #define bdbtofsb(bn)		((bn) / (BLKDEV_IOSIZE/DEV_BSIZE))
 
 /*
- * Mach derived conversion macros
- */
-#define mvme88k_btop(x)		((unsigned)(x) >> PGSHIFT)
-#define mvme88k_ptob(x)		((unsigned)(x) << PGSHIFT)
-
-#include <machine/psl.h>
-
-/*
  * Get interrupt glue.
  */
+#include <machine/psl.h>
 #include <machine/intr.h>
 
 #ifdef   _KERNEL
 extern int delay __P((int));
 #define  DELAY(x)             delay(x)
-#endif
 
-#ifdef _KERNEL
 extern int cputyp;
 extern int cpumod;
 #endif
+
 /*
  * Values for the cputyp variable.
  */
@@ -195,6 +188,7 @@ extern int cpumod;
 #define CPU_188		0x188
 #define CPU_197		0x197
 #define CPU_8120	0x8120
+
 #endif /* !_MACHINE_PARAM_H_ */
 
 

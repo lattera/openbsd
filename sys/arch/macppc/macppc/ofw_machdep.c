@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3 2001/10/01 22:47:48 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/ofw_machdep.c,v 1.3.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: ofw_machdep.c,v 1.1 1996/09/30 16:34:50 ws Exp $	*/
 
 /*

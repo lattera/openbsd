@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/kcore.h,v 1.1 2001/08/06 20:48:22 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/kcore.h,v 1.1.4.1 2001/10/31 03:01:19 nate Exp $	*/
 
 /*
  * Copyright (c) 2001 Miodrag Vallat.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.8 2001/10/30 19:20:17 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/machdep.c,v 1.124.2.9 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -120,9 +120,7 @@
 #include <stand/boot/bootarg.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
 #include <vm/vm_page.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <sys/sysctl.h>
@@ -359,14 +357,14 @@ cpu_startup()
 
 	/*
 	 * Initialize error message buffer (at end of core).
-	 * (space reserved in /boot)
+	 * (space reserved in pmap_bootstrap)
 	 */
 	pa = avail_end;
 	for (i = 0; i < btoc(MSGBUFSIZE); i++, pa += NBPG)
 		pmap_enter(pmap_kernel(),
 		    (vm_offset_t)((caddr_t)msgbufp + i * NBPG), pa,
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	printf("%s", version);
@@ -405,13 +403,8 @@ cpu_startup()
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, (vm_offset_t *)&mbutl, &maxaddr,
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 	    VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-
-	/*
-	 * Initialize timeouts
-	 */
-	timeout_init();
 
 	printf("avail mem = %lu (%uK)\n", ptoa(uvmexp.free),
 	    ptoa(uvmexp.free)/1024);
@@ -491,10 +484,6 @@ allocsys(v)
 
 #define	valloc(name, type, num) \
 	    v = (caddr_t)(((name) = (type *)v) + (num))
-#ifdef REAL_CLISTS
-	valloc(cfree, struct cblock, nclist);
-#endif
-	valloc(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -645,8 +634,8 @@ setup_buffers(maxaddr)
 		for (size = PAGE_SIZE * (i < residual ? base + 1 : base);
 		    size > 0; size -= NBPG, addr += NBPG) {
 			pmap_enter(pmap_kernel(), addr, pg->phys_addr,
-			    VM_PROT_READ|VM_PROT_WRITE, TRUE,
-			    VM_PROT_READ|VM_PROT_WRITE);
+			    VM_PROT_READ|VM_PROT_WRITE,
+			    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 			pg = pg->pageq.tqe_next;
 		}
 	}
@@ -2062,7 +2051,7 @@ dumpsys()
 			printf("(%x %d) ", maddr, blkno);
 #endif
 			pmap_enter(pmap_kernel(), dumpspace, maddr,
-			    VM_PROT_READ, TRUE, 0);
+			    VM_PROT_READ, PMAP_WIRED);
 			if ((error = (*dump)(dumpdev, blkno,
 			    (caddr_t)dumpspace, NBPG)))
 				break;
@@ -2371,15 +2360,15 @@ init386(first_avail)
 	/* Boot arguments are in a single page specified by /boot */
 	if (bootapiver & BAPIV_VECTOR) {
 		if (bootargc > NBPG)
-			panic ("too many boot args");
+			panic("too many boot args");
 
 		if (extent_alloc_region(iomem_ex, (paddr_t)bootargv, bootargc,
 		    EX_NOWAIT))
 			panic("cannot reserve /boot args memory");
 
 		pmap_enter(pmap_kernel(), (vaddr_t)bootargp, (paddr_t)bootargv,
-		    VM_PROT_READ|VM_PROT_WRITE, TRUE,
-		    VM_PROT_READ|VM_PROT_WRITE);
+		    VM_PROT_READ|VM_PROT_WRITE,
+		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 
 		bios_getopt();
 
@@ -2395,7 +2384,7 @@ init386(first_avail)
 	/* install the page after boot args as PT page for first 4M */
 	pmap_enter(pmap_kernel(), (u_long)vtopte(0),
 	   i386_round_page(bootargv + bootargc), VM_PROT_READ|VM_PROT_WRITE,
-	   TRUE, VM_PROT_READ|VM_PROT_WRITE);
+	   VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
 	memset(vtopte(0), 0, NBPG);  /* make sure it is clean before using */
 #endif
 
@@ -2424,7 +2413,7 @@ init386(first_avail)
 			/* skip shorter than page regions */
 			if ((e - a) < NBPG) {
 #ifdef DEBUG
-				printf ("-S");
+				printf("-S");
 #endif
 				continue;
 			}
@@ -2478,20 +2467,20 @@ init386(first_avail)
 			if (a < atop(16 * 1024 * 1024)) {
 				lim = MIN(atop(16 * 1024 * 1024), e);
 #ifdef DEBUG
-				printf (" %x-%x (<16M)", a, lim);
+				printf(" %x-%x (<16M)", a, lim);
 #endif
 				uvm_page_physload(a, lim, a, lim,
 				    VM_FREELIST_FIRST16);
 				if (e > lim) {
 #ifdef DEBUG
-					printf (" %x-%x", lim, e);
+					printf(" %x-%x", lim, e);
 #endif
 					uvm_page_physload(lim, e, lim, e,
 					    VM_FREELIST_DEFAULT);
 				}
 			} else {
 #ifdef DEBUG
-				printf (" %x-%x", a, e);
+				printf(" %x-%x", a, e);
 #endif
 				uvm_page_physload(a, e, a, e,
 				    VM_FREELIST_DEFAULT);
@@ -2934,7 +2923,7 @@ bus_space_alloc(t, rstart, rend, size, alignment, boundary, cacheable,
 	/*
 	 * Do the requested allocation.
 	 */
-	error = extent_alloc_subregion(ex, rstart, rend, size, alignment,
+	error = extent_alloc_subregion(ex, rstart, rend, size, alignment, 0,
 	    boundary, EX_NOWAIT | (ioport_malloc_safe ?  EX_MALLOCOK : 0),
 	    &bpa);
 
@@ -3298,8 +3287,28 @@ _bus_dmamap_load_raw(t, map, segs, nsegs, size, flags)
 	bus_size_t size;
 	int flags;
 {
+	if (nsegs > map->_dm_segcnt || size > map->_dm_size)
+		return (EINVAL);
 
-	panic("_bus_dmamap_load_raw: not implemented");
+	/*
+	 * Make sure we don't cross any boundaries.
+	 */
+	if (map->_dm_boundary) {
+		bus_addr_t bmask = ~(map->_dm_boundary - 1);
+		int i;
+
+		for (i = 0; i < nsegs; i++) {
+			if (segs[i].ds_len > map->_dm_maxsegsz)
+				return (EINVAL);
+			if ((segs[i].ds_addr & bmask) !=
+			    ((segs[i].ds_addr + segs[i].ds_len - 1) & bmask))
+				return (EINVAL);
+		}
+	}
+
+	bcopy(segs, map->dm_segs, nsegs * sizeof(*segs));
+	map->dm_nsegs = nsegs;
+	return (0);
 }
 
 /*
@@ -3414,8 +3423,8 @@ _bus_dmamem_map(t, segs, nsegs, size, kvap, flags)
 			if (size == 0)
 				panic("_bus_dmamem_map: size botch");
 			pmap_enter(pmap_kernel(), va, addr,
-			    VM_PROT_READ | VM_PROT_WRITE, TRUE,
-			    VM_PROT_READ | VM_PROT_WRITE);
+			    VM_PROT_READ | VM_PROT_WRITE,
+			    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED);
 		}
 	}
 	pmap_update();
@@ -3447,11 +3456,13 @@ _bus_dmamem_unmap(t, kva, size)
  * Common functin for mmap(2)'ing DMA-safe memory.  May be called by
  * bus-specific DMA mmap(2)'ing functions.
  */
-int
+paddr_t
 _bus_dmamem_mmap(t, segs, nsegs, off, prot, flags)
 	bus_dma_tag_t t;
 	bus_dma_segment_t *segs;
-	int nsegs, off, prot, flags;
+	int nsegs;
+	off_t off;
+	int prot, flags;
 {
 	int i;
 
@@ -3611,17 +3622,20 @@ _bus_dmamem_alloc_range(t, size, alignment, boundary, segs, nsegs, rsegs,
 	 * Compute the location, size, and number of segments actually
 	 * returned by the VM code.
 	 */
-	m = mlist.tqh_first;
+	m = TAILQ_FIRST(&mlist);
 	curseg = 0;
 	lastaddr = segs[curseg].ds_addr = VM_PAGE_TO_PHYS(m);
 	segs[curseg].ds_len = PAGE_SIZE;
-	m = m->pageq.tqe_next;
 
-	for (; m != NULL; m = m->pageq.tqe_next) {
+	for (m = TAILQ_NEXT(m, pageq); m != NULL; m = TAILQ_NEXT(m, pageq)) {
 		curaddr = VM_PAGE_TO_PHYS(m);
 #ifdef DIAGNOSTIC
+		if (curseg == nsegs) {
+			printf("uvm_pglistalloc returned too many\n");
+			panic("_bus_dmamem_alloc_range");
+		}
 		if (curaddr < low || curaddr >= high) {
-			printf("vm_page_alloc_memory returned non-sensical"
+			printf("uvm_pglistalloc returned non-sensical"
 			    " address 0x%lx\n", curaddr);
 			panic("_bus_dmamem_alloc_range");
 		}

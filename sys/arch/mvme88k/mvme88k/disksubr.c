@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.1 2001/04/18 16:11:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/disksubr.c,v 1.10.4.2 2001/10/31 03:01:19 nate Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1995 Dale Rahn.
@@ -325,7 +325,7 @@ setdisklabel(olp, nlp, openmask, clp)
 int
 writedisklabel(dev, strat, lp, clp)
 	dev_t dev;
-	void (*strat)();
+	void (*strat) __P((struct buf *));
 	register struct disklabel *lp;
 	struct cpu_disklabel *clp;
 {

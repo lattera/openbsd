@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/signal.h,v 1.4.6.1 2001/04/18 16:11:27 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/signal.h,v 1.4.6.2 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Copyright (c) 1996 Nivas Madhur
  * All rights reserved.
@@ -75,4 +75,4 @@ struct  sigcontext {
 	int	sc_fpit;
 	int	sc_xxxx;	/* padd to double word boundary */
 };
-#endif __MACHINE_SIGNAL_H__
+#endif /* __MACHINE_SIGNAL_H__ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/adb.c,v 1.3 2001/10/03 14:45:37 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/adb.c,v 1.3.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: adb.c,v 1.6 1999/08/16 06:28:09 tsubai Exp $	*/
 
 /*-

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/z8530var.h,v 1.1 2001/09/26 22:45:43 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/z8530var.h,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: z8530var.h,v 1.1 1998/05/15 10:15:57 tsubai Exp $	*/
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvmeppc/dev/Attic/bugio.c,v 1.1.2.1 2001/10/31 03:01:20 nate Exp $	*/
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.

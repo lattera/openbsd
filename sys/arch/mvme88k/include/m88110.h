@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/m88110.h,v 1.1.4.1 2001/04/18 16:11:22 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/m88110.h,v 1.1.4.2 2001/10/31 03:01:19 nate Exp $ */
 
 #ifndef	__MACHINE_M88110_H__
 #define	__MACHINE_M88110_H__
@@ -115,23 +115,23 @@
  * Prototypes from "mvme88k/mvme88k/m197_cmmu.c"
  */
 
+#ifdef DDB
+void m197_cmmu_show_translation(unsigned, unsigned, unsigned, int);
+void m197_cmmu_cache_state(unsigned, unsigned);
+void m197_show_cmmu_info(unsigned);
+#endif
+
 #ifdef CMMU_DEBUG
- void m197_show_apr(unsigned value);
- void m197_show_sctr(unsigned value);
+void m197_show_apr(unsigned value);
+void m197_show_sctr(unsigned value);
 #endif
 
 unsigned m197_cmmu_cpu_number(void);
-#if !DDB
-static
-#endif /* !DDB */
 unsigned m197_cmmu_remote_get(unsigned cpu, unsigned r, unsigned data);
 unsigned m197_cmmu_get_idr(unsigned data);
 void m197_cmmu_init(void);
 void m197_cmmu_shutdown_now(void);
 void m197_cmmu_parity_enable(void);
-#if !DDB
-static
-#endif /* !DDB */
 void m197_setup_board_config(void);
 void m197_setup_cmmu_config(void);
 void m197_cmmu_dump_config(void);
@@ -232,4 +232,4 @@ unsigned get_dpar (void);
 
 #endif	/* _LOCORE */
 
-#endif __MACHINE_M88110_H__
+#endif /* __MACHINE_M88110_H__ */

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/eisa/eisa_machdep.c,v 1.3.6.3 2001/10/31 03:01:11 nate Exp $	*/
 /*	$NetBSD: eisa_machdep.c,v 1.10.22.2 2000/06/25 19:36:58 sommerfeld Exp $	*/
 
 /*-

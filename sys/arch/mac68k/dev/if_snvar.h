@@ -1,3 +1,4 @@
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_snvar.h,v 1.8.12.1 2001/10/31 03:01:14 nate Exp $      */
 /*    $NetBSD: if_snvar.h,v 1.8 1997/04/25 03:40:09 briggs Exp $      */
 
 /*

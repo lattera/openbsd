@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.1 2001/07/04 10:18:30 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/cpu.h,v 1.19.8.2 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: cpu.h,v 1.45 1997/02/10 22:13:40 scottr Exp $	*/
 
 /*
@@ -304,8 +304,6 @@ u_int	get_mapping __P((void));
 /* locore.s */
 void	m68881_restore __P((struct fpframe *));
 void	m68881_save __P((struct fpframe *));
-u_int   getsfc __P((void));
-u_int   getdfc __P((void));
 void	TBIA __P((void));
 void	TBIAS __P((void));
 void	TBIS __P((vm_offset_t));

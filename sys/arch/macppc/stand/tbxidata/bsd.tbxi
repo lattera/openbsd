@@ -1,6 +1,6 @@
 <CHRP-BOOT>
 <LICENSE>
-/*      $OpenBSD: src/sys/arch/macppc/stand/tbxidata/bsd.tbxi,v 1.4 2001/10/06 17:33:23 drahn Exp $      */
+/*      $OpenBSD: src/sys/arch/macppc/stand/tbxidata/bsd.tbxi,v 1.4.4.1 2001/10/31 03:01:17 nate Exp $      */
 /*
  * Copyright (c) 2001 Dale Rahn. All rights reserved.
  *

@@ -1,3 +1,4 @@
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn.c,v 1.25.4.3 2001/10/31 03:01:14 nate Exp $        */
 /*    $NetBSD: if_sn.c,v 1.13 1997/04/25 03:40:10 briggs Exp $        */
 
 /*

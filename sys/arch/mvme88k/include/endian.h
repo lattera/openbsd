@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/endian.h,v 1.9.4.1 2001/04/18 16:11:16 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/endian.h,v 1.9.4.2 2001/10/31 03:01:18 nate Exp $ */
 
 /*-
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
@@ -37,5 +37,5 @@
 
 #define	__STRICT_ALIGNMENT
 
-#endif __MVME88K_ENDIAN_H__
+#endif /* __MVME88K_ENDIAN_H__ */
 

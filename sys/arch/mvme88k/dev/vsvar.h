@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vsvar.h,v 1.1.4.1 2001/04/18 16:11:10 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vsvar.h,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * Copyright (c) 1990 The Regents of the University of California.
@@ -47,7 +47,7 @@
 #define	DMAMAXIO	(MAXPHYS/NBPG+1)
 #define  LO(x) (u_short)((unsigned long)x & 0x0000FFFF)
 #define  HI(x) (u_short)((unsigned long)x >> 16)
-#define  OFF(x) (u_short)((long)kvtop(x) - (long)kvtop(sc->sc_vsreg))
+#define  OFF(x) (u_short)((long)kvtop((vm_offset_t)x) - (long)kvtop((vm_offset_t)sc->sc_vsreg))
 #define  vs_name(sc)	(sc)->sc_dev.dv_xname
 
 /****************     Scater/Gather Stuff                *******************/

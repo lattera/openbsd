@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/include/vmparam.h,v 1.4.10.1 2001/07/04 10:19:32 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/include/vmparam.h,v 1.4.10.2 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -43,7 +43,7 @@
  */
 
 #ifndef _MVME68K_VMPARAM_H_
-#define       _MVME68K_VMPARAM_H_
+#define _MVME68K_VMPARAM_H_
 
 /*
  * Machine dependent constants for MVME68K
@@ -62,8 +62,6 @@
  */
 #define	USRTEXT		8192			/* Must equal __LDPGSZ */
 #define	USRSTACK	(-HIGHPAGES*NBPG)	/* Start of user stack */
-#define	BTOPUSRSTACK	(0x100000-HIGHPAGES)	/* btop(USRSTACK) */
-#define	P1PAGES		0x100000
 #define	LOWPAGES	0
 #define	HIGHPAGES	(0x100000/NBPG)
 
@@ -87,20 +85,8 @@
 #endif
 
 /*
- * Default sizes of swap allocation chunks (see dmap.h).
- * The actual values may be changed in vminit() based on MAXDSIZ.
- * With MAXDSIZ of 16Mb and NDMAP of 38, dmmax will be 1024.
- * DMMIN should be at least ctod(1) so that vtod() works.
- * vminit() insures this.
- */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	4096			/* largest potential swap allocation */
-
-/*
  * Sizes of the system and user portions of the system page table.
  */
-/* SYSPTSIZE IS SILLY; IT SHOULD BE COMPUTED AT BOOT TIME */
-#define	SYSPTSIZE	(2 * NPTEPG)	/* 8mb */
 #define	USRPTSIZE 	(1 * NPTEPG)	/* 4mb */
 
 /*
@@ -137,18 +123,6 @@
  */
 #define	MAXSLP 		20
 
-/*
- * A swapped in process is given a small amount of core without being bothered
- * by the page replacement algorithm.  Basically this says that if you are
- * swapped in you deserve some resources.  We protect the last SAFERSS
- * pages against paging and will just swap you out rather than paging you.
- */
-#define	SAFERSS		4		/* nominal ``small'' resident set size
-					   protected against replacement */
-/*
- * Mach derived constants
- */
-
 /* user/kernel map constants */
 #define VM_MIN_ADDRESS		((vm_offset_t)0)
 #define VM_MAXUSER_ADDRESS	((vm_offset_t)0xFFF00000)
@@ -162,7 +136,7 @@
 #define VM_PHYS_SIZE		(USRIOSIZE*PAGE_SIZE)
 
 /* # of kernel PT pages (initial only, can grow dynamically) */
-#define VM_KERNEL_PT_PAGES	((vm_size_t)2)		/* XXX: SYSPTSIZE */
+#define VM_KERNEL_PT_PAGES	((vm_size_t)2)
 
 /* pcb base */
 #define	pcbb(p)		((u_int)(p)->p_addr)

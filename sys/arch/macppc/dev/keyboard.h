@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/keyboard.h,v 1.1 2001/09/01 15:50:00 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/keyboard.h,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: keyboard.h,v 1.1 1998/05/15 10:15:54 tsubai Exp $	*/
 
 /*-

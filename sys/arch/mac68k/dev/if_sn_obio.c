@@ -1,3 +1,4 @@
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn_obio.c,v 1.16.8.1 2001/10/31 03:01:14 nate Exp $    */
 /*    $NetBSD: if_sn_obio.c,v 1.9 1997/04/22 20:56:15 scottr Exp $    */
 
 /*

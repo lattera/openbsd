@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.3 1998/05/03 07:13:00 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.c,v 1.3.8.1 2001/10/31 03:01:14 nate Exp $	*/
 /*  pm_direct.c 1.22 01/09/97 Takashi Hamada */
 
 /*
@@ -972,7 +972,7 @@ pm_adb_op(buffer, compRout, data, command)
 
 	PM_VIA_INTR_ENABLE();
 
-	/* wait until the PM interrupt is occured */
+	/* wait until the PM interrupt is occurred */
 	delay = 0x80000;
 	while(adbWaiting == 1) {
 		if ((via_reg(VIA1, vIFR) & 0x10) == 0x10)

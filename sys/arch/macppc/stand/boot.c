@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/stand/Attic/boot.c,v 1.2 2001/09/21 16:58:41 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/stand/Attic/boot.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: boot.c,v 1.1 1997/04/16 20:29:17 thorpej Exp $	*/
 
 /*

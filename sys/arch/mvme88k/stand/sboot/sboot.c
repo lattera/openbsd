@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/sboot.c,v 1.1.1.1.14.1 2001/10/31 03:01:20 nate Exp $	*/
+
 /*
  * Copyright (c) 1995 Theo de Raadt
  * 

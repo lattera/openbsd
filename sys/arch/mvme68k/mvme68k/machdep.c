@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.4 2001/07/04 10:19:39 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.31.2.5 2001/10/31 03:01:17 nate Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -92,6 +92,8 @@
 #include <sys/mount.h>
 #include <sys/user.h>
 #include <sys/exec.h>
+#include <sys/core.h>
+#include <sys/kcore.h>
 #include <sys/vnode.h>
 #include <sys/sysctl.h>
 #include <sys/syscallargs.h>
@@ -111,11 +113,11 @@
 #include <machine/reg.h>
 #include <machine/psl.h>
 #include <machine/pte.h>
+#include <machine/kcore.h>
 #include <dev/cons.h>
 #include <net/netisr.h>
 
 #define	MAXMEM	64*1024	/* XXX - from cmap.h */
-#include <vm/vm_kern.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -149,7 +151,6 @@ int   physmem = MAXMEM;	/* max supported memory, changes to actual */
  */
 int   safepri = PSL_LOWIPL;
 
-extern   u_int lowram;
 extern   short exframesize[];
 
 #ifdef COMPAT_HPUX
@@ -181,6 +182,7 @@ static struct consdev bootcons = {
 	makedev(14,0), 
 	1};
 
+void dumpsys(void);
 void initvectors(void);
 
 void
@@ -243,11 +245,6 @@ cpu_startup()
 	
 	vaddr_t minaddr, maxaddr;
 	vm_size_t size;
-#ifdef BUFFERS_UNMANAGED
-	vm_offset_t bufmemp;
-	caddr_t buffermem;
-	int ix;
-#endif
 #ifdef DEBUG
 	extern int pmapdebug;
 	int opmapdebug = pmapdebug;
@@ -260,9 +257,8 @@ cpu_startup()
 	 * avail_end was pre-decremented in pmap_bootstrap to compensate.
 	 */
 	for (i = 0; i < btoc(MSGBUFSIZE); i++)
-		pmap_enter(pmap_kernel(), (vm_offset_t)msgbufp,
-		    avail_end + i * NBPG, VM_PROT_READ|VM_PROT_WRITE,
-		    TRUE, VM_PROT_READ|VM_PROT_WRITE);
+		pmap_kenter_pa((vm_offset_t)msgbufp,
+		    avail_end + i * NBPG, VM_PROT_READ|VM_PROT_WRITE);
 	initmsgbuf((caddr_t)msgbufp, round_page(MSGBUFSIZE));
 
 	/*
@@ -295,10 +291,6 @@ again:
 	    (name) = (type *)v; v = (caddr_t)((name)+(num))
 #define	valloclim(name, type, num, lim) \
 	    (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
-#ifdef REAL_CLISTS
-	valloc(cfree, struct cblock, nclist);
-#endif
-	valloc(timeouts, struct timeout, ntimeout);
 #ifdef SYSVSHM
 	valloc(shmsegs, struct shmid_ds, shminfo.shmmni);
 #endif
@@ -336,11 +328,6 @@ again:
 		firstaddr = (caddr_t) uvm_km_zalloc(kernel_map, round_page(size));
 		if (firstaddr == 0)
 			panic("startup: no room for tables");
-#ifdef BUFFERS_UNMANAGED
-		buffermem = (caddr_t) uvm_km_zalloc(kernel_map, bufpages*PAGE_SIZE);
-		if (buffermem == 0)
-			panic("startup: no room for buffers");
-#endif
 		goto again;
 	}
 	/*
@@ -353,7 +340,6 @@ again:
 	 * in that they usually occupy more virtual memory than physical.
 	 */
 	size = MAXBSIZE * nbuf;
-
 	if (uvm_map(kernel_map, (vaddr_t *) &buffers, m68k_round_page(size),
 		    NULL, UVM_UNKNOWN_OFFSET,
 		    UVM_MAPFLAG(UVM_PROT_NONE, UVM_PROT_NONE, UVM_INH_NONE,
@@ -367,6 +353,7 @@ again:
 	}
 	base = bufpages / nbuf;
 	residual = bufpages % nbuf;
+
 	for (i = 0; i < nbuf; i++) {
 		vsize_t curbufsize;
 		vaddr_t curbuf;
@@ -386,57 +373,33 @@ again:
 			if (pg == NULL)
 				panic("cpu_startup: not enough memory for "
 				      "buffer cache");
-			pmap_enter(kernel_map->pmap, curbuf,
-				   VM_PAGE_TO_PHYS(pg), VM_PROT_ALL, TRUE,
-				   VM_PROT_READ|VM_PROT_WRITE);
+			pmap_kenter_pgs(curbuf, &pg, 1);
 			curbuf += PAGE_SIZE;
 			curbufsize -= PAGE_SIZE;
 		}
 	}
+
 	/*
 	 * Allocate a submap for exec arguments.  This map effectively
 	 * limits the number of processes exec'ing at any time.
 	 */
 	exec_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   16*NCARGS, VM_MAP_PAGEABLE, FALSE, NULL);
+
 	/*
-	 * Allocate a submap for physio
+	 * Allocate a submap for physio.
 	 */
 	phys_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				   VM_PHYS_SIZE, 0, FALSE, NULL);
 
-	mb_map = uvm_km_suballoc(kernel_map, (vaddr_t *)&mbutl, &maxaddr,
+	mb_map = uvm_km_suballoc(kernel_map, &minaddr, &maxaddr,
 				 VM_MBUF_SIZE, VM_MAP_INTRSAFE, FALSE, NULL);
-	/*
-	 * Initialize timeouts
-	 */
-	timeout_init();
-
 #ifdef DEBUG
 	pmapdebug = opmapdebug;
 #endif
 	printf("avail mem = %ld (%ld pages)\n", ptoa(uvmexp.free), uvmexp.free);
 	printf("using %d buffers containing %d bytes of memory\n",
 			 nbuf, bufpages * PAGE_SIZE);
-#ifdef MFS
-	/*
-	 * Check to see if a mini-root was loaded into memory. It resides
-	 * at the start of the next page just after the end of BSS.
-	 */
-	{
-		extern void *smini;
-
-		if (smini && (boothowto & RB_MINIROOT)) {
-			boothowto |= RB_DFLTROOT;
-			mfs_initminiroot(smini);
-		}
-	}
-#endif
-
-	/*
-	 * Set up CPU-specific registers, cache, etc.
-	 */
-	initcpu();
 
 	/*
 	 * Set up buffers, so they can be used to read disk labels.
@@ -460,10 +423,10 @@ again:
  */
 void
 setregs(p, pack, stack, retval)
-register struct proc *p;
-struct exec_package *pack;
-u_long stack;
-register_t *retval;
+	register struct proc *p;
+	struct exec_package *pack;
+	u_long stack;
+	register_t *retval;
 {
 	struct frame *frame = (struct frame *)p->p_md.md_regs;
 
@@ -760,10 +723,11 @@ boot(howto)
 u_long   dumpmag = 0x8fca0101;	/* magic number */
 int   dumpsize = 0;		/* pages */
 long  dumplo = 0;		/* blocks */
+cpu_kcore_hdr_t cpu_kcore_hdr;
 
 /*
  * This is called by configure to set dumplo and dumpsize.
- * Dumps always skip the first block of disk space
+ * Dumps always skip the first PAGE_SIZE of disk space
  * in case there might be a disk label stored there.
  * If there is extra space, put dump at the end to
  * reduce the chance that swapping trashes it.
@@ -785,20 +749,24 @@ dumpconf()
 	if (nblks <= ctod(1))
 		return;
 
-	/*
-	 * XXX include the final RAM page which is not included in physmem.
-	 */
-	dumpsize = physmem + 1;
+	dumpsize = physmem;
+
+	/* mvme68k only uses a single segment. */
+	cpu_kcore_hdr.ram_segs[0].start = 0;
+	cpu_kcore_hdr.ram_segs[0].size = ctob(physmem);
+	cpu_kcore_hdr.mmutype = mmutype;
+	cpu_kcore_hdr.kernel_pa = 0;
+	cpu_kcore_hdr.sysseg_pa = pmap_kernel()->pm_stpa;
 
 	/* Always skip the first block, in case there is a label there. */
 	if (dumplo < ctod(1))
 		dumplo = ctod(1);
 
 	/* Put dump at end of partition, and make it fit. */
-	if (dumpsize > dtoc(nblks - dumplo))
-		dumpsize = dtoc(nblks - dumplo);
-	if (dumplo < nblks - ctod(dumpsize))
-		dumplo = nblks - ctod(dumpsize);
+	if (dumpsize + 1 > dtoc(nblks - dumplo))
+		dumpsize = dtoc(nblks - dumplo) - 1;
+	if (dumplo < nblks - ctod(dumpsize) - 1)
+		dumplo = nblks - ctod(dumpsize) - 1;
 }
 
 /*
@@ -806,11 +774,26 @@ dumpconf()
  * getting on the dump stack, either when called above, or by
  * the auto-restart code.
  */
+void
 dumpsys()
 {
+	int maj;
+	int psize;
+	daddr_t blkno;			/* current block to write */
+					/* dump routine */
+	int (*dump) __P((dev_t, daddr_t, caddr_t, size_t));
+	int pg;				/* page being dumped */
+	paddr_t maddr;			/* PA being dumped */
+	int error;			/* error code from (*dump)() */
+	kcore_seg_t *kseg_p;
+	cpu_kcore_hdr_t *chdr_p;
+	char dump_hdr[dbtob(1)];	/* XXX assume hdr fits in 1 block */
+
 	extern int msgbufmapped;
 
 	msgbufmapped = 0;
+
+	/* Make sure dump device is valid. */
 	if (dumpdev == NODEV)
 		return;
 	if (dumpsize == 0) {
@@ -818,44 +801,96 @@ dumpsys()
 		if (dumpsize == 0)
 			return;
 	}
-	printf("\ndumping to dev %x, offset %d\n", dumpdev, dumplo);
+	maj = major(dumpdev);
+	if (dumplo < 0) {
+		printf("\ndump to dev %u,%u not possible\n", maj,
+		    minor(dumpdev));
+		return;
+	}
+	dump = bdevsw[maj].d_dump;
+	blkno = dumplo;
+
+	printf("\ndumping to dev %u,%u offset %ld\n", maj,
+	    minor(dumpdev), dumplo);
+
+	kseg_p = (kcore_seg_t *)dump_hdr;
+	chdr_p = (cpu_kcore_hdr_t *)&dump_hdr[ALIGN(sizeof(*kseg_p))];
+	bzero(dump_hdr, sizeof(dump_hdr));
+
+	/*
+	 * Generate a segment header
+	 */
+	CORE_SETMAGIC(*kseg_p, KCORE_MAGIC, MID_MACHINE, CORE_CPU);
+	kseg_p->c_size = dbtob(1) - ALIGN(sizeof(*kseg_p));
+
+	/*
+	 * Add the md header
+	 */
+	*chdr_p = cpu_kcore_hdr;
 
 	printf("dump ");
-	switch ((*bdevsw[major(dumpdev)].d_dump)(dumpdev)) {
-		
-		case ENXIO:
-			printf("device bad\n");
-			break;
+	psize = (*bdevsw[maj].d_psize)(dumpdev);
+	if (psize == -1) {
+		printf("area unavailable\n");
+		return;
+	}
 
-		case EFAULT:
-			printf("device not ready\n");
-			break;
+	/* Dump the header. */
+	error = (*dump) (dumpdev, blkno++, (caddr_t)dump_hdr, dbtob(1));
+	if (error != 0)
+		goto abort;
 
-		case EINVAL:
-			printf("area improper\n");
-			break;
+	maddr = (paddr_t)0;
+	for (pg = 0; pg < dumpsize; pg++) {
+#define	NPGMB	(1024 * 1024 / PAGE_SIZE)
+		/* print out how many MBs we have dumped */
+		if (pg != 0 && (pg % NPGMB) == 0)
+			printf("%d ", pg / NPGMB);
+#undef	NPGMB
+		pmap_kenter_pa((vaddr_t)vmmap, maddr, VM_PROT_READ);
 
-		case EIO:
-			printf("i/o error\n");
+		error = (*dump)(dumpdev, blkno, vmmap, PAGE_SIZE);
+		if (error == 0) {
+			maddr += PAGE_SIZE;
+			blkno += btodb(PAGE_SIZE);
+		} else
 			break;
+	}
+abort:
+	switch (error) {
+	case 0:
+		printf("succeeded\n");
+		break;
 
-		case EINTR:
-			printf("aborted from console\n");
-			break;
+	case ENXIO:
+		printf("device bad\n");
+		break;
 
-		default:
-			printf("succeeded\n");
-			break;
+	case EFAULT:
+		printf("device not ready\n");
+		break;
+
+	case EINVAL:
+		printf("area improper\n");
+		break;
+
+	case EIO:
+		printf("i/o error\n");
+		break;
+
+	case EINTR:
+		printf("aborted from console\n");
+		break;
+
+	default:
+		printf("error %d\n", error);
+		break;
 	}
 }
 
 #if defined(M68060)
 int m68060_pcr_init = 0x21;	/* make this patchable */
 #endif
-
-initcpu()
-{
-}
 
 void
 initvectors()
@@ -1014,115 +1049,6 @@ struct frame *frame;
 #endif
 }
 
-regdump(fp, sbytes)
-struct frame *fp;	/* must not be register */
-int sbytes;
-{
-	static int doingdump = 0;
-	register int i;
-	int s;
-	extern char *hexstr();
-
-	if (doingdump)
-		return;
-	s = splhigh();
-	doingdump = 1;
-	printf("pid = %d, pc = %s, ",
-			 curproc ? curproc->p_pid : -1, hexstr(fp->f_pc, 8));
-	printf("ps = %s, ", hexstr(fp->f_sr, 4));
-	printf("sfc = %s, ", hexstr(getsfc(), 4));
-	printf("dfc = %s\n", hexstr(getdfc(), 4));
-	printf("Registers:\n     ");
-	for (i = 0; i < 8; i++)
-		printf("        %d", i);
-	printf("\ndreg:");
-	for (i = 0; i < 8; i++)
-		printf(" %s", hexstr(fp->f_regs[i], 8));
-	printf("\nareg:");
-	for (i = 0; i < 8; i++)
-		printf(" %s", hexstr(fp->f_regs[i+8], 8));
-	if (sbytes > 0) {
-		if (fp->f_sr & PSL_S) {
-			printf("\n\nKernel stack (%s):",
-					 hexstr((int)(((int *)&fp)-1), 8));
-			dumpmem(((int *)&fp)-1, sbytes, 0);
-		} else {
-			printf("\n\nUser stack (%s):", hexstr(fp->f_regs[SP], 8));
-			dumpmem((int *)fp->f_regs[SP], sbytes, 1);
-		}
-	}
-	doingdump = 0;
-	splx(s);
-}
-
-#define KSADDR	((int *)((u_int)curproc->p_addr + USPACE - NBPG))
-
-dumpmem(ptr, sz, ustack)
-register int *ptr;
-int sz, ustack;
-{
-	register int i, val;
-	extern char *hexstr();
-
-	for (i = 0; i < sz; i++) {
-		if ((i & 7) == 0)
-			printf("\n%s: ", hexstr((int)ptr, 6));
-		else
-			printf(" ");
-		if (ustack == 1) {
-			if ((val = fuword(ptr++)) == -1)
-				break;
-		} else {
-			if (ustack == 0 &&
-				 (ptr < KSADDR || ptr > KSADDR+(NBPG/4-1)))
-				break;
-			val = *ptr++;
-		}
-		printf("%s", hexstr(val, 8));
-	}
-	printf("\n");
-}
-
-char *
-hexstr(val, len)
-register int val;
-int len;
-{
-	static char nbuf[9];
-	register int x, i;
-
-	if (len > 8)
-		return ("");
-	nbuf[len] = '\0';
-	for (i = len-1; i >= 0; --i) {
-		x = val & 0xF;
-		if (x > 9)
-			nbuf[i] = x - 10 + 'A';
-		else
-			nbuf[i] = x + '0';
-		val >>= 4;
-	}
-	return (nbuf);
-}
-
-#ifdef STACKCHECK
-char oflowmsg[] = "k-stack overflow";
-char uflowmsg[] = "k-stack underflow";
-
-badkstack(oflow, fr)
-int oflow;
-struct frame fr;
-{
-	extern char kstackatbase[];
-
-	printf("%s: sp should be %x\n", 
-			 oflow ? oflowmsg : uflowmsg,
-			 kstackatbase - (exframesize[fr.f_format] + 8));
-	regdump(&fr, 0);
-	panic(oflow ? oflowmsg : uflowmsg);
-}
-#endif
-
 /*
  * cpu_exec_aout_makecmds():
  *	cpu-dependent a.out format hook for execve().
@@ -1153,7 +1079,7 @@ u_char   myea[6] = { 0x08, 0x00, 0x3e, 0xff, 0xff, 0xff};
 
 void
 myetheraddr(ether)
-u_char *ether;
+	u_char *ether;
 {
 	bcopy(myea, ether, sizeof myea);
 }
@@ -1264,8 +1190,6 @@ memsize1x7()
 }
 #endif
 
-int foodebug = 0;
-
 int
 memsize(void)
 {
@@ -1288,8 +1212,6 @@ memsize(void)
 		 look = (int*)((unsigned)look + STRIDE)) {
 		unsigned save;
 
-		/* if can't access, we've reached the end */
-		if (foodebug) printf("%x\n", look);
 		if (badvaddr((caddr_t)look, 2)) {
 #if defined(DEBUG)
 			printf("%x\n", look);
@@ -1321,33 +1243,31 @@ memsize(void)
 
 void
 bootcnprobe(cp)
-struct consdev *cp;
+	struct consdev *cp;
 {
 	cp->cn_dev = makedev(14, 0);
 	cp->cn_pri = CN_NORMAL;
-	return;
 }
 
 void
 bootcninit(cp)
-struct consdev *cp;
+	struct consdev *cp;
 {
 	/* Nothing to do */
 }
 
 int
 bootcngetc(dev)
-dev_t dev;
+	dev_t dev;
 {
 	return (bug_inchr());
 }
 
 void
 bootcnputc(dev, c)
-dev_t dev;
-int c;
+	dev_t dev;
+	int c;
 {
-	int s;
 	char cc = (char)c;
 	if (cc == '\n')
 		bug_outchr('\r');

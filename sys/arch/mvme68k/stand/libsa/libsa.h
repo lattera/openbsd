@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme68k/stand/libsa/libsa.h,v 1.3.14.1 2001/10/31 03:01:18 nate Exp $	*/
+
 /*
  * libsa prototypes 
  */

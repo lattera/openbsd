@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.9.4.1 2001/07/04 10:18:26 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/grf.c,v 1.9.4.2 2001/10/31 03:01:14 nate Exp $	*/
 /*	$NetBSD: grf.c,v 1.41 1997/02/24 06:20:04 scottr Exp $	*/
 
 /*
@@ -68,9 +68,6 @@
 #include <miscfs/specfs/specdev.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-#include <vm/vm_page.h>
-#include <vm/vm_pager.h>
 
 #include <uvm/uvm.h>
 

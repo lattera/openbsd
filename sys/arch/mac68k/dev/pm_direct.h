@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/pm_direct.h,v 1.1.14.1 2001/10/31 03:01:14 nate Exp $	*/
+
 /*  pm_direct.h 1.0 01/02/97 Takashi Hamada */
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1 2001/09/01 15:55:17 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/pchb.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: pchb.c,v 1.4 2000/01/25 07:19:11 tsubai Exp $	*/
 
 /*-

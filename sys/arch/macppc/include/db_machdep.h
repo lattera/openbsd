@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/db_machdep.h,v 1.1 2001/09/01 15:49:06 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/include/db_machdep.h,v 1.1.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.13 1996/04/29 20:50:08 leo Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/pciide_machdep.c,v 1.1 2001/09/01 15:55:17 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/pciide_machdep.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: pciide_machdep.c,v 1.2 1999/02/19 18:01:27 mycroft Exp $	*/
 
 /*

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvmeppc/stand/libsa/Attic/exec_mvme.c,v 1.1.2.1 2001/10/31 03:01:21 nate Exp $	*/
+
 
 /*-
  * Copyright (c) 1982, 1986, 1990, 1993

@@ -1,10 +1,7 @@
-#ifndef ASSEMBLER
-#define	ASSEMBLER
-#endif /* ASSEMBLER */
+#	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/m88110_mmu.S,v 1.1.4.2 2001/10/31 03:01:19 nate Exp $
 
 #include <machine/asm.h>
 
-#ifdef MVME197
 /* set routines */
 ENTRY(set_icmd)
 	jmp.n	r1
@@ -159,5 +156,3 @@ ENTRY(get_dlar)
 ENTRY(get_dpar)
 	jmp.n	r1
 	ldcr	r2, DPAR
-#endif /* MVME197 */
-

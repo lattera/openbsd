@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/exec_mvme.c,v 1.4.4.3 2001/10/31 03:01:20 nate Exp $	*/
+
 
 /*-
  * Copyright (c) 1982, 1986, 1990, 1993

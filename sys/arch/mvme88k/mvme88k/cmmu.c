@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.3 2001/07/04 10:20:07 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/mvme88k/Attic/cmmu.c,v 1.5.4.4 2001/10/31 03:01:19 nate Exp $	*/
 /*
  * Copyright (c) 1998 Steve Murphree, Jr.
  * Copyright (c) 1996 Nivas Madhur
@@ -60,10 +60,11 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/simplelock.h>
+
 #include <machine/board.h>
+#include <machine/cmmu.h>
 #include <machine/cpus.h>
 #include <machine/cpu_number.h>
-#include <machine/cmmu.h>
 #if defined(MVME187) || defined(MVME188)
 #include <machine/m882xx.h>
 #endif /* defined(MVME187) || defined(MVME188) */
@@ -86,7 +87,6 @@ unsigned cache_policy = /*CACHE_INH*/ 0;
 unsigned cpu_sets[MAX_CPUS];
 unsigned number_cpus = 0;
 unsigned master_cpu = 0;
-int      vme188_config;
 int      max_cpus, max_cmmus;
 int      cpu_cmmu_ratio;
 
@@ -341,7 +341,7 @@ cmmu_cpu_number(void)
 }
 
 /**
- **	Funcitons that actually modify CMMU registers.
+ **	Functions that actually modify CMMU registers.
  **/
 
 void
@@ -719,7 +719,7 @@ cmmu_flush_data_cache(vm_offset_t physaddr, int size)
 /*
  * sync dcache (and icache too)
  */
-static void
+void
 cmmu_sync_cache(vm_offset_t physaddr, int size)
 {
    CMMU_LOCK;
@@ -739,7 +739,7 @@ cmmu_sync_cache(vm_offset_t physaddr, int size)
    CMMU_UNLOCK;
 }
 
-static void
+void
 cmmu_sync_inval_cache(vm_offset_t physaddr, int size)
 {
    CMMU_LOCK;
@@ -759,7 +759,7 @@ cmmu_sync_inval_cache(vm_offset_t physaddr, int size)
    CMMU_UNLOCK;
 }
 
-static void
+void
 cmmu_inval_cache(vm_offset_t physaddr, int size)
 {
    CMMU_LOCK;

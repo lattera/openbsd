@@ -1,3 +1,4 @@
+/*    $OpenBSD: src/sys/arch/mac68k/dev/Attic/if_sn_nubus.c,v 1.12.12.1 2001/10/31 03:01:14 nate Exp $  */
 /*    $NetBSD: if_sn_nubus.c,v 1.13 1997/05/11 19:11:34 scottr Exp $  */
 /*
  * Copyright (C) 1997 Allen Briggs

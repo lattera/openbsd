@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/macppc/opendev.c,v 1.2 2001/09/05 22:32:38 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/macppc/opendev.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: openfirm.c,v 1.1 1996/09/30 16:34:52 ws Exp $	*/
 
 /*

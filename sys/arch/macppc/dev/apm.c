@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.2 2001/10/03 20:06:00 drahn Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/apm.c,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 
 /*-
  * Copyright (c) 2001 Alexander Guy.  All rights reserved.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1.4.1 2001/04/18 16:08:30 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/pci/pcic_pci_machdep.c,v 1.1.4.2 2001/10/31 03:01:13 nate Exp $ */
 /*	$NetBSD: pcic_pci_machdep.c,v 1.1 1998/12/20 17:53:29 nathanw Exp $	*/
 
 /*
@@ -69,14 +69,15 @@ pcic_pci_machdep_pcic_intr_establish(sc, fct)
 }
 
 void *
-pcic_pci_machdep_chip_intr_establish(pch, pf, ipl, fct, arg)
+pcic_pci_machdep_chip_intr_establish(pch, pf, ipl, fct, arg, xname)
 	pcmcia_chipset_handle_t pch;
 	struct pcmcia_function *pf;
 	int ipl;
 	int (*fct) __P((void *));
 	void *arg;
+	char *xname;
 {
-	return (pcic_isa_chip_intr_establish(pch, pf, ipl, fct, arg));
+	return (pcic_isa_chip_intr_establish(pch, pf, ipl, fct, arg, xname));
 }
 
 void

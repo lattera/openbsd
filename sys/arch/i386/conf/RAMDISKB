@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKB,v 1.12.2.3 2001/07/04 10:16:24 niklas Exp $
+#	$OpenBSD: src/sys/arch/i386/conf/RAMDISKB,v 1.12.2.4 2001/10/31 03:01:11 nate Exp $
 
 machine		i386		# architecture, used by config; REQUIRED
 
@@ -18,9 +18,6 @@ option		SMALL_KERNEL
 maxusers	4		# estimated number of users
 option		TIMEZONE=0	# time zone to adjust RTC time by
 option		DST=0		# daylight saving time used by RTC
-
-option		SWAPPAGER	# paging; REQUIRED
-option		DEVPAGER	# mmap() of devices
 
 #makeoptions	DEBUG="-g"	# compile full symbol table
 
@@ -134,8 +131,8 @@ scsibus* at ami?
 cac*	at pci? dev ? function ?	# Compaq Smart ARRAY RAID controllers
 cac*	at eisa? slot ?
 scsibus* at cac?
-twe*	at pci? dev ? function ?	# 3ware Escalade RAID controllers
-scsibus* at twe?
+#twe*	at pci? dev ? function ?	# 3ware Escalade RAID controllers
+#scsibus* at twe?
 iha*	at pci? dev ? function ?	# Initio Ultra/UltraWide SCSI controllers
 scsibus* at iha?
 isp*	at pci? dev ? function ?	# Qlogic ISP [12]0x0 SCSI/FibreChannel
@@ -252,7 +249,7 @@ icsphy*	at mii? phy ?				# ICS 1890 PHYs
 #lxtphy*	at mii? phy ?			# Level1 LXT970 PHYs
 nsphy*	at mii? phy ?				# NS and compatible PHYs
 nsphyter*	at mii? phy ?				# NS and compatible PHYs
-#qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
+qsphy*	at mii? phy ?				# Quality Semi QS6612 PHYs
 #sqphy*	at mii? phy ?				# Seeq 8x220 PHYs
 rlphy* at mii? phy ?				# RealTek 8139 internal PHYs
 #mtdphy*	at mii? phy ?			# Myson MTD972 PHYs
@@ -265,6 +262,5 @@ ukphy*	at mii? phy ?				# "unknown" PHYs
 pseudo-device	loop	1		# network loopback
 #pseudo-device	sl	1		# CSLIP
 #pseudo-device	ppp	1		# PPP
-#pseudo-device	pty	16		# pseudo-terminals
 pseudo-device	bpfilter 1		# packet filter
 pseudo-device	rd	1		# ramdisk

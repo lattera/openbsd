@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.1 2001/07/04 10:19:43 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/vectors.s,v 1.4.16.2 2001/10/31 03:01:17 nate Exp $ */
 
 | Copyright (c) 1995 Theo de Raadt
 |
@@ -174,4 +174,4 @@ GLOBAL(fpsp_tab)
 	ASVECTOR(operr)		/* 52: FPCP operand error */
 	ASVECTOR(ovfl)		/* 53: FPCP overflow */
 	ASVECTOR(snan)		/* 54: FPCP signalling NAN */
-#endif FPSP
+#endif /* FPSP */

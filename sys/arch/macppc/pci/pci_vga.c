@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pci_vga.c,v 1.1 2001/09/01 15:55:17 drahn Exp $ */
+/*	$OpenBSD: src/sys/arch/macppc/pci/Attic/pci_vga.c,v 1.1.4.1 2001/10/31 03:01:16 nate Exp $ */
 
 /*
  * Copyright (c) 1997 Per Fogelstrom

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.3 2001/04/18 16:11:11 niklas Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/ansi.h,v 1.7.6.4 2001/10/31 03:01:18 nate Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -77,6 +77,7 @@
  * defined for ctype.h.
  */
 #define	_BSD_WCHAR_T_	int			/* wchar_t */
+#define	_BSD_WINT_T_	int			/* wint_t */
 #define	_BSD_RUNE_T_	int			/* rune_t */
 
 /*
@@ -85,4 +86,4 @@
  */
 #define _BSD_OFF_T_	long long		/* file offset */
 
-#endif __MACHINE_ANSI_H__
+#endif /* __MACHINE_ANSI_H__ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdmap.h,v 1.2 2001/09/12 22:57:30 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/akbdmap.h,v 1.2.4.1 2001/10/31 03:01:15 nate Exp $	*/
 /*	$NetBSD: akbdmap.h,v 1.3 2000/09/01 16:00:39 tsubai Exp $	*/
 
 /*-

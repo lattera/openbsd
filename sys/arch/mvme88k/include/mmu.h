@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.2 2001/07/04 10:20:03 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/mmu.h,v 1.4.6.3 2001/10/31 03:01:19 nate Exp $ */
 /*
  * Ashura Project
  */
@@ -31,7 +31,7 @@ typedef struct cmmu_apr {
 			g:1,		/* global (cache control) */
 			ci:1,		/* cache inhibit */
 			rsvC:5,		/* reserved */
-			te:1;		/* transration enable */
+			te:1;		/* translation enable */
 } cmmu_apr_t;
 
 typedef union apr_template {
@@ -212,17 +212,6 @@ typedef union batc_template {
     	printf("%s: addr  %x not page aligned.\n", who, ad)
 
 /*
- * Flags for cmmu_store() <cmmu.s>
- */
-#define STORE_CMD	0
-#define STORE_UAPR	4
-#define STORE_SAPR	8
-#define STORE_BATCWP	0x400
-
-#define C_CMMU		0
-#define D_CMMU		0x1000
-
-/*
  * Parameters for ATC(TLB) fulsh
  */
 
@@ -246,7 +235,7 @@ typedef union batc_template {
 #define CACHE_MASK	(~(unsigned)(CACHE_INH | CACHE_GLOBAL | CACHE_WT))
 
 /*
- * Prototype for invalidate_pte found in "motorola/m88k/m88100/misc.s"
+ * Prototype for invalidate_pte found in locore_asm_routines.S
  */
 unsigned invalidate_pte(pt_entry_t *pointer);
 
@@ -265,5 +254,5 @@ extern u_int kvtop __P((vm_offset_t));
 #define DMA_CACHE_INV		0x3
 extern void dma_cachectl(vm_offset_t, int, int);
 
-#endif __MACHINE_MMU_H__
+#endif /* __MACHINE_MMU_H__ */
 

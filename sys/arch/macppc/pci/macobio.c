@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/pci/macobio.c,v 1.2 2001/09/15 01:42:55 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/pci/macobio.c,v 1.2.4.1 2001/10/31 03:01:16 nate Exp $	*/
 /*	$NetBSD: obio.c,v 1.6 1999/05/01 10:36:08 tsubai Exp $	*/
 
 /*-

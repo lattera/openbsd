@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/macppc/stand/ofwboot/Makefile,v 1.1 2001/09/01 15:34:13 drahn Exp $
+#	$OpenBSD: src/sys/arch/macppc/stand/ofwboot/Makefile,v 1.1.4.1 2001/10/31 03:01:17 nate Exp $
 #	$NetBSD: Makefile,v 1.2 1997/04/17 07:46:24 thorpej Exp $
 
 S=	${.CURDIR}/../../../..

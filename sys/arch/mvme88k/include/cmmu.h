@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/cmmu.h,v 1.1.4.1 2001/04/18 16:11:14 niklas Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/include/cmmu.h,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $ */
 /* 
  * Mach Operating System
  * Copyright (c) 1993-1992 Carnegie Mellon University
@@ -67,35 +67,31 @@
  */
 extern unsigned cpu_sets[MAX_CPUS];
 extern int cpu_cmmu_ratio;
-extern unsigned ncpus;
+extern unsigned number_cpus, master_cpu;
 extern unsigned cache_policy;
+extern int max_cpus, max_cmmus;
 
 #ifdef CMMU_DEBUG
 void show_apr(unsigned value);
 void show_sctr(unsigned value);
 #endif
 
-#if DDB
+#ifdef DDB
 void cmmu_show_translation(unsigned, unsigned, unsigned, int);
 void cmmu_cache_state(unsigned, unsigned);
 void show_cmmu_info(unsigned);
 #endif 
+
 /*
- * Prototypes from "mvme88k/mvme88k/cmmu.c
+ * Prototypes from "mvme88k/mvme88k/cmmu.c"
  */
 
 unsigned cmmu_cpu_number(void);
-#if !DDB
-static
-#endif /* !DDB */
 unsigned cmmu_remote_get(unsigned cpu, unsigned r, unsigned data);
 unsigned cmmu_get_idr(unsigned data);
 void cmmu_init(void);
 void cmmu_shutdown_now(void);
 void cmmu_parity_enable(void);
-#if !DDB
-static
-#endif /* !DDB */
 void setup_board_config(void);
 void setup_cmmu_config(void);
 void cmmu_dump_config(void);

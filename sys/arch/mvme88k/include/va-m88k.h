@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/include/Attic/va-m88k.h,v 1.3.14.1 2001/10/31 03:01:19 nate Exp $	*/
+
 /* This file has local changes by MOTOROLA
 Thu Sep  9 09:06:29 CDT 1993 Dale Rahn (drahn@pacific)
 	* Due to C-Front's usage of __alignof__ builtin the
@@ -25,25 +27,11 @@ typedef struct
 
 #ifdef _STDARG_H /* stdarg.h support */
 
-#if __GNUC__ > 1 /* GCC 2.0 and beyond */
 #define va_start(AP,LASTARG) ((AP) = *(__gnuc_va_list *)__builtin_saveregs())
-#else
-#define va_start(AP,LASTARG) \
-  ( (AP).__va_reg = (int *) __builtin_saveregs2(0), \
-    (AP).__va_stk = (int *) __builtin_argptr(), \
-    (AP).__va_arg = (int) (__builtin_argsize() + 3) / 4 )
-#endif
 
 #else /* varargs.h support */
 
-#if __GNUC__ > 1 /* GCC 2.0 and beyond */
 #define va_start(AP) ((AP) = *(__gnuc_va_list *)__builtin_saveregs())
-#else
-#define va_start(AP) \
-  ( (AP).__va_reg = (int *) __builtin_saveregs2(1), \
-    (AP).__va_stk = (int *) __builtin_argptr(), \
-    (AP).__va_arg = (int) (__builtin_argsize() - 4 + 3) / 4 )
-#endif
 #define va_alist __va_1st_arg
 #define va_dcl register int va_alist;
 

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/mvmeppc/include/Attic/vmparam.h,v 1.2.2.1 2001/10/31 03:01:21 nate Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.1 1996/09/30 16:34:38 ws Exp $	*/
 
 /*-
@@ -35,7 +36,7 @@
 #define MACHINE_VMPARAM_H
 
 #define	USRTEXT		PAGE_SIZE
-#define	USRSTACK	VM_MAXUSER_ADDRESS
+#define	USRSTACK	VM_MAX_ADDRESS
 
 #ifndef	MAXTSIZ
 #define	MAXTSIZ		(16*1024*1024)		/* max text size */
@@ -56,12 +57,6 @@
 #ifndef	MAXSSIZ
 #define	MAXSSIZ		(32*1024*1024)		/* max stack size */
 #endif
-
-/*
- * Min & Max swap space allocation chunks
- */
-#define	DMMIN		32
-#define	DMMAX		4096
 
 /*
  * Size of shared memory map
@@ -90,8 +85,8 @@
  * Would like to have MAX addresses = 0, but this doesn't (currently) work
  */
 #define	VM_MIN_ADDRESS		((vm_offset_t)0)
-#define	VM_MAXUSER_ADDRESS	((vm_offset_t)0xfffff000)
-#define	VM_MAX_ADDRESS		VM_MAXUSER_ADDRESS
+#define	VM_MAX_ADDRESS		((vm_offset_t)0xfffff000)
+#define VM_MAXUSER_ADDRESS	VM_MAX_ADDRESS
 #define	VM_MIN_KERNEL_ADDRESS	((vm_offset_t)(KERNEL_SR << ADDR_SR_SHFT))
 
 /* ppc_kvm_size is so that vm space can be stolen before vm is fully

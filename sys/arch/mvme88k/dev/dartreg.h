@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/Attic/dartreg.h,v 1.1.4.2 2001/10/31 03:01:18 nate Exp $	*/
+
 /*
  * Something to put append a 'U' to a long constant if it's C so that
  * it'll be unsigned in both ANSI and traditional.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.4 2001/07/14 10:02:40 ho Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/param.h,v 1.9.2.5 2001/10/31 03:01:12 nate Exp $	*/
 /*	$NetBSD: param.h,v 1.29 1996/03/04 05:04:26 cgd Exp $	*/
 
 /*-
@@ -95,8 +95,6 @@
 #define MSGBUFSIZE	4*NBPG		/* default message buffer size */
 #endif
 
-#define PMAP_NEW
-
 /*
  * Constants related to network buffer management.
  * MCLBYTES must be no larger than the software page size, and,
@@ -104,7 +102,7 @@
  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
  * of the hardware page size.
  */
-#define	MSIZE		128		/* size of an mbuf */
+#define	MSIZE		256		/* size of an mbuf */
 #define	MCLSHIFT	11		/* convert bytes to m_buf clusters */
 #define	MCLBYTES	(1 << MCLSHIFT)	/* size of a m_buf cluster */
 #define	MCLOFSET	(MCLBYTES - 1)	/* offset within a m_buf cluster */

@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libbug/diskrd.c,v 1.2.6.1 2001/10/31 03:01:20 nate Exp $	*/
+
 /*
  * bug routines -- assumes that the necessary sections of memory
  * are preserved.
