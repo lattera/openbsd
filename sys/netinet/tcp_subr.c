@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.65.4.1 2004/03/03 02:35:59 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_subr.c,v 1.65.4.2 2004/03/03 08:40:07 brad Exp $	*/
 /*	$NetBSD: tcp_subr.c,v 1.22 1996/02/13 23:44:00 christos Exp $	*/
 
 /*
@@ -141,16 +141,17 @@ int	tcp_do_ecn = 0;		/* RFC3168 ECN enabled/disabled? */
 #endif
 int	tcbhashsize = TCBHASHSIZE;
 
+int tcp_reass_limit = NMBCLUSTERS / 2; /* hardlimit for tcpqe_pool */
+
 #ifdef INET6
 extern int ip6_defhlim;
 #endif /* INET6 */
 
 struct pool tcpcb_pool;
+struct pool tcpqe_pool;
 #ifdef TCP_SACK
 struct pool sackhl_pool;
 #endif
-
-int	tcp_freeq(struct tcpcb *);
 
 struct tcpstat tcpstat;		/* tcp statistics */
 
@@ -165,6 +166,9 @@ tcp_init()
 #endif /* TCP_COMPAT_42 */
 	pool_init(&tcpcb_pool, sizeof(struct tcpcb), 0, 0, 0, "tcpcbpl",
 	    NULL);
+	pool_init(&tcpqe_pool, sizeof(struct ipqent), 0, 0, 0, "tcpqepl",
+	    NULL);
+	pool_sethardlimit(&tcpqe_pool, tcp_reass_limit, NULL, 0);
 #ifdef TCP_SACK
 	pool_init(&sackhl_pool, sizeof(struct sackhole), 0, 0, 0, "sackhlpl",
 	    NULL);
@@ -705,7 +709,7 @@ tcp_freeq(struct tcpcb *tp)
 	while ((qe = LIST_FIRST(&tp->segq)) != NULL) {
 		LIST_REMOVE(qe, ipqe_q);
 		m_freem(qe->ipqe_m);
-		pool_put(&ipqent_pool, qe);
+		pool_put(&tcpqe_pool, qe);
 		rv = 1;
 	}
 	return (rv);

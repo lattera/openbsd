@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.45.2.1 2004/03/03 02:35:59 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_var.h,v 1.45.2.2 2004/03/03 08:40:07 brad Exp $	*/
 /*	$NetBSD: tcp_var.h,v 1.17 1996/02/13 23:44:24 christos Exp $	*/
 
 /*
@@ -375,7 +375,8 @@ struct	tcpstat {
 #define	TCPCTL_RSTPPSLIMIT     12 /* RST pps limit */
 #define	TCPCTL_ACK_ON_PUSH     13 /* ACK immediately on PUSH */
 #define	TCPCTL_ECN	       14 /* RFC3168 ECN */
-#define	TCPCTL_MAXID	       15
+#define	TCPCTL_REASS_LIMIT     15 /* max entries for tcp reass queues */
+#define	TCPCTL_MAXID	       16
 
 #define	TCPCTL_NAMES { \
 	{ 0, 0 }, \
@@ -393,6 +394,7 @@ struct	tcpstat {
 	{ "rstppslimit",	CTLTYPE_INT }, \
 	{ "ackonpush",	CTLTYPE_INT }, \
 	{ "ecn", 	CTLTYPE_INT }, \
+	{ "reasslimit",	CTLTYPE_INT }, \
 }
 
 struct tcp_ident_mapping {
@@ -413,10 +415,14 @@ extern	struct pool sackhl_pool;
 #endif
 extern	int tcp_do_ecn;		/* RFC3168 ECN enabled/disabled? */
 
+extern	struct pool tcpqe_pool;
+extern	int tcp_reass_limit;	/* max entries for tcp reass queues */
+
 int	 tcp_attach(struct socket *);
 void	 tcp_canceltimers(struct tcpcb *);
 struct tcpcb *
 	 tcp_close(struct tcpcb *);
+int	 tcp_freeq(struct tcpcb *);
 #if defined(INET6) && !defined(TCP6)
 void	 tcp6_ctlinput(int, struct sockaddr *, void *);
 #endif
