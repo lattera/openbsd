@@ -1,4 +1,4 @@
-/* $Id: cmdtab.c,v 1.3 2001/08/02 16:41:32 rees Exp $ */
+/* $Id: cmdtab.c,v 1.6 2001/08/02 17:02:05 rees Exp $ */
 
 /*
 copyright 1999
@@ -127,7 +127,7 @@ sectok_get_ins(int ins)
 	    break;
 
     if (!p->name) {
-	sprintf(name, "unknown ins %02x", ins);
+	snprintf(name, sizeof name, "unknown ins %02x", ins);
 	return name;
     }
 

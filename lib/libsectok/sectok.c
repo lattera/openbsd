@@ -1,4 +1,4 @@
-/* $Id: sectok.c,v 1.4 2001/08/02 16:41:32 rees Exp $ */
+/* $Id: sectok.c,v 1.10 2001/08/02 17:02:05 rees Exp $ */
 
 /*
 copyright 2000
@@ -411,7 +411,7 @@ lookupSym(void *handle, char *name)
 #else
     char undername[32];
 
-    sprintf(undername, "_%s", name);
+    snprintf(undername, sizeof undername, "_%s", name);
     return dlsym(handle, undername);
 #endif
 }
