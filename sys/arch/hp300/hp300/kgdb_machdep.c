@@ -1,14 +1,18 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/Attic/led.h,v 1.2 1997/01/12 15:13:20 downsj Exp $	*/
-/*	$NetBSD: led.h,v 1.4 1996/10/05 09:18:22 thorpej Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/kgdb_machdep.c,v 1.1 1997/07/06 08:02:01 downsj Exp $	*/
+/*	$NetBSD: kgdb_machdep.c,v 1.1 1997/05/05 20:51:05 thorpej Exp $	*/
 
 /*
- * Copyright (c) 1992 University of Utah.
- * Copyright (c) 1982, 1986, 1990, 1993
+ * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * This code is derived from software contributed to Berkeley by
- * the Systems Programming Group of the University of Utah Computer
- * Science Department.
+ * This software was developed by the Computer Systems Engineering group
+ * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
+ * contributed to Berkeley.
+ *
+ * All advertising materials mentioning features or use of this software
+ * must display the following acknowledgement:
+ *	This product includes software developed by the University of
+ *	California, Lawrence Berkeley Laboratories.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,21 +42,80 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * from: Utah $Hdr: led.h 1.2 92/08/27$
- *
- *	@(#)led.h	8.1 (Berkeley) 6/10/93
+ *	@(#)kgdb_stub.c	8.4 (Berkeley) 1/12/94
  */
 
-#define	LED_ADDR	0x1FFFF		/* a ROM address--strange but true */
+/*
+ * Machine-dependent part of the KGDB remote "stub"
+ */
 
-#define	LED_LANXMT	0x80		/* for LAN transmit activity */
-#define	LED_LANRCV	0x40		/* for LAN receive activity */
-#define	LED_DISK	0x20		/* for disk activity */
-#define	LED_PULSE	0x10		/* heartbeat */
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/kgdb.h>
 
-#ifdef _KERNEL
-extern	char *ledaddr;
-extern	int inledcontrol;
+#include <machine/db_machdep.h>
+#include <machine/pte.h>
 
-void	ledcontrol __P((int, int, int));
-#endif
+#define	INVOKE_KGDB()	__asm __volatile("trap	#15")
+
+/*
+ * Determine if the memory at va..(va+len) is valid.
+ */
+int
+kgdb_acc(va, ulen)
+	vm_offset_t va;
+	size_t ulen;
+{
+	int len, pgoff;
+	pt_entry_t *pte;
+
+	len = (int)ulen;
+	pgoff = va & PGOFSET;
+	va  -= pgoff;
+	len += pgoff;
+
+	while (len > 0) {
+		pte = kvtopte(va);
+		if ((*pte & PG_V) == 0)
+			return (0);
+		va  += NBPG;
+		len -= NBPG;
+	}
+
+	return (1);
+}
+
+/*
+ * Trap into kgdb to wait for debugger to connect,
+ * noting on the console why nothing else is going on.
+ */
+void
+kgdb_connect(verbose)
+	int verbose;
+{
+
+	if (kgdb_dev < 0)
+		return;
+
+	if (verbose)
+		printf("kgdb waiting...");
+
+	INVOKE_KGDB();
+
+	if (verbose)
+		printf("connected.\n");
+
+	kgdb_debug_panic = 1;
+}
+
+/*
+ * Decide what to do on panic.
+ */
+void
+kgdb_panic()
+{
+	if (kgdb_dev >= 0 && kgdb_debug_panic) {
+		printf("entering kgdb\n");
+		INVOKE_KGDB();
+	}
+}

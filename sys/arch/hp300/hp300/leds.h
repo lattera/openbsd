@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/hp300/include/Attic/mtpr.h,v 1.2 1997/01/12 15:13:37 downsj Exp $	*/
-/*	$NetBSD: mtpr.h,v 1.4 1994/10/26 07:26:29 cgd Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/leds.h,v 1.1 1997/07/06 08:02:03 downsj Exp $	*/
+/*	$NetBSD: leds.h,v 1.1 1997/05/05 20:54:36 thorpej Exp $	*/
 
 /*
- * Copyright (c) 1988 University of Utah.
- * Copyright (c) 1990 The Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1992 University of Utah.
+ * Copyright (c) 1982, 1986, 1990, 1993
+ *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -38,20 +38,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * from: Utah Hdr: mtpr.h 1.1 90/07/09
+ * from: Utah $Hdr: led.h 1.2 92/08/27$
  *
- *	@(#)mtpr.h	7.2 (Berkeley) 11/3/90
+ *	@(#)led.h	8.1 (Berkeley) 6/10/93
  */
 
-/*
- * simulated software interrupt register
- */
+#define	LED_ADDR	0x1FFFF		/* a ROM address--strange but true */
 
-extern unsigned char ssir;
+#define	LED_LANXMT	0x80		/* for LAN transmit activity */
+#define	LED_LANRCV	0x40		/* for LAN receive activity */
+#define	LED_DISK	0x20		/* for disk activity */
+#define	LED_PULSE	0x10		/* heartbeat */
 
-#define SIR_NET		0x1
-#define SIR_CLOCK	0x2
-
-#define siroff(x)	ssir &= ~(x)
-#define setsoftnet()	ssir |= SIR_NET
-#define setsoftclock()	ssir |= SIR_CLOCK
+#if defined(_KERNEL) && !defined(_LOCORE)
+void	ledinit __P((void));
+void	ledcontrol __P((int, int, int));
+#endif
