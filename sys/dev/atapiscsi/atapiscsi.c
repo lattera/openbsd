@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.54.2.2 2002/06/11 03:42:16 art Exp $     */
+/*      $OpenBSD: src/sys/dev/atapiscsi/atapiscsi.c,v 1.54.2.3 2003/05/19 22:01:43 tedu Exp $     */
 
 /*
  * This code is derived from code with the copyright below.
@@ -92,9 +92,10 @@ enum atapi_drive_states {
 
 #if defined(WDCDEBUG)
 int wdcdebug_atapi_mask = 0;
-#define WDCDEBUG_PRINT(args, level) \
-	if (wdcdebug_atapi_mask & (level)) \
-		printf args
+#define WDCDEBUG_PRINT(args, level) do {		\
+	if ((wdcdebug_atapi_mask & (level)) != 0)	\
+		printf args;				\
+} while (0)
 #else
 #define WDCDEBUG_PRINT(args, level)
 #endif
@@ -1447,12 +1448,14 @@ wdc_atapi_ctrl(chp, xfer, timeout, ret)
 	}
 
 	case ATAPI_PIOMODE_STATE:
-piomode:
 		/* Don't try to set mode if controller can't be adjusted */
 		if ((chp->wdc->cap & WDC_CAPABILITY_MODE) == 0)
 			goto ready;
 		/* Also don't try if the drive didn't report its mode */
 		if ((drvp->drive_flags & DRIVE_MODE) == 0)
+			goto ready;
+		/* SET FEATURES 0x08 is only for PIO mode > 2 */
+		if (drvp->PIO_mode <= 2)
 			goto ready;
 		wdccommand(chp, drvp->drive, SET_FEATURES, 0, 0, 0,
 		    0x08 | drvp->PIO_mode, WDSF_SET_MODE);
@@ -1464,14 +1467,7 @@ piomode:
 		if (chp->wdc->cap & WDC_CAPABILITY_IRQACK)
 			chp->wdc->irqack(chp);
 		if (chp->ch_status & WDCS_ERR) {
-			if (drvp->PIO_mode < 3) {
-				drvp->PIO_mode = 3;
-				goto piomode;
-			}
-			/* 
-			 * All ATAPI drives are supposed to support
-			 * PIO mode 3 or greater. 
-			 */
+			/* Downgrade straight to PIO mode 3 */
 			drvp->PIO_mode = 3;
 			chp->wdc->set_modes(chp);
 		}

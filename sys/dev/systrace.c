@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/systrace.c,v 1.5.2.2 2002/10/29 00:33:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/systrace.c,v 1.5.2.3 2003/05/19 22:01:42 tedu Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -522,7 +522,7 @@ systraceioctl(dev, cmd, data, flag, p)
 	int fd, error;
 
 	switch (cmd) {
-	case SYSTR_CLONE:
+	case STRIOCCLONE:
 		MALLOC(fst, struct fsystrace *, sizeof(struct fsystrace),
 		    M_XDATA, M_WAITOK);
 
@@ -644,6 +644,18 @@ systrace_fork(struct proc *oldproc, struct proc *p)
 	lockmgr(&fst->lock, LK_RELEASE, NULL, curproc);
 }
 
+#define REACQUIRE_LOCK	do { \
+	systrace_lock(); \
+	strp = p->p_systrace; \
+	if (strp == NULL) { \
+		systrace_unlock(); \
+		return (error); \
+	} \
+	fst = strp->parent; \
+	lockmgr(&fst->lock, LK_EXCLUSIVE, NULL, p); \
+	systrace_unlock(); \
+} while (0)
+
 int
 systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 {
@@ -660,6 +672,11 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	systrace_lock();
 	strp = p->p_systrace;
 	if (strp == NULL) {
+		systrace_unlock();
+		return (EINVAL);
+	}
+
+	if (code < 0 || code >= p->p_emul->e_nsysent) {
 		systrace_unlock();
 		return (EINVAL);
 	}
@@ -744,6 +761,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 		fst = NULL;
 	}
 
+
 	if (error)
 		return (error);
 
@@ -753,100 +771,90 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	oldgid = pc->p_rgid;
 		
 	/* Elevate privileges as desired */
-	if (issuser) {
-		systrace_lock();
-		if ((strp = p->p_systrace) != NULL) {
+	systrace_lock();
+	if ((strp = p->p_systrace) != NULL) {
+		if (issuser) {
 			if (ISSET(strp->flags, STR_PROC_SETEUID))
 				strp->saveuid = systrace_seteuid(p, strp->seteuid);
 			if (ISSET(strp->flags, STR_PROC_SETEGID))
 				strp->savegid = systrace_setegid(p, strp->setegid);
-		}
-		systrace_unlock();
-	} else
-		CLR(strp->flags, STR_PROC_SETEUID|STR_PROC_SETEGID);
+		} else
+			CLR(strp->flags, STR_PROC_SETEUID|STR_PROC_SETEGID);
+	}
+	systrace_unlock();
 				
 	error = (*callp->sy_call)(p, v, retval);
 
 	/* Return to old privileges */
-	if (issuser) {
-		systrace_lock();
-		if ((strp = p->p_systrace) != NULL) {
-			if (ISSET(strp->flags, STR_PROC_SETEUID)) {
-				if (pc->pc_ucred->cr_uid == strp->seteuid)
-					systrace_seteuid(p, strp->saveuid);
-				CLR(strp->flags, STR_PROC_SETEUID);
-			}
-			if (ISSET(strp->flags, STR_PROC_SETEGID)) {
-				if (pc->pc_ucred->cr_gid == strp->setegid)
-					systrace_setegid(p, strp->savegid);
-				CLR(strp->flags, STR_PROC_SETEGID);
-			}
-		}
+	systrace_lock();
+	if ((strp = p->p_systrace) == NULL) {
 		systrace_unlock();
+		return (error);
+	}
+
+	if (issuser) {
+		if (ISSET(strp->flags, STR_PROC_SETEUID)) {
+			if (pc->pc_ucred->cr_uid == strp->seteuid)
+				systrace_seteuid(p, strp->saveuid);
+			CLR(strp->flags, STR_PROC_SETEUID);
+		}
+		if (ISSET(strp->flags, STR_PROC_SETEGID)) {
+			if (pc->pc_ucred->cr_gid == strp->setegid)
+				systrace_setegid(p, strp->savegid);
+			CLR(strp->flags, STR_PROC_SETEGID);
+		}
 	}
 
 	if (p->p_flag & P_SUGID) {
-		/* Stupid Locking not necessary */
-		if ((strp = p->p_systrace) == NULL ||
-		    (fst = strp->parent) == NULL)
+		if ((fst = strp->parent) == NULL || !fst->issuser) {
+			systrace_unlock();
 			return (error);
-		if (!fst->issuser)
-			return (error);
+		}
 	}
 
 	/* Report change in emulation */
-	systrace_lock();
-	strp = p->p_systrace;
 
 	/* See if we should force a report */
-	if (strp != NULL && ISSET(strp->flags, STR_PROC_REPORT)) {
+	if (ISSET(strp->flags, STR_PROC_REPORT)) {
 		CLR(strp->flags, STR_PROC_REPORT);
 		oldemul = NULL;
 	}
 
-	if (p->p_emul != oldemul && strp != NULL) {
-		fst = strp->parent;
-		lockmgr(&fst->lock, LK_EXCLUSIVE, NULL, p);
-		systrace_unlock();
+	/* Acquire lock */
+	fst = strp->parent;
+	lockmgr(&fst->lock, LK_EXCLUSIVE, NULL, p);
+	systrace_unlock();
 
+	if (p->p_emul != oldemul) {
 		/* Old policy is without meaning now */
 		if (strp->policy) {
 			systrace_closepolicy(fst, strp->policy);
 			strp->policy = NULL;
 		}
 		systrace_msg_emul(fst, strp);
-	} else
-		systrace_unlock();
+
+		REACQUIRE_LOCK;
+	}
 
 	/* Report if effective uid or gid changed */
 	if (olduid != p->p_cred->p_ruid ||
 	    oldgid != p->p_cred->p_rgid) {
-		systrace_lock();
-		if ((strp = p->p_systrace) == NULL) {
-			systrace_unlock();
-			goto nougid;
-		}
-
-		fst = strp->parent;
-		lockmgr(&fst->lock, LK_EXCLUSIVE, NULL, p);
-		systrace_unlock();
-
 		systrace_msg_ugid(fst, strp);
-	nougid:
+
+		REACQUIRE_LOCK;
 	}
 
 	/* Report result from system call */
-	systrace_lock();
-	if (report && (strp = p->p_systrace) != NULL) {
-		fst = strp->parent;
-		lockmgr(&fst->lock, LK_EXCLUSIVE, NULL, p);
-		systrace_unlock();
-
+	if (report) {
 		systrace_msg_result(fst, strp, error, code,
 		    callp->sy_argsize, v, retval);
-	} else
-		systrace_unlock();
 
+		/* not locked */
+		goto out;
+	}
+
+	lockmgr(&fst->lock, LK_RELEASE, NULL, curproc);
+ out:
 	return (error);
 }
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/ic/pckbc.c,v 1.2.8.1 2002/06/11 03:42:20 art Exp $ */
+/* $OpenBSD: src/sys/dev/ic/pckbc.c,v 1.2.8.2 2003/05/19 21:59:43 tedu Exp $ */
 /* $NetBSD: pckbc.c,v 1.5 2000/06/09 04:58:35 soda Exp $ */
 
 /*
@@ -305,6 +305,9 @@ pckbc_attach(sc)
 	iot = t->t_iot;
 	ioh_d = t->t_ioh_d;
 	ioh_c = t->t_ioh_c;
+
+	if (pckbc_console == 0)
+		timeout_set(&t->t_cleanup, pckbc_cleanup, t);
 
 	/* flush */
 	(void) pckbc_poll_data1(iot, ioh_d, ioh_c, PCKBC_KBD_SLOT, 0);

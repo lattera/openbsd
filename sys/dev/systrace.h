@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/systrace.h,v 1.4.2.2 2002/10/29 00:33:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/systrace.h,v 1.4.2.3 2003/05/19 22:01:42 tedu Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -33,8 +33,6 @@
 #define _SYSTRACE_H_
 
 #include <sys/ioccom.h>
-
-#define	SYSTR_CLONE	_IOR('s', 1, int)
 
 #define SYSTR_EMULEN	8	/* sync with sys proc */
 
@@ -140,6 +138,8 @@ struct systrace_replace {
 	size_t strr_offlen[SYSTR_MAXARGS];
 };
 
+#define STRIOCCLONE	_IOR('s', 100, int)
+#define SYSTR_CLONE	STRIOCCLONE
 #define STRIOCATTACH	_IOW('s', 101, pid_t)
 #define STRIOCDETACH	_IOW('s', 102, pid_t)
 #define STRIOCANSWER	_IOW('s', 103, struct systrace_answer)

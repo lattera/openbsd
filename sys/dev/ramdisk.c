@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.17.2.1 2002/06/11 03:42:15 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/ramdisk.c,v 1.17.2.2 2003/05/19 22:01:42 tedu Exp $	*/
 /*	$NetBSD: ramdisk.c,v 1.8 1996/04/12 08:30:09 leo Exp $	*/
 
 /*
@@ -100,7 +100,7 @@ struct rd_softc {
 #define RD_SERVED	0x02
 
 void rdattach(int);
-static void rd_attach(struct device *, struct device *, void *);
+void rd_attach(struct device *, struct device *, void *);
 struct disklabel *rdgetdisklabel(dev_t dev, struct rd_softc *sc);
 
 /*
@@ -116,8 +116,8 @@ struct cfdriver rd_cd = {
 void rdstrategy(struct buf *bp);
 struct dkdriver rddkdriver = { rdstrategy };
 
-static int   ramdisk_ndevs;
-static void *ramdisk_devs[RD_MAX_UNITS];
+int   ramdisk_ndevs;
+void *ramdisk_devs[RD_MAX_UNITS];
 
 /*
  * This is called if we are configured as a pseudo-device
@@ -149,17 +149,21 @@ rdattach(n)
 
 	/* Attach as if by autoconfig. */
 	for (i = 0; i < n; i++) {
-
 		sc = malloc(sizeof(*sc), M_DEVBUF, M_WAITOK);
 		bzero((caddr_t)sc, sizeof(*sc));
+		if (snprintf(sc->sc_dev.dv_xname, sizeof(sc->sc_dev.dv_xname),
+		    "rd%d", i) >= sizeof(sc->sc_dev.dv_xname)) {
+			printf("rdattach: device name too long\n");
+			free(sc, M_DEVBUF);
+			return;
+		}
 		ramdisk_devs[i] = sc;
 		sc->sc_dev.dv_unit = i;
-		sprintf(sc->sc_dev.dv_xname, "rd%d", i);
 		rd_attach(NULL, &sc->sc_dev, NULL);
 	}
 }
 
-static void
+void
 rd_attach(parent, self, aux)
 	struct device	*parent, *self;
 	void		*aux;
@@ -191,11 +195,11 @@ rd_attach(parent, self, aux)
  */
 
 #if RAMDISK_SERVER
-static int rd_server_loop(struct rd_softc *sc);
-static int rd_ioctl_server(struct rd_softc *sc,
+int rd_server_loop(struct rd_softc *sc);
+int rd_ioctl_server(struct rd_softc *sc,
 		struct rd_conf *urd, struct proc *proc);
 #endif
-static int rd_ioctl_kalloc(struct rd_softc *sc,
+int rd_ioctl_kalloc(struct rd_softc *sc,
 		struct rd_conf *urd, struct proc *proc);
 
 dev_type_open(rdopen);
@@ -206,7 +210,8 @@ dev_type_ioctl(rdioctl);
 dev_type_size(rdsize);
 dev_type_dump(rddump);
 
-int rddump(dev, blkno, va, size)
+int
+rddump(dev, blkno, va, size)
 	dev_t dev;
 	daddr_t blkno;
 	caddr_t va;
@@ -215,13 +220,15 @@ int rddump(dev, blkno, va, size)
 	return ENODEV;
 }
 
-int rdsize(dev_t dev)
+int
+rdsize(dev_t dev)
 {
-	int unit;
+	int part, unit;
 	struct rd_softc *sc;
+	struct disklabel *lp;
 
 	/* Disallow control units. */
-	unit = minor(dev);
+	unit = DISKUNIT(dev);
 	if (unit >= ramdisk_ndevs)
 		return 0;
 	sc = ramdisk_devs[unit];
@@ -231,7 +238,13 @@ int rdsize(dev_t dev)
 	if (sc->sc_type == RD_UNCONFIGURED)
 		return 0;
 
-	return (sc->sc_size >> DEV_BSHIFT);
+	lp = rdgetdisklabel(dev, sc);
+	part = DISKPART(dev);
+	if (part > lp->d_npartitions)
+		return 0;
+	else
+		return lp->d_partitions[part].p_size *
+		    (lp->d_secsize / DEV_BSIZE);
 }
 
 int
@@ -487,9 +500,9 @@ rdgetdisklabel(dev, sc)
 		/* as long as it's not 0 - readdisklabel divides by it (?) */
 	}
 
-	strncpy(lp.d_typename, "RAM disk", 16);
+	strncpy(lp.d_typename, "RAM disk", sizeof(lp.d_typename));
 	lp.d_type = DTYPE_SCSI;
-	strncpy(lp.d_packname, "fictitious", 16);
+	strncpy(lp.d_packname, "fictitious", sizeof(lp.d_packname));
 	lp.d_secperunit = lp.d_nsectors;
 	lp.d_rpm = 3600;
 	lp.d_interleave = 1;
@@ -520,7 +533,7 @@ rdgetdisklabel(dev, sc)
  * Handle ioctl RD_SETCONF for (sc_type == RD_KMEM_ALLOCATED)
  * Just allocate some kernel memory and return.
  */
-static int
+int
 rd_ioctl_kalloc(sc, urd, proc)
 	struct rd_softc *sc;
 	struct rd_conf *urd;
@@ -548,7 +561,7 @@ rd_ioctl_kalloc(sc, urd, proc)
  * Handle ioctl RD_SETCONF for (sc_type == RD_UMEM_SERVER)
  * Set config, then become the I/O server for this unit.
  */
-static int
+int
 rd_ioctl_server(sc, urd, proc)
 	struct rd_softc *sc;
 	struct rd_conf *urd;
@@ -581,7 +594,7 @@ rd_ioctl_server(sc, urd, proc)
 
 int	rd_sleep_pri = PWAIT | PCATCH;
 
-static int
+int
 rd_server_loop(sc)
 	struct rd_softc *sc;
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.3 2002/10/29 00:33:26 art Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/rtl81x9.c,v 1.11.2.4 2003/05/19 21:59:43 tedu Exp $ */
 
 /*
  * Copyright (c) 1997, 1998
@@ -68,7 +68,7 @@
  * levels.
  *
  * It's impossible given this rotten design to really achieve decent
- * performance at 100Mbps, unless you happen to have a 400Mhz PII or
+ * performance at 100Mbps, unless you happen to have a 400MHz PII or
  * some equally overmuscled CPU to drive it.
  *
  * On the bright side, the 8139 does have a built-in PHY, although

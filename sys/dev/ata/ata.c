@@ -1,7 +1,7 @@
-/*      $OpenBSD: src/sys/dev/ata/ata.c,v 1.13 2001/09/21 17:55:43 miod Exp $      */
+/*      $OpenBSD: src/sys/dev/ata/ata.c,v 1.13.4.1 2003/05/19 22:01:42 tedu Exp $      */
 /*      $NetBSD: ata.c,v 1.9 1999/04/15 09:41:09 bouyer Exp $      */
 /*
- * Copyright (c) 1998 Manuel Bouyer.  All rights reserved.
+ * Copyright (c) 1998, 2001 Manuel Bouyer.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -49,9 +49,10 @@
 #define DEBUG_PROBE  0x10
 #ifdef WDCDEBUG
 extern int wdcdebug_mask; /* init'ed in wdc.c */
-#define WDCDEBUG_PRINT(args, level) \
-        if (wdcdebug_mask & (level)) \
-		printf args
+#define WDCDEBUG_PRINT(args, level) do {	\
+	if ((wdcdebug_mask & (level)) != 0)	\
+		printf args;			\
+} while (0)
 #else
 #define WDCDEBUG_PRINT(args, level)
 #endif
@@ -81,7 +82,7 @@ ata_get_params(drvp, flags, prms)
 		wdc_c.r_command = WDCC_IDENTIFY;
 		wdc_c.r_st_bmask = WDCS_DRDY;
 		wdc_c.r_st_pmask = WDCS_DRQ;
-		wdc_c.timeout = 1000; /* 1s */
+		wdc_c.timeout = 3000; /* 3s */
 	} else if (drvp->drive_flags & DRIVE_ATAPI) {
 		wdc_c.r_command = ATAPI_IDENTIFY_DEVICE;
 		wdc_c.r_st_bmask = 0;
@@ -205,10 +206,7 @@ ata_dmaerr(drvp)
 }
 
 void
-ata_perror(drvp, errno, buf)
-	struct ata_drive_datas *drvp;
-	int errno;
-	char *buf;
+ata_perror(struct ata_drive_datas *drvp, int errno, char *buf, size_t buf_len)
 {
 	static char *errstr0_3[] = {"address mark not found",
 	    "track 0 not found", "aborted command", "media change requested",
@@ -221,6 +219,7 @@ ata_perror(drvp, errno, buf)
 	char **errstr;
 	int i;
 	char *sep = "";
+	size_t len = 0;
 
 	if (drvp->ata_vers >= 4)
 		errstr = errstr4_5;
@@ -228,12 +227,14 @@ ata_perror(drvp, errno, buf)
 		errstr = errstr0_3;
 
 	if (errno == 0) {
-		sprintf(buf, "error not notified");
+		snprintf(buf, buf_len, "error not notified");
 	}
 
 	for (i = 0; i < 8; i++) {
 		if (errno & (1 << i)) {
-			buf += sprintf(buf, "%s %s", sep, errstr[i]);
+			snprintf(buf + len, buf_len - len, "%s %s", sep,
+			    errstr[i]);
+			len = strlen(buf);
 			sep = ",";
 		}
 	}

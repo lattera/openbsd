@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ieee1394/Attic/fwnodereg.h,v 1.1 2002/06/25 17:11:49 itojun Exp $	*/
+/*	$OpenBSD: src/sys/dev/ieee1394/Attic/fwnodereg.h,v 1.1.4.1 2003/05/19 22:01:43 tedu Exp $	*/
 /*	$NetBSD: fwnodereg.h,v 1.1 2001/05/01 04:46:23 jmc Exp $	*/
 
 /*
@@ -37,23 +37,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _DEV_IEEE1394_FWNODEREG_H
-#define _DEV_IEEE1394_FWNODEREG_H
+#ifndef	_DEV_IEEE1394_FWNODEREG_H
+#define	_DEV_IEEE1394_FWNODEREG_H
 
-#define DEVTYPE_UNKNOWN 0x0
-#define DEVTYPE_SBP2 0x1
+#define	DEVTYPE_UNKNOWN				0x0
+#define	DEVTYPE_SBP2				0x1
 
-#define DEVSPEC_UNKNOWN 0x0
-#define DEVSPEC_SCSI2 0x1
+#define	DEVSPEC_UNKNOWN				0x0
+#define	DEVSPEC_SCSI2				0x1
 
-#define FWNODE_ENABLED    0x0001
+#define	FWNODE_ENABLED				0x0001
 
-#ifndef FALSE
-#define FALSE 0
+#ifndef	FALSE
+#define	FALSE 0
 #endif
 
-#ifndef TRUE
-#define TRUE 1
+#ifndef	TRUE
+#define	TRUE 1
 #endif
 
-#endif /* _DEV_IEEE1394_FWNODEREG_H */
+#endif	/* _DEV_IEEE1394_FWNODEREG_H */

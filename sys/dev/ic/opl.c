@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/Attic/opl.c,v 1.2.4.1 2002/06/11 03:42:19 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/Attic/opl.c,v 1.2.4.2 2003/05/19 21:59:43 tedu Exp $	*/
 /*	$NetBSD: opl.c,v 1.7 1998/12/08 14:26:56 augustss Exp $	*/
 
 /*
@@ -159,7 +159,8 @@ opl_attach(sc)
 	}
 
 	sc->syn.mets = &opl3_midi;
-	sprintf(sc->syn.name, "%sYamaha OPL%d", sc->syn.name, sc->model);
+	snprintf(sc->syn.name, sizeof sc->syn.name, "%sYamaha OPL%d",
+	    sc->syn.name, sc->model);
 	sc->syn.data = sc;
 	sc->syn.nvoice = sc->model == OPL_2 ? OPL2_NVOICE : OPL3_NVOICE;
 	sc->syn.flags =  MS_DOALLOC | MS_FREQXLATE;

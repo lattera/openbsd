@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/Attic/midisyn.c,v 1.1.16.1 2002/06/11 03:42:15 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/Attic/midisyn.c,v 1.1.16.2 2003/05/19 22:01:42 tedu Exp $	*/
 /*	$NetBSD: midisyn.c,v 1.5 1998/11/25 22:17:07 augustss Exp $	*/
 
 /*
@@ -413,8 +413,8 @@ midisyn_finetune(base_freq, bend, range, vibrato_cents)
 	}
 
 	semitones = bend / 100;
-	if (semitones > 99)
-		semitones = 99;
+	if (semitones > 23)
+		semitones = 23;
 	cents = bend % 100;
 
 	amount = semitone_tuning[semitones] * multiplier * cent_tuning[cents]

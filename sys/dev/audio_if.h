@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/audio_if.h,v 1.13.2.3 2002/10/29 00:33:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/audio_if.h,v 1.13.2.4 2003/05/19 22:01:42 tedu Exp $	*/
 /*	$NetBSD: audio_if.h,v 1.24 1998/01/10 14:07:25 tv Exp $	*/
 
 /*
@@ -50,7 +50,7 @@ struct mixer_ctrl;
 
 struct audio_params {
 	u_long	sample_rate;			/* sample rate */
-	u_int	encoding;			/* e.g. ulaw, linear, etc */
+	u_int	encoding;			/* mu-law, linear, etc */
 	u_int	precision;			/* bits/sample */
 	u_int	channels;			/* mono(1), stereo(2) */
 	/* Software en/decode functions, set if SW coding required by HW */
@@ -58,7 +58,7 @@ struct audio_params {
 	int	factor;				/* coding space change */
 };
 
-/* The default audio mode: 8 kHz mono ulaw */
+/* The default audio mode: 8 kHz mono mu-law */
 extern struct audio_params audio_default;
 
 struct audio_hw_if {
@@ -158,7 +158,7 @@ int	       audioprint(void *, const char *);
 #define ISDEVAUDIOCTL(x)	(AUDIODEV((x)) == AUDIOCTL_DEVICE)
 #define ISDEVMIXER(x)		(AUDIODEV((x)) == MIXER_DEVICE)
 
-#if !defined(__i386__) && !defined(__sparc64__) && !defined(__powerpc__)
+#if !defined(__i386__) && !defined(__sparc64__) && !defined(__powerpc__) && !defined(__hppa__)
 #define splaudio splbio		/* XXX */
 #define IPL_AUDIO IPL_BIO	/* XXX */
 #endif

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2o/Attic/iopsp.c,v 1.4.6.2 2002/10/29 00:33:23 art Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2o/Attic/iopsp.c,v 1.4.6.3 2003/05/19 22:01:43 tedu Exp $	*/
 /*	$NetBSD$	*/
 
 /*-
@@ -435,7 +435,7 @@ iopsp_scsi_cmd(xs)
 		return (COMPLETE);
 	}
 
-	SC_DEBUG(periph, SDEV_DB2, ("iopsp_scsi_cmd: run_xfer\n"));
+	SC_DEBUG(xs->sc_link, SDEV_DB2, ("iopsp_scsi_cmd: run_xfer\n"));
 
 	/* Need to reset the target? */
 	if ((xs->flags & XS_RESET) != 0) {
@@ -569,7 +569,7 @@ iopsp_intr(struct device *dv, struct iop_msg *im, void *reply)
 	iop = (struct iop_softc *)dv->dv_parent;
 	rb = reply;
 
-	SC_DEBUG(xs->xs_periph, SDEV_DB2, ("iopsp_intr\n"));
+	SC_DEBUG(xs->sc_link, SDEV_DB2, ("iopsp_intr\n"));
 
 	if ((rb->msgflags & I2O_MSGFLAGS_FAIL) != 0) {
 		xs->error = XS_DRIVER_STUFFUP;

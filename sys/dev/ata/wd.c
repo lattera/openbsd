@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.20.2.2 2002/06/11 03:42:16 art Exp $ */
+/*	$OpenBSD: src/sys/dev/ata/wd.c,v 1.20.2.3 2003/05/19 22:01:42 tedu Exp $ */
 /*	$NetBSD: wd.c,v 1.193 1999/02/28 17:15:27 explorer Exp $ */
 
 /*
- * Copyright (c) 1998 Manuel Bouyer.  All rights reserved.
+ * Copyright (c) 1998, 2001 Manuel Bouyer.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -122,9 +122,10 @@
 #define DEBUG_PROBE  0x10
 #ifdef WDCDEBUG
 extern int wdcdebug_wd_mask; /* init'ed in ata_wdc.c */
-#define WDCDEBUG_PRINT(args, level) \
-	if (wdcdebug_wd_mask & (level)) \
-		printf args
+#define WDCDEBUG_PRINT(args, level) do {	\
+	if ((wdcdebug_wd_mask & (level)) != 0)	\
+		printf args;			\
+} while (0)
 #else
 #define WDCDEBUG_PRINT(args, level)
 #endif
@@ -645,7 +646,8 @@ wddone(v)
 		if (wd->sc_wdc_bio.r_error != 0 &&
 		    (wd->sc_wdc_bio.r_error & ~(WDCE_MC | WDCE_MCR)) == 0)
 			goto noerror;
-		ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf);
+		ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf,
+		    sizeof buf);
 retry:
 		/* Just reset and retry. Can we do more ? */
 		wdc_reset_channel(wd->drvp);
@@ -863,13 +865,13 @@ wdgetdefaultlabel(wd, lp)
 	lp->d_secpercyl = lp->d_ntracks * lp->d_nsectors;
 	if (wd->drvp->ata_vers == -1) {
 		lp->d_type = DTYPE_ST506;
-		strncpy(lp->d_typename, "ST506/MFM/RLL", 16);
+		strncpy(lp->d_typename, "ST506/MFM/RLL", sizeof lp->d_typename);
 	} else {
 		lp->d_type = DTYPE_ESDI;
-		strncpy(lp->d_typename, "ESDI/IDE disk", 16);
+		strncpy(lp->d_typename, "ESDI/IDE disk", sizeof lp->d_typename);
 	}
 	/* XXX - user viscopy() like sd.c */
-	strncpy(lp->d_packname, wd->sc_params.atap_model, 16);
+	strncpy(lp->d_packname, wd->sc_params.atap_model, sizeof lp->d_packname);
 	lp->d_secperunit = wd->sc_capacity;
 	lp->d_rpm = 3600;
 	lp->d_interleave = 1;
@@ -1222,7 +1224,8 @@ again:
 			break;
 		case ERROR:
 			errbuf[0] = '\0';
-			ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf);
+			ata_perror(wd->drvp, wd->sc_wdc_bio.r_error, errbuf,
+			    sizeof errbuf);
 			printf("wddump: %s", errbuf);
 			err = EIO;
 			break;
