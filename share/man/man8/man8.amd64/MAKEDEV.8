@@ -1,9 +1,9 @@
-.\" $OpenBSD: src/share/man/man8/man8.vax/MAKEDEV.8,v 1.15 2004/02/16 19:05:06 miod Exp $
+.\" $OpenBSD: src/share/man/man8/man8.amd64/MAKEDEV.8,v 1.1 2004/02/16 19:05:06 miod Exp $
 .\"
 .\" THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 .\" generated from:
 .\"
-.\"	OpenBSD: etc.vax/MAKEDEV.md,v 1.16 2004/02/16 19:01:02 miod Exp 
+.\"	OpenBSD: etc.amd64/MAKEDEV.md,v 1.4 2004/02/16 19:01:01 miod Exp 
 .\"	OpenBSD: MAKEDEV.common,v 1.1 2004/02/16 18:58:54 miod Exp 
 .\"	OpenBSD: MAKEDEV.man,v 1.1 2004/02/16 19:03:30 miod Exp 
 .\"	OpenBSD: MAKEDEV.mansub,v 1.1 2004/02/16 19:03:30 miod Exp 
@@ -24,7 +24,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .Dd February 16, 2004
-.Dt MAKEDEV 8 vax
+.Dt MAKEDEV 8 amd64
 .Os
 .Sh NAME
 .Nm MAKEDEV
@@ -54,13 +54,13 @@ If units are expected for a device but not provided,
 .Nm
 will supply the standard numbers in most cases.
 .Pp
-The vax supports the following devices:
+The amd64 supports the following devices:
 .Pp
 .Pp
 .Sy Special device names
 .Bl -tag -width tenletters -compact
 .It Ar all
-Creates special files for all devices on vax.
+Creates special files for all devices on amd64.
 .It Ar ramdisk
 Ramdisk kernel devices.
 .It Ar std
@@ -81,66 +81,45 @@ Concatenated disk devices.
 SCSI cdrom drives.
 .It Ar fd*
 Floppy disk drives (3 1/2", 5 1/4").
-.It Ar hk*
-UNIBUS RK06 and RK07 disks.
-.It Ar hd*
-HP300 HP-IB disks.
-.It Ar hp*
-MASSBUSS disks.
-.It Ar ra*
-MSCP disks.
-.It Ar rb*
-730 IDC w/ RB80 and/or RB02.
+.It Ar mcd*
+Mitsumi cdrom drives.
+.It Ar raid*
+RAIDframe disk devices.
 .It Ar rd*
 .Dq rd
 pseudo-disks.
-.It Ar rl*
-UNIBUS RL02.
-.It Ar rx*
-RX02 floppy disks.
 .It Ar sd*
 SCSI disks.
-.It Ar up*
-Other UNIBUS devices.
 .It Ar vnd*
 .Dq file
 pseudo-disk devices.
+.It Ar wd*
+.Dq winchester
+disk drives (ST506, IDE, ESDI, RLL, ...).
 .El
 .Pp
 .Sy Tapes
 .Bl -tag -width tenletters -compact
 .It Ar ch*
 SCSI media changers.
-.It Ar ht*
-MASSBUS TM03 and TU?? devices.
-.It Ar mt*
-(Magnetic) 9-track reel tape drives.
 .It Ar st*
 SCSI tape drives.
-.It Ar tm*
-UNIBUS TM11 and TE10 emulations (e.g. Emulex TC-11).
-.It Ar ts*
-UNIBUS TS11.
-.It Ar ut*
-UNIBUS TU45 emulations (e.g. 9700).
+.It Ar wt*	
+Archive/Wangtek QIC-cartridge tape drives.
 .El
 .Pp
 .Sy Terminal ports
 .Bl -tag -width tenletters -compact
-.It Ar dh*
-UNIBUS DH11 and emulations (e.g. Able dmax, Emulex CS-11).
-.It Ar dhu*
-UNIBUS DHU11.
-.It Ar dl*
-UNIBUS DL11.
-.It Ar dmf*
-UNIBUS DMF32.
-.It Ar dmz*
-UNIBUS DMZ32.
-.It Ar dz*
-UNIBUS DZ11 and DZ32.
-.It Ar vt*
-console.
+.It Ar tty[0-7][0-9a-f]
+NS16x50 serial ports.
+.It Ar ttyc*
+Cyclades serial ports.
+.El
+.Pp
+.Sy Call units
+.Bl -tag -width tenletters -compact
+.It Ar tun*
+Network tunnel driver.
 .El
 .Pp
 .Sy Pseudo terminals
@@ -153,30 +132,102 @@ Set of 16 master pseudo terminals.
 Set of 16 slave pseudo terminals.
 .El
 .Pp
+.Sy Console ports
+.Bl -tag -width tenletters -compact
+.It Ar ttyC0
+Minimal wscons devices.
+.It Ar ttyC-F*
+wscons display devices.
+.It Ar wskbd*
+wscons keyboards.
+.It Ar wsmux
+wscons keyboard/mouse mux devices.
+.El
+.Pp
+.Sy Pointing devices
+.Bl -tag -width tenletters -compact
+.It Ar wsmouse*
+wscons mice.
+.El
+.Pp
+.Sy Printers
+.Bl -tag -width tenletters -compact
+.It Ar lpa*
+Polled printer port.
+.It Ar lpt*
+IEEE 1284 centronics printer.
+.El
+.Pp
+.Sy USB devices
+.Bl -tag -width tenletters -compact
+.It Ar usbs
+All USB devices.
+.It Ar ttyU*
+USB serial ports.
+.It Ar ugen*
+Generic USB devices.
+.It Ar uhid*
+Generic HID devices.
+.It Ar ulpt*
+Printer devices.
+.It Ar urio*
+Diamond Multimedia Rio 500.
+.It Ar usb*
+Bus control devices used by usbd for attach/detach.
+.It Ar uscanner*
+Scanners.
+.El
+.Pp
 .Sy Special purpose devices
 .Bl -tag -width tenletters -compact
+.It Ar apm
+Power management device.
+.It Ar audio*
+Audio devices.
+.It Ar bktr*
+Video frame grabbers.
 .It Ar bpf*
 Berkeley Packet Filter.
+.It Ar crypto
+Hardware crypto access driver.
 .It Ar fd
 fd/* nodes for fdescfs.
+.It Ar gpr*
+GPR400 smartcard reader.
+.It Ar iop*
+I2O controller devices.
+.It Ar joy*
+Joystick driver.
 .It Ar lkm
 Loadable kernel modules interface.
+.It Ar music*
+MIDI devices.
+.It Ar pci
+PCI bus device.
+.It Ar pctr*
+PC Performance Tuning Register access device.
 .It Ar pf*
 Packet Filter.
-.It Ar raid*
-RAIDframe disk devices.
+.It Ar radio*
+FM tuner devices.
+.It Ar rmidi*
+Raw MIDI devices.
 .It Ar *random
 In-kernel random data source.
 .It Ar ses*
 SES/SAF-TE SCSI devices.
+.It Ar speaker
+PC speaker.
 .It Ar ss*
 SCSI scanners.
 .It Ar systrace*
 System call tracing device.
-.It Ar tun*
-Network tunnel driver.
+.It Ar tuner*
+Tuner devices.
 .It Ar uk*
 SCSI unknown devices.
+.It Ar wdt0
+Watchdog timer.
 .It Ar xfs*
 XFS filesystem node.
 .Sh FILES
