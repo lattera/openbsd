@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/tar/Attic/list.c,v 1.2 1996/04/23 00:16:09 niklas Exp $	*/
+
 /* List a tar archive.
    Copyright (C) 1988, 1992, 1993 Free Software Foundation
 
@@ -18,7 +20,7 @@ along with GNU Tar; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #ifndef lint
-static char rcsid[] = "$Id: list.c,v 1.3 1993/08/02 17:48:52 mycroft Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/tar/Attic/list.c,v 1.2 1996/04/23 00:16:09 niklas Exp $";
 #endif /* not lint */
 
 /*
@@ -459,7 +461,8 @@ decode_header (header, st, stdp, wantug)
       st->st_ctime = from_oct (1 + 12, header->header.ctime);
     }
 
-  if (0 == strcmp (header->header.magic, TMAGIC))
+  /* just match against "ustar" */
+  if (0 == strncmp (header->header.magic, TMAGIC, 5))
     {
       /* Unix Standard tar archive */
       *stdp = 1;

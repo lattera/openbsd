@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/gnu/usr.bin/gas/Attic/expr.c,v 1.2 1996/04/23 00:15:52 niklas Exp $	*/
+
 /* expr.c -operands, expressions-
    Copyright (C) 1987, 1990, 1991, 1992 Free Software Foundation, Inc.
    
@@ -25,7 +27,7 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: expr.c,v 1.3 1993/10/02 20:57:26 pk Exp $";
+static char rcsid[] = "$OpenBSD: src/gnu/usr.bin/gas/Attic/expr.c,v 1.2 1996/04/23 00:15:52 niklas Exp $";
 #endif
 
 #include <ctype.h>
@@ -126,7 +128,7 @@ register expressionS *	expressionP;
 		/* likewise for the b's.  xoxorich. */
 		if ((c == 'f' || c == 'b' || c == 'B')
 		    && (!*input_line_pointer ||
-			(!strchr("+-.0123456789",*input_line_pointer) &&
+			(!strchr("+-.0123456789iInN",*input_line_pointer) &&
 			 !strchr(EXP_CHARS,*input_line_pointer)))) {
 		    maxdig = radix = 10;
 		    too_many_digits = 11;
