@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_tracemse.c,v 1.2 1997/12/03 05:21:37 millert Exp $	*/
+
 
 /***************************************************************************
 *                            COPYRIGHT NOTICE                              *

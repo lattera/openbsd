@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_delwin.c,v 1.3 1997/12/03 05:21:15 millert Exp $	*/
+
 
 /***************************************************************************
 *                            COPYRIGHT NOTICE                              *

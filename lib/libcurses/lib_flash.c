@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_flash.c,v 1.1 1997/12/03 05:21:17 millert Exp $	*/
+
 
 /***************************************************************************
 *                            COPYRIGHT NOTICE                              *
@@ -20,28 +22,38 @@
 ***************************************************************************/
 
 
+/*
+ *	flash.c
+ *
+ *	The routine flash().
+ *
+ */
 
-#include <unctrl.h>
+#include <curses.priv.h>
+#include <term.h>	/* beep, flash */
 
-char *unctrl(register chtype uch)
+MODULE_ID("Id: lib_flash.c,v 1.1 1997/10/08 05:59:49 jtc Exp $")
+
+/*
+ *	flash()
+ *
+ *	Flash the current terminal's screen if possible.   If not,
+ *	sound the audible bell if one exists.
+ *
+ */
+
+int flash(void)
 {
-    static char buffer[3] = "^x";
+	T((T_CALLED("flash()")));
 
-    if ((uch & 0x60) != 0 && uch != 0x7F) {
-	/*
-	 * Printable character. Simply return the character as a one-character
-	 * string.
-	 */
-	buffer[1] = uch;
-	return &buffer[1];
-    }
-    /*
-     * It is a control character. DEL is handled specially (^?). All others
-     * use ^x notation, where x is the character code for the control character
-     * with 0x40 ORed in. (Control-A becomes ^A etc.).
-     */
-    buffer[1] = (uch == 0x7F ? '?' : (uch | 0x40));
-
-    return buffer;
-
+	/* FIXME: should make sure that we are not in altchar mode */
+	if (flash_screen) {
+		TPUTS_TRACE("flash_screen");
+		returnCode(putp(flash_screen));
+	} else if (bell) {
+		TPUTS_TRACE("bell");
+		returnCode(putp(bell));
+	}
+	else
+		returnCode(ERR);
 }

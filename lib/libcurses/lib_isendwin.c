@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/lib/libcurses/Attic/lib_isendwin.c,v 1.3 1997/12/03 05:21:22 millert Exp $	*/
+
 
 /***************************************************************************
 *                            COPYRIGHT NOTICE                              *
