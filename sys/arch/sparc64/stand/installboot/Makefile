@@ -1,10 +1,10 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/installboot/Makefile,v 1.4 2001/09/07 15:35:23 jason Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/installboot/Makefile,v 1.5 2003/07/19 00:03:52 david Exp $
 #	$NetBSD: Makefile,v 1.13 2000/08/16 08:24:01 mrg Exp $
 
 .include <bsd.own.mk>
 
 MAN=	installboot.8
-MANSUBDIR=/sparc64
+MANSUBDIR=sparc64
 
 .if ${MACHINE} == "sparc64"
 PROG=	installboot

@@ -1,7 +1,7 @@
-#	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/Makefile,v 1.4 2000/05/25 21:55:03 deraadt Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/installboot/Makefile,v 1.5 2003/07/19 00:03:52 david Exp $
 
 MAN=	installboot.8
-MANSUBDIR=/mvme68k
+MANSUBDIR=mvme68k
 
 .if ${MACHINE} == "mvme68k"
 PROG=	installboot
