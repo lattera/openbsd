@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.16.2.2 2003/09/10 15:38:01 brad Exp $	*/
+/*	$OpenBSD: src/sys/kern/sysv_sem.c,v 1.16.2.3 2003/11/20 23:36:49 margarida Exp $	*/
 /*	$NetBSD: sysv_sem.c,v 1.26 1996/02/09 19:00:25 christos Exp $	*/
 
 /*
@@ -283,7 +283,7 @@ sys___semctl(struct proc *p, void *v, register_t *retval)
 	DPRINTF(("call to semctl(%d, %d, %d, %p)\n", semid, semnum, cmd, arg));
 
 	semid = IPCID_TO_IX(semid);
-	if (semid < 0 || semid >= seminfo.semmsl)
+	if (semid < 0 || semid >= seminfo.semmni)
 		return (EINVAL);
 
 	if ((semaptr = sema[semid]) == NULL ||
@@ -540,7 +540,7 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 
 	semid = IPCID_TO_IX(semid);	/* Convert back to zero origin */
 
-	if (semid < 0 || semid >= seminfo.semmsl)
+	if (semid < 0 || semid >= seminfo.semmni)
 		return (EINVAL);
 
 	if ((semaptr = sema[semid]) == NULL ||
