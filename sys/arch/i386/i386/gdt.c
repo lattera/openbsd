@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.15 2001/05/10 07:59:05 art Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/gdt.c,v 1.16 2001/09/19 20:50:56 mickey Exp $	*/
 /*	$NetBSD: gdt.c,v 1.8 1996/05/03 19:42:06 christos Exp $	*/
 
 /*-
@@ -43,8 +43,6 @@
 #include <sys/user.h>
 
 #include <vm/vm.h>
-#include <vm/vm_kern.h>
-
 #include <uvm/uvm_extern.h>
 
 #include <machine/gdt.h>
