@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/i386/i386/mutex.S,v 1.2 2005/04/08 07:07:06 jolan Exp $	*/
+
 /*
  * Copyright (c) 2004 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
