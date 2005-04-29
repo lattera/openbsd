@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/boot/conf.c,v 1.2 2004/03/21 21:37:41 tom Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/boot/conf.c,v 1.3 2005/04/29 16:14:04 tom Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
@@ -42,7 +42,7 @@
 #include <biosdev.h>
 #include <dev/cons.h>
 
-const char version[] = "2.06";
+const char version[] = "2.07";
 int	debug = 1;
 
 
