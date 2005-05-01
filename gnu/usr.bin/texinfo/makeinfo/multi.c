@@ -1,5 +1,5 @@
 /* multi.c -- multitable stuff for makeinfo.
-   $Id: multi.c,v 1.4 2002/06/10 13:51:03 espie Exp $
+   $Id: multi.c,v 1.5 2003/05/05 22:19:16 avsm Exp $
 
    Copyright (C) 1996, 97, 98, 99, 2000, 01, 02 Free Software Foundation, Inc.
 
@@ -453,8 +453,8 @@ output_multitable_row ()
 
   /* remove trailing whitespace from each column */
   for (i = 1; i <= last_column; i++) {
-    if (envs[i].output_paragraph_offset)
-      while (cr_or_whitespace (CHAR_AT (envs[i].output_paragraph_offset - 1)))
+      while (envs[i].output_paragraph_offset &&
+             cr_or_whitespace (CHAR_AT (envs[i].output_paragraph_offset - 1)))
         envs[i].output_paragraph_offset--;
 
     if (i == current_env_no)
