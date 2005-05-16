@@ -1,0 +1,174 @@
+.\"	$OpenBSD: src/usr.sbin/spamdb/spamdb.8,v 1.7 2005/05/16 17:31:17 jmc Exp $
+.\"
+.\" Copyright (c) 2004 Bob Beck.  All rights reserved.
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd February 16, 2004
+.Dt SPAMDB 8
+.Os
+.Sh NAME
+.Nm spamdb
+.Nd spamd database tool
+.Sh SYNOPSIS
+.Nm spamdb
+.Op Fl Tt
+.Op Fl a Ar key
+.Op Fl d Ar key
+.Sh DESCRIPTION
+.Nm
+manipulates the spamd database in
+.Pa /var/db/spamd
+used for
+.Xr spamd 8
+greylisting.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl a Ar key
+Add or update an entry for
+.Ar key .
+This can be used to whitelist an IP address
+(i.e. circumvent the greylisting process altogether)
+by adding it to the spamd database as a WHITE entry.
+If the
+.Ar key
+specified matches an entry already in the spamd database,
+.Nm
+updates the entry's time last seen to now.
+.It Fl d Ar key
+Delete an entry for
+.Ar key .
+.It Fl T
+Add or delete the key as a SPAMTRAP entry.
+See the
+.Sx GREYTRAPPING
+section of
+.Xr spamd 8
+for more information.
+Must be used in conjunction with the
+.Fl a
+or
+.Fl d
+option.
+.It Fl t
+Add or delete the key as a TRAPPED entry.
+See the
+.Sx GREYTRAPPING
+section of
+.Xr spamd 8
+for more information.
+Must be used in conjunction with the
+.Fl a
+or
+.Fl d
+option.
+.El
+.Pp
+If adding/deleting a SPAMTRAP address
+.Pq Fl T ,
+.Ar key
+should be specified as an email address.
+Otherwise
+.Ar key
+should be a numerical IP address.
+.Ss DATABASE OUTPUT FORMAT
+If invoked without any arguments,
+.Nm
+lists the contents of the database in a text format.
+For SPAMTRAP entries the format is:
+.Pp
+.Dl type|mailaddress
+.Pp
+where
+.Em type
+will be SPAMTRAP and
+.Em mailaddress
+will be the email address for which any connections received by
+.Xr spamd 8
+will be blacklisted if mail is sent to this address.
+.Pp
+For TRAPPED entries the format is:
+.Pp
+.Dl type|ip|expire
+.Pp
+where
+.Em type
+will be TRAPPED,
+.Em ip
+will be the IP address blacklisted due to hitting a spamtrap, and
+.Em expire
+will be when the IP is due to be removed from the blacklist.
+.Pp
+For GREY or WHITE entries, the format is:
+.Pp
+.Dl type|source ip|from|to|first|pass|expire|block|pass
+.Pp
+The fields are as follows:
+.Pp
+.Bl -tag -width "source ip" -offset indent -compact
+.It type
+.Em WHITE
+if whitelisted or
+.Em GREY
+if greylisted
+.It source ip
+IP address the connection originated from
+.It from
+envelope-from address for
+.Em GREY
+(empty for
+.Em WHITE
+entries)
+.It to
+envelope-to address for
+.Em GREY
+(empty for
+.Em WHITE
+entries)
+.It first
+time the entry was first seen
+.It pass
+time the entry passed from being
+.Em GREY
+to being
+.Em WHITE
+.It expire
+time the entry will expire and be removed from the database
+.It block
+number of times a corresponding connection received a temporary
+failure from
+.Xr spamd 8
+.It pass
+number of times a corresponding connection has been seen to pass
+to the real MTA by
+.Xr spamlogd 8
+.El
+.Pp
+Note that times are in seconds since the Epoch, in the manner returned by
+.Xr time 3 .
+Times may be converted to human readable format using:
+.Pp
+.Dl $ date -r <value>
+.Sh FILES
+/var/db/spamd
+.Sh SEE ALSO
+.Xr spamd.conf 5 ,
+.Xr spamd 8 ,
+.Xr spamd-setup 8
+.Sh HISTORY
+The
+.Nm
+command
+appeared in
+.Ox 3.5 .
