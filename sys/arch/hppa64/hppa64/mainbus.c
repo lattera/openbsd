@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa64/hppa64/mainbus.c,v 1.1 2005/04/01 10:40:47 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa64/hppa64/mainbus.c,v 1.2 2005/05/22 01:38:09 mickey Exp $	*/
 
 /*
  * Copyright (c) 2005 Michael Shalayeff
@@ -627,7 +627,8 @@ mbattach(parent, self, aux)
 	bzero (&nca, sizeof(nca));
 	nca.ca_iot = &hppa_bustag;
 	nca.ca_dmatag = &hppa_dmatag;
-	pdc_patscan(self, &nca, -1);
+	nca.ca_mod = -1;
+	pdc_scan(self, &nca);
 }
 
 /*
