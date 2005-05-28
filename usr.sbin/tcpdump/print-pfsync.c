@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-pfsync.c,v 1.27 2004/07/07 23:48:40 mcbride Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-pfsync.c,v 1.28 2005/05/28 15:10:07 ho Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -28,7 +28,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-pfsync.c,v 1.26 2004/03/22 08:13:10 mcbride Exp $";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-pfsync.c,v 1.27 2004/07/07 23:48:40 mcbride Exp $";
 #endif
 
 #include <sys/param.h>
@@ -116,6 +116,7 @@ pfsync_print(struct pfsync_header *hdr, int len)
 	struct pfsync_state_clr *c;
 	struct pfsync_state_upd_req *r;
 	struct pfsync_state_bus *b;
+	struct pfsync_tdb *t;
 	int i, flags = 0, min, sec;
 	u_int64_t id;
 
@@ -230,6 +231,14 @@ pfsync_print(struct pfsync_header *hdr, int len)
 				break;
 			}
 		}
+		break;
+	case PFSYNC_ACT_TDB_UPD:
+		for (i = 1, t = (void *)((char *)hdr + PFSYNC_HDRLEN);
+		    i <= hdr->count && i * sizeof(*t) <= len; i++, t++)
+			printf("\n\tspi: %08x rpl: %u cur_bytes: %llu",
+			    htonl(t->spi), htonl(t->rpl),
+			    betoh64(t->cur_bytes));
+			/* XXX add dst and sproto? */
 		break;
 	default:
 		break;
