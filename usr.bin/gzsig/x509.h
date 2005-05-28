@@ -28,7 +28,7 @@
  *   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  *   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: x509.h,v 1.2 2005/04/01 16:47:31 dugsong Exp $
+ * $Vendor: x509.h,v 1.2 2005/04/01 16:47:31 dugsong Exp $
  */
 
 #ifndef X509_H
