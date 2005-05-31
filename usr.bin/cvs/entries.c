@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/cvs/entries.c,v 1.33 2005/05/27 17:39:40 xsa Exp $	*/
+/*	$OpenBSD: src/usr.bin/cvs/entries.c,v 1.34 2005/05/31 08:58:47 xsa Exp $	*/
 /*
  * Copyright (c) 2004 Jean-Francois Brousseau <jfb@openbsd.org>
  * All rights reserved.
@@ -34,8 +34,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "log.h"
 #include "cvs.h"
+#include "log.h"
 
 
 #define CVS_ENTRIES_NFIELDS  6
