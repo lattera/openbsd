@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/acpidump/Attic/acpi.c,v 1.1 2005/06/02 20:09:39 tholo Exp $	*/
+/*	$OpenBSD: src/usr.sbin/acpidump/Attic/acpi.c,v 1.2 2005/06/04 02:25:53 cloder Exp $	*/
 /*-
  * Copyright (c) 1998 Doug Rabson
  * Copyright (c) 2000 Mitsuru IWASAKI <iwasaki@FreeBSD.org>
@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: acpi.c,v 1.4 2000/08/09 14:47:52 iwasaki Exp $
+ *	$Id: acpi.c,v 1.1 2005/06/02 20:09:39 tholo Exp $
  *	$FreeBSD: src/usr.sbin/acpi/acpidump/acpi.c,v 1.3 2000/11/08 02:37:00 iwasaki Exp $
  */
 #include <sys/types.h>
@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "acpidump.h"
 
