@@ -25,7 +25,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.61.2.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/monitor.c,v 1.61.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <openssl/dh.h>
 
@@ -772,7 +772,7 @@ mm_answer_keyallowed(int sock, Buffer *m)
 	debug3("%s: key_from_blob: %p", __func__, key);
 
 	if (key != NULL && authctxt->valid) {
-		switch(type) {
+		switch (type) {
 		case MM_USERKEY:
 			allowed = options.pubkey_authentication &&
 			    user_key_allowed(authctxt->pw, key);

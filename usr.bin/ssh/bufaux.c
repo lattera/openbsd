@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.32.4.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.32.4.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <openssl/bn.h>
 #include "bufaux.h"
@@ -179,7 +179,7 @@ buffer_get_bignum2_ret(Buffer *buffer, BIGNUM *value)
 {
 	u_int len;
 	u_char *bin;
-	
+
 	if ((bin = buffer_get_string_ret(buffer, &len)) == NULL) {
 		error("buffer_get_bignum2_ret: invalid bignum");
 		return (-1);

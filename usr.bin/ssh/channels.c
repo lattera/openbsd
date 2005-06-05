@@ -39,7 +39,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.210.2.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.210.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -57,6 +57,8 @@ RCSID("$OpenBSD: src/usr.bin/ssh/channels.c,v 1.210.2.1 2005/03/10 16:28:27 brad
 #include "bufaux.h"
 
 /* -- channel core */
+
+#define CHAN_RBUF	16*1024
 
 /*
  * Pointer to an array containing all allocated channels.  The array is
@@ -711,6 +713,9 @@ channel_pre_open(Channel *c, fd_set * readset, fd_set * writeset)
 {
 	u_int limit = compat20 ? c->remote_window : packet_get_maxsize();
 
+	/* check buffer limits */
+	limit = MIN(limit, (BUFFER_MAX_LEN - BUFFER_MAX_CHUNK - CHAN_RBUF));
+
 	if (c->istate == CHAN_INPUT_OPEN &&
 	    limit > 0 &&
 	    buffer_len(&c->input) < limit)
@@ -1017,7 +1022,7 @@ channel_decode_socks5(Channel *c, fd_set * readset, fd_set * writeset)
 		debug2("channel %d: only socks5 connect supported", c->self);
 		return -1;
 	}
-	switch(s5_req.atyp){
+	switch (s5_req.atyp){
 	case SSH_SOCKS5_IPV4:
 		addrlen = 4;
 		af = AF_INET;
@@ -1359,7 +1364,7 @@ channel_post_connecting(Channel *c, fd_set * readset, fd_set * writeset)
 static int
 channel_handle_rfd(Channel *c, fd_set * readset, fd_set * writeset)
 {
-	char buf[16*1024];
+	char buf[CHAN_RBUF];
 	int len;
 
 	if (c->rfd != -1 &&
@@ -1448,7 +1453,7 @@ channel_handle_wfd(Channel *c, fd_set * readset, fd_set * writeset)
 static int
 channel_handle_efd(Channel *c, fd_set * readset, fd_set * writeset)
 {
-	char buf[16*1024];
+	char buf[CHAN_RBUF];
 	int len;
 
 /** XXX handle drain efd, too */
@@ -2193,11 +2198,11 @@ channel_setup_fwd_listener(int type, const char *listen_addr, u_short listen_por
 
 	/*
 	 * Determine whether or not a port forward listens to loopback,
-	 * specified address or wildcard. On the client, a specified bind 
-	 * address will always override gateway_ports. On the server, a 
-	 * gateway_ports of 1 (``yes'') will override the client's 
-	 * specification and force a wildcard bind, whereas a value of 2 
-	 * (``clientspecified'') will bind to whatever address the client 
+	 * specified address or wildcard. On the client, a specified bind
+	 * address will always override gateway_ports. On the server, a
+	 * gateway_ports of 1 (``yes'') will override the client's
+	 * specification and force a wildcard bind, whereas a value of 2
+	 * (``clientspecified'') will bind to whatever address the client
 	 * asked for.
 	 *
 	 * Special-case listen_addrs are:
@@ -2307,7 +2312,7 @@ channel_cancel_rport_listener(const char *host, u_short port)
 	u_int i;
 	int found = 0;
 
-	for(i = 0; i < channels_alloc; i++) {
+	for (i = 0; i < channels_alloc; i++) {
 		Channel *c = channels[i];
 
 		if (c != NULL && c->type == SSH_CHANNEL_RPORT_LISTENER &&
@@ -2617,7 +2622,7 @@ channel_send_window_changes(void)
 	struct winsize ws;
 
 	for (i = 0; i < channels_alloc; i++) {
-		if (channels[i] == NULL || !channels[i]->client_tty || 
+		if (channels[i] == NULL || !channels[i]->client_tty ||
 		    channels[i]->type != SSH_CHANNEL_OPEN)
 			continue;
 		if (ioctl(channels[i]->rfd, TIOCGWINSZ, &ws) < 0)

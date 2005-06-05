@@ -13,7 +13,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.158.2.1 2005/03/10 16:28:28 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.158.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <openssl/bn.h>
 
@@ -243,13 +243,13 @@ timeout_connect(int sockfd, const struct sockaddr *serv_addr,
 	tv.tv_sec = timeout;
 	tv.tv_usec = 0;
 
-	for(;;) {
+	for (;;) {
 		rc = select(sockfd + 1, NULL, fdset, NULL, &tv);
 		if (rc != -1 || errno != EINTR)
 			break;
 	}
 
-	switch(rc) {
+	switch (rc) {
 	case 0:
 		/* Timed out */
 		errno = ETIMEDOUT;

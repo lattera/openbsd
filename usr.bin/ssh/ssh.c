@@ -40,7 +40,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.226.2.1 2005/03/10 16:28:28 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.226.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -845,8 +845,8 @@ ssh_init_forwarding(void)
 	for (i = 0; i < options.num_local_forwards; i++) {
 		debug("Local connections to %.200s:%d forwarded to remote "
 		    "address %.200s:%d",
-		    (options.local_forwards[i].listen_host == NULL) ? 
-		    (options.gateway_ports ? "*" : "LOCALHOST") : 
+		    (options.local_forwards[i].listen_host == NULL) ?
+		    (options.gateway_ports ? "*" : "LOCALHOST") :
 		    options.local_forwards[i].listen_host,
 		    options.local_forwards[i].listen_port,
 		    options.local_forwards[i].connect_host,
@@ -1331,7 +1331,7 @@ control_client(const char *path)
 
 	switch (mux_command) {
 	case SSHMUX_COMMAND_ALIVE_CHECK:
-		fprintf(stderr, "Master running (pid=%d)\r\n", 
+		fprintf(stderr, "Master running (pid=%d)\r\n",
 		    control_server_pid);
 		exit(0);
 	case SSHMUX_COMMAND_TERMINATE:

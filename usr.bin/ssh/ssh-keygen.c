@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.117.2.1 2005/03/10 16:28:28 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/ssh-keygen.c,v 1.117.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -684,7 +684,7 @@ do_known_hosts(struct passwd *pw, const char *name)
 				if (delete_host && !c)
 					print_host(out, cp, public, 0);
 			} else if (hash_hosts) {
-				for(cp2 = strsep(&cp, ",");
+				for (cp2 = strsep(&cp, ",");
 				    cp2 != NULL && *cp2 != '\0';
 				    cp2 = strsep(&cp, ",")) {
 					if (strcspn(cp2, "*?!") != strlen(cp2))
@@ -707,7 +707,7 @@ do_known_hosts(struct passwd *pw, const char *name)
 		    identity_file);
 		if (inplace) {
 			fprintf(stderr, "Not replacing existing known_hosts "
-			    "file beacuse of errors");
+			    "file because of errors\n");
 			fclose(out);
 			unlink(tmp);
 		}

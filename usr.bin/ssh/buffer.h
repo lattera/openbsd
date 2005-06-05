@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.11.12.1 2005/03/10 16:28:27 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/buffer.h,v 1.11.12.2 2005/06/05 02:22:39 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -22,6 +22,9 @@ typedef struct {
 	u_int	 offset;	/* Offset of first byte containing data. */
 	u_int	 end;		/* Offset of last byte containing data. */
 }       Buffer;
+
+#define	BUFFER_MAX_CHUNK	0x100000
+#define	BUFFER_MAX_LEN		0xa00000
 
 void	 buffer_init(Buffer *);
 void	 buffer_clear(Buffer *);

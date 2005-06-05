@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.56.2.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth.c,v 1.56.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include <libgen.h>
 
@@ -89,7 +89,8 @@ allowed_user(struct passwd * pw)
 		return 0;
 	}
 
-	if (options.num_deny_users > 0 || options.num_allow_users > 0) {
+	if (options.num_deny_users > 0 || options.num_allow_users > 0 ||
+	    options.num_deny_groups > 0 || options.num_allow_groups > 0) {
 		hostname = get_canonical_hostname(options.use_dns);
 		ipaddr = get_remote_ipaddr();
 	}

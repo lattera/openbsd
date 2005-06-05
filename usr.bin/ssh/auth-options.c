@@ -10,7 +10,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.28.6.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-options.c,v 1.28.6.2 2005/06/05 02:22:39 brad Exp $");
 
 #include "xmalloc.h"
 #include "match.h"
@@ -247,7 +247,7 @@ auth_parse_options(struct passwd *pw, char *opts, char *file, u_long linenum)
 			host = hpdelim(&p);
 			if (host == NULL || strlen(host) >= NI_MAXHOST) {
 				debug("%.100s, line %lu: Bad permitopen "
-				    "specification <%.100s>", file, linenum, 
+				    "specification <%.100s>", file, linenum,
 				    patterns);
 				auth_debug_add("%.100s, line %lu: "
 				    "Bad permitopen specification", file,
@@ -255,8 +255,8 @@ auth_parse_options(struct passwd *pw, char *opts, char *file, u_long linenum)
 				xfree(patterns);
 				goto bad_option;
 			}
- 			host = cleanhostname(host);
- 			if (p == NULL || (port = a2port(p)) == 0) {
+			host = cleanhostname(host);
+			if (p == NULL || (port = a2port(p)) == 0) {
 				debug("%.100s, line %lu: Bad permitopen port "
 				    "<%.100s>", file, linenum, p ? p : "");
 				auth_debug_add("%.100s, line %lu: "

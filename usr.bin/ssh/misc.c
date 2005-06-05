@@ -23,7 +23,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.25.2.1 2005/03/10 16:28:27 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.25.2.2 2005/06/05 02:22:39 brad Exp $");
 
 #include "misc.h"
 #include "log.h"
@@ -297,13 +297,13 @@ hpdelim(char **cp)
 	case '\0':
 		*cp = NULL;	/* no more fields*/
 		break;
-	
+
 	case ':':
 	case '/':
 		*s = '\0';	/* terminate */
 		*cp = s + 1;
 		break;
-	
+
 	default:
 		return NULL;
 	}
@@ -385,7 +385,7 @@ read_keyfile_line(FILE *f, const char *filename, char *buf, size_t bufsz,
 			debug("%s: %s line %lu exceeds size limit", __func__,
 			    filename, *lineno);
 			/* discard remainder of line */
-			while(fgetc(f) != '\n' && !feof(f))
+			while (fgetc(f) != '\n' && !feof(f))
 				;	/* nothing */
 		}
 	}
