@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.65 2004/12/06 20:12:25 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.65.2.1 2005/06/11 02:31:36 brad Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -666,7 +666,7 @@ for (i = 0; i < errnum; i++) {
 	 */
 	if (p != fpuproc)
 		frame->srr1 &= ~PSL_FP;
-	else
+	else if (p->p_addr->u_pcb.pcb_flags & PCB_FPU)
 		frame->srr1 |= PSL_FP;
 
 #ifdef ALTIVEC
