@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.122 2004/07/31 21:27:31 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.122.2.1 2005/06/14 01:49:24 brad Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -1137,6 +1137,8 @@ ip_dooptions(m)
 
 		case IPOPT_TS:
 			code = cp - (u_char *)ip;
+			if (optlen < sizeof(struct ip_timestamp))
+				goto bad;
 			bcopy(cp, &ipt, sizeof(struct ip_timestamp));
 			if (ipt.ipt_ptr < 5 || ipt.ipt_len < 5)
 				goto bad;
