@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/usr.bin/mg/kbd.c,v 1.16 2005/04/03 02:09:28 db Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/kbd.c,v 1.17 2005/06/14 18:14:40 kjell Exp $	*/
+
+/* This file is in the public domain. */
 
 /*
  *	Terminal independent keyboard handling.

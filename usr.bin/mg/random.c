@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/usr.bin/mg/random.c,v 1.11 2005/04/03 02:09:28 db Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/random.c,v 1.12 2005/06/14 18:14:40 kjell Exp $	*/
+
+/* This file is in the public domain. */
 
 /*
  *		Assorted commands.

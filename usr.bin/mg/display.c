@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/usr.bin/mg/display.c,v 1.21 2005/04/03 02:09:28 db Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/display.c,v 1.22 2005/06/14 18:14:40 kjell Exp $	*/
+
+/* This file is in the public domain. */
 
 /*
  * The functions in this file handle redisplay. The

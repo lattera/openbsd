@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/usr.bin/mg/re_search.c,v 1.16 2005/06/14 00:55:45 kjell Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/re_search.c,v 1.17 2005/06/14 18:14:40 kjell Exp $	*/
+
+/* This file is in the public domain. */
 
 /*
  *	regular expression search commands for Mg

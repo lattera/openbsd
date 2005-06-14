@@ -1,4 +1,6 @@
-/*	$OpenBSD: src/usr.bin/mg/ttyio.c,v 1.27 2005/04/13 02:33:08 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/ttyio.c,v 1.28 2005/06/14 18:14:40 kjell Exp $	*/
+
+/* This file is in the public domain. */
 
 /*
  * POSIX terminal I/O.
