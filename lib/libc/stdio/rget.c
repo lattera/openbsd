@@ -31,7 +31,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/rget.c,v 1.5 2004/09/28 18:12:44 otto Exp $";
+static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/rget.c,v 1.6 2005/06/17 20:40:32 espie Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdio.h>
@@ -45,6 +45,7 @@ static char rcsid[] = "$OpenBSD: src/lib/libc/stdio/rget.c,v 1.5 2004/09/28 18:1
 int
 __srget(FILE *fp)
 {
+	_SET_ORIENTATION(fp, -1);
 	if (__srefill(fp) == 0) {
 		fp->_r--;
 		return (*fp->_p++);
