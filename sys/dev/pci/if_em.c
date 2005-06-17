@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
 
 /*$FreeBSD: if_em.c,v 1.38 2004/03/17 17:50:31 njl Exp $*/
-/* $OpenBSD: src/sys/dev/pci/if_em.c,v 1.27 2004/09/16 09:37:14 mcbride Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_em.c,v 1.27.2.1 2005/06/17 00:37:14 brad Exp $ */
 
 #include "bpfilter.h"
 #include "vlan.h"
@@ -1022,7 +1022,7 @@ em_init_locked(struct em_softc *sc)
 		sc->num_tx_desc = EM_MIN_TXD;
 		sc->num_rx_desc = EM_MIN_RXD;
 	}
-
+	IFQ_SET_MAXLEN(&ifp->if_snd, sc->num_tx_desc - 1);
 
 #ifdef __FreeBSD__
         /* Get the latest mac address, User can use a LAA */
