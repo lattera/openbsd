@@ -1,0 +1,190 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/hardware,v 1.23 2005/06/21 18:10:57 martin Exp $
+OpenBSD/MACHINE OSREV runs on the following classes of HP9000 machines:
+dnl - PA7000-based
+dnl	705, 710, 720, 730, 750
+- PA7100-based
+	715/33, 715/50, 715/75
+	725/50, 725/75
+	735/100, 755/100
+	742i, 745i, 747i
+- PA7100LC-based
+	712
+	715/64, 715/80, 715/100, 715/100XC
+	725/64, 725/100
+	743i, 748i
+	Saic Galaxy 1100
+- PA7150-based
+	735/125, 755/125
+- PA7200-based
+	J200, J210, J210XC
+	C100, C110
+- PA7300LC-based
+	A180, A180C
+	B132L, B132L+, B160L, B180L+, C132L, C160L
+	744, 745, 748
+	RDI PrecisionBook
+- PA8000-based (in 32-bit mode):
+	C160, C180
+- PA8200-based (in 32-bit mode):
+	C200, C230, C240
+- PA8500-based (in 32-bit mode):
+	C360
+
+Supported devices {:-include-:}:
+- Ethernet Controllers
+	built-in Intel 82596 (ie)
+	Intel/DEC 21443 "Tulip" clones (dc)
+	Novell NE1000, NE2000 (not bootable)
+	Intel i8255x-based (fxp) (not bootable), including:
+		Intel EtherExpress PRO/10+
+		Intel EtherExpress PRO/100, PRO/100B, and PRO/100+
+		Intel EtherExpress PRO/100+ "Management Adapter"
+		Intel EtherExpress PRO/100 Dual Port
+		Intel PRO/100 VE, PRO/100 VM, and PRO/100 S
+- SCSI controllers
+	built-in 53C700 SCSI (oosiop)
+	built-in 53C710 SCSI (osiop)
+	53C8xx-based SCSI (siop)
+	Adaptec AIC-7770, AIC-7850, AIC-7860, AIC-7870, AIC-7880,
+	    AIC-7890, AIC-7891, AIC-7892, AIC-7895, AIC-7896, AIC-7897
+	    and AIC-7899 based host adapters (ahc) (not bootable), including:
+		AHA-274X[W,T]
+		AHA-284X
+		AHA-2910, AHA-2915 
+		AHA-2920
+		AHA-2930[C,U2]
+		AHA-2940[J,N,U,AU,UW,UW Dual,UW Pro,U2W,U2B]
+		AHA-2950[U2W,U2B]
+		AHA-3940[U,AU,UW,AUW,U2W]
+		AHA-3950U2
+		AHA-3960
+		AHA-3985
+		AHA-4944UW
+		AHA-19160B
+		AHA-29160[B,N]
+		AHA-39160
+- SGC/GSC graphics:
+	Artist (as found on 712) (sti)
+	CRX-8, CRX-24, HCRX-8, HCRX-24 (sti)
+- RS-232 devices:
+	on-board NS16550 or similar serial ports (com)
+- Parallel ports:
+	on-board parallel port (lpt)
+- Audio devices:
+	Harmony CS4215/AD1849 LASI audio (harmony)
+- Input devices:
+	PS/2 keyboard (gsckbd) and mouse (pms)
+	HIL keyboard (hilkbd), mouse and tablets (hilms)
+- Wireless Ethernet Adapters
+	Intersil PRISM 2-3, Lucent Hermes and Symbol Spectrum 24
+	  based PCMCIA IEEE 802.11b adapters
+	    3Com AirConnect 3CRWE737A
+	    ACTIONTEC HWC01170
+	    Addtron AWP-100
+	    Agere Orinoco
+	    ARtem Onair
+	    BUFFALO AirStation
+	    Cabletron RoamAbout
+	    Compaq Agency NC5004
+	    Contec FLEXLAN/FX-DS110-PCC
+	    Corega PCC-11
+	    Corega PCCA-11
+	    Corega PCCB-11
+	    Corega CGWLPCIA11
+	    D-Link DWL-650 revisions A1-J3
+	    ELSA XI300
+	    ELSA XI325
+	    ELSA XI325H
+	    EMTAC A2424i
+	    Ericsson Wireless LAN CARD C11
+	    Gemtek WL-311
+	    Hawking Technology WE110P
+	    I-O DATA WN-B11/PCM
+	    Intel PRO/Wireless 2011
+	    Intersil Prism II
+	    Linksys Instant Wireless WPC11
+	    Linksys Instant Wireless WPC11 2.5
+	    Linksys Instant Wireless WPC11 3.0
+	    Lucent WaveLAN
+	    NANOSPEED ROOT-RZ2000
+	    NEC CMZ-RT-WP
+	    Netgear MA401
+	    Netgear MA401RA
+	    Nokia C020 Wireless LAN
+	    Nokia C110/C111 Wireless LAN
+	    NTT-ME 11Mbps Wireless LAN
+	    Planex GW-NS11H Wireless LAN
+	    Proxim Harmony
+	    Proxim RangeLAN-DS
+	    Samsung MagicLAN SWL-2000N
+	    SMC 2632 EZ Connect
+	    Symbol Spectrum24
+	    TDK LAK-CD011WL
+	    US Robotics 2410
+	    US Robotics 2445
+- PC Cards (PCMCIA and CardBus)
+	ATA cards, including:
+	    ATA/IDE card drives
+	    ATA/IDE CD-ROM adapters
+	    CF/ATA flash cards and disk drives
+	Ethernet adapters, including:
+	    NE2000-based, including:
+		Accton EN2212, EN2216
+		Allied Telesis LA-PCM
+		AmbiCom AMB8002T
+		Arowana FE
+		Belkin F5D5020
+		Billionton Systems LNT-10TN
+		CNet NE2000
+		Compex Linkport ENET-B
+		Corega PCC-T, PCC-TD, EtherII PCC-T,
+		Corega FastEther PCC-T, FastEther PCC-TX
+		Corega FastEther PCC-TXD, FastEther PCC-TXF
+		D-Link DE-650, DE-660, DE-660+, DFE-670TXD
+		Dayna CommuniCard E
+		Digital DEPCM-XX
+		Dual NE2000
+		Edimax NE2000
+		Genius ME 3000II SE
+		Grey Cell GCS2000 Gold II
+		GVC NIC-2000p, NP0335
+		Hawking PN650TX
+		I-O DATA PCLA, PCLA/TE
+		IC-Card
+		Kingston KNE-PC2
+		Linksys PCMPC100, EC2T Combo, EthernetCard
+		Linksys Combo EthernetCard, Trust Combo EthernetCard
+		Linksys Etherfast 10/100
+		MACNICA ME1 for JEIDA
+		Melco LPC3-TX
+		National Semiconductor InfoMover
+		NDC Instant-Link
+		Netgear FA410TX, FA410TXC, FA411
+		Network Everywhere NP10T
+		New Media LiveWire 10/100
+		Planet SmartCom 2000
+		Planex FNW-3600-T, FNW-3700-T
+		Premax PE-200
+		RPTI EP-400, EP-401
+		Seiko Epson EN10B
+		SMC EZCard, 8041
+		Socket Communications LP-CF, LP-E
+		SVEC PN650TX, ComboCard, LANCard
+		Synergy S21810
+		Tamarack NE2000
+		Telecom Device TCD-HPC100
+		Wisecom T210CT, iPort
+		Xircom CFE-10
+- Universal Serial Bus (USB) Devices
+		USB Generic Human Interface Devices (catch-all)
+		USB Hubs
+		USB Keyboards
+		USB Mass Storage devices, i.e., USB floppy drives and
+		  USB memory stick controllers
+		USB Mice
+- Miscellaneous devices:
+	battery-backed real time clock
+	``soft'' power button as available on some models (power)
+
+If your hardware is not listed above, there is currently no support for it
+in this release.
