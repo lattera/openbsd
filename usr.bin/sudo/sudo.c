@@ -296,6 +296,8 @@ main(argc, argv, envp)
 	if (runas_pw == NULL)
 	    log_error(NO_MAIL|MSG_ONLY, "no passwd entry for %s!", *user_runas);
     }
+    if (safe_cmnd == NULL)
+	safe_cmnd = user_cmnd;
 
     /*
      * Look up the timestamp dir owner if one is specified.
@@ -378,14 +380,6 @@ main(argc, argv, envp)
 	else if (sudo_mode == MODE_LIST) {
 	    list_matches();
 	    exit(0);
-	}
-
-	/* This *must* have been set if we got a match but... */
-	if (safe_cmnd == NULL) {
-	    log_error(MSG_ONLY,
-		"internal error, safe_cmnd never got set for %s; %s",
-		user_cmnd,
-		"please report this error at http://courtesan.com/sudo/bugs/");
 	}
 
 	/* Override user's umask if configured to do so. */
