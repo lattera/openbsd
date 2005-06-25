@@ -1,5 +1,6 @@
-#	$OpenBSD: src/usr.bin/whois/Makefile,v 1.5 2005/06/25 14:27:36 henning Exp $
+#	$OpenBSD: src/usr.bin/whois/Makefile,v 1.6 2005/06/25 14:28:29 henning Exp $
 
 PROG=	whois
+CFLAGS+= -Wall
 
 .include <bsd.prog.mk>
