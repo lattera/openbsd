@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.32 2005/01/14 18:14:14 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_fxp_pci.c,v 1.32.2.1 2005/07/04 23:26:55 brad Exp $	*/
 
 /*
  * Copyright (c) 1995, David Greenman
@@ -187,9 +187,10 @@ fxp_pci_attach(parent, self, aux)
 		if (chipname != NULL)
 			printf(", %s", chipname);
 
+		sc->not_82557 = (rev >= FXP_REV_82558_A4) ? 1 : 0;
+
 		break;
 	}
-		sc->not_82557 = (rev >= FXP_REV_82558_A4) ? 1 : 0;
 		break;
 	case PCI_PRODUCT_INTEL_82562:
 		sc->not_82557 = 1;
