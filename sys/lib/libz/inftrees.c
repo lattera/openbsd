@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/lib/libz/inftrees.c,v 1.11 2003/12/16 23:57:48 millert Exp $	*/
+/*	$OpenBSD: src/sys/lib/libz/inftrees.c,v 1.11.4.1 2005/07/07 16:19:11 brad Exp $	*/
 /* inftrees.c -- generate Huffman trees for efficient decoding
  * Copyright (C) 1995-2003 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -127,7 +127,7 @@ unsigned short FAR *work;
         left -= count[len];
         if (left < 0) return -1;        /* over-subscribed */
     }
-    if (left > 0 && (type == CODES || (codes - count[0] != 1)))
+    if (left > 0 && (type == CODES || max != 1))
         return -1;                      /* incomplete set */
 
     /* generate offsets into symbol table for each length for sorting */
