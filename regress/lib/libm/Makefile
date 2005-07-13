@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/lib/libm/Makefile,v 1.5 2005/07/13 07:08:00 otto Exp $
+#	$OpenBSD: src/regress/lib/libm/Makefile,v 1.6 2005/07/13 14:53:54 otto Exp $
 
-SUBDIR+= rint floor toint trivial1 fpsig
+SUBDIR+= rint floor toint trivial1
 
 install:
 

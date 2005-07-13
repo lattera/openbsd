@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/regress/lib/libm/fpsig/Attic/fpsig.c,v 1.1 2005/07/13 07:08:00 otto Exp $	*/
+/*	$OpenBSD: src/regress/sys/kern/signal/fpsig/fpsig.c,v 1.1 2005/07/13 14:53:54 otto Exp $	*/
 
 /*
  * Public domain.  2005, Otto Moerbeek
