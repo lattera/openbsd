@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/csu/m88k/Attic/crt0.c,v 1.8 2004/07/24 19:12:33 miod Exp $	*/
+/*	$OpenBSD: src/lib/csu/m88k/Attic/crt0.c,v 1.9 2005/08/04 16:33:05 espie Exp $	*/
 
 /*   
  *   Mach Operating System
@@ -26,10 +26,6 @@
  *   any improvements or extensions that they make and grant Carnegie Mellon 
  *   the rights to redistribute these changes.
  */
-
-#if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/csu/m88k/Attic/crt0.c,v 1.8 2004/07/24 19:12:33 miod Exp $";
-#endif /* LIBC_SCCS and not lint */
 
 /*
  * When a program begins, r31 points to a structure passed by the kernel.
