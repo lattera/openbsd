@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/net/rcmdsh.c,v 1.10 2005/03/25 13:24:12 otto Exp $	*/ 
+/*	$OpenBSD: src/lib/libc/net/rcmdsh.c,v 1.11 2005/08/06 20:30:03 espie Exp $	*/ 
 
 /*
  * Copyright (c) 2001, MagniComp
@@ -32,10 +32,6 @@
  * This is an rcmd() replacement originally by 
  * Chris Siebenmann <cks@utcc.utoronto.ca>.
  */
-
-#if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/lib/libc/net/rcmdsh.c,v 1.10 2005/03/25 13:24:12 otto Exp $";
-#endif /* LIBC_SCCS and not lint */
 
 #include      <sys/types.h>
 #include      <sys/socket.h>
