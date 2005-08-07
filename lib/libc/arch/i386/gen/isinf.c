@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.6 2003/06/25 21:15:04 deraadt Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.7 2005/08/07 11:30:38 espie Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -32,10 +32,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/arch/i386/gen/Attic/isinf.c,v 1.6 2003/06/25 21:15:04 deraadt Exp $";
-#endif /* LIBC_SCCS and not lint */
 
 #include <sys/types.h>
 #include <machine/ieee.h>

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/lib/libc/arch/i386/gen/setjmp.S,v 1.8 2005/08/07 11:30:38 espie Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -31,11 +32,6 @@
  */
 
 #include <machine/asm.h>
-
-#if defined(LIBC_SCCS)
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/i386/gen/setjmp.S,v 1.7 2005/04/01 08:08:15 hshoexer Exp $"
-#endif
 
 /*
  * C library -- setjmp, longjmp

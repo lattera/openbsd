@@ -1,14 +1,10 @@
+/* $OpenBSD: src/lib/libc/arch/i386/gen/fpgetmask.S,v 1.3 2005/08/07 11:30:38 espie Exp $ */
 /*
  * Written by J.T. Conklin, Apr 4, 1995
  * Public domain.
  */
 
 #include <machine/asm.h>
-
-#if defined(LIBC_SCCS)
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/i386/gen/fpgetmask.S,v 1.2 1996/08/19 08:12:22 tholo Exp $"
-#endif
 
 ENTRY(fpgetmask)
 	subl $4,%esp
