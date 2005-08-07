@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libc/arch/m68k/string/strlcpy.S,v 1.7 2005/08/07 16:40:14 espie Exp $ */
 /*
  * Copyright (c) 1999 Todd C. Miller <Todd.Miller@courtesan.com>
  *
@@ -15,11 +16,6 @@
  */
 
 #include "DEFS.h"
-
-#if defined(LIBC_SCCS)
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/m68k/string/strlcpy.S,v 1.6 2003/06/17 21:56:23 millert Exp $"
-#endif /* LIBC_SCCS */
 
 /*
  * It is faster to implement strlcpy() as two distinct operations,

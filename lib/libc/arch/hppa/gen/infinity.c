@@ -1,10 +1,6 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa/gen/infinity.c,v 1.2 2001/01/24 08:19:02 mickey Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/hppa/gen/infinity.c,v 1.3 2005/08/07 16:40:14 espie Exp $	*/
 
 /* infinity.c */
-
-#if defined(LIBC_SCCS) && !defined(lint)
-static char rcsid[] = "$OpenBSD: src/lib/libc/arch/hppa/gen/infinity.c,v 1.2 2001/01/24 08:19:02 mickey Exp $";
-#endif /* LIBC_SCCS and not lint */
 
 #include <math.h>
 
