@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/sys/kern/signal/Makefile,v 1.2 2005/07/13 14:53:54 otto Exp $
+#	$OpenBSD: src/regress/sys/kern/signal/Makefile,v 1.3 2005/08/08 18:53:35 otto Exp $
 
-SUBDIR+= sigfpe siginfo_addr fpsig
+SUBDIR+= sigfpe siginfo_addr fpsig earlysig
 
 install:
 
