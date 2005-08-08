@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/sbin/Makefile,v 1.4 2004/09/24 12:54:13 markus Exp $
+#	$OpenBSD: src/regress/sbin/Makefile,v 1.5 2005/08/08 14:52:41 hshoexer Exp $
 
-SUBDIR+= ipsecadm pfctl route
+SUBDIR+= ipsecadm ipsecctl pfctl route
 
 install:
 
