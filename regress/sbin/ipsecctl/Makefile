@@ -1,0 +1,54 @@
+# $OpenBSD: src/regress/sbin/ipsecctl/Makefile,v 1.6 2005/08/11 09:57:24 hshoexer Exp $
+
+# TARGETS
+# ipsec: feed ipsecNN.in through ipsecctl and check wether the output matches
+# 	 ipsecNN.ok
+# tcpmd5: same as above, but for tcpmd5 rules
+# sa:	 same as above, but for SA rules.
+
+IPSECTESTS=1 2 3 4 5 6 7 8 9 10 11 12
+TCPMD5TESTS=1 2 3
+SATESTS=1 2 3 4 5 6
+
+SHELL=/bin/sh
+
+.MAIN: all
+
+.for n in ${IPSECTESTS}
+IPSEC_TARGETS+=ipsec${n}
+
+ipsec${n}:
+	cat ${.CURDIR}/ipsec${n}.in | sed -e 's,DIR,${.CURDIR},g' | \
+	    ipsecctl -nv -f - | diff -u ${.CURDIR}/ipsec${n}.ok /dev/stdin
+.endfor
+
+.for n in ${TCPMD5TESTS}
+TCPMD5_TARGETS+=tcpmd5${n}
+
+tcpmd5${n}:
+	cat ${.CURDIR}/tcpmd5${n}.in | sed -e 's,DIR,${.CURDIR},g' | \
+	    ipsecctl -nv -f - | diff -u ${.CURDIR}/tcpmd5${n}.ok /dev/stdin
+.endfor
+
+.for n in ${SATESTS}
+SA_TARGETS+=sa${n}
+
+sa${n}:
+	cat ${.CURDIR}/sa${n}.in | sed -e 's,DIR,${.CURDIR},g' | \
+	    ipsecctl -nv -f - | diff -u ${.CURDIR}/sa${n}.ok /dev/stdin
+.endfor
+
+ipsec:		${IPSEC_TARGETS}
+REGRESS_TARGETS+=ipsec
+
+tcpmd5:		${TCPMD5_TARGETS}
+REGRESS_TARGETS+=tcpmd5
+
+sa:		${SA_TARGETS}
+REGRESS_TARGETS+=sa
+
+alltests: ${REGRESS_TARGETS}
+
+.PHONY: ${REGRESS_TARGETS}
+
+.include <bsd.regress.mk>
