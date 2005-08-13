@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/bt8370reg.h,v 1.1 2005/08/13 22:49:48 claudio Exp $ */
-/*	$Id: bt8370reg.h,v 1.35 2005/08/12 17:35:10 cjeker Exp $ */
+/*	$OpenBSD: src/sys/dev/pci/bt8370reg.h,v 1.2 2005/08/13 23:52:49 claudio Exp $ */
 
 /*
  * Copyright (c) 2004,2005  Internet Business Solutions AG, Zurich, Switzerland
