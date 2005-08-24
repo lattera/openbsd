@@ -1,0 +1,16 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/xfer,v 1.9 2005/08/24 15:14:01 kettenis Exp $
+Installation is supported from several media types, including:
+
+	CD-ROM
+	FFS partitions (for upgrades only)
+	Tape
+	FTP
+	HTTP
+
+
+OpenBSDXferShortPrelude
+
+
+OpenBSDXferBootTape(xbase xetc xfont xserv xshare,lif{:--:}OSrev.fs obs=2k conv=sync)
+
+OpenBSDXferFFS
