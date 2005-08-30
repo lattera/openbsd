@@ -1,0 +1,40 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/contents,v 1.15 2005/08/30 17:05:31 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+	lif{:--:}OSrev.fs	A LIF bootable miniroot image, suitable for network
+			boot.
+dnl
+dnl	installboot	The OpenBSD/MACHINE boot loader installation program
+
+	xxboot		The OpenBSD/MACHINE LIF boot block.
+
+DistributionDescription(ten)
+
+OpenBSDbase(41805353,108152368,shared)
+
+OpenBSDcomp(23936541,73719049,shared)
+
+OpenBSDetc(1149836,3990243)
+
+OpenBSDgame(2752864,6108792)
+
+OpenBSDman(7409404,26554719)
+
+OpenBSDmisc(2276240,7482333)
+
+OpenBSDxbase(13028061,32312706)
+
+OpenBSDxetc(87082,315963)
+
+OpenBSDxfont(33217264,37555046)
+
+dnl Do not list xserv, on purpose. No real X11 server yet.
+dnl OpenBSDxserv(3417985,7966494)
+dnl
+OpenBSDxshare(2035265,10734070)

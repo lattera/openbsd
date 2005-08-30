@@ -1,0 +1,46 @@
+dnl	$OpenBSD: src/distrib/notes/mvme68k/contents,v 1.29 2005/08/30 17:05:32 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+	installboot	The OpenBSD/MACHINE boot loader installation
+			program.
+	bootxx		The OpenBSD/MACHINE boot block.
+	bootsd		The OpenBSD/MACHINE disk boot loader.
+	bootst		The OpenBSD/MACHINE tape boot loader.
+	rboot		A standalone bootrom for the MVME147, in
+			S-records format.
+	sboot		A network bootloader for the MVME147, in
+			S-records format.
+	stboot		A VID tape block.
+
+These files can be used to make a bootable tape suitable for installation.
+They can also be used to configure an NFS server to support installation
+"over the network".  See the section "Getting the OpenBSD system onto
+Useful Media" for more information.
+
+DistributionDescription(ten)
+
+OpenBSDbase(33506665,97393339,shared)
+
+OpenBSDcomp(15550003,47891505,shared)
+
+OpenBSDetc(1149163,3825844)
+
+OpenBSDgame(2640805,6305110)
+
+OpenBSDman(6763530,24101170)
+
+OpenBSDmisc(2276398,7482333)
+
+OpenBSDxbase(8560711,25501313)
+
+OpenBSDxetc(78038,309979)
+
+OpenBSDxfont(33221144,37555046)
+
+OpenBSDxshare(2033353,10726688)

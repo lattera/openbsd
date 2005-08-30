@@ -1,0 +1,32 @@
+dnl	$OpenBSD: src/distrib/notes/cats/Attic/contents,v 1.8 2005/08/30 17:05:31 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+
+DistributionDescription(eleven)
+
+OpenBSDcomp(17816600,59841802,shared)
+
+OpenBSDetc(1153314,3842967)
+
+OpenBSDgame(2648066,5961956)
+
+OpenBSDman(7409759,26554707)
+
+OpenBSDmisc(2276291,7482333)
+
+OpenBSDxbase(12161966,34110489)
+
+OpenBSDxetc(84666,312192)
+
+OpenBSDxfont(33219911,37555046)
+
+OpenBSDxserv(9315734,24048979)
+
+OpenBSDxshare(2036718,10734070)

@@ -1,0 +1,44 @@
+dnl	$OpenBSD: src/distrib/notes/zaurus/contents,v 1.4 2005/08/30 17:05:33 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+
+	zboot		The OpenBSD/MACHINE disk-based boot loader.
+
+	zbsdmod.o	The OpenBSD/MACHINE memory-based boot loader.
+
+	openbsd{:--:}OSrev{:--:}_arm.ipk
+			An installable package for Linux containing
+			the boot loader and the RAMDISK kernel.
+
+	Packages	Index file for the Linux package installer.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(43114040,112902251,shared)
+
+OpenBSDcomp(18013852,60296645,shared)
+
+OpenBSDetc(1154044,4006767)
+
+OpenBSDgame(2648224,5961956)
+
+OpenBSDman(7410059,26554734)
+
+OpenBSDmisc(2276231,7482333)
+
+OpenBSDxbase(11919869,33155457)
+
+OpenBSDxetc(97854,377443)
+
+OpenBSDxfont(33219336,37555046)
+
+OpenBSDxserv(8168467,21630641)
+
+OpenBSDxshare(2035786,10734070)
