@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.32 2003/11/04 08:54:09 djm Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.32.4.1 2005/09/02 03:44:59 brad Exp $");
 
 #include "packet.h"
 #include "uidswap.h"
@@ -133,7 +133,7 @@ check_rhosts_file(const char *filename, const char *hostname,
 		/* If the entry was negated, deny access. */
 		if (negated) {
 			auth_debug_add("Matched negative entry in %.100s.",
-			     filename);
+			    filename);
 			return 0;
 		}
 		/* Accept authentication. */

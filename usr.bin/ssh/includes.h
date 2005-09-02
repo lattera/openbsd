@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.18 2004/06/13 15:03:02 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/Attic/includes.h,v 1.18.2.1 2005/09/02 03:45:00 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -17,7 +17,7 @@
 #define INCLUDES_H
 
 #define RCSID(msg) \
-static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
+static /**/const char *const rcsid[] = { (const char *)rcsid, "\100(#)" msg }
 
 #include <sys/types.h>
 #include <sys/socket.h>

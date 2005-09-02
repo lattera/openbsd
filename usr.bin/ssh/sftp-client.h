@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp-client.h,v 1.12.4.1 2005/03/10 16:28:28 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp-client.h,v 1.12.4.2 2005/09/02 03:45:00 brad Exp $ */
 
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
@@ -30,7 +30,7 @@ struct SFTP_DIRENT {
 };
 
 /*
- * Initialiase a SSH filexfer connection. Returns NULL on error or
+ * Initialise a SSH filexfer connection. Returns NULL on error or
  * a pointer to a initialized sftp_conn struct on success.
  */
 struct sftp_conn *do_init(int, int, u_int, u_int);

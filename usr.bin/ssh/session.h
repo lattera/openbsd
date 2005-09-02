@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.23 2004/07/17 05:31:41 dtucker Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/session.h,v 1.23.2.1 2005/09/02 03:45:00 brad Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -49,8 +49,9 @@ struct Session {
 	int	single_connection;
 	/* proto 2 */
 	int	chanid;
+	int	*x11_chanids;
 	int	is_subsystem;
-	int	num_env;
+	u_int	num_env;
 	struct {
 		char	*name;
 		char	*val;
