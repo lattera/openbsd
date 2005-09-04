@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.35 2004/06/13 12:53:24 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.35.4.1 2005/09/04 18:40:02 brad Exp $	*/
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -34,6 +34,10 @@
 #define	KEX_DH1		"diffie-hellman-group1-sha1"
 #define	KEX_DH14	"diffie-hellman-group14-sha1"
 #define	KEX_DHGEX	"diffie-hellman-group-exchange-sha1"
+
+#define COMP_NONE	0
+#define COMP_ZLIB	1
+#define COMP_DELAYED	2
 
 enum kex_init_proposals {
 	PROPOSAL_KEX_ALGS,
@@ -83,9 +87,9 @@ struct Mac {
 	char	*name;
 	int	enabled;
 	const EVP_MD	*md;
-	int	mac_len;
+	u_int	mac_len;
 	u_char	*key;
-	int	key_len;
+	u_int	key_len;
 };
 struct Comp {
 	int	type;
@@ -101,7 +105,7 @@ struct Kex {
 	u_char	*session_id;
 	u_int	session_id_len;
 	Newkeys	*newkeys[MODE_MAX];
-	int	we_need;
+	u_int	we_need;
 	int	server;
 	char	*name;
 	int	hostkey_type;

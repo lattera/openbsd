@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sshd_config,v 1.70 2004/12/23 23:11:00 djm Exp $
+#	$OpenBSD: src/usr.bin/ssh/sshd_config,v 1.70.2.1 2005/09/04 18:40:11 brad Exp $
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -25,7 +25,7 @@
 #ServerKeyBits 768
 
 # Logging
-#obsoletes QuietMode and FascistLogging
+# obsoletes QuietMode and FascistLogging
 #SyslogFacility AUTH
 #LogLevel INFO
 
@@ -78,7 +78,7 @@
 #UseLogin no
 #UsePrivilegeSeparation yes
 #PermitUserEnvironment no
-#Compression yes
+#Compression delayed
 #ClientAliveInterval 0
 #ClientAliveCountMax 3
 #UseDNS yes

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.76 2005/03/01 10:09:52 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/channels.h,v 1.76.2.1 2005/09/04 18:40:01 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -148,7 +148,7 @@ struct Channel {
 	buffer_len(&c->extended) > 0))
 #define CHANNEL_EFD_OUTPUT_ACTIVE(c) \
 	(compat20 && c->extended_usage == CHAN_EXTENDED_WRITE && \
-	((c->efd != -1 && !(c->flags & (CHAN_EOF_RCVD|CHAN_CLOSE_RCVD))) || \
+	c->efd != -1 && (!(c->flags & (CHAN_EOF_RCVD|CHAN_CLOSE_RCVD)) || \
 	buffer_len(&c->extended) > 0))
 
 /* channel management */
@@ -213,9 +213,10 @@ int	 channel_cancel_rport_listener(const char *, u_short);
 /* x11 forwarding */
 
 int	 x11_connect_display(void);
-int	 x11_create_display_inet(int, int, int, u_int *);
+int	 x11_create_display_inet(int, int, int, u_int *, int **);
 void     x11_input_open(int, u_int32_t, void *);
-void	 x11_request_forwarding_with_spoofing(int, const char *, const char *);
+void	 x11_request_forwarding_with_spoofing(int, const char *, const char *,
+	    const char *);
 void	 deny_input_open(int, u_int32_t, void *);
 
 /* agent forwarding */

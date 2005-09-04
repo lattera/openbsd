@@ -16,7 +16,7 @@
 
 #include "includes.h"
 
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.63 2005/03/10 22:01:05 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.63.2.1 2005/09/04 18:40:06 brad Exp $");
 
 #include <glob.h>
 #include <histedit.h>
@@ -399,7 +399,7 @@ get_pathname(const char **cpp, char **path)
 {
 	const char *cp = *cpp, *end;
 	char quot;
-	int i, j;
+	u_int i, j;
 
 	cp += strspn(cp, WHITESPACE);
 	if (!*cp) {
@@ -659,14 +659,15 @@ sdirent_comp(const void *aa, const void *bb)
 static int
 do_ls_dir(struct sftp_conn *conn, char *path, char *strip_path, int lflag)
 {
-	int n, c = 1, colspace = 0, columns = 1;
+	int n;
+	u_int c = 1, colspace = 0, columns = 1;
 	SFTP_DIRENT **d;
 
 	if ((n = do_readdir(conn, path, &d)) != 0)
 		return (n);
 
 	if (!(lflag & LS_SHORT_VIEW)) {
-		int m = 0, width = 80;
+		u_int m = 0, width = 80;
 		struct winsize ws;
 		char *tmp;
 
@@ -742,7 +743,7 @@ do_globbed_ls(struct sftp_conn *conn, char *path, char *strip_path,
     int lflag)
 {
 	glob_t g;
-	int i, c = 1, colspace = 0, columns = 1;
+	u_int i, c = 1, colspace = 0, columns = 1;
 	Attrib *a = NULL;
 
 	memset(&g, 0, sizeof(g));
@@ -778,7 +779,7 @@ do_globbed_ls(struct sftp_conn *conn, char *path, char *strip_path,
 	}
 
 	if (!(lflag & LS_SHORT_VIEW)) {
-		int m = 0, width = 80;
+		u_int m = 0, width = 80;
 		struct winsize ws;
 
 		/* Count entries for sort and find longest filename */
@@ -1229,7 +1230,7 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 	char *dir = NULL;
 	char cmd[2048];
 	struct sftp_conn *conn;
-	int err;
+	int err, interactive;
 	EditLine *el = NULL;
 	History *hl = NULL;
 	HistEvent hev;
@@ -1288,6 +1289,7 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	setvbuf(infile, NULL, _IOLBF, 0);
 
+	interactive = !batchmode && isatty(STDIN_FILENO);
 	err = 0;
 	for (;;) {
 		char *cp;
@@ -1297,16 +1299,24 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 		signal(SIGINT, SIG_IGN);
 
 		if (el == NULL) {
-			printf("sftp> ");
+			if (interactive)
+				printf("sftp> ");
 			if (fgets(cmd, sizeof(cmd), infile) == NULL) {
+				if (interactive)
+					printf("\n");
+				break;
+			}
+			if (!interactive) { /* Echo command */
+				printf("sftp> %s", cmd);
+				if (strlen(cmd) > 0 &&
+				    cmd[strlen(cmd) - 1] != '\n')
+					printf("\n");
+			}
+		} else {
+			if ((line = el_gets(el, &count)) == NULL || count <= 0) {
 				printf("\n");
 				break;
 			}
-			if (batchmode) /* Echo command */
-				printf("%s", cmd);
-		} else {
-			if ((line = el_gets(el, &count)) == NULL || count <= 0)
-				break;
 			history(hl, &hev, H_ENTER, line);
 			if (strlcpy(cmd, line, sizeof(cmd)) >= sizeof(cmd)) {
 				fprintf(stderr, "Error: input line too long\n");
@@ -1327,6 +1337,9 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 			break;
 	}
 	xfree(pwd);
+
+	if (el != NULL)
+		el_end(el);
 
 	/* err == 1 signifies normal "quit" exit */
 	return (err >= 0 ? 0 : -1);
@@ -1457,7 +1470,7 @@ main(int argc, char **argv)
 
 			/* Allow "-" as stdin */
 			if (strcmp(optarg, "-") != 0 &&
-			   (infile = fopen(optarg, "r")) == NULL)
+			    (infile = fopen(optarg, "r")) == NULL)
 				fatal("%s (%s).", strerror(errno), optarg);
 			showprogress = 0;
 			batchmode = 1;

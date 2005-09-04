@@ -23,7 +23,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-chall.c,v 1.22 2005/01/19 13:11:47 dtucker Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/auth2-chall.c,v 1.22.2.1 2005/09/04 18:39:57 brad Exp $");
 
 #include "ssh2.h"
 #include "auth.h"
@@ -137,7 +137,7 @@ kbdint_next_device(KbdintAuthctxt *kbdintctxt)
 		kbdintctxt->devices = t[len] ? xstrdup(t+len+1) : NULL;
 		xfree(t);
 		debug2("kbdint_next_device: devices %s", kbdintctxt->devices ?
-		   kbdintctxt->devices : "<empty>");
+		    kbdintctxt->devices : "<empty>");
 	} while (kbdintctxt->devices && !kbdintctxt->device);
 
 	return kbdintctxt->device ? 1 : 0;
@@ -209,8 +209,7 @@ send_userauth_info_request(Authctxt *authctxt)
 {
 	KbdintAuthctxt *kbdintctxt;
 	char *name, *instr, **prompts;
-	int i;
-	u_int *echo_on;
+	u_int i, *echo_on;
 
 	kbdintctxt = authctxt->kbdintctxt;
 	if (kbdintctxt->device->query(kbdintctxt->ctxt,
@@ -243,8 +242,8 @@ input_userauth_info_response(int type, u_int32_t seq, void *ctxt)
 {
 	Authctxt *authctxt = ctxt;
 	KbdintAuthctxt *kbdintctxt;
-	int i, authenticated = 0, res, len;
-	u_int nresp;
+	int authenticated = 0, res, len;
+	u_int i, nresp;
 	char **response = NULL, *method;
 
 	if (authctxt == NULL)

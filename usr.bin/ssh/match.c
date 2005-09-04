@@ -35,7 +35,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.19 2002/03/01 13:12:10 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.19.14.1 2005/09/04 18:40:02 brad Exp $");
 
 #include "match.h"
 #include "xmalloc.h"
@@ -254,7 +254,7 @@ match_list(const char *client, const char *server, u_int *next)
 				ret = xstrdup(p);
 				if (next != NULL)
 					*next = (cp == NULL) ?
-					    strlen(c) : cp - c;
+					    strlen(c) : (u_int)(cp - c);
 				xfree(c);
 				xfree(s);
 				return ret;

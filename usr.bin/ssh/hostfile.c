@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.34 2005/03/10 22:01:05 deraadt Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.34.2.1 2005/09/04 18:40:02 brad Exp $");
 
 #include <resolv.h>
 #include <openssl/hmac.h>
@@ -315,7 +315,7 @@ add_host_to_hostfile(const char *filename, const char *host, const Key *key,
 {
 	FILE *f;
 	int success = 0;
-	char *hashed_host;
+	char *hashed_host = NULL;
 
 	if (key == NULL)
 		return 1;	/* XXX ? */

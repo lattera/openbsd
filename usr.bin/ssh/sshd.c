@@ -42,7 +42,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.308 2005/02/08 22:24:57 dtucker Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sshd.c,v 1.308.2.1 2005/09/04 18:40:11 brad Exp $");
 
 #include <openssl/dh.h>
 #include <openssl/bn.h>
@@ -353,7 +353,8 @@ key_regeneration_alarm(int sig)
 static void
 sshd_exchange_identification(int sock_in, int sock_out)
 {
-	int i, mismatch;
+	u_int i;
+	int mismatch;
 	int remote_major, remote_minor;
 	int major, minor;
 	char *s;
@@ -661,6 +662,12 @@ privsep_postauth(Authctxt *authctxt)
 
 	/* It is safe now to apply the key state */
 	monitor_apply_keystate(pmonitor);
+
+	/*
+	 * Tell the packet layer that authentication was successful, since
+	 * this information is not part of the key state.
+	 */
+	packet_set_authenticated();
 }
 
 static char *
@@ -1545,19 +1552,22 @@ main(int ac, char **av)
 	signal(SIGQUIT, SIG_DFL);
 	signal(SIGCHLD, SIG_DFL);
 
-	/* Set SO_KEEPALIVE if requested. */
-	if (options.tcp_keep_alive &&
-	    setsockopt(sock_in, SOL_SOCKET, SO_KEEPALIVE, &on,
-	    sizeof(on)) < 0)
-		error("setsockopt SO_KEEPALIVE: %.100s", strerror(errno));
-
 	/*
 	 * Register our connection.  This turns encryption off because we do
 	 * not have a key.
 	 */
 	packet_set_connection(sock_in, sock_out);
+	packet_set_server();
 
-	remote_port = get_remote_port();
+	/* Set SO_KEEPALIVE if requested. */
+	if (options.tcp_keep_alive && packet_connection_is_on_socket() &&
+	    setsockopt(sock_in, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
+		error("setsockopt SO_KEEPALIVE: %.100s", strerror(errno));
+
+	if ((remote_port = get_remote_port()) < 0) {
+		debug("get_remote_port failed");
+		cleanup_exit(255);
+	}
 	remote_ip = get_remote_ipaddr();
 
 #ifdef LIBWRAP
@@ -1809,7 +1819,7 @@ do_ssh1_kex(void)
 	if (!rsafail) {
 		BN_mask_bits(session_key_int, sizeof(session_key) * 8);
 		len = BN_num_bytes(session_key_int);
-		if (len < 0 || len > sizeof(session_key)) {
+		if (len < 0 || (u_int)len > sizeof(session_key)) {
 			error("do_connection: bad session key len from %s: "
 			    "session_key_int %d > sizeof(session_key) %lu",
 			    get_remote_ipaddr(), len, (u_long)sizeof(session_key));
@@ -1896,10 +1906,14 @@ do_ssh2_kex(void)
 		myproposal[PROPOSAL_MAC_ALGS_CTOS] =
 		myproposal[PROPOSAL_MAC_ALGS_STOC] = options.macs;
 	}
-	if (!options.compression) {
+	if (options.compression == COMP_NONE) {
 		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
 		myproposal[PROPOSAL_COMP_ALGS_STOC] = "none";
+	} else if (options.compression == COMP_DELAYED) {
+		myproposal[PROPOSAL_COMP_ALGS_CTOS] =
+		myproposal[PROPOSAL_COMP_ALGS_STOC] = "none,zlib@openssh.com";
 	}
+	
 	myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = list_hostkey_types();
 
 	/* start key exchange */
