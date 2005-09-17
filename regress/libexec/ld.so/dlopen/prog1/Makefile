@@ -1,4 +1,4 @@
-# $OpenBSD: src/regress/libexec/ld.so/dlopen/prog1/Makefile,v 1.1.1.1 2005/09/13 20:51:39 drahn Exp $
+# $OpenBSD: src/regress/libexec/ld.so/dlopen/prog1/Makefile,v 1.2 2005/09/17 01:55:23 drahn Exp $
 
 .include <bsd.obj.mk>
 
@@ -23,6 +23,7 @@ AB_OBJDIR!=    if [ -d $(AB_DIR)/${__objdir} ]; then \
 
 
 CFLAGS=-I${.CURDIR}/../libab
+CFLAGS+=-g
 LDADD=
 #LDADD+=-lab
 #LDADD+=-laa
