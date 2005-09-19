@@ -1,11 +1,12 @@
 /*
  * Public Domain 2003 Dale Rahn
  *
- * $OpenBSD: src/regress/libexec/ld.so/dlopen/prog1/prog1.C,v 1.3 2005/09/18 19:58:50 drahn Exp $
+ * $OpenBSD: src/regress/libexec/ld.so/dlopen/prog1/prog1.C,v 1.4 2005/09/19 18:39:38 deraadt Exp $
  */
 #include <iostream>
 #include <dlfcn.h>
 #include <string.h>
+#include <stdio.h>
 typedef char * (cp_func)(void);
 int a;
 int
