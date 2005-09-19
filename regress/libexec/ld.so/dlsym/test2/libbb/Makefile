@@ -1,6 +1,4 @@
-# $OpenBSD: src/regress/libexec/ld.so/dlsym/test2/libbb/Makefile,v 1.3 2005/09/18 22:29:46 kurt Exp $
-
-.include <../Makefile.inc>
+# $OpenBSD: src/regress/libexec/ld.so/dlsym/test2/libbb/Makefile,v 1.4 2005/09/19 01:20:58 kurt Exp $
 
 LIB=bb
 SRCS= bb.c
