@@ -1,5 +1,5 @@
 %{
-/*	$OpenBSD: src/lib/libpcap/scanner.l,v 1.14 2003/05/14 08:50:37 canacar Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/scanner.l,v 1.15 2005/09/27 18:26:57 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -24,7 +24,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/lib/libpcap/scanner.l,v 1.13 2002/08/26 22:43:53 deraadt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/lib/libpcap/scanner.l,v 1.14 2003/05/14 08:50:37 canacar Exp $ (LBL)";
 #endif
 
 #include <sys/types.h>
@@ -264,6 +264,7 @@ action		return PF_ACTION;
 {B}:+({B}:+)+		{ bpf_error("bogus ethernet address %s", yytext); }
 [A-Za-z0-9][-_.A-Za-z0-9]*[.A-Za-z0-9] {
 			 yylval.s = sdup((char *)yytext); return ID; }
+[A-Za-z] {		 yylval.s = sdup((char *)yytext); return ID; }
 "\\"[^ !()\n\t]+	{ yylval.s = sdup((char *)yytext + 1); return ID; }
 [^ \[\]\t\n\-_.A-Za-z0-9!<>()&|=]+i {
 			bpf_error("illegal token: %s\n", yytext); }
