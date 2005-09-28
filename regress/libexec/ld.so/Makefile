@@ -1,6 +1,6 @@
-#	$OpenBSD: src/regress/libexec/ld.so/Makefile,v 1.7 2005/09/22 23:54:48 drahn Exp $
+#	$OpenBSD: src/regress/libexec/ld.so/Makefile,v 1.8 2005/09/28 15:48:09 kurt Exp $
 
-SUBDIR+= elf weak dlsym dlopen
+SUBDIR+= elf weak dlsym dlopen dlclose
 #SUBDIR+= constructor 
 SUBDIR+= link-order edgecases
 
