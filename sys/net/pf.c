@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.483 2005/03/15 17:38:43 dhartmei Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.483.2.1 2005/10/07 19:56:14 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -48,6 +48,7 @@
 #include <sys/kernel.h>
 #include <sys/time.h>
 #include <sys/pool.h>
+#include <sys/proc.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -104,8 +105,6 @@ u_int32_t		 ticket_altqs_active;
 u_int32_t		 ticket_altqs_inactive;
 int			 altqs_inactive_open;
 u_int32_t		 ticket_pabuf;
-
-struct timeout		 pf_expire_to;			/* expire timeout */
 
 struct pf_anchor_stackframe {
 	struct pf_ruleset			*rs;
@@ -857,18 +856,19 @@ pf_insert_state(struct pfi_kif *kif, struct pf_state *state)
 }
 
 void
-pf_purge_timeout(void *arg)
+pf_purge_thread(void *v)
 {
-	struct timeout	*to = arg;
-	int		 s;
+	int s;
 
-	s = splsoftnet();
-	pf_purge_expired_states();
-	pf_purge_expired_fragments();
-	pf_purge_expired_src_nodes();
-	splx(s);
-
-	timeout_add(to, pf_default_rule.timeout[PFTM_INTERVAL] * hz);
+	for (;;) {
+		tsleep(pf_purge_thread, PWAIT, "pftm",
+		    pf_default_rule.timeout[PFTM_INTERVAL] * hz);
+		s = splsoftnet();
+		pf_purge_expired_states();
+		pf_purge_expired_fragments();
+		pf_purge_expired_src_nodes();
+		splx(s);
+	}
 }
 
 u_int32_t

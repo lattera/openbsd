@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.139 2005/03/03 07:13:39 dhartmei Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.139.2.1 2005/10/07 19:56:15 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -49,6 +49,7 @@
 #include <sys/timeout.h>
 #include <sys/pool.h>
 #include <sys/malloc.h>
+#include <sys/kthread.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -78,6 +79,7 @@
 #endif
 
 void			 pfattach(int);
+void			 pf_thread_create(void *);
 int			 pfopen(dev_t, int, int, struct proc *);
 int			 pfclose(dev_t, int, int, struct proc *);
 struct pf_pool		*pf_get_pool(char *, u_int32_t, u_int8_t, u_int32_t,
@@ -103,8 +105,6 @@ int			 pf_disable_altq(struct pf_altq *);
 int			 pf_begin_rules(u_int32_t *, int, const char *);
 int			 pf_rollback_rules(u_int32_t, int, char *);
 int			 pf_commit_rules(u_int32_t, int, char *);
-
-extern struct timeout	 pf_expire_to;
 
 struct pf_rule		 pf_default_rule;
 #ifdef ALTQ
@@ -184,15 +184,22 @@ pfattach(int num)
 	timeout[PFTM_SRC_NODE] = PFTM_SRC_NODE_VAL;
 	timeout[PFTM_TS_DIFF] = PFTM_TS_DIFF_VAL;
 
-	timeout_set(&pf_expire_to, pf_purge_timeout, &pf_expire_to);
-	timeout_add(&pf_expire_to, timeout[PFTM_INTERVAL] * hz);
-
 	pf_normalize_init();
 	bzero(&pf_status, sizeof(pf_status));
 	pf_status.debug = PF_DEBUG_URGENT;
 
 	/* XXX do our best to avoid a conflict */
 	pf_status.hostid = arc4random();
+
+	/* require process context to purge states, so perform in a thread */
+	kthread_create_deferred(pf_thread_create, NULL);
+}
+
+void
+pf_thread_create(void *v)
+{
+	if (kthread_create(pf_purge_thread, NULL, NULL, "pfpurge"))
+		panic("pfpurge thread");
 }
 
 int
@@ -1810,7 +1817,11 @@ pfioctl(dev_t dev, u_long cmd, caddr_t addr, int flags, struct proc *p)
 			goto fail;
 		}
 		old = pf_default_rule.timeout[pt->timeout];
+		if (pt->timeout == PFTM_INTERVAL && pt->seconds == 0)
+			pt->seconds = 1;
 		pf_default_rule.timeout[pt->timeout] = pt->seconds;
+		if (pt->timeout == PFTM_INTERVAL && pt->seconds < old)
+			wakeup(pf_purge_thread);
 		pt->seconds = old;
 		break;
 	}
