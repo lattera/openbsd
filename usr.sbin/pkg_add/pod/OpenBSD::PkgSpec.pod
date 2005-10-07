@@ -1,0 +1,21 @@
+$OpenBSD: src/usr.sbin/pkg_add/pod/OpenBSD::PkgSpec.pod,v 1.3 2005/10/07 21:54:22 jmc Exp $
+
+=head1 NAME
+
+OpenBSD::PkgSpec - C<packages-specs(7)> handling
+
+=head1 SYNOPSIS
+
+   use OpenBSD::PkgSpec;
+   @sublist = OpenBSD::PkgSpec::match($pattern, @list);
+
+=head1 DESCRIPTION
+
+C<OpenBSD::PkgSpec> is the canonical interface to C<packages-specs(7)>
+handling.
+
+A package specification C<$pattern> is a string that can be used to
+extract matching package names from a C<@list>.  The resulting list
+C<@sublist> will only hold the package names that match the specification.
+
+For performance reason, the result may contain duplicates.
