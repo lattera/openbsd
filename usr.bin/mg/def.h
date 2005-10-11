@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/mg/def.h,v 1.65 2005/10/06 16:48:00 kjell Exp $	*/
+/*	$OpenBSD: src/usr.bin/mg/def.h,v 1.66 2005/10/11 00:50:00 kjell Exp $	*/
 
 /* This file is in the public domain. */
 
@@ -607,6 +607,9 @@ int	 add_autoexec(const char *, const char *);
 
 /* mail.c X */
 void	 mail_init(void);
+
+/* grep.c X */
+int	 next_error(int, int);
 
 /*
  * Externals.
