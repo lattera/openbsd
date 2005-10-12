@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.75 2004/12/26 21:22:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/kern/vfs_bio.c,v 1.75.2.1 2005/10/12 22:01:05 brad Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -102,7 +102,7 @@ struct pool bufpool;
 #define	binstailfree(bp, dp)	TAILQ_INSERT_TAIL(dp, bp, b_freelist)
 
 static __inline struct buf *bio_doread(struct vnode *, daddr_t, int, int);
-int getnewbuf(int slpflag, int slptimeo, struct buf **);
+struct buf *getnewbuf(int slpflag, int slptimeo);
 
 /*
  * We keep a few counters to monitor the utilization of the buffer cache
@@ -599,7 +599,7 @@ struct buf *
 getblk(struct vnode *vp, daddr_t blkno, int size, int slpflag, int slptimeo)
 {
 	struct bufhashhdr *bh;
-	struct buf *bp, *nbp = NULL;
+	struct buf *bp;
 	int s, err;
 
 	/*
@@ -639,22 +639,13 @@ start:
 	}
 
 	if (bp == NULL) {
-		if (nbp == NULL && getnewbuf(slpflag, slptimeo, &nbp) != 0) {
+		if ((bp = getnewbuf(slpflag, slptimeo)) == NULL)
 			goto start;
-		}
-		bp = nbp;
 		binshash(bp, bh);
 		bp->b_blkno = bp->b_lblkno = blkno;
 		s = splbio();
 		bgetvp(vp, bp);
 		splx(s);
-	} else if (nbp != NULL) {
-		/*
-		 * Set B_AGE so that buffer appear at BQ_CLEAN head
-		 * and gets reused ASAP.
-		 */
-		SET(nbp->b_flags, B_AGE);
-		brelse(nbp);
 	}
 	allocbuf(bp, size);
 
@@ -669,7 +660,8 @@ geteblk(int size)
 {
 	struct buf *bp;
 
-	getnewbuf(0, 0, &bp);
+	while ((bp = getnewbuf(0, 0)) == 0)
+		;
 	SET(bp->b_flags, B_INVAL);
 	binshash(bp, &invalhash);
 	allocbuf(bp, size);
@@ -708,7 +700,8 @@ allocbuf(struct buf *bp, int size)
 		int amt;
 
 		/* find a buffer */
-		getnewbuf(0, 0, &nbp);
+		while ((nbp = getnewbuf(0, 0)) == NULL)
+			;
  		SET(nbp->b_flags, B_INVAL);
 		binshash(nbp, &invalhash);
 
@@ -766,21 +759,13 @@ out:
 
 /*
  * Find a buffer which is available for use.
- *
- * We must notify getblk if we slept during the buffer allocation. When
- * that happens, we allocate a buffer anyway (unless tsleep is interrupted
- * or times out) and return !0.
  */
-int
-getnewbuf(int slpflag, int slptimeo, struct buf **bpp)
+struct buf *
+getnewbuf(int slpflag, int slptimeo)
 {
 	struct buf *bp;
-	int s, ret, error;
+	int s;
 
-	*bpp = NULL;
-	ret = 0;
-
-start:
 	s = splbio();
 	/*
 	 * Wake up cleaner if we're getting low on buffers.
@@ -791,24 +776,16 @@ start:
 	if ((numcleanpages <= locleanpages) &&
 	    curproc != syncerproc && curproc != cleanerproc) {
 		needbuffer++;
-		error = tsleep(&needbuffer, slpflag|(PRIBIO+1), "getnewbuf",
-				slptimeo);
+		tsleep(&needbuffer, slpflag|(PRIBIO+1), "getnewbuf", slptimeo);
 		splx(s);
-		if (error)
-			return (1);
-		ret = 1;
-		goto start;
+		return (0);
 	}
 	if ((bp = TAILQ_FIRST(&bufqueues[BQ_CLEAN])) == NULL) {
 		/* wait for a free buffer of any kind */
 		nobuffers = 1;
-		error = tsleep(&nobuffers, slpflag|(PRIBIO-3),
-				"getnewbuf", slptimeo);
+		tsleep(&nobuffers, slpflag|(PRIBIO-3), "getnewbuf", slptimeo);
 		splx(s);
-		if (error)
-			return (1);
-		ret = 1;
-		goto start;
+		return (0);
 	}
 
 	bremfree(bp);
@@ -845,8 +822,7 @@ start:
 	bp->b_validoff = bp->b_validend = 0;
 
 	bremhash(bp);
-	*bpp = bp;
-	return (ret);
+	return (bp);
 }
 
 /*
