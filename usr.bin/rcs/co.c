@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/rcs/co.c,v 1.15 2005/10/15 21:23:54 niallo Exp $	*/
+/*	$OpenBSD: src/usr.bin/rcs/co.c,v 1.16 2005/10/16 11:59:06 niallo Exp $	*/
 /*
  * Copyright (c) 2005 Joris Vink <joris@openbsd.org>
  * All rights reserved.
@@ -145,7 +145,7 @@ void
 checkout_usage(void)
 {
 	fprintf(stderr,
-	    "usage: co [-qV] [-l [rev]] [-r [rev]] [-u [rev]] file ...\n");
+	    "usage: co [-qV] [-l[rev]] [-r[rev]] [-u[rev]] file ...\n");
 }
 
 /*
