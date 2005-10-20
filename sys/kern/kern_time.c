@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.45 2004/07/28 17:15:12 tholo Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_time.c,v 1.45.4.1 2005/10/20 02:10:21 brad Exp $	*/
 /*	$NetBSD: kern_time.c,v 1.20 1996/02/18 11:57:06 fvdl Exp $	*/
 
 /*
@@ -600,7 +600,8 @@ realitexpire(arg)
 			timo = tvtohz(&ntv) - 1;
 			if (timo <= 0)
 				timo = 1;
-			timeout_add(&p->p_realit_to, timo);
+			if ((p->p_flag & P_WEXIT) == 0)
+				timeout_add(&p->p_realit_to, timo);
 			return;
 		}
 	}
