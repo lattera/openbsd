@@ -1,5 +1,5 @@
-/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.14 2004/05/12 06:35:11 tedu Exp $ */
-/* $Id: if_lmc_media.c,v 1.13 2003/02/11 19:20:27 mickey Exp $ */
+/* $OpenBSD: src/sys/dev/pci/if_lmc_media.c,v 1.15 2005/11/05 11:49:01 brad Exp $ */
+/* $Id: if_lmc_media.c,v 1.14 2004/05/12 06:35:11 tedu Exp $ */
 
 /*-
  * Copyright (c) 1997-1999 LAN Media Corporation (LMC)
@@ -75,8 +75,6 @@
 #if NBPFILTER > 0
 #include <net/bpf.h>
 #endif
-
-#include <uvm/uvm_extern.h>
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <net/if_sppp.h>
