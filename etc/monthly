@@ -1,0 +1,10 @@
+#!/bin/sh -
+#	$OpenBSD: src/etc/monthly,v 1.6 2005/11/12 16:14:37 jmc Exp $
+
+if [ -f /etc/monthly.local ];then
+	echo ""
+	echo "Running monthly.local:"
+	. /etc/monthly.local
+else
+	echo "Nothing to do!"
+fi
