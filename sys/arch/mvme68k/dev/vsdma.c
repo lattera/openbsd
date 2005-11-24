@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.9 2004/07/30 22:29:45 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/vsdma.c,v 1.10 2005/11/24 22:43:16 miod Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -101,7 +101,7 @@ vsattach(parent, self, auxp)
 	struct vsreg * rp;
 	int tmp;
 
-	sc->sc_vsreg = rp = ca->ca_vaddr;
+	sc->sc_vsreg = rp = (void *)ca->ca_vaddr;
 
 	sc->sc_ipl = ca->ca_ipl;
 	sc->sc_nvec = ca->ca_vec + 0;
