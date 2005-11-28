@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/cvs/Attic/resp.c,v 1.61 2005/10/22 17:32:57 joris Exp $	*/
+/*	$OpenBSD: src/usr.bin/cvs/Attic/resp.c,v 1.62 2005/11/28 08:49:25 xsa Exp $	*/
 /*
  * Copyright (c) 2004 Jean-Francois Brousseau <jfb@openbsd.org>
  * All rights reserved.
@@ -436,7 +436,7 @@ cvs_resp_createdir(char *line)
 	 */
 	if (stat(line, &st) == -1) {
 		if (errno != ENOENT) {
-			cvs_log(LP_ERRNO, "failed to stat '%s'", line);
+			cvs_log(LP_ERRNO, "failed to stat `%s'", line);
 			return (-1);
 		}
 
