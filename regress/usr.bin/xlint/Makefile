@@ -1,6 +1,6 @@
-# $OpenBSD: src/regress/usr.bin/xlint/Attic/Makefile,v 1.5 2005/11/28 01:05:08 cloder Exp $
+# $OpenBSD: src/regress/usr.bin/xlint/Attic/Makefile,v 1.6 2005/11/30 19:39:16 cloder Exp $
 
-TEST_MODULES=	1 2 3 4 5
+TEST_MODULES=	1 2 3 4 5 6
 LINT=		lint
 LINTFLAGS?=	-chapbx
 
