@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.35 2003/08/14 07:46:39 mickey Exp $	*/
+/*	$OpenBSD: src/sys/isofs/cd9660/cd9660_vfsops.c,v 1.35.10.1 2005/12/01 00:42:13 brad Exp $	*/
 /*	$NetBSD: cd9660_vfsops.c,v 1.26 1997/06/13 15:38:58 pk Exp $	*/
 
 /*-
@@ -855,7 +855,7 @@ retry:
 	}
 
 	ip->iso_extent = isonum_733(isodir->extent);
-	ip->i_size = isonum_733(isodir->size);
+	ip->i_size = (u_int32_t) isonum_733(isodir->size);
 	ip->iso_start = isonum_711(isodir->ext_attr_length) + ip->iso_extent;
 	
 	/*
