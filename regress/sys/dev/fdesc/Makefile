@@ -1,7 +1,5 @@
-#	$OpenBSD: src/regress/sys/dev/fdesc/Makefile,v 1.1 2005/12/07 01:43:39 pedro Exp $
+#	$OpenBSD: src/regress/sys/dev/fdesc/Makefile,v 1.2 2005/12/07 02:29:01 pedro Exp $
 
-SUBDIR=confuse
+PROG=	confuse
 
-install:
-
-.include <bsd.subdir.mk>
+.include <bsd.regress.mk>
