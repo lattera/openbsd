@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.c,v 1.34 2005/10/12 19:33:48 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/if_ie.c,v 1.35 2005/12/11 21:44:04 miod Exp $ */
 
 /*-
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -109,7 +109,6 @@ Mode of operation:
 #include <net/if.h>
 #include <net/if_types.h>
 #include <net/if_dl.h>
-#include <net/netisr.h>
 #include <net/route.h>
 
 #if NBPFILTER > 0
