@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.89 2005/12/03 18:11:29 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/init_sysent.c,v 1.90 2005/12/13 06:02:02 tedu Exp $	*/
 
 /*
  * System call switch table.

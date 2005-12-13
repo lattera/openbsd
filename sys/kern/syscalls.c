@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.90 2005/12/03 18:11:29 tedu Exp $	*/
+/*	$OpenBSD: src/sys/kern/syscalls.c,v 1.91 2005/12/13 06:02:03 tedu Exp $	*/
 
 /*
  * System call names.
