@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.30 2005/12/11 20:46:28 pedro Exp $	*/
+/*	$OpenBSD: src/sys/ufs/ext2fs/ext2fs_inode.c,v 1.31 2005/12/15 13:44:28 krw Exp $	*/
 /*	$NetBSD: ext2fs_inode.c,v 1.24 2001/06/19 12:59:18 wiz Exp $	*/
 
 /*
@@ -413,9 +413,10 @@ done:
 	 * Put back the real size.
 	 */
 	(void)ext2fs_setsize(oip, length);
-	oip->i_e2fs_nblock -= blocksreleased;
-	if (oip->i_e2fs_nblock < 0)			/* sanity */
+	if (blocksreleased >= oip->i_e2fs_nblock)
 		oip->i_e2fs_nblock = 0;
+	else
+		oip->i_e2fs_nblock -= blocksreleased;
 	oip->i_flag |= IN_CHANGE;
 	return (allerror);
 }
