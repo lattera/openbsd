@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.109 2005/08/31 04:49:21 mcbride Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.109.2.1 2005/12/16 23:47:44 brad Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.
@@ -1311,19 +1311,9 @@ carp_setrun(struct carp_softc *sc, sa_family_t af)
 
 	switch (sc->sc_state) {
 	case INIT:
-		if (carp_opts[CARPCTL_PREEMPT] && !carp_suppress_preempt) {
-			carp_set_state(sc, MASTER);
-			carp_setroute(sc, RTM_ADD);
-			carp_send_ad(sc);
-			carp_send_arp(sc);
-#ifdef INET6
-			carp_send_na(sc);
-#endif /* INET6 */
-		} else {
-			carp_set_state(sc, BACKUP);
-			carp_setroute(sc, RTM_DELETE);
-			carp_setrun(sc, 0);
-		}
+		carp_set_state(sc, BACKUP);
+		carp_setroute(sc, RTM_DELETE);
+		carp_setrun(sc, 0);
 		break;
 	case BACKUP:
 		timeout_del(&sc->sc_ad_tmo);
