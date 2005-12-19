@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/newlfs/Attic/lfs.c,v 1.9 2004/07/17 02:14:33 deraadt Exp $	*/
+/*	$OpenBSD: src/sbin/newlfs/Attic/lfs.c,v 1.10 2005/12/19 15:18:01 pedro Exp $	*/
 /*	$NetBSD: lfs.c,v 1.8 1995/06/19 21:30:36 cgd Exp $	*/
 
 /*-
@@ -34,7 +34,7 @@
 #if 0
 static char sccsid[] = "@(#)lfs.c	8.5 (Berkeley) 5/24/95";
 #else
-static char rcsid[] = "$OpenBSD: src/sbin/newlfs/Attic/lfs.c,v 1.9 2004/07/17 02:14:33 deraadt Exp $";
+static char rcsid[] = "$OpenBSD: src/sbin/newlfs/Attic/lfs.c,v 1.10 2005/12/19 15:18:01 pedro Exp $";
 #endif
 #endif /* not lint */
 
@@ -130,7 +130,7 @@ static struct lfs lfs_default =  {
 	/* lfs_fbshift */	DFL_LFS_FBSHIFT,
 	/* lfs_fsbtodb */	0,
 	/* lfs_sushift */	0,
-	/* lfs_maxsymlinklen */	MAXSYMLINKLEN,
+	/* lfs_maxsymlinklen */	MAXSYMLINKLEN_UFS1,
 	/* lfs_sboffs */	{ 0 },
 	/* lfs_cksum */		0,
 	/* lfs_sp */		NULL,
