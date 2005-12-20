@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips64/mips64/interrupt.c,v 1.18 2005/08/14 11:02:30 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mips64/mips64/interrupt.c,v 1.19 2005/12/20 06:57:52 miod Exp $ */
 
 /*
  * Copyright (c) 2001-2004 Opsycon AB  (www.opsycon.se / www.opsycon.com)
@@ -56,9 +56,6 @@
 #include <ddb/db_sym.h>
 #endif
 
-#include "atm.h"
-#include "bridge.h"
-#include "ppp.h"
 
 static struct evcount soft_count;
 static int soft_irq = 0;
