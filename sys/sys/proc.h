@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/proc.h,v 1.79 2005/05/29 03:20:42 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/sys/proc.h,v 1.79.2.1 2005/12/22 02:41:54 brad Exp $	*/
 /*	$NetBSD: proc.h,v 1.44 1996/04/22 01:23:21 christos Exp $	*/
 
 /*-
@@ -144,7 +144,8 @@ struct	proc {
 	int	p_flag;			/* P_* flags. */
 	u_char	p_os;			/* OS tag */
 	char	p_stat;			/* S* process status. */
-	char	p_pad1[2];
+	char	p_pad1[1];
+	u_char	p_descfd;		/* if not 255, fdesc permits this fd */
 
 	pid_t	p_pid;			/* Process identifier. */
 	LIST_ENTRY(proc) p_hash;	/* Hash chain. */
