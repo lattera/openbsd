@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2c/adm1025.c,v 1.4 2005/12/22 23:49:41 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2c/adm1025.c,v 1.5 2005/12/23 01:15:06 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2005 Theo de Raadt
@@ -84,7 +84,7 @@ admtm_match(struct device *parent, void *match, void *aux)
 		 */
 		return (1);
 	}
-	return (1);
+	return (0);
 }
 
 void
