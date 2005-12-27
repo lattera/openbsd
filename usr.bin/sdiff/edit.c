@@ -1,4 +1,4 @@
-/*	$Id: edit.c,v 1.4 2005/12/15 16:19:27 ray Exp $	*/
+/*	$OpenBSD: src/usr.bin/sdiff/edit.c,v 1.2 2005/12/27 04:06:16 tedu Exp $ */
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.

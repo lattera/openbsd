@@ -1,4 +1,4 @@
-/*	$Id: sdiff.c,v 1.106 2005/12/16 20:31:25 ray Exp $	*/
+/*	$OpenBSD: src/usr.bin/sdiff/sdiff.c,v 1.2 2005/12/27 04:06:16 tedu Exp $ */
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
