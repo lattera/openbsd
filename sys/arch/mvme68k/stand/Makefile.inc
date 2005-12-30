@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/mvme68k/stand/Makefile.inc,v 1.5 2004/07/13 21:03:38 marc Exp $
+#	$OpenBSD: src/sys/arch/mvme68k/stand/Makefile.inc,v 1.6 2005/12/30 02:03:49 millert Exp $
 
 MDEC_DIR?=/usr/mdec
-CFLAGS+=	-fno-stack-protector -Derrno=errno
+CFLAGS+=	-fno-stack-protector
