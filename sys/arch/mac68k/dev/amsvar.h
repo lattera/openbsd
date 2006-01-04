@@ -1,8 +1,9 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/itevar.h,v 1.4 2002/06/11 05:13:37 miod Exp $	*/
-/*	$NetBSD: itevar.h,v 1.1 1996/05/05 06:16:49 briggs Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/amsvar.h,v 1.1 2006/01/04 20:39:04 miod Exp $	*/
+/*	$NetBSD: amsvar.h,v 1.4 1999/06/17 06:59:05 tsubai Exp $	*/
 
 /*
- * Copyright (c) 1995 Allen Briggs.  All rights reserved.
+ * Copyright (C) 1998	Colin Wood
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,7 +15,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by Allen Briggs.
+ *	This product includes software developed by Colin Wood.
  * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
@@ -26,31 +27,41 @@
  * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <machine/adbsys.h>
+#ifndef _MAC68K_AMSVAR_H_
+#define _MAC68K_AMSVAR_H_
 
-int	ite_intr(adb_event_t *event);
-int	iteon(dev_t dev, int flags);
-int	iteoff(dev_t dev, int flags);
-void	itereset(void);
+/*
+ * State info, per mouse instance.
+ */
+struct ams_softc {
+	struct	device	sc_dev;
 
-#ifndef CN_DEAD
-#include <dev/cons.h>
-#endif
+	/* ADB info */
+	int		origaddr;	/* ADB device type (ADBADDR_MS) */
+	int		adbaddr;	/* current ADB address */
+	int		handler_id;	/* type of mouse */
 
-void	itestop(struct tty * tp, int flag);
-void	itestart(register struct tty * tp);
-int	iteopen(dev_t dev, int mode, int devtype, struct proc * p);
-int	iteclose(dev_t dev, int flag, int mode, struct proc * p);
-int	iteread(dev_t dev, struct uio * uio, int flag);
-int	itewrite(dev_t dev, struct uio * uio, int flag);
-int	iteioctl(dev_t, int, caddr_t, int, struct proc *);
-struct tty	*itetty(dev_t dev);
+	/* Extended Mouse Protocol info, faked for non-EMP mice */
+	u_int8_t	sc_class;	/* mouse class (mouse, trackball) */
+	u_int8_t	sc_buttons;	/* number of buttons */
+	u_int32_t	sc_res;		/* mouse resolution (dpi) */
+	char		sc_devid[5];	/* device indentifier */
 
-int	itecnprobe(struct consdev * cp);
-int	itecninit(struct consdev * cp);
-int	itecngetc(dev_t dev);
-void	itecnputc(dev_t dev, int c);
+	int		sc_mb;		/* current button state */
+	struct device	*sc_wsmousedev;
+};
+
+/* EMP device classes */
+#define MSCLASS_TABLET		0
+#define MSCLASS_MOUSE		1
+#define MSCLASS_TRACKBALL	2
+#define MSCLASS_TRACKPAD	3
+
+void ms_adbcomplete(caddr_t buffer, caddr_t data_area, int adb_command);
+void ms_handoff(adb_event_t *event, struct ams_softc *);
+
+#endif /* _MAC68K_AMSVAR_H_ */
