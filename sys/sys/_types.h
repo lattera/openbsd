@@ -1,14 +1,8 @@
-/*	$OpenBSD: src/sys/arch/powerpc/include/varargs.h,v 1.5 2006/01/06 18:53:05 millert Exp $	*/
-/*	$NetBSD: varargs.h,v 1.1 1996/09/30 16:34:37 ws Exp $	*/
+/*	$OpenBSD: src/sys/sys/_types.h,v 1.1 2006/01/06 18:53:05 millert Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
- * (c) UNIX System Laboratories, Inc.
- * All or some portions of this file are derived from material licensed
- * to the University of California by American Telephone and Telegraph
- * Co. or Unix System Laboratories, Inc. and are reproduced herein with
- * the permission of UNIX System Laboratories, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,17 +28,42 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)varargs.h	8.2 (Berkeley) 3/22/94
+ *	@(#)types.h	8.3 (Berkeley) 1/5/94
  */
 
-#ifndef _POWERPC_VARARGS_H_
-#define	_POWERPC_VARARGS_H_
-
-#define _VARARGS_H
+#ifndef _SYS__TYPES_H_
+#define	_SYS__TYPES_H_
 
 #include <machine/_types.h>
-#include <machine/va-ppc.h>
 
-typedef __va_list va_list;
+typedef	unsigned long	__cpuid_t;	/* CPU id */
+typedef	__int32_t	__dev_t;	/* device number */
+typedef	__uint32_t	__fixpt_t;	/* fixed point number */
+typedef	__uint32_t	__gid_t;	/* group id */
+typedef	__uint32_t	__id_t;		/* may contain pid, uid or gid */
+typedef __uint32_t	__in_addr_t;	/* base type for internet address */
+typedef __uint16_t	__in_port_t;	/* IP port type */
+typedef	__uint32_t	__ino_t;	/* inode number */
+typedef	long		__key_t;	/* IPC key (for Sys V IPC) */
+typedef	__uint32_t	__mode_t;	/* permissions */
+typedef	__uint32_t	__nlink_t;	/* link count */
+typedef	__int32_t	__pid_t;	/* process id */
+typedef __uint64_t	__rlim_t;	/* resource limit */
+typedef __uint8_t	__sa_family_t;	/* sockaddr address family type */
+typedef	__int32_t	__segsz_t;	/* segment size */
+typedef __uint32_t	__socklen_t;	/* length type for network syscalls */
+typedef	__int32_t	__swblk_t;	/* swap offset */
+typedef	__uint32_t	__uid_t;	/* user id */
+typedef	__uint32_t	__useconds_t;	/* microseconds */
+typedef	__int32_t	__suseconds_t;	/* microseconds (signed) */
 
-#endif /* !_POWERPC_VARARGS_H_ */
+/*
+ * mbstate_t is an opaque object to keep conversion state, during multibyte
+ * stream conversions. The content must not be referenced by user programs.
+ */
+typedef union {
+	char __mbstate8[128];
+	__int64_t __mbstateL;			/* for alignment */
+} __mbstate_t;
+
+#endif /* !_SYS__TYPES_H_ */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/alpha/include/stdarg.h,v 1.8 2005/12/14 23:51:32 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/alpha/include/stdarg.h,v 1.9 2006/01/06 18:53:04 millert Exp $	*/
 /*	$NetBSD: stdarg.h,v 1.4 1996/10/09 21:13:05 cgd Exp $	*/
 
 /*-
@@ -36,9 +36,9 @@
 #define	_ALPHA_STDARG_H_
 
 #include <sys/cdefs.h>
-#include <machine/ansi.h>
+#include <machine/_types.h>
 
-typedef _BSD_VA_LIST_	va_list;
+typedef __va_list	va_list;
 
 #define	__va_size(type) \
 	(((sizeof(type) + sizeof(long) - 1) / sizeof(long)) * sizeof(long))
