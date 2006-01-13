@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.68 2005/05/27 10:41:11 kjell Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/cpu.h,v 1.68.2.1 2006/01/13 01:56:55 brad Exp $	*/
 /*	$NetBSD: cpu.h,v 1.35 1996/05/05 19:29:26 christos Exp $	*/
 
 /*-
@@ -132,6 +132,8 @@ struct cpu_info {
 	int		ci_astpending;
 
 	union descriptor *ci_gdt;
+	union descriptor *ci_ldt;	/* per-cpu default LDT */
+	int		ci_ldt_len;	/* in bytes */
 
 	volatile int ci_ddb_paused;	/* paused due to other proc in ddb */
 #define CI_DDB_RUNNING		0
