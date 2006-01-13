@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.12 2004/09/09 09:29:52 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/cpu.c,v 1.12.4.1 2006/01/13 00:49:20 brad Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
@@ -255,6 +255,8 @@ cpu_attach(parent, self, aux)
 	pcb->pcb_pmap = pmap_kernel();
 	pcb->pcb_cr3 = vtophys(pcb->pcb_pmap->pm_pdir);
 	/* pcb->pcb_cr3 = pcb->pcb_pmap->pm_pdir - KERNBASE; XXX ??? */
+
+	cpu_default_ldt(ci);	/* Use the `global' ldt until one alloc'd */
 #endif
 
 	/* further PCB init done later. */
@@ -297,6 +299,7 @@ cpu_attach(parent, self, aux)
 
 #ifdef MULTIPROCESSOR
 		gdt_alloc_cpu(ci);
+		cpu_alloc_ldt(ci);
 		ci->ci_flags |= CPUF_PRESENT | CPUF_AP;
 		identifycpu(ci);
 		ci->ci_next = cpu_info_list->ci_next;
@@ -446,6 +449,7 @@ cpu_hatch(void *v)
 	lapic_initclocks();
 	lapic_set_lvt();
 	gdt_init_cpu(ci);
+	cpu_init_ldt(ci);
 	npxinit(ci);
 
 	lldt(GSEL(GLDT_SEL, SEL_KPL));
