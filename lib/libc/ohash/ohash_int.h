@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/lib/libc/ohash/ohash_int.h,v 1.2 2004/06/22 20:00:16 espie Exp $	*/
+/*	$OpenBSD: src/lib/libc/ohash/ohash_int.h,v 1.3 2006/01/16 15:52:25 espie Exp $	*/
 
-#include <sys/types.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ohash.h"
