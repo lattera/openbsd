@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/include/Attic/adbsys.h,v 1.5 2006/01/04 21:03:49 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/adb/adb.h,v 1.1 2006/01/18 23:21:17 miod Exp $	*/
 /*	$NetBSD: adbsys.h,v 1.4 2000/12/19 02:59:24 tsubai Exp $	*/
 
 /*-
@@ -34,10 +34,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _ADBSYS_MACHINE_
-#define _ADBSYS_MACHINE_
+#ifndef _ADB_H_
+#define _ADB_H_
+
+#ifdef _KERNEL
 
 #include <sys/time.h>	/* timeval stuff */
+
+/*
+ * Arguments used to attach a device to the Apple Desktop Bus
+ */
+struct adb_attach_args {
+	int	origaddr;
+	int	adbaddr;
+	int	handler_id;
+};
+
+#define	ADB_CMDADDR(cmd)	((u_int8_t)(cmd & 0xf0) >> 4)
+#define	ADBFLUSH(dev)		((((u_int8_t)dev & 0x0f) << 4) | 0x01)
+#define	ADBLISTEN(dev, reg)	((((u_int8_t)dev & 0x0f) << 4) | 0x08 | reg)
+#define	ADBTALK(dev, reg)	((((u_int8_t)dev & 0x0f) << 4) | 0x0c | reg)
 
 /* an ADB event */
 typedef struct adb_event_s {
@@ -48,25 +64,16 @@ typedef struct adb_event_s {
 	unsigned char bytes[8];		/* bytes from register 0 */
 	struct timeval timestamp;	/* time event was acquired */
 	union {
-		struct adb_keydata_s{
+		struct adb_keydata_s {
 			int key;	/* ADB key code */
 		} k;
-		struct adb_mousedata_s{
+		struct adb_mousedata_s {
 			int dx;		/* mouse delta x */
 			int dy;		/* mouse delta y */
 			int buttons;	/* buttons (down << (buttonnum)) */
 		} m;
 	} u;				/* courtesy interpretation */
 } adb_event_t;
-
-
-/* a device on the ADB */
-typedef struct adb_dev_s{
-	int		addr;		/* current address */
-	int		default_addr;	/* startup address */
-	int		handler_id;	/* handler ID */
-} adb_dev_t;
-
 
 	/* Interesting default addresses */
 #define	ADBADDR_SECURE	1		/* Security dongles */
@@ -126,12 +133,31 @@ typedef struct adb_dev_s{
 #define ADB_POWERKEY	34	/* Sophisticated Circuits PowerKey */
 				/* (intelligent power tap) */
 
-#ifdef _KERNEL
-int	adb_poweroff(void);
-void	adb_restart(void);
-int	CountADBs(void);
-void	ADBReInit(void);
-int	adb_read_date_time(time_t *);
+extern int	adb_polling;
+#ifdef ADB_DEBUG
+extern int	adb_debug;
 #endif
 
-#endif /* _ADBSYS_MACHINE_ */
+/* ADB Manager */
+
+typedef caddr_t Ptr;
+
+typedef struct {
+	Ptr siServiceRtPtr;
+	Ptr siDataAreaAddr;
+} ADBSetInfoBlock;
+
+typedef struct {
+	unsigned char	devType;
+	unsigned char	origADBAddr;
+	Ptr		dbServiceRtPtr;
+	Ptr		dbDataAreaAddr;
+} ADBDataBlock;
+
+int	adbprint(void *, const char *);
+int	adb_op_sync(Ptr, Ptr, Ptr, short);
+int	set_adb_info(ADBSetInfoBlock *, int);
+
+#endif	/* _KERNEL */
+
+#endif /* _ADB_H_ */

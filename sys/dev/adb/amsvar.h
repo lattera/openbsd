@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/Attic/amsvar.h,v 1.2 2002/03/14 01:26:36 millert Exp $	*/
+/*	$OpenBSD: src/sys/dev/adb/amsvar.h,v 1.1 2006/01/18 23:21:17 miod Exp $	*/
 /*	$NetBSD: amsvar.h,v 1.4 1999/06/17 06:59:05 tsubai Exp $	*/
 
 /*
@@ -31,8 +31,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MACPPC_AMSVAR_H_
-#define _MACPPC_AMSVAR_H_
+#ifndef _ADB_AMSVAR_H_
+#define _ADB_AMSVAR_H_
 
 /*
  * State info, per mouse instance.
@@ -49,7 +49,7 @@ struct ams_softc {
 	u_int8_t	sc_class;	/* mouse class (mouse, trackball) */
 	u_int8_t	sc_buttons;	/* number of buttons */
 	u_int32_t	sc_res;		/* mouse resolution (dpi) */
-	char		sc_devid[5];	/* device indentifier */
+	char		sc_devid[5];	/* device identifier */
 
 	int		sc_mb;		/* current button state */
 	struct device	*sc_wsmousedev;
@@ -61,7 +61,4 @@ struct ams_softc {
 #define MSCLASS_TRACKBALL	2
 #define MSCLASS_TRACKPAD	3
 
-void ms_adbcomplete(caddr_t buffer, caddr_t data_area, int adb_command);
-void ms_handoff(adb_event_t *event, struct ams_softc *);
-
-#endif /* _MACPPC_AMSVAR_H_ */
+#endif /* _ADB_AMSVAR_H_ */

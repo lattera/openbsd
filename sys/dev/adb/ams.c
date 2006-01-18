@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/dev/Attic/ams.c,v 1.4 2006/01/13 19:36:44 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/adb/ams.c,v 1.1 2006/01/18 23:21:17 miod Exp $	*/
 /*	$NetBSD: ams.c,v 1.11 2000/12/19 03:13:40 tsubai Exp $	*/
 
 /*
@@ -45,16 +45,14 @@
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsmousevar.h>
 
-#include <mac68k/dev/adbvar.h>
-#include <mac68k/dev/amsvar.h>
+#include <dev/adb/adb.h>
+#include <dev/adb/amsvar.h>
 
 /*
  * Function declarations.
  */
 int	amsmatch(struct device *, void *, void *);
 void	amsattach(struct device *, struct device *, void *);
-void	ems_init(struct ams_softc *);
-void	ms_processevent(adb_event_t *event, struct ams_softc *);
 
 /* Driver definition. */
 struct cfattach ams_ca = {
@@ -65,16 +63,20 @@ struct cfdriver ams_cd = {
 	NULL, "ams", DV_DULL
 };
 
-
-int ams_enable(void *);
-int ams_ioctl(void *, u_long, caddr_t, int, struct proc *);
-void ams_disable(void *);
+int	ams_enable(void *);
+int	ams_ioctl(void *, u_long, caddr_t, int, struct proc *);
+void	ams_disable(void *);
 
 const struct wsmouse_accessops ams_accessops = {
 	ams_enable,
 	ams_ioctl,
 	ams_disable,
 };
+
+void	ems_init(struct ams_softc *);
+void	ms_adbcomplete(caddr_t buffer, caddr_t data_area, int adb_command);
+void	ms_handoff(adb_event_t *event, struct ams_softc *);
+void	ms_processevent(adb_event_t *event, struct ams_softc *);
 
 int
 amsmatch(struct device *parent, void *cf, void *aux)
@@ -177,10 +179,10 @@ amsattach(struct device *parent, struct device *self, void   *aux)
 			sc->handler_id);
 		break;
 	}
-	error = SetADBInfo(&adbinfo, sc->adbaddr);
+	error = set_adb_info(&adbinfo, sc->adbaddr);
 #ifdef ADB_DEBUG
 	if (adb_debug)
-		printf("ams: returned %d from SetADBInfo\n", error);
+		printf("ams: returned %d from set_adb_info\n", error);
 #endif
 
 	a.accessops = &ams_accessops;
