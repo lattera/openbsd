@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.139.2.1 2005/10/07 19:56:15 brad Exp $ */
+/*	$OpenBSD: src/sys/net/pf_ioctl.c,v 1.139.2.2 2006/01/26 22:38:32 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -345,6 +345,7 @@ pf_find_or_create_ruleset(const char *path)
 	ruleset = pf_find_ruleset(path);
 	if (ruleset != NULL)
 		return (ruleset);
+	bzero(p, MAXPATHLEN);
 	strlcpy(p, path, sizeof(p));
 	while (parent == NULL && (q = strrchr(p, '/')) != NULL) {
 		*q = 0;
@@ -453,6 +454,7 @@ pf_anchor_setup(struct pf_rule *r, const struct pf_ruleset *s,
 	r->anchor_wildcard = 0;
 	if (!name[0])
 		return (0);
+	bzero(path, MAXPATHLEN);
 	if (name[0] == '/')
 		strlcpy(path, name + 1, sizeof(path));
 	else {
@@ -507,6 +509,7 @@ pf_anchor_copyout(const struct pf_ruleset *rs, const struct pf_rule *r,
 		char a[MAXPATHLEN], b[MAXPATHLEN], *p;
 		int i;
 
+		bzero(a, MAXPATHLEN);
 		if (rs->anchor == NULL)
 			a[0] = 0;
 		else
