@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/bgpd/bgpd.h,v 1.189 2006/01/24 15:28:02 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/bgpd/bgpd.h,v 1.190 2006/02/02 14:06:05 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -532,6 +532,7 @@ struct filter_peers {
 /* special community type */
 #define	COMMUNITY_ERROR			-1
 #define	COMMUNITY_ANY			-2
+#define	COMMUNITY_NEIGHBOR_AS		-3
 #define	COMMUNITY_WELLKNOWN		0xffff
 #define	COMMUNITY_NO_EXPORT		0xff01
 #define	COMMUNITY_NO_ADVERTISE		0xff02
