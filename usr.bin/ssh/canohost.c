@@ -12,7 +12,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/canohost.c,v 1.42.2.1 2005/09/04 18:40:01 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/canohost.c,v 1.42.2.2 2006/02/03 02:53:44 brad Exp $");
 
 #include "packet.h"
 #include "xmalloc.h"
@@ -43,12 +43,12 @@ get_remote_hostname(int sock, int use_dns)
 		cleanup_exit(255);
 	}
 
-	if (from.ss_family == AF_INET)
-		check_ip_options(sock, ntop);
-
 	if (getnameinfo((struct sockaddr *)&from, fromlen, ntop, sizeof(ntop),
 	    NULL, 0, NI_NUMERICHOST) != 0)
 		fatal("get_remote_hostname: getnameinfo NI_NUMERICHOST failed");
+
+	if (from.ss_family == AF_INET)
+		check_ip_options(sock, ntop);
 
 	if (!use_dns)
 		return xstrdup(ntop);
@@ -97,7 +97,7 @@ get_remote_hostname(int sock, int use_dns)
 	hints.ai_socktype = SOCK_STREAM;
 	if (getaddrinfo(name, NULL, &hints, &aitop) != 0) {
 		logit("reverse mapping checking getaddrinfo for %.700s "
-		    "failed - POSSIBLE BREAKIN ATTEMPT!", name);
+		    "failed - POSSIBLE BREAK-IN ATTEMPT!", name);
 		return xstrdup(ntop);
 	}
 	/* Look for the address from the list of addresses. */
@@ -112,7 +112,7 @@ get_remote_hostname(int sock, int use_dns)
 	if (!ai) {
 		/* Address not found for the host name. */
 		logit("Address %.100s maps to %.600s, but this does not "
-		    "map back to the address - POSSIBLE BREAKIN ATTEMPT!",
+		    "map back to the address - POSSIBLE BREAK-IN ATTEMPT!",
 		    ntop, name);
 		return xstrdup(ntop);
 	}
@@ -152,9 +152,7 @@ check_ip_options(int sock, char *ipaddr)
 		for (i = 0; i < option_size; i++)
 			snprintf(text + i*3, sizeof(text) - i*3,
 			    " %2.2x", options[i]);
-		logit("Connection from %.100s with IP options:%.800s",
-		    ipaddr, text);
-		packet_disconnect("Connection from %.100s with IP options:%.800s",
+		fatal("Connection from %.100s with IP options:%.800s",
 		    ipaddr, text);
 	}
 }
@@ -168,26 +166,27 @@ check_ip_options(int sock, char *ipaddr)
 const char *
 get_canonical_hostname(int use_dns)
 {
+	char *host;
 	static char *canonical_host_name = NULL;
-	static int use_dns_done = 0;
+	static char *remote_ip = NULL;
 
 	/* Check if we have previously retrieved name with same option. */
-	if (canonical_host_name != NULL) {
-		if (use_dns_done != use_dns)
-			xfree(canonical_host_name);
-		else
-			return canonical_host_name;
-	}
+	if (use_dns && canonical_host_name != NULL)
+		return canonical_host_name;
+	if (!use_dns && remote_ip != NULL)
+		return remote_ip;
 
 	/* Get the real hostname if socket; otherwise return UNKNOWN. */
 	if (packet_connection_is_on_socket())
-		canonical_host_name = get_remote_hostname(
-		    packet_get_connection_in(), use_dns);
+		host = get_remote_hostname(packet_get_connection_in(), use_dns);
 	else
-		canonical_host_name = xstrdup("UNKNOWN");
+		host = "UNKNOWN";
 
-	use_dns_done = use_dns;
-	return canonical_host_name;
+	if (use_dns)
+		canonical_host_name = host;
+	else
+		remote_ip = host;
+	return host;
 }
 
 /*

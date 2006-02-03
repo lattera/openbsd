@@ -36,7 +36,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.34.2.1 2005/09/04 18:40:02 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/hostfile.c,v 1.34.2.2 2006/02/03 02:53:44 brad Exp $");
 
 #include <resolv.h>
 #include <openssl/hmac.h>
@@ -88,8 +88,8 @@ extract_salt(const char *s, u_int l, char *salt, size_t salt_len)
 		return (-1);
 	}
 	if (ret != SHA_DIGEST_LENGTH) {
-		debug2("extract_salt: expected salt len %u, got %u",
-		    salt_len, ret);
+		debug2("extract_salt: expected salt len %d, got %d",
+		    SHA_DIGEST_LENGTH, ret);
 		return (-1);
 	}
 

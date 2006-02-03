@@ -37,7 +37,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.35.2.1 2005/09/04 18:40:01 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/bufaux.c,v 1.35.2.2 2006/02/03 02:53:44 brad Exp $");
 
 #include <openssl/bn.h>
 #include "bufaux.h"
@@ -63,6 +63,7 @@ buffer_put_bignum_ret(Buffer *buffer, const BIGNUM *value)
 	if (oi != bin_size) {
 		error("buffer_put_bignum_ret: BN_bn2bin() failed: oi %d != bin_size %d",
 		    oi, bin_size);
+		xfree(buf);
 		return (-1);
 	}
 
@@ -187,10 +188,12 @@ buffer_get_bignum2_ret(Buffer *buffer, BIGNUM *value)
 
 	if (len > 0 && (bin[0] & 0x80)) {
 		error("buffer_get_bignum2_ret: negative numbers not supported");
+		xfree(bin);
 		return (-1);
 	}
 	if (len > 8 * 1024) {
 		error("buffer_get_bignum2_ret: cannot handle BN of size %d", len);
+		xfree(bin);
 		return (-1);
 	}
 	BN_bin2bn(bin, len, value);

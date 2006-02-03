@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.3 2004/07/21 10:36:23 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.3.4.1 2006/02/03 02:53:44 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -35,8 +35,6 @@
 #include "servconf.h"
 
 #include "ssh-gss.h"
-
-extern ServerOptions options;
 
 #include <krb5.h>
 

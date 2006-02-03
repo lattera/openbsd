@@ -14,13 +14,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.47.4.1 2005/09/04 18:40:04 brad Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/sftp-server.c,v 1.47.4.2 2006/02/03 02:53:45 brad Exp $");
 
 #include "buffer.h"
 #include "bufaux.h"
 #include "getput.h"
 #include "log.h"
 #include "xmalloc.h"
+#include "misc.h"
 
 #include "sftp.h"
 #include "sftp-common.h"
@@ -925,7 +926,7 @@ process(void)
 		return;		/* Incomplete message. */
 	cp = buffer_ptr(&iqueue);
 	msg_len = GET_32BIT(cp);
-	if (msg_len > 256 * 1024) {
+	if (msg_len > SFTP_MAX_MSG_LENGTH) {
 		error("bad message ");
 		exit(11);
 	}
@@ -1015,6 +1016,9 @@ main(int ac, char **av)
 	fd_set *rset, *wset;
 	int in, out, max;
 	ssize_t len, olen, set_size;
+
+	/* Ensure that fds 0, 1 and 2 are open or directed to /dev/null */
+	sanitise_stdfd();
 
 	/* XXX should use getopt */
 

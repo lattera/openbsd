@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.66.2.1 2005/09/04 18:40:03 brad Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.66.2.2 2006/02/03 02:53:44 brad Exp $	*/
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -114,6 +114,14 @@ typedef struct {
 	int	control_master;
 
 	int	hash_known_hosts;
+
+	int	tun_open;	/* tun(4) */
+	int     tun_local;	/* force tun device (optional) */
+	int     tun_remote;	/* force tun device (optional) */
+
+	char	*local_command;
+	int	permit_local_command;
+
 }       Options;
 
 #define SSHCTL_MASTER_NO	0
