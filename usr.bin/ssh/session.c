@@ -33,7 +33,7 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.186 2005/07/25 11:59:40 markus Exp $");
+RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.186.2.1 2006/02/03 03:01:57 brad Exp $");
 
 #include "ssh.h"
 #include "ssh1.h"
@@ -206,15 +206,6 @@ do_authenticated(Authctxt *authctxt)
 {
 	setproctitle("%s", authctxt->pw->pw_name);
 
-	/*
-	 * Cancel the alarm we set to limit the time taken for
-	 * authentication.
-	 */
-	alarm(0);
-	if (startup_pipe != -1) {
-		close(startup_pipe);
-		startup_pipe = -1;
-	}
 	/* setup the channel layer */
 	if (!no_port_forwarding_flag && options.allow_tcp_forwarding)
 		channel_permit_all_opens();
@@ -1082,7 +1073,7 @@ child_close_fds(void)
 	endpwent();
 
 	/*
-	 * Close any extra open file descriptors so that we don\'t have them
+	 * Close any extra open file descriptors so that we don't have them
 	 * hanging around in clients.  Note that we want to do this after
 	 * initgroups, because at least on Solaris 2.3 it leaves file
 	 * descriptors open.
@@ -1190,7 +1181,7 @@ do_child(Session *s, const char *command)
 	}
 #endif
 
-	/* Change current directory to the user\'s home directory. */
+	/* Change current directory to the user's home directory. */
 	if (chdir(pw->pw_dir) < 0) {
 		fprintf(stderr, "Could not chdir to home directory %s: %s\n",
 		    pw->pw_dir, strerror(errno));
@@ -1505,7 +1496,7 @@ session_x11_req(Session *s)
 
 	if (s->auth_proto != NULL || s->auth_data != NULL) {
 		error("session_x11_req: session %d: "
-		    "x11 fowarding already active", s->self);
+		    "x11 forwarding already active", s->self);
 		return 0;
 	}
 	s->single_connection = packet_get_char();
@@ -1737,7 +1728,7 @@ session_close_x11(int id)
 {
 	Channel *c;
 
-	if ((c = channel_lookup(id)) == NULL) {
+	if ((c = channel_by_id(id)) == NULL) {
 		debug("session_close_x11: x11 channel %d missing", id);
 	} else {
 		/* Detach X11 listener */
@@ -1792,7 +1783,6 @@ static void
 session_exit_message(Session *s, int status)
 {
 	Channel *c;
-	u_int i;
 
 	if ((c = channel_lookup(s->chanid)) == NULL)
 		fatal("session_exit_message: session %d: no channel %d",
@@ -1818,7 +1808,15 @@ session_exit_message(Session *s, int status)
 
 	/* disconnect channel */
 	debug("session_exit_message: release channel %d", s->chanid);
-	channel_cancel_cleanup(s->chanid);
+	s->pid = 0;
+
+	/*
+	 * Adjust cleanup callback attachment to send close messages when
+	 * the channel gets EOF. The session will be then be closed 
+	 * by session_close_by_channel when the childs close their fds.
+	 */
+	channel_register_cleanup(c->self, session_close_by_channel, 1);
+
 	/*
 	 * emulate a write failure with 'chan_write_failed', nobody will be
 	 * interested in data we write.
@@ -1827,15 +1825,6 @@ session_exit_message(Session *s, int status)
 	 */
 	if (c->ostate != CHAN_OUTPUT_CLOSED)
 		chan_write_failed(c);
-	s->chanid = -1;
-
-	/* Close any X11 listeners associated with this session */
-	if (s->x11_chanids != NULL) {
-		for (i = 0; s->x11_chanids[i] != -1; i++) {
-			session_close_x11(s->x11_chanids[i]);
-			s->x11_chanids[i] = -1;
-		}
-	}
 }
 
 void
@@ -1879,7 +1868,8 @@ session_close_by_pid(pid_t pid, int status)
 	}
 	if (s->chanid != -1)
 		session_exit_message(s, status);
-	session_close(s);
+	if (s->ttyfd != -1)
+		session_pty_cleanup(s);
 }
 
 /*
@@ -1890,6 +1880,7 @@ void
 session_close_by_channel(int id, void *arg)
 {
 	Session *s = session_by_channel(id);
+	u_int i;
 
 	if (s == NULL) {
 		debug("session_close_by_channel: no session for id %d", id);
@@ -1909,6 +1900,15 @@ session_close_by_channel(int id, void *arg)
 	}
 	/* detach by removing callback */
 	channel_cancel_cleanup(s->chanid);
+
+	/* Close any X11 listeners associated with this session */
+	if (s->x11_chanids != NULL) {
+		for (i = 0; s->x11_chanids[i] != -1; i++) {
+			session_close_x11(s->x11_chanids[i]);
+			s->x11_chanids[i] = -1;
+		}
+	}
+
 	s->chanid = -1;
 	session_close(s);
 }
@@ -1994,7 +1994,7 @@ session_setup_x11fwd(Session *s)
 	}
 	for (i = 0; s->x11_chanids[i] != -1; i++) {
 		channel_register_cleanup(s->x11_chanids[i],
-		    session_close_single_x11);
+		    session_close_single_x11, 0);
 	}
 
 	/* Set up a suitable value for the DISPLAY variable. */

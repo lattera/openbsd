@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.17 2002/06/19 00:27:55 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/sshconnect.h,v 1.17.14.1 2006/02/03 03:01:58 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -49,7 +49,7 @@ void	 ssh_userauth1(const char *, const char *, char *, Sensitive *);
 void	 ssh_userauth2(const char *, const char *, char *, Sensitive *);
 
 void	 ssh_put_password(char *);
-
+int	 ssh_local_cmd(const char *);
 
 /*
  * Macros to raise/lower permissions.

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.10 2005/07/17 07:17:54 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/ssh/auth2-gss.c,v 1.10.2.1 2006/02/03 03:01:55 brad Exp $	*/
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -34,7 +34,6 @@
 #include "log.h"
 #include "dispatch.h"
 #include "servconf.h"
-#include "compat.h"
 #include "packet.h"
 #include "monitor_wrap.h"
 
@@ -49,7 +48,7 @@ static void input_gssapi_errtok(int, u_int32_t, void *);
 
 /*
  * We only support those mechanisms that we know about (ie ones that we know
- * how to check local user kuserok and the like
+ * how to check local user kuserok and the like)
  */
 static int
 userauth_gssapi(Authctxt *authctxt)
@@ -105,7 +104,7 @@ userauth_gssapi(Authctxt *authctxt)
 		return (0);
 	}
 
-	authctxt->methoddata=(void *)ctxt;
+	authctxt->methoddata = (void *)ctxt;
 
 	packet_start(SSH2_MSG_USERAUTH_GSSAPI_RESPONSE);
 
