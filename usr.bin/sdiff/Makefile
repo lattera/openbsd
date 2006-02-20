@@ -1,7 +1,7 @@
-#	$OpenBSD: src/usr.bin/sdiff/Makefile,v 1.3 2006/02/15 06:58:06 otto Exp $
+#	$OpenBSD: src/usr.bin/sdiff/Makefile,v 1.4 2006/02/20 08:38:18 otto Exp $
 
 PROG=sdiff
-SRCS=edit.c sdiff.c
+SRCS=common.c edit.c sdiff.c
 COPTS+=-Wall -W
 
 LDADD+=	-lutil
