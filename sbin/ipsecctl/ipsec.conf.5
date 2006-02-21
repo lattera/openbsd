@@ -1,0 +1,517 @@
+.\"	$OpenBSD: src/sbin/ipsecctl/ipsec.conf.5,v 1.30 2006/02/21 12:19:17 hshoexer Exp $
+.\"
+.\" Copyright (c) 2004 Mathieu Sauve-Frankel  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 9, 2005
+.Dt IPSEC.CONF 5
+.Os
+.Sh NAME
+.Nm ipsec.conf
+.Nd IPsec configuration file
+.Sh DESCRIPTION
+The
+.Nm
+file specifies rules and definitions for
+.Xr ipsec 4
+IP security services.
+The rulesets themselves can be loaded, viewed, and modified via the
+.Xr ipsecctl 8
+userland utility.
+.Sh FLOWS
+IPsec uses
+.Em flows
+to determine whether to apply security services to an IP packet or not.
+The following security services are available:
+.Bl -tag -width xxxx
+.It Ic flow esp
+ESP can provide the following properties:
+authentication, integrity, replay protection, and confidentiality of the data.
+.It Ic flow ah
+AH provides authentication, integrity, and replay protection, but no
+confidentiality.
+.It Ic flow ipip
+IPIP provides neither authentication, integrity, replay protection, nor
+confidentiality.
+However, it allows you to tunnel IP traffic over IP, without setting up
+.Xr gif 4
+interfaces.
+.El
+.Pp
+For details on ESP and AH see
+.Xr ipsec 4 .
+When no service is specified,
+.Xr ipsecctl 8
+will use ESP.
+The settings for the security services have to be negotiated by
+.Xr isakmpd 8 .
+As soon as a packet matches a flow,
+.Xr isakmpd 8
+automatically starts the negotiation.
+See
+.Xr isakmpd 8
+for details.
+.Pp
+Parameters specify the packets to which a flow applies.
+Some parameters are optional.
+.Bl -tag -width xxxx
+.It Ar in No or Ar out
+This rule applies to incoming or outgoing packets.
+If neither
+.Ar in
+nor
+.Ar out
+are specified,
+.Xr ipsecctl 8
+will assume the direction
+.Ar out
+for this rule and will construct a proper
+.Ar in
+rule.
+Thus packets in both directions will be matched.
+.It Xo
+.Ar from
+.Aq Ar src
+.Ar to
+.Aq Ar dst
+.Ar peer
+.Aq Ar remote
+.Xc
+This rule applies for packets with source address
+.Aq Ar src
+and destination address
+.Aq Ar dst .
+All addresses are specified in CIDR notation.
+The keyword
+.Ar any
+will match any address (i.e. 0.0.0.0/0).
+The
+.Ar peer
+parameter specifies the address of the remote endpoint of this particular
+flow.
+For host-to-host connections where
+.Aq Ar dst
+is identical to
+.Aq Ar remote ,
+the
+.Ar peer
+specification can be left out.
+.El
+.Sh IPSEC SAs
+The security parameters for a
+.Ar flow
+are stored in the Security Association Database
+(SADB).
+The following rules enter SAs in the SADB:
+.Pp
+.Bl -tag -width Ds -offset indent -compact
+.It Ic esp
+Enter an ESP SA.
+.It Ic ah
+Enter an AH SA.
+.It Ic ipcomp
+Enter an IPCOMP SA.
+.It Ic ipip
+Enter an IPIP pseudo SA.
+.El
+.Pp
+Parameters specify the peers, Security Parameter Index (SPI),
+cryptographic transforms, and key material to be used.
+.Bl -tag -width xxxx
+.It Xo
+.Ar from
+.Aq Ar src
+.Ar to
+.Aq Ar dst
+.Xc
+This SA is for a
+.Ar flow
+between the peers
+.Aq Ar src
+and
+.Aq Ar dst .
+.It Xo
+.Ar spi
+.Aq Ar number
+.Xc
+The SPI identifies a specific SA.
+.Ar number
+is a 32-bit value and needs to be unique.
+.It Xo
+.Ar auth
+.Aq Ar algorithm
+.Xc
+For both
+.Ar esp
+and
+.Ar ah
+an authentication algorithm can be specified.
+Possible algorithms are
+.Ar hmac-md5 ,
+.Ar hmac-ripemd160 ,
+.Ar hmac-sha1 ,
+.Ar hmac-sha2-256 ,
+.Ar hmac-sha2-384 ,
+and
+.Ar hmac-sha2-512 .
+.Pp
+If no algorithm is specified,
+.Xr ipsecctl 8
+will choose
+.Ar hmac-sha2-256
+by default.
+.It Xo
+.Ar comp
+.Aq Ar algorithm
+.Xc
+The compression algorithm to be used.
+Possible algorithms are
+.Ar deflate
+and
+.Ar lzs .
+Note that
+.Ar lzs
+is only available with
+.Xr hifn 4
+because of the patent held by Hifn, Inc.
+.It Xo
+.Ar enc
+.Aq Ar algorithm
+.Xc
+For
+.Ar esp
+an encryption algorithm needs to be specified.
+Possible algorithms are
+.Ar 3des-cbc ,
+.Ar des-cbc ,
+.Ar aes ,
+.Ar aesctr ,
+.Ar blowfish ,
+.Ar cast128 ,
+.Ar null ,
+and
+.Ar skipjack .
+.Pp
+If no algorithm is specified,
+.Xr ipsecctl 8
+will choose
+.Ar aesctr
+by default.
+.It Xo
+.Ar authkey
+.Aq Ar keyspec
+.Xc
+.Ar keyspec
+defines the authentication key to be used.
+It is either a hexadecimal string or a path to a file containing the key.
+The filename may be given as either an absolute path to the file
+or a relative pathname,
+and is specified as follows:
+.Bd -literal -offset -indent
+authkey file "filename"
+.Ed
+.It Xo
+.Ar enckey
+.Aq Ar keyspec
+.Xc
+The encryption key is defined similar to
+.Ar authkey .
+.El
+.Pp
+It is very important that keys are not guessable.
+One practical way of generating 160-bit (20-byte) keys is a follows:
+.Bd -literal -offset indent
+$ openssl rand 20 | hexdump -e '20/1 "%02x"'
+.Ed
+.Pp
+For
+.Ar spi ,
+.Ar authkey ,
+and
+.Ar enckey ,
+it is possible to specify two colon separated values.
+.Xr ipsecctl 8
+will then generate the matching incoming SA using the second values for
+.Ar spi ,
+.Ar authkey ,
+and
+.Ar enckey .
+.Sh AUTOMATIC KEYING USING ISAKMP/IKE
+Rules can also specify IPsec flows and SAs to be established automatically by
+.Xr isakmpd 8 .
+This is accomplished by the following rule:
+.Bl -tag -width xxxx
+.It Ic ike esp
+Creates an IPsec tunnel using ESP.
+.El
+.Pp
+Note that AH and transport mode are not yet supported.
+See
+.Xr isakmpd 8
+for details on ISAKMP/IKE.
+.Pp
+Parameters specify the packets that will go through the tunnel and which
+cryptographic transforms are used for
+.Xr isakmpd 8 .
+Some parameters are optional.
+.Bl -tag -width xxxx
+.It Xo
+.Ar passive
+.Xc
+When
+.Ar passive
+is specified
+.Xr isakmpd 8
+will not immediately start negotiation of this tunnel, but wait for an incoming
+request from the remote peer.
+If not specified,
+.Xr isakmpd 8
+will start negotiation at once.
+.It Xo
+.Ar from
+.Aq Ar src
+.Ar to
+.Aq Ar dst
+.Ar peer
+.Aq Ar remote
+.Xc
+This rule applies for packets with source address
+.Aq Ar src
+and destination address
+.Aq Ar dst .
+All addresses are specified in CIDR notation.
+The keyword
+.Ar any
+will match any address (i.e. 0.0.0.0/0).
+The
+.Ar peer
+parameter specifies the address of the remote endpoint of this particular
+flow.
+For host-to-host connections where
+.Aq Ar dst
+is identical to
+.Aq Ar remote ,
+the
+.Ar peer
+specification can be left out.
+.It Xo
+.Ar main auth
+.Aq Ar algorithm
+.Ar enc
+.Aq Ar algorithm
+.Xc
+These paramters define the cryptographic transforms to be used for main mode.
+Possible values for
+.Aq Ar auth
+are
+.Ar hmac-sha1
+and
+.Ar hmac-md5 .
+For
+.Aq Ar enc
+the values
+.Ar des ,
+.Ar 3des ,
+.Ar aes ,
+.Ar blowfish
+and
+.Ar cast
+are allowed.
+If omitted,
+.Xr ipsecctl 8
+will use the default values
+.Ar hmac-sha1
+and
+.Ar aes .
+.It Xo
+.Ar quick auth
+.Aq Ar algorithm
+.Ar enc
+.Aq Ar algorithm
+.Xc
+Similar to
+.Ar main ,
+.Ar quick
+defines the transforms to be used for quick mode.
+However, the possible values for
+.Aq Ar auth
+are
+.Ar hmac-md5 ,
+.Ar hmac-sha1 ,
+.Ar hmac-ripemd160 ,
+.Ar hmac-sha2-256 ,
+.Ar hmac-sha2-384
+and
+.Ar hmac-sha2-512 .
+For
+.Ar enc
+valid values are again
+.Ar des ,
+.Ar 3des ,
+.Ar aes ,
+.Ar blowfish
+and
+.Ar cast .
+If no quick mode transforms are specified,
+the default values
+.Ar hmac-sha2-256
+and
+.Ar aes
+are chosen.
+.It Xo
+.Ar srcid
+.Aq Ar fqdn
+.Xc
+This optional parameter defines a FQDN that will be used by
+.Xr isakmpd 8
+as the identity of the local peer.
+.It Xo
+.Ar dstid
+.Aq Ar fqdn
+.Xc
+Similar to
+.Ar srcid ,
+this optional parameter defines a FQDN to be used by the remote peer.
+.It Ar psk Aq Ar string
+Use a pre-shared key
+.Ar string
+for authentication.
+If not specified, RSA authentication will be used.
+By default, the system startup script
+.Xr rc 8
+generates a key-pair for
+.Xr isakmpd 8
+when starting, if one does not already exist.
+.El
+.Pp
+See also
+.Sx ISAKMP EXAMPLES
+below.
+.Sh TCP MD5 SIGNATURES
+RFC 2385 describes a mechanism to protect
+.Xr tcp 4
+sessions using MD5.
+A Security Association (SA) for TCP MD5 signatures is set up using the
+following rule:
+.Bl -tag -width xxxx
+.It Xo
+.Ar tcpmd5
+.Ar from
+.Aq Ar src
+.Ar to
+.Aq Ar dst
+.Ar spi
+.Aq Ar number
+.Ar authkey
+.Aq Ar keyspec
+.Xc
+This rule applies for packets with source address
+.Aq Ar src
+and destination address
+.Aq Ar dst .
+All addresses are specified in CIDR notation.
+The parameter
+.Ar spi
+is a 32-bit value defining the Security Parameter Index (SPI) for this SA.
+.Pp
+The authentication key to be used is a hexadecimal string of arbitrary length
+or a path to a file containing the key.
+The filename may be given as either an absolute path to the file
+or a relative pathname,
+and is specified as follows:
+.Bd -literal -offset -indent
+authkey file "filename"
+.Ed
+.Pp
+It is very important that the key is not guessable.
+One practical way of generating 160-bit (20-byte) keys is as follows:
+.Bd -literal -offset indent
+$ openssl rand 20 | hexdump -e '20/1 "%02x"'
+.Ed
+.Pp
+For both
+.Ar spi
+and
+.Ar authkey
+it is possible to specify two values separated by a colon.
+.Xr ipsecctl 8
+will then generate the matching incoming SA using the second values for
+.Ar spi
+and
+.Ar authkey .
+.El
+.Pp
+For details on how to enable TCP MD5 signatures see
+.Xr tcp 4 .
+.Sh EXAMPLES
+.Bd -literal
+# Host-to-host
+flow esp from 192.168.3.14 to 192.168.3.100
+
+# Same as above, but explicitly specifying "in" and "out" rules
+flow esp out from 192.168.3.14  to 192.168.3.100
+flow esp in  from 192.168.3.100 to 192.168.3.14
+
+# Net-to-net
+flow esp from 192.168.7.0/24 to 192.168.8.0/24 peer 192.168.3.12
+
+# Same as above, but explicitly specifying "in" and "out" rules
+flow esp out from 192.168.7.0/24 to 192.168.8.0/24 peer 192.168.3.12
+flow esp in  from 192.168.8.0/24 to 192.168.7.0/24 peer 192.168.3.12
+
+# Set up IPsec SAs for flows between 192.168.3.14 and 192.168.3.12
+esp from 192.168.3.14 to 192.168.3.12 spi 0xdeadbeef:0xbeefdead \e
+	auth hmac-sha2-256 enc aesctr authkey file "auth14:auth12" \e
+	enckey file "enc14:enc12"
+.Ed
+.Sh TCP MD5 EXAMPLES
+.Bd -literal
+# Set up keys for TCP MD5 signatures
+tcpmd5 from 192.168.3.14 to 192.168.3.27 spi 0x1000:0x1001 \e
+	authkey 0xdeadbeef:0xbeefdead
+
+# Set up keys for TCP MD5 signatures; read keys from files
+tcpmd5 from 192.168.3.14 to 192.168.3.27 spi 0x1000:0x1001 \e
+	authkey file "/path/to/key1:/path/to/key2"
+.Ed
+.Sh ISAKMP EXAMPLES
+.Bd -literal
+# Set up two tunnels:
+# First between the networks 10.1.1.0/24 and 10.1.2.0/24
+# Second between the machines 192.168.3.1 and 192.168.3.2
+
+ike esp from 10.1.1.0/24 to 10.1.2.0/24 peer 192.168.3.2
+ike esp from 192.168.3.1 to 192.168.3.2
+.Ed
+.Sh SEE ALSO
+.Xr ipcomp 4 ,
+.Xr ipsec 4 ,
+.Xr tcp 4 ,
+.Xr isakmpd.conf 5 ,
+.Xr ipsecctl 8 ,
+.Xr isakmpd 8 ,
+.Xr vpn 8
+.Sh HISTORY
+The
+.Nm
+file format first appeared in
+.Ox 3.8 .
