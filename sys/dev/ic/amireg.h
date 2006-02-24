@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/amireg.h,v 1.22 2005/08/17 21:36:42 marco Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/amireg.h,v 1.22.2.1 2006/02/24 01:34:47 brad Exp $	*/
 
 /*
  * Copyright (c) 2000 Michael Shalayeff
@@ -38,12 +38,15 @@
 #define	AMI_BIG_MAX_SPANDEPTH	8
 #define	AMI_BIG_MAX_DEVDEPTH	32
 
-#define	AMI_MAXCMDS	126	/* theoretical limit is 250 */
+#define	AMI_MAXCMDS	126		/* theoretical limit is 250 */
 #define	AMI_SECTOR_SIZE	512
 #define	AMI_MAXOFFSETS	26
 #define	AMI_SGEPERCMD	32		/* to prevent page boundary crossing */
 #define AMI_MAX_BUSYWAIT 10		/* wait up to 10 usecs */
 #define AMI_MAX_POLLWAIT 1000000	/* wait up to 1000 000 usecs */
+#define AMI_MAXIOCTLCMDS 1		/* number of parallel ioctl calls */
+#define AMI_MAXPROCS	 2		/* number of processors on a channel */
+#define AMI_MAXRAWCMDS	 2		/* number of parallel processor cmds */
  
 #define	AMI_MAXFER	(AMI_MAXOFFSETS * PAGE_SIZE)
 
