@@ -1,0 +1,120 @@
+.\"	$OpenBSD: src/share/man/man4/ami.4,v 1.32 2006/02/24 09:57:55 jmc Exp $
+.\"
+.\" Michael Shalayeff, 2001. Public Domain.
+.\"
+.Dd February 27, 2004
+.Dt AMI 4
+.Os
+.Sh NAME
+.Nm ami
+.Nd American Megatrends Inc. MegaRAID Controllers
+.Sh SYNOPSIS
+.Cd "ami* at pci?"
+.Cd "scsibus* at ami?"
+.Sh DESCRIPTION
+The
+.Nm
+driver provides support for the MegaRAID family of RAID controllers,
+including:
+.Pp
+.Bl -dash -offset indent -compact
+.It
+ACER MegaRAID ROMB-2E
+.It
+Dell CERC-PATA,
+PERC 2/DC,
+PERC 3/DC,
+PERC 3/DCL,
+PERC 3/Di,
+PERC 3/QC,
+PERC 3/SC,
+PERC 4/DC,
+PERC 4/Di,
+PERC 4/SC,
+PERC 4e/DC,
+PERC 4e/Di,
+PERC 4e/SC,
+PERC 4e/Si
+.It
+FSC MegaRAID PCI Express ROMB
+.It
+Hewlett-Packard 438,
+466,
+T[567]
+.It
+Intel RAID Controller SROMBU42E,
+SRCU42X,
+SRCU42E,
+SRCU41L,
+SRCS16,
+SRCS28X,
+SRCZCRX
+.It
+LSI/AMI/Symbios MegaRAID,
+MegaRAID 320-0,
+MegaRAID 320-1,
+MegaRAID 320-2,
+MegaRAID 320-1E,
+MegaRAID 320-2E,
+MegaRAID 320-0X,
+MegaRAID 320-2X,
+MegaRAID 320-4X,
+MegaRAID i4,
+523 SATA,
+MegaRAID 150-4,
+MegaRAID 150-6,
+MegaRAID 300-4x,
+MegaRAID 300-8x
+.It
+NEC MegaRAID PCI Express ROMB
+.El
+.Pp
+These controllers support RAID 0, RAID 1, RAID 5, JBOD,
+and superpositions of those configurations.
+.Pp
+Some cards support both I2O and a so-called
+.Sq Mass Storage
+mode of operation.
+This driver only supports the
+.Sq Mass Storage
+mode; I2O mode is supported
+by the
+.Xr iop 4
+driver.
+However it is recommended to use these cards in
+.Sq Mass Storage
+mode.
+.Pp
+Although the controllers are actual RAID controllers,
+the driver makes them look just like SCSI controllers.
+All RAID configuration is done through the controllers' BIOSes.
+.Pp
+The management interface is provided through the
+.Xr bio 4
+device or one of the daughter
+.Xr sd 4
+devices as implemented in the
+.Xr bioctl 8
+utility.
+.Sh SEE ALSO
+.Xr bio 4 ,
+.Xr intro 4 ,
+.Xr iop 4 ,
+.Xr pci 4 ,
+.Xr scsi 4 ,
+.Xr sd 4 ,
+.Xr bioctl 8
+.Sh HISTORY
+The
+.Nm
+driver first appeared in
+.Ox 2.9 .
+.Sh AUTHORS
+.An -nosplit
+The
+.Nm
+driver was written by
+.An Michael Shalayeff Aq mickey@openbsd.org .
+.Pp
+Management functions were implemented by
+.An Marco Peereboom Aq marco@openbsd.org .
