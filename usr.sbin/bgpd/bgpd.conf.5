@@ -1,0 +1,1016 @@
+.\" $OpenBSD: src/usr.sbin/bgpd/bgpd.conf.5,v 1.64 2006/02/25 15:53:15 claudio Exp $
+.\"
+.\" Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
+.\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
+.\" Copyright (c) 2002 Daniel Hartmeier <dhartmei@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd March 10, 2004
+.Dt BGPD.CONF 5
+.Os
+.Sh NAME
+.Nm bgpd.conf
+.Nd Border Gateway Protocol daemon configuration file
+.Sh DESCRIPTION
+The
+.Xr bgpd 8
+daemon implements the Border Gateway Protocol version 4 as described
+in RFC 1771.
+.Sh SECTIONS
+The
+.Nm
+config file is divided into four main sections.
+.Bl -tag -width xxxx
+.It Sy Macros
+User-defined variables may be defined and used later, simplifying the
+configuration file.
+.It Sy Global Configuration
+Global settings for
+.Xr bgpd 8 .
+.It Sy Neighbors and Groups
+.Xr bgpd 8
+establishes sessions with
+.Em neighbors .
+The neighbor definition and properties are set in this section, as well as
+grouping neighbors for the ease of configuration.
+.It Sy Filter
+Filter rules for incoming and outgoing
+.Em UPDATES .
+.El
+.Pp
+With the exception of macros,
+the sections should be grouped and appear in
+.Nm
+in the order shown above.
+.Sh MACROS
+Much like
+.Xr cpp 1
+or
+.Xr m4 1 ,
+macros can be defined that will later be expanded in context.
+Macro names must start with a letter, and may contain letters, digits
+and underscores.
+Macro names may not be reserved words (for example,
+.Ic AS ,
+.Ic neighbor ,
+or
+.Ic group ) .
+Macros are not expanded inside quotes.
+.Pp
+For example:
+.Bd -literal -offset indent
+peer1="1.2.3.4"
+neighbor $peer1 {
+	remote-as 65001
+}
+.Ed
+.Sh GLOBAL CONFIGURATION
+There are quite a few settings that affect the operation of the
+.Xr bgpd 8
+daemon globally.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic AS Ar as-number
+Set the local
+.Em autonomous system
+number to
+.Ar as-number .
+The AS numbers are assigned by local RIRs, such as:
+.Pp
+.Bl -tag -width xxxxxxxx -compact
+.It AfriNIC
+for Africa
+.It APNIC
+for Asia Pacific
+.It ARIN
+for North America and parts of the Caribbean
+.It LACNIC
+for Latin America and the Caribbean
+.It RIPE NCC
+for Europe, the Middle East, and parts of Asia
+.El
+.Pp
+For example:
+.Bd -literal -offset indent
+AS 65001
+.Ed
+.Pp
+sets the local AS to 65001.
+.Pp
+.It Xo
+.Ic dump
+.Pq Ic table Ns \&| Ns Ic table-mp
+.Ar file Op Ar timeout
+.Xc
+.It Xo
+.Ic dump
+.Pq Ic all Ns \&| Ns Ic updates
+.Pq Ic in Ns \&| Ns Ic out
+.Ar file Op Ar timeout
+.Xc
+Dump the RIB, a.k.a. the
+.Em routing information base ,
+and all BGP messages in Multi-threaded Routing Toolkit (MRT) format.
+Dumping the RIB is normally an expensive operation,
+but it should not influence the session handling.
+Excessive dumping may result in delayed update processing.
+.Pp
+For example, the following will dump the entire table to the
+.Xr strftime 3 Ns -expanded
+filename.
+The
+.Ic table-mp
+format is multi-protocol capable but often not supported by 3rd-party tools.
+The timeout is optional:
+.Bd -literal -offset indent
+dump table "/tmp/rib-dump-%H%M" 300
+.Ed
+.Pp
+Similar to the table dump, but this time all
+BGP messages and
+.Em state transitions
+will be dumped to the specified file:
+.Bd -literal -offset indent
+dump all in "/tmp/all-in-%H%M" 300
+.Ed
+.Pp
+As before, but only the
+.Em UPDATE
+messages will be dumped to the file:
+.Bd -literal -offset indent
+dump updates in "/tmp/updates-in-%H%M" 300
+.Ed
+.Pp
+It is also possible to dump outgoing messages:
+.Bd -literal -offset indent
+dump all out "/tmp/all-out-%H%M" 300
+# or
+dump updates out "/tmp/updates-out-%H%M" 300
+.Ed
+.Pp
+.It Xo
+.Ic fib-update
+.Pq Ic yes Ns \&| Ns Ic no
+.Xc
+If set to
+.Ic no ,
+do not update the Forward Information Base, a.k.a. the kernel
+routing table.
+The default is
+.Ic yes .
+.Pp
+.It Ic holdtime Ar seconds
+Set the holdtime in seconds.
+The holdtime is reset to its initial value every time either a
+.Em KEEPALIVE
+or an
+.Em UPDATE
+message is received from the neighbor.
+If the holdtime expires the session is dropped.
+The default is 90 seconds.
+Neighboring systems negotiate the holdtime used when the connection is
+established in the
+.Em OPEN
+messages.
+Each neighbor announces its configured holdtime; the smaller one is
+then agreed upon.
+.Pp
+.It Ic holdtime min Ar seconds
+The minimal accepted holdtime in seconds.
+This value must be greater than or equal to 3.
+.Pp
+.It Ic listen on Ar address
+Specify the local IP address
+.Xr bgpd 8
+should listen on.
+.Bd -literal -offset indent
+listen on 127.0.0.1
+.Ed
+.Pp
+.It Ic log updates
+Log received and sent updates.
+.Pp
+.It Xo
+.Ic network
+.Ar address Ns Li / Ns Ar prefix
+.Op Ic set ...\&
+.Xc
+.It Xo
+.Ic network
+.Pq Ic inet Ns \&| Ns Ic inet6
+.Ic static Op Ic set ...\&
+.Xc
+.It Xo
+.Ic network
+.Pq Ic inet Ns \&| Ns Ic inet6
+.Ic connected Op Ic set ...\&
+.Xc
+Announce the specified network as belonging to our AS.
+If set to
+.Ic connected ,
+routes to directly attached networks will be announced.
+If set to
+.Ic static ,
+all static routes will be announced.
+.Bd -literal -offset indent
+network 192.168.7.0/24
+.Ed
+.Pp
+It is possible to set default
+.Em AS path attributes
+per
+.Ic network
+statement:
+.Bd -literal -offset indent
+network 192.168.7.0/24 set localpref 220
+.Ed
+.Pp
+See also the
+.Sx ATTRIBUTE SET
+section.
+.Pp
+.It Xo
+.Ic rde
+.Ic med
+.Ic compare
+.Pq Ic always Ns \&| Ns Ic strict
+.Xc
+If set to
+.Ic always ,
+the
+.Em MED
+attributes will always be compared.
+The default is
+.Ic strict ,
+where the
+.Em MED
+is only compared between peers belonging to the same AS.
+.Pp
+.It Xo
+.Ic rde
+.Ic route-age
+.Pq Ic ignore Ns \&| Ns Ic evaluate
+.Xc
+If set to
+.Ic evaluate ,
+the best path selection will not only be based on the path attributes but
+also on the age of the route, giving preference to the older, typically
+more stable, route.
+In this case the decision process is no longer deterministic.
+The default is
+.Ic ignore .
+.Pp
+.It Xo
+.Ic route-collector
+.Pq Ic yes Ns \&| Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+the route selection process is turned off.
+The default is
+.Ic no .
+.Pp
+.It Ic router-id Ar address
+Set the router ID to the given IP address, which must be local to the
+machine.
+.Bd -literal -offset indent
+router-id 10.0.0.1
+.Ed
+.Pp
+If not given, the BGP ID is determined as the biggest IP address assigned
+to the local machine.
+.Pp
+.It Xo
+.Ic transparent-as
+.Pq Ic yes Ns \&| Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+to EBGP neighbors are not prepended with their own AS.
+The default is
+.Ic no .
+.El
+.Sh NEIGHBORS AND GROUPS
+.Xr bgpd 8
+establishes TCP connections to other BGP speakers called
+.Em neighbors .
+Each neighbor is specified by a
+.Ic neighbor
+section, which allows properties to be set specifically for that neighbor:
+.Bd -literal -offset indent
+neighbor 10.0.0.2 {
+	remote-as 65002
+	descr "a neighbor"
+}
+.Ed
+.Pp
+Multiple neighbors can be grouped together by a
+.Ic group
+section.
+Each
+.Ic neighbor
+section within the
+.Ic group
+section inherits all properties from its group:
+.Bd -literal -offset indent
+group "peering AS65002" {
+	remote-as 65002
+	neighbor 10.0.0.2 {
+		descr "AS65002-p1"
+	}
+	neighbor 10.0.0.3 {
+		descr "AS65002-p2"
+	}
+}
+.Ed
+.Pp
+Instead of the neighbor's IP address, an address/netmask pair may be given:
+.Bd -literal -offset indent
+neighbor 10.0.0.0/8
+.Ed
+.Pp
+In this case, the neighbor specification becomes a
+.Em template ,
+and if a neighbor connects from an IP address within the given network,
+the template is
+.Em cloned ,
+inheriting everything from the template but the remote address, which is
+replaced by the connecting neighbor's address.
+With a template specification it is valid to omit
+.Ic remote-as ;
+.Xr bgpd 8
+will then accept any AS the neighbor presents in the
+.Em OPEN
+message.
+.Pp
+There are several neighbor properties:
+.Pp
+.Bl -tag -width Ds -compact
+.It Xo
+.Ic announce
+.Sm off
+.Po Ic all \*(Ba none \*(Ba
+.Ic self \*(Ba default-route Pc
+.Sm on
+.Xc
+If set to
+.Ic none ,
+no
+.Em UPDATE
+messages will be sent to the neighbor.
+If set to
+.Ic default-route ,
+only the default route will be announced to the neighbor.
+If set to
+.Ic all ,
+all generated
+.Em UPDATE
+messages will be sent to the neighbor.
+This is usually used for
+.Em transit AS's
+and
+.Em IBGP
+peers.
+The default value
+for
+.Em EBGP
+peers is
+.Ic self ,
+which limits the sent
+.Em UPDATE
+messages to announcements of the local AS.
+The default for IBGP peers is
+.Ic all .
+.Pp
+.It Xo
+.Ic announce
+.Pq Ic IPv4 Ns \&| Ns Ic IPv6
+.Pq Ic none Ns \&| Ns Ic unicast
+.Xc
+For the given address family, control which subsequent address families
+(at the moment, only
+.Em none ,
+which disables the announcement of that address family, and
+.Em unicast
+are supported) are announced during the capabilities negotiation.
+Only routes for that address family and subsequent address family will be
+announced and processed.
+.Pp
+.It Ic depend on Ar interface
+The neighbor session will be kept in state
+.Em IDLE
+as long as
+.Ar interface
+reports no link.
+For
+.Xr carp 4
+interfaces, no link means that the interface is currently
+.Em backup .
+This is primarily intended to be used with
+.Xr carp 4
+to reduce failover times.
+.Pp
+The state of the network interfaces on the system can be viewed
+using the
+.Cm show interfaces
+command to
+.Xr bgpctl 8 .
+.Pp
+.It Ic descr Ar description
+Add a description.
+The description is used when logging neighbor events, in status
+reports, for specifying neighbors, etc., but has no further meaning to
+.Xr bgpd 8 .
+.Pp
+.It Ic down
+Do not start the session when bgpd comes up but stay in
+.Em IDLE .
+.Pp
+.It Xo
+.Ic dump
+.Pq Ic all Ns \&| Ns Ic updates
+.Pq Ic in Ns \&| Ns Ic out
+.Ar file Op Ar timeout
+.Xc
+Do a peer specific MRT dump.
+Peer specific dumps are limited to
+.Ic all
+and
+.Ic updates .
+See also the
+.Ic dump
+section in
+.Sx GLOBAL CONFIGURATION .
+.Pp
+.It Xo
+.Ic enforce neighbor-as
+.Pq Ic yes Ns \&| Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+whose
+.Em leftmost AS
+is not equal to the
+.Em remote AS
+of the neighbor are rejected and a
+.Em NOTIFICATION
+is sent back.
+The default value for IBGP peers is
+.Ic no
+otherwise the default is
+.Ic yes .
+.Pp
+.It Ic holdtime Ar seconds
+Set the holdtime in seconds.
+Inherited from the global configuration if not given.
+.Pp
+.It Ic holdtime min Ar seconds
+Set the minimal acceptable holdtime.
+Inherited from the global configuration if not given.
+.Pp
+.It Xo
+.Ic ipsec
+.Pq Ic ah Ns \&| Ns Ic esp
+.Pq Ic in Ns \&| Ns Ic out
+.Ic spi Ar spi-number authspec Op Ar encspec
+.Xc
+Enable IPsec with static keying.
+There must be at least two
+.Ic ipsec
+statements per peer with manual keying, one per direction.
+.Ar authspec
+specifies the authentication algorithm and key.
+It can be
+.Bd -literal -offset indent
+sha1 <key>
+md5 <key>
+.Ed
+.Pp
+.Ar encspec
+specifies the encryption algorithm and key.
+.Ic ah
+does not support encryption.
+With
+.Ic esp ,
+encryption is optional.
+.Ar encspec
+can be
+.Bd -literal -offset indent
+3des <key>
+3des-cbc <key>
+aes <key>
+aes-128-cbc <key>
+.Ed
+.Pp
+Keys must be given in hexadecimal format.
+.Pp
+.It Xo
+.Ic ipsec
+.Pq Ic ah Ns \&| Ns Ic esp
+.Ic ike
+.Xc
+Enable IPsec with dynamic keying.
+In this mode,
+.Xr bgpd 8
+sets up the flows, and a key management daemon such as
+.Xr isakmpd 8
+is responsible for managing the session keys.
+With
+.Xr isakmpd 8 ,
+it is sufficient to copy the peer's public key, found in
+.Pa /etc/isakmpd/private/local.pub ,
+to the local machine.
+It must be stored in a file
+named after the peer's IP address and must be stored in
+.Pa /etc/isakmpd/pubkeys/ipv4/ .
+The local public key must be copied to the peer in the same way.
+As
+.Xr bgpd 8
+manages the flows on its own, it is sufficient to restrict
+.Xr isakmpd 8
+to only take care of keying by specifying the flags
+.Fl Ka .
+This can be done in
+.Xr rc.conf.local 8 .
+After starting the
+.Xr isakmpd 8
+and
+.Xr bgpd 8
+daemons on both sides, the session should be established.
+.Pp
+.It Ic local-address Ar address
+When
+.Xr bgpd 8
+initiates the TCP connection to the neighbor system, it normally does not
+bind to a specific IP address.
+If a
+.Ic local-address
+is given,
+.Xr bgpd 8
+binds to this address first.
+.Pp
+.It Ic max-prefix Ar number
+Limit the amount of prefixes received.
+No such limit is imposed by default.
+.Pp
+.It Ic multihop Ar hops
+Neighbors not in the same AS as the local
+.Xr bgpd 8
+normally have to be directly connected to the local machine.
+If this is not the case, the
+.Ic multihop
+statement defines the maximum hops the neighbor may be away.
+.Pp
+.It Ic passive
+Do not attempt to actively open a TCP connection to the neighbor system.
+.Pp
+.It Ic remote-as Ar as-number
+Set the AS number of the remote system.
+.Pp
+.It Ic route-reflector Op Ar address
+Act as an RFC 2796
+.Em route-reflector
+for this neighbor.
+An optional cluster ID can be specified; otherwise the BGP ID will be used.
+.Pp
+.It Ic set Ar attribute ...
+Set the
+.Em AS path attributes
+to some default per
+.Ic neighbor
+or
+.Ic group
+block:
+.Bd -literal -offset indent
+set localpref 300
+.Ed
+.Pp
+See also the
+.Sx ATTRIBUTE SET
+section.
+.Pp
+.It Xo
+.Ic softreconfig
+.Pq Ic in Ns \&| Ns Ic out
+.Pq Ic yes Ns \&| Ns Ic no
+.Xc
+Turn soft reconfiguration on or off for the specified direction.
+If soft reconfiguration is turned on, filter changes will be applied on
+configuration reloads.
+If turned off, a BGP session needs to be cleared to apply the filter changes.
+Enabling
+.Ic softreconfig in
+will raise the memory requirements of
+.Xr bgpd 8
+because the unmodified
+.Em AS path attributes
+need to be stored as well.
+.Pp
+.It Ic tcp md5sig password Ar secret
+.It Ic tcp md5sig key Ar secret
+Enable TCP MD5 signatures per RFC 2385.
+The shared secret can either be given as a password or hexadecimal key.
+.Bd -literal -offset indent
+tcp md5sig password mekmidasdigoat
+tcp md5sig key deadbeef
+.Ed
+.El
+.Sh FILTER
+.Xr bgpd 8
+has the ability to
+.Ic allow
+and
+.Ic deny
+.Em UPDATES
+based on
+.Em prefix
+or
+.Em AS path attributes .
+In addition,
+.Em UPDATES
+may also be modified by filter rules.
+.Pp
+For each
+.Em UPDATE
+processed by the filter, the filter rules are evaluated in sequential order,
+from first to last.
+The last matching
+.Ic allow
+or
+.Ic deny
+rule decides what action is taken.
+.Pp
+The following actions can be used in the filter:
+.Bl -tag -width xxxxxxxx
+.It Ic allow
+The
+.Em UPDATE
+is passed.
+.It Ic deny
+The
+.Em UPDATE
+is blocked.
+.It Ic match
+Apply the filter attribute set without influencing the filter decision.
+.El
+.Sh PARAMETERS
+The rule parameters specify the
+.Em UPDATES
+to which a rule applies.
+An
+.Em UPDATE
+always comes from, or goes to, one neighbor.
+Most parameters are optional, but each can appear at most once per rule.
+If a parameter is specified, the rule only applies to packets with
+matching attributes.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ar as-type as-number
+This rule applies only to
+.Em UPDATES
+where the
+.Em AS path
+matches.
+The
+.Ar as-number
+is matched against a part of the
+.Em AS path
+specified by the
+.Ar as-type .
+.Ar as-type
+is one of the following operators:
+.Pp
+.Bl -tag -width transmit-as -compact
+.It Ic AS
+(any part)
+.It Ic source-as
+(rightmost AS number)
+.It Ic transit-as
+(all but the rightmost AS number)
+.El
+.Pp
+Multiple
+.Ar as-number
+entries for a given type or
+.Ar as-type as-number
+entries may also be specified,
+separated by commas or whitespace,
+if enclosed in curly brackets:
+.Bd -literal -offset indent
+deny from any AS { 1, 2, 3 }
+deny from any { AS 1, source-as 2, transit-as 3 }
+deny from any { AS { 1, 2, 3 }, source-as 4, transit-as 5 }
+.Ed
+.Pp
+.It Xo
+.Ic community
+.Ar as-number Ns Li \&: Ns Ar local
+.Xc
+.It Ic community Ar name
+This rule applies only to
+.Em UPDATES
+where the
+.Ic community
+path attribute is present and matches.
+Communities are specified as
+.Ar as-number Ns Li : Ns Ar local ,
+where
+.Ar as-number
+is an AS number and
+.Ar local
+is a locally significant number between zero and
+.Li 65535 .
+Both
+.Ar as-number
+and
+.Ar local
+may be set to
+.Sq *
+to do wildcard matching.
+Alternatively, well-known communities may be given by name instead and
+include
+.Ic NO_EXPORT ,
+.Ic NO_ADVERTISE ,
+.Ic NO_EXPORT_SUBCONFED ,
+and
+.Ic NO_PEER .
+Both
+.Ar as-number
+and
+.Ar local
+may be set to
+.Ic neighbor-as ,
+which is expanded to the current neighbor remote AS number.
+.Pp
+.It Xo
+.Pq Ic from Ns \&| Ns Ic to
+.Ar peer
+.Xc
+This rule applies only to
+.Em UPDATES
+coming from, or going to, this particular neighbor.
+This parameter must be specified.
+.Ar peer
+is one of the following:
+.Pp
+.Bl -tag -width "group descr" -compact
+.It Ic any
+Any neighbor will be matched.
+.It Ar address
+Neighbors with this address will be matched.
+.It Ic group Ar descr
+Neighbors in this group will be matched.
+.El
+.Pp
+Multiple
+.Ar peer
+entries may also be specified,
+separated by commas or whitespace,
+if enclosed in curly brackets:
+.Bd -literal -offset indent
+deny from { 128.251.16.1, 251.128.16.2, group hojo }
+.Ed
+.Pp
+.It Xo
+.Ic prefix
+.Ar address Ns Li / Ns Ar len
+.Xc
+This rule applies only to
+.Em UPDATES
+for the specified prefix.
+.Pp
+Multiple
+.Ar address Ns Li / Ns Ar len
+entries may be specified,
+separated by commas or whitespace,
+if enclosed in curly brackets:
+.Bd -literal -offset indent
+deny from any prefix { 192.168.0.0/16, 10.0.0.0/8 }
+.Ed
+.Pp
+Multiple lists can also be specified, which is useful for
+macro expansion:
+.Bd -literal -offset indent
+good="{ 192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8 }"
+bad="{ 224.0.0.0/4, 240.0.0.0/4 }"
+ugly="{ 127.0.0.1/8, 169.254.0.0/16 }"
+
+deny from any prefix { $good $bad $ugly }
+.Ed
+.Pp
+.It Ic prefixlen Ar range
+This rule applies only to
+.Em UPDATES
+for prefixes where the prefixlen matches.
+Prefix length ranges are specified by using these operators:
+.Bd -literal -offset indent
+=	(equal)
+!=	(unequal)
+<	(less than)
+<=	(less than or equal)
+>	(greater than)
+>=	(greater than or equal)
+-	(range including boundaries)
+><	(except range)
+.Ed
+.Pp
+>< and -
+are binary operators (they take two arguments).
+For instance, to match all prefix lengths >= 8 and <= 12, and hence the
+CIDR netmasks 8, 9, 10, 11 and 12:
+.Bd -literal -offset indent
+prefixlen 8-12
+.Ed
+.Pp
+Or, to match all prefix lengths < 8 or > 12, and hence the CIDR netmasks
+0\-7 and 13\-32:
+.Bd -literal -offset indent
+prefixlen 8><12
+.Ed
+.Pp
+.Ic prefixlen
+can be used together with
+.Ic prefix .
+.Pp
+This will match all prefixes in the 10.0.0.0/8 netblock with netmasks longer
+than 16:
+.Bd -literal -offset indent
+prefix 10.0.0.0/8 prefixlen > 16
+.Ed
+.Pp
+.It Ic quick
+If an
+.Em UPDATE
+matches a rule which has the
+.Ic quick
+option set, this rule is considered the last matching rule, and evaluation
+of subsequent rules is skipped.
+.Pp
+.It Ic set Ar attribute ...
+All matching rules can set the
+.Em AS path attributes
+to some default.
+The set of every matching rule is applied, not only the last matching one.
+See also the following section.
+.El
+.Sh ATTRIBUTE SET
+.Em AS path attributes
+can be modified with
+.Ic set .
+.Pp
+.Ic set
+can be used on
+.Ic network
+statements, in
+.Ic neighbor
+or
+.Ic group
+blocks, and on filter rules.
+Attribute sets can be expressed as lists.
+.Pp
+The following attributes can be modified:
+.Pp
+.Bl -tag -width Ds -compact
+.It Xo
+.Ic community
+.Ar as-number Ns Li : Ns Ar local
+.Xc
+.It Ic community Ar name
+Set the
+.Em COMMUNITIES
+AS path attribute.
+Communities are specified as
+.Ar as-number Ns Li : Ns Ar local ,
+where
+.Ar as-number
+is an AS number and
+.Ar local
+is a locally-significant number between zero and
+.Li 0xffff .
+Alternately, well-known communities may be specified by name:
+.Ic NO_EXPORT ,
+.Ic NO_ADVERTISE ,
+or
+.Ic NO_EXPORT_SUBCONFED .
+.Pp
+.It Ic localpref Ar number
+Set the
+.Em LOCAL_PREF
+AS path attribute.
+If
+.Ar number
+starts with a plus or minus sign,
+.Em LOCAL_PREF
+will be adjusted by adding or subtracting
+.Ar number ;
+otherwise it will be set to
+.Ar number .
+.Pp
+.It Ic med Ar number
+.It Ic metric Ar number
+Set the
+.Em MULTI_EXIT_DISC
+AS path attribute.
+If
+.Ar number
+starts with a plus or minus sign,
+.Em MULTI_EXIT_DISC
+will be adjusted by adding or subtracting
+.Ar number ;
+otherwise it will be set to
+.Ar number .
+.Pp
+.It Xo
+.Ic nexthop
+.Sm off
+.Po Ar address \*(Ba
+.Ic blackhole \*(Ba
+.Ic reject \*(Ba
+.Ic no-modify Pc
+.Sm on
+.Xc
+Set the
+.Em NEXTHOP
+AS path attribute
+to a different nexthop address, use blackhole or reject routes,
+or do not modify it.
+.Bd -literal -offset indent
+set nexthop 192.168.0.1
+set nexthop blackhole
+set nexthop reject
+.Ed
+.Pp
+.It Ic pftable Ar table
+Add the prefix in the update to the specified
+.Xr pf 4
+table, regardless of whether or not the path was selected for routing.
+This option may be useful in building realtime blacklists.
+.Pp
+.It Ic prepend-neighbor Ar number
+Prepend the neighbor's AS
+.Ar number
+times to the
+.Em AS path .
+.Pp
+.It Ic prepend-self Ar number
+Prepend the local AS
+.Ar number
+times to the
+.Em AS path .
+.Pp
+.It Ic rtlabel Ar label
+Add the prefix with the specified
+.Ar label
+to the kernel routing table.
+.Pp
+.It Ic weight Ar number
+The
+.Em weight
+is used to tip prefixes with equally long AS paths in one or
+the other direction.
+A prefix is weighed at a very late stage in the decision process.
+If
+.Ar number
+starts with a plus or minus sign, the
+.Em weight
+will be adjusted by adding or subtracting
+.Ar number ;
+otherwise it will be set to
+.Ar number .
+.Em Weight
+is a local non-transitive attribute and a bgpd-specific extension.
+.El
+.Sh FILES
+.Bl -tag -width "/etc/bgpd.conf" -compact
+.It Pa /etc/bgpd.conf
+.Xr bgpd 8
+configuration file
+.El
+.Sh SEE ALSO
+.Xr strftime 3 ,
+.Xr ipsec 4 ,
+.Xr pf 4 ,
+.Xr tcp 4 ,
+.Xr bgpctl 8 ,
+.Xr bgpd 8 ,
+.Xr ipsecadm 8 ,
+.Xr isakmpd 8 ,
+.Xr rc.conf.local 8
+.Sh HISTORY
+The
+.Nm
+file format first appeared in
+.Ox 3.5 .
