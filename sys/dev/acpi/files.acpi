@@ -1,0 +1,42 @@
+#	$OpenBSD: src/sys/dev/acpi/files.acpi,v 1.8 2006/02/26 02:49:28 marco Exp $
+#
+# Config file and device description for machine-independent ACPI code.
+# Included by ports that need it.
+
+define	acpi {}
+device	acpi
+attach	acpi at mainbus
+file	dev/acpi/acpi.c			acpi needs-flag
+file	dev/acpi/acpiutil.c		acpi
+file	dev/acpi/dsdt.c			acpi
+
+# ACPI timer
+device	acpitimer
+attach	acpitimer at acpi
+file	dev/acpi/acpitimer.c		acpitimer
+
+# AC device
+device	acpiac
+attach	acpiac at acpi
+file	dev/acpi/acpiac.c		acpiac
+
+# battery device
+device	acpibat
+attach	acpibat at acpi
+file	dev/acpi/acpibat.c		acpibat
+
+# button device
+device	acpibtn
+attach	acpibtn at acpi
+file	dev/acpi/acpibtn.c		acpibtn
+
+# cpu device
+device	acpicpu
+attach	acpicpu at acpi
+file	dev/acpi/acpicpu.c		acpicpu
+
+# High Precision Event Timer
+device	hpet
+attach	hpet at acpi
+file	dev/acpi/hpet.c			hpet
+
