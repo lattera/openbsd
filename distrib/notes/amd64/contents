@@ -1,0 +1,80 @@
+dnl	$OpenBSD: src/distrib/notes/amd64/contents,v 1.18 2006/02/28 20:42:34 miod Exp $
+TopPart
+
+dnl uncomment as stuff becomes available
+dnl
+OpenBSDfloppy
+dnl
+dnl	floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+dnl			this one features all the drivers not available
+dnl			in floppy{:--:}OSrev.fs, such as SCSI, RAID, Gigabit
+dnl			Ethernet, and such; see below.
+dnl
+dnl	floppyC{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+dnl			this one features most of the cardbus and
+dnl			PCMCIA drivers; see below.
+
+	cdrom{:--:}OSrev.fs	The MACHINE boot and installation 2.88MB
+			floppy image that contains almost all OpenBSD
+			drivers; see below.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDcd
+
+	cdbr		First-stage CD bootstrap (boot sector), which loads
+			the cdboot second-stage bootstrap.  This file is
+			included in the cd{:--:}OSrev.iso image, and is
+			provided as a convenience, but will rarely be needed.
+
+	cdboot		Second-stage CD bootstrap loader for non-emulation
+			OpenBSD El Torito CD-ROMs. It processes boot.conf
+			then loads the bsd.rd installation ramdisk kernel.
+			This file is included in the cd{:--:}OSrev.iso image,
+			and is provided as a convenience, but will rarely be
+			needed.
+
+dnl Uncomment if this really is worth providing...
+dnl
+dnl Additionally, you may be interested in
+dnl
+dnl .../OSREV/tools/
+dnl		miscellaneous MACHINE installation utilities like
+dnl		rawrite.exe, ntrw.exe, gzip.exe, and pfdisk.exe;
+dnl		see installation section, below.
+dnl
+dnl
+OpenBSDfloppydesc(,The)
+dnl
+dnl In addition, the "tools/" directory contains some utilities that might be
+dnl useful for the installation.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(44672069,138481711,shared)
+
+OpenBSDcomp(87031601,308801726,shared)
+
+OpenBSDetc(1152568,3837470)
+
+OpenBSDgame(2690128,6162995)
+
+OpenBSDman(7432420,26645880)
+
+OpenBSDmisc(2276145,7482328)
+
+OpenBSDxbase(11686810,36200909)
+
+OpenBSDxetc(93321,363680)
+
+OpenBSDxfont(33234618,37547572)
+
+OpenBSDxserv(12009524,35230563)
+
+OpenBSDxshare(2078183,10998944)
