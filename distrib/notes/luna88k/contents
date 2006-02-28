@@ -1,0 +1,38 @@
+dnl	$OpenBSD: src/distrib/notes/luna88k/contents,v 1.6 2006/02/28 20:42:35 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+These files can be used to make a bootable tape suitable for installation.
+They can also be used to configure an NFS server to support installation
+over the network. See the section "Getting the OpenBSD system onto Useful
+Media" for more information.
+
+DistributionDescription(ten)
+
+OpenBSDbase(82275426,203136564)
+
+OpenBSDcomp(39864856,141513399)
+
+OpenBSDetc(1152425,3995805)
+
+OpenBSDgame(7098734,15193395)
+
+OpenBSDman(6839254,24374923)
+
+OpenBSDmisc(2276459,7482328)
+
+OpenBSDxbase(22,148531552)
+
+OpenBSDxetc(21,1903549)
+
+OpenBSDxfont(22,37547572)
+
+dnl No X server yet...
+dnl OpenBSDxserv
+dnl
+OpenBSDxshare(23,11019768)
