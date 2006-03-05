@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/rcs/ci.c,v 1.104 2006/03/05 17:17:27 niallo Exp $	*/
+/*	$OpenBSD: src/usr.bin/rcs/ci.c,v 1.105 2006/03/05 17:20:35 niallo Exp $	*/
 /*
  * Copyright (c) 2005, 2006 Niall O'Higgins <niallo@openbsd.org>
  * All rights reserved.
@@ -1067,6 +1067,4 @@ checkin_parsekeyword(char *keystring,  RCSNUM **rev, time_t *date,
 			fatal("could not parse rcsnum");
 		break;
 	}
-
-	return;
 }
