@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.125.2.1 2005/06/14 02:10:33 brad Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_input.c,v 1.125.2.2 2006/03/05 03:04:01 brad Exp $	*/
 /*	$NetBSD: ip_input.c,v 1.30 1996/03/16 23:53:58 christos Exp $	*/
 
 /*
@@ -1457,9 +1457,9 @@ ip_forward(m, srcrt)
 	 * we need to generate an ICMP message to the src.
 	 * Pullup to avoid sharing mbuf cluster between m and mcopy.
 	 */
-	mcopy = m_copym(m, 0, imin(ntohs(ip->ip_len), 68), M_DONTWAIT);
+	mcopy = m_copym(m, 0, min(ntohs(ip->ip_len), 68), M_DONTWAIT);
 	if (mcopy)
-		mcopy = m_pullup(mcopy, ip->ip_hl << 2);
+		mcopy = m_pullup(mcopy, min(ntohs(ip->ip_len), 68));
 
 	ip->ip_ttl -= IPTTLDEC;
 
