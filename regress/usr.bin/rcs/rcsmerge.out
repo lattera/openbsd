@@ -1,5 +1,4 @@
 <<<<<<< blah.c
-/* $Id: blah.c,v 1.6 $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +14,6 @@ main(int argc, char **argv)
 	return (0);
 }
 =======
-/* $Id: blah.c,v 1.3 $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
