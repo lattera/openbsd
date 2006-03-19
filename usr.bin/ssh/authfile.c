@@ -36,7 +36,6 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/authfile.c,v 1.63 2006/03/13 10:26:52 dtucker Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>

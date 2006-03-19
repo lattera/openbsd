@@ -22,7 +22,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/msg.c,v 1.8 2005/05/24 17:32:43 avsm Exp $");
 
 #include "buffer.h"
 #include "getput.h"

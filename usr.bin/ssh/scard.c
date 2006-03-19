@@ -24,7 +24,6 @@
 
 #ifdef SMARTCARD
 #include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/scard.c,v 1.29 2004/05/08 00:21:31 djm Exp $");
 
 #include <openssl/evp.h>
 #include <sectok.h>
