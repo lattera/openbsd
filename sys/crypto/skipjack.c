@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/crypto/Attic/skipjack.c,v 1.3 2001/05/05 00:31:34 angelos Exp $	*/
+/*	$OpenBSD: src/sys/crypto/Attic/skipjack.c,v 1.4 2006/03/23 15:32:03 mickey Exp $	*/
 
 /* 
  * Further optimized test implementation of SKIPJACK algorithm 
