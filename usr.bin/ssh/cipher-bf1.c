@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/cipher-bf1.c,v 1.3 2006/03/25 13:17:01 djm Exp $ */
 /*
  * Copyright (c) 2003 Markus Friedl.  All rights reserved.
  *

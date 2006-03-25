@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/Attic/auth-skey.c,v 1.23 2006/03/25 13:17:01 djm Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *

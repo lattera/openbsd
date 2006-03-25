@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/progressmeter.c,v 1.29 2006/03/25 13:17:02 djm Exp $ */
 /*
  * Copyright (c) 2003 Nils Nordman.  All rights reserved.
  *

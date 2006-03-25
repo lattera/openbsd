@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.20 2006/03/25 13:17:03 djm Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *

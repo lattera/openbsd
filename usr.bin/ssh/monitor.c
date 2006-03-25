@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/monitor.c,v 1.76 2006/03/25 13:17:02 djm Exp $ */
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * Copyright 2002 Markus Friedl <markus@openbsd.org>
