@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.5 2006/03/25 18:36:15 deraadt Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/sshlogin.h,v 1.6 2006/03/25 22:22:43 djm Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
