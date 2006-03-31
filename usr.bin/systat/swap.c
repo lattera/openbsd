@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/systat/swap.c,v 1.17 2003/06/03 02:56:17 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/systat/swap.c,v 1.18 2006/03/31 04:10:59 deraadt Exp $	*/
 /*	$NetBSD: swap.c,v 1.9 1998/12/26 07:05:08 marc Exp $	*/
 
 /*-
@@ -35,7 +35,7 @@
 #if 0
 static char sccsid[] = "@(#)swap.c	8.3 (Berkeley) 4/29/95";
 #endif
-static char rcsid[] = "$OpenBSD: src/usr.bin/systat/swap.c,v 1.17 2003/06/03 02:56:17 millert Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/systat/swap.c,v 1.18 2006/03/31 04:10:59 deraadt Exp $";
 #endif /* not lint */
 
 #include <sys/cdefs.h>
@@ -54,8 +54,6 @@ static char rcsid[] = "$OpenBSD: src/usr.bin/systat/swap.c,v 1.17 2003/06/03 02:
 
 #include "systat.h"
 #include "extern.h"
-
-void showspace(char *header, int hlen, long blocksize);
 
 static	long blocksize;
 static	int hlen, nswap, rnswap;
