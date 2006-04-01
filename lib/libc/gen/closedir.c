@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/gen/closedir.c,v 1.6 2005/08/08 08:05:33 espie Exp $ */
+/*	$OpenBSD: src/lib/libc/gen/closedir.c,v 1.7 2006/04/01 18:06:59 otto Exp $ */
 /*
  * Copyright (c) 1983, 1993
  *	Regents of the University of California.  All rights reserved.
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "thread_private.h"
+#include "telldir.h"
 
 /*
  * close a directory.
@@ -45,12 +46,12 @@ closedir(DIR *dirp)
 
 	if ((ret = _FD_LOCK(dirp->dd_fd, FD_READ, NULL)) != 0)
 		return (ret);
-	seekdir(dirp, dirp->dd_rewind);	/* free seekdir storage */
 	fd = dirp->dd_fd;
 	dirp->dd_fd = -1;
 	dirp->dd_loc = 0;
-	free((void *)dirp->dd_buf);
-	free((void *)dirp);
+	free(dirp->dd_td->td_locs);
+	free(dirp->dd_buf);
+	free(dirp);
 	ret = close(fd);
 	_FD_UNLOCK(fd, FD_READ);
 	return (ret);
