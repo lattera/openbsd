@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/file/apprentice.c,v 1.20 2004/09/25 09:19:35 otto Exp $ */
+/*	$OpenBSD: src/usr.bin/file/apprentice.c,v 1.21 2006/04/04 10:53:40 pedro Exp $ */
 /*
  * Copyright (c) Ian F. Darwin 1986-1995.
  * Software written by Ian F. Darwin and others;
@@ -46,7 +46,7 @@
 #endif
 
 #ifndef	lint
-FILE_RCSID("@(#)$Id: apprentice.c,v 1.19 2004/05/19 02:32:35 tedu Exp $")
+FILE_RCSID("@(#)$Id: apprentice.c,v 1.20 2004/09/25 09:19:35 otto Exp $")
 #endif	/* lint */
 
 #define	EATAB {while (isascii((unsigned char) *l) && \
@@ -698,8 +698,8 @@ GetDesc:
 		m->nospflag = 1;
 	} else
 		m->nospflag = 0;
-	while ((m->desc[i++] = *l++) != '\0' && i < MAXDESC)
-		/* NULLBODY */;
+
+	strlcpy(m->desc, l, sizeof(m->desc));
 
 #ifndef COMPILE_ONLY
 	if (action == FILE_CHECK) {
