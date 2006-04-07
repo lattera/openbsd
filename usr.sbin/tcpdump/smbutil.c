@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.3 2001/11/07 18:48:16 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.4 2006/04/07 05:16:52 ray Exp $	*/
 
 /*
    Copyright (C) Andrew Tridgell 1995-1999
@@ -13,7 +13,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-     "@(#) $Header: /cvs/src/usr.sbin/tcpdump/smbutil.c,v 1.2 2001/01/03 18:41:00 mickey Exp $";
+     "@(#) $Header: /home/ray/openbsd/src/usr.sbin/tcpdump/smbutil.c,v 1.3 2001/11/07 18:48:16 deraadt Exp $";
 #endif
 
 #include <sys/param.h>
@@ -492,6 +492,9 @@ static const uchar *fdata1(const uchar *buf, const char *fmt, const uchar *maxbu
 	case 3:
 	  t = interpret_long_date(buf);
 	  buf+=8;
+	  break;
+	default:
+	  t = 0;
 	  break;
 	}
 	printf("%s",t?asctime(localtime(&t)):"NULL ");
