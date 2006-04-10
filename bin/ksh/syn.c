@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/bin/ksh/syn.c,v 1.26 2006/03/21 10:41:26 otto Exp $	*/
+/*	$OpenBSD: src/bin/ksh/syn.c,v 1.27 2006/04/10 14:38:59 jaredy Exp $	*/
 
 /*
  * shell parser (C version)
@@ -695,7 +695,7 @@ syntaxerr(const char *what)
 		}
 		/* don't quote the EOF */
 		yyerror("syntax error: unexpected EOF\n");
-		/*NOTREACHED*/
+		/* NOTREACHED */
 
 	case LWORD:
 		s = snptreef((char *) 0, 32, "%S", yylval.cp);
