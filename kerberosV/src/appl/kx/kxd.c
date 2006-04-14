@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: kxd.c,v 1.71.2.2 2003/05/15 15:11:35 lha Exp $");
+RCSID("$KTH: kxd.c,v 1.76.2.1 2005/07/13 20:47:19 lha Exp $");
 
 static pid_t wait_on_pid = -1;
 static int   done        = 0;
@@ -120,6 +120,11 @@ recv_conn (int sock, kx_context *kc,
      int flags;
      int len;
      u_int32_t tmp32;
+
+     memset(kc, 0, sizeof(*kc));
+     *nsockets = 0;
+     *sockets = NULL;
+     *dispnr = 0;
 
      addrlen = sizeof(kc->__ss_this);
      kc->thisaddr = (struct sockaddr*)&kc->__ss_this;
@@ -675,11 +680,13 @@ doit(int sock, int tcp_flag)
 
     flags = recv_conn (sock, &context, &dispnr, &nsockets, &sockets, tcp_flag);
 
-    if (flags & PASSIVE)
+    if (flags & PASSIVE) {
 	ret = doit_passive (&context, sock, flags, dispnr,
 			    nsockets, sockets, tcp_flag);
-    else
+    } else {
 	ret = doit_active (&context, sock, flags, tcp_flag);
+	cleanup(nsockets, sockets);
+    }
     context_destroy (&context);
     return ret;
 }

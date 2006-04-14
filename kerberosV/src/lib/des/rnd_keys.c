@@ -34,17 +34,15 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 
-RCSID("$KTH: rnd_keys.c,v 1.58 2001/08/21 15:32:07 assar Exp $");
+RCSID("$KTH: rnd_keys.c,v 1.67 2005/06/02 07:18:50 lha Exp $");
 #endif
 
-#include <des.h>
-#include <des_locl.h>
 #ifdef KRB5
 #include <krb5-types.h>
-#elif defined(KRB4)
-#include <ktypes.h>
 #endif
+#include <des.h>
 
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef TIME_WITH_SYS_TIME
@@ -84,7 +82,7 @@ static
 int
 sumFile (const char *name, int len, void *res)
 {
-  u_int32_t sum[2];
+  u_int32_t sum[2] = { 0, 0 };
   u_int32_t buf[1024*2];
   int fd, i;
 
@@ -149,7 +147,7 @@ md5sumFile (const char *name, int len, int32_t sum[4])
  * The sequence is indexed with a long long and 
  * based on an initial des key used as a seed.
  */
-static des_key_schedule sequence_seed;
+static DES_key_schedule sequence_seed;
 static u_int32_t sequence_index[2];
 
 /* 
@@ -190,7 +188,7 @@ sigALRM(int sig)
 #endif
 #endif
 
-#ifndef HAVE_SETITIMER
+#if !defined(HAVE_SETITIMER) || defined(WIN32) || defined(__EMX__) || defined(__OS2__) || defined(__CYGWIN32__)
 static void
 des_not_rand_data(unsigned char *data, int size)
 {
@@ -242,7 +240,7 @@ static RETSIGTYPE
  * It's not neccessary to be root to run it.
  */
 void
-des_rand_data(unsigned char *data, int size)
+DES_rand_data(unsigned char *data, int size)
 {
     struct itimerval tv, otv;
     RETSIGTYPE (*osa)(int);
@@ -254,6 +252,7 @@ des_rand_data(unsigned char *data, int size)
     char *rnd_devices[] = {"/dev/random",
 			   "/dev/srandom",
 			   "/dev/urandom",
+			   "/dev/arandom",
 			   NULL};
     char **p;
 
@@ -312,36 +311,39 @@ des_rand_data(unsigned char *data, int size)
 }
 #else
 void
-des_rand_data(unsigned char *p, int s)
+DES_rand_data(unsigned char *p, int s)
 {
   des_not_rand_data (p, s);
 }
 #endif
 
 void
-des_generate_random_block(des_cblock *block)
+DES_generate_random_block(DES_cblock *block)
 {
-  des_rand_data((unsigned char *)block, sizeof(*block));
+  DES_rand_data((unsigned char *)block, sizeof(*block));
 }
+
+void
+DES_rand_data_key(DES_cblock *key);
 
 /*
  * Generate a "random" DES key.
  */
 void
-des_rand_data_key(des_cblock *key)
+DES_rand_data_key(DES_cblock *key)
 {
     unsigned char data[8];
-    des_key_schedule sched;
+    DES_key_schedule sched;
     do {
-	des_rand_data(data, sizeof(data));
-	des_rand_data((unsigned char*)key, sizeof(des_cblock));
-	des_set_odd_parity(key);
-	des_key_sched(key, sched);
-	des_ecb_encrypt(&data, key, sched, DES_ENCRYPT);
+	DES_rand_data(data, sizeof(data));
+	DES_rand_data((unsigned char*)key, sizeof(DES_cblock));
+	DES_set_odd_parity(key);
+	DES_set_key(key, &sched);
+	DES_ecb_encrypt(&data, key, &sched, DES_ENCRYPT);
 	memset(&data, 0, sizeof(data));
 	memset(&sched, 0, sizeof(sched));
-	des_set_odd_parity(key);
-    } while(des_is_weak_key(key));
+	DES_set_odd_parity(key);
+    } while(DES_is_weak_key(key));
 }
 
 /*
@@ -351,7 +353,10 @@ des_rand_data_key(des_cblock *key)
  * problems with permissions.
  */
 int
-des_mem_rand8(unsigned char *data)
+DES_mem_rand8(unsigned char *data);
+
+int
+DES_mem_rand8(unsigned char *data)
 {
   return 1;
 }
@@ -364,12 +369,12 @@ static int initialized;
 static void
 do_initialize(void)
 {
-    des_cblock default_seed;
+    DES_cblock default_seed;
     do {
-	des_generate_random_block(&default_seed);
-	des_set_odd_parity(&default_seed);
-    } while (des_is_weak_key(&default_seed));
-    des_init_random_number_generator(&default_seed);
+	DES_generate_random_block(&default_seed);
+	DES_set_odd_parity(&default_seed);
+    } while (DES_is_weak_key(&default_seed));
+    DES_init_random_number_generator(&default_seed);
 }
 
 #define zero_long_long(ll) do { ll[0] = ll[1] = 0; } while (0)
@@ -383,7 +388,7 @@ memcpy((char *)sequence_index, (ll), sizeof(sequence_index));
  * Set the sequnce number to this value (a long long).
  */
 void
-des_set_sequence_number(unsigned char *ll)
+DES_set_sequence_number(unsigned char *ll)
 {
     set_sequence_number(ll);
 }
@@ -392,9 +397,9 @@ des_set_sequence_number(unsigned char *ll)
  * Set the generator seed and reset the sequence number to 0.
  */
 void
-des_set_random_generator_seed(des_cblock *seed)
+DES_set_random_generator_seed(DES_cblock *seed)
 {
-    des_key_sched(seed, sequence_seed);
+    DES_set_key(seed, &sequence_seed);
     zero_long_long(sequence_index);
     initialized = 1;
 }
@@ -405,20 +410,20 @@ des_set_random_generator_seed(des_cblock *seed)
  * parity and skip weak keys.
  */
 int
-des_new_random_key(des_cblock *key)
+DES_new_random_key(DES_cblock *key)
 {
     if (!initialized)
 	do_initialize();
 
     do {
-	des_ecb_encrypt((des_cblock *) sequence_index,
+	DES_ecb_encrypt((DES_cblock *) sequence_index,
 			key,
-			sequence_seed,
+			&sequence_seed,
 			DES_ENCRYPT);
 	incr_long_long(sequence_index);
 	/* random key must have odd parity and not be weak */
-	des_set_odd_parity(key);
-    } while (des_is_weak_key(key));
+	DES_set_odd_parity(key);
+    } while (DES_is_weak_key(key));
     return(0);
 }
 
@@ -431,34 +436,34 @@ des_new_random_key(des_cblock *key)
  *
  */
 void 
-des_init_random_number_generator(des_cblock *seed)
+DES_init_random_number_generator(DES_cblock *seed)
 {
     struct timeval now;
-    des_cblock uniq;
-    des_cblock new_key;
+    DES_cblock uniq;
+    DES_cblock new_key;
 
     gettimeofday(&now, (struct timezone *)0);
-    des_generate_random_block(&uniq);
+    DES_generate_random_block(&uniq);
 
     /* Pick a unique random key from the shared sequence. */
-    des_set_random_generator_seed(seed);
+    DES_set_random_generator_seed(seed);
     set_sequence_number((unsigned char *)&uniq);
-    des_new_random_key(&new_key);
+    DES_new_random_key(&new_key);
 
     /* Select a new nonshared sequence, */
-    des_set_random_generator_seed(&new_key);
+    DES_set_random_generator_seed(&new_key);
 
     /* and use the current time to pick a key for the new sequence. */
     set_sequence_number((unsigned char *)&now);
-    des_new_random_key(&new_key);
-    des_set_random_generator_seed(&new_key);
+    DES_new_random_key(&new_key);
+    DES_set_random_generator_seed(&new_key);
 }
 
 /* This is for backwards compatibility. */
 void
-des_random_key(des_cblock ret)
+DES_random_key(DES_cblock *ret)
 {
-    des_new_random_key((des_cblock *)ret);
+    DES_new_random_key(ret);
 }
 
 #ifdef TESTRUN
@@ -483,13 +488,13 @@ main()
 int
 main()
 {
-    des_cblock data;
+    DES_cblock data;
     int i;
 
     while (1)
         {
 	    do_initialize();
-            des_random_key(data);
+            DES_random_key(data);
             for (i = 0; i < 8; i++)
                 printf("%02x", data[i]);
             printf("\n");

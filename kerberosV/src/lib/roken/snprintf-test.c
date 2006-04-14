@@ -33,12 +33,12 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include "snprintf-test.h"
 #include "roken.h"
 #include <limits.h>
 
-#include "snprintf-test.h"
 
-RCSID("$KTH: snprintf-test.c,v 1.5 2001/09/13 01:01:16 assar Exp $");
+RCSID("$KTH: snprintf-test.c,v 1.8 2005/05/04 11:56:56 lha Exp $");
 
 static int
 try (const char *format, ...)
@@ -51,6 +51,8 @@ try (const char *format, ...)
     ret = vsnprintf (buf1, sizeof(buf1), format, ap);
     if (ret >= sizeof(buf1))
 	errx (1, "increase buf and try again");
+    va_end (ap);
+    va_start (ap, format);
     vsprintf (buf2, format, ap);
     ret = strcmp (buf1, buf2);
     if (ret)
@@ -223,6 +225,14 @@ test_null (void)
     return snprintf (NULL, 0, "foo") != 3;
 }
 
+static int
+test_length (void)
+{
+    char ch = 'a';
+    snprintf (&ch, 0, "foo");
+    return ch != 'a';
+}
+
 int
 main (int argc, char **argv)
 {
@@ -234,5 +244,6 @@ main (int argc, char **argv)
     ret += cmp_with_sprintf_long_long ();
 #endif
     ret += test_null ();
+    ret += test_length ();
     return ret;
 }

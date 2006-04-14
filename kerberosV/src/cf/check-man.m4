@@ -1,4 +1,4 @@
-dnl $KTH: check-man.m4,v 1.3.12.1 2004/04/01 07:27:32 joda Exp $
+dnl $KTH: check-man.m4,v 1.4 2004/02/12 14:20:40 lha Exp $
 dnl check how to format manual pages
 dnl
 

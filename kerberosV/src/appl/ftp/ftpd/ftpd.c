@@ -38,7 +38,7 @@
 #endif
 #include "getarg.h"
 
-RCSID("$KTH: ftpd.c,v 1.166.2.3 2004/08/20 15:16:37 lha Exp $");
+RCSID("$KTH: ftpd.c,v 1.173 2005/06/02 10:41:28 lha Exp $");
 
 static char version[] = "Version 6.00";
 
@@ -600,9 +600,9 @@ user(char *name)
 	    else
 		reply(530, "User %s access denied.", name);
 	} else {
+#ifdef OTP
 		char ss[256];
 
-#ifdef OTP
 		if (otp_challenge(&otp_ctx, name, ss, sizeof(ss)) == 0) {
 			reply(331, "Password %s for %s required.",
 			      ss, name);
@@ -613,9 +613,9 @@ user(char *name)
 		    reply(331, "Password required for %s.", name);
 		    askpasswd = 1;
 		} else {
-		    char *s;
-		    
 #ifdef OTP
+		    char *s;
+
 		    if ((s = otp_error (&otp_ctx)) != NULL)
 			lreply(530, "OTP: %s", s);
 #endif
@@ -1107,17 +1107,17 @@ done:
 int 
 filename_check(char *filename)
 {
-    unsigned char *p;
+    char *p;
 
-    p = (unsigned char *)strrchr(filename, '/');
+    p = strrchr(filename, '/');
     if(p)
 	filename = p + 1;
 
     p = filename;
 
-    if(isalnum(*p)){
+    if(isalnum((unsigned char)*p)){
 	p++;
-	while(*p && (isalnum(*p) || strchr(good_chars, *p)))
+	while(*p && (isalnum((unsigned char)*p) || strchr(good_chars, (unsigned char)*p)))
 	    p++;
 	if(*p == '\0')
 	    return 0;
@@ -1625,7 +1625,7 @@ statcmd(void)
 	lreply(211, "%s FTP server (%s) status:", hostname, version);
 	printf("     %s\r\n", version);
 	printf("     Connected to %s", remotehost);
-	if (!isdigit(remotehost[0]))
+	if (!isdigit((unsigned char)remotehost[0]))
 		printf(" (%s)", inet_ntoa(his_addr.sin_addr));
 	printf("\r\n");
 	if (logged_in) {

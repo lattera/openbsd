@@ -34,11 +34,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 
-RCSID("$KTH: md4.c,v 1.15 2001/01/29 04:33:44 assar Exp $");
+RCSID("$KTH: md4.c,v 1.17 2005/04/27 11:54:56 lha Exp $");
 #endif
 
-#include "md4.h"
 #include "hash.h"
+#include "md4.h"
 
 #define A m->counter[0]
 #define B m->counter[1]
@@ -212,7 +212,7 @@ MD4_Update (struct md4 *m, const void *v, size_t len)
 void
 MD4_Final (void *res, struct md4 *m)
 {
-  static unsigned char zeros[72];
+  unsigned char zeros[72];
   unsigned offset = (m->sz[0] / 8) % 64;
   unsigned int dstart = (120 - offset - 1) % 64 + 1;
 

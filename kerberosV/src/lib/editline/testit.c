@@ -1,4 +1,4 @@
-/*  $Revision: 1.3 $
+/*  $Revision: 1.4 $
 **
 **  A "micro-shell" to test editline library.
 **  If given any arguments, commands aren't executed.
@@ -13,7 +13,7 @@
 #endif
 #include <getarg.h>
 
-#include "editline.h"
+#include "edit_locl.h"
 
 static int n_flag	= 0;
 static int version_flag = 0;

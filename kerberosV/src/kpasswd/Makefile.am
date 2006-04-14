@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.16 2001/08/28 08:31:29 assar Exp $
+# $KTH: Makefile.am,v 1.17 2004/08/26 11:55:23 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_des)
+AM_CPPFLAGS += $(INCLUDE_des)
 
 man_MANS = kpasswd.1 kpasswdd.8
 

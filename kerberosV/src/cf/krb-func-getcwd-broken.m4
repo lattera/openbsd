@@ -1,4 +1,4 @@
-dnl $KTH: krb-func-getcwd-broken.m4,v 1.3.8.1 2004/04/01 07:27:34 joda Exp $
+dnl $KTH: krb-func-getcwd-broken.m4,v 1.5 2004/08/26 10:02:57 joda Exp $
 dnl
 dnl
 dnl test for broken getcwd in (SunOS braindamage)
@@ -10,7 +10,7 @@ AC_MSG_CHECKING(if getcwd is broken)
 AC_CACHE_VAL(ac_cv_func_getcwd_broken, [
 ac_cv_func_getcwd_broken=no
 
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <errno.h>
 char *getcwd(char*, int);
 
@@ -28,7 +28,7 @@ int main()
 		return 0;
 	return 1;
 }
-], ac_cv_func_getcwd_broken=yes,:,:)
+]])], [ac_cv_func_getcwd_broken=yes],[:],[:])
 ])
 if test "$ac_cv_func_getcwd_broken" = yes; then
 	AC_DEFINE(BROKEN_GETCWD, 1, [Define if getcwd is broken (like in SunOS 4).])dnl

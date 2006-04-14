@@ -5,7 +5,7 @@
  */
 
 #include <popper.h>
-RCSID("$KTH: popper.c,v 1.16 2002/07/04 14:09:25 joda Exp $");
+RCSID("$KTH: popper.c,v 1.20 2004/10/25 14:02:00 joda Exp $");
 
 int hangup = FALSE ;
 
@@ -36,15 +36,19 @@ ring(int sig)
 static char *
 tgets(char *str, int size, FILE *fp, int timeout)
 {
-  signal(SIGALRM, ring);
-  alarm(timeout);
-  if (setjmp(env))
-    str = NULL;
-  else
-    str = fgets(str,size,fp);
-  alarm(0);
-  signal(SIGALRM,SIG_DFL);
-  return(str);
+    char *ret;
+    
+    signal(SIGALRM, ring);
+    alarm(timeout);
+    if (setjmp(env)) {
+	alarm(0);
+	signal(SIGALRM, SIG_DFL);
+	return NULL;
+    }
+    ret = fgets(str, size, fp);
+    alarm(0);
+    signal(SIGALRM, SIG_DFL);
+    return ret;
 }
 
 /* 
@@ -97,7 +101,7 @@ main (int argc, char **argv)
             /*  Otherwise assume NOOP and send an OK message to the client */
             else {
                 p.CurrentState = s->success_state;
-                pop_msg(&p,POP_SUCCESS,NULL);
+                pop_msg(&p,POP_SUCCESS,"time passes");
             }
         }       
     }

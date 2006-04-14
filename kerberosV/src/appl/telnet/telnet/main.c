@@ -38,7 +38,7 @@ static char *copyright[] = {
 };
 
 #include "telnet_locl.h"
-RCSID("$KTH: main.c,v 1.38.6.1 2004/03/22 18:16:35 lha Exp $");
+RCSID("$KTH: main.c,v 1.40 2004/04/02 21:28:48 lha Exp $");
 
 #if KRB5
 #define FORWARD
@@ -112,7 +112,6 @@ set_forward_options(void)
 }
 
 #ifdef KRB5
-/* XXX ugly hack to setup dns-proxy stuff */
 #define Authenticator asn1_Authenticator
 #include <krb5.h>
 static void
@@ -120,24 +119,29 @@ krb5_init(void)
 {
     krb5_context context;
     krb5_error_code ret;
+    krb5_boolean ret_val;
 
     ret = krb5_init_context(&context);
     if (ret)
 	return;
 
-#if defined(AUTHENTICATION) && defined(KRB5) && defined(FORWARD)
-    if (krb5_config_get_bool (context, NULL,
-         "libdefaults", "forward", NULL)) {
+#if defined(AUTHENTICATION) && defined(FORWARD)
+    krb5_appdefault_boolean(context, NULL,
+			    NULL, "forward",
+			    0, &ret_val);
+    if (ret_val)
 	    kerberos5_set_forward(1);
-    }
-    if (krb5_config_get_bool (context, NULL,
-         "libdefaults", "forwardable", NULL)) {
+    krb5_appdefault_boolean(context, NULL,
+			    NULL, "forwardable",
+			    0, &ret_val);
+    if (ret_val)
 	    kerberos5_set_forwardable(1);
-    }
 #endif
 #ifdef  ENCRYPTION
-    if (krb5_config_get_bool (context, NULL,
-        "libdefaults", "encrypt", NULL)) {
+    krb5_appdefault_boolean(context, NULL, 
+			    NULL, "encrypt",
+			    0, &ret_val);
+    if (ret_val) {
           encrypt_auto(1);
           decrypt_auto(1); 
 	  wantencryption = 1;

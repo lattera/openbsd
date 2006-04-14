@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: compile_et.h,v 1.6 2000/07/01 20:21:48 assar Exp $ */
+/* $KTH: compile_et.h,v 1.7 2005/05/16 08:51:47 lha Exp $ */
 
 #ifndef __COMPILE_ET_H__
 #define __COMPILE_ET_H__
@@ -40,6 +40,7 @@
 #include <config.h>
 #endif
 
+#include <err.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

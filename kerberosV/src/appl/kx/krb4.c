@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: krb4.c,v 1.11.2.1 2004/02/18 19:22:30 lha Exp $");
+RCSID("$KTH: krb4.c,v 1.12 2004/02/18 19:17:35 lha Exp $");
 
 #ifdef KRB4
 

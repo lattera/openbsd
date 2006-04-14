@@ -1,4 +1,4 @@
-# $KTH: Makefile.am,v 1.29 2002/08/13 13:48:17 joda Exp $
+# $KTH: Makefile.am,v 1.32 2005/04/29 11:32:42 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
@@ -6,7 +6,7 @@ if do_roken_rename
 ES = strtok_r.c snprintf.c strdup.c strupr.c getprogname.c
 endif
 
-INCLUDES += $(ROKEN_RENAME)
+AM_CPPFLAGS += $(ROKEN_RENAME)
 
 YFLAGS = -d
 
@@ -25,9 +25,12 @@ libss_la_SOURCES = $(libsl_la_SOURCES) ss.c ss.h
 # install these?
 
 bin_PROGRAMS = mk_cmds
+noinst_PROGRAMS = slc
 
 mk_cmds_SOURCES = make_cmds.c make_cmds.h parse.y lex.l
 mk_cmds_LDADD = libsl.la $(LDADD)
+
+slc_SOURCES = slc-gram.y slc-lex.l slc.h
 
 ssincludedir = $(includedir)/ss
 ssinclude_HEADERS = ss.h
@@ -37,6 +40,7 @@ CLEANFILES = lex.c parse.c parse.h snprintf.c strtok_r.c strdup.c strupr.c getpr
 $(mk_cmds_OBJECTS): parse.h parse.c
 
 LDADD =						\
+	libsl.la				\
 	$(LIB_roken)				\
 	$(LEXLIB)
 

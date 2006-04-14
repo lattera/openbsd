@@ -14,14 +14,15 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.44.2.7 2003/10/14 16:13:13 joda Exp $
+# $KTH: Makefile.am,v 1.58 2005/04/10 14:04:43 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
-SOURCES = $(libgssapi_la_SOURCES)
+
+SOURCES = $(libgssapi_la_SOURCES) test_acquire_cred.c test_cred.c test_sequence.c
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -47,6 +48,8 @@ host_triplet = @host@
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.common \
 	$(top_srcdir)/cf/Makefile.am.common ChangeLog
+check_PROGRAMS = test_acquire_cred$(EXEEXT) $(am__EXEEXT_1)
+noinst_PROGRAMS = test_cred$(EXEEXT)
 subdir = lib/gssapi
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
@@ -59,7 +62,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -80,16 +82,18 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)"
@@ -97,22 +101,42 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libgssapi_la_DEPENDENCIES = ../krb5/libkrb5.la $(am__DEPENDENCIES_1) \
-	../asn1/libasn1.la ../roken/libroken.la
-am_libgssapi_la_OBJECTS = 8003.lo arcfour.lo accept_sec_context.lo \
-	acquire_cred.lo add_cred.lo add_oid_set_member.lo \
-	canonicalize_name.lo compare_name.lo compat.lo context_time.lo \
-	copy_ccache.lo create_emtpy_oid_set.lo decapsulate.lo \
-	delete_sec_context.lo display_name.lo display_status.lo \
-	duplicate_name.lo encapsulate.lo export_sec_context.lo \
-	export_name.lo external.lo get_mic.lo import_name.lo \
-	import_sec_context.lo indicate_mechs.lo init.lo \
+	../asn1/libasn1.la $(am__DEPENDENCIES_1)
+am__objects_1 = asn1_ContextFlags.lo asn1_MechType.lo \
+	asn1_MechTypeList.lo asn1_NegotiationToken.lo \
+	asn1_NegTokenInit.lo asn1_NegTokenTarg.lo
+am__objects_2 = $(am__objects_1)
+am_libgssapi_la_OBJECTS = $(am__objects_2) 8003.lo \
+	accept_sec_context.lo acquire_cred.lo add_cred.lo \
+	add_oid_set_member.lo arcfour.lo canonicalize_name.lo \
+	ccache_name.lo cfx.lo compare_name.lo compat.lo \
+	context_time.lo copy_ccache.lo create_emtpy_oid_set.lo \
+	decapsulate.lo delete_sec_context.lo display_name.lo \
+	display_status.lo duplicate_name.lo encapsulate.lo \
+	export_sec_context.lo export_name.lo external.lo get_mic.lo \
+	import_name.lo import_sec_context.lo indicate_mechs.lo init.lo \
 	init_sec_context.lo inquire_context.lo inquire_cred.lo \
 	inquire_cred_by_mech.lo inquire_mechs_for_name.lo \
 	inquire_names_for_mech.lo release_buffer.lo release_cred.lo \
-	release_name.lo release_oid_set.lo process_context_token.lo \
+	release_name.lo release_oid_set.lo sequence.lo \
+	process_context_token.lo ticket_flags.lo \
 	test_oid_set_member.lo unwrap.lo v1.lo verify_mic.lo wrap.lo \
 	address_to_krb5addr.lo
 libgssapi_la_OBJECTS = $(am_libgssapi_la_OBJECTS)
+am__EXEEXT_1 = test_sequence$(EXEEXT)
+PROGRAMS = $(noinst_PROGRAMS)
+test_acquire_cred_SOURCES = test_acquire_cred.c
+test_acquire_cred_OBJECTS = test_acquire_cred.$(OBJEXT)
+test_acquire_cred_LDADD = $(LDADD)
+test_acquire_cred_DEPENDENCIES = libgssapi.la $(am__DEPENDENCIES_1)
+test_cred_SOURCES = test_cred.c
+test_cred_OBJECTS = test_cred.$(OBJEXT)
+test_cred_LDADD = $(LDADD)
+test_cred_DEPENDENCIES = libgssapi.la $(am__DEPENDENCIES_1)
+test_sequence_SOURCES = test_sequence.c
+test_sequence_OBJECTS = test_sequence.$(OBJEXT)
+test_sequence_LDADD = $(LDADD)
+test_sequence_DEPENDENCIES = libgssapi.la $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =
@@ -124,8 +148,10 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libgssapi_la_SOURCES)
-DIST_SOURCES = $(libgssapi_la_SOURCES)
+SOURCES = $(libgssapi_la_SOURCES) test_acquire_cred.c test_cred.c \
+	test_sequence.c
+DIST_SOURCES = $(libgssapi_la_SOURCES) test_acquire_cred.c test_cred.c \
+	test_sequence.c
 man3dir = $(mandir)/man3
 MANS = $(man_MANS)
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -202,6 +228,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -233,6 +261,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -277,6 +306,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -286,6 +317,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -322,6 +355,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -353,7 +388,11 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken) -I$(srcdir)/../krb5 $(INCLUDE_des) $(INCLUDE_krb4)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken) -I$(srcdir)/../krb5 \
+	-I${srcdir}/../asn1/include \
+	$(INCLUDE_des) \
+	$(INCLUDE_krb4)
+
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -370,20 +409,38 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
+spnego_files = \
+	asn1_ContextFlags.x			\
+	asn1_MechType.x				\
+	asn1_MechTypeList.x			\
+	asn1_NegotiationToken.x			\
+	asn1_NegTokenInit.x			\
+	asn1_NegTokenTarg.x
+
+BUILT_SOURCES = $(spnego_files:.x=.c)
 lib_LTLIBRARIES = libgssapi.la
-libgssapi_la_LDFLAGS = -version-info 5:0:4
-libgssapi_la_LIBADD = ../krb5/libkrb5.la $(LIB_des) ../asn1/libasn1.la ../roken/libroken.la
+libgssapi_la_LDFLAGS = -version-info 4:0:0
+libgssapi_la_LIBADD = \
+	../krb5/libkrb5.la \
+	$(LIB_des) \
+	../asn1/libasn1.la \
+	$(LIB_roken)
+
 man_MANS = gssapi.3 gss_acquire_cred.3
 include_HEADERS = gssapi.h
 libgssapi_la_SOURCES = \
+	$(BUILT_SOURCES)	\
 	8003.c			\
-	arcfour.c		\
 	accept_sec_context.c	\
 	acquire_cred.c		\
 	add_cred.c		\
 	add_oid_set_member.c	\
+	arcfour.c		\
 	canonicalize_name.c	\
+	ccache_name.c		\
+	cfx.c			\
 	compare_name.c		\
 	compat.c		\
 	context_time.c		\
@@ -415,7 +472,9 @@ libgssapi_la_SOURCES = \
 	release_cred.c		\
 	release_name.c		\
 	release_oid_set.c	\
+	sequence.c		\
 	process_context_token.c \
+	ticket_flags.c		\
 	test_oid_set_member.c	\
 	unwrap.c		\
 	v1.c			\
@@ -423,7 +482,11 @@ libgssapi_la_SOURCES = \
         wrap.c                  \
         address_to_krb5addr.c
 
-all: all-am
+CLEANFILES = $(BUILT_SOURCES) $(spnego_files) spnego_asn1.h asn1_files
+TESTS = test_sequence
+LDADD = libgssapi.la $(LIB_roken)
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8 .c .lo .o .obj
@@ -485,6 +548,29 @@ clean-libLTLIBRARIES:
 	done
 libgssapi.la: $(libgssapi_la_OBJECTS) $(libgssapi_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libgssapi_la_LDFLAGS) $(libgssapi_la_OBJECTS) $(libgssapi_la_LIBADD) $(LIBS)
+
+clean-checkPROGRAMS:
+	@list='$(check_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+test_acquire_cred$(EXEEXT): $(test_acquire_cred_OBJECTS) $(test_acquire_cred_DEPENDENCIES) 
+	@rm -f test_acquire_cred$(EXEEXT)
+	$(LINK) $(test_acquire_cred_LDFLAGS) $(test_acquire_cred_OBJECTS) $(test_acquire_cred_LDADD) $(LIBS)
+test_cred$(EXEEXT): $(test_cred_OBJECTS) $(test_cred_DEPENDENCIES) 
+	@rm -f test_cred$(EXEEXT)
+	$(LINK) $(test_cred_LDFLAGS) $(test_cred_OBJECTS) $(test_cred_LDADD) $(LIBS)
+test_sequence$(EXEEXT): $(test_sequence_OBJECTS) $(test_sequence_DEPENDENCIES) 
+	@rm -f test_sequence$(EXEEXT)
+	$(LINK) $(test_sequence_LDFLAGS) $(test_sequence_OBJECTS) $(test_sequence_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -619,6 +705,79 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -gt `echo "$$banner" | wc -c` && \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -gt `echo "$$banner" | wc -c` && \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -n "$$skipped" && echo "$$skipped"; \
+	  test -n "$$report" && echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	$(mkdir_p) $(distdir)/../.. $(distdir)/../../cf
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
@@ -651,14 +810,18 @@ distdir: $(DISTFILES)
 	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
 	  dist-hook
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) check-local
-check: check-am
-all-am: Makefile $(LTLIBRARIES) $(MANS) $(HEADERS) all-local
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(MANS) $(HEADERS) \
+		all-local
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -675,6 +838,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f $(CONFIG_CLEAN_FILES)
@@ -682,10 +846,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -738,8 +903,9 @@ uninstall-am: uninstall-includeHEADERS uninstall-info-am \
 
 uninstall-man: uninstall-man3
 
-.PHONY: CTAGS GTAGS all all-am all-local check check-am check-local \
-	clean clean-generic clean-libLTLIBRARIES clean-libtool ctags \
+.PHONY: CTAGS GTAGS all all-am all-local check check-TESTS check-am \
+	check-local clean clean-checkPROGRAMS clean-generic \
+	clean-libLTLIBRARIES clean-libtool clean-noinstPROGRAMS ctags \
 	distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
@@ -782,7 +948,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -806,6 +973,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:
@@ -884,11 +1058,12 @@ install-data-hook: install-cat-mans
 .et.c:
 	$(COMPILE_ET) $<
 
-#noinst_PROGRAMS = test_acquire_cred
+$(spnego_files) spnego_asn1.h: asn1_files
 
-#test_acquire_cred_SOURCES = test_acquire_cred.c
+asn1_files: ../asn1/asn1_compile$(EXEEXT) $(srcdir)/spnego.asn1
+	../asn1/asn1_compile$(EXEEXT) $(srcdir)/spnego.asn1 spnego_asn1
 
-#test_acquire_cred_LDADD = libgssapi.la
+$(libgssapi_la_OBJECTS): spnego_asn1.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

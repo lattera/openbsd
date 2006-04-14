@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.23.2.1 2003/05/12 15:20:47 joda Exp $
+# $KTH: Makefile.am,v 1.24 2004/08/26 11:55:28 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_des) $(ROKEN_RENAME)
+AM_CPPFLAGS += $(INCLUDE_des) $(ROKEN_RENAME)
 
 noinst_PROGRAMS = otptest
 
@@ -13,7 +13,7 @@ otptest_LDADD = libotp.la
 include_HEADERS = otp.h
 
 lib_LTLIBRARIES = libotp.la
-libotp_la_LDFLAGS = -version-info 1:4:1
+libotp_la_LDFLAGS = -version-info 1:3:1
 libotp_la_LIBADD  = $(LIB_des) $(LIB_roken) $(LIB_NDBM)
 
 if HAVE_DB3

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 1999, 2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997-2004 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -32,7 +32,7 @@
  */
 
 #include "rsh_locl.h"
-RCSID("$KTH: common.c,v 1.16 2002/09/04 15:50:36 assar Exp $");
+RCSID("$KTH: common.c,v 1.17 2004/09/21 11:32:54 joda Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 
@@ -43,7 +43,7 @@ void *ivec_in[2];
 void *ivec_out[2];
 
 void
-init_ivecs(int client)
+init_ivecs(int client, int have_errsock)
 {
     size_t blocksize;
 
@@ -52,14 +52,20 @@ init_ivecs(int client)
     ivec_in[0] = malloc(blocksize);
     memset(ivec_in[0], client, blocksize);
 
-    ivec_in[1] = malloc(blocksize);
-    memset(ivec_in[1], 2 | client, blocksize);
+    if(have_errsock) {
+	ivec_in[1] = malloc(blocksize);
+	memset(ivec_in[1], 2 | client, blocksize);
+    } else
+	ivec_in[1] = ivec_in[0];
 
     ivec_out[0] = malloc(blocksize);
     memset(ivec_out[0], !client, blocksize);
 
-    ivec_out[1] = malloc(blocksize);
-    memset(ivec_out[1], 2 | !client, blocksize);
+    if(have_errsock) {
+	ivec_out[1] = malloc(blocksize);
+	memset(ivec_out[1], 2 | !client, blocksize);
+    } else
+	ivec_out[1] = ivec_out[0];
 }
 #endif
 

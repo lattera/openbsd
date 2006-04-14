@@ -33,7 +33,7 @@
  *	@(#)externs.h	8.3 (Berkeley) 5/30/95
  */
 
-/* $KTH: externs.h,v 1.25 2002/08/28 20:58:23 joda Exp $ */
+/* $KTH: externs.h,v 1.26 2003/09/25 15:47:24 lha Exp $ */
 
 #ifndef	BSD
 # define BSD 43
@@ -180,6 +180,10 @@ extern void
 extern jmp_buf
     peerdied,
     toplevel;		/* For error conditions. */
+
+int Scheduler(int);
+extern int scheduler_lockout_tty;
+
 
 /* authenc.c */
 

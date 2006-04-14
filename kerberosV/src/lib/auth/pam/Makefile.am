@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.4 2002/05/19 18:43:44 joda Exp $
+# $KTH: Makefile.am,v 1.6 2004/08/26 11:55:25 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 WFLAGS += $(WFLAGS_NOIMPLICITINT)
 
@@ -59,5 +59,9 @@ CLEANFILES = $(MOD) $(OBJS)
 
 SUFFIXES += .c .o
 
+# XXX inline COMPILE since automake wont add it
+
 .c.o:
-	$(COMPILE) -c $<
+	$(CC) $(DEFS) $(DEFAULT_AM_CPPFLAGS) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) \
+	-c `test -f '$<' || echo '$(srcdir)/'`$<

@@ -1,27 +1,48 @@
-# $KTH: Makefile.am,v 1.14 2001/08/04 03:08:02 assar Exp $
+# $KTH: Makefile.am,v 1.16 2004/08/26 11:55:18 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 noinst_PROGRAMS = pop_debug
 
 libexec_PROGRAMS = popper
 
-popper_SOURCES = \
-	pop_dele.c pop_dropcopy.c pop_dropinfo.c \
-	pop_get_command.c pop_init.c \
-	pop_last.c pop_list.c pop_log.c \
-	pop_msg.c pop_parse.c pop_pass.c pop_quit.c \
-	pop_rset.c pop_send.c pop_stat.c pop_updt.c \
-	pop_user.c pop_uidl.c pop_xover.c popper.c \
-	maildir.c popper.h version.h
+popper_SOURCES =				\
+	pop_auth.c				\
+	pop_auth.h				\
+	pop_dele.c				\
+	pop_dropcopy.c				\
+	pop_dropinfo.c				\
+	pop_get_command.c			\
+	pop_init.c				\
+	pop_last.c				\
+	pop_list.c				\
+	pop_log.c				\
+	pop_msg.c				\
+	pop_parse.c				\
+	pop_pass.c				\
+	pop_quit.c				\
+	pop_rset.c				\
+	pop_send.c				\
+	pop_stat.c				\
+	pop_uidl.c				\
+	pop_updt.c				\
+	pop_user.c				\
+	pop_xover.c				\
+	popper.c				\
+	maildir.c				\
+	auth_gssapi.c				\
+	auth_krb4.c				\
+	popper.h				\
+	version.h
 
 EXTRA_DIST = pop3.rfc1081 pop3e.rfc1082 \
 	popper.README.release README-FIRST README-KRB4
 
 LDADD = \
 	$(LIB_otp) \
+	$(top_builddir)/lib/gssapi/libgssapi.la \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \

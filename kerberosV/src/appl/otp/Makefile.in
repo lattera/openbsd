@@ -14,11 +14,11 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.11 2001/08/28 08:31:21 assar Exp $
+# $KTH: Makefile.am,v 1.13 2005/05/29 13:08:22 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 SOURCES = $(otp_SOURCES) $(otpprint_SOURCES)
 
@@ -59,7 +59,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -80,16 +79,18 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
@@ -98,11 +99,14 @@ PROGRAMS = $(bin_PROGRAMS)
 am_otp_OBJECTS = otp.$(OBJEXT)
 otp_OBJECTS = $(am_otp_OBJECTS)
 otp_LDADD = $(LDADD)
-otp_DEPENDENCIES = $(top_builddir)/lib/otp/libotp.la
+am__DEPENDENCIES_1 =
+otp_DEPENDENCIES = $(top_builddir)/lib/otp/libotp.la \
+	$(am__DEPENDENCIES_1)
 am_otpprint_OBJECTS = otpprint.$(OBJEXT)
 otpprint_OBJECTS = $(am_otpprint_OBJECTS)
 otpprint_LDADD = $(LDADD)
-otpprint_DEPENDENCIES = $(top_builddir)/lib/otp/libotp.la
+otpprint_DEPENDENCIES = $(top_builddir)/lib/otp/libotp.la \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =
@@ -190,6 +194,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -221,6 +227,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -265,6 +272,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -274,6 +283,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -310,6 +321,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -341,7 +354,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken) $(INCLUDE_des)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken) $(INCLUDE_des)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -358,13 +371,15 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 bin_SUIDS = otp
 otp_SOURCES = otp.c otp_locl.h
 otpprint_SOURCES = otpprint.c otp_locl.h
 man_MANS = otp.1  otpprint.1
 LDADD = \
-	$(top_builddir)/lib/otp/libotp.la
+	$(top_builddir)/lib/otp/libotp.la	\
+	$(LIB_roken)
 
 all: all-am
 
@@ -710,7 +725,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -734,6 +750,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:

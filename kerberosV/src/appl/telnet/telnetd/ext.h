@@ -33,7 +33,7 @@
  *	@(#)ext.h	8.2 (Berkeley) 12/15/93
  */
 
-/* $KTH: ext.h,v 1.23 2001/08/29 00:45:22 assar Exp $ */
+/* $KTH: ext.h,v 1.24 2005/04/24 20:58:54 lha Exp $ */
 
 #ifndef __EXT_H__
 #define __EXT_H__
@@ -57,7 +57,7 @@ extern const char *new_login;
 
 extern slcfun	slctab[NSLC + 1];	/* slc mapping table */
 
-extern char	*terminaltype;
+extern char	terminaltype[41];
 
 /*
  * I/O data buffers, pointers, and counters.

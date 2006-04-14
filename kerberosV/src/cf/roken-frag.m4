@@ -1,4 +1,4 @@
-dnl $KTH: roken-frag.m4,v 1.45.2.1 2004/04/01 07:27:35 joda Exp $
+dnl $KTH: roken-frag.m4,v 1.56 2005/05/17 08:50:23 joda Exp $
 dnl
 dnl some code to get roken working
 dnl
@@ -26,7 +26,7 @@ dnl C characteristics
 AC_REQUIRE([AC_C___ATTRIBUTE__])
 AC_REQUIRE([AC_C_INLINE])
 AC_REQUIRE([AC_C_CONST])
-AC_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
+rk_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
 
 AC_REQUIRE([rk_DB])
 
@@ -55,28 +55,24 @@ AC_CHECK_HEADERS([\
 	fcntl.h					\
 	grp.h					\
 	ifaddrs.h				\
-	net/if.h				\
 	netdb.h					\
 	netinet/in.h				\
 	netinet/in6.h				\
 	netinet/in_systm.h			\
 	netinet6/in6.h				\
-	netinet6/in6_var.h			\
 	paths.h					\
+	poll.h					\
 	pwd.h					\
-	resolv.h				\
 	rpcsvc/ypclnt.h				\
 	shadow.h				\
 	sys/bswap.h				\
 	sys/ioctl.h				\
 	sys/mman.h				\
 	sys/param.h				\
-	sys/proc.h				\
 	sys/resource.h				\
 	sys/socket.h				\
 	sys/sockio.h				\
 	sys/stat.h				\
-	sys/sysctl.h				\
 	sys/time.h				\
 	sys/tty.h				\
 	sys/types.h				\
@@ -89,9 +85,53 @@ AC_CHECK_HEADERS([\
 	userconf.h				\
 	usersec.h				\
 	util.h					\
-	vis.h					\
 ])
+
+dnl Sunpro 5.2 has a vis.h which is something different.
+AC_CHECK_HEADERS(vis.h, , , [
+#include <vis.h>
+#ifndef VIS_SP
+#error invis
+#endif])
 	
+AC_CHECK_HEADERS(net/if.h, , , [AC_INCLUDES_DEFAULT
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif])
+
+AC_CHECK_HEADERS(netinet6/in6_var.h, , , [AC_INCLUDES_DEFAULT
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET6_IN6_H
+#include <netinet6/in6.h>
+#endif
+])
+
+AC_CHECK_HEADERS(sys/sysctl.h, , , [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+])
+
+AC_CHECK_HEADERS(sys/proc.h, , , [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+])
+
+AC_CHECK_HEADERS(resolv.h, , , [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif
+])
+
 AC_REQUIRE([CHECK_NETINET_IP_AND_TCP])
 
 AM_CONDITIONAL(have_err_h, test "$ac_cv_header_err_h" = yes)
@@ -201,6 +241,7 @@ AC_CHECK_FUNCS([				\
 	initstate				\
 	issetugid				\
 	on_exit					\
+	poll					\
 	random					\
 	setprogname				\
 	setstate				\
@@ -221,6 +262,7 @@ AC_CHECK_FUNCS([				\
 if test "$ac_cv_func_cgetent" = no; then
 	AC_LIBOBJ(getcap)
 fi
+AM_CONDITIONAL(have_cgetent, test "$ac_cv_func_cgetent" = yes)
 
 AC_REQUIRE([AC_FUNC_GETLOGIN])
 
@@ -298,6 +340,7 @@ AC_FIND_IF_NOT_BROKEN(gai_strerror,,
 AC_BROKEN([					\
 	chown					\
 	copyhostent				\
+	closefrom				\
 	daemon					\
 	ecalloc					\
 	emalloc					\
@@ -444,6 +487,7 @@ AC_NEED_PROTO([#include <stdlib.h>], unsetenv)
 AC_NEED_PROTO([#include <unistd.h>], gethostname)
 AC_NEED_PROTO([#include <unistd.h>], mkstemp)
 AC_NEED_PROTO([#include <unistd.h>], getusershell)
+AC_NEED_PROTO([#include <unistd.h>], daemon)
 
 AC_NEED_PROTO([
 #ifdef HAVE_SYS_TYPES_H
@@ -579,24 +623,11 @@ rk_CHECK_VAR([__progname],
 #include <err.h>
 #endif])
 
-AC_CHECK_DECLARATION([#include <stdlib.h>
+AC_CHECK_DECLS([optarg, optind, opterr, optopt, environ],[],[][
+#include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif], optarg)
-AC_CHECK_DECLARATION([#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif], optind)
-AC_CHECK_DECLARATION([#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif], opterr)
-AC_CHECK_DECLARATION([#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif], optopt)
-
-AC_CHECK_DECLARATION([#include <stdlib.h>], environ)
+#endif])
 
 dnl
 dnl Check for fields in struct tm

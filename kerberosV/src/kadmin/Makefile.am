@@ -1,12 +1,14 @@
-# $KTH: Makefile.am,v 1.34 2001/08/28 08:31:26 assar Exp $
+# $KTH: Makefile.am,v 1.39 2004/08/26 11:55:22 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_readline) $(INCLUDE_krb4) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
+AM_CPPFLAGS += $(INCLUDE_readline) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
 
 sbin_PROGRAMS = kadmin
 
 libexec_PROGRAMS = kadmind
+
+SLC = $(top_builddir)/lib/sl/slc
 
 man_MANS = kadmin.8 kadmind.8
 
@@ -25,14 +27,19 @@ kadmin_SOURCES =				\
 	load.c					\
 	mod.c					\
 	rename.c				\
+	stash.c					\
 	util.c					\
+	pw_quality.c				\
 	random_password.c			\
+	kadmin-commands.c			\
 	kadmin_locl.h
 
-if KRB4
-KRB4LIB = $(LIB_krb4)
-version4_c = version4.c
-endif
+$(kadmin_OBJECTS): kadmin-commands.h
+
+CLEANFILES = kadmin-commands.h kadmin-commands.c
+
+kadmin-commands.c kadmin-commands.h: kadmin-commands.in
+	$(SLC) $(srcdir)/kadmin-commands.in
 
 kadmind_SOURCES =				\
 	kadmind.c				\
@@ -40,8 +47,6 @@ kadmind_SOURCES =				\
 	kadmin_locl.h				\
 	$(version4_c)				\
 	kadm_conn.c
-
-EXTRA_kadmind_SOURCES = version4.c
 
 add_random_users_SOURCES = add-random-users.c
 
@@ -54,7 +59,7 @@ LDADD_common = \
 	$(LIB_roken) \
 	$(DBLIB)
 
-kadmind_LDADD = $(KRB4LIB) $(top_builddir)/lib/kadm5/libkadm5srv.la \
+kadmind_LDADD = $(top_builddir)/lib/kadm5/libkadm5srv.la \
 	$(LDADD_common) \
 	$(LIB_pidfile) \
 	$(LIB_dlopen)

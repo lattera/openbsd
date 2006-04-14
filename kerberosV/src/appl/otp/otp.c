@@ -34,7 +34,7 @@
 #include "otp_locl.h"
 #include <getarg.h>
 
-RCSID("$KTH: otp.c,v 1.34 2003/02/25 10:55:17 lha Exp $");
+RCSID("$KTH: otp.c,v 1.35 2003/09/03 09:34:55 lha Exp $");
 
 static int listp;
 static int deletep;
@@ -91,7 +91,7 @@ renew (int argc, char **argv, OtpAlgorithm *alg, char *user)
 	      newctx.alg->name,
 	      newctx.n, 
 	      newctx.seed);
-    if (des_read_pw_string (pw, sizeof(pw), prompt, 0) == 0 &&
+    if (UI_UTIL_read_pw_string (pw, sizeof(pw), prompt, 0) == 0 &&
 	otp_parse (newctx.key, pw, alg) == 0) {
 	ctx = &newctx;
 	ret = 0;
@@ -126,7 +126,7 @@ verify_user_otp(char *username)
     }
 
     snprintf (prompt, sizeof(prompt), "%s's %s Password: ", username, ss);
-    if(des_read_pw_string(passwd, sizeof(passwd)-1, prompt, 0))
+    if(UI_UTIL_read_pw_string(passwd, sizeof(passwd)-1, prompt, 0))
 	return 1;
     return otp_verify_user (&ctx, passwd);
 }
@@ -153,7 +153,7 @@ set (int argc, char **argv, OtpAlgorithm *alg, char *user)
     strlcpy (ctx.seed, argv[1], sizeof(ctx.seed));
     strlwr(ctx.seed);
     do {
-	if (des_read_pw_string (pw, sizeof(pw), "Pass-phrase: ", 1))
+	if (UI_UTIL_read_pw_string (pw, sizeof(pw), "Pass-phrase: ", 1))
 	    return 1;
 	if (strlen (pw) < OTP_MIN_PASSPHRASE)
 	    printf ("Too short pass-phrase.  Use at least %d characters\n",

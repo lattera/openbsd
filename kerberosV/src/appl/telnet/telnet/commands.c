@@ -33,7 +33,7 @@
 
 #include "telnet_locl.h"
 
-RCSID("$KTH: commands.c,v 1.72 2002/08/28 21:04:59 joda Exp $");
+RCSID("$KTH: commands.c,v 1.74 2005/04/06 11:20:32 lha Exp $");
 
 #if	defined(IPPROTO_IP) && defined(IP_TOS)
 int tos = -1;
@@ -74,7 +74,7 @@ makeargv()
     }
     while ((c = *cp)) {
 	int inquote = 0;
-	while (isspace(c))
+	while (isspace((unsigned char)c))
 	    c = *++cp;
 	if (c == '\0')
 	    break;
@@ -96,7 +96,7 @@ makeargv()
 		} else if (c == '\'') {
 		    inquote = '\'';
 		    continue;
-		} else if (isspace(c))
+		} else if (isspace((unsigned char)c))
 		    break;
 	    }
 	    *cp2++ = c;
@@ -1318,9 +1318,9 @@ shell(int argc, char **argv)
 	    else
 		shellname++;
 	    if (argc > 1)
-		execl(shellp, shellname, "-c", &saveline[1], 0);
+		execl(shellp, shellname, "-c", &saveline[1], NULL);
 	    else
-		execl(shellp, shellname, 0);
+		execl(shellp, shellname, NULL);
 	    perror("Execl");
 	    _exit(1);
 	}
@@ -2026,11 +2026,11 @@ cmdrc(char *m1, char *m2)
 	if (line[0] == '#')
 	    continue;
 	if (gotmachine) {
-	    if (!isspace(line[0]))
+	    if (!isspace((unsigned char)line[0]))
 		gotmachine = 0;
 	}
 	if (gotmachine == 0) {
-	    if (isspace(line[0]))
+	    if (isspace((unsigned char)line[0]))
 		continue;
 	    if (strncasecmp(line, m1, l1) == 0)
 		strncpy(line, &line[l1], sizeof(line) - l1);

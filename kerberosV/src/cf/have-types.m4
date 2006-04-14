@@ -1,5 +1,5 @@
 dnl
-dnl $KTH: have-types.m4,v 1.2.12.1 2004/04/01 07:27:33 joda Exp $
+dnl $KTH: have-types.m4,v 1.3 2004/02/12 14:20:52 lha Exp $
 dnl
 
 AC_DEFUN([AC_HAVE_TYPES], [

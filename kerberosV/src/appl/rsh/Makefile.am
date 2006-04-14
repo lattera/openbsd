@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.17 2001/07/31 09:12:03 joda Exp $
+# $KTH: Makefile.am,v 1.18.4.1 2005/12/28 18:00:05 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) -I$(srcdir)/../login
+AM_CPPFLAGS += $(INCLUDE_krb4) -I$(srcdir)/../login
 
 bin_PROGRAMS = rsh
 
@@ -21,5 +21,4 @@ LDADD = $(LIB_kafs) \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \
-	$(LIB_roken) \
-	$(LIB_kdfs)
+	$(LIB_roken)

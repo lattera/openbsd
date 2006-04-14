@@ -14,11 +14,11 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.69.2.3 2004/06/21 08:26:44 lha Exp $
+# $KTH: Makefile.am,v 1.79 2005/04/29 18:42:52 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
 
@@ -62,7 +62,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -83,45 +82,57 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libasn1_la_DEPENDENCIES =
-am__objects_1 = asn1_APOptions.lo asn1_AP_REP.lo asn1_AP_REQ.lo \
-	asn1_AS_REP.lo asn1_AS_REQ.lo asn1_Authenticator.lo \
-	asn1_AuthorizationData.lo asn1_CKSUMTYPE.lo \
+am__DEPENDENCIES_1 =
+libasn1_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__objects_1 = asn1_AD_AND_OR.lo asn1_AD_IF_RELEVANT.lo \
+	asn1_AD_KDCIssued.lo asn1_AD_MANDATORY_FOR_KDC.lo \
+	asn1_APOptions.lo asn1_AP_REP.lo asn1_AP_REQ.lo asn1_AS_REP.lo \
+	asn1_AS_REQ.lo asn1_Authenticator.lo asn1_AuthorizationData.lo \
+	asn1_AUTHDATA_TYPE.lo asn1_CBCParameter.lo asn1_CKSUMTYPE.lo \
 	asn1_ChangePasswdDataMS.lo asn1_Checksum.lo asn1_ENCTYPE.lo \
-	asn1_ETYPE_INFO.lo asn1_ETYPE_INFO_ENTRY.lo \
+	asn1_ETYPE_INFO.lo asn1_ETYPE_INFO2.lo \
+	asn1_ETYPE_INFO2_ENTRY.lo asn1_ETYPE_INFO_ENTRY.lo \
 	asn1_EncAPRepPart.lo asn1_EncASRepPart.lo \
 	asn1_EncKDCRepPart.lo asn1_EncKrbCredPart.lo \
 	asn1_EncKrbPrivPart.lo asn1_EncTGSRepPart.lo \
 	asn1_EncTicketPart.lo asn1_EncryptedData.lo \
-	asn1_EncryptionKey.lo asn1_HostAddress.lo \
+	asn1_EncryptionKey.lo asn1_EtypeList.lo asn1_HostAddress.lo \
 	asn1_HostAddresses.lo asn1_KDCOptions.lo asn1_KDC_REP.lo \
 	asn1_KDC_REQ.lo asn1_KDC_REQ_BODY.lo asn1_KRB_CRED.lo \
 	asn1_KRB_ERROR.lo asn1_KRB_PRIV.lo asn1_KRB_SAFE.lo \
-	asn1_KRB_SAFE_BODY.lo asn1_KerberosTime.lo asn1_KrbCredInfo.lo \
-	asn1_LastReq.lo asn1_LR_TYPE.lo asn1_MESSAGE_TYPE.lo \
-	asn1_METHOD_DATA.lo asn1_NAME_TYPE.lo asn1_PADATA_TYPE.lo \
-	asn1_PA_DATA.lo asn1_PA_ENC_TS_ENC.lo asn1_Principal.lo \
-	asn1_PrincipalName.lo asn1_Realm.lo asn1_TGS_REP.lo \
-	asn1_TGS_REQ.lo asn1_Ticket.lo asn1_TicketFlags.lo \
-	asn1_TransitedEncoding.lo asn1_UNSIGNED.lo
+	asn1_KRB_SAFE_BODY.lo asn1_KerberosString.lo \
+	asn1_KerberosTime.lo asn1_KrbCredInfo.lo asn1_LR_TYPE.lo \
+	asn1_LastReq.lo asn1_MESSAGE_TYPE.lo asn1_METHOD_DATA.lo \
+	asn1_NAME_TYPE.lo asn1_PADATA_TYPE.lo asn1_PA_DATA.lo \
+	asn1_PA_ENC_SAM_RESPONSE_ENC.lo asn1_PA_ENC_TS_ENC.lo \
+	asn1_PA_PAC_REQUEST.lo asn1_PA_SAM_CHALLENGE_2.lo \
+	asn1_PA_SAM_CHALLENGE_2_BODY.lo asn1_PA_SAM_REDIRECT.lo \
+	asn1_PA_SAM_RESPONSE_2.lo asn1_PA_SAM_TYPE.lo \
+	asn1_Principal.lo asn1_PrincipalName.lo \
+	asn1_RC2CBCParameter.lo asn1_Realm.lo asn1_SAMFlags.lo \
+	asn1_TGS_REP.lo asn1_TGS_REQ.lo asn1_Ticket.lo \
+	asn1_TicketFlags.lo asn1_TransitedEncoding.lo asn1_UNSIGNED.lo
 am__objects_2 = $(am__objects_1) asn1_err.lo
 am_libasn1_la_OBJECTS = der_get.lo der_put.lo der_free.lo \
-	der_length.lo der_copy.lo timegm.lo $(am__objects_2)
+	der_length.lo der_copy.lo der_cmp.lo timegm.lo \
+	$(am__objects_2)
 libasn1_la_OBJECTS = $(am_libasn1_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_asn1_compile_OBJECTS = gen.$(OBJEXT) gen_copy.$(OBJEXT) \
@@ -129,7 +140,6 @@ am_asn1_compile_OBJECTS = gen.$(OBJEXT) gen_copy.$(OBJEXT) \
 	gen_glue.$(OBJEXT) gen_length.$(OBJEXT) hash.$(OBJEXT) \
 	lex.$(OBJEXT) main.$(OBJEXT) parse.$(OBJEXT) symbol.$(OBJEXT)
 asn1_compile_OBJECTS = $(am_asn1_compile_OBJECTS)
-am__DEPENDENCIES_1 =
 asn1_compile_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 asn1_print_SOURCES = asn1_print.c
@@ -236,6 +246,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -267,6 +279,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -311,6 +324,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -320,6 +335,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -356,6 +373,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -387,7 +406,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -404,17 +423,22 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 YFLAGS = -d
 lib_LTLIBRARIES = libasn1.la
-libasn1_la_LDFLAGS = -version-info 6:2:0
-libasn1_la_LIBADD = @LIB_com_err@
+libasn1_la_LDFLAGS = -version-info 7:0:1
+libasn1_la_LIBADD = $(LIB_com_err)
 BUILT_SOURCES = \
 	$(gen_files:.x=.c)	\
 	asn1_err.h		\
 	asn1_err.c
 
 gen_files = \
+	asn1_AD_AND_OR.x			\
+	asn1_AD_IF_RELEVANT.x			\
+	asn1_AD_KDCIssued.x			\
+	asn1_AD_MANDATORY_FOR_KDC.x		\
 	asn1_APOptions.x			\
 	asn1_AP_REP.x				\
 	asn1_AP_REQ.x				\
@@ -422,11 +446,15 @@ gen_files = \
 	asn1_AS_REQ.x				\
 	asn1_Authenticator.x			\
 	asn1_AuthorizationData.x		\
+	asn1_AUTHDATA_TYPE.x			\
+	asn1_CBCParameter.x			\
 	asn1_CKSUMTYPE.x			\
 	asn1_ChangePasswdDataMS.x		\
 	asn1_Checksum.x				\
 	asn1_ENCTYPE.x				\
 	asn1_ETYPE_INFO.x			\
+	asn1_ETYPE_INFO2.x			\
+	asn1_ETYPE_INFO2_ENTRY.x		\
 	asn1_ETYPE_INFO_ENTRY.x			\
 	asn1_EncAPRepPart.x			\
 	asn1_EncASRepPart.x			\
@@ -437,6 +465,7 @@ gen_files = \
 	asn1_EncTicketPart.x			\
 	asn1_EncryptedData.x			\
 	asn1_EncryptionKey.x			\
+	asn1_EtypeList.x			\
 	asn1_HostAddress.x			\
 	asn1_HostAddresses.x			\
 	asn1_KDCOptions.x			\
@@ -448,19 +477,29 @@ gen_files = \
 	asn1_KRB_PRIV.x				\
 	asn1_KRB_SAFE.x				\
 	asn1_KRB_SAFE_BODY.x			\
+	asn1_KerberosString.x			\
 	asn1_KerberosTime.x			\
 	asn1_KrbCredInfo.x			\
-	asn1_LastReq.x				\
 	asn1_LR_TYPE.x				\
+	asn1_LastReq.x				\
 	asn1_MESSAGE_TYPE.x			\
 	asn1_METHOD_DATA.x			\
 	asn1_NAME_TYPE.x			\
 	asn1_PADATA_TYPE.x			\
 	asn1_PA_DATA.x				\
+	asn1_PA_ENC_SAM_RESPONSE_ENC.x		\
 	asn1_PA_ENC_TS_ENC.x			\
+	asn1_PA_PAC_REQUEST.x			\
+	asn1_PA_SAM_CHALLENGE_2.x		\
+	asn1_PA_SAM_CHALLENGE_2_BODY.x		\
+	asn1_PA_SAM_REDIRECT.x			\
+	asn1_PA_SAM_RESPONSE_2.x		\
+	asn1_PA_SAM_TYPE.x			\
 	asn1_Principal.x			\
 	asn1_PrincipalName.x			\
+	asn1_RC2CBCParameter.x			\
 	asn1_Realm.x				\
+	asn1_SAMFlags.x				\
 	asn1_TGS_REP.x				\
 	asn1_TGS_REQ.x				\
 	asn1_Ticket.x				\
@@ -491,6 +530,7 @@ libasn1_la_SOURCES = \
 	der_free.c				\
 	der_length.c				\
 	der_copy.c				\
+	der_cmp.c				\
 	timegm.c				\
 	$(BUILT_SOURCES)
 
@@ -503,8 +543,9 @@ check_der_LDADD = \
 
 check_gen_LDADD = $(check_der_LDADD)
 asn1_print_LDADD = $(check_der_LDADD)
-CLEANFILES = lex.c parse.c parse.h krb5_asn1.h $(BUILT_SOURCES) \
-	$(gen_files) asn1_files
+CLEANFILES = lex.c parse.c parse.h krb5_asn1.h \
+	$(BUILT_SOURCES) \
+	$(gen_files) asn1_files asn1_files2
 
 include_HEADERS = krb5_asn1.h asn1_err.h der.h
 EXTRA_DIST = asn1_err.et
@@ -958,7 +999,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -982,6 +1024,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:

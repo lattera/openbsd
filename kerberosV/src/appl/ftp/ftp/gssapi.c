@@ -39,9 +39,10 @@
 #include <gssapi.h>
 #include <krb5_err.h>
 
-RCSID("$KTH: gssapi.c,v 1.22.2.2 2003/08/20 16:41:24 lha Exp $");
+RCSID("$KTH: gssapi.c,v 1.26 2003/12/19 00:49:08 lha Exp $");
 
 int ftp_do_gss_bindings = 0;
+int ftp_do_gss_delegate = 1;
 
 struct gss_data {
     gss_ctx_id_t context_hdl;
@@ -54,7 +55,7 @@ gss_init(void *app_data)
 {
     struct gss_data *d = app_data;
     d->context_hdl = GSS_C_NO_CONTEXT;
-    d->delegated_cred_handle = NULL;
+    d->delegated_cred_handle = GSS_C_NO_CREDENTIAL;
 #if defined(FTP_SERVER)
     return 0;
 #else
@@ -193,15 +194,6 @@ gss_adat(void *app_data, void *buf, size_t len)
     input_token.value = buf;
     input_token.length = len;
 
-    d->delegated_cred_handle = malloc(sizeof(*d->delegated_cred_handle));
-    if (d->delegated_cred_handle == NULL) {
-	reply(500, "Out of memory");
-	goto out;
-    }
-
-    memset ((char*)d->delegated_cred_handle, 0,
-	    sizeof(*d->delegated_cred_handle));
-    
     maj_stat = gss_accept_sec_context (&min_stat,
 				       &d->context_hdl,
 				       GSS_C_NO_CREDENTIAL,
@@ -353,6 +345,7 @@ gss_auth(void *app_data, char *host)
     int n;
     gss_channel_bindings_t bindings;
     struct gss_data *d = app_data;
+    OM_uint32 mech_flags = GSS_C_MUTUAL_FLAG | GSS_C_SEQUENCE_FLAG;
 
     const char *knames[] = { "ftp", "host", NULL }, **kname = knames;
 	    
@@ -380,14 +373,16 @@ gss_auth(void *app_data, char *host)
     } else
 	bindings = GSS_C_NO_CHANNEL_BINDINGS;
 
+    if (ftp_do_gss_delegate)
+	mech_flags |= GSS_C_DELEG_FLAG;
+
     while(!context_established) {
 	maj_stat = gss_init_sec_context(&min_stat,
 					GSS_C_NO_CREDENTIAL,
 					&d->context_hdl,
 					target_name,
 					GSS_C_NO_OID,
-                                        GSS_C_MUTUAL_FLAG | GSS_C_SEQUENCE_FLAG
-                                          | GSS_C_DELEG_FLAG,
+                                        mech_flags,
 					0,
 					bindings,
 					&input,

@@ -33,7 +33,7 @@
 
 #include "telnetd.h"
 
-RCSID("$KTH: telnetd.c,v 1.69.6.1 2004/03/22 18:17:25 lha Exp $");
+RCSID("$KTH: telnetd.c,v 1.75.2.2 2005/12/01 15:29:02 lha Exp $");
 
 #ifdef _SC_CRAY_SECURE_SYS
 #include <sys/sysv.h>
@@ -49,6 +49,12 @@ struct	socksec ss;
 
 #ifdef AUTHENTICATION
 int	auth_level = 0;
+#endif
+
+#ifdef KRB5
+#define Authenticator k5_Authenticator
+#include <krb5.h>
+#undef Authenticator
 #endif
 
 extern	int utmp_len;
@@ -141,10 +147,6 @@ char valid_opts[] = "Bd:hklnS:u:UL:y"
 
 static void doit(struct sockaddr*, int);
 
-#ifdef ENCRYPTION
-extern int des_check_key;
-#endif
-
 int
 main(int argc, char **argv)
 {
@@ -155,9 +157,6 @@ main(int argc, char **argv)
     int ch;
 #if	defined(IPPROTO_IP) && defined(IP_TOS)
     int tos = -1;
-#endif
-#ifdef ENCRYPTION
-    des_check_key = 1;	/* Kludge for Mac NCSA telnet 2.6 /bg */
 #endif
     pfrontp = pbackp = ptyobuf;
     netip = netibuf;
@@ -636,7 +635,7 @@ getterminaltype(char *name, size_t name_sz)
 		     */
 		    _gettermname();
 		    if (strncmp(first, terminaltype, sizeof(first)) != 0)
-			strcpy(terminaltype, first);
+			strlcpy(terminaltype, first, sizeof(terminaltype));
 		    break;
 		}
 	    }
@@ -747,12 +746,21 @@ Please contact your net administrator");
 #endif
 
     init_env();
+
+    /* begin server processing */
+
+    /*
+     * Initialize the slc mapping table.
+     */
+
+    get_slc_defaults();
+
     /*
      * get terminal type.
      */
     *user_name = 0;
     level = getterminaltype(user_name, sizeof(user_name));
-    esetenv("TERM", terminaltype ? terminaltype : "network", 1);
+    esetenv("TERM", terminaltype[0] ? terminaltype : "network", 1);
 
 #ifdef _SC_CRAY_SECURE_SYS
     if (secflag) {
@@ -763,7 +771,6 @@ Please contact your net administrator");
     }
 #endif	/* _SC_CRAY_SECURE_SYS */
 
-    /* begin server processing */
     my_telnet(net, ourpty, remote_host_name, remote_utmp_name,
 	      level, user_name);
     /*NOTREACHED*/
@@ -779,9 +786,17 @@ show_issue(void)
     if(f == NULL)
 	f = fopen(SYSCONFDIR "/issue", "r");
     if(f){
-	while(fgets(buf, sizeof(buf)-2, f)){
-	    strcpy(buf + strcspn(buf, "\r\n"), "\r\n");
-	    writenet((unsigned char*)buf, strlen(buf));
+	while(fgets(buf, sizeof(buf), f) != NULL) {
+	    size_t len = strcspn(buf, "\r\n");
+	    if(len == strlen(buf)) {
+		/* there's no newline */
+		writenet((unsigned char*)buf, len);
+	    } else {
+		/* replace newline with \r\n */
+		buf[len] = '\0';
+		writenet((unsigned char*)buf, len);
+		writenet((unsigned char*)"\r\n", 2);
+	    }
 	}
 	fclose(f);
     }
@@ -801,11 +816,6 @@ my_telnet(int f, int p, const char *host, const char *utmp_host,
     int nfd;
     int startslave_called = 0;
     time_t timeout;
-
-    /*
-     * Initialize the slc mapping table.
-     */
-    get_slc_defaults();
 
     /*
      * Do some tests where it is desireable to wait for a response.

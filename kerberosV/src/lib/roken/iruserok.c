@@ -10,11 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -33,7 +29,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: iruserok.c,v 1.23 1999/12/05 13:27:05 assar Exp $");
+RCSID("$KTH: iruserok.c,v 1.25 2005/04/12 11:28:54 lha Exp $");
 #endif
 
 #include <stdio.h>
@@ -221,7 +217,7 @@ __ivaliduser(FILE *hostf, unsigned raddr, const char *luser,
  *
  * Returns 0 if ok, -1 if not ok.
  */
-int
+int ROKEN_LIB_FUNCTION
 iruserok(unsigned raddr, int superuser, const char *ruser, const char *luser)
 {
 	char *cp;

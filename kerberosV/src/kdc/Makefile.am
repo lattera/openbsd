@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.44 2003/01/14 05:47:06 lha Exp $
+# $KTH: Makefile.am,v 1.47 2005/04/24 13:45:31 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
+AM_CPPFLAGS += $(INCLUDE_krb4) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
 
 bin_PROGRAMS = string2key
 
@@ -19,23 +19,19 @@ kstash_SOURCES = kstash.c headers.h
 
 string2key_SOURCES = string2key.c headers.h
 
-if KRB4
-krb4_sources = kaserver.c rx.h
-else
-krb4_sources =
-endif
-
 kdc_SOURCES = \
 	config.c	\
 	connect.c	\
 	kdc_locl.h	\
 	kerberos5.c	\
+	pkinit.c	\
 	log.c		\
 	main.c		\
 	misc.c		\
 	524.c		\
 	kerberos4.c	\
-	$(krb4_sources)
+	kaserver.c	\
+	rx.h
 
 
 hprop_LDADD = \

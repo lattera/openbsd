@@ -1,4 +1,4 @@
-dnl $KTH: crypto.m4,v 1.16.2.1 2003/05/05 20:08:32 joda Exp $
+dnl $KTH: crypto.m4,v 1.20.4.1 2005/08/12 07:40:53 lha Exp $
 dnl
 dnl test for crypto libraries:
 dnl - libcrypto (from openssl)
@@ -8,12 +8,16 @@ dnl - own-built libdes
 m4_define([test_headers], [
 		#undef KRB5 /* makes md4.h et al unhappy */
 		#ifdef HAVE_OPENSSL
+		#ifdef HAVE_SYS_TYPES_H
+		#include <sys/types.h>
+		#endif
 		#include <openssl/md4.h>
 		#include <openssl/md5.h>
 		#include <openssl/sha.h>
-		#define OPENSSL_DES_LIBDES_COMPATIBILITY
 		#include <openssl/des.h>
 		#include <openssl/rc4.h>
+		#include <openssl/aes.h>
+		#include <openssl/ui.h>
 		#include <openssl/rand.h>
 		#else
 		#include <md4.h>
@@ -21,6 +25,7 @@ m4_define([test_headers], [
 		#include <sha.h>
 		#include <des.h>
 		#include <rc4.h>
+		#include <aes.h>
 		#endif
 		#ifdef OLD_HASH_NAMES
 		typedef struct md4 MD4_CTX;
@@ -48,9 +53,11 @@ m4_define([test_body], [
 		SHA1_Init(&sha1);
 		#ifdef HAVE_OPENSSL
 		RAND_status();
+		UI_UTIL_read_pw_string(0,0,0,0);
 		#endif
 
-		des_cbc_encrypt(0, 0, 0, schedule, 0, 0);
+		AES_encrypt(0,0,0);
+		DES_cbc_encrypt(0, 0, 0, schedule, 0, 0);
 		RC4(0, 0, 0, 0);])
 
 
@@ -83,24 +90,25 @@ if test "$crypto_lib" = "unknown" -a "$with_krb4" != "no"; then
 		for j in $cdirs; do
 			for k in $clibs; do
 				LIBS="$j $k $save_LIBS"
-				AC_TRY_LINK(test_headers, test_body,
-					openssl=yes ires="$i" lres="$j $k"; break 3)
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([test_headers],
+						[test_body])],
+					[openssl=yes ires="$i" lres="$j $k"; break 3])
 			done
 		done
 		CFLAGS="$i $save_CFLAGS"
 		for j in $cdirs; do
 			for k in $clibs; do
 				LIBS="$j $k $save_LIBS"
-				AC_TRY_LINK(test_headers, test_body,
-					openssl=no ires="$i" lres="$j $k"; break 3)
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([test_headers],[test_body])],
+					[openssl=no ires="$i" lres="$j $k"; break 3])
 			done
 		done
 		CFLAGS="-DHAVE_OLD_HASH_NAMES $i $save_CFLAGS"
 		for j in $cdirs; do
 			for k in $clibs; do
 				LIBS="$j $k $save_LIBS"
-				AC_TRY_LINK(test_headers, test_body,
-					openssl=no ires="$i" lres="$j $k"; break 3)
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([test_headers],[test_body])],
+					[openssl=no ires="$i" lres="$j $k"; break 3])
 			done
 		done
 	done
@@ -137,7 +145,7 @@ if test "$crypto_lib" = "unknown" -a "$with_openssl" != "no"; then
 		LIB_des_so="$LIB_des"
 		LIB_des_appl="$LIB_des"
 		LIBS="${LIBS} ${LIB_des}"
-		AC_TRY_LINK(test_headers, test_body, [
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([test_headers],[test_body])], [
 			crypto_lib=libcrypto openssl=yes
 			AC_MSG_RESULT([libcrypto])
 		])

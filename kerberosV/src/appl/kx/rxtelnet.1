@@ -29,9 +29,9 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
 .\" SUCH DAMAGE. 
 .\" 
-.\" $KTH: rxtelnet.1,v 1.12 2003/04/11 12:48:46 lha Exp $
+.\" $KTH: rxtelnet.1,v 1.13 2004/03/07 17:24:58 lha Exp $
 .\"
-.Dd September 27, 1996
+.Dd March  7, 2004
 .Dt RXTELNET 1
 .Os KTH_KRB
 .Sh NAME
@@ -62,6 +62,10 @@ From this window you will also be able to run X clients that will be
 able to connect securely to your X server. If
 .Ar port
 is given, that port will be used instead of the default.
+.Pp
+If setting up the X forwarding failes,
+.Nm
+will still telnet in to the remote host, but without X forwarding.
 .Pp
 The supported options are:
 .Bl -tag -width Ds

@@ -1,5 +1,5 @@
 dnl
-dnl $KTH: capabilities.m4,v 1.2.20.1 2004/04/01 07:27:32 joda Exp $
+dnl $KTH: capabilities.m4,v 1.3 2004/02/12 14:20:37 lha Exp $
 dnl
 
 dnl

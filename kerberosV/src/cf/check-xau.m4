@@ -1,4 +1,4 @@
-dnl $KTH: check-xau.m4,v 1.3.34.1 2004/04/01 07:27:33 joda Exp $
+dnl $KTH: check-xau.m4,v 1.4 2004/02/12 14:20:44 lha Exp $
 dnl
 dnl check for Xau{Read,Write}Auth and XauFileName
 dnl

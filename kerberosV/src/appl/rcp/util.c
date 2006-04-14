@@ -43,7 +43,7 @@ static const char rcsid[] =
 
 #include "rcp_locl.h"
 
-RCSID("$KTH: util.c,v 1.6 2001/09/04 14:35:58 assar Exp $");
+RCSID("$KTH: util.c,v 1.7 2005/04/18 07:52:58 lha Exp $");
 
 char *
 colon(cp)
@@ -81,7 +81,7 @@ okname(cp0)
 	char *cp0;
 {
 	int c;
-	char *cp;
+	unsigned char *cp;
 
 	cp = cp0;
 	do {

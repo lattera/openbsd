@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.16 2001/08/28 11:21:16 joda Exp $
+# $KTH: Makefile.am,v 1.17 2004/08/26 11:55:20 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += -I$(srcdir)/.. $(INCLUDE_krb4) $(INCLUDE_des)
+AM_CPPFLAGS += -I$(srcdir)/.. $(INCLUDE_krb4) $(INCLUDE_des)
 
 bin_PROGRAMS = telnet
 

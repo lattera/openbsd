@@ -43,7 +43,7 @@
 %{
 
 #include "ftpd_locl.h"
-RCSID("$KTH: ftpcmd.y,v 1.61.10.2 2004/08/20 15:15:46 lha Exp $");
+RCSID("$KTH: ftpcmd.y,v 1.65 2004/08/20 13:31:19 lha Exp $");
 
 off_t	restart_point;
 
@@ -526,7 +526,7 @@ cmd
 		}
 	| SITE SP AFSLOG CRLF check_login
 		{
-#ifdef KRB4
+#if defined(KRB4) || defined(KRB5)
 		    if(guest)
 			reply(500, "Can't be done as guest.");
 		    else if($5)
@@ -537,7 +537,7 @@ cmd
 		}
 	| SITE SP AFSLOG SP STRING CRLF check_login
 		{
-#ifdef KRB4
+#if defined(KRB4) || defined(KRB5)
 		    if(guest)
 			reply(500, "Can't be done as guest.");
 		    else if($7)

@@ -1,25 +1,45 @@
-# $KTH: Makefile.am,v 1.44.2.7 2003/10/14 16:13:13 joda Exp $
+# $KTH: Makefile.am,v 1.58 2005/04/10 14:04:43 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += -I$(srcdir)/../krb5 $(INCLUDE_des) $(INCLUDE_krb4)
+AM_CPPFLAGS += -I$(srcdir)/../krb5 \
+	-I${srcdir}/../asn1/include \
+	$(INCLUDE_des) \
+	$(INCLUDE_krb4)
+
+spnego_files =					\
+	asn1_ContextFlags.x			\
+	asn1_MechType.x				\
+	asn1_MechTypeList.x			\
+	asn1_NegotiationToken.x			\
+	asn1_NegTokenInit.x			\
+	asn1_NegTokenTarg.x
+
+BUILT_SOURCES = $(spnego_files:.x=.c)
 
 lib_LTLIBRARIES = libgssapi.la
-libgssapi_la_LDFLAGS = -version-info 5:0:4
-libgssapi_la_LIBADD  = ../krb5/libkrb5.la $(LIB_des) ../asn1/libasn1.la ../roken/libroken.la
+libgssapi_la_LDFLAGS = -version-info 4:0:0
+libgssapi_la_LIBADD  = \
+	../krb5/libkrb5.la \
+	$(LIB_des) \
+	../asn1/libasn1.la \
+	$(LIB_roken)
 
 man_MANS = gssapi.3 gss_acquire_cred.3
 
 include_HEADERS = gssapi.h
 
 libgssapi_la_SOURCES =		\
+	$(BUILT_SOURCES)	\
 	8003.c			\
-	arcfour.c		\
 	accept_sec_context.c	\
 	acquire_cred.c		\
 	add_cred.c		\
 	add_oid_set_member.c	\
+	arcfour.c		\
 	canonicalize_name.c	\
+	ccache_name.c		\
+	cfx.c			\
 	compare_name.c		\
 	compat.c		\
 	context_time.c		\
@@ -51,7 +71,9 @@ libgssapi_la_SOURCES =		\
 	release_cred.c		\
 	release_name.c		\
 	release_oid_set.c	\
+	sequence.c		\
 	process_context_token.c \
+	ticket_flags.c		\
 	test_oid_set_member.c	\
 	unwrap.c		\
 	v1.c			\
@@ -59,8 +81,18 @@ libgssapi_la_SOURCES =		\
         wrap.c                  \
         address_to_krb5addr.c
 
-#noinst_PROGRAMS = test_acquire_cred
+CLEANFILES = $(BUILT_SOURCES) $(spnego_files) spnego_asn1.h asn1_files
 
-#test_acquire_cred_SOURCES = test_acquire_cred.c
+$(spnego_files) spnego_asn1.h: asn1_files
 
-#test_acquire_cred_LDADD = libgssapi.la
+asn1_files: ../asn1/asn1_compile$(EXEEXT) $(srcdir)/spnego.asn1
+	../asn1/asn1_compile$(EXEEXT) $(srcdir)/spnego.asn1 spnego_asn1
+
+$(libgssapi_la_OBJECTS): spnego_asn1.h
+
+TESTS = test_sequence
+
+check_PROGRAMS = test_acquire_cred $(TESTS)
+
+noinst_PROGRAMS = test_cred
+LDADD = libgssapi.la $(LIB_roken)

@@ -30,7 +30,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-/* $KTH: hash.h,v 1.1 1999/03/22 19:16:25 joda Exp $ */
+/* $KTH: hash.h,v 1.3 2005/04/27 11:53:48 lha Exp $ */
 
 /* stuff in common between md4, md5, and sha1 */
 
@@ -39,6 +39,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
+#ifdef KRB5
+#include <krb5-types.h>
+#endif
 
 #ifndef min
 #define min(a,b) (((a)>(b))?(b):(a))

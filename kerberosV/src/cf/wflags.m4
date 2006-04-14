@@ -1,8 +1,8 @@
-dnl $KTH: wflags.m4,v 1.3.34.1 2004/04/01 07:27:35 joda Exp $
+dnl $KTH: wflags.m4,v 1.4 2004/02/12 14:21:14 lha Exp $
 dnl
 dnl set WFLAGS
 
-AC_DEFUN([AC_WFLAGS],[
+AC_DEFUN([rk_WFLAGS],[
 WFLAGS_NOUNUSED=""
 WFLAGS_NOIMPLICITINT=""
 if test -z "$WFLAGS" -a "$GCC" = "yes"; then

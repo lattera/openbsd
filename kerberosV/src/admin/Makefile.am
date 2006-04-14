@@ -1,8 +1,10 @@
-# $KTH: Makefile.am,v 1.35 2001/08/28 08:31:19 assar Exp $
+# $KTH: Makefile.am,v 1.37 2004/09/23 14:47:38 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_readline) $(INCLUDE_des)
+AM_CPPFLAGS += $(INCLUDE_readline) $(INCLUDE_des)
+
+SLC = $(top_builddir)/lib/sl/slc
 
 man_MANS = ktutil.8
 
@@ -17,7 +19,15 @@ ktutil_SOURCES =				\
 	list.c					\
 	purge.c					\
 	remove.c				\
+	ktutil-commands.c			\
 	rename.c
+
+$(ktutil_OBJECTS): ktutil-commands.h
+
+CLEANFILES = ktutil-commands.h ktutil-commands.c
+
+ktutil-commands.c ktutil-commands.h: ktutil-commands.in
+	$(SLC) $(srcdir)/ktutil-commands.in
 
 LDADD = \
 	$(top_builddir)/lib/kadm5/libkadm5clnt.la \

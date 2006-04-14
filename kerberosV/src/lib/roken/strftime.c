@@ -35,7 +35,7 @@
 #endif
 #include "roken.h"
 
-RCSID("$KTH: strftime.c,v 1.13 2002/08/20 12:42:37 joda Exp $");
+RCSID("$KTH: strftime.c,v 1.14 2005/04/12 11:29:08 lha Exp $");
 
 static const char *abb_weekdays[] = {
     "Sun",
@@ -167,7 +167,7 @@ week_number_mon4 (const struct tm *tm)
  *
  */
 
-size_t
+size_t ROKEN_LIB_FUNCTION
 strftime (char *buf, size_t maxsize, const char *format,
 	  const struct tm *tm)
 {

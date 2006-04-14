@@ -1,8 +1,8 @@
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 SUFFIXES = .et .h
 
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken)
 
 if do_roken_rename
 ROKEN_RENAME = -DROKEN_RENAME
@@ -40,6 +40,8 @@ LIB_setsockopt		= @LIB_setsockopt@
 LIB_socket		= @LIB_socket@
 LIB_syslog		= @LIB_syslog@
 LIB_tgetent		= @LIB_tgetent@
+LIB_com_err		= @LIB_com_err@
+LIB_door_create		= @LIB_door_create@
 
 HESIODLIB = @HESIODLIB@
 HESIODINCLUDE = @HESIODINCLUDE@
@@ -85,7 +87,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -109,6 +112,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 SUFFIXES += .x
@@ -202,6 +212,7 @@ if KRB5
 LIB_krb5 = $(top_builddir)/lib/krb5/libkrb5.la \
 	$(top_builddir)/lib/asn1/libasn1.la
 LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 endif
 
 if DCE

@@ -14,15 +14,15 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.53.4.2 2003/10/14 16:13:14 joda Exp $
+# $KTH: Makefile.am,v 1.64 2005/04/20 21:17:32 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
 
-SOURCES = $(libhdb_la_SOURCES) convert_db.c
+SOURCES = $(hdb_ldap_la_SOURCES) $(libhdb_la_SOURCES) convert_db.c
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -61,7 +61,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -82,29 +81,43 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
+hdb_ldap_la_LIBADD =
+am__hdb_ldap_la_SOURCES_DIST = hdb-ldap.c
+@OPENLDAP_MODULE_TRUE@am_hdb_ldap_la_OBJECTS = hdb-ldap.lo
+hdb_ldap_la_OBJECTS = $(am_hdb_ldap_la_OBJECTS)
 am__DEPENDENCIES_1 =
 libhdb_la_DEPENDENCIES = ../krb5/libkrb5.la ../asn1/libasn1.la \
 	../roken/libroken.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-am__objects_1 = asn1_Key.lo asn1_Event.lo asn1_HDBFlags.lo \
-	asn1_hdb_entry.lo asn1_Salt.lo hdb_err.lo asn1_GENERATION.lo
-am_libhdb_la_OBJECTS = common.lo db.lo db3.lo hdb-ldap.lo hdb.lo \
-	keytab.lo mkey.lo ndbm.lo print.lo $(am__objects_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+am__libhdb_la_SOURCES_DIST = common.c db.c db3.c hdb-ldap.c hdb.c \
+	keys.c keytab.c mkey.c ndbm.c print.c asn1_Event.c \
+	asn1_GENERATION.c asn1_HDBFlags.c asn1_Key.c asn1_Salt.c \
+	asn1_hdb_entry.c hdb_err.c hdb_err.h
+@OPENLDAP_MODULE_FALSE@am__objects_1 = hdb-ldap.lo
+am__objects_2 = common.lo db.lo db3.lo $(am__objects_1) hdb.lo keys.lo \
+	keytab.lo mkey.lo ndbm.lo print.lo
+am__objects_3 = asn1_Event.lo asn1_GENERATION.lo asn1_HDBFlags.lo \
+	asn1_Key.lo asn1_Salt.lo asn1_hdb_entry.lo
+am__objects_4 = $(am__objects_3) hdb_err.lo
+am_libhdb_la_OBJECTS = $(am__objects_2) $(am__objects_4)
 libhdb_la_OBJECTS = $(am_libhdb_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 convert_db_SOURCES = convert_db.c
@@ -124,8 +137,9 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libhdb_la_SOURCES) convert_db.c
-DIST_SOURCES = $(libhdb_la_SOURCES) convert_db.c
+SOURCES = $(hdb_ldap_la_SOURCES) $(libhdb_la_SOURCES) convert_db.c
+DIST_SOURCES = $(am__hdb_ldap_la_SOURCES_DIST) \
+	$(am__libhdb_la_SOURCES_DIST) convert_db.c
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(include_HEADERS)
 ETAGS = etags
@@ -200,6 +214,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -231,6 +247,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -275,6 +292,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -284,6 +303,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -320,6 +341,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -351,7 +374,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken) -I../asn1 -I$(srcdir)/../asn1 $(INCLUDE_des) $(INCLUDE_openldap)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken) -I../asn1 -I$(srcdir)/../asn1 $(INCLUDE_des) $(INCLUDE_openldap)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -368,35 +391,65 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
-BUILT_SOURCES = asn1_Key.c asn1_Event.c asn1_HDBFlags.c asn1_hdb_entry.c \
-	asn1_Salt.c hdb_err.c hdb_err.h asn1_GENERATION.c
+BUILT_SOURCES = \
+	$(foo:.x=.c)	\
+	hdb_err.c \
+	hdb_err.h
 
-foo = asn1_Key.x asn1_GENERATION.x asn1_Event.x asn1_HDBFlags.x asn1_hdb_entry.x asn1_Salt.x
+foo = \
+	asn1_Event.x \
+	asn1_GENERATION.x \
+	asn1_HDBFlags.x \
+	asn1_Key.x \
+	asn1_Salt.x \
+	asn1_hdb_entry.x
+
 CLEANFILES = $(BUILT_SOURCES) $(foo) hdb_asn1.h asn1_files
 LDADD = libhdb.la \
 	$(LIB_openldap) \
 	../krb5/libkrb5.la \
 	../asn1/libasn1.la \
 	$(LIB_des) \
-	$(LIB_roken)
+	$(LIB_roken) \
+	$(LIB_ldopen)
 
-lib_LTLIBRARIES = libhdb.la
-libhdb_la_LDFLAGS = -version-info 7:7:0
-libhdb_la_SOURCES = \
+@OPENLDAP_MODULE_TRUE@ldap_so = hdb_ldap.la
+@OPENLDAP_MODULE_TRUE@hdb_ldap_la_SOURCES = hdb-ldap.c
+@OPENLDAP_MODULE_TRUE@hdb_ldap_la_LDFLAGS = -module
+@OPENLDAP_MODULE_FALSE@ldap = hdb-ldap.c
+lib_LTLIBRARIES = libhdb.la $(ldap_so)
+libhdb_la_LDFLAGS = -version-info 8:0:1
+hdb_source = \
 	common.c				\
 	db.c					\
 	db3.c					\
-	hdb-ldap.c				\
+	$(ldap)					\
 	hdb.c					\
+	keys.c					\
 	keytab.c				\
 	mkey.c					\
 	ndbm.c					\
-	print.c					\
+	print.c
+
+libhdb_la_SOURCES = \
+	$(hdb_source)				\
 	$(BUILT_SOURCES)
 
 include_HEADERS = hdb.h hdb_err.h hdb_asn1.h hdb-protos.h hdb-private.h
-libhdb_la_LIBADD = ../krb5/libkrb5.la ../asn1/libasn1.la ../roken/libroken.la $(LIB_openldap) $(DBLIB) $(LIB_NDBM)
+libhdb_la_LIBADD = \
+	../krb5/libkrb5.la \
+	../asn1/libasn1.la \
+	../roken/libroken.la \
+	$(LIB_openldap) \
+	$(LIB_dlopen) \
+	$(DBLIB) \
+	$(LIB_NDBM)
+
+CHECK_SYMBOLS = -lib hdb -asn1compile -com_err \
+	hdb_ _hdb HDBFlags2int initialize_hdb_error_table
+
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -458,6 +511,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+hdb_ldap.la: $(hdb_ldap_la_OBJECTS) $(hdb_ldap_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(hdb_ldap_la_LDFLAGS) $(hdb_ldap_la_OBJECTS) $(hdb_ldap_la_LIBADD) $(LIBS)
 libhdb.la: $(libhdb_la_OBJECTS) $(libhdb_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libhdb_la_LDFLAGS) $(libhdb_la_OBJECTS) $(libhdb_la_LIBADD) $(LIBS)
 
@@ -723,7 +778,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -747,6 +803,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:
@@ -828,10 +891,10 @@ install-data-hook: install-cat-mans
 $(libhdb_la_OBJECTS): $(srcdir)/hdb-protos.h $(srcdir)/hdb-private.h
 
 $(srcdir)/hdb-protos.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -o hdb-protos.h $(libhdb_la_SOURCES) || rm -f hdb-protos.h
+	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -o hdb-protos.h $(hdb_source) || rm -f hdb-protos.h
 
 $(srcdir)/hdb-private.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -p hdb-private.h $(libhdb_la_SOURCES) || rm -f hdb-private.h
+	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -p hdb-private.h $(hdb_source) || rm -f hdb-private.h
 
 $(foo) hdb_asn1.h: asn1_files
 

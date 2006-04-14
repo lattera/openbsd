@@ -1,4 +1,4 @@
-dnl $KTH: have-pragma-weak.m4,v 1.3.34.1 2004/04/01 07:27:33 joda Exp $
+dnl $KTH: have-pragma-weak.m4,v 1.4 2004/02/12 14:20:49 lha Exp $
 dnl
 AC_DEFUN([AC_HAVE_PRAGMA_WEAK], [
 if test "${enable_shared}" = "yes"; then

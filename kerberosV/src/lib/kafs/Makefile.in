@@ -14,11 +14,11 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.43.2.1 2003/05/12 15:20:46 joda Exp $
+# $KTH: Makefile.am,v 1.46 2005/02/24 15:48:47 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
 
@@ -60,7 +60,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -81,16 +80,18 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(foodir)" "$(DESTDIR)$(includedir)"
@@ -105,15 +106,14 @@ libkafs_la_DEPENDENCIES = $(am__DEPENDENCIES_1) ../roken/libroken.la \
 am__libkafs_la_SOURCES_DIST = afssys.c afskrb.c afskrb5.c common.c \
 	afslib.c dlfcn.c kafs_locl.h afssysdefs.h resolve.c strtok_r.c \
 	strlcpy.c strsep.c
-@KRB4_TRUE@am__objects_1 = afskrb.lo
-@KRB5_TRUE@am__objects_2 = afskrb5.lo
-@AIX_DYNAMIC_AFS_FALSE@@AIX_TRUE@am__objects_3 = afslib.lo
-@AIX_DYNAMIC_AFS_TRUE@@AIX_TRUE@@HAVE_DLOPEN_FALSE@am__objects_3 =  \
+@KRB5_TRUE@am__objects_1 = afskrb5.lo
+@AIX_DYNAMIC_AFS_FALSE@@AIX_TRUE@am__objects_2 = afslib.lo
+@AIX_DYNAMIC_AFS_TRUE@@AIX_TRUE@@HAVE_DLOPEN_FALSE@am__objects_2 =  \
 @AIX_DYNAMIC_AFS_TRUE@@AIX_TRUE@@HAVE_DLOPEN_FALSE@	dlfcn.lo
-@do_roken_rename_TRUE@am__objects_4 = resolve.lo strtok_r.lo \
+@do_roken_rename_TRUE@am__objects_3 = resolve.lo strtok_r.lo \
 @do_roken_rename_TRUE@	strlcpy.lo strsep.lo
-am_libkafs_la_OBJECTS = afssys.lo $(am__objects_1) $(am__objects_2) \
-	common.lo $(am__objects_3) $(am__objects_4)
+am_libkafs_la_OBJECTS = afssys.lo afskrb.lo $(am__objects_1) common.lo \
+	$(am__objects_2) $(am__objects_3)
 libkafs_la_OBJECTS = $(am_libkafs_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
@@ -207,6 +207,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -238,6 +240,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -282,6 +285,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -291,6 +296,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -327,6 +334,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -358,7 +367,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken) $(AFS_EXTRA_DEFS) $(ROKEN_RENAME) $(krb4_am_workaround) $(krb5_am_workaround)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken) $(AFS_EXTRA_DEFS) $(ROKEN_RENAME) $(krb4_am_workaround) $(krb5_am_workaround)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -375,6 +384,7 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 @KRB4_FALSE@DEPLIB_krb4 = 
 @KRB4_TRUE@DEPLIB_krb4 = $(LIB_krb4) $(LIB_des)
@@ -398,18 +408,17 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @AIX_DYNAMIC_AFS_TRUE@@AIX_TRUE@AFS_EXTRA_DEFS = 
 libkafs_la_LIBADD = $(DEPLIB_krb5) ../roken/libroken.la $(DEPLIB_krb4)
 lib_LTLIBRARIES = libkafs.la
-libkafs_la_LDFLAGS = -version-info 4:0:4
+libkafs_la_LDFLAGS = -version-info 4:1:4
 foodir = $(libdir)
 foo_DATA = $(AFS_EXTRA_LIBS)
 # EXTRA_DATA = afslib.so
 CLEANFILES = $(AFS_EXTRA_LIBS) $(ROKEN_SRCS)
 include_HEADERS = kafs.h
 @KRB5_TRUE@afskrb5_c = afskrb5.c
-@KRB4_TRUE@afskrb_c = afskrb.c
 @do_roken_rename_TRUE@ROKEN_SRCS = resolve.c strtok_r.c strlcpy.c strsep.c
 libkafs_la_SOURCES = \
 	afssys.c				\
-	$(afskrb_c)				\
+	afskrb.c				\
 	$(afskrb5_c)				\
 	common.c				\
 	$(AIX_SRC)				\
@@ -799,7 +808,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -823,6 +833,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:

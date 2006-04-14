@@ -33,7 +33,7 @@
 
 #include "telnet_locl.h"
 
-RCSID("$KTH: network.c,v 1.11.12.1 2004/06/21 08:22:35 lha Exp $");
+RCSID("$KTH: network.c,v 1.12 2004/06/20 17:01:28 lha Exp $");
 
 Ring		netoring, netiring;
 size_t		netobufsize = 64*1024;

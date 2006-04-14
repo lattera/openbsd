@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.15 2003/03/18 13:13:06 lha Exp $
+# $KTH: Makefile.am,v 1.17 2005/02/12 14:27:01 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 bin_PROGRAMS = afslog pagsh
 
@@ -10,7 +10,7 @@ afslog_SOURCES = afslog.c
 
 pagsh_SOURCES  = pagsh.c
 
-man_MANS = afslog.1
+man_MANS = afslog.1 pagsh.1
 
 LDADD = $(LIB_kafs) \
 	$(LIB_krb4) \

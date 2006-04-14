@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: kx.c,v 1.72 2003/04/16 17:33:02 joda Exp $");
+RCSID("$KTH: kx.c,v 1.73 2005/04/30 14:11:47 lha Exp $");
 
 static int nchild;
 static int donep;
@@ -99,7 +99,7 @@ connect_host (kx_context *kc)
     int error;
     char portstr[NI_MAXSERV];
     socklen_t addrlen;
-    int s;
+    int s = -1;
     struct sockaddr_storage thisaddr_ss;
     struct sockaddr *thisaddr = (struct sockaddr *)&thisaddr_ss;
 

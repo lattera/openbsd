@@ -35,7 +35,7 @@
 #include "compile_et.h"
 #include <getarg.h>
 
-RCSID("$KTH: compile_et.c,v 1.16 2002/08/20 12:44:51 joda Exp $");
+RCSID("$KTH: compile_et.c,v 1.17 2005/05/16 08:42:45 lha Exp $");
 
 #include <roken.h>
 #include <err.h>
@@ -221,8 +221,7 @@ main(int argc, char **argv)
 	p++;
     else
 	p = filename;
-    strncpy(Basename, p, sizeof(Basename));
-    Basename[sizeof(Basename) - 1] = '\0';
+    strlcpy(Basename, p, sizeof(Basename));
     
     Basename[strcspn(Basename, ".")] = '\0';
     

@@ -34,7 +34,7 @@
 #define PRINTOPTIONS
 #include "telnetd.h"
 
-RCSID("$KTH: utility.c,v 1.27 2001/09/03 05:54:17 assar Exp $");
+RCSID("$KTH: utility.c,v 1.28 2005/04/28 16:36:32 joda Exp $");
 
 /*
  * utility functions performing io related tasks
@@ -431,11 +431,7 @@ putchr(int cc)
     *putlocation++ = cc;
 }
 
-/*
- * This is split on two lines so that SCCS will not see the M
- * between two % signs and expand it...
- */
-static char fmtstr[] = { "%l:%M" "%P on %A, %d %B %Y" };
+static char fmtstr[] = { "%l:%M%P on %A, %d %B %Y" };
 
 void putf(char *cp, char *where)
 {
@@ -470,12 +466,7 @@ void putf(char *cp, char *where)
 	switch (*++cp) {
 
 	case 't':
-#ifdef	STREAMSPTY
-	    /* names are like /dev/pts/2 -- we want pts/2 */
 	    slash = strchr(line+1, '/');
-#else
-	    slash = strrchr(line, '/');
-#endif
 	    if (slash == (char *) 0)
 		putstr(line);
 	    else

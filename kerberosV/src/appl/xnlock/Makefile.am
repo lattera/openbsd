@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.15.12.1 2003/05/06 16:50:33 joda Exp $
+# $KTH: Makefile.am,v 1.19 2004/08/26 11:55:21 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(X_CFLAGS)
+AM_CPPFLAGS += $(INCLUDE_krb4) $(X_CFLAGS)
 
 WFLAGS += $(WFLAGS_NOIMPLICITINT)
 
@@ -16,7 +16,7 @@ bin_PROGRAMS =
 
 endif
 
-CHECK_LOCAL = 
+CHECK_LOCAL = no-check-local
 
 man_MANS = xnlock.1
 

@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.21 2003/03/24 16:15:48 joda Exp $
+# $KTH: Makefile.am,v 1.23 2005/04/22 15:39:14 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 man_MANS = login.1 login.access.5
 
@@ -15,6 +15,7 @@ login_SOURCES =					\
 		login_access.c			\
 		login_locl.h			\
 		login_protos.h			\
+		limits_conf.c			\
 		osfc2.c				\
 		read_string.c			\
 		shadow.c			\

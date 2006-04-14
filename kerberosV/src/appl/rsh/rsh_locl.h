@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2003 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2004 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: rsh_locl.h,v 1.33 2003/04/16 20:05:39 lha Exp $ */
+/* $KTH: rsh_locl.h,v 1.37.2.1 2005/12/28 18:00:05 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -102,9 +102,17 @@
 #endif
 #ifdef KRB5
 #include <krb5.h>
+/* XXX */
+struct krb5_pk_identity;
+struct krb5_pk_cert;
+struct ContentInfo;
+struct _krb5_krb_auth_data;
+struct krb5_dh_moduli;
 #include <krb5-private.h> /* for _krb5_{get,put}_int */
 #endif
+#if defined(KRB4) || defined(KRB5)
 #include <kafs.h>
+#endif
 
 #ifndef _PATH_NOLOGIN
 #define _PATH_NOLOGIN   "/etc/nologin"
@@ -137,7 +145,7 @@ extern krb5_crypto crypto;
 extern int key_usage;
 extern void *ivec_in[2];
 extern void *ivec_out[2];
-void init_ivecs(int);
+void init_ivecs(int, int);
 #endif
 #ifdef KRB4
 extern des_key_schedule schedule;
@@ -153,6 +161,7 @@ extern des_cblock iv;
 #endif
 
 #define RSH_BUFSIZ (5 * 1024) /* MIT kcmd can't handle larger buffers */
+#define RSHD_BUFSIZ (16 * 1024) /* Old maxize for Heimdal 0.4 rsh */
 
 #define PATH_RSH BINDIR "/rsh"
 

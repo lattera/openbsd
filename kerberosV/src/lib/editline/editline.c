@@ -21,11 +21,11 @@
 **  Main editing routines for editline library.
 */
 #include <config.h>
-#include "editline.h"
+#include "edit_locl.h"
 #include <ctype.h>
 #include <errno.h>
 
-RCSID("$KTH: editline.c,v 1.10 2001/09/13 01:19:54 assar Exp $");
+RCSID("$KTH: editline.c,v 1.13 2005/04/24 18:55:58 lha Exp $");
 
 /*
 **  Manifest constants.
@@ -179,7 +179,7 @@ TTYstring(unsigned char *p)
 static int
 TTYget()
 {
-    char c;
+    unsigned char c;
     int e;
 
     TTYflush();
@@ -217,7 +217,7 @@ static void
 TTYinfo()
 {
     static int		init;
-    char		*term;
+    const char		*term;
     char		buff[2048];
     char		*bp;
     char		*tmp;
@@ -250,8 +250,6 @@ TTYinfo()
     tmp = tgetstr("le", &bp);
     if (tmp != NULL)
 	backspace = strdup(tmp);
-    else
-	backspace = "\b";
     TTYwidth = tgetnum("co");
     TTYrows = tgetnum("li");
 
@@ -1077,7 +1075,7 @@ c_possible()
     int		ac;
 
     word = find_word();
-    ac = rl_list_possib((char *)word, (char ***)&av);
+    ac = rl_list_possib((char *)word, (void *)&av);
     if (word)
 	free(word);
     if (ac) {

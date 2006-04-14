@@ -1,16 +1,20 @@
-# $KTH: Makefile.am,v 1.51.6.1 2003/05/12 15:20:46 joda Exp $
+# $KTH: Makefile.am,v 1.57 2005/05/05 19:51:37 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
 lib_LTLIBRARIES = libkadm5srv.la libkadm5clnt.la
-libkadm5srv_la_LDFLAGS = -version-info 7:6:0
-libkadm5clnt_la_LDFLAGS = -version-info 6:4:2
+libkadm5srv_la_LDFLAGS = -version-info 7:7:0
+libkadm5clnt_la_LDFLAGS = -version-info 6:5:2
 sbin_PROGRAMS = dump_log replay_log truncate_log
+check_PROGRAMS = default_keys
+noinst_PROGRAMS = test_pw_quality
 
 libkadm5srv_la_LIBADD = ../krb5/libkrb5.la ../hdb/libhdb.la ../roken/libroken.la
 libkadm5clnt_la_LIBADD = ../krb5/libkrb5.la ../hdb/libhdb.la ../roken/libroken.la
 
 libexec_PROGRAMS = ipropd-master ipropd-slave
+
+default_keys_SOURCES = default_keys.c
 
 kadm5includedir = $(includedir)/kadm5
 buildkadm5include = $(buildinclude)/kadm5
@@ -33,6 +37,7 @@ install-build-headers:: $(kadm5include_HEADERS)
 
 SOURCES_client =				\
 	admin.h					\
+	ad.c					\
 	chpass_c.c				\
 	common_glue.c				\
 	create_c.c				\
@@ -53,7 +58,7 @@ SOURCES_client =				\
 	rename_c.c				\
 	send_recv.c
 
-SOURCES_server =					\
+SOURCES_server =				\
 	acl.c					\
 	admin.h					\
 	bump_pw_expire.c			\
@@ -96,6 +101,8 @@ ipropd_master_SOURCES = ipropd_master.c iprop.h kadm5_locl.h
 ipropd_slave_SOURCES = ipropd_slave.c iprop.h kadm5_locl.h
 
 truncate_log_SOURCES = truncate_log.c
+
+man_MANS = kadm5_pwcheck.3 iprop.8
 
 LDADD = \
 	libkadm5srv.la \

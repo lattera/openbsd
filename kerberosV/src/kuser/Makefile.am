@@ -1,14 +1,15 @@
-# $KTH: Makefile.am,v 1.31 2003/03/18 13:15:27 lha Exp $
+# $KTH: Makefile.am,v 1.34 2004/08/26 11:55:24 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
+AM_CPPFLAGS += $(INCLUDE_krb4) $(INCLUDE_des) -I$(srcdir)/../lib/krb5
 
 man_MANS = kinit.1 klist.1 kdestroy.1 kgetcred.1
 
 bin_PROGRAMS = kinit klist kdestroy kgetcred
 
-noinst_PROGRAMS = kverify kdecode_ticket generate-requests
+noinst_PROGRAMS = kverify kdecode_ticket generate-requests copy_cred_cache
+noinst_MANS = copy_cred_cache.1
 
 kinit_LDADD = \
 	$(LIB_kafs) \

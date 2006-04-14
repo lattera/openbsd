@@ -1,12 +1,13 @@
-# $KTH: Makefile.am,v 1.7 2001/08/28 08:31:22 assar Exp $
+# $KTH: Makefile.am,v 1.9 2004/08/26 11:55:19 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(INCLUDE_des)
+AM_CPPFLAGS += $(INCLUDE_krb4) $(INCLUDE_des)
 
 bin_PROGRAMS = su
 bin_SUIDS = su
 su_SOURCES = su.c
+man_MANS = su.1
 
 LDADD = $(LIB_kafs) \
 	$(top_builddir)/lib/krb5/libkrb5.la \

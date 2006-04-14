@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.6 2001/07/15 04:21:07 assar Exp $
+# $KTH: Makefile.am,v 1.9 2005/05/02 13:49:53 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 DEFS = @DEFS@
 
@@ -17,14 +17,14 @@ OBJS = verify.o
 CLEANFILES = $(foo_DATA) $(OBJS) so_locations
 
 afskauthlib.so: $(OBJS)
-	$(LINK) -shared $(OBJS) $(L)
+	$(LIBTOOL) --mode=link $(CC) -shared -o $@ $(OBJS) $(L) $(LDFLAGS)
 
 .c.o:
-	$(COMPILE) -c $<
+	$(CC) $(DEFS) $(DEFAULT_AM_CPPFLAGS) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) \
+	-c `test -f '$<' || echo '$(srcdir)/'`$<
 
-if KRB4
 KAFS = $(top_builddir)/lib/kafs/libkafs.la
-endif
 
 if KRB5
 L = \

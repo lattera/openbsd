@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.2 2001/01/28 22:50:35 assar Exp $
+# $KTH: Makefile.am,v 1.3 2004/08/26 11:55:18 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4)
+AM_CPPFLAGS += $(INCLUDE_krb4)
 
 bin_PROGRAMS = rcp
 

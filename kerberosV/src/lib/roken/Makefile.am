@@ -1,4 +1,4 @@
-# $KTH: Makefile.am,v 1.122.6.3 2003/10/14 16:13:15 joda Exp $
+# $KTH: Makefile.am,v 1.137 2005/05/24 11:39:01 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
@@ -7,17 +7,21 @@ ACLOCAL_AMFLAGS = -I ../../cf
 CLEANFILES = roken.h make-roken.c $(XHEADERS)
 
 lib_LTLIBRARIES = libroken.la
-libroken_la_LDFLAGS = -version-info 16:3:0
+libroken_la_LDFLAGS = -version-info 17:0:1
+libroken_la_CPPFLAGS = -DBUILD_ROKEN_LIB
 
-noinst_PROGRAMS = make-roken snprintf-test
+noinst_PROGRAMS = make-roken snprintf-test resolve-test
 
 nodist_make_roken_SOURCES = make-roken.c
 
 check_PROGRAMS = 				\
 		base64-test			\
 		getaddrinfo-test		\
+		hex-test			\
+		test-readenv			\
 		parse_bytes-test		\
 		parse_reply-test		\
+		parse_time-test			\
 		snprintf-test			\
 		strpftime-test
 
@@ -33,11 +37,17 @@ libtest_la_CFLAGS = -DTEST_SNPRINTF
 parse_reply_test_SOURCES = parse_reply-test.c resolve.c
 parse_reply_test_CFLAGS  = -DTEST_RESOLVE
 
+test_readenv_SOURCES = test-readenv.c test-mem.c
+
+parse_time_test_SOURCES = parse_time-test.c test-mem.c
+
 strpftime_test_SOURCES	= strpftime-test.c
 strpftime_test_LDADD = libtest.la $(LDADD)
-snprintf_test_SOURCES	= snprintf-test.c
+snprintf_test_SOURCES	= snprintf-test.c snprintf-test.h
 snprintf_test_LDADD = libtest.la $(LDADD)
 snprintf_test_CFLAGS	= -DTEST_SNPRINTF
+
+resolve_test_SOURCES = resolve-test.c
 
 libroken_la_SOURCES =		\
 	base64.c		\
@@ -54,6 +64,7 @@ libroken_la_SOURCES =		\
 	getnameinfo_verified.c	\
 	getprogname.c		\
 	h_errno.c		\
+	hex.c			\
 	hostent_find_fqdn.c	\
 	issuid.c		\
 	k_getpwnam.c		\
@@ -64,6 +75,7 @@ libroken_la_SOURCES =		\
 	parse_bytes.c		\
 	parse_time.c		\
 	parse_units.c		\
+	realloc.c		\
 	resolve.c		\
 	roken_gethostby.c	\
 	rtbl.c			\
@@ -92,7 +104,11 @@ EXTRA_libroken_la_SOURCES =	\
 
 EXTRA_DIST = roken.awk roken.h.in
 
-libroken_la_LIBADD = @LTLIBOBJS@ $(DBLIB)
+libroken_la_LIBADD = @LTLIBOBJS@
+if have_cgetent
+else
+libroken_la_LIBADD += $(DBLIB)
+endif
 
 $(LTLIBOBJS) $(libroken_la_OBJECTS): roken.h $(XHEADERS)
 
@@ -130,10 +146,12 @@ endif
 
 ## these are controlled by configure
 XHEADERS = $(err_h) $(fnmatch_h) $(glob_h) $(ifaddrs_h) $(vis_h)
+CLEANFILES += err.h fnmatch.h glob.h ifaddrs.h vis.h
 
 include_HEADERS = 				\
 	base64.h				\
 	getarg.h				\
+	hex.h					\
 	parse_bytes.h 				\
 	parse_time.h 				\
 	parse_units.h				\
@@ -143,9 +161,11 @@ include_HEADERS = 				\
 	xdbm.h					\
 	$(XHEADERS) 
 
+build_HEADERZ = test-mem.h
+
 nodist_include_HEADERS = roken.h
 
-man_MANS = getarg.3
+man_MANS = getarg.3 parse_time.3 rtbl.3
 
 SUFFIXES += .hin
 .hin.h:

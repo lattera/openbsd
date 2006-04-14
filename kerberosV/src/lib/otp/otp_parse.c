@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-RCSID("$KTH: otp_parse.c,v 1.20 2000/07/01 13:58:38 assar Exp $");
+RCSID("$KTH: otp_parse.c,v 1.21 2005/01/08 23:05:07 lha Exp $");
 #endif
 
 #include "otp_locl.h"
@@ -169,7 +169,7 @@ otp_parse_hex (OtpKey key, const char *s)
       if (b - buf >= 16)
 	return -1;
       else
-	*b++ = tolower(*s);
+	*b++ = tolower((unsigned char)*s);
     }
     s++;
   }

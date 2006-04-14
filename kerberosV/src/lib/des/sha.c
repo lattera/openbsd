@@ -34,11 +34,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 
-RCSID("$KTH: sha.c,v 1.16 2001/01/29 04:33:44 assar Exp $");
+RCSID("$KTH: sha.c,v 1.18 2005/04/27 11:55:05 lha Exp $");
 #endif
 
-#include "sha.h"
 #include "hash.h"
+#include "sha.h"
 
 #define A m->counter[0]
 #define B m->counter[1]
@@ -262,7 +262,7 @@ SHA1_Update (struct sha *m, const void *v, size_t len)
 void
 SHA1_Final (void *res, struct sha *m)
 {
-  static unsigned char zeros[72];
+  unsigned char zeros[72];
   unsigned offset = (m->sz[0] / 8) % 64;
   unsigned int dstart = (120 - offset - 1) % 64 + 1;
 

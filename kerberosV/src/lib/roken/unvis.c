@@ -12,11 +12,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +32,7 @@
 #if 1
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: unvis.c,v 1.2 2000/12/06 21:41:46 joda Exp $");
+RCSID("$KTH: unvis.c,v 1.5 2005/04/18 08:28:35 lha Exp $");
 #endif
 #include <roken.h>
 #ifndef _DIAGASSERT
@@ -90,7 +86,7 @@ __warn_references(unvis,
  * unvis - decode characters previously encoded by vis
  */
 #ifndef HAVE_UNVIS
-int
+int ROKEN_LIB_FUNCTION
 unvis(char *cp, int c, int *astate, int flag)
 {
 
@@ -254,7 +250,7 @@ unvis(char *cp, int c, int *astate, int flag)
  */
 
 #ifndef HAVE_STRUNVIS
-int
+int ROKEN_LIB_FUNCTION
 strunvis(char *dst, const char *src)
 {
 	char c;
@@ -266,7 +262,7 @@ strunvis(char *dst, const char *src)
 
 	while ((c = *src++) != '\0') {
 	again:
-		switch (unvis(dst, c, &state, 0)) {
+		switch (unvis(dst, (unsigned char)c, &state, 0)) {
 		case UNVIS_VALID:
 			dst++;
 			break;
@@ -280,7 +276,7 @@ strunvis(char *dst, const char *src)
 			return (-1);
 		}
 	}
-	if (unvis(dst, c, &state, UNVIS_END) == UNVIS_VALID)
+	if (unvis(dst, (unsigned char)c, &state, UNVIS_END) == UNVIS_VALID)
 		dst++;
 	*dst = '\0';
 	return (dst - start);

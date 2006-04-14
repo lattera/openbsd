@@ -14,15 +14,15 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.122.6.3 2003/10/14 16:13:15 joda Exp $
+# $KTH: Makefile.am,v 1.137 2005/05/24 11:39:01 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
 
-SOURCES = $(libroken_la_SOURCES) $(EXTRA_libroken_la_SOURCES) $(libtest_la_SOURCES) base64-test.c getaddrinfo-test.c $(nodist_make_roken_SOURCES) parse_bytes-test.c $(parse_reply_test_SOURCES) $(snprintf_test_SOURCES) $(strpftime_test_SOURCES)
+SOURCES = $(libroken_la_SOURCES) $(EXTRA_libroken_la_SOURCES) $(libtest_la_SOURCES) base64-test.c getaddrinfo-test.c hex-test.c $(nodist_make_roken_SOURCES) parse_bytes-test.c $(parse_reply_test_SOURCES) $(parse_time_test_SOURCES) $(resolve_test_SOURCES) $(snprintf_test_SOURCES) $(strpftime_test_SOURCES) $(test_readenv_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -48,25 +48,29 @@ host_triplet = @host@
 DIST_COMMON = $(am__include_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.common \
 	$(top_srcdir)/cf/Makefile.am.common ChangeLog chown.c \
-	copyhostent.c daemon.c ecalloc.c emalloc.c erealloc.c err.c \
-	errx.c estrdup.c fchown.c flock.c fnmatch.c freeaddrinfo.c \
-	freehostent.c gai_strerror.c getaddrinfo.c getcap.c getcwd.c \
-	getdtablesize.c getegid.c geteuid.c getgid.c gethostname.c \
-	getifaddrs.c getipnodebyaddr.c getipnodebyname.c getnameinfo.c \
-	getopt.c gettimeofday.c getuid.c getusershell.c glob.c \
-	hstrerror.c inet_aton.c inet_ntop.c inet_pton.c initgroups.c \
-	innetgr.c install-sh iruserok.c localtime_r.c lstat.c \
-	memmove.c missing mkinstalldirs mkstemp.c putenv.c rcmd.c \
-	readv.c recvmsg.c sendmsg.c setegid.c setenv.c seteuid.c \
-	strcasecmp.c strdup.c strerror.c strftime.c strlcat.c \
-	strlcpy.c strlwr.c strncasecmp.c strndup.c strnlen.c \
+	closefrom.c copyhostent.c daemon.c ecalloc.c emalloc.c \
+	erealloc.c err.c errx.c estrdup.c fchown.c flock.c fnmatch.c \
+	freeaddrinfo.c freehostent.c gai_strerror.c getaddrinfo.c \
+	getcap.c getcwd.c getdtablesize.c getegid.c geteuid.c getgid.c \
+	gethostname.c getifaddrs.c getipnodebyaddr.c getipnodebyname.c \
+	getnameinfo.c getopt.c gettimeofday.c getuid.c getusershell.c \
+	glob.c hstrerror.c inet_aton.c inet_ntop.c inet_pton.c \
+	initgroups.c innetgr.c install-sh iruserok.c localtime_r.c \
+	lstat.c memmove.c missing mkinstalldirs mkstemp.c putenv.c \
+	rcmd.c readv.c recvmsg.c sendmsg.c setegid.c setenv.c \
+	seteuid.c strcasecmp.c strdup.c strerror.c strftime.c \
+	strlcat.c strlcpy.c strlwr.c strncasecmp.c strndup.c strnlen.c \
 	strptime.c strsep.c strsep_copy.c strtok_r.c strupr.c swab.c \
 	unsetenv.c verr.c verrx.c vsyslog.c vwarn.c vwarnx.c warn.c \
 	warnx.c writev.c
-noinst_PROGRAMS = make-roken$(EXEEXT) snprintf-test$(EXEEXT)
+noinst_PROGRAMS = make-roken$(EXEEXT) snprintf-test$(EXEEXT) \
+	resolve-test$(EXEEXT)
 check_PROGRAMS = base64-test$(EXEEXT) getaddrinfo-test$(EXEEXT) \
+	hex-test$(EXEEXT) test-readenv$(EXEEXT) \
 	parse_bytes-test$(EXEEXT) parse_reply-test$(EXEEXT) \
-	snprintf-test$(EXEEXT) strpftime-test$(EXEEXT)
+	parse_time-test$(EXEEXT) snprintf-test$(EXEEXT) \
+	strpftime-test$(EXEEXT)
+@have_cgetent_FALSE@am__append_1 = $(DBLIB)
 subdir = lib/roken
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
@@ -79,7 +83,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -100,33 +103,47 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libroken_la_DEPENDENCIES = @LTLIBOBJS@ $(am__DEPENDENCIES_1)
-am_libroken_la_OBJECTS = base64.lo bswap.lo concat.lo environment.lo \
-	eread.lo esetenv.lo ewrite.lo getaddrinfo_hostspec.lo \
-	get_default_username.lo get_window_size.lo getarg.lo \
-	getnameinfo_verified.lo getprogname.lo h_errno.lo \
-	hostent_find_fqdn.lo issuid.lo k_getpwnam.lo k_getpwuid.lo \
-	mini_inetd.lo net_read.lo net_write.lo parse_bytes.lo \
-	parse_time.lo parse_units.lo resolve.lo roken_gethostby.lo \
-	rtbl.lo setprogname.lo signal.lo simple_exec.lo snprintf.lo \
-	socket.lo strcollect.lo timeval.lo tm2time.lo unvis.lo \
-	verify.lo vis.lo warnerr.lo write_pid.lo
+@have_cgetent_FALSE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+libroken_la_DEPENDENCIES = @LTLIBOBJS@ $(am__DEPENDENCIES_2)
+am_libroken_la_OBJECTS = libroken_la-base64.lo libroken_la-bswap.lo \
+	libroken_la-concat.lo libroken_la-environment.lo \
+	libroken_la-eread.lo libroken_la-esetenv.lo \
+	libroken_la-ewrite.lo libroken_la-getaddrinfo_hostspec.lo \
+	libroken_la-get_default_username.lo \
+	libroken_la-get_window_size.lo libroken_la-getarg.lo \
+	libroken_la-getnameinfo_verified.lo libroken_la-getprogname.lo \
+	libroken_la-h_errno.lo libroken_la-hex.lo \
+	libroken_la-hostent_find_fqdn.lo libroken_la-issuid.lo \
+	libroken_la-k_getpwnam.lo libroken_la-k_getpwuid.lo \
+	libroken_la-mini_inetd.lo libroken_la-net_read.lo \
+	libroken_la-net_write.lo libroken_la-parse_bytes.lo \
+	libroken_la-parse_time.lo libroken_la-parse_units.lo \
+	libroken_la-realloc.lo libroken_la-resolve.lo \
+	libroken_la-roken_gethostby.lo libroken_la-rtbl.lo \
+	libroken_la-setprogname.lo libroken_la-signal.lo \
+	libroken_la-simple_exec.lo libroken_la-snprintf.lo \
+	libroken_la-socket.lo libroken_la-strcollect.lo \
+	libroken_la-timeval.lo libroken_la-tm2time.lo \
+	libroken_la-unvis.lo libroken_la-verify.lo libroken_la-vis.lo \
+	libroken_la-warnerr.lo libroken_la-write_pid.lo
 libroken_la_OBJECTS = $(am_libroken_la_OBJECTS)
 libtest_la_LIBADD =
 am_libtest_la_OBJECTS = libtest_la-strftime.lo libtest_la-strptime.lo \
@@ -141,6 +158,10 @@ getaddrinfo_test_SOURCES = getaddrinfo-test.c
 getaddrinfo_test_OBJECTS = getaddrinfo-test.$(OBJEXT)
 getaddrinfo_test_LDADD = $(LDADD)
 getaddrinfo_test_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
+hex_test_SOURCES = hex-test.c
+hex_test_OBJECTS = hex-test.$(OBJEXT)
+hex_test_LDADD = $(LDADD)
+hex_test_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
 nodist_make_roken_OBJECTS = make-roken.$(OBJEXT)
 make_roken_OBJECTS = $(nodist_make_roken_OBJECTS)
 make_roken_DEPENDENCIES =
@@ -154,13 +175,26 @@ am_parse_reply_test_OBJECTS =  \
 parse_reply_test_OBJECTS = $(am_parse_reply_test_OBJECTS)
 parse_reply_test_LDADD = $(LDADD)
 parse_reply_test_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
+am_parse_time_test_OBJECTS = parse_time-test.$(OBJEXT) \
+	test-mem.$(OBJEXT)
+parse_time_test_OBJECTS = $(am_parse_time_test_OBJECTS)
+parse_time_test_LDADD = $(LDADD)
+parse_time_test_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
+am_resolve_test_OBJECTS = resolve-test.$(OBJEXT)
+resolve_test_OBJECTS = $(am_resolve_test_OBJECTS)
+resolve_test_LDADD = $(LDADD)
+resolve_test_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
 am_snprintf_test_OBJECTS = snprintf_test-snprintf-test.$(OBJEXT)
 snprintf_test_OBJECTS = $(am_snprintf_test_OBJECTS)
-am__DEPENDENCIES_2 = libroken.la $(am__DEPENDENCIES_1)
-snprintf_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_3 = libroken.la $(am__DEPENDENCIES_1)
+snprintf_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_3)
 am_strpftime_test_OBJECTS = strpftime-test.$(OBJEXT)
 strpftime_test_OBJECTS = $(am_strpftime_test_OBJECTS)
-strpftime_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_2)
+strpftime_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_3)
+am_test_readenv_OBJECTS = test-readenv.$(OBJEXT) test-mem.$(OBJEXT)
+test_readenv_OBJECTS = $(am_test_readenv_OBJECTS)
+test_readenv_LDADD = $(LDADD)
+test_readenv_DEPENDENCIES = libroken.la $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =
@@ -174,16 +208,19 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libroken_la_SOURCES) $(EXTRA_libroken_la_SOURCES) \
 	$(libtest_la_SOURCES) base64-test.c getaddrinfo-test.c \
-	$(nodist_make_roken_SOURCES) parse_bytes-test.c \
-	$(parse_reply_test_SOURCES) $(snprintf_test_SOURCES) \
-	$(strpftime_test_SOURCES)
+	hex-test.c $(nodist_make_roken_SOURCES) parse_bytes-test.c \
+	$(parse_reply_test_SOURCES) $(parse_time_test_SOURCES) \
+	$(resolve_test_SOURCES) $(snprintf_test_SOURCES) \
+	$(strpftime_test_SOURCES) $(test_readenv_SOURCES)
 DIST_SOURCES = $(libroken_la_SOURCES) $(EXTRA_libroken_la_SOURCES) \
 	$(libtest_la_SOURCES) base64-test.c getaddrinfo-test.c \
-	parse_bytes-test.c $(parse_reply_test_SOURCES) \
-	$(snprintf_test_SOURCES) $(strpftime_test_SOURCES)
+	hex-test.c parse_bytes-test.c $(parse_reply_test_SOURCES) \
+	$(parse_time_test_SOURCES) $(resolve_test_SOURCES) \
+	$(snprintf_test_SOURCES) $(strpftime_test_SOURCES) \
+	$(test_readenv_SOURCES)
 man3dir = $(mandir)/man3
 MANS = $(man_MANS)
-am__include_HEADERS_DIST = base64.h getarg.h parse_bytes.h \
+am__include_HEADERS_DIST = base64.h getarg.h hex.h parse_bytes.h \
 	parse_time.h parse_units.h resolve.h roken-common.h rtbl.h \
 	xdbm.h err.h fnmatch.h glob.h ifaddrs.h vis.h
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -261,6 +298,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -292,6 +331,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -336,6 +376,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -345,6 +387,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -381,6 +425,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -412,7 +458,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8 .hin
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -429,11 +475,13 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 ACLOCAL_AMFLAGS = -I ../../cf
-CLEANFILES = roken.h make-roken.c $(XHEADERS)
+CLEANFILES = roken.h make-roken.c $(XHEADERS) err.h fnmatch.h glob.h ifaddrs.h vis.h
 lib_LTLIBRARIES = libroken.la
-libroken_la_LDFLAGS = -version-info 16:3:0
+libroken_la_LDFLAGS = -version-info 17:0:1
+libroken_la_CPPFLAGS = -DBUILD_ROKEN_LIB
 nodist_make_roken_SOURCES = make-roken.c
 TESTS = $(check_PROGRAMS)
 LDADD = libroken.la $(LIB_crypt)
@@ -443,11 +491,14 @@ libtest_la_SOURCES = strftime.c strptime.c snprintf.c
 libtest_la_CFLAGS = -DTEST_SNPRINTF
 parse_reply_test_SOURCES = parse_reply-test.c resolve.c
 parse_reply_test_CFLAGS = -DTEST_RESOLVE
+test_readenv_SOURCES = test-readenv.c test-mem.c
+parse_time_test_SOURCES = parse_time-test.c test-mem.c
 strpftime_test_SOURCES = strpftime-test.c
 strpftime_test_LDADD = libtest.la $(LDADD)
-snprintf_test_SOURCES = snprintf-test.c
+snprintf_test_SOURCES = snprintf-test.c snprintf-test.h
 snprintf_test_LDADD = libtest.la $(LDADD)
 snprintf_test_CFLAGS = -DTEST_SNPRINTF
+resolve_test_SOURCES = resolve-test.c
 libroken_la_SOURCES = \
 	base64.c		\
 	bswap.c			\
@@ -463,6 +514,7 @@ libroken_la_SOURCES = \
 	getnameinfo_verified.c	\
 	getprogname.c		\
 	h_errno.c		\
+	hex.c			\
 	hostent_find_fqdn.c	\
 	issuid.c		\
 	k_getpwnam.c		\
@@ -473,6 +525,7 @@ libroken_la_SOURCES = \
 	parse_bytes.c		\
 	parse_time.c		\
 	parse_units.c		\
+	realloc.c		\
 	resolve.c		\
 	roken_gethostby.c	\
 	rtbl.c			\
@@ -500,7 +553,7 @@ EXTRA_libroken_la_SOURCES = \
 	vis.hin	
 
 EXTRA_DIST = roken.awk roken.h.in
-libroken_la_LIBADD = @LTLIBOBJS@ $(DBLIB)
+libroken_la_LIBADD = @LTLIBOBJS@ $(am__append_1)
 BUILT_SOURCES = make-roken.c roken.h
 @have_err_h_FALSE@err_h = err.h
 @have_err_h_TRUE@err_h = 
@@ -516,6 +569,7 @@ XHEADERS = $(err_h) $(fnmatch_h) $(glob_h) $(ifaddrs_h) $(vis_h)
 include_HEADERS = \
 	base64.h				\
 	getarg.h				\
+	hex.h					\
 	parse_bytes.h 				\
 	parse_time.h 				\
 	parse_units.h				\
@@ -525,8 +579,9 @@ include_HEADERS = \
 	xdbm.h					\
 	$(XHEADERS) 
 
+build_HEADERZ = test-mem.h
 nodist_include_HEADERS = roken.h
-man_MANS = getarg.3
+man_MANS = getarg.3 parse_time.3 rtbl.3
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -621,6 +676,9 @@ base64-test$(EXEEXT): $(base64_test_OBJECTS) $(base64_test_DEPENDENCIES)
 getaddrinfo-test$(EXEEXT): $(getaddrinfo_test_OBJECTS) $(getaddrinfo_test_DEPENDENCIES) 
 	@rm -f getaddrinfo-test$(EXEEXT)
 	$(LINK) $(getaddrinfo_test_LDFLAGS) $(getaddrinfo_test_OBJECTS) $(getaddrinfo_test_LDADD) $(LIBS)
+hex-test$(EXEEXT): $(hex_test_OBJECTS) $(hex_test_DEPENDENCIES) 
+	@rm -f hex-test$(EXEEXT)
+	$(LINK) $(hex_test_LDFLAGS) $(hex_test_OBJECTS) $(hex_test_LDADD) $(LIBS)
 make-roken$(EXEEXT): $(make_roken_OBJECTS) $(make_roken_DEPENDENCIES) 
 	@rm -f make-roken$(EXEEXT)
 	$(LINK) $(make_roken_LDFLAGS) $(make_roken_OBJECTS) $(make_roken_LDADD) $(LIBS)
@@ -630,12 +688,21 @@ parse_bytes-test$(EXEEXT): $(parse_bytes_test_OBJECTS) $(parse_bytes_test_DEPEND
 parse_reply-test$(EXEEXT): $(parse_reply_test_OBJECTS) $(parse_reply_test_DEPENDENCIES) 
 	@rm -f parse_reply-test$(EXEEXT)
 	$(LINK) $(parse_reply_test_LDFLAGS) $(parse_reply_test_OBJECTS) $(parse_reply_test_LDADD) $(LIBS)
+parse_time-test$(EXEEXT): $(parse_time_test_OBJECTS) $(parse_time_test_DEPENDENCIES) 
+	@rm -f parse_time-test$(EXEEXT)
+	$(LINK) $(parse_time_test_LDFLAGS) $(parse_time_test_OBJECTS) $(parse_time_test_LDADD) $(LIBS)
+resolve-test$(EXEEXT): $(resolve_test_OBJECTS) $(resolve_test_DEPENDENCIES) 
+	@rm -f resolve-test$(EXEEXT)
+	$(LINK) $(resolve_test_LDFLAGS) $(resolve_test_OBJECTS) $(resolve_test_LDADD) $(LIBS)
 snprintf-test$(EXEEXT): $(snprintf_test_OBJECTS) $(snprintf_test_DEPENDENCIES) 
 	@rm -f snprintf-test$(EXEEXT)
 	$(LINK) $(snprintf_test_LDFLAGS) $(snprintf_test_OBJECTS) $(snprintf_test_LDADD) $(LIBS)
 strpftime-test$(EXEEXT): $(strpftime_test_OBJECTS) $(strpftime_test_DEPENDENCIES) 
 	@rm -f strpftime-test$(EXEEXT)
 	$(LINK) $(strpftime_test_LDFLAGS) $(strpftime_test_OBJECTS) $(strpftime_test_LDADD) $(LIBS)
+test-readenv$(EXEEXT): $(test_readenv_OBJECTS) $(test_readenv_DEPENDENCIES) 
+	@rm -f test-readenv$(EXEEXT)
+	$(LINK) $(test_readenv_LDFLAGS) $(test_readenv_OBJECTS) $(test_readenv_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -651,6 +718,384 @@ distclean-compile:
 
 .c.lo:
 	$(LTCOMPILE) -c -o $@ $<
+
+libroken_la-base64.o: base64.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-base64.o `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+
+libroken_la-base64.obj: base64.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-base64.obj `if test -f 'base64.c'; then $(CYGPATH_W) 'base64.c'; else $(CYGPATH_W) '$(srcdir)/base64.c'; fi`
+
+libroken_la-base64.lo: base64.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-base64.lo `test -f 'base64.c' || echo '$(srcdir)/'`base64.c
+
+libroken_la-bswap.o: bswap.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-bswap.o `test -f 'bswap.c' || echo '$(srcdir)/'`bswap.c
+
+libroken_la-bswap.obj: bswap.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-bswap.obj `if test -f 'bswap.c'; then $(CYGPATH_W) 'bswap.c'; else $(CYGPATH_W) '$(srcdir)/bswap.c'; fi`
+
+libroken_la-bswap.lo: bswap.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-bswap.lo `test -f 'bswap.c' || echo '$(srcdir)/'`bswap.c
+
+libroken_la-concat.o: concat.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-concat.o `test -f 'concat.c' || echo '$(srcdir)/'`concat.c
+
+libroken_la-concat.obj: concat.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-concat.obj `if test -f 'concat.c'; then $(CYGPATH_W) 'concat.c'; else $(CYGPATH_W) '$(srcdir)/concat.c'; fi`
+
+libroken_la-concat.lo: concat.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-concat.lo `test -f 'concat.c' || echo '$(srcdir)/'`concat.c
+
+libroken_la-environment.o: environment.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-environment.o `test -f 'environment.c' || echo '$(srcdir)/'`environment.c
+
+libroken_la-environment.obj: environment.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-environment.obj `if test -f 'environment.c'; then $(CYGPATH_W) 'environment.c'; else $(CYGPATH_W) '$(srcdir)/environment.c'; fi`
+
+libroken_la-environment.lo: environment.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-environment.lo `test -f 'environment.c' || echo '$(srcdir)/'`environment.c
+
+libroken_la-eread.o: eread.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-eread.o `test -f 'eread.c' || echo '$(srcdir)/'`eread.c
+
+libroken_la-eread.obj: eread.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-eread.obj `if test -f 'eread.c'; then $(CYGPATH_W) 'eread.c'; else $(CYGPATH_W) '$(srcdir)/eread.c'; fi`
+
+libroken_la-eread.lo: eread.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-eread.lo `test -f 'eread.c' || echo '$(srcdir)/'`eread.c
+
+libroken_la-esetenv.o: esetenv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-esetenv.o `test -f 'esetenv.c' || echo '$(srcdir)/'`esetenv.c
+
+libroken_la-esetenv.obj: esetenv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-esetenv.obj `if test -f 'esetenv.c'; then $(CYGPATH_W) 'esetenv.c'; else $(CYGPATH_W) '$(srcdir)/esetenv.c'; fi`
+
+libroken_la-esetenv.lo: esetenv.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-esetenv.lo `test -f 'esetenv.c' || echo '$(srcdir)/'`esetenv.c
+
+libroken_la-ewrite.o: ewrite.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-ewrite.o `test -f 'ewrite.c' || echo '$(srcdir)/'`ewrite.c
+
+libroken_la-ewrite.obj: ewrite.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-ewrite.obj `if test -f 'ewrite.c'; then $(CYGPATH_W) 'ewrite.c'; else $(CYGPATH_W) '$(srcdir)/ewrite.c'; fi`
+
+libroken_la-ewrite.lo: ewrite.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-ewrite.lo `test -f 'ewrite.c' || echo '$(srcdir)/'`ewrite.c
+
+libroken_la-getaddrinfo_hostspec.o: getaddrinfo_hostspec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getaddrinfo_hostspec.o `test -f 'getaddrinfo_hostspec.c' || echo '$(srcdir)/'`getaddrinfo_hostspec.c
+
+libroken_la-getaddrinfo_hostspec.obj: getaddrinfo_hostspec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getaddrinfo_hostspec.obj `if test -f 'getaddrinfo_hostspec.c'; then $(CYGPATH_W) 'getaddrinfo_hostspec.c'; else $(CYGPATH_W) '$(srcdir)/getaddrinfo_hostspec.c'; fi`
+
+libroken_la-getaddrinfo_hostspec.lo: getaddrinfo_hostspec.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getaddrinfo_hostspec.lo `test -f 'getaddrinfo_hostspec.c' || echo '$(srcdir)/'`getaddrinfo_hostspec.c
+
+libroken_la-get_default_username.o: get_default_username.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_default_username.o `test -f 'get_default_username.c' || echo '$(srcdir)/'`get_default_username.c
+
+libroken_la-get_default_username.obj: get_default_username.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_default_username.obj `if test -f 'get_default_username.c'; then $(CYGPATH_W) 'get_default_username.c'; else $(CYGPATH_W) '$(srcdir)/get_default_username.c'; fi`
+
+libroken_la-get_default_username.lo: get_default_username.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_default_username.lo `test -f 'get_default_username.c' || echo '$(srcdir)/'`get_default_username.c
+
+libroken_la-get_window_size.o: get_window_size.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_window_size.o `test -f 'get_window_size.c' || echo '$(srcdir)/'`get_window_size.c
+
+libroken_la-get_window_size.obj: get_window_size.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_window_size.obj `if test -f 'get_window_size.c'; then $(CYGPATH_W) 'get_window_size.c'; else $(CYGPATH_W) '$(srcdir)/get_window_size.c'; fi`
+
+libroken_la-get_window_size.lo: get_window_size.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-get_window_size.lo `test -f 'get_window_size.c' || echo '$(srcdir)/'`get_window_size.c
+
+libroken_la-getarg.o: getarg.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getarg.o `test -f 'getarg.c' || echo '$(srcdir)/'`getarg.c
+
+libroken_la-getarg.obj: getarg.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getarg.obj `if test -f 'getarg.c'; then $(CYGPATH_W) 'getarg.c'; else $(CYGPATH_W) '$(srcdir)/getarg.c'; fi`
+
+libroken_la-getarg.lo: getarg.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getarg.lo `test -f 'getarg.c' || echo '$(srcdir)/'`getarg.c
+
+libroken_la-getnameinfo_verified.o: getnameinfo_verified.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getnameinfo_verified.o `test -f 'getnameinfo_verified.c' || echo '$(srcdir)/'`getnameinfo_verified.c
+
+libroken_la-getnameinfo_verified.obj: getnameinfo_verified.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getnameinfo_verified.obj `if test -f 'getnameinfo_verified.c'; then $(CYGPATH_W) 'getnameinfo_verified.c'; else $(CYGPATH_W) '$(srcdir)/getnameinfo_verified.c'; fi`
+
+libroken_la-getnameinfo_verified.lo: getnameinfo_verified.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getnameinfo_verified.lo `test -f 'getnameinfo_verified.c' || echo '$(srcdir)/'`getnameinfo_verified.c
+
+libroken_la-getprogname.o: getprogname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getprogname.o `test -f 'getprogname.c' || echo '$(srcdir)/'`getprogname.c
+
+libroken_la-getprogname.obj: getprogname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getprogname.obj `if test -f 'getprogname.c'; then $(CYGPATH_W) 'getprogname.c'; else $(CYGPATH_W) '$(srcdir)/getprogname.c'; fi`
+
+libroken_la-getprogname.lo: getprogname.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-getprogname.lo `test -f 'getprogname.c' || echo '$(srcdir)/'`getprogname.c
+
+libroken_la-h_errno.o: h_errno.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-h_errno.o `test -f 'h_errno.c' || echo '$(srcdir)/'`h_errno.c
+
+libroken_la-h_errno.obj: h_errno.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-h_errno.obj `if test -f 'h_errno.c'; then $(CYGPATH_W) 'h_errno.c'; else $(CYGPATH_W) '$(srcdir)/h_errno.c'; fi`
+
+libroken_la-h_errno.lo: h_errno.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-h_errno.lo `test -f 'h_errno.c' || echo '$(srcdir)/'`h_errno.c
+
+libroken_la-hex.o: hex.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hex.o `test -f 'hex.c' || echo '$(srcdir)/'`hex.c
+
+libroken_la-hex.obj: hex.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hex.obj `if test -f 'hex.c'; then $(CYGPATH_W) 'hex.c'; else $(CYGPATH_W) '$(srcdir)/hex.c'; fi`
+
+libroken_la-hex.lo: hex.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hex.lo `test -f 'hex.c' || echo '$(srcdir)/'`hex.c
+
+libroken_la-hostent_find_fqdn.o: hostent_find_fqdn.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hostent_find_fqdn.o `test -f 'hostent_find_fqdn.c' || echo '$(srcdir)/'`hostent_find_fqdn.c
+
+libroken_la-hostent_find_fqdn.obj: hostent_find_fqdn.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hostent_find_fqdn.obj `if test -f 'hostent_find_fqdn.c'; then $(CYGPATH_W) 'hostent_find_fqdn.c'; else $(CYGPATH_W) '$(srcdir)/hostent_find_fqdn.c'; fi`
+
+libroken_la-hostent_find_fqdn.lo: hostent_find_fqdn.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-hostent_find_fqdn.lo `test -f 'hostent_find_fqdn.c' || echo '$(srcdir)/'`hostent_find_fqdn.c
+
+libroken_la-issuid.o: issuid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-issuid.o `test -f 'issuid.c' || echo '$(srcdir)/'`issuid.c
+
+libroken_la-issuid.obj: issuid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-issuid.obj `if test -f 'issuid.c'; then $(CYGPATH_W) 'issuid.c'; else $(CYGPATH_W) '$(srcdir)/issuid.c'; fi`
+
+libroken_la-issuid.lo: issuid.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-issuid.lo `test -f 'issuid.c' || echo '$(srcdir)/'`issuid.c
+
+libroken_la-k_getpwnam.o: k_getpwnam.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwnam.o `test -f 'k_getpwnam.c' || echo '$(srcdir)/'`k_getpwnam.c
+
+libroken_la-k_getpwnam.obj: k_getpwnam.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwnam.obj `if test -f 'k_getpwnam.c'; then $(CYGPATH_W) 'k_getpwnam.c'; else $(CYGPATH_W) '$(srcdir)/k_getpwnam.c'; fi`
+
+libroken_la-k_getpwnam.lo: k_getpwnam.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwnam.lo `test -f 'k_getpwnam.c' || echo '$(srcdir)/'`k_getpwnam.c
+
+libroken_la-k_getpwuid.o: k_getpwuid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwuid.o `test -f 'k_getpwuid.c' || echo '$(srcdir)/'`k_getpwuid.c
+
+libroken_la-k_getpwuid.obj: k_getpwuid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwuid.obj `if test -f 'k_getpwuid.c'; then $(CYGPATH_W) 'k_getpwuid.c'; else $(CYGPATH_W) '$(srcdir)/k_getpwuid.c'; fi`
+
+libroken_la-k_getpwuid.lo: k_getpwuid.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-k_getpwuid.lo `test -f 'k_getpwuid.c' || echo '$(srcdir)/'`k_getpwuid.c
+
+libroken_la-mini_inetd.o: mini_inetd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-mini_inetd.o `test -f 'mini_inetd.c' || echo '$(srcdir)/'`mini_inetd.c
+
+libroken_la-mini_inetd.obj: mini_inetd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-mini_inetd.obj `if test -f 'mini_inetd.c'; then $(CYGPATH_W) 'mini_inetd.c'; else $(CYGPATH_W) '$(srcdir)/mini_inetd.c'; fi`
+
+libroken_la-mini_inetd.lo: mini_inetd.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-mini_inetd.lo `test -f 'mini_inetd.c' || echo '$(srcdir)/'`mini_inetd.c
+
+libroken_la-net_read.o: net_read.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_read.o `test -f 'net_read.c' || echo '$(srcdir)/'`net_read.c
+
+libroken_la-net_read.obj: net_read.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_read.obj `if test -f 'net_read.c'; then $(CYGPATH_W) 'net_read.c'; else $(CYGPATH_W) '$(srcdir)/net_read.c'; fi`
+
+libroken_la-net_read.lo: net_read.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_read.lo `test -f 'net_read.c' || echo '$(srcdir)/'`net_read.c
+
+libroken_la-net_write.o: net_write.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_write.o `test -f 'net_write.c' || echo '$(srcdir)/'`net_write.c
+
+libroken_la-net_write.obj: net_write.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_write.obj `if test -f 'net_write.c'; then $(CYGPATH_W) 'net_write.c'; else $(CYGPATH_W) '$(srcdir)/net_write.c'; fi`
+
+libroken_la-net_write.lo: net_write.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-net_write.lo `test -f 'net_write.c' || echo '$(srcdir)/'`net_write.c
+
+libroken_la-parse_bytes.o: parse_bytes.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_bytes.o `test -f 'parse_bytes.c' || echo '$(srcdir)/'`parse_bytes.c
+
+libroken_la-parse_bytes.obj: parse_bytes.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_bytes.obj `if test -f 'parse_bytes.c'; then $(CYGPATH_W) 'parse_bytes.c'; else $(CYGPATH_W) '$(srcdir)/parse_bytes.c'; fi`
+
+libroken_la-parse_bytes.lo: parse_bytes.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_bytes.lo `test -f 'parse_bytes.c' || echo '$(srcdir)/'`parse_bytes.c
+
+libroken_la-parse_time.o: parse_time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_time.o `test -f 'parse_time.c' || echo '$(srcdir)/'`parse_time.c
+
+libroken_la-parse_time.obj: parse_time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_time.obj `if test -f 'parse_time.c'; then $(CYGPATH_W) 'parse_time.c'; else $(CYGPATH_W) '$(srcdir)/parse_time.c'; fi`
+
+libroken_la-parse_time.lo: parse_time.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_time.lo `test -f 'parse_time.c' || echo '$(srcdir)/'`parse_time.c
+
+libroken_la-parse_units.o: parse_units.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_units.o `test -f 'parse_units.c' || echo '$(srcdir)/'`parse_units.c
+
+libroken_la-parse_units.obj: parse_units.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_units.obj `if test -f 'parse_units.c'; then $(CYGPATH_W) 'parse_units.c'; else $(CYGPATH_W) '$(srcdir)/parse_units.c'; fi`
+
+libroken_la-parse_units.lo: parse_units.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-parse_units.lo `test -f 'parse_units.c' || echo '$(srcdir)/'`parse_units.c
+
+libroken_la-realloc.o: realloc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-realloc.o `test -f 'realloc.c' || echo '$(srcdir)/'`realloc.c
+
+libroken_la-realloc.obj: realloc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-realloc.obj `if test -f 'realloc.c'; then $(CYGPATH_W) 'realloc.c'; else $(CYGPATH_W) '$(srcdir)/realloc.c'; fi`
+
+libroken_la-realloc.lo: realloc.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-realloc.lo `test -f 'realloc.c' || echo '$(srcdir)/'`realloc.c
+
+libroken_la-resolve.o: resolve.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-resolve.o `test -f 'resolve.c' || echo '$(srcdir)/'`resolve.c
+
+libroken_la-resolve.obj: resolve.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-resolve.obj `if test -f 'resolve.c'; then $(CYGPATH_W) 'resolve.c'; else $(CYGPATH_W) '$(srcdir)/resolve.c'; fi`
+
+libroken_la-resolve.lo: resolve.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-resolve.lo `test -f 'resolve.c' || echo '$(srcdir)/'`resolve.c
+
+libroken_la-roken_gethostby.o: roken_gethostby.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-roken_gethostby.o `test -f 'roken_gethostby.c' || echo '$(srcdir)/'`roken_gethostby.c
+
+libroken_la-roken_gethostby.obj: roken_gethostby.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-roken_gethostby.obj `if test -f 'roken_gethostby.c'; then $(CYGPATH_W) 'roken_gethostby.c'; else $(CYGPATH_W) '$(srcdir)/roken_gethostby.c'; fi`
+
+libroken_la-roken_gethostby.lo: roken_gethostby.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-roken_gethostby.lo `test -f 'roken_gethostby.c' || echo '$(srcdir)/'`roken_gethostby.c
+
+libroken_la-rtbl.o: rtbl.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-rtbl.o `test -f 'rtbl.c' || echo '$(srcdir)/'`rtbl.c
+
+libroken_la-rtbl.obj: rtbl.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-rtbl.obj `if test -f 'rtbl.c'; then $(CYGPATH_W) 'rtbl.c'; else $(CYGPATH_W) '$(srcdir)/rtbl.c'; fi`
+
+libroken_la-rtbl.lo: rtbl.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-rtbl.lo `test -f 'rtbl.c' || echo '$(srcdir)/'`rtbl.c
+
+libroken_la-setprogname.o: setprogname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-setprogname.o `test -f 'setprogname.c' || echo '$(srcdir)/'`setprogname.c
+
+libroken_la-setprogname.obj: setprogname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-setprogname.obj `if test -f 'setprogname.c'; then $(CYGPATH_W) 'setprogname.c'; else $(CYGPATH_W) '$(srcdir)/setprogname.c'; fi`
+
+libroken_la-setprogname.lo: setprogname.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-setprogname.lo `test -f 'setprogname.c' || echo '$(srcdir)/'`setprogname.c
+
+libroken_la-signal.o: signal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-signal.o `test -f 'signal.c' || echo '$(srcdir)/'`signal.c
+
+libroken_la-signal.obj: signal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-signal.obj `if test -f 'signal.c'; then $(CYGPATH_W) 'signal.c'; else $(CYGPATH_W) '$(srcdir)/signal.c'; fi`
+
+libroken_la-signal.lo: signal.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-signal.lo `test -f 'signal.c' || echo '$(srcdir)/'`signal.c
+
+libroken_la-simple_exec.o: simple_exec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-simple_exec.o `test -f 'simple_exec.c' || echo '$(srcdir)/'`simple_exec.c
+
+libroken_la-simple_exec.obj: simple_exec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-simple_exec.obj `if test -f 'simple_exec.c'; then $(CYGPATH_W) 'simple_exec.c'; else $(CYGPATH_W) '$(srcdir)/simple_exec.c'; fi`
+
+libroken_la-simple_exec.lo: simple_exec.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-simple_exec.lo `test -f 'simple_exec.c' || echo '$(srcdir)/'`simple_exec.c
+
+libroken_la-snprintf.o: snprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-snprintf.o `test -f 'snprintf.c' || echo '$(srcdir)/'`snprintf.c
+
+libroken_la-snprintf.obj: snprintf.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-snprintf.obj `if test -f 'snprintf.c'; then $(CYGPATH_W) 'snprintf.c'; else $(CYGPATH_W) '$(srcdir)/snprintf.c'; fi`
+
+libroken_la-snprintf.lo: snprintf.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-snprintf.lo `test -f 'snprintf.c' || echo '$(srcdir)/'`snprintf.c
+
+libroken_la-socket.o: socket.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-socket.o `test -f 'socket.c' || echo '$(srcdir)/'`socket.c
+
+libroken_la-socket.obj: socket.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-socket.obj `if test -f 'socket.c'; then $(CYGPATH_W) 'socket.c'; else $(CYGPATH_W) '$(srcdir)/socket.c'; fi`
+
+libroken_la-socket.lo: socket.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-socket.lo `test -f 'socket.c' || echo '$(srcdir)/'`socket.c
+
+libroken_la-strcollect.o: strcollect.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-strcollect.o `test -f 'strcollect.c' || echo '$(srcdir)/'`strcollect.c
+
+libroken_la-strcollect.obj: strcollect.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-strcollect.obj `if test -f 'strcollect.c'; then $(CYGPATH_W) 'strcollect.c'; else $(CYGPATH_W) '$(srcdir)/strcollect.c'; fi`
+
+libroken_la-strcollect.lo: strcollect.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-strcollect.lo `test -f 'strcollect.c' || echo '$(srcdir)/'`strcollect.c
+
+libroken_la-timeval.o: timeval.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-timeval.o `test -f 'timeval.c' || echo '$(srcdir)/'`timeval.c
+
+libroken_la-timeval.obj: timeval.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-timeval.obj `if test -f 'timeval.c'; then $(CYGPATH_W) 'timeval.c'; else $(CYGPATH_W) '$(srcdir)/timeval.c'; fi`
+
+libroken_la-timeval.lo: timeval.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-timeval.lo `test -f 'timeval.c' || echo '$(srcdir)/'`timeval.c
+
+libroken_la-tm2time.o: tm2time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-tm2time.o `test -f 'tm2time.c' || echo '$(srcdir)/'`tm2time.c
+
+libroken_la-tm2time.obj: tm2time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-tm2time.obj `if test -f 'tm2time.c'; then $(CYGPATH_W) 'tm2time.c'; else $(CYGPATH_W) '$(srcdir)/tm2time.c'; fi`
+
+libroken_la-tm2time.lo: tm2time.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-tm2time.lo `test -f 'tm2time.c' || echo '$(srcdir)/'`tm2time.c
+
+libroken_la-unvis.o: unvis.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-unvis.o `test -f 'unvis.c' || echo '$(srcdir)/'`unvis.c
+
+libroken_la-unvis.obj: unvis.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-unvis.obj `if test -f 'unvis.c'; then $(CYGPATH_W) 'unvis.c'; else $(CYGPATH_W) '$(srcdir)/unvis.c'; fi`
+
+libroken_la-unvis.lo: unvis.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-unvis.lo `test -f 'unvis.c' || echo '$(srcdir)/'`unvis.c
+
+libroken_la-verify.o: verify.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-verify.o `test -f 'verify.c' || echo '$(srcdir)/'`verify.c
+
+libroken_la-verify.obj: verify.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-verify.obj `if test -f 'verify.c'; then $(CYGPATH_W) 'verify.c'; else $(CYGPATH_W) '$(srcdir)/verify.c'; fi`
+
+libroken_la-verify.lo: verify.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-verify.lo `test -f 'verify.c' || echo '$(srcdir)/'`verify.c
+
+libroken_la-vis.o: vis.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-vis.o `test -f 'vis.c' || echo '$(srcdir)/'`vis.c
+
+libroken_la-vis.obj: vis.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-vis.obj `if test -f 'vis.c'; then $(CYGPATH_W) 'vis.c'; else $(CYGPATH_W) '$(srcdir)/vis.c'; fi`
+
+libroken_la-vis.lo: vis.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-vis.lo `test -f 'vis.c' || echo '$(srcdir)/'`vis.c
+
+libroken_la-warnerr.o: warnerr.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-warnerr.o `test -f 'warnerr.c' || echo '$(srcdir)/'`warnerr.c
+
+libroken_la-warnerr.obj: warnerr.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-warnerr.obj `if test -f 'warnerr.c'; then $(CYGPATH_W) 'warnerr.c'; else $(CYGPATH_W) '$(srcdir)/warnerr.c'; fi`
+
+libroken_la-warnerr.lo: warnerr.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-warnerr.lo `test -f 'warnerr.c' || echo '$(srcdir)/'`warnerr.c
+
+libroken_la-write_pid.o: write_pid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-write_pid.o `test -f 'write_pid.c' || echo '$(srcdir)/'`write_pid.c
+
+libroken_la-write_pid.obj: write_pid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-write_pid.obj `if test -f 'write_pid.c'; then $(CYGPATH_W) 'write_pid.c'; else $(CYGPATH_W) '$(srcdir)/write_pid.c'; fi`
+
+libroken_la-write_pid.lo: write_pid.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libroken_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libroken_la-write_pid.lo `test -f 'write_pid.c' || echo '$(srcdir)/'`write_pid.c
 
 libtest_la-strftime.o: strftime.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libtest_la_CFLAGS) $(CFLAGS) -c -o libtest_la-strftime.o `test -f 'strftime.c' || echo '$(srcdir)/'`strftime.c
@@ -1088,7 +1533,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -1112,6 +1558,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:

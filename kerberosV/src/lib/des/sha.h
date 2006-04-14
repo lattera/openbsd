@@ -31,20 +31,10 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: sha.h,v 1.7 2001/01/29 02:08:57 assar Exp $ */
+/* $KTH: sha.h,v 1.8 2005/04/10 19:18:13 lha Exp $ */
 
-#include <stdlib.h>
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_BITYPES_H
-#include <sys/bitypes.h>
-#endif
-#ifdef KRB5
-#include <krb5-types.h>
-#elif defined(KRB4)
-#include <ktypes.h>
-#endif
+#ifndef HEIM_SHA_H
+#define HEIM_SHA_H 1
 
 struct sha {
   unsigned int sz[2];
@@ -57,3 +47,5 @@ typedef struct sha SHA_CTX;
 void SHA1_Init (struct sha *m);
 void SHA1_Update (struct sha *m, const void *v, size_t len);
 void SHA1_Final (void *res, struct sha *m);
+
+#endif /* HEIM_SHA_H */

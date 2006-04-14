@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: roken_rename.h,v 1.4 1999/12/02 16:58:39 joda Exp $ */
+/* $KTH: roken_rename.h,v 1.6 2005/04/24 19:28:50 lha Exp $ */
 
 #ifndef __roken_rename_h__
 #define __roken_rename_h__
@@ -56,6 +56,9 @@
 #endif
 #ifndef HAVE_VASNPRINTF
 #define vasnprintf _editline_vasnprintf
+#endif
+#ifndef HAVE_STRLCAT
+#define strlcat _editline_strlcat
 #endif
 
 #endif /* __roken_rename_h__ */

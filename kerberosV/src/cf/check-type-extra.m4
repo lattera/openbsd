@@ -1,4 +1,4 @@
-dnl $KTH: check-type-extra.m4,v 1.2.34.1 2004/04/01 07:27:33 joda Exp $
+dnl $KTH: check-type-extra.m4,v 1.3 2004/02/12 14:20:42 lha Exp $
 dnl
 dnl ac_check_type + extra headers
 

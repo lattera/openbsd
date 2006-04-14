@@ -1,15 +1,15 @@
-# $KTH: Makefile.am,v 1.26 2001/09/06 12:18:34 assar Exp $
+# $KTH: Makefile.am,v 1.28 2004/08/26 11:55:16 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += -I$(srcdir)/../common $(INCLUDE_krb4) -DFTP_SERVER
+AM_CPPFLAGS += -I$(srcdir)/../common $(INCLUDE_krb4) -DFTP_SERVER
 
 libexec_PROGRAMS = ftpd
 
 CHECK_LOCAL = 
 
 if KRB4
-krb4_sources = krb4.c kauth.c
+krb4_sources = krb4.c
 endif
 if KRB5
 krb5_sources = gssapi.c gss_userok.c
@@ -25,6 +25,7 @@ ftpd_SOURCES =		\
 	pathnames.h	\
 	popen.c		\
 	security.c	\
+	kauth.c		\
 	$(krb4_sources) \
 	$(krb5_sources)
 

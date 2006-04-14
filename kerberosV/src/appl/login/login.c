@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2003 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2006 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -38,8 +38,11 @@
 #ifdef HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
 #endif
+#ifdef HAVE_CRYPT_H
+#include <crypt.h>
+#endif
 
-RCSID("$KTH: login.c,v 1.59.2.1 2004/09/08 09:15:39 joda Exp $");
+RCSID("$KTH: login.c,v 1.65.2.1 2006/01/09 16:29:49 joda Exp $");
 
 static int login_timeout = 60;
 
@@ -203,6 +206,8 @@ krb5_to4 (krb5_ccache id)
 	krb5_error_code ret;
 	krb5_principal princ;
 
+	krb5_cc_clear_mcred(&mcred);
+
 	ret = krb5_cc_get_principal (context, id, &princ);
 	if (ret)
 	    return ret;
@@ -212,9 +217,11 @@ krb5_to4 (krb5_ccache id)
 				  "krbtgt",
 				  princ->realm,
 				  NULL);
-	krb5_free_principal (context, princ);
-	if (ret)
+	if (ret) {
+	    krb5_free_principal(context, princ);
 	    return ret;
+	}
+	mcred.client = princ;
 
 	ret = krb5_cc_retrieve_cred(context, id, 0, &mcred, &cred);
 	if(ret == 0) {
@@ -226,9 +233,10 @@ krb5_to4 (krb5_ccache id)
 		tf_setup(&c, c.pname, c.pinst);
 	    }
 	    memset(&c, 0, sizeof(c));
-	    krb5_free_creds_contents(context, &cred);
+	    krb5_free_cred_contents(context, &cred);
 	}
 	krb5_free_principal(context, mcred.server);
+	krb5_free_principal(context, mcred.client);
     }
     return 0;
 }
@@ -476,6 +484,14 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 	    exit(1);
     }
 #endif
+    if(rootlogin == 0) {
+	const char *file = login_conf_get_string("limits");
+	if(file == NULL)
+	    file = _PATH_LIMITS_CONF;
+
+	read_limits_conf(file, pwd);
+    }
+	    
 #ifdef HAVE_SETPCRED
     if (setpcred (pwd->pw_name, NULL) == -1)
 	warn("setpcred(%s)", pwd->pw_name);
@@ -717,7 +733,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    openlog("login", LOG_ODELAY, LOG_AUTH);
+    openlog("login", LOG_ODELAY | LOG_PID, LOG_AUTH);
 
     if (getarg (args, sizeof(args) / sizeof(args[0]), argc, argv,
 		&optind))
@@ -850,6 +866,13 @@ main(int argc, char **argv)
 		syslog(LOG_NOTICE, "%s LOGIN REFUSED ON %s",
 		       pwd->pw_name, tty);
 	    exit (1);
+	} else {
+	    if (remote_host)
+		syslog(LOG_NOTICE, "%s LOGIN ACCEPTED FROM %s ppid=%d",
+		       pwd->pw_name, remote_host, (int) getppid());
+	    else
+		syslog(LOG_NOTICE, "%s LOGIN ACCEPTED ON %s ppid=%d",
+		       pwd->pw_name, tty, (int) getppid());
 	}
         alarm(0);
 	do_login(pwd, tty, ttyn);

@@ -1,17 +1,16 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION($Revision: 1.331.2.8 $)
-AC_PREREQ(2.53)
-##test -z "$CFLAGS" && CFLAGS="-g"
-AC_INIT([Heimdal], [0.6.3], [heimdal-bugs@pdc.kth.se])
+AC_REVISION($Revision: 1.365.2.7 $)
+AC_PREREQ([2.59])
+#test -z "$CFLAGS" && CFLAGS="-g"
+AC_INIT([Heimdal],[0.7.2],[heimdal-bugs@pdc.kth.se])
 AC_CONFIG_SRCDIR([kuser/kinit.c])
-AM_CONFIG_HEADER(include/config.h)
+AC_CONFIG_HEADERS(include/config.h)
 
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_CC_STDC
 
-AM_INIT_AUTOMAKE([foreign no-dependencies 1.7])
+AM_INIT_AUTOMAKE([foreign no-dependencies 1.8])
 AM_MAINTAINER_MODE
 
 AC_PREFIX_DEFAULT(/usr/heimdal)
@@ -23,18 +22,17 @@ AC_CANONICAL_HOST
 CANONICAL_HOST=$host
 AC_SUBST(CANONICAL_HOST)
 
-AC_SYS_LARGEFILE
-dnl need to set this on the command line, since it might otherwise break
-dnl with generated code, such as lex
-if test "$enable_largefile" != no -a "$ac_cv_sys_large_files" != no; then
-	CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
-fi
+rk_SYS_LARGEFILE
 
 dnl
 dnl this is needed to run the configure tests against glibc
 dnl
 AC_DEFINE([_GNU_SOURCE], 1,
 	[Define to enable extensions on glibc-based systems such as Linux.])
+
+if test -f $srcdir/lib/asn1/pkcs12.asn1 ; then
+	AC_DEFINE([PKINIT], 1, [Define to enable PKINIT.])
+fi
 
 AC_OBJEXT
 AC_EXEEXT
@@ -55,12 +53,20 @@ AC_C___ATTRIBUTE__
 AC_ENABLE_SHARED(no)
 AC_PROG_LIBTOOL
 
-AC_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
+rk_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
 
 rk_TEST_PACKAGE(openldap,
 [#include <lber.h>
 #include <ldap.h>],
 [-lldap -llber],,,OPENLDAP)
+
+AC_ARG_ENABLE(hdb-openldap-module, 
+	AS_HELP_STRING([--enable-hdb-openldap-module],
+		[if you want support to build openldap hdb as shared object]))
+if test "$enable_hdb_openldap_module" = yes -a "$with_openldap" = yes; then
+    AC_DEFINE(OPENLDAP_MODULE, 1, [Define if you want support for hdb ldap module])
+fi
+AM_CONDITIONAL(OPENLDAP_MODULE, test "$enable_hdb_openldap_module" = yes -a "$with_openldap" = yes)
 
 rk_TEST_PACKAGE(krb4,[#include <krb.h>],-lkrb,-ldes,/usr/athena, KRB4, krb4-config)
 
@@ -73,11 +79,11 @@ if test "$with_krb4" != "no"; then
 	EXTRA_LIB45=lib45.a
 	AC_SUBST(EXTRA_LIB45)
 	AC_CACHE_CHECK(for four valued krb_put_int, ac_cv_func_krb_put_int_four,
-		[AC_TRY_COMPILE([#include <krb.h>],[
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <krb.h>]], [[
 		char tmp[4];
-		krb_put_int(17, tmp, 4, sizeof(tmp));],
-		ac_cv_func_krb_put_int_four=yes,
-		ac_cv_func_krb_put_int_four=no)
+		krb_put_int(17, tmp, 4, sizeof(tmp));]])],
+		[ac_cv_func_krb_put_int_four=yes],
+		[ac_cv_func_krb_put_int_four=no])
 	])
 	if test "$ac_cv_func_krb_put_int_four" = yes; then
 		AC_DEFINE(HAVE_FOUR_VALUED_KRB_PUT_INT, 1,
@@ -90,10 +96,10 @@ if test "$with_krb4" != "no"; then
 #endif
 ])
 	AC_CACHE_CHECK(for KRB_VERIFY_SECURE, ac_cv_func_krb_verify_secure,
-		[AC_TRY_COMPILE([#include <krb.h>],[
-		int x = KRB_VERIFY_SECURE],
-		ac_cv_func_krb_verify_secure=yes,
-		ac_cv_func_krb_verify_secure=no)
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <krb.h>]], [[
+		int x = KRB_VERIFY_SECURE]])],
+		[ac_cv_func_krb_verify_secure=yes],
+		[ac_cv_func_krb_verify_secure=no])
 	])
 	if test "$ac_cv_func_krb_verify_secure" != yes; then
 		AC_DEFINE(KRB_VERIFY_SECURE, 1,
@@ -103,10 +109,10 @@ if test "$with_krb4" != "no"; then
 	fi
 	AC_CACHE_CHECK(for KRB_VERIFY_NOT_SECURE,
 		ac_cv_func_krb_verify_not_secure,
-		[AC_TRY_COMPILE([#include <krb.h>],[
-		int x = KRB_VERIFY_NOT_SECURE],
-		ac_cv_func_krb_verify_not_secure=yes,
-		ac_cv_func_krb_verify_not_secure=no)
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <krb.h>]], [[
+		int x = KRB_VERIFY_NOT_SECURE]])],
+		[ac_cv_func_krb_verify_not_secure=yes],
+		[ac_cv_func_krb_verify_not_secure=no])
 	])
 	if test "$ac_cv_func_krb_verify_not_secure" != yes; then
 		AC_DEFINE(KRB_VERIFY_NOT_SECURE, 0,
@@ -127,11 +133,11 @@ if test "$with_krb4" != "no"; then
 #endif])
 	AC_CACHE_CHECK([for KRB_SENDAUTH_VERS],
 		ac_cv_func_krb_sendauth_vers,
-		[AC_TRY_COMPILE([#include <krb.h>
-			#include <prot.h>],[
-		char *x = KRB_SENDAUTH_VERS],
-		ac_cv_func_krb_sendauth_vers=yes,
-		ac_cv_func_krb_sendauth_vers=no)
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <krb.h>
+			#include <prot.h>]], [[
+		char *x = KRB_SENDAUTH_VERS]])],
+		[ac_cv_func_krb_sendauth_vers=yes],
+		[ac_cv_func_krb_sendauth_vers=no])
 	])
 	if test "$ac_cv_func_krb_sendauth_vers" != yes; then
 		AC_DEFINE(KRB_SENDAUTH_VERS, ["AUTHV0.1"],
@@ -139,12 +145,12 @@ if test "$with_krb4" != "no"; then
 	fi
 	AC_CACHE_CHECK(for krb_mk_req with const arguments,
 		ac_cv_func_krb_mk_req_const,
-		[AC_TRY_COMPILE([#include <krb.h>
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <krb.h>
 		int krb_mk_req(KTEXT a, const char *s, const char *i,
 			       const char *r, int32_t checksum)
-		{ return 17; }], [],
-		ac_cv_func_krb_mk_req_const=yes,
-		ac_cv_func_krb_mk_req_const=no)
+		{ return 17; }]], [[]])],
+		[ac_cv_func_krb_mk_req_const=yes],
+		[ac_cv_func_krb_mk_req_const=no])
 	])
 	if test "$ac_cv_func_krb_mk_req_const" = "yes"; then
 		AC_DEFINE(KRB_MK_REQ_CONST, 1,
@@ -164,8 +170,10 @@ AC_SUBST(LIB_kdb)dnl
 
 KRB_CRYPTO
 
+KRB_PTHREADS
+
 AC_ARG_ENABLE(dce, 
-	AC_HELP_STRING([--enable-dce],[if you want support for DCE/DFS PAG's]))
+	AS_HELP_STRING([--enable-dce],[if you want support for DCE/DFS PAG's]))
 if test "$enable_dce" = yes; then
     AC_DEFINE(DCE, 1, [Define if you want support for DCE/DFS PAG's.])
 fi
@@ -197,7 +205,7 @@ rk_OTP
 AC_CHECK_OSFC2
 
 AC_ARG_ENABLE(mmap,
-	AC_HELP_STRING([--disable-mmap],[disable use of mmap]))
+	AS_HELP_STRING([--disable-mmap],[disable use of mmap]))
 if test "$enable_mmap" = "no"; then
 	AC_DEFINE(NO_MMAP, 1, [Define if you don't want to use mmap.])
 fi
@@ -256,7 +264,6 @@ AC_CHECK_HEADERS([\
 	pthread.h				\
 	pty.h					\
 	sac.h					\
-	security/pam_modules.h			\
 	sgtty.h					\
 	siad.h					\
 	signal.h				\
@@ -269,20 +276,20 @@ AC_CHECK_HEADERS([\
 	sys/mman.h				\
 	sys/pty.h				\
 	sys/ptyio.h				\
-	sys/ptyvar.h				\
 	sys/select.h				\
+	sys/socket.h				\
 	sys/str_tty.h				\
 	sys/stream.h				\
 	sys/stropts.h				\
-	sys/strtty.h				\
 	sys/syscall.h				\
 	sys/termio.h				\
 	sys/timeb.h				\
 	sys/times.h				\
 	sys/un.h				\
-	term.h					\
+	sys/ucred.h				\
 	termcap.h				\
 	termio.h				\
+	termios.h				\
 	time.h					\
 	tmpdir.h				\
 	udb.h					\
@@ -290,13 +297,52 @@ AC_CHECK_HEADERS([\
 	utmpx.h					\
 ])
 
+dnl On Solaris 8 there's a compilation warning for term.h because
+dnl it doesn't define `bool'.
+AC_CHECK_HEADERS(term.h, , , -)
+
+AC_CHECK_HEADERS(net/if.h, , , [AC_INCLUDES_DEFAULT
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif])
+
+AC_CHECK_HEADERS(sys/ptyvar.h, , , [AC_INCLUDES_DEFAULT
+#if HAVE_SYS_TTY_H
+#include <sys/tty.h>
+#endif])
+
+AC_CHECK_HEADERS(sys/strtty.h, , , [AC_INCLUDES_DEFAULT
+#if HAVE_TERMIOS_H
+#include <termios.h>
+#endif
+#if HAVE_SYS_STREAM_H
+#include <sys/stream.h>
+#endif])
+
+AC_CHECK_HEADERS(security/pam_modules.h, , , [AC_INCLUDES_DEFAULT
+#include <security/pam_appl.h>
+])
+
 AC_ARG_ENABLE(netinfo,
-	AC_HELP_STRING([--enable-netinfo],[enable netinfo for configuration lookup]))
+	AS_HELP_STRING([--enable-netinfo],[enable netinfo for configuration lookup]))
 
 if test "$ac_cv_header_netinfo_ni_h" = yes -a "$enable_netinfo" = yes; then
        AC_DEFINE(HAVE_NETINFO, 1,
                [Define if you want to use Netinfo instead of krb5.conf.])
 fi
+
+AC_ARG_ENABLE(kcm,
+	AC_HELP_STRING([--enable-kcm],[enable Kerberos Credentials Manager]))
+
+if test "$ac_cv_header_sys_un_h" = yes -a "$enable_kcm" = yes; then
+       AC_DEFINE(HAVE_KCM, 1,
+               [Define if you want to use the Kerberos Credentials Manager.])
+fi
+AM_CONDITIONAL(KCM, test "$enable_kcm" = yes)
+
+dnl export symbols
+rk_WIN32_EXPORT(BUILD_KRB5_LIB, KRB5_LIB_FUNCTION)
+rk_WIN32_EXPORT(BUILD_ROKEN_LIB, ROKEN_LIB_FUNCTION)
 
 dnl Checks for libraries.
 
@@ -311,6 +357,8 @@ AC_CHECK_FUNCS([				\
 	_getpty					\
 	_scrsize				\
 	fcntl					\
+	getpeereid				\
+	getpeerucred				\
 	grantpt					\
 	mktime					\
 	ptsname					\
@@ -343,6 +391,14 @@ AC_FUNC_MMAP
 KRB_CAPABILITIES
 
 AC_CHECK_GETPWNAM_R_POSIX
+
+dnl detect doors on solaris
+if test "$enable_pthread_support" != no; then
+   saved_LIBS="$LIBS"
+   LIBS="$LIBS $PTHREADS_LIBS"
+   AC_FIND_FUNC_NO_LIBS(door_create, door)
+   LIBS="$saved_LIBS"
+fi
 
 dnl Cray stuff
 AC_CHECK_FUNCS(getudbnam setlim)
@@ -393,10 +449,6 @@ rk_AUTH_MODULES([sia afskauthlib])
 
 rk_DESTDIRS
 
-LTLIBOBJS=`echo "$LIB@&t@OBJS" |
-	sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
-AC_SUBST(LTLIBOBJS)
-
 AH_BOTTOM([#ifdef ROKEN_RENAME
 #include "roken_rename.h"
 #endif])
@@ -428,6 +480,7 @@ AC_CONFIG_FILES(Makefile 		\
 	kpasswd/Makefile		\
 	kadmin/Makefile			\
 	admin/Makefile			\
+	kcm/Makefile			\
 	kdc/Makefile			\
 	appl/Makefile			\
 	appl/afsutil/Makefile		\

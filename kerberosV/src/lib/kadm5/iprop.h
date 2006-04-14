@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2002 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998-2003 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -31,13 +31,12 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: iprop.h,v 1.7 2002/07/04 14:39:19 joda Exp $ */
+/* $KTH: iprop.h,v 1.9 2003/11/23 06:24:16 lha Exp $ */
 
 #ifndef __IPROP_H__
 #define __IPROP_H__
 
 #include "kadm5_locl.h"
-#include <krb5-private.h> /* _krb5_{get,put}_int */
 #include <getarg.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -45,6 +44,8 @@
 #ifdef HAVE_UTIL_H
 #include <util.h>
 #endif
+
+#include <parse_time.h>
 
 #define IPROP_VERSION "iprop-0.0"
 
@@ -62,7 +63,9 @@ enum iprop_cmd { I_HAVE = 1,
 		 FOR_YOU = 2,
 		 TELL_YOU_EVERYTHING = 3,
 		 ONE_PRINC = 4,
-		 NOW_YOU_HAVE = 5
+		 NOW_YOU_HAVE = 5,
+		 ARE_YOU_THERE = 6,
+		 I_AM_HERE = 7
 };
 
 #endif /* __IPROP_H__ */

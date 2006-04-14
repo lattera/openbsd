@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $KTH: security.h,v 1.9.12.1 2003/08/20 16:41:53 lha Exp $ */
+/* $KTH: security.h,v 1.11 2003/12/19 00:54:52 lha Exp $ */
 
 #ifndef __security_h__
 #define __security_h__
@@ -77,6 +77,7 @@ struct sec_server_mech {
 #define AUTH_ERROR	2
 
 extern int ftp_do_gss_bindings;
+extern int ftp_do_gss_delegate;
 #ifdef FTP_SERVER
 extern struct sec_server_mech krb4_server_mech, gss_server_mech;
 #else

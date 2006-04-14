@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.17 2000/11/15 22:51:09 assar Exp $
+# $KTH: Makefile.am,v 1.18 2004/08/26 11:55:18 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(INCLUDE_hesiod)
+AM_CPPFLAGS += $(INCLUDE_krb4) $(INCLUDE_hesiod)
 
 bin_SCRIPTS		= pfrom
 

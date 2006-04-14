@@ -14,15 +14,15 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.156.2.4 2004/06/21 10:52:01 lha Exp $
+# $KTH: Makefile.am,v 1.197.2.1 2006/02/03 15:08:40 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
 
-SOURCES = $(libkrb5_la_SOURCES) aes-test.c derived-key-test.c dump_config.c krbhst-test.c n-fold-test.c name-45-test.c parse-name-test.c store-test.c string-to-key-test.c test_alname.c test_cc.c test_get_addrs.c verify_krb5_conf.c
+SOURCES = $(libkrb5_la_SOURCES) aes-test.c derived-key-test.c dump_config.c krbhst-test.c n-fold-test.c name-45-test.c parse-name-test.c store-test.c string-to-key-test.c test_acl.c test_addr.c test_alname.c test_cc.c test_config.c test_crypto.c test_get_addrs.c test_keytab.c test_kuserok.c test_mem.c test_time.c verify_krb5_conf.c
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -50,7 +50,8 @@ DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(top_srcdir)/cf/Makefile.am.common
 bin_PROGRAMS = verify_krb5_conf$(EXEEXT)
 noinst_PROGRAMS = dump_config$(EXEEXT) test_get_addrs$(EXEEXT) \
-	krbhst-test$(EXEEXT) test_alname$(EXEEXT)
+	krbhst-test$(EXEEXT) test_alname$(EXEEXT) test_crypto$(EXEEXT) \
+	test_kuserok$(EXEEXT)
 check_PROGRAMS = $(am__EXEEXT_1)
 subdir = lib/krb5
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -64,7 +65,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -85,56 +85,86 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libkrb5_la_DEPENDENCIES = ../com_err/error.lo ../com_err/com_err.lo \
-	$(am__DEPENDENCIES_1) $(top_builddir)/lib/asn1/libasn1.la \
-	$(am__DEPENDENCIES_1)
-am__objects_1 = krb5_err.lo heim_err.lo k524_err.lo
-am_libkrb5_la_OBJECTS = acl.lo add_et_list.lo addr_families.lo \
-	aname_to_localname.lo appdefault.lo asn1_glue.lo \
-	auth_context.lo build_ap_req.lo build_auth.lo cache.lo \
-	changepw.lo codec.lo config_file.lo config_file_netinfo.lo \
-	convert_creds.lo constants.lo context.lo copy_host_realm.lo \
-	crc.lo creds.lo crypto.lo data.lo eai_to_heim_errno.lo \
-	error_string.lo expand_hostname.lo fcache.lo free.lo \
-	free_host_realm.lo generate_seq_number.lo generate_subkey.lo \
-	get_addrs.lo get_cred.lo get_default_principal.lo \
-	get_default_realm.lo get_for_creds.lo get_host_realm.lo \
-	get_in_tkt.lo get_in_tkt_pw.lo get_in_tkt_with_keytab.lo \
-	get_in_tkt_with_skey.lo get_port.lo init_creds.lo \
-	init_creds_pw.lo keyblock.lo keytab.lo keytab_any.lo \
-	keytab_file.lo keytab_memory.lo keytab_keyfile.lo \
-	keytab_krb4.lo krbhst.lo kuserok.lo log.lo mcache.lo misc.lo \
-	mk_error.lo mk_priv.lo mk_rep.lo mk_req.lo mk_req_ext.lo \
-	mk_safe.lo net_read.lo net_write.lo n-fold.lo padata.lo \
-	principal.lo prog_setup.lo prompter_posix.lo rd_cred.lo \
-	rd_error.lo rd_priv.lo rd_rep.lo rd_req.lo rd_safe.lo \
-	read_message.lo recvauth.lo replay.lo send_to_kdc.lo \
-	sendauth.lo set_default_realm.lo sock_principal.lo store.lo \
-	store_emem.lo store_fd.lo store_mem.lo ticket.lo time.lo \
-	transited.lo verify_init.lo verify_user.lo version.lo warn.lo \
-	write_message.lo $(am__objects_1)
+libkrb5_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+am__objects_1 = libkrb5_la-krb5_err.lo libkrb5_la-heim_err.lo \
+	libkrb5_la-k524_err.lo
+am_libkrb5_la_OBJECTS = libkrb5_la-acache.lo libkrb5_la-acl.lo \
+	libkrb5_la-add_et_list.lo libkrb5_la-addr_families.lo \
+	libkrb5_la-aname_to_localname.lo libkrb5_la-appdefault.lo \
+	libkrb5_la-asn1_glue.lo libkrb5_la-auth_context.lo \
+	libkrb5_la-build_ap_req.lo libkrb5_la-build_auth.lo \
+	libkrb5_la-cache.lo libkrb5_la-changepw.lo libkrb5_la-codec.lo \
+	libkrb5_la-config_file.lo libkrb5_la-config_file_netinfo.lo \
+	libkrb5_la-convert_creds.lo libkrb5_la-constants.lo \
+	libkrb5_la-context.lo libkrb5_la-copy_host_realm.lo \
+	libkrb5_la-crc.lo libkrb5_la-creds.lo libkrb5_la-crypto.lo \
+	libkrb5_la-data.lo libkrb5_la-eai_to_heim_errno.lo \
+	libkrb5_la-error_string.lo libkrb5_la-expand_hostname.lo \
+	libkrb5_la-fcache.lo libkrb5_la-free.lo \
+	libkrb5_la-free_host_realm.lo \
+	libkrb5_la-generate_seq_number.lo \
+	libkrb5_la-generate_subkey.lo libkrb5_la-get_addrs.lo \
+	libkrb5_la-get_cred.lo libkrb5_la-get_default_principal.lo \
+	libkrb5_la-get_default_realm.lo libkrb5_la-get_for_creds.lo \
+	libkrb5_la-get_host_realm.lo libkrb5_la-get_in_tkt.lo \
+	libkrb5_la-get_in_tkt_pw.lo \
+	libkrb5_la-get_in_tkt_with_keytab.lo \
+	libkrb5_la-get_in_tkt_with_skey.lo libkrb5_la-get_port.lo \
+	libkrb5_la-init_creds.lo libkrb5_la-init_creds_pw.lo \
+	libkrb5_la-kcm.lo libkrb5_la-keyblock.lo libkrb5_la-keytab.lo \
+	libkrb5_la-keytab_any.lo libkrb5_la-keytab_file.lo \
+	libkrb5_la-keytab_memory.lo libkrb5_la-keytab_keyfile.lo \
+	libkrb5_la-keytab_krb4.lo libkrb5_la-krbhst.lo \
+	libkrb5_la-kuserok.lo libkrb5_la-log.lo libkrb5_la-mcache.lo \
+	libkrb5_la-misc.lo libkrb5_la-mk_error.lo \
+	libkrb5_la-mk_priv.lo libkrb5_la-mk_rep.lo \
+	libkrb5_la-mk_req.lo libkrb5_la-mk_req_ext.lo \
+	libkrb5_la-mk_safe.lo libkrb5_la-mit_glue.lo \
+	libkrb5_la-net_read.lo libkrb5_la-net_write.lo \
+	libkrb5_la-n-fold.lo libkrb5_la-padata.lo libkrb5_la-pkinit.lo \
+	libkrb5_la-principal.lo libkrb5_la-prog_setup.lo \
+	libkrb5_la-prompter_posix.lo libkrb5_la-rd_cred.lo \
+	libkrb5_la-rd_error.lo libkrb5_la-rd_priv.lo \
+	libkrb5_la-rd_rep.lo libkrb5_la-rd_req.lo \
+	libkrb5_la-rd_safe.lo libkrb5_la-read_message.lo \
+	libkrb5_la-recvauth.lo libkrb5_la-replay.lo \
+	libkrb5_la-send_to_kdc.lo libkrb5_la-sendauth.lo \
+	libkrb5_la-set_default_realm.lo libkrb5_la-sock_principal.lo \
+	libkrb5_la-store.lo libkrb5_la-store_emem.lo \
+	libkrb5_la-store_fd.lo libkrb5_la-store_mem.lo \
+	libkrb5_la-ticket.lo libkrb5_la-time.lo \
+	libkrb5_la-transited.lo libkrb5_la-v4_glue.lo \
+	libkrb5_la-verify_init.lo libkrb5_la-verify_user.lo \
+	libkrb5_la-version.lo libkrb5_la-warn.lo \
+	libkrb5_la-write_message.lo $(am__objects_1)
 libkrb5_la_OBJECTS = $(am_libkrb5_la_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-am__EXEEXT_1 = aes-test$(EXEEXT) n-fold-test$(EXEEXT) \
-	string-to-key-test$(EXEEXT) derived-key-test$(EXEEXT) \
-	store-test$(EXEEXT) parse-name-test$(EXEEXT) test_cc$(EXEEXT) \
-	name-45-test$(EXEEXT)
+am__EXEEXT_1 = aes-test$(EXEEXT) derived-key-test$(EXEEXT) \
+	n-fold-test$(EXEEXT) name-45-test$(EXEEXT) \
+	parse-name-test$(EXEEXT) store-test$(EXEEXT) \
+	string-to-key-test$(EXEEXT) test_acl$(EXEEXT) \
+	test_addr$(EXEEXT) test_cc$(EXEEXT) test_config$(EXEEXT) \
+	test_keytab$(EXEEXT) test_time$(EXEEXT) test_mem$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 aes_test_SOURCES = aes-test.c
 aes_test_OBJECTS = aes-test.$(OBJEXT)
@@ -181,6 +211,16 @@ string_to_key_test_OBJECTS = string-to-key-test.$(OBJEXT)
 string_to_key_test_LDADD = $(LDADD)
 string_to_key_test_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
 	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_acl_SOURCES = test_acl.c
+test_acl_OBJECTS = test_acl.$(OBJEXT)
+test_acl_LDADD = $(LDADD)
+test_acl_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_addr_SOURCES = test_addr.c
+test_addr_OBJECTS = test_addr.$(OBJEXT)
+test_addr_LDADD = $(LDADD)
+test_addr_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
 test_alname_SOURCES = test_alname.c
 test_alname_OBJECTS = test_alname.$(OBJEXT)
 test_alname_LDADD = $(LDADD)
@@ -191,10 +231,40 @@ test_cc_OBJECTS = test_cc.$(OBJEXT)
 test_cc_LDADD = $(LDADD)
 test_cc_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
 	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_config_SOURCES = test_config.c
+test_config_OBJECTS = test_config.$(OBJEXT)
+test_config_LDADD = $(LDADD)
+test_config_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_crypto_SOURCES = test_crypto.c
+test_crypto_OBJECTS = test_crypto.$(OBJEXT)
+test_crypto_LDADD = $(LDADD)
+test_crypto_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
 test_get_addrs_SOURCES = test_get_addrs.c
 test_get_addrs_OBJECTS = test_get_addrs.$(OBJEXT)
 test_get_addrs_LDADD = $(LDADD)
 test_get_addrs_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_keytab_SOURCES = test_keytab.c
+test_keytab_OBJECTS = test_keytab.$(OBJEXT)
+test_keytab_LDADD = $(LDADD)
+test_keytab_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_kuserok_SOURCES = test_kuserok.c
+test_kuserok_OBJECTS = test_kuserok.$(OBJEXT)
+test_kuserok_LDADD = $(LDADD)
+test_kuserok_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_mem_SOURCES = test_mem.c
+test_mem_OBJECTS = test_mem.$(OBJEXT)
+test_mem_LDADD = $(LDADD)
+test_mem_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
+test_time_SOURCES = test_time.c
+test_time_OBJECTS = test_time.$(OBJEXT)
+test_time_LDADD = $(LDADD)
+test_time_DEPENDENCIES = libkrb5.la $(am__DEPENDENCIES_1) \
 	$(top_builddir)/lib/asn1/libasn1.la $(am__DEPENDENCIES_1)
 verify_krb5_conf_SOURCES = verify_krb5_conf.c
 verify_krb5_conf_OBJECTS = verify_krb5_conf.$(OBJEXT)
@@ -214,12 +284,16 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libkrb5_la_SOURCES) aes-test.c derived-key-test.c \
 	dump_config.c krbhst-test.c n-fold-test.c name-45-test.c \
-	parse-name-test.c store-test.c string-to-key-test.c \
-	test_alname.c test_cc.c test_get_addrs.c verify_krb5_conf.c
+	parse-name-test.c store-test.c string-to-key-test.c test_acl.c \
+	test_addr.c test_alname.c test_cc.c test_config.c \
+	test_crypto.c test_get_addrs.c test_keytab.c test_kuserok.c \
+	test_mem.c test_time.c verify_krb5_conf.c
 DIST_SOURCES = $(libkrb5_la_SOURCES) aes-test.c derived-key-test.c \
 	dump_config.c krbhst-test.c n-fold-test.c name-45-test.c \
-	parse-name-test.c store-test.c string-to-key-test.c \
-	test_alname.c test_cc.c test_get_addrs.c verify_krb5_conf.c
+	parse-name-test.c store-test.c string-to-key-test.c test_acl.c \
+	test_addr.c test_alname.c test_cc.c test_config.c \
+	test_crypto.c test_get_addrs.c test_keytab.c test_kuserok.c \
+	test_mem.c test_time.c verify_krb5_conf.c
 man3dir = $(mandir)/man3
 man5dir = $(mandir)/man5
 man8dir = $(mandir)/man8
@@ -298,6 +372,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -329,6 +405,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -373,6 +450,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -382,6 +461,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -418,6 +499,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -449,7 +532,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken) $(INCLUDE_krb4) $(INCLUDE_des) -I../com_err -I$(srcdir)/../com_err
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken) $(INCLUDE_krb4) $(INCLUDE_des) -I../com_err -I$(srcdir)/../com_err
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -466,16 +549,23 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 TESTS = \
 	aes-test				\
-	n-fold-test				\
-	string-to-key-test			\
 	derived-key-test			\
-	store-test				\
+	n-fold-test				\
+	name-45-test				\
 	parse-name-test				\
+	store-test				\
+	string-to-key-test			\
+	test_acl				\
+	test_addr				\
 	test_cc					\
-	name-45-test
+	test_config				\
+	test_keytab				\
+	test_time				\
+	test_mem
 
 LDADD = libkrb5.la \
 	$(LIB_des) \
@@ -483,14 +573,18 @@ LDADD = libkrb5.la \
 	$(LIB_roken)
 
 libkrb5_la_LIBADD = \
-	../com_err/error.lo ../com_err/com_err.lo \
+	$(LIB_com_err) \
 	$(LIB_des) \
 	$(top_builddir)/lib/asn1/libasn1.la \
-	$(LIB_roken)
+	$(LIB_roken) \
+	$(LIB_door_create) \
+	$(LIB_dlopen)
 
 lib_LTLIBRARIES = libkrb5.la
 ERR_FILES = krb5_err.c heim_err.c k524_err.c
+libkrb5_la_CPPFLAGS = -DBUILD_KRB5_LIB $(AM_CPPFLAGS)
 libkrb5_la_SOURCES = \
+	acache.c				\
 	acl.c					\
 	add_et_list.c				\
 	addr_families.c				\
@@ -534,6 +628,8 @@ libkrb5_la_SOURCES = \
 	get_port.c				\
 	init_creds.c				\
 	init_creds_pw.c				\
+	kcm.c					\
+	kcm.h					\
 	keyblock.c				\
 	keytab.c				\
 	keytab_any.c				\
@@ -552,10 +648,12 @@ libkrb5_la_SOURCES = \
 	mk_req.c				\
 	mk_req_ext.c				\
 	mk_safe.c				\
+	mit_glue.c				\
 	net_read.c				\
 	net_write.c				\
 	n-fold.c				\
 	padata.c				\
+	pkinit.c				\
 	principal.c				\
 	prog_setup.c				\
 	prompter_posix.c			\
@@ -580,6 +678,7 @@ libkrb5_la_SOURCES = \
 	ticket.c				\
 	time.c					\
 	transited.c				\
+	v4_glue.c				\
 	verify_init.c				\
 	verify_user.c				\
 	version.c				\
@@ -587,47 +686,69 @@ libkrb5_la_SOURCES = \
 	write_message.c				\
 	$(ERR_FILES)
 
-libkrb5_la_LDFLAGS = -version-info 20:0:3
+libkrb5_la_LDFLAGS = -version-info 21:0:4
+CHECK_SYMBOLS = -lib krb5 -com_err -version \
+	krb5_ _krb5_ __heimdal krb524_ krb4_fkt_ops heim_ pkcs7_
+
 
 #libkrb5_la_LIBADD = ../com_err/error.lo ../com_err/com_err.lo
 man_MANS = \
 	kerberos.8				\
 	krb5.3					\
 	krb5.conf.5				\
+	krb524_convert_creds_kdc.3		\
 	krb5_425_conv_principal.3		\
+	krb5_acl_match_file.3			\
 	krb5_address.3				\
 	krb5_aname_to_localname.3		\
 	krb5_appdefault.3			\
 	krb5_auth_context.3			\
-	krb5_build_principal.3			\
+	krb5_c_make_checksum.3			\
 	krb5_ccache.3				\
+	krb5_check_transited.3			\
+	krb5_compare_creds.3			\
 	krb5_config.3				\
 	krb5_context.3				\
 	krb5_create_checksum.3			\
+	krb5_creds.3				\
 	krb5_crypto_init.3			\
 	krb5_data.3				\
+	krb5_eai_to_heim_errno.3		\
 	krb5_encrypt.3				\
-	krb5_free_addresses.3			\
-	krb5_free_principal.3			\
+	krb5_expand_hostname.3			\
+	krb5_find_padata.3			\
+	krb5_generate_random_block.3		\
 	krb5_get_all_client_addrs.3		\
+	krb5_get_credentials.3			\
+	krb5_get_forwarded_creds.3		\
+	krb5_get_in_cred.3			\
+	krb5_get_init_creds.3			\
 	krb5_get_krbhst.3			\
+	krb5_getportbyname.3			\
 	krb5_init_context.3			\
+	krb5_is_thread_safe.3			\
+	krb5_keyblock.3				\
 	krb5_keytab.3				\
 	krb5_krbhst_init.3			\
 	krb5_kuserok.3				\
 	krb5_openlog.3				\
 	krb5_parse_name.3			\
-	krb5_principal_get_realm.3		\
+	krb5_principal.3			\
+	krb5_rcache.3				\
+	krb5_rd_error.3				\
 	krb5_set_default_realm.3		\
 	krb5_set_password.3			\
-	krb5_sname_to_principal.3		\
+	krb5_storage.3				\
+	krb5_string_to_key.3			\
+	krb5_ticket.3				\
 	krb5_timeofday.3			\
 	krb5_unparse_name.3			\
+	krb5_verify_init_creds.3		\
 	krb5_verify_user.3			\
 	krb5_warn.3				\
 	verify_krb5_conf.8
 
-include_HEADERS = krb5.h krb5-protos.h krb5-private.h krb5_err.h heim_err.h k524_err.h
+include_HEADERS = krb5.h krb5-protos.h krb5-private.h krb5_err.h heim_err.h k524_err.h krb5_ccapi.h
 CLEANFILES = krb5_err.c krb5_err.h heim_err.c heim_err.h k524_err.c k524_err.h
 all: all-am
 
@@ -760,15 +881,39 @@ store-test$(EXEEXT): $(store_test_OBJECTS) $(store_test_DEPENDENCIES)
 string-to-key-test$(EXEEXT): $(string_to_key_test_OBJECTS) $(string_to_key_test_DEPENDENCIES) 
 	@rm -f string-to-key-test$(EXEEXT)
 	$(LINK) $(string_to_key_test_LDFLAGS) $(string_to_key_test_OBJECTS) $(string_to_key_test_LDADD) $(LIBS)
+test_acl$(EXEEXT): $(test_acl_OBJECTS) $(test_acl_DEPENDENCIES) 
+	@rm -f test_acl$(EXEEXT)
+	$(LINK) $(test_acl_LDFLAGS) $(test_acl_OBJECTS) $(test_acl_LDADD) $(LIBS)
+test_addr$(EXEEXT): $(test_addr_OBJECTS) $(test_addr_DEPENDENCIES) 
+	@rm -f test_addr$(EXEEXT)
+	$(LINK) $(test_addr_LDFLAGS) $(test_addr_OBJECTS) $(test_addr_LDADD) $(LIBS)
 test_alname$(EXEEXT): $(test_alname_OBJECTS) $(test_alname_DEPENDENCIES) 
 	@rm -f test_alname$(EXEEXT)
 	$(LINK) $(test_alname_LDFLAGS) $(test_alname_OBJECTS) $(test_alname_LDADD) $(LIBS)
 test_cc$(EXEEXT): $(test_cc_OBJECTS) $(test_cc_DEPENDENCIES) 
 	@rm -f test_cc$(EXEEXT)
 	$(LINK) $(test_cc_LDFLAGS) $(test_cc_OBJECTS) $(test_cc_LDADD) $(LIBS)
+test_config$(EXEEXT): $(test_config_OBJECTS) $(test_config_DEPENDENCIES) 
+	@rm -f test_config$(EXEEXT)
+	$(LINK) $(test_config_LDFLAGS) $(test_config_OBJECTS) $(test_config_LDADD) $(LIBS)
+test_crypto$(EXEEXT): $(test_crypto_OBJECTS) $(test_crypto_DEPENDENCIES) 
+	@rm -f test_crypto$(EXEEXT)
+	$(LINK) $(test_crypto_LDFLAGS) $(test_crypto_OBJECTS) $(test_crypto_LDADD) $(LIBS)
 test_get_addrs$(EXEEXT): $(test_get_addrs_OBJECTS) $(test_get_addrs_DEPENDENCIES) 
 	@rm -f test_get_addrs$(EXEEXT)
 	$(LINK) $(test_get_addrs_LDFLAGS) $(test_get_addrs_OBJECTS) $(test_get_addrs_LDADD) $(LIBS)
+test_keytab$(EXEEXT): $(test_keytab_OBJECTS) $(test_keytab_DEPENDENCIES) 
+	@rm -f test_keytab$(EXEEXT)
+	$(LINK) $(test_keytab_LDFLAGS) $(test_keytab_OBJECTS) $(test_keytab_LDADD) $(LIBS)
+test_kuserok$(EXEEXT): $(test_kuserok_OBJECTS) $(test_kuserok_DEPENDENCIES) 
+	@rm -f test_kuserok$(EXEEXT)
+	$(LINK) $(test_kuserok_LDFLAGS) $(test_kuserok_OBJECTS) $(test_kuserok_LDADD) $(LIBS)
+test_mem$(EXEEXT): $(test_mem_OBJECTS) $(test_mem_DEPENDENCIES) 
+	@rm -f test_mem$(EXEEXT)
+	$(LINK) $(test_mem_LDFLAGS) $(test_mem_OBJECTS) $(test_mem_LDADD) $(LIBS)
+test_time$(EXEEXT): $(test_time_OBJECTS) $(test_time_DEPENDENCIES) 
+	@rm -f test_time$(EXEEXT)
+	$(LINK) $(test_time_LDFLAGS) $(test_time_OBJECTS) $(test_time_LDADD) $(LIBS)
 verify_krb5_conf$(EXEEXT): $(verify_krb5_conf_OBJECTS) $(verify_krb5_conf_DEPENDENCIES) 
 	@rm -f verify_krb5_conf$(EXEEXT)
 	$(LINK) $(verify_krb5_conf_LDFLAGS) $(verify_krb5_conf_OBJECTS) $(verify_krb5_conf_LDADD) $(LIBS)
@@ -787,6 +932,915 @@ distclean-compile:
 
 .c.lo:
 	$(LTCOMPILE) -c -o $@ $<
+
+libkrb5_la-acache.o: acache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acache.o `test -f 'acache.c' || echo '$(srcdir)/'`acache.c
+
+libkrb5_la-acache.obj: acache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acache.obj `if test -f 'acache.c'; then $(CYGPATH_W) 'acache.c'; else $(CYGPATH_W) '$(srcdir)/acache.c'; fi`
+
+libkrb5_la-acache.lo: acache.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acache.lo `test -f 'acache.c' || echo '$(srcdir)/'`acache.c
+
+libkrb5_la-acl.o: acl.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acl.o `test -f 'acl.c' || echo '$(srcdir)/'`acl.c
+
+libkrb5_la-acl.obj: acl.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acl.obj `if test -f 'acl.c'; then $(CYGPATH_W) 'acl.c'; else $(CYGPATH_W) '$(srcdir)/acl.c'; fi`
+
+libkrb5_la-acl.lo: acl.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-acl.lo `test -f 'acl.c' || echo '$(srcdir)/'`acl.c
+
+libkrb5_la-add_et_list.o: add_et_list.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-add_et_list.o `test -f 'add_et_list.c' || echo '$(srcdir)/'`add_et_list.c
+
+libkrb5_la-add_et_list.obj: add_et_list.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-add_et_list.obj `if test -f 'add_et_list.c'; then $(CYGPATH_W) 'add_et_list.c'; else $(CYGPATH_W) '$(srcdir)/add_et_list.c'; fi`
+
+libkrb5_la-add_et_list.lo: add_et_list.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-add_et_list.lo `test -f 'add_et_list.c' || echo '$(srcdir)/'`add_et_list.c
+
+libkrb5_la-addr_families.o: addr_families.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-addr_families.o `test -f 'addr_families.c' || echo '$(srcdir)/'`addr_families.c
+
+libkrb5_la-addr_families.obj: addr_families.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-addr_families.obj `if test -f 'addr_families.c'; then $(CYGPATH_W) 'addr_families.c'; else $(CYGPATH_W) '$(srcdir)/addr_families.c'; fi`
+
+libkrb5_la-addr_families.lo: addr_families.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-addr_families.lo `test -f 'addr_families.c' || echo '$(srcdir)/'`addr_families.c
+
+libkrb5_la-aname_to_localname.o: aname_to_localname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-aname_to_localname.o `test -f 'aname_to_localname.c' || echo '$(srcdir)/'`aname_to_localname.c
+
+libkrb5_la-aname_to_localname.obj: aname_to_localname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-aname_to_localname.obj `if test -f 'aname_to_localname.c'; then $(CYGPATH_W) 'aname_to_localname.c'; else $(CYGPATH_W) '$(srcdir)/aname_to_localname.c'; fi`
+
+libkrb5_la-aname_to_localname.lo: aname_to_localname.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-aname_to_localname.lo `test -f 'aname_to_localname.c' || echo '$(srcdir)/'`aname_to_localname.c
+
+libkrb5_la-appdefault.o: appdefault.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-appdefault.o `test -f 'appdefault.c' || echo '$(srcdir)/'`appdefault.c
+
+libkrb5_la-appdefault.obj: appdefault.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-appdefault.obj `if test -f 'appdefault.c'; then $(CYGPATH_W) 'appdefault.c'; else $(CYGPATH_W) '$(srcdir)/appdefault.c'; fi`
+
+libkrb5_la-appdefault.lo: appdefault.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-appdefault.lo `test -f 'appdefault.c' || echo '$(srcdir)/'`appdefault.c
+
+libkrb5_la-asn1_glue.o: asn1_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-asn1_glue.o `test -f 'asn1_glue.c' || echo '$(srcdir)/'`asn1_glue.c
+
+libkrb5_la-asn1_glue.obj: asn1_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-asn1_glue.obj `if test -f 'asn1_glue.c'; then $(CYGPATH_W) 'asn1_glue.c'; else $(CYGPATH_W) '$(srcdir)/asn1_glue.c'; fi`
+
+libkrb5_la-asn1_glue.lo: asn1_glue.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-asn1_glue.lo `test -f 'asn1_glue.c' || echo '$(srcdir)/'`asn1_glue.c
+
+libkrb5_la-auth_context.o: auth_context.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-auth_context.o `test -f 'auth_context.c' || echo '$(srcdir)/'`auth_context.c
+
+libkrb5_la-auth_context.obj: auth_context.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-auth_context.obj `if test -f 'auth_context.c'; then $(CYGPATH_W) 'auth_context.c'; else $(CYGPATH_W) '$(srcdir)/auth_context.c'; fi`
+
+libkrb5_la-auth_context.lo: auth_context.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-auth_context.lo `test -f 'auth_context.c' || echo '$(srcdir)/'`auth_context.c
+
+libkrb5_la-build_ap_req.o: build_ap_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_ap_req.o `test -f 'build_ap_req.c' || echo '$(srcdir)/'`build_ap_req.c
+
+libkrb5_la-build_ap_req.obj: build_ap_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_ap_req.obj `if test -f 'build_ap_req.c'; then $(CYGPATH_W) 'build_ap_req.c'; else $(CYGPATH_W) '$(srcdir)/build_ap_req.c'; fi`
+
+libkrb5_la-build_ap_req.lo: build_ap_req.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_ap_req.lo `test -f 'build_ap_req.c' || echo '$(srcdir)/'`build_ap_req.c
+
+libkrb5_la-build_auth.o: build_auth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_auth.o `test -f 'build_auth.c' || echo '$(srcdir)/'`build_auth.c
+
+libkrb5_la-build_auth.obj: build_auth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_auth.obj `if test -f 'build_auth.c'; then $(CYGPATH_W) 'build_auth.c'; else $(CYGPATH_W) '$(srcdir)/build_auth.c'; fi`
+
+libkrb5_la-build_auth.lo: build_auth.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-build_auth.lo `test -f 'build_auth.c' || echo '$(srcdir)/'`build_auth.c
+
+libkrb5_la-cache.o: cache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-cache.o `test -f 'cache.c' || echo '$(srcdir)/'`cache.c
+
+libkrb5_la-cache.obj: cache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-cache.obj `if test -f 'cache.c'; then $(CYGPATH_W) 'cache.c'; else $(CYGPATH_W) '$(srcdir)/cache.c'; fi`
+
+libkrb5_la-cache.lo: cache.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-cache.lo `test -f 'cache.c' || echo '$(srcdir)/'`cache.c
+
+libkrb5_la-changepw.o: changepw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-changepw.o `test -f 'changepw.c' || echo '$(srcdir)/'`changepw.c
+
+libkrb5_la-changepw.obj: changepw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-changepw.obj `if test -f 'changepw.c'; then $(CYGPATH_W) 'changepw.c'; else $(CYGPATH_W) '$(srcdir)/changepw.c'; fi`
+
+libkrb5_la-changepw.lo: changepw.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-changepw.lo `test -f 'changepw.c' || echo '$(srcdir)/'`changepw.c
+
+libkrb5_la-codec.o: codec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-codec.o `test -f 'codec.c' || echo '$(srcdir)/'`codec.c
+
+libkrb5_la-codec.obj: codec.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-codec.obj `if test -f 'codec.c'; then $(CYGPATH_W) 'codec.c'; else $(CYGPATH_W) '$(srcdir)/codec.c'; fi`
+
+libkrb5_la-codec.lo: codec.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-codec.lo `test -f 'codec.c' || echo '$(srcdir)/'`codec.c
+
+libkrb5_la-config_file.o: config_file.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file.o `test -f 'config_file.c' || echo '$(srcdir)/'`config_file.c
+
+libkrb5_la-config_file.obj: config_file.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file.obj `if test -f 'config_file.c'; then $(CYGPATH_W) 'config_file.c'; else $(CYGPATH_W) '$(srcdir)/config_file.c'; fi`
+
+libkrb5_la-config_file.lo: config_file.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file.lo `test -f 'config_file.c' || echo '$(srcdir)/'`config_file.c
+
+libkrb5_la-config_file_netinfo.o: config_file_netinfo.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file_netinfo.o `test -f 'config_file_netinfo.c' || echo '$(srcdir)/'`config_file_netinfo.c
+
+libkrb5_la-config_file_netinfo.obj: config_file_netinfo.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file_netinfo.obj `if test -f 'config_file_netinfo.c'; then $(CYGPATH_W) 'config_file_netinfo.c'; else $(CYGPATH_W) '$(srcdir)/config_file_netinfo.c'; fi`
+
+libkrb5_la-config_file_netinfo.lo: config_file_netinfo.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-config_file_netinfo.lo `test -f 'config_file_netinfo.c' || echo '$(srcdir)/'`config_file_netinfo.c
+
+libkrb5_la-convert_creds.o: convert_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-convert_creds.o `test -f 'convert_creds.c' || echo '$(srcdir)/'`convert_creds.c
+
+libkrb5_la-convert_creds.obj: convert_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-convert_creds.obj `if test -f 'convert_creds.c'; then $(CYGPATH_W) 'convert_creds.c'; else $(CYGPATH_W) '$(srcdir)/convert_creds.c'; fi`
+
+libkrb5_la-convert_creds.lo: convert_creds.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-convert_creds.lo `test -f 'convert_creds.c' || echo '$(srcdir)/'`convert_creds.c
+
+libkrb5_la-constants.o: constants.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-constants.o `test -f 'constants.c' || echo '$(srcdir)/'`constants.c
+
+libkrb5_la-constants.obj: constants.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-constants.obj `if test -f 'constants.c'; then $(CYGPATH_W) 'constants.c'; else $(CYGPATH_W) '$(srcdir)/constants.c'; fi`
+
+libkrb5_la-constants.lo: constants.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-constants.lo `test -f 'constants.c' || echo '$(srcdir)/'`constants.c
+
+libkrb5_la-context.o: context.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-context.o `test -f 'context.c' || echo '$(srcdir)/'`context.c
+
+libkrb5_la-context.obj: context.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-context.obj `if test -f 'context.c'; then $(CYGPATH_W) 'context.c'; else $(CYGPATH_W) '$(srcdir)/context.c'; fi`
+
+libkrb5_la-context.lo: context.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-context.lo `test -f 'context.c' || echo '$(srcdir)/'`context.c
+
+libkrb5_la-copy_host_realm.o: copy_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-copy_host_realm.o `test -f 'copy_host_realm.c' || echo '$(srcdir)/'`copy_host_realm.c
+
+libkrb5_la-copy_host_realm.obj: copy_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-copy_host_realm.obj `if test -f 'copy_host_realm.c'; then $(CYGPATH_W) 'copy_host_realm.c'; else $(CYGPATH_W) '$(srcdir)/copy_host_realm.c'; fi`
+
+libkrb5_la-copy_host_realm.lo: copy_host_realm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-copy_host_realm.lo `test -f 'copy_host_realm.c' || echo '$(srcdir)/'`copy_host_realm.c
+
+libkrb5_la-crc.o: crc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crc.o `test -f 'crc.c' || echo '$(srcdir)/'`crc.c
+
+libkrb5_la-crc.obj: crc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crc.obj `if test -f 'crc.c'; then $(CYGPATH_W) 'crc.c'; else $(CYGPATH_W) '$(srcdir)/crc.c'; fi`
+
+libkrb5_la-crc.lo: crc.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crc.lo `test -f 'crc.c' || echo '$(srcdir)/'`crc.c
+
+libkrb5_la-creds.o: creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-creds.o `test -f 'creds.c' || echo '$(srcdir)/'`creds.c
+
+libkrb5_la-creds.obj: creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-creds.obj `if test -f 'creds.c'; then $(CYGPATH_W) 'creds.c'; else $(CYGPATH_W) '$(srcdir)/creds.c'; fi`
+
+libkrb5_la-creds.lo: creds.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-creds.lo `test -f 'creds.c' || echo '$(srcdir)/'`creds.c
+
+libkrb5_la-crypto.o: crypto.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crypto.o `test -f 'crypto.c' || echo '$(srcdir)/'`crypto.c
+
+libkrb5_la-crypto.obj: crypto.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crypto.obj `if test -f 'crypto.c'; then $(CYGPATH_W) 'crypto.c'; else $(CYGPATH_W) '$(srcdir)/crypto.c'; fi`
+
+libkrb5_la-crypto.lo: crypto.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-crypto.lo `test -f 'crypto.c' || echo '$(srcdir)/'`crypto.c
+
+libkrb5_la-data.o: data.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-data.o `test -f 'data.c' || echo '$(srcdir)/'`data.c
+
+libkrb5_la-data.obj: data.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-data.obj `if test -f 'data.c'; then $(CYGPATH_W) 'data.c'; else $(CYGPATH_W) '$(srcdir)/data.c'; fi`
+
+libkrb5_la-data.lo: data.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-data.lo `test -f 'data.c' || echo '$(srcdir)/'`data.c
+
+libkrb5_la-eai_to_heim_errno.o: eai_to_heim_errno.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-eai_to_heim_errno.o `test -f 'eai_to_heim_errno.c' || echo '$(srcdir)/'`eai_to_heim_errno.c
+
+libkrb5_la-eai_to_heim_errno.obj: eai_to_heim_errno.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-eai_to_heim_errno.obj `if test -f 'eai_to_heim_errno.c'; then $(CYGPATH_W) 'eai_to_heim_errno.c'; else $(CYGPATH_W) '$(srcdir)/eai_to_heim_errno.c'; fi`
+
+libkrb5_la-eai_to_heim_errno.lo: eai_to_heim_errno.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-eai_to_heim_errno.lo `test -f 'eai_to_heim_errno.c' || echo '$(srcdir)/'`eai_to_heim_errno.c
+
+libkrb5_la-error_string.o: error_string.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-error_string.o `test -f 'error_string.c' || echo '$(srcdir)/'`error_string.c
+
+libkrb5_la-error_string.obj: error_string.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-error_string.obj `if test -f 'error_string.c'; then $(CYGPATH_W) 'error_string.c'; else $(CYGPATH_W) '$(srcdir)/error_string.c'; fi`
+
+libkrb5_la-error_string.lo: error_string.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-error_string.lo `test -f 'error_string.c' || echo '$(srcdir)/'`error_string.c
+
+libkrb5_la-expand_hostname.o: expand_hostname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-expand_hostname.o `test -f 'expand_hostname.c' || echo '$(srcdir)/'`expand_hostname.c
+
+libkrb5_la-expand_hostname.obj: expand_hostname.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-expand_hostname.obj `if test -f 'expand_hostname.c'; then $(CYGPATH_W) 'expand_hostname.c'; else $(CYGPATH_W) '$(srcdir)/expand_hostname.c'; fi`
+
+libkrb5_la-expand_hostname.lo: expand_hostname.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-expand_hostname.lo `test -f 'expand_hostname.c' || echo '$(srcdir)/'`expand_hostname.c
+
+libkrb5_la-fcache.o: fcache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-fcache.o `test -f 'fcache.c' || echo '$(srcdir)/'`fcache.c
+
+libkrb5_la-fcache.obj: fcache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-fcache.obj `if test -f 'fcache.c'; then $(CYGPATH_W) 'fcache.c'; else $(CYGPATH_W) '$(srcdir)/fcache.c'; fi`
+
+libkrb5_la-fcache.lo: fcache.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-fcache.lo `test -f 'fcache.c' || echo '$(srcdir)/'`fcache.c
+
+libkrb5_la-free.o: free.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free.o `test -f 'free.c' || echo '$(srcdir)/'`free.c
+
+libkrb5_la-free.obj: free.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free.obj `if test -f 'free.c'; then $(CYGPATH_W) 'free.c'; else $(CYGPATH_W) '$(srcdir)/free.c'; fi`
+
+libkrb5_la-free.lo: free.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free.lo `test -f 'free.c' || echo '$(srcdir)/'`free.c
+
+libkrb5_la-free_host_realm.o: free_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free_host_realm.o `test -f 'free_host_realm.c' || echo '$(srcdir)/'`free_host_realm.c
+
+libkrb5_la-free_host_realm.obj: free_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free_host_realm.obj `if test -f 'free_host_realm.c'; then $(CYGPATH_W) 'free_host_realm.c'; else $(CYGPATH_W) '$(srcdir)/free_host_realm.c'; fi`
+
+libkrb5_la-free_host_realm.lo: free_host_realm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-free_host_realm.lo `test -f 'free_host_realm.c' || echo '$(srcdir)/'`free_host_realm.c
+
+libkrb5_la-generate_seq_number.o: generate_seq_number.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_seq_number.o `test -f 'generate_seq_number.c' || echo '$(srcdir)/'`generate_seq_number.c
+
+libkrb5_la-generate_seq_number.obj: generate_seq_number.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_seq_number.obj `if test -f 'generate_seq_number.c'; then $(CYGPATH_W) 'generate_seq_number.c'; else $(CYGPATH_W) '$(srcdir)/generate_seq_number.c'; fi`
+
+libkrb5_la-generate_seq_number.lo: generate_seq_number.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_seq_number.lo `test -f 'generate_seq_number.c' || echo '$(srcdir)/'`generate_seq_number.c
+
+libkrb5_la-generate_subkey.o: generate_subkey.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_subkey.o `test -f 'generate_subkey.c' || echo '$(srcdir)/'`generate_subkey.c
+
+libkrb5_la-generate_subkey.obj: generate_subkey.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_subkey.obj `if test -f 'generate_subkey.c'; then $(CYGPATH_W) 'generate_subkey.c'; else $(CYGPATH_W) '$(srcdir)/generate_subkey.c'; fi`
+
+libkrb5_la-generate_subkey.lo: generate_subkey.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-generate_subkey.lo `test -f 'generate_subkey.c' || echo '$(srcdir)/'`generate_subkey.c
+
+libkrb5_la-get_addrs.o: get_addrs.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_addrs.o `test -f 'get_addrs.c' || echo '$(srcdir)/'`get_addrs.c
+
+libkrb5_la-get_addrs.obj: get_addrs.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_addrs.obj `if test -f 'get_addrs.c'; then $(CYGPATH_W) 'get_addrs.c'; else $(CYGPATH_W) '$(srcdir)/get_addrs.c'; fi`
+
+libkrb5_la-get_addrs.lo: get_addrs.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_addrs.lo `test -f 'get_addrs.c' || echo '$(srcdir)/'`get_addrs.c
+
+libkrb5_la-get_cred.o: get_cred.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_cred.o `test -f 'get_cred.c' || echo '$(srcdir)/'`get_cred.c
+
+libkrb5_la-get_cred.obj: get_cred.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_cred.obj `if test -f 'get_cred.c'; then $(CYGPATH_W) 'get_cred.c'; else $(CYGPATH_W) '$(srcdir)/get_cred.c'; fi`
+
+libkrb5_la-get_cred.lo: get_cred.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_cred.lo `test -f 'get_cred.c' || echo '$(srcdir)/'`get_cred.c
+
+libkrb5_la-get_default_principal.o: get_default_principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_principal.o `test -f 'get_default_principal.c' || echo '$(srcdir)/'`get_default_principal.c
+
+libkrb5_la-get_default_principal.obj: get_default_principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_principal.obj `if test -f 'get_default_principal.c'; then $(CYGPATH_W) 'get_default_principal.c'; else $(CYGPATH_W) '$(srcdir)/get_default_principal.c'; fi`
+
+libkrb5_la-get_default_principal.lo: get_default_principal.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_principal.lo `test -f 'get_default_principal.c' || echo '$(srcdir)/'`get_default_principal.c
+
+libkrb5_la-get_default_realm.o: get_default_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_realm.o `test -f 'get_default_realm.c' || echo '$(srcdir)/'`get_default_realm.c
+
+libkrb5_la-get_default_realm.obj: get_default_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_realm.obj `if test -f 'get_default_realm.c'; then $(CYGPATH_W) 'get_default_realm.c'; else $(CYGPATH_W) '$(srcdir)/get_default_realm.c'; fi`
+
+libkrb5_la-get_default_realm.lo: get_default_realm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_default_realm.lo `test -f 'get_default_realm.c' || echo '$(srcdir)/'`get_default_realm.c
+
+libkrb5_la-get_for_creds.o: get_for_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_for_creds.o `test -f 'get_for_creds.c' || echo '$(srcdir)/'`get_for_creds.c
+
+libkrb5_la-get_for_creds.obj: get_for_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_for_creds.obj `if test -f 'get_for_creds.c'; then $(CYGPATH_W) 'get_for_creds.c'; else $(CYGPATH_W) '$(srcdir)/get_for_creds.c'; fi`
+
+libkrb5_la-get_for_creds.lo: get_for_creds.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_for_creds.lo `test -f 'get_for_creds.c' || echo '$(srcdir)/'`get_for_creds.c
+
+libkrb5_la-get_host_realm.o: get_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_host_realm.o `test -f 'get_host_realm.c' || echo '$(srcdir)/'`get_host_realm.c
+
+libkrb5_la-get_host_realm.obj: get_host_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_host_realm.obj `if test -f 'get_host_realm.c'; then $(CYGPATH_W) 'get_host_realm.c'; else $(CYGPATH_W) '$(srcdir)/get_host_realm.c'; fi`
+
+libkrb5_la-get_host_realm.lo: get_host_realm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_host_realm.lo `test -f 'get_host_realm.c' || echo '$(srcdir)/'`get_host_realm.c
+
+libkrb5_la-get_in_tkt.o: get_in_tkt.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt.o `test -f 'get_in_tkt.c' || echo '$(srcdir)/'`get_in_tkt.c
+
+libkrb5_la-get_in_tkt.obj: get_in_tkt.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt.obj `if test -f 'get_in_tkt.c'; then $(CYGPATH_W) 'get_in_tkt.c'; else $(CYGPATH_W) '$(srcdir)/get_in_tkt.c'; fi`
+
+libkrb5_la-get_in_tkt.lo: get_in_tkt.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt.lo `test -f 'get_in_tkt.c' || echo '$(srcdir)/'`get_in_tkt.c
+
+libkrb5_la-get_in_tkt_pw.o: get_in_tkt_pw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_pw.o `test -f 'get_in_tkt_pw.c' || echo '$(srcdir)/'`get_in_tkt_pw.c
+
+libkrb5_la-get_in_tkt_pw.obj: get_in_tkt_pw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_pw.obj `if test -f 'get_in_tkt_pw.c'; then $(CYGPATH_W) 'get_in_tkt_pw.c'; else $(CYGPATH_W) '$(srcdir)/get_in_tkt_pw.c'; fi`
+
+libkrb5_la-get_in_tkt_pw.lo: get_in_tkt_pw.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_pw.lo `test -f 'get_in_tkt_pw.c' || echo '$(srcdir)/'`get_in_tkt_pw.c
+
+libkrb5_la-get_in_tkt_with_keytab.o: get_in_tkt_with_keytab.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_keytab.o `test -f 'get_in_tkt_with_keytab.c' || echo '$(srcdir)/'`get_in_tkt_with_keytab.c
+
+libkrb5_la-get_in_tkt_with_keytab.obj: get_in_tkt_with_keytab.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_keytab.obj `if test -f 'get_in_tkt_with_keytab.c'; then $(CYGPATH_W) 'get_in_tkt_with_keytab.c'; else $(CYGPATH_W) '$(srcdir)/get_in_tkt_with_keytab.c'; fi`
+
+libkrb5_la-get_in_tkt_with_keytab.lo: get_in_tkt_with_keytab.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_keytab.lo `test -f 'get_in_tkt_with_keytab.c' || echo '$(srcdir)/'`get_in_tkt_with_keytab.c
+
+libkrb5_la-get_in_tkt_with_skey.o: get_in_tkt_with_skey.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_skey.o `test -f 'get_in_tkt_with_skey.c' || echo '$(srcdir)/'`get_in_tkt_with_skey.c
+
+libkrb5_la-get_in_tkt_with_skey.obj: get_in_tkt_with_skey.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_skey.obj `if test -f 'get_in_tkt_with_skey.c'; then $(CYGPATH_W) 'get_in_tkt_with_skey.c'; else $(CYGPATH_W) '$(srcdir)/get_in_tkt_with_skey.c'; fi`
+
+libkrb5_la-get_in_tkt_with_skey.lo: get_in_tkt_with_skey.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_in_tkt_with_skey.lo `test -f 'get_in_tkt_with_skey.c' || echo '$(srcdir)/'`get_in_tkt_with_skey.c
+
+libkrb5_la-get_port.o: get_port.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_port.o `test -f 'get_port.c' || echo '$(srcdir)/'`get_port.c
+
+libkrb5_la-get_port.obj: get_port.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_port.obj `if test -f 'get_port.c'; then $(CYGPATH_W) 'get_port.c'; else $(CYGPATH_W) '$(srcdir)/get_port.c'; fi`
+
+libkrb5_la-get_port.lo: get_port.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-get_port.lo `test -f 'get_port.c' || echo '$(srcdir)/'`get_port.c
+
+libkrb5_la-init_creds.o: init_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds.o `test -f 'init_creds.c' || echo '$(srcdir)/'`init_creds.c
+
+libkrb5_la-init_creds.obj: init_creds.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds.obj `if test -f 'init_creds.c'; then $(CYGPATH_W) 'init_creds.c'; else $(CYGPATH_W) '$(srcdir)/init_creds.c'; fi`
+
+libkrb5_la-init_creds.lo: init_creds.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds.lo `test -f 'init_creds.c' || echo '$(srcdir)/'`init_creds.c
+
+libkrb5_la-init_creds_pw.o: init_creds_pw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds_pw.o `test -f 'init_creds_pw.c' || echo '$(srcdir)/'`init_creds_pw.c
+
+libkrb5_la-init_creds_pw.obj: init_creds_pw.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds_pw.obj `if test -f 'init_creds_pw.c'; then $(CYGPATH_W) 'init_creds_pw.c'; else $(CYGPATH_W) '$(srcdir)/init_creds_pw.c'; fi`
+
+libkrb5_la-init_creds_pw.lo: init_creds_pw.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-init_creds_pw.lo `test -f 'init_creds_pw.c' || echo '$(srcdir)/'`init_creds_pw.c
+
+libkrb5_la-kcm.o: kcm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kcm.o `test -f 'kcm.c' || echo '$(srcdir)/'`kcm.c
+
+libkrb5_la-kcm.obj: kcm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kcm.obj `if test -f 'kcm.c'; then $(CYGPATH_W) 'kcm.c'; else $(CYGPATH_W) '$(srcdir)/kcm.c'; fi`
+
+libkrb5_la-kcm.lo: kcm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kcm.lo `test -f 'kcm.c' || echo '$(srcdir)/'`kcm.c
+
+libkrb5_la-keyblock.o: keyblock.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keyblock.o `test -f 'keyblock.c' || echo '$(srcdir)/'`keyblock.c
+
+libkrb5_la-keyblock.obj: keyblock.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keyblock.obj `if test -f 'keyblock.c'; then $(CYGPATH_W) 'keyblock.c'; else $(CYGPATH_W) '$(srcdir)/keyblock.c'; fi`
+
+libkrb5_la-keyblock.lo: keyblock.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keyblock.lo `test -f 'keyblock.c' || echo '$(srcdir)/'`keyblock.c
+
+libkrb5_la-keytab.o: keytab.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab.o `test -f 'keytab.c' || echo '$(srcdir)/'`keytab.c
+
+libkrb5_la-keytab.obj: keytab.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab.obj `if test -f 'keytab.c'; then $(CYGPATH_W) 'keytab.c'; else $(CYGPATH_W) '$(srcdir)/keytab.c'; fi`
+
+libkrb5_la-keytab.lo: keytab.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab.lo `test -f 'keytab.c' || echo '$(srcdir)/'`keytab.c
+
+libkrb5_la-keytab_any.o: keytab_any.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_any.o `test -f 'keytab_any.c' || echo '$(srcdir)/'`keytab_any.c
+
+libkrb5_la-keytab_any.obj: keytab_any.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_any.obj `if test -f 'keytab_any.c'; then $(CYGPATH_W) 'keytab_any.c'; else $(CYGPATH_W) '$(srcdir)/keytab_any.c'; fi`
+
+libkrb5_la-keytab_any.lo: keytab_any.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_any.lo `test -f 'keytab_any.c' || echo '$(srcdir)/'`keytab_any.c
+
+libkrb5_la-keytab_file.o: keytab_file.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_file.o `test -f 'keytab_file.c' || echo '$(srcdir)/'`keytab_file.c
+
+libkrb5_la-keytab_file.obj: keytab_file.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_file.obj `if test -f 'keytab_file.c'; then $(CYGPATH_W) 'keytab_file.c'; else $(CYGPATH_W) '$(srcdir)/keytab_file.c'; fi`
+
+libkrb5_la-keytab_file.lo: keytab_file.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_file.lo `test -f 'keytab_file.c' || echo '$(srcdir)/'`keytab_file.c
+
+libkrb5_la-keytab_memory.o: keytab_memory.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_memory.o `test -f 'keytab_memory.c' || echo '$(srcdir)/'`keytab_memory.c
+
+libkrb5_la-keytab_memory.obj: keytab_memory.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_memory.obj `if test -f 'keytab_memory.c'; then $(CYGPATH_W) 'keytab_memory.c'; else $(CYGPATH_W) '$(srcdir)/keytab_memory.c'; fi`
+
+libkrb5_la-keytab_memory.lo: keytab_memory.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_memory.lo `test -f 'keytab_memory.c' || echo '$(srcdir)/'`keytab_memory.c
+
+libkrb5_la-keytab_keyfile.o: keytab_keyfile.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_keyfile.o `test -f 'keytab_keyfile.c' || echo '$(srcdir)/'`keytab_keyfile.c
+
+libkrb5_la-keytab_keyfile.obj: keytab_keyfile.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_keyfile.obj `if test -f 'keytab_keyfile.c'; then $(CYGPATH_W) 'keytab_keyfile.c'; else $(CYGPATH_W) '$(srcdir)/keytab_keyfile.c'; fi`
+
+libkrb5_la-keytab_keyfile.lo: keytab_keyfile.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_keyfile.lo `test -f 'keytab_keyfile.c' || echo '$(srcdir)/'`keytab_keyfile.c
+
+libkrb5_la-keytab_krb4.o: keytab_krb4.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_krb4.o `test -f 'keytab_krb4.c' || echo '$(srcdir)/'`keytab_krb4.c
+
+libkrb5_la-keytab_krb4.obj: keytab_krb4.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_krb4.obj `if test -f 'keytab_krb4.c'; then $(CYGPATH_W) 'keytab_krb4.c'; else $(CYGPATH_W) '$(srcdir)/keytab_krb4.c'; fi`
+
+libkrb5_la-keytab_krb4.lo: keytab_krb4.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-keytab_krb4.lo `test -f 'keytab_krb4.c' || echo '$(srcdir)/'`keytab_krb4.c
+
+libkrb5_la-krbhst.o: krbhst.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krbhst.o `test -f 'krbhst.c' || echo '$(srcdir)/'`krbhst.c
+
+libkrb5_la-krbhst.obj: krbhst.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krbhst.obj `if test -f 'krbhst.c'; then $(CYGPATH_W) 'krbhst.c'; else $(CYGPATH_W) '$(srcdir)/krbhst.c'; fi`
+
+libkrb5_la-krbhst.lo: krbhst.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krbhst.lo `test -f 'krbhst.c' || echo '$(srcdir)/'`krbhst.c
+
+libkrb5_la-kuserok.o: kuserok.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kuserok.o `test -f 'kuserok.c' || echo '$(srcdir)/'`kuserok.c
+
+libkrb5_la-kuserok.obj: kuserok.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kuserok.obj `if test -f 'kuserok.c'; then $(CYGPATH_W) 'kuserok.c'; else $(CYGPATH_W) '$(srcdir)/kuserok.c'; fi`
+
+libkrb5_la-kuserok.lo: kuserok.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-kuserok.lo `test -f 'kuserok.c' || echo '$(srcdir)/'`kuserok.c
+
+libkrb5_la-log.o: log.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-log.o `test -f 'log.c' || echo '$(srcdir)/'`log.c
+
+libkrb5_la-log.obj: log.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-log.obj `if test -f 'log.c'; then $(CYGPATH_W) 'log.c'; else $(CYGPATH_W) '$(srcdir)/log.c'; fi`
+
+libkrb5_la-log.lo: log.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-log.lo `test -f 'log.c' || echo '$(srcdir)/'`log.c
+
+libkrb5_la-mcache.o: mcache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mcache.o `test -f 'mcache.c' || echo '$(srcdir)/'`mcache.c
+
+libkrb5_la-mcache.obj: mcache.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mcache.obj `if test -f 'mcache.c'; then $(CYGPATH_W) 'mcache.c'; else $(CYGPATH_W) '$(srcdir)/mcache.c'; fi`
+
+libkrb5_la-mcache.lo: mcache.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mcache.lo `test -f 'mcache.c' || echo '$(srcdir)/'`mcache.c
+
+libkrb5_la-misc.o: misc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-misc.o `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
+
+libkrb5_la-misc.obj: misc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-misc.obj `if test -f 'misc.c'; then $(CYGPATH_W) 'misc.c'; else $(CYGPATH_W) '$(srcdir)/misc.c'; fi`
+
+libkrb5_la-misc.lo: misc.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-misc.lo `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
+
+libkrb5_la-mk_error.o: mk_error.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_error.o `test -f 'mk_error.c' || echo '$(srcdir)/'`mk_error.c
+
+libkrb5_la-mk_error.obj: mk_error.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_error.obj `if test -f 'mk_error.c'; then $(CYGPATH_W) 'mk_error.c'; else $(CYGPATH_W) '$(srcdir)/mk_error.c'; fi`
+
+libkrb5_la-mk_error.lo: mk_error.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_error.lo `test -f 'mk_error.c' || echo '$(srcdir)/'`mk_error.c
+
+libkrb5_la-mk_priv.o: mk_priv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_priv.o `test -f 'mk_priv.c' || echo '$(srcdir)/'`mk_priv.c
+
+libkrb5_la-mk_priv.obj: mk_priv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_priv.obj `if test -f 'mk_priv.c'; then $(CYGPATH_W) 'mk_priv.c'; else $(CYGPATH_W) '$(srcdir)/mk_priv.c'; fi`
+
+libkrb5_la-mk_priv.lo: mk_priv.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_priv.lo `test -f 'mk_priv.c' || echo '$(srcdir)/'`mk_priv.c
+
+libkrb5_la-mk_rep.o: mk_rep.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_rep.o `test -f 'mk_rep.c' || echo '$(srcdir)/'`mk_rep.c
+
+libkrb5_la-mk_rep.obj: mk_rep.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_rep.obj `if test -f 'mk_rep.c'; then $(CYGPATH_W) 'mk_rep.c'; else $(CYGPATH_W) '$(srcdir)/mk_rep.c'; fi`
+
+libkrb5_la-mk_rep.lo: mk_rep.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_rep.lo `test -f 'mk_rep.c' || echo '$(srcdir)/'`mk_rep.c
+
+libkrb5_la-mk_req.o: mk_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req.o `test -f 'mk_req.c' || echo '$(srcdir)/'`mk_req.c
+
+libkrb5_la-mk_req.obj: mk_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req.obj `if test -f 'mk_req.c'; then $(CYGPATH_W) 'mk_req.c'; else $(CYGPATH_W) '$(srcdir)/mk_req.c'; fi`
+
+libkrb5_la-mk_req.lo: mk_req.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req.lo `test -f 'mk_req.c' || echo '$(srcdir)/'`mk_req.c
+
+libkrb5_la-mk_req_ext.o: mk_req_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req_ext.o `test -f 'mk_req_ext.c' || echo '$(srcdir)/'`mk_req_ext.c
+
+libkrb5_la-mk_req_ext.obj: mk_req_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req_ext.obj `if test -f 'mk_req_ext.c'; then $(CYGPATH_W) 'mk_req_ext.c'; else $(CYGPATH_W) '$(srcdir)/mk_req_ext.c'; fi`
+
+libkrb5_la-mk_req_ext.lo: mk_req_ext.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_req_ext.lo `test -f 'mk_req_ext.c' || echo '$(srcdir)/'`mk_req_ext.c
+
+libkrb5_la-mk_safe.o: mk_safe.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_safe.o `test -f 'mk_safe.c' || echo '$(srcdir)/'`mk_safe.c
+
+libkrb5_la-mk_safe.obj: mk_safe.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_safe.obj `if test -f 'mk_safe.c'; then $(CYGPATH_W) 'mk_safe.c'; else $(CYGPATH_W) '$(srcdir)/mk_safe.c'; fi`
+
+libkrb5_la-mk_safe.lo: mk_safe.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mk_safe.lo `test -f 'mk_safe.c' || echo '$(srcdir)/'`mk_safe.c
+
+libkrb5_la-mit_glue.o: mit_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mit_glue.o `test -f 'mit_glue.c' || echo '$(srcdir)/'`mit_glue.c
+
+libkrb5_la-mit_glue.obj: mit_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mit_glue.obj `if test -f 'mit_glue.c'; then $(CYGPATH_W) 'mit_glue.c'; else $(CYGPATH_W) '$(srcdir)/mit_glue.c'; fi`
+
+libkrb5_la-mit_glue.lo: mit_glue.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-mit_glue.lo `test -f 'mit_glue.c' || echo '$(srcdir)/'`mit_glue.c
+
+libkrb5_la-net_read.o: net_read.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_read.o `test -f 'net_read.c' || echo '$(srcdir)/'`net_read.c
+
+libkrb5_la-net_read.obj: net_read.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_read.obj `if test -f 'net_read.c'; then $(CYGPATH_W) 'net_read.c'; else $(CYGPATH_W) '$(srcdir)/net_read.c'; fi`
+
+libkrb5_la-net_read.lo: net_read.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_read.lo `test -f 'net_read.c' || echo '$(srcdir)/'`net_read.c
+
+libkrb5_la-net_write.o: net_write.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_write.o `test -f 'net_write.c' || echo '$(srcdir)/'`net_write.c
+
+libkrb5_la-net_write.obj: net_write.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_write.obj `if test -f 'net_write.c'; then $(CYGPATH_W) 'net_write.c'; else $(CYGPATH_W) '$(srcdir)/net_write.c'; fi`
+
+libkrb5_la-net_write.lo: net_write.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-net_write.lo `test -f 'net_write.c' || echo '$(srcdir)/'`net_write.c
+
+libkrb5_la-n-fold.o: n-fold.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-n-fold.o `test -f 'n-fold.c' || echo '$(srcdir)/'`n-fold.c
+
+libkrb5_la-n-fold.obj: n-fold.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-n-fold.obj `if test -f 'n-fold.c'; then $(CYGPATH_W) 'n-fold.c'; else $(CYGPATH_W) '$(srcdir)/n-fold.c'; fi`
+
+libkrb5_la-n-fold.lo: n-fold.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-n-fold.lo `test -f 'n-fold.c' || echo '$(srcdir)/'`n-fold.c
+
+libkrb5_la-padata.o: padata.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-padata.o `test -f 'padata.c' || echo '$(srcdir)/'`padata.c
+
+libkrb5_la-padata.obj: padata.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-padata.obj `if test -f 'padata.c'; then $(CYGPATH_W) 'padata.c'; else $(CYGPATH_W) '$(srcdir)/padata.c'; fi`
+
+libkrb5_la-padata.lo: padata.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-padata.lo `test -f 'padata.c' || echo '$(srcdir)/'`padata.c
+
+libkrb5_la-pkinit.o: pkinit.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-pkinit.o `test -f 'pkinit.c' || echo '$(srcdir)/'`pkinit.c
+
+libkrb5_la-pkinit.obj: pkinit.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-pkinit.obj `if test -f 'pkinit.c'; then $(CYGPATH_W) 'pkinit.c'; else $(CYGPATH_W) '$(srcdir)/pkinit.c'; fi`
+
+libkrb5_la-pkinit.lo: pkinit.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-pkinit.lo `test -f 'pkinit.c' || echo '$(srcdir)/'`pkinit.c
+
+libkrb5_la-principal.o: principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-principal.o `test -f 'principal.c' || echo '$(srcdir)/'`principal.c
+
+libkrb5_la-principal.obj: principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-principal.obj `if test -f 'principal.c'; then $(CYGPATH_W) 'principal.c'; else $(CYGPATH_W) '$(srcdir)/principal.c'; fi`
+
+libkrb5_la-principal.lo: principal.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-principal.lo `test -f 'principal.c' || echo '$(srcdir)/'`principal.c
+
+libkrb5_la-prog_setup.o: prog_setup.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prog_setup.o `test -f 'prog_setup.c' || echo '$(srcdir)/'`prog_setup.c
+
+libkrb5_la-prog_setup.obj: prog_setup.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prog_setup.obj `if test -f 'prog_setup.c'; then $(CYGPATH_W) 'prog_setup.c'; else $(CYGPATH_W) '$(srcdir)/prog_setup.c'; fi`
+
+libkrb5_la-prog_setup.lo: prog_setup.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prog_setup.lo `test -f 'prog_setup.c' || echo '$(srcdir)/'`prog_setup.c
+
+libkrb5_la-prompter_posix.o: prompter_posix.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prompter_posix.o `test -f 'prompter_posix.c' || echo '$(srcdir)/'`prompter_posix.c
+
+libkrb5_la-prompter_posix.obj: prompter_posix.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prompter_posix.obj `if test -f 'prompter_posix.c'; then $(CYGPATH_W) 'prompter_posix.c'; else $(CYGPATH_W) '$(srcdir)/prompter_posix.c'; fi`
+
+libkrb5_la-prompter_posix.lo: prompter_posix.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-prompter_posix.lo `test -f 'prompter_posix.c' || echo '$(srcdir)/'`prompter_posix.c
+
+libkrb5_la-rd_cred.o: rd_cred.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_cred.o `test -f 'rd_cred.c' || echo '$(srcdir)/'`rd_cred.c
+
+libkrb5_la-rd_cred.obj: rd_cred.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_cred.obj `if test -f 'rd_cred.c'; then $(CYGPATH_W) 'rd_cred.c'; else $(CYGPATH_W) '$(srcdir)/rd_cred.c'; fi`
+
+libkrb5_la-rd_cred.lo: rd_cred.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_cred.lo `test -f 'rd_cred.c' || echo '$(srcdir)/'`rd_cred.c
+
+libkrb5_la-rd_error.o: rd_error.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_error.o `test -f 'rd_error.c' || echo '$(srcdir)/'`rd_error.c
+
+libkrb5_la-rd_error.obj: rd_error.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_error.obj `if test -f 'rd_error.c'; then $(CYGPATH_W) 'rd_error.c'; else $(CYGPATH_W) '$(srcdir)/rd_error.c'; fi`
+
+libkrb5_la-rd_error.lo: rd_error.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_error.lo `test -f 'rd_error.c' || echo '$(srcdir)/'`rd_error.c
+
+libkrb5_la-rd_priv.o: rd_priv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_priv.o `test -f 'rd_priv.c' || echo '$(srcdir)/'`rd_priv.c
+
+libkrb5_la-rd_priv.obj: rd_priv.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_priv.obj `if test -f 'rd_priv.c'; then $(CYGPATH_W) 'rd_priv.c'; else $(CYGPATH_W) '$(srcdir)/rd_priv.c'; fi`
+
+libkrb5_la-rd_priv.lo: rd_priv.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_priv.lo `test -f 'rd_priv.c' || echo '$(srcdir)/'`rd_priv.c
+
+libkrb5_la-rd_rep.o: rd_rep.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_rep.o `test -f 'rd_rep.c' || echo '$(srcdir)/'`rd_rep.c
+
+libkrb5_la-rd_rep.obj: rd_rep.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_rep.obj `if test -f 'rd_rep.c'; then $(CYGPATH_W) 'rd_rep.c'; else $(CYGPATH_W) '$(srcdir)/rd_rep.c'; fi`
+
+libkrb5_la-rd_rep.lo: rd_rep.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_rep.lo `test -f 'rd_rep.c' || echo '$(srcdir)/'`rd_rep.c
+
+libkrb5_la-rd_req.o: rd_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_req.o `test -f 'rd_req.c' || echo '$(srcdir)/'`rd_req.c
+
+libkrb5_la-rd_req.obj: rd_req.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_req.obj `if test -f 'rd_req.c'; then $(CYGPATH_W) 'rd_req.c'; else $(CYGPATH_W) '$(srcdir)/rd_req.c'; fi`
+
+libkrb5_la-rd_req.lo: rd_req.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_req.lo `test -f 'rd_req.c' || echo '$(srcdir)/'`rd_req.c
+
+libkrb5_la-rd_safe.o: rd_safe.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_safe.o `test -f 'rd_safe.c' || echo '$(srcdir)/'`rd_safe.c
+
+libkrb5_la-rd_safe.obj: rd_safe.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_safe.obj `if test -f 'rd_safe.c'; then $(CYGPATH_W) 'rd_safe.c'; else $(CYGPATH_W) '$(srcdir)/rd_safe.c'; fi`
+
+libkrb5_la-rd_safe.lo: rd_safe.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-rd_safe.lo `test -f 'rd_safe.c' || echo '$(srcdir)/'`rd_safe.c
+
+libkrb5_la-read_message.o: read_message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-read_message.o `test -f 'read_message.c' || echo '$(srcdir)/'`read_message.c
+
+libkrb5_la-read_message.obj: read_message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-read_message.obj `if test -f 'read_message.c'; then $(CYGPATH_W) 'read_message.c'; else $(CYGPATH_W) '$(srcdir)/read_message.c'; fi`
+
+libkrb5_la-read_message.lo: read_message.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-read_message.lo `test -f 'read_message.c' || echo '$(srcdir)/'`read_message.c
+
+libkrb5_la-recvauth.o: recvauth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-recvauth.o `test -f 'recvauth.c' || echo '$(srcdir)/'`recvauth.c
+
+libkrb5_la-recvauth.obj: recvauth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-recvauth.obj `if test -f 'recvauth.c'; then $(CYGPATH_W) 'recvauth.c'; else $(CYGPATH_W) '$(srcdir)/recvauth.c'; fi`
+
+libkrb5_la-recvauth.lo: recvauth.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-recvauth.lo `test -f 'recvauth.c' || echo '$(srcdir)/'`recvauth.c
+
+libkrb5_la-replay.o: replay.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-replay.o `test -f 'replay.c' || echo '$(srcdir)/'`replay.c
+
+libkrb5_la-replay.obj: replay.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-replay.obj `if test -f 'replay.c'; then $(CYGPATH_W) 'replay.c'; else $(CYGPATH_W) '$(srcdir)/replay.c'; fi`
+
+libkrb5_la-replay.lo: replay.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-replay.lo `test -f 'replay.c' || echo '$(srcdir)/'`replay.c
+
+libkrb5_la-send_to_kdc.o: send_to_kdc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-send_to_kdc.o `test -f 'send_to_kdc.c' || echo '$(srcdir)/'`send_to_kdc.c
+
+libkrb5_la-send_to_kdc.obj: send_to_kdc.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-send_to_kdc.obj `if test -f 'send_to_kdc.c'; then $(CYGPATH_W) 'send_to_kdc.c'; else $(CYGPATH_W) '$(srcdir)/send_to_kdc.c'; fi`
+
+libkrb5_la-send_to_kdc.lo: send_to_kdc.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-send_to_kdc.lo `test -f 'send_to_kdc.c' || echo '$(srcdir)/'`send_to_kdc.c
+
+libkrb5_la-sendauth.o: sendauth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sendauth.o `test -f 'sendauth.c' || echo '$(srcdir)/'`sendauth.c
+
+libkrb5_la-sendauth.obj: sendauth.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sendauth.obj `if test -f 'sendauth.c'; then $(CYGPATH_W) 'sendauth.c'; else $(CYGPATH_W) '$(srcdir)/sendauth.c'; fi`
+
+libkrb5_la-sendauth.lo: sendauth.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sendauth.lo `test -f 'sendauth.c' || echo '$(srcdir)/'`sendauth.c
+
+libkrb5_la-set_default_realm.o: set_default_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-set_default_realm.o `test -f 'set_default_realm.c' || echo '$(srcdir)/'`set_default_realm.c
+
+libkrb5_la-set_default_realm.obj: set_default_realm.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-set_default_realm.obj `if test -f 'set_default_realm.c'; then $(CYGPATH_W) 'set_default_realm.c'; else $(CYGPATH_W) '$(srcdir)/set_default_realm.c'; fi`
+
+libkrb5_la-set_default_realm.lo: set_default_realm.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-set_default_realm.lo `test -f 'set_default_realm.c' || echo '$(srcdir)/'`set_default_realm.c
+
+libkrb5_la-sock_principal.o: sock_principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sock_principal.o `test -f 'sock_principal.c' || echo '$(srcdir)/'`sock_principal.c
+
+libkrb5_la-sock_principal.obj: sock_principal.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sock_principal.obj `if test -f 'sock_principal.c'; then $(CYGPATH_W) 'sock_principal.c'; else $(CYGPATH_W) '$(srcdir)/sock_principal.c'; fi`
+
+libkrb5_la-sock_principal.lo: sock_principal.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-sock_principal.lo `test -f 'sock_principal.c' || echo '$(srcdir)/'`sock_principal.c
+
+libkrb5_la-store.o: store.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store.o `test -f 'store.c' || echo '$(srcdir)/'`store.c
+
+libkrb5_la-store.obj: store.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store.obj `if test -f 'store.c'; then $(CYGPATH_W) 'store.c'; else $(CYGPATH_W) '$(srcdir)/store.c'; fi`
+
+libkrb5_la-store.lo: store.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store.lo `test -f 'store.c' || echo '$(srcdir)/'`store.c
+
+libkrb5_la-store_emem.o: store_emem.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_emem.o `test -f 'store_emem.c' || echo '$(srcdir)/'`store_emem.c
+
+libkrb5_la-store_emem.obj: store_emem.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_emem.obj `if test -f 'store_emem.c'; then $(CYGPATH_W) 'store_emem.c'; else $(CYGPATH_W) '$(srcdir)/store_emem.c'; fi`
+
+libkrb5_la-store_emem.lo: store_emem.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_emem.lo `test -f 'store_emem.c' || echo '$(srcdir)/'`store_emem.c
+
+libkrb5_la-store_fd.o: store_fd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_fd.o `test -f 'store_fd.c' || echo '$(srcdir)/'`store_fd.c
+
+libkrb5_la-store_fd.obj: store_fd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_fd.obj `if test -f 'store_fd.c'; then $(CYGPATH_W) 'store_fd.c'; else $(CYGPATH_W) '$(srcdir)/store_fd.c'; fi`
+
+libkrb5_la-store_fd.lo: store_fd.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_fd.lo `test -f 'store_fd.c' || echo '$(srcdir)/'`store_fd.c
+
+libkrb5_la-store_mem.o: store_mem.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_mem.o `test -f 'store_mem.c' || echo '$(srcdir)/'`store_mem.c
+
+libkrb5_la-store_mem.obj: store_mem.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_mem.obj `if test -f 'store_mem.c'; then $(CYGPATH_W) 'store_mem.c'; else $(CYGPATH_W) '$(srcdir)/store_mem.c'; fi`
+
+libkrb5_la-store_mem.lo: store_mem.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-store_mem.lo `test -f 'store_mem.c' || echo '$(srcdir)/'`store_mem.c
+
+libkrb5_la-ticket.o: ticket.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-ticket.o `test -f 'ticket.c' || echo '$(srcdir)/'`ticket.c
+
+libkrb5_la-ticket.obj: ticket.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-ticket.obj `if test -f 'ticket.c'; then $(CYGPATH_W) 'ticket.c'; else $(CYGPATH_W) '$(srcdir)/ticket.c'; fi`
+
+libkrb5_la-ticket.lo: ticket.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-ticket.lo `test -f 'ticket.c' || echo '$(srcdir)/'`ticket.c
+
+libkrb5_la-time.o: time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-time.o `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libkrb5_la-time.obj: time.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-time.obj `if test -f 'time.c'; then $(CYGPATH_W) 'time.c'; else $(CYGPATH_W) '$(srcdir)/time.c'; fi`
+
+libkrb5_la-time.lo: time.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-time.lo `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libkrb5_la-transited.o: transited.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-transited.o `test -f 'transited.c' || echo '$(srcdir)/'`transited.c
+
+libkrb5_la-transited.obj: transited.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-transited.obj `if test -f 'transited.c'; then $(CYGPATH_W) 'transited.c'; else $(CYGPATH_W) '$(srcdir)/transited.c'; fi`
+
+libkrb5_la-transited.lo: transited.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-transited.lo `test -f 'transited.c' || echo '$(srcdir)/'`transited.c
+
+libkrb5_la-v4_glue.o: v4_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-v4_glue.o `test -f 'v4_glue.c' || echo '$(srcdir)/'`v4_glue.c
+
+libkrb5_la-v4_glue.obj: v4_glue.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-v4_glue.obj `if test -f 'v4_glue.c'; then $(CYGPATH_W) 'v4_glue.c'; else $(CYGPATH_W) '$(srcdir)/v4_glue.c'; fi`
+
+libkrb5_la-v4_glue.lo: v4_glue.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-v4_glue.lo `test -f 'v4_glue.c' || echo '$(srcdir)/'`v4_glue.c
+
+libkrb5_la-verify_init.o: verify_init.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_init.o `test -f 'verify_init.c' || echo '$(srcdir)/'`verify_init.c
+
+libkrb5_la-verify_init.obj: verify_init.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_init.obj `if test -f 'verify_init.c'; then $(CYGPATH_W) 'verify_init.c'; else $(CYGPATH_W) '$(srcdir)/verify_init.c'; fi`
+
+libkrb5_la-verify_init.lo: verify_init.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_init.lo `test -f 'verify_init.c' || echo '$(srcdir)/'`verify_init.c
+
+libkrb5_la-verify_user.o: verify_user.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_user.o `test -f 'verify_user.c' || echo '$(srcdir)/'`verify_user.c
+
+libkrb5_la-verify_user.obj: verify_user.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_user.obj `if test -f 'verify_user.c'; then $(CYGPATH_W) 'verify_user.c'; else $(CYGPATH_W) '$(srcdir)/verify_user.c'; fi`
+
+libkrb5_la-verify_user.lo: verify_user.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-verify_user.lo `test -f 'verify_user.c' || echo '$(srcdir)/'`verify_user.c
+
+libkrb5_la-version.o: version.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-version.o `test -f 'version.c' || echo '$(srcdir)/'`version.c
+
+libkrb5_la-version.obj: version.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-version.obj `if test -f 'version.c'; then $(CYGPATH_W) 'version.c'; else $(CYGPATH_W) '$(srcdir)/version.c'; fi`
+
+libkrb5_la-version.lo: version.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-version.lo `test -f 'version.c' || echo '$(srcdir)/'`version.c
+
+libkrb5_la-warn.o: warn.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-warn.o `test -f 'warn.c' || echo '$(srcdir)/'`warn.c
+
+libkrb5_la-warn.obj: warn.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-warn.obj `if test -f 'warn.c'; then $(CYGPATH_W) 'warn.c'; else $(CYGPATH_W) '$(srcdir)/warn.c'; fi`
+
+libkrb5_la-warn.lo: warn.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-warn.lo `test -f 'warn.c' || echo '$(srcdir)/'`warn.c
+
+libkrb5_la-write_message.o: write_message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-write_message.o `test -f 'write_message.c' || echo '$(srcdir)/'`write_message.c
+
+libkrb5_la-write_message.obj: write_message.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-write_message.obj `if test -f 'write_message.c'; then $(CYGPATH_W) 'write_message.c'; else $(CYGPATH_W) '$(srcdir)/write_message.c'; fi`
+
+libkrb5_la-write_message.lo: write_message.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-write_message.lo `test -f 'write_message.c' || echo '$(srcdir)/'`write_message.c
+
+libkrb5_la-krb5_err.o: krb5_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krb5_err.o `test -f 'krb5_err.c' || echo '$(srcdir)/'`krb5_err.c
+
+libkrb5_la-krb5_err.obj: krb5_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krb5_err.obj `if test -f 'krb5_err.c'; then $(CYGPATH_W) 'krb5_err.c'; else $(CYGPATH_W) '$(srcdir)/krb5_err.c'; fi`
+
+libkrb5_la-krb5_err.lo: krb5_err.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-krb5_err.lo `test -f 'krb5_err.c' || echo '$(srcdir)/'`krb5_err.c
+
+libkrb5_la-heim_err.o: heim_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-heim_err.o `test -f 'heim_err.c' || echo '$(srcdir)/'`heim_err.c
+
+libkrb5_la-heim_err.obj: heim_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-heim_err.obj `if test -f 'heim_err.c'; then $(CYGPATH_W) 'heim_err.c'; else $(CYGPATH_W) '$(srcdir)/heim_err.c'; fi`
+
+libkrb5_la-heim_err.lo: heim_err.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-heim_err.lo `test -f 'heim_err.c' || echo '$(srcdir)/'`heim_err.c
+
+libkrb5_la-k524_err.o: k524_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-k524_err.o `test -f 'k524_err.c' || echo '$(srcdir)/'`k524_err.c
+
+libkrb5_la-k524_err.obj: k524_err.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-k524_err.obj `if test -f 'k524_err.c'; then $(CYGPATH_W) 'k524_err.c'; else $(CYGPATH_W) '$(srcdir)/k524_err.c'; fi`
+
+libkrb5_la-k524_err.lo: k524_err.c
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libkrb5_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libkrb5_la-k524_err.lo `test -f 'k524_err.c' || echo '$(srcdir)/'`k524_err.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1241,7 +2295,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -1265,6 +2320,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:
@@ -1346,7 +2408,7 @@ install-data-hook: install-cat-mans
 $(libkrb5_la_OBJECTS): $(srcdir)/krb5-protos.h $(srcdir)/krb5-private.h
 
 $(srcdir)/krb5-protos.h:
-	cd $(srcdir) && perl ../../cf/make-proto.pl -q -P comment -o krb5-protos.h $(libkrb5_la_SOURCES) || rm -f krb5-protos.h
+	cd $(srcdir) && perl ../../cf/make-proto.pl -E KRB5_LIB_FUNCTION -q -P comment -o krb5-protos.h $(libkrb5_la_SOURCES) || rm -f krb5-protos.h
 
 $(srcdir)/krb5-private.h:
 	cd $(srcdir) && perl ../../cf/make-proto.pl -q -P comment -p krb5-private.h $(libkrb5_la_SOURCES) || rm -f krb5-private.h

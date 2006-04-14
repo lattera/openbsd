@@ -1,26 +1,28 @@
-# $KTH: Makefile.am,v 1.6 2002/09/09 22:29:26 joda Exp $
+# $KTH: Makefile.am,v 1.8.4.1 2006/02/03 15:01:11 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
 EXTRA_DIST = krb5-config.1
 
-CLEANFILES = krb5-config
+CLEANFILES = krb5-config krb5-config.new
 
 bin_SCRIPTS = krb5-config
 
 man_MANS = krb5-config.1
 
 krb5-config: krb5-config.in
-	sed	-e "s,@PACKAGE\@,$(PACKAGE),g" \
-		-e "s,@VERSION\@,$(VERSION),g" \
-		-e "s,@prefix\@,$(prefix),g" \
-		-e "s,@exec_prefix\@,$(exec_prefix),g" \
-		-e "s,@libdir\@,$(libdir),g" \
-		-e "s,@includedir\@,$(includedir),g" \
-		-e "s,@LIB_crypt\@,$(LIB_crypt),g" \
-		-e "s,@LIB_dbopen\@,$(LIB_dbopen),g" \
-		-e "s,@INCLUDE_des\@,$(INCLUDE_des),g" \
-		-e "s,@LIB_des_appl\@,$(LIB_des_appl),g" \
-		-e "s,@LIBS\@,$(LIBS),g" \
-		$(srcdir)/krb5-config.in > $@
+	sed	-e "s!@PACKAGE\@!$(PACKAGE)!g" \
+		-e "s!@VERSION\@!$(VERSION)!g" \
+		-e "s!@prefix\@!$(prefix)!g" \
+		-e "s!@exec_prefix\@!$(exec_prefix)!g" \
+		-e "s!@libdir\@!$(libdir)!g" \
+		-e "s!@includedir\@!$(includedir)!g" \
+		-e "s!@LIB_crypt\@!$(LIB_crypt)!g" \
+		-e "s!@LIB_dbopen\@!$(LIB_dbopen)!g" \
+		-e "s!@LIB_dlopen\@!$(LIB_dlopen)!g" \
+		-e "s!@INCLUDE_des\@!$(INCLUDE_des)!g" \
+		-e "s!@LIB_des_appl\@!$(LIB_des_appl)!g" \
+		-e "s!@LIBS\@!$(LIBS)!g" \
+		$(srcdir)/krb5-config.in > $@.new
+	mv $@.new $@
 	chmod +x $@

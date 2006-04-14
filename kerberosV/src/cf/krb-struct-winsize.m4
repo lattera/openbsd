@@ -1,4 +1,4 @@
-dnl $KTH: krb-struct-winsize.m4,v 1.3.10.1 2004/04/01 07:27:34 joda Exp $
+dnl $KTH: krb-struct-winsize.m4,v 1.4 2004/02/12 14:21:02 lha Exp $
 dnl
 dnl
 dnl Search for struct winsize

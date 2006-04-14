@@ -1,4 +1,4 @@
-dnl $KTH: krb-prog-ln-s.m4,v 1.1.42.1 2004/04/01 07:27:34 joda Exp $
+dnl $KTH: krb-prog-ln-s.m4,v 1.2 2004/02/12 14:20:57 lha Exp $
 dnl
 dnl
 dnl Better test for ln -s, ln or cp

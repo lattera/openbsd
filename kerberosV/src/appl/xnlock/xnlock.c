@@ -8,7 +8,7 @@
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: xnlock.c,v 1.93.2.4 2004/09/08 09:16:00 joda Exp $");
+RCSID("$KTH: xnlock.c,v 1.102 2005/04/06 11:21:59 lha Exp $");
 #endif
 
 #include <stdio.h>
@@ -297,8 +297,8 @@ zrefresh(void)
       return -1;
   case 0:
       /* Child */
-      execlp("zrefresh", "zrefresh", 0);
-      execl(BINDIR "/zrefresh", "zrefresh", 0);
+      execlp("zrefresh", "zrefresh", NULL);
+      execl(BINDIR "/zrefresh", "zrefresh", NULL);
       return -1;
   default:
       /* Parent */
@@ -579,7 +579,9 @@ verify_krb5(const char *password)
 {
     krb5_error_code ret;
     krb5_ccache id;
+#ifdef KRB4
     krb5_boolean get_v4_tgt;
+#endif
     
     krb5_cc_default(context, &id);
     ret = krb5_verify_user(context,
@@ -597,18 +599,22 @@ verify_krb5(const char *password)
 	    CREDENTIALS c;
 	    krb5_creds mcred, cred;
 
+	    krb5_cc_clear_mcred(&mcred);
+
 	    krb5_make_principal(context, &mcred.server,
 				client->realm,
 				"krbtgt",
 				client->realm,
 				NULL);
+	    mcred.client = client;
+
 	    ret = krb5_cc_retrieve_cred(context, id, 0, &mcred, &cred);
 	    if(ret == 0) {
 		ret = krb524_convert_creds_kdc_ccache(context, id, &cred, &c);
 		if(ret == 0) 
 		    tf_setup(&c, c.pname, c.pinst);
 		memset(&c, 0, sizeof(c));
-		krb5_free_creds_contents(context, &cred);
+		krb5_free_cred_contents(context, &cred);
 	    }
 	    krb5_free_principal(context, mcred.server);
 	}

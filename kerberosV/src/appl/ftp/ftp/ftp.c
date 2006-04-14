@@ -32,7 +32,7 @@
  */
 
 #include "ftp_locl.h"
-RCSID ("$KTH: ftp.c,v 1.75.2.1 2004/08/20 14:59:06 lha Exp $");
+RCSID ("$KTH: ftp.c,v 1.79 2005/04/07 18:57:29 lha Exp $");
 
 struct sockaddr_storage hisctladdr_ss;
 struct sockaddr *hisctladdr = (struct sockaddr *)&hisctladdr_ss;
@@ -79,6 +79,7 @@ hookup (const char *host, int port)
     strlcpy (hostnamebuf, host, sizeof(hostnamebuf));
     hostname = hostnamebuf;
 
+    s = -1;
     for (a = ai; a != NULL; a = a->ai_next) {
 	s = socket (a->ai_family, a->ai_socktype, a->ai_protocol);
 	if (s < 0)
@@ -100,12 +101,13 @@ hookup (const char *host, int port)
 			     
 	    warn ("connect %s", addrstr);
 	    close (s);
+	    s = -1;
 	    continue;
 	}
 	break;
     }
     freeaddrinfo (ai);
-    if (error < 0) {
+    if (s < 0) {
 	warnx ("failed to contact %s", host);
 	code = -1;
 	return NULL;
@@ -219,7 +221,7 @@ login (char *host)
 	    }
 	    if (pass == NULL) {
 		pass = defaultpass;
-		des_read_pw_string (tmp, sizeof (tmp), prompt, 0);
+		UI_UTIL_read_pw_string (tmp, sizeof (tmp), prompt, 0);
 		if (tmp[0])
 		    pass = tmp;
 	    }
@@ -229,7 +231,7 @@ login (char *host)
     if (n == CONTINUE) {
 	aflag++;
 	acct = tmp;
-	des_read_pw_string (acct, 128, "Account:", 0);
+	UI_UTIL_read_pw_string (acct, 128, "Account:", 0);
 	n = command ("ACCT %s", acct);
     }
     if (n != COMPLETE) {
@@ -351,7 +353,7 @@ getreply (int expecteof)
 	    continue;
 	case '\n':
 	    *p++ = '\0';
-	    if(isdigit(buf[0])){
+	    if(isdigit((unsigned char)buf[0])){
 		sscanf(buf, "%d", &code);
 		if(code == 631){
 		    code = 0;
@@ -727,6 +729,8 @@ sendrequest (char *cmd, char *local, char *remote, char *lmode, int printnames)
 	case TYPE_L:
 	    rc = lseek (fileno (fin), restart_point, SEEK_SET);
 	    break;
+	default:
+	    abort();
 	}
 	if (rc < 0) {
 	    warn ("local: %s", local);
@@ -859,7 +863,7 @@ void
 recvrequest (char *cmd, char *local, char *remote,
 	     char *lmode, int printnames, int local_given)
 {
-    FILE *fout, *din = 0;
+    FILE *fout = NULL, *din = NULL;
     int (*closefunc) (FILE *);
     sighand oldintr, oldintp;
     int c, d, is_retr, tcrflag, bare_lfs = 0;
@@ -1544,7 +1548,7 @@ abortpt (int sig)
 void
 proxtrans (char *cmd, char *local, char *remote)
 {
-    sighand oldintr;
+    sighand oldintr = NULL;
     int secndflag = 0, prox_type, nfnd;
     char *cmd2;
     fd_set mask;
@@ -1616,7 +1620,8 @@ abort:
 	pswitch (1);
 	if (ptabflg)
 	    code = -1;
-	signal (SIGINT, oldintr);
+	if (oldintr)
+	    signal (SIGINT, oldintr);
 	return;
     }
     if (cpend)

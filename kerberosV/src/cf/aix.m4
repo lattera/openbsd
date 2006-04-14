@@ -1,5 +1,5 @@
 dnl
-dnl $KTH: aix.m4,v 1.9.6.1 2004/04/01 07:27:32 joda Exp $
+dnl $KTH: aix.m4,v 1.11 2004/08/25 14:13:57 joda Exp $
 dnl
 
 AC_DEFUN([rk_AIX],[
@@ -19,7 +19,7 @@ AM_CONDITIONAL(AIX4, test "$aix" = 4)
 
 
 AC_ARG_ENABLE(dynamic-afs,
-	AC_HELP_STRING([--disable-dynamic-afs],
+	AS_HELP_STRING([--disable-dynamic-afs],
 		[do not use loaded AFS library with AIX]))
 
 if test "$aix" != no; then

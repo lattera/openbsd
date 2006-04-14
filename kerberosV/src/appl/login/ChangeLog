@@ -1,8 +1,42 @@
+2005-05-10  Dave Love  <fx@gnu.org>
+
+	* login.c: Include <crypt.h>.
+
+2005-05-02  Dave Love  <fx@gnu.org>
+
+	* limits_conf.c: Check RLIMIT_MEMLOCK, not RLIMIT_LOCK.
+
+2005-04-28  Dave Love  <fx@gnu.org>
+
+	* limits_conf.c: Maybe include sys/resource.h.  Use various
+	RLIMIT_ macros conditionally.  For Solaris, Irix and Tru64.
+
+2005-04-22  Johan Danielsson  <joda@pdc.kth.se>
+
+	* login.1: document limits.conf
+	
+	* Makefile.am: limits_conf.c
+	
+	* login_locl.h: template for limits.conf
+	
+	* login.c: read limits.conf (from /etc/security by default,
+	overridable in login.conf)
+	
+	* limits_conf.c: implement a parser for limits.conf
+	
 2004-09-08  Johan Danielsson  <joda@pdc.kth.se>
 
-	* login.c: pull up 1.62->1.63: use krb5_appdefault_boolean instead
-	of krb5_config_get_bool
+	* login.c: use krb5_appdefault_boolean instead of
+	krb5_config_get_bool
 
+2003-09-03  Love Hörnquist Åstrand <lha@it.su.se>
+
+	* login.c (krb5_to4): set client princ of the mcred
+	
+2003-07-07  Love Hörnquist Åstrand <lha@it.su.se>
+
+	* login.c (krb5_to4): use krb5_cc_clear_mcred
+	
 2003-03-24  Johan Danielsson  <joda@pdc.kth.se>
 
 	* Makefile.am: install man pages

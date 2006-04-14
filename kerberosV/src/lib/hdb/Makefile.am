@@ -1,13 +1,21 @@
-# $KTH: Makefile.am,v 1.53.4.2 2003/10/14 16:13:14 joda Exp $
+# $KTH: Makefile.am,v 1.64 2005/04/20 21:17:32 lha Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += -I../asn1 -I$(srcdir)/../asn1 $(INCLUDE_des)
+AM_CPPFLAGS += -I../asn1 -I$(srcdir)/../asn1 $(INCLUDE_des)
 
-BUILT_SOURCES = asn1_Key.c asn1_Event.c asn1_HDBFlags.c asn1_hdb_entry.c \
-	asn1_Salt.c hdb_err.c hdb_err.h asn1_GENERATION.c
+BUILT_SOURCES = \
+	$(foo:.x=.c)	\
+	hdb_err.c \
+	hdb_err.h
 
-foo = asn1_Key.x asn1_GENERATION.x asn1_Event.x asn1_HDBFlags.x asn1_hdb_entry.x asn1_Salt.x
+foo = \
+	asn1_Event.x \
+	asn1_GENERATION.x \
+	asn1_HDBFlags.x \
+	asn1_Key.x \
+	asn1_Salt.x \
+	asn1_hdb_entry.x
 
 CLEANFILES = $(BUILT_SOURCES) $(foo) hdb_asn1.h asn1_files
 
@@ -17,36 +25,64 @@ LDADD = libhdb.la \
 	../krb5/libkrb5.la \
 	../asn1/libasn1.la \
 	$(LIB_des) \
-	$(LIB_roken)
+	$(LIB_roken) \
+	$(LIB_ldopen)
 
-lib_LTLIBRARIES = libhdb.la
-libhdb_la_LDFLAGS = -version-info 7:7:0
+if OPENLDAP_MODULE
 
-libhdb_la_SOURCES =				\
+ldap_so = hdb_ldap.la
+hdb_ldap_la_SOURCES = hdb-ldap.c
+hdb_ldap_la_LDFLAGS = -module
+
+else
+
+ldap = hdb-ldap.c
+
+endif
+
+
+lib_LTLIBRARIES = libhdb.la $(ldap_so)
+libhdb_la_LDFLAGS = -version-info 8:0:1
+
+hdb_source =					\
 	common.c				\
 	db.c					\
 	db3.c					\
-	hdb-ldap.c				\
+	$(ldap)					\
 	hdb.c					\
+	keys.c					\
 	keytab.c				\
 	mkey.c					\
 	ndbm.c					\
-	print.c					\
+	print.c
+
+libhdb_la_SOURCES =				\
+	$(hdb_source)				\
 	$(BUILT_SOURCES)
 
-INCLUDES += $(INCLUDE_openldap)
+AM_CPPFLAGS += $(INCLUDE_openldap)
 
 include_HEADERS = hdb.h hdb_err.h hdb_asn1.h hdb-protos.h hdb-private.h
 
-libhdb_la_LIBADD = ../krb5/libkrb5.la ../asn1/libasn1.la ../roken/libroken.la $(LIB_openldap) $(DBLIB) $(LIB_NDBM)
+libhdb_la_LIBADD = \
+	../krb5/libkrb5.la \
+	../asn1/libasn1.la \
+	../roken/libroken.la \
+	$(LIB_openldap) \
+	$(LIB_dlopen) \
+	$(DBLIB) \
+	$(LIB_NDBM)
 
 $(libhdb_la_OBJECTS): $(srcdir)/hdb-protos.h $(srcdir)/hdb-private.h
 
+CHECK_SYMBOLS = -lib hdb -asn1compile -com_err \
+	hdb_ _hdb HDBFlags2int initialize_hdb_error_table
+
 $(srcdir)/hdb-protos.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -o hdb-protos.h $(libhdb_la_SOURCES) || rm -f hdb-protos.h
+	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -o hdb-protos.h $(hdb_source) || rm -f hdb-protos.h
 
 $(srcdir)/hdb-private.h:
-	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -p hdb-private.h $(libhdb_la_SOURCES) || rm -f hdb-private.h
+	cd $(srcdir); perl ../../cf/make-proto.pl -q -P comment -p hdb-private.h $(hdb_source) || rm -f hdb-private.h
 
 $(foo) hdb_asn1.h: asn1_files
 

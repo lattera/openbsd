@@ -1,4 +1,4 @@
-dnl $KTH: auth-modules.m4,v 1.5.6.1 2004/04/01 07:27:32 joda Exp $
+dnl $KTH: auth-modules.m4,v 1.6 2004/02/12 14:20:29 lha Exp $
 dnl
 dnl Figure what authentication modules should be built
 dnl

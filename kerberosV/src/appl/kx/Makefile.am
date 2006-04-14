@@ -1,8 +1,8 @@
-# $KTH: Makefile.am,v 1.12 2000/11/15 22:51:08 assar Exp $
+# $KTH: Makefile.am,v 1.13 2004/08/26 11:55:17 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
-INCLUDES += $(INCLUDE_krb4) $(X_CFLAGS)
+AM_CPPFLAGS += $(INCLUDE_krb4) $(X_CFLAGS)
 
 WFLAGS += $(WFLAGS_NOIMPLICITINT)
 

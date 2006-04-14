@@ -33,11 +33,17 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: mdtest.c,v 1.16 2002/05/07 15:49:28 joda Exp $");
+RCSID("$KTH: mdtest.c,v 1.19 2005/05/04 09:47:00 lha Exp $");
 #endif
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #include <string.h>
+#ifdef KRB5
+#include <krb5-types.h>
+#endif
 #include <md4.h>
 #include <md5.h>
 #include <sha.h>

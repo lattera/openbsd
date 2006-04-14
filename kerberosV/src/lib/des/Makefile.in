@@ -14,15 +14,14 @@
 
 @SET_MAKE@
 
-# $KTH: Makefile.am,v 1.26 2001/08/04 03:10:23 assar Exp $
+# $KTH: Makefile.am,v 1.33 2005/04/29 10:59:24 lha Exp $
 
 # $KTH: Makefile.am.common,v 1.5 2002/05/19 18:35:37 joda Exp $
 
-# $KTH: Makefile.am.common,v 1.37.2.2 2003/10/13 13:15:39 joda Exp $
+# $KTH: Makefile.am.common,v 1.44 2005/05/29 14:43:42 lha Exp $
 
 
-
-SOURCES = $(libdes_la_SOURCES) $(EXTRA_libdes_la_SOURCES) $(des_SOURCES) destest.c md5crypt_test.c mdtest.c
+SOURCES = $(libdes_la_SOURCES) destest.c mdtest.c rc2test.c rctest.c
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -45,12 +44,11 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = @host@
-DIST_COMMON = README $(include_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.common \
-	$(top_srcdir)/cf/Makefile.am.common ChangeLog INSTALL
-check_PROGRAMS = destest$(EXEEXT) mdtest$(EXEEXT) \
-	md5crypt_test$(EXEEXT)
-bin_PROGRAMS = des$(EXEEXT)
+	$(top_srcdir)/cf/Makefile.am.common ChangeLog
+check_PROGRAMS = destest$(EXEEXT) mdtest$(EXEEXT) rctest$(EXEEXT) \
+	rc2test$(EXEEXT)
 subdir = lib/des
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
@@ -63,7 +61,6 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/broken2.m4 $(top_srcdir)/cf/c-attribute.m4 \
 	$(top_srcdir)/cf/capabilities.m4 \
 	$(top_srcdir)/cf/check-compile-et.m4 \
-	$(top_srcdir)/cf/check-declaration.m4 \
 	$(top_srcdir)/cf/check-getpwnam_r-posix.m4 \
 	$(top_srcdir)/cf/check-man.m4 \
 	$(top_srcdir)/cf/check-netinet-ip-and-tcp.m4 \
@@ -84,48 +81,45 @@ am__aclocal_m4_deps = $(top_srcdir)/cf/aix.m4 \
 	$(top_srcdir)/cf/krb-readline.m4 \
 	$(top_srcdir)/cf/krb-struct-spwd.m4 \
 	$(top_srcdir)/cf/krb-struct-winsize.m4 \
-	$(top_srcdir)/cf/mips-abi.m4 $(top_srcdir)/cf/misc.m4 \
-	$(top_srcdir)/cf/need-proto.m4 $(top_srcdir)/cf/osfc2.m4 \
-	$(top_srcdir)/cf/otp.m4 $(top_srcdir)/cf/proto-compat.m4 \
+	$(top_srcdir)/cf/largefile.m4 $(top_srcdir)/cf/mips-abi.m4 \
+	$(top_srcdir)/cf/misc.m4 $(top_srcdir)/cf/need-proto.m4 \
+	$(top_srcdir)/cf/osfc2.m4 $(top_srcdir)/cf/otp.m4 \
+	$(top_srcdir)/cf/proto-compat.m4 $(top_srcdir)/cf/pthreads.m4 \
 	$(top_srcdir)/cf/retsigtype.m4 $(top_srcdir)/cf/roken-frag.m4 \
 	$(top_srcdir)/cf/sunos.m4 $(top_srcdir)/cf/telnet.m4 \
 	$(top_srcdir)/cf/test-package.m4 $(top_srcdir)/cf/wflags.m4 \
-	$(top_srcdir)/cf/with-all.m4 $(top_srcdir)/configure.in
+	$(top_srcdir)/cf/win32.m4 $(top_srcdir)/cf/with-all.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(mkdir_p)
 CONFIG_HEADER = $(top_builddir)/include/config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdes_la_LIBADD =
-am_libdes_la_OBJECTS = cbc3_enc.lo cbc_cksm.lo cbc_enc.lo cfb64ede.lo \
-	cfb64enc.lo cfb_enc.lo des_enc.lo ecb3_enc.lo ecb_enc.lo \
-	ede_enc.lo enc_read.lo enc_writ.lo fcrypt.lo key_par.lo md4.lo \
-	md5.lo ncbc_enc.lo ofb64ede.lo ofb64enc.lo ofb_enc.lo \
-	pcbc_enc.lo qud_cksm.lo rc4_skey.lo rc4_enc.lo read_pwd.lo \
-	rnd_keys.lo set_key.lo sha.lo str2key.lo xcbc_enc.lo
+am_libdes_la_OBJECTS = aes.lo des.lo md4.lo md5.lo rc2.lo rc4.lo \
+	rijndael-alg-fst.lo rnd_keys.lo sha.lo ui.lo
 libdes_la_OBJECTS = $(am_libdes_la_OBJECTS)
-binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(bin_PROGRAMS)
-am_des_OBJECTS = des.$(OBJEXT)
-des_OBJECTS = $(am_des_OBJECTS)
-des_LDADD = $(LDADD)
-am__DEPENDENCIES_1 = libdes.la
-des_DEPENDENCIES = $(am__DEPENDENCIES_1)
 destest_SOURCES = destest.c
 destest_OBJECTS = destest.$(OBJEXT)
 destest_LDADD = $(LDADD)
-destest_DEPENDENCIES = $(am__DEPENDENCIES_1)
-md5crypt_test_SOURCES = md5crypt_test.c
-md5crypt_test_OBJECTS = md5crypt_test.$(OBJEXT)
-md5crypt_test_LDADD = $(LDADD)
-md5crypt_test_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_1 = libdes.la
+am__DEPENDENCIES_2 =
+destest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 mdtest_SOURCES = mdtest.c
 mdtest_OBJECTS = mdtest.$(OBJEXT)
 mdtest_LDADD = $(LDADD)
-mdtest_DEPENDENCIES = $(am__DEPENDENCIES_1)
+mdtest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+rc2test_SOURCES = rc2test.c
+rc2test_OBJECTS = rc2test.$(OBJEXT)
+rc2test_LDADD = $(LDADD)
+rc2test_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+rctest_SOURCES = rctest.c
+rctest_OBJECTS = rctest.$(OBJEXT)
+rctest_LDADD = $(LDADD)
+rctest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =
@@ -137,13 +131,9 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libdes_la_SOURCES) $(EXTRA_libdes_la_SOURCES) \
-	$(des_SOURCES) destest.c md5crypt_test.c mdtest.c
-DIST_SOURCES = $(libdes_la_SOURCES) $(EXTRA_libdes_la_SOURCES) \
-	$(des_SOURCES) destest.c md5crypt_test.c mdtest.c
-man1dir = $(mandir)/man1
-man3dir = $(mandir)/man3
-MANS = $(man_MANS)
+SOURCES = $(libdes_la_SOURCES) destest.c mdtest.c rc2test.c rctest.c
+DIST_SOURCES = $(libdes_la_SOURCES) destest.c mdtest.c rc2test.c \
+	rctest.c
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(include_HEADERS)
 ETAGS = etags
@@ -218,6 +208,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 IRIX_FALSE = @IRIX_FALSE@
 IRIX_TRUE = @IRIX_TRUE@
+KCM_FALSE = @KCM_FALSE@
+KCM_TRUE = @KCM_TRUE@
 KRB4_FALSE = @KRB4_FALSE@
 KRB4_TRUE = @KRB4_TRUE@
 KRB5_FALSE = @KRB5_FALSE@
@@ -249,6 +241,7 @@ LIB_des_appl = @LIB_des_appl@
 LIB_des_so = @LIB_des_so@
 LIB_dlopen = @LIB_dlopen@
 LIB_dn_expand = @LIB_dn_expand@
+LIB_door_create = @LIB_door_create@
 LIB_el_init = @LIB_el_init@
 LIB_freeaddrinfo = @LIB_freeaddrinfo@
 LIB_gai_strerror = @LIB_gai_strerror@
@@ -293,6 +286,8 @@ NEED_WRITEAUTH_FALSE = @NEED_WRITEAUTH_FALSE@
 NEED_WRITEAUTH_TRUE = @NEED_WRITEAUTH_TRUE@
 NROFF = @NROFF@
 OBJEXT = @OBJEXT@
+OPENLDAP_MODULE_FALSE = @OPENLDAP_MODULE_FALSE@
+OPENLDAP_MODULE_TRUE = @OPENLDAP_MODULE_TRUE@
 OTP_FALSE = @OTP_FALSE@
 OTP_TRUE = @OTP_TRUE@
 PACKAGE = @PACKAGE@
@@ -302,6 +297,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREADS_CFLAGS = @PTHREADS_CFLAGS@
+PTHREADS_LIBS = @PTHREADS_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -338,6 +335,8 @@ dpagaix_ldflags = @dpagaix_ldflags@
 el_compat_FALSE = @el_compat_FALSE@
 el_compat_TRUE = @el_compat_TRUE@
 exec_prefix = @exec_prefix@
+have_cgetent_FALSE = @have_cgetent_FALSE@
+have_cgetent_TRUE = @have_cgetent_TRUE@
 have_err_h_FALSE = @have_err_h_FALSE@
 have_err_h_TRUE = @have_err_h_TRUE@
 have_fnmatch_h_FALSE = @have_fnmatch_h_FALSE@
@@ -369,7 +368,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUFFIXES = .et .h .x .1 .3 .5 .8 .cat1 .cat3 .cat5 .cat8
-INCLUDES = -I$(top_builddir)/include $(INCLUDES_roken)
+AM_CPPFLAGS = -I$(top_builddir)/include $(INCLUDES_roken)
 @do_roken_rename_TRUE@ROKEN_RENAME = -DROKEN_RENAME
 AM_CFLAGS = $(WFLAGS)
 CP = cp
@@ -386,99 +385,33 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB5_TRUE@	$(top_builddir)/lib/asn1/libasn1.la
 
 @KRB5_TRUE@LIB_gssapi = $(top_builddir)/lib/gssapi/libgssapi.la
+@KRB5_TRUE@LIB_tsasl = $(top_builddir)/lib/tsasl/libtsasl.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 lib_LTLIBRARIES = libdes.la
 libdes_la_LDFLAGS = -version-info 3:1:0
-include_HEADERS = des.h md4.h md5.h sha.h rc4.h
+include_HEADERS = des.h md4.h md5.h sha.h rc2.h rc4.h aes.h
 build_HEADERZ = $(include_HEADERS)
-TESTS = destest mdtest md5crypt_test
-CHECK_LOCAL = 
-des_SOURCES = des.c des_ver.h
-LDADD = $(lib_LTLIBRARIES)
+TESTS = $(check_PROGRAMS)
+LDADD = $(lib_LTLIBRARIES) $(LIB_roken)
 libdes_la_SOURCES = \
-	cbc3_enc.c	\
-	cbc_cksm.c	\
-	cbc_enc.c	\
-	cfb64ede.c	\
-	cfb64enc.c	\
-	cfb_enc.c	\
-	des_enc.c	\
-	des_locl.h	\
-	ecb3_enc.c	\
-	ecb_enc.c	\
-	ede_enc.c	\
-	enc_read.c	\
-	enc_writ.c	\
-	fcrypt.c	\
-	hash.h		\
-	key_par.c	\
+	aes.c		\
+	aes.h		\
+	des.c		\
+	des.h		\
 	md4.c		\
+	md4.h		\
 	md5.c		\
-	ncbc_enc.c	\
-	ofb64ede.c	\
-	ofb64enc.c	\
-	ofb_enc.c	\
-	pcbc_enc.c	\
-	podd.h		\
-	qud_cksm.c	\
-	rc4_skey.c	\
-	rc4_enc.c	\
-	read_pwd.c	\
+	md5.h		\
+	rc2.c		\
+	rc2.h		\
+	rc4.c		\
+	rc4.h		\
+	rijndael-alg-fst.c \
+	rijndael-alg-fst.h \
 	rnd_keys.c	\
-	set_key.c	\
 	sha.c		\
-	sk.h		\
-	spr.h		\
-	str2key.c	\
-	xcbc_enc.c
-
-EXTRA_libdes_la_SOURCES = dllmain.c passwd_dialog.aps passwd_dialog.clw \
-	passwd_dialog.rc passwd_dialog.res passwd_dlg.c passwd_dlg.h resource.h
-
-man_MANS = des.1 des_crypt.3
-EXTRA_DIST = \
-	COPYRIGHT	\
-	DES.pm		\
-	DES.pod		\
-	DES.xs		\
-	FILES		\
-	Imakefile	\
-	KERBEROS	\
-	MODES.DES	\
-	Makefile.PL	\
-	Makefile.ssl	\
-	Makefile.uni	\
-	PC1		\
-	PC2		\
-	VERSION		\
-	des.def		\
-	des.dsp		\
-	des.doc		\
-	des.mak		\
-	des.man		\
-	des.org		\
-	des.pl		\
-	des_crypt.man	\
-	des_locl.org	\
-	des_opts.c	\
-	doIP		\
-	doPC1		\
-	doPC2		\
-	makefile.bc	\
-	rand_key.c	\
-	rpc_des.h	\
-	rpc_enc.c	\
-	shifts.pl	\
-	supp.c		\
-	testdes.pl	\
-	times		\
-	typemap		\
-	version.h	\
-	vms.com
-
-asm_files = des-som2.pl des-som3.pl des586.pl des686.pl desboth.pl \
-	dx86-cpp.s dx86unix.cpp readme win32.asm win32.obj win32.uu x86ms.pl \
-	x86unix.pl
+	sha.h		\
+	ui.c
 
 all: all-am
 
@@ -542,34 +475,6 @@ clean-libLTLIBRARIES:
 	done
 libdes.la: $(libdes_la_OBJECTS) $(libdes_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libdes_la_LDFLAGS) $(libdes_la_OBJECTS) $(libdes_la_LIBADD) $(LIBS)
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
-	done
-
-clean-binPROGRAMS:
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; for p in $$list; do \
@@ -577,18 +482,18 @@ clean-checkPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-des$(EXEEXT): $(des_OBJECTS) $(des_DEPENDENCIES) 
-	@rm -f des$(EXEEXT)
-	$(LINK) $(des_LDFLAGS) $(des_OBJECTS) $(des_LDADD) $(LIBS)
 destest$(EXEEXT): $(destest_OBJECTS) $(destest_DEPENDENCIES) 
 	@rm -f destest$(EXEEXT)
 	$(LINK) $(destest_LDFLAGS) $(destest_OBJECTS) $(destest_LDADD) $(LIBS)
-md5crypt_test$(EXEEXT): $(md5crypt_test_OBJECTS) $(md5crypt_test_DEPENDENCIES) 
-	@rm -f md5crypt_test$(EXEEXT)
-	$(LINK) $(md5crypt_test_LDFLAGS) $(md5crypt_test_OBJECTS) $(md5crypt_test_LDADD) $(LIBS)
 mdtest$(EXEEXT): $(mdtest_OBJECTS) $(mdtest_DEPENDENCIES) 
 	@rm -f mdtest$(EXEEXT)
 	$(LINK) $(mdtest_LDFLAGS) $(mdtest_OBJECTS) $(mdtest_LDADD) $(LIBS)
+rc2test$(EXEEXT): $(rc2test_OBJECTS) $(rc2test_DEPENDENCIES) 
+	@rm -f rc2test$(EXEEXT)
+	$(LINK) $(rc2test_LDFLAGS) $(rc2test_OBJECTS) $(rc2test_LDADD) $(LIBS)
+rctest$(EXEEXT): $(rctest_OBJECTS) $(rctest_DEPENDENCIES) 
+	@rm -f rctest$(EXEEXT)
+	$(LINK) $(rctest_LDFLAGS) $(rctest_OBJECTS) $(rctest_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -614,96 +519,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-man1: $(man1_MANS) $(man_MANS)
-	@$(NORMAL_INSTALL)
-	test -z "$(man1dir)" || $(mkdir_p) "$(DESTDIR)$(man1dir)"
-	@list='$(man1_MANS) $(dist_man1_MANS) $(nodist_man1_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    1*) ;; \
-	    *) ext='1' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
-	  $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst"; \
-	done
-uninstall-man1:
-	@$(NORMAL_UNINSTALL)
-	@list='$(man1_MANS) $(dist_man1_MANS) $(nodist_man1_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    1*) ;; \
-	    *) ext='1' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f '$(DESTDIR)$(man1dir)/$$inst'"; \
-	  rm -f "$(DESTDIR)$(man1dir)/$$inst"; \
-	done
-install-man3: $(man3_MANS) $(man_MANS)
-	@$(NORMAL_INSTALL)
-	test -z "$(man3dir)" || $(mkdir_p) "$(DESTDIR)$(man3dir)"
-	@list='$(man3_MANS) $(dist_man3_MANS) $(nodist_man3_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.3*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    3*) ;; \
-	    *) ext='3' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man3dir)/$$inst'"; \
-	  $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man3dir)/$$inst"; \
-	done
-uninstall-man3:
-	@$(NORMAL_UNINSTALL)
-	@list='$(man3_MANS) $(dist_man3_MANS) $(nodist_man3_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.3*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    3*) ;; \
-	    *) ext='3' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f '$(DESTDIR)$(man3dir)/$$inst'"; \
-	  rm -f "$(DESTDIR)$(man3dir)/$$inst"; \
-	done
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
@@ -876,12 +691,9 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(MANS) $(HEADERS) \
-		all-local
-install-binPROGRAMS: install-libLTLIBRARIES
-
+all-am: Makefile $(LTLIBRARIES) $(HEADERS) all-local
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -910,8 +722,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -928,17 +740,17 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS install-man
+install-data-am: install-includeHEADERS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 
-install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
+install-exec-am: install-libLTLIBRARIES
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
 install-info: install-info-am
 
-install-man: install-man1 install-man3
+install-man:
 
 installcheck-am:
 
@@ -959,27 +771,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
-	uninstall-info-am uninstall-libLTLIBRARIES uninstall-man
-
-uninstall-man: uninstall-man1 uninstall-man3
+uninstall-am: uninstall-includeHEADERS uninstall-info-am \
+	uninstall-libLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am all-local check check-TESTS check-am \
-	check-local clean clean-binPROGRAMS clean-checkPROGRAMS \
-	clean-generic clean-libLTLIBRARIES clean-libtool ctags \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-man1 install-man3 \
+	check-local clean clean-checkPROGRAMS clean-generic \
+	clean-libLTLIBRARIES clean-libtool ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-includeHEADERS install-info \
+	install-info-am install-libLTLIBRARIES install-man \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-includeHEADERS \
-	uninstall-info-am uninstall-libLTLIBRARIES uninstall-man \
-	uninstall-man1 uninstall-man3
+	uninstall-includeHEADERS uninstall-info-am \
+	uninstall-libLTLIBRARIES
 
 
 install-suid-programs:
@@ -1010,7 +818,8 @@ install-build-headers:: $(include_HEADERS) $(build_HEADERZ)
 all-local: install-build-headers
 
 check-local::
-	@if test '$(CHECK_LOCAL)'; then \
+	@if test '$(CHECK_LOCAL)' = "no-check-local"; then \
+	  foo=''; elif test '$(CHECK_LOCAL)'; then \
 	  foo='$(CHECK_LOCAL)'; else \
 	  foo='$(PROGRAMS)'; fi; \
 	  if test "$$foo"; then \
@@ -1034,6 +843,13 @@ check-local::
 	  echo "$$banner"; \
 	  echo "$$dashes"; \
 	  test "$$failed" -eq 0; \
+	fi ; \
+	if test '$(CHECK_SYMBOLS)' != ""; then \
+	  echo "$$dashes"; \
+	  echo "Checking symbols"; \
+	  sh $(top_srcdir)/cf/check-symbols.sh $(CHECK_SYMBOLS) || exit 1; \
+	  echo "Passed"; \
+	  echo "$$dashes"; \
 	fi
 
 .x.c:
@@ -1111,14 +927,6 @@ install-data-hook: install-cat-mans
 	$(COMPILE_ET) $<
 .et.c:
 	$(COMPILE_ET) $<
-
-dist-hook:
-	$(mkinstalldirs) $(distdir)/t
-	$(INSTALL_DATA) $(srcdir)/t/perl $(distdir)/t
-	$(INSTALL_DATA) $(srcdir)/t/test $(distdir)/t
-	$(mkinstalldirs) $(distdir)/asm
-	(cd $(srcdir)/asm && tar cf - $(asm_files)) \
-		| (cd $(distdir)/asm; tar xf -)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

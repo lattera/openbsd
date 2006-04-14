@@ -36,7 +36,7 @@
  */
 
 #include "ftp_locl.h"
-RCSID("$KTH: cmds.c,v 1.44 2001/08/05 06:39:14 assar Exp $");
+RCSID("$KTH: cmds.c,v 1.47 2005/04/18 07:45:12 lha Exp $");
 
 typedef void (*sighand)(int);
 
@@ -142,7 +142,7 @@ setpeer(int argc, char **argv)
 		if (autologin)
 			login(argv[1]);
 
-#if (defined(unix) || defined(__unix__) || defined(__unix) || defined(_AIX) || defined(_CRAY) || defined(__NetBSD__)) && NBBY == 8
+#if (defined(unix) || defined(__unix__) || defined(__unix) || defined(_AIX) || defined(_CRAY) || defined(__NetBSD__) || defined(__APPLE__)) && NBBY == 8
 /*
  * this ifdef is to keep someone form "porting" this to an incompatible
  * system and not checking this out. This way they have to think about it.
@@ -150,22 +150,23 @@ setpeer(int argc, char **argv)
 		overbose = verbose;
 		if (debug == 0)
 			verbose = -1;
-		if (command("SYST") == COMPLETE && overbose) {
-			char *cp, c;
-			cp = strchr(reply_string+4, ' ');
+		if (command("SYST") == COMPLETE && overbose && strlen(reply_string) > 4) {
+			char *cp, *p;
+
+			cp = strdup(reply_string + 4);
 			if (cp == NULL)
-				cp = strchr(reply_string+4, '\r');
-			if (cp) {
-				if (cp[-1] == '.')
-					cp--;
-				c = *cp;
-				*cp = '\0';
+			    errx(1, "strdup: out of memory");
+			p = strchr(cp, ' ');
+			if (p == NULL)
+				p = strchr(cp, '\r');
+			if (p) {
+				if (p[-1] == '.')
+					p--;
+				*p = '\0';
 			}
 
-			printf("Remote system type is %s.\n",
-				reply_string+4);
-			if (cp)
-				*cp = c;
+			printf("Remote system type is %s.\n", cp);
+			free(cp);
 		}
 		if (!strncmp(reply_string, "215 UNIX Type: L8", 17)) {
 			if (proxy)
@@ -736,7 +737,7 @@ mget(int argc, char **argv)
 		if (mflag && confirm(argv[0], cp)) {
 			tp = cp;
 			if (mcase) {
-				for (tp2 = tmpbuf; (ch = *tp++);)
+				for (tp2 = tmpbuf;(ch = (unsigned char)*tp++);)
 					*tp2++ = tolower(ch);
 				*tp2 = '\0';
 				tp = tmpbuf;
@@ -1303,7 +1304,7 @@ user(int argc, char **argv)
 	n = command("USER %s", argv[1]);
 	if (n == CONTINUE) {
 	    if (argc < 3 ) {
-		des_read_pw_string (tmp,
+		UI_UTIL_read_pw_string (tmp,
 				    sizeof(tmp),
 				    "Password: ", 0);
 		argv[2] = tmp;
@@ -1594,7 +1595,7 @@ account(int argc, char **argv)
 		}
 	}
 	else {
-	    des_read_pw_string(acct, sizeof(acct), "Account:", 0);
+	    UI_UTIL_read_pw_string(acct, sizeof(acct), "Account:", 0);
 	}
 	command("ACCT %s", acct);
 }

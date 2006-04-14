@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999 - 2003 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999 - 2006 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -32,7 +32,7 @@
 
 #include <config.h>
 
-RCSID("$KTH: su.c,v 1.26.2.1 2003/05/06 12:06:44 joda Exp $");
+RCSID("$KTH: su.c,v 1.29.2.1 2006/01/12 16:26:16 joda Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +49,9 @@ RCSID("$KTH: su.c,v 1.26.2.1 2003/05/06 12:06:44 joda Exp $");
 #endif
 
 #include <pwd.h>
+#ifdef HAVE_CRYPT_H
+#include <crypt.h>
+#endif
 
 #include "crypto-headers.h"
 #ifdef KRB5
@@ -299,7 +302,7 @@ krb_verify(const struct passwd *login_info,
 	asprintf (&prompt, 
 		  "%s's Password: ",
 		  krb_unparse_name_long (name, instance, realm));
-	if (des_read_pw_string (password, sizeof (password), prompt, 0)) {
+	if (UI_UTIL_read_pw_string (password, sizeof (password), prompt, 0)) {
 	    memset (password, 0, sizeof (password));
 	    free(prompt);
 	    return (1);
@@ -346,7 +349,7 @@ verify_unix(struct passwd *su)
     int r;
     if(su->pw_passwd != NULL && *su->pw_passwd != '\0') {
 	snprintf(prompt, sizeof(prompt), "%s's password: ", su->pw_name);
-	r = des_read_pw_string(pw_buf, sizeof(pw_buf), prompt, 0);
+	r = UI_UTIL_read_pw_string(pw_buf, sizeof(pw_buf), prompt, 0);
 	if(r != 0)
 	    exit(0);
 	pw = crypt(pw_buf, su->pw_passwd);
@@ -469,7 +472,7 @@ main(int argc, char **argv)
 #endif
     {
 	char *tty = ttyname (STDERR_FILENO);
-	syslog (LOG_NOTICE | LOG_AUTH, tty ? "%s to %s" : "%s to %s on %s",
+	syslog (LOG_NOTICE | LOG_AUTH, tty ? "%s to %s on %s" : "%s to %s",
 		login_info->pw_name, su_info->pw_name, tty);
     }
 
