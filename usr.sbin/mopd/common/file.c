@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/mopd/common/file.c,v 1.8 2004/04/14 20:37:28 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/mopd/common/file.c,v 1.9 2006/04/17 16:23:01 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995-96 Mats O Jansson.  All rights reserved.
@@ -24,9 +24,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LINT
+#ifndef lint
 static const char rcsid[] =
-    "$OpenBSD: src/usr.sbin/mopd/common/file.c,v 1.8 2004/04/14 20:37:28 henning Exp $";
+    "$OpenBSD: src/usr.sbin/mopd/common/file.c,v 1.9 2006/04/17 16:23:01 deraadt Exp $";
 #endif
 
 #include "os.h"

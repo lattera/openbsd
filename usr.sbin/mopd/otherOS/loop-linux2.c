@@ -22,8 +22,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LINT
-static const char rcsid[] = "$Id: loop-linux2.c,v 1.4 2003/12/01 00:56:51 avsm Exp $";
+#ifndef lint
+static const char rcsid[] = "$Id: loop-linux2.c,v 1.5 2005/12/21 01:40:24 millert Exp $";
 #endif
 
 #include <errno.h>
