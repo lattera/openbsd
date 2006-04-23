@@ -1,10 +1,10 @@
-# $OpenBSD: src/kerberosV/usr.sbin/kstash/Makefile,v 1.6 2004/06/05 06:38:21 biorn Exp $
+# $OpenBSD: src/kerberosV/usr.sbin/kstash/Makefile,v 1.7 2006/04/23 21:25:11 biorn Exp $
 
 KRBDEPTH=../..
 .include <${.CURDIR}/../../Makefile.inc>
 
 PROG=	kstash
-NOMAN=
+MAN=	${PROG}.8
 
 SRCS=	kstash.c \
 	sl.c
