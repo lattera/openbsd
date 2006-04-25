@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ftp/util.c,v 1.41 2005/10/12 06:50:42 otto Exp $	*/
+/*	$OpenBSD: src/usr.bin/ftp/util.c,v 1.42 2006/04/25 05:45:20 tedu Exp $	*/
 /*	$NetBSD: util.c,v 1.12 1997/08/18 10:20:27 lukem Exp $	*/
 
 /*-
@@ -71,7 +71,7 @@
  */
 
 #if !defined(lint) && !defined(SMALL)
-static char rcsid[] = "$OpenBSD: src/usr.bin/ftp/util.c,v 1.41 2005/10/12 06:50:42 otto Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.bin/ftp/util.c,v 1.42 2006/04/25 05:45:20 tedu Exp $";
 #endif /* not lint and not SMALL */
 
 /*
