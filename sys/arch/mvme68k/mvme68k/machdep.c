@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.95 2006/04/21 22:21:54 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/mvme68k/machdep.c,v 1.96 2006/04/25 05:40:15 deraadt Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -203,6 +203,8 @@ mvme68k_init()
 void
 consinit()
 {
+	extern void db_machine_init(void);
+
 	/*
 	 * Initialize the console before we print anything out.
 	 */
