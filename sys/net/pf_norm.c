@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf_norm.c,v 1.102.2.1 2006/01/19 21:52:53 brad Exp $ */
+/*	$OpenBSD: src/sys/net/pf_norm.c,v 1.102.2.2 2006/05/02 22:08:47 brad Exp $ */
 
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
@@ -864,8 +864,12 @@ pf_normalize_ip(struct mbuf **m0, int dir, struct pfi_kif *kif, u_short *reason,
 		goto drop;
 
 	/* Clear IP_DF if the rule uses the no-df option */
-	if (r->rule_flag & PFRULE_NODF)
+	if (r->rule_flag & PFRULE_NODF && h->ip_off & htons(IP_DF)) {
+		u_int16_t ip_off = h->ip_off;
+
 		h->ip_off &= htons(~IP_DF);
+		h->ip_sum = pf_cksum_fixup(h->ip_sum, ip_off, h->ip_off, 0);
+	}
 
 	/* We will need other tests here */
 	if (!fragoff && !mff)
@@ -975,11 +979,20 @@ pf_normalize_ip(struct mbuf **m0, int dir, struct pfi_kif *kif, u_short *reason,
 
  no_fragment:
 	/* At this point, only IP_DF is allowed in ip_off */
-	h->ip_off &= htons(IP_DF);
+	if (h->ip_off & ~htons(IP_DF)) {
+		u_int16_t ip_off = h->ip_off;
+
+		h->ip_off &= htons(IP_DF);
+		h->ip_sum = pf_cksum_fixup(h->ip_sum, ip_off, h->ip_off, 0);
+	}
 
 	/* Enforce a minimum ttl, may cause endless packet loops */
-	if (r->min_ttl && h->ip_ttl < r->min_ttl)
+	if (r->min_ttl && h->ip_ttl < r->min_ttl) {
+		u_int16_t ip_ttl = h->ip_ttl;
+
 		h->ip_ttl = r->min_ttl;
+		h->ip_sum = pf_cksum_fixup(h->ip_sum, ip_ttl, h->ip_ttl, 0);
+	}
 
 	if (r->rule_flag & PFRULE_RANDOMID) {
 		u_int16_t ip_id = h->ip_id;
@@ -994,8 +1007,12 @@ pf_normalize_ip(struct mbuf **m0, int dir, struct pfi_kif *kif, u_short *reason,
 
  fragment_pass:
 	/* Enforce a minimum ttl, may cause endless packet loops */
-	if (r->min_ttl && h->ip_ttl < r->min_ttl)
+	if (r->min_ttl && h->ip_ttl < r->min_ttl) {
+		u_int16_t ip_ttl = h->ip_ttl;
+
 		h->ip_ttl = r->min_ttl;
+		h->ip_sum = pf_cksum_fixup(h->ip_sum, ip_ttl, h->ip_ttl, 0);
+	}
 	if ((r->rule_flag & (PFRULE_FRAGCROP|PFRULE_FRAGDROP)) == 0)
 		pd->flags |= PFDESC_IP_REAS;
 	return (PF_PASS);
