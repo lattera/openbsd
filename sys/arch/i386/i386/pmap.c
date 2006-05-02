@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.80.2.1 2006/01/13 00:49:21 brad Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.80.2.2 2006/05/02 02:42:51 brad Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -2186,6 +2186,12 @@ pmap_ldt_cleanup(p)
 		ldt_free(pmap);
 		pmap->pm_ldt_sel = GSEL(GLDT_SEL, SEL_KPL);
 		pcb->pcb_ldt_sel = pmap->pm_ldt_sel;
+		/* Reset the cached address of the LDT that this process uses */
+#ifdef MULTIPROCESSOR
+		pcb->pcb_ldt = curcpu()->ci_ldt;
+#else
+		pcb->pcb_ldt = ldt;
+#endif
 		if (pcb == curpcb)
 			lldt(pcb->pcb_ldt_sel);
 		old_ldt = pmap->pm_ldt;
