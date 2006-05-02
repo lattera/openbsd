@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/fpu.c,v 1.7 2004/10/28 20:36:15 kettenis Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/fpu.c,v 1.7.2.1 2006/05/02 04:08:54 brad Exp $	*/
 /*	$NetBSD: fpu.c,v 1.1 2003/04/26 18:39:28 fvdl Exp $	*/
 
 /*-
@@ -87,6 +87,7 @@
 
 #define	fninit()		__asm("fninit")
 #define fwait()			__asm("fwait")
+#define fnclex()		__asm("fnclex")
 #define	fxsave(addr)		__asm("fxsave %0" : "=m" (*addr))
 #define	fxrstor(addr)		__asm("fxrstor %0" : : "m" (*addr))
 #define	ldmxcsr(addr)		__asm("ldmxcsr %0" : : "m" (*addr))
@@ -242,8 +243,17 @@ fpudna(struct cpu_info *ci)
 		fldcw(&p->p_addr->u_pcb.pcb_savefpu.fp_fxsave.fx_fcw);
 		ldmxcsr(&p->p_addr->u_pcb.pcb_savefpu.fp_fxsave.fx_mxcsr);
 		p->p_md.md_flags |= MDP_USEDFPU;
-	} else
+	} else {
+		static double	zero = 0.0;
+
+		/*
+		 * amd fpu does not restore fip, fdp, fop on fxrstor
+		 * thus leaking other process's execution history.
+		 */
+		fnclex();
+		__asm __volatile("ffree %%st(7)\n\tfld %0" : : "m" (zero));
 		fxrstor(&p->p_addr->u_pcb.pcb_savefpu);
+	}
 }
 
 
