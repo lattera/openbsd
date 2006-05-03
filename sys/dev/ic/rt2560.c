@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/rt2560.c,v 1.12 2006/02/25 13:02:10 damien Exp $  */
+/*	$OpenBSD: src/sys/dev/ic/rt2560.c,v 1.12.2.1 2006/05/03 03:43:49 brad Exp $  */
 
 /*-
  * Copyright (c) 2005, 2006
@@ -1480,10 +1480,15 @@ int
 rt2560_intr(void *arg)
 {
 	struct rt2560_softc *sc = arg;
+	struct ifnet *ifp = &sc->sc_ic.ic_if;
 	uint32_t r;
 
 	/* disable interrupts */
 	RAL_WRITE(sc, RT2560_CSR8, 0xffffffff);
+
+	/* don't re-enable interrupts if we're shutting down */
+	if (!(ifp->if_flags & IFF_RUNNING))
+		return 0;
 
 	r = RAL_READ(sc, RT2560_CSR7);
 	RAL_WRITE(sc, RT2560_CSR7, r);
@@ -2848,6 +2853,9 @@ rt2560_stop(struct ifnet *ifp, int disable)
 
 	/* disable interrupts */
 	RAL_WRITE(sc, RT2560_CSR8, 0xffffffff);
+
+	/* clear any pending interrupt */
+	RAL_WRITE(sc, RT2560_CSR7, 0xffffffff);
 
 	/* reset Tx and Rx rings */
 	rt2560_reset_tx_ring(sc, &sc->txq);
