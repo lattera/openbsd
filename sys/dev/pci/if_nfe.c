@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_nfe.c,v 1.52 2006/03/02 09:04:00 jsg Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_nfe.c,v 1.52.2.1 2006/05/03 03:49:50 brad Exp $	*/
 
 /*-
  * Copyright (c) 2006 Damien Bergamini <damien.bergamini@free.fr>
@@ -812,7 +812,7 @@ nfe_txeof(struct nfe_softc *sc)
 		data = &sc->txq.data[sc->txq.next];
 
 		if ((sc->sc_flags & (NFE_JUMBO_SUP | NFE_40BIT_ADDR)) == 0) {
-			if (!(flags & NFE_TX_LASTFRAG_V1))
+			if (!(flags & NFE_TX_LASTFRAG_V1) && data->m == NULL)
 				goto skip;
 
 			if ((flags & NFE_TX_ERROR_V1) != 0) {
@@ -822,7 +822,7 @@ nfe_txeof(struct nfe_softc *sc)
 			} else
 				ifp->if_opackets++;
 		} else {
-			if (!(flags & NFE_TX_LASTFRAG_V2))
+			if (!(flags & NFE_TX_LASTFRAG_V2) && data->m == NULL)
 				goto skip;
 
 			if ((flags & NFE_TX_ERROR_V2) != 0) {
