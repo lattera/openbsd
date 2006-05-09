@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.75 2005/08/09 04:10:11 mickey Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_de.c,v 1.75.2.1 2006/05/09 21:08:53 brad Exp $	*/
 /*	$NetBSD: if_de.c,v 1.45 1997/06/09 00:34:18 thorpej Exp $	*/
 
 /*-
@@ -4655,7 +4655,12 @@ tulip_ifstart(
 		break;
 	    }
 	}
-	sc->tulip_if.if_start = tulip_ifstart_one;
+#ifdef ALTQ
+	if (0) /* don't switch to the one packet mode */
+#else
+	if (IFQ_IS_EMPTY(&sc->tulip_if.if_snd))
+#endif
+	    sc->tulip_if.if_start = tulip_ifstart_one;
     }
 
     TULIP_PERFEND(ifstart);
