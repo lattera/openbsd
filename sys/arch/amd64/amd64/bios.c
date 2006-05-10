@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amd64/amd64/bios.c,v 1.6 2006/05/10 12:36:39 krw Exp $	*/
 /*
  * Copyright (c) 2006 Gordon Willem Klok <gklok@cogeco.ca>
  *
