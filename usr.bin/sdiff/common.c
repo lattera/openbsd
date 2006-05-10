@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sdiff/common.c,v 1.2 2006/03/11 07:12:42 ray Exp $	*/
+/*	$OpenBSD: src/usr.bin/sdiff/common.c,v 1.3 2006/05/10 14:32:51 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
@@ -55,14 +55,12 @@ xmktemp(const char *s)
 	if ((file = fdopen(fd, "w")) == NULL) {
 		warn("could not open %s", filename);
 		cleanup(filename);
-		/* NOTREACHED */
 	}
 
 	/* Write to file. */
 	if (fputs(s, file)) {
 		warn("could not write to %s", filename);
 		cleanup(filename);
-		/* NOTREACHED */
 	}
 
 	/* Close temp file. */
