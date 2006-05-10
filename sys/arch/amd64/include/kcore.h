@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amd64/include/kcore.h,v 1.2 2006/05/10 01:39:04 krw Exp $	*/
 /*	$NetBSD: kcore.h,v 1.1 2003/04/26 18:39:43 fvdl Exp $	*/
 
 /*

@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amd64/include/pcb.h,v 1.3 2006/05/10 01:39:04 krw Exp $	*/
 /*	$NetBSD: pcb.h,v 1.1 2003/04/26 18:39:45 fvdl Exp $	*/
 
 /*-

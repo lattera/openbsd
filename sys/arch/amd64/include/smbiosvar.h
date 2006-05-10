@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/amd64/include/smbiosvar.h,v 1.2 2006/05/10 01:39:04 krw Exp $	*/
 /*
  * Copyright (c) 2006 Gordon Willem Klok <gklok@cogeco.ca>
  * Copyright (c) 2005 Jordan Hargrave
