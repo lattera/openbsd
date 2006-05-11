@@ -1,7 +1,7 @@
-#	$OpenBSD: src/libexec/ld.so/Makefile,v 1.33 2006/05/04 01:52:16 drahn Exp $
+#	$OpenBSD: src/libexec/ld.so/Makefile,v 1.34 2006/05/11 22:03:22 deraadt Exp $
 
 SUBDIR=ldconfig ldd
-#SUBDIR+=prebind prebind_strip
+#SUBDIR+=prebind
 VPATH=${.CURDIR}/../../lib/libc/string
 
 SRCS=	ldasm.S loader.c resolve.c dlfcn.c dl_printf.c rtld_machine.c
