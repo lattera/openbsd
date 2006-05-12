@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ld.so/prebind/Attic/sod.c,v 1.1 2006/05/03 16:10:52 drahn Exp $	*/
+/*	$OpenBSD: src/libexec/ld.so/ldconfig/sod.c,v 1.1 2006/05/12 23:20:53 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1993 Paul Kranenburg

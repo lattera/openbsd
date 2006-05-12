@@ -1,4 +1,4 @@
-/* $OpenBSD: src/libexec/ld.so/prebind/Attic/objarray.c,v 1.8 2006/05/12 15:12:42 drahn Exp $ */
+/* $OpenBSD: src/libexec/ld.so/ldconfig/library.c,v 1.1 2006/05/12 23:20:52 deraadt Exp $ */
 /*
  * Copyright (c) 2006 Dale Rahn <drahn@dalerahn.com>
  *
