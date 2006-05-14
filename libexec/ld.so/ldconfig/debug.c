@@ -1,4 +1,4 @@
-/* $OpenBSD: src/libexec/ld.so/ldconfig/debug.c,v 1.2 2006/05/13 05:58:42 deraadt Exp $ */
+/* $OpenBSD: src/libexec/ld.so/ldconfig/debug.c,v 1.3 2006/05/14 21:09:47 deraadt Exp $ */
 /*
  * Copyright (c) 2006 Dale Rahn <drahn@dalerahn.com>
  *
@@ -31,7 +31,7 @@
 #include "resolve.h"
 #include "link.h"
 #include "sod.h"
-#ifndef __mips64
+#ifndef __mips64__
 #include "machine/reloc.h"
 #endif
 #include "prebind.h"
