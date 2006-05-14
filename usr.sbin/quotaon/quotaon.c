@@ -38,7 +38,7 @@ static char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)quotaon.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: quotaon.c,v 1.19 2003/06/26 19:47:09 deraadt Exp $";
+static char *rcsid = "$Id: quotaon.c,v 1.20 2003/07/18 22:58:56 david Exp $";
 #endif /* not lint */
 
 /*
@@ -213,7 +213,7 @@ hasquota(struct fstab *fs, int type, char **qfnamep, int force)
 	}
 	strlcpy(buf, fs->fs_mntops, sizeof buf);
 	for (opt = strtok(buf, ","); opt; opt = strtok(NULL, ",")) {
-		if (cp = strchr(opt, '='))
+		if ((cp = strchr(opt, '=')) != NULL)
 			*cp++ = '\0';
 		if (type == USRQUOTA && strcmp(opt, usrname) == 0)
 			break;
