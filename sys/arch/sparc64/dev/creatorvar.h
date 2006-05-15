@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc64/dev/creatorvar.h,v 1.10 2003/06/17 17:35:40 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc64/dev/creatorvar.h,v 1.11 2006/05/15 21:38:36 miod Exp $	*/
 
 /*
  * Copyright (c) 2002 Jason L. Wright (jason@thought.net),
@@ -64,5 +64,3 @@ struct creator_softc {
     bus_space_write_4((sc)->sc_bt, (sc)->sc_dac_h, (r), (v))
 #define	DAC_READ(sc,r) \
     bus_space_read_4((sc)->sc_bt, (sc)->sc_dac_h, (r))
-
-void	creator_attach(struct creator_softc *);
