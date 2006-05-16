@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/srec.c,v 1.2 2001/04/30 00:06:34 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/sboot/Attic/srec.c,v 1.3 2006/05/16 22:52:26 miod Exp $	*/
 
 /*
  * Public domain, believed to be by Mike Price.
- * 
+ *
  * convert binary file to Srecord format
  */
 #include <stdio.h>
