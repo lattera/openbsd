@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/re.c,v 1.14 2005/08/01 17:00:23 pvalchev Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/re.c,v 1.14.2.1 2006/05/23 00:26:03 brad Exp $	*/
 /*	$FreeBSD: if_re.c,v 1.31 2004/09/04 07:54:05 ru Exp $	*/
 /*
  * Copyright (c) 1997, 1998-2003
@@ -1585,13 +1585,12 @@ re_init(struct ifnet *ifp)
 	re_stop(sc);
 
 	/*
-	 * Enable C+ RX and TX mode, as well as VLAN stripping and
-	 * RX checksum offload. We must configure the C+ register
-	 * before all others.
+	 * Enable C+ RX and TX mode, as well as RX checksum offload.
+	 * We must configure the C+ register before all others.
 	 */
 	CSR_WRITE_2(sc, RL_CPLUS_CMD, RL_CPLUSCMD_RXENB|
 	    RL_CPLUSCMD_TXENB|RL_CPLUSCMD_PCI_MRW|
-	    RL_CPLUSCMD_VLANSTRIP|RL_CPLUSCMD_RXCSUM_ENB);
+	    RL_CPLUSCMD_RXCSUM_ENB);
 
 	/*
 	 * Init our MAC address.  Even though the chipset
