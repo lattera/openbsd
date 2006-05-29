@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/armish/dev/i80321_mainbus.c,v 1.2 2006/05/29 17:30:26 drahn Exp $	*/
 /*	$NetBSD: i80321_mainbus.c,v 1.16 2005/12/15 01:44:00 briggs Exp $	*/
 
 /*
