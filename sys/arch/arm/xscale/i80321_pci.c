@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/arm/xscale/i80321_pci.c,v 1.2 2006/05/29 17:27:31 drahn Exp $	*/
 /*	$NetBSD: i80321_pci.c,v 1.7 2005/12/15 01:44:00 briggs Exp $	*/
 
 /*

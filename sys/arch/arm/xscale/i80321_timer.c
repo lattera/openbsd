@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/arm/xscale/Attic/i80321_timer.c,v 1.2 2006/05/29 17:27:31 drahn Exp $	*/
 /*	$NetBSD: i80321_timer.c,v 1.13 2005/12/24 20:06:52 perry Exp $	*/
 
 /*
