@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/dvmrpd/dvmrpd.h,v 1.1 2006/06/01 14:12:20 norby Exp $ */
+/*	$OpenBSD: src/usr.sbin/dvmrpd/dvmrpd.h,v 1.2 2006/06/01 18:18:25 norby Exp $ */
 
 /*
  * Copyright (c) 2004, 2005, 2006 Esben Norby <norby@openbsd.org>
@@ -230,6 +230,9 @@ struct iface {
 	int			 fd;
 	int			 state;
 	int			 mtu;
+	int			 nbr_cnt;
+	int			 adj_cnt;
+
 	u_int16_t		 flags;
 	u_int16_t		 metric;
 	enum iface_type		 type;
