@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/fpe/Attic/fpu_int.c,v 1.3 2006/01/16 22:08:26 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/fpe/Attic/fpu_int.c,v 1.4 2006/06/11 20:43:28 miod Exp $	*/
 /*	$NetBSD: fpu_int.c,v 1.6 2003/07/15 02:43:10 lukem Exp $	*/
 
 /*
@@ -33,8 +33,8 @@
 
 #include <machine/reg.h>
 
-#include "fpu_arith.h"
-#include "fpu_emulate.h"
+#include <m68k/fpe/fpu_arith.h>
+#include <m68k/fpe/fpu_emulate.h>
 
 /* FINTRZ - always round to zero */
 struct fpn *
