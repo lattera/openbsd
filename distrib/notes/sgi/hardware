@@ -1,0 +1,32 @@
+dnl	$OpenBSD: src/distrib/notes/sgi/hardware,v 1.3 2006/06/13 19:35:06 miod Exp $
+OpenBSD/MACHINE OSREV runs on the following machines:
+	O2 with the following CPU configurations:
+		R5000, R52xx and RM7000 with any secondary/tertiary caches.
+		R10000 and R12000 with secondary caches.
+
+	On O2's with R10000 CPUs the Speculative Dirty problem is not
+	handled in any special way. However, so far, we have not seen
+	any problems from this behaviour.
+
+Supported devices {:-include-:}:
+- Ethernet Controllers
+        built-in Mace Ethernet Controller (mec)
+        Intel/DEC 21443 "Tulip" clones (dc)
+        Intel i8255x-based (fxp) including:
+                Intel EtherExpress PRO/10+
+                Intel EtherExpress PRO/100, PRO/100B, and PRO/100+
+                Intel EtherExpress PRO/100+ "Management Adapter"
+                Intel EtherExpress PRO/100 Dual Port
+                Intel PRO/100 VE, PRO/100 VM, and PRO/100 S
+- SCSI controllers
+        built-in Adaptec AIC-7880 (ahc)
+        53C8xx-based SCSI (siop)
+- RS-232 devices:
+        on-board NS16550 compatible serial ports (com)
+- Miscellaneous devices:
+        battery-backed real time clock
+        ``soft'' power button as available on some models (power)
+
+If your hardware is not listed above, there is currently no support for it
+in this release.
+
