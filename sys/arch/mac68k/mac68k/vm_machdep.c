@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vm_machdep.c,v 1.35 2006/06/11 20:48:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/mac68k/Attic/vm_machdep.c,v 1.36 2006/06/23 13:46:05 mickey Exp $	*/
 /*	$NetBSD: vm_machdep.c,v 1.29 1998/07/28 18:34:55 thorpej Exp $	*/
 
 /*
@@ -129,7 +129,6 @@ cpu_exit(p)
 {
 
 	(void)splhigh();
-	uvmexp.swtch++;
 	switch_exit(p);
 	/* NOTREACHED */
 }
