@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/if_bnxfw.h,v 1.1 2006/06/26 04:57:54 brad Exp $	*/
+/*	$OpenBSD: src/sys/dev/microcode/bnx/bnxfw.h,v 1.1 2006/06/26 05:37:05 brad Exp $	*/
 
 /*-
  * Copyright (c) 2006 Broadcom Corporation
