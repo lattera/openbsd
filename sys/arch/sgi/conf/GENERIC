@@ -1,0 +1,128 @@
+#	$OpenBSD: src/sys/arch/sgi/conf/Attic/GENERIC,v 1.19 2006/06/26 22:26:29 dlg Exp $
+#
+# For further information on compiling OpenBSD kernels, see the config(8)
+# man page.
+#
+# For further information on hardware support for this architecture, see
+# the intro(4) man page.  For further information about kernel options
+# for this architecture, see the options(4) man page.  For an explanation
+# of each device driver in this file see the section 4 man page for the
+# device.
+
+machine		sgi mips64
+include		"../../../conf/GENERIC"
+maxusers	32			# estimated number of users
+
+# Make options
+makeoption	LINK_ADDRESS="0xffffffff80100000"
+
+# MD options
+option		ARCBIOS		# We use arcbios for FW communication.
+
+#option		APERTURE
+
+#option	WSDISPLAY_COMPAT_RAWKBD		# provide raw scancodes; needed for X11
+
+option		PCIVERBOSE
+option		USBVERBOSE
+
+#option		UVMHIST		# enable uvm history logging
+
+#option		DEBUG
+#option		SYSCALL_DEBUG
+
+# Define what targets to support
+option		TGT_O2
+
+# Control certain other stuff
+option		AHC_CTRL_ID=0	# SGI have scsi controllers at 0.
+
+# Specify storage configuration (its a joke..)
+config		bsd	swap generic
+
+#
+# Definition of system
+#
+mainbus0	at root
+cpu*		at mainbus0
+
+#### Main local buses
+#crimebus0	at mainbus0
+macebus0	at mainbus0	# MACE controller localbus.
+
+# Localbus devices
+clock0		at macebus0
+mec0		at macebus0 sys 0x18 base 0x00280000 irq 4
+mavb0		at macebus0 sys 0x18 base 0x00300000 irq 7
+com0		at macebus0 sys 0x18 base 0x00390000 irq 5
+com1		at macebus0 sys 0x18 base 0x00398000 irq 5
+
+#### PCI Bus
+macepcibr0	at macebus0	# MACE controller PCI Bus bridge.
+pci*		at macepcibr?
+
+#### SCSI
+ahc*		at pci?
+siop*		at pci?
+mpi*		at pci?
+scsibus*	at siop?
+scsibus*	at ahc?
+scsibus*	at mpi?
+
+#### NICs
+dc*		at pci?		# 21143, "tulip" clone ethernet
+ep*		at pci?		# 3Com 3c59x
+fxp*		at pci?		# EtherExpress 10/100B ethernet
+mtd*		at pci?		# Myson MTD803 3-in-1 Ethernet
+ne*		at pci?		# NE2000-compatible Ethernet
+ti*		at pci?		# Alteon ACEnic gigabit Ethernet
+vr*		at pci?		# VIA Rhine Fast Ethernet
+xl*		at pci?		# 3C9xx ethernet
+
+##### Media Independent Interface (mii) drivers
+exphy*		at mii?		# 3Com internal PHYs
+inphy*		at mii?		# Intel 82555 PHYs
+iophy*		at mii?		# Intel 82553 PHYs
+icsphy*		at mii?		# ICS 1890 PHYs
+lxtphy*		at mii?		# Level1 LXT970 PHYs
+nsphy*		at mii?		# NS and compatible PHYs
+nsphyter*	at mii?		# NS and compatible PHYs
+qsphy*		at mii?		# Quality Semi QS6612 PHYs
+sqphy*		at mii?		# Seeq 8x220 PHYs
+rlphy*		at mii?		# RealTek 8139 internal PHYs
+mtdphy*		at mii?		# Myson MTD972 PHYs
+dcphy*		at mii?		# Digital Clone PHYs
+acphy*		at mii?		# Altima AC101 PHYs
+amphy*		at mii?		# AMD 79C873 PHYs
+tqphy*		at mii?		# TDK 78Q212x PHYs
+bmtphy*		at mii?		# Broadcom 10/100 PHYs
+brgphy*		at mii?		# Broadcom Gigabit PHYs
+eephy*		at mii?		# Marvell 88E1000 series PHY
+xmphy*		at mii?		# XaQti XMAC-II PHYs
+nsgphy*		at mii?		# NS gigabit PHYs
+urlphy*		at mii?		# Realtek RTL8150L internal PHY
+rgephy*		at mii?		# Realtek 8169S/8110S PHY
+ukphy*		at mii?		# "unknown" PHYs
+
+#### Audio
+audio*		at mavb?
+
+#### WS console
+#wsdisplay*	at vga?
+#wskbd*		at ukbd? mux 1
+
+#### SCSI Bus devices
+sd*		at scsibus?
+st*		at scsibus?
+cd*		at scsibus?
+ch*		at scsibus?
+ss*		at scsibus?
+safte*		at scsibus?
+ses*		at scsibus?
+uk*		at scsibus?
+
+#### crypto devices
+hifn*		at pci?		# Hi/fn 7751 crypto card
+
+#pseudo-device	wsmux	2	# mouse & keyboard multiplexor
+pseudo-device	crypto		1
