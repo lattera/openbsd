@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/misc.h,v 1.31 2006/03/30 09:58:15 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/misc.h,v 1.32 2006/07/06 16:03:53 stevesk Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -14,6 +14,10 @@
 
 #ifndef _MISC_H
 #define _MISC_H
+
+#include <sys/types.h>
+
+#include <pwd.h>
 
 /* misc.c */
 
