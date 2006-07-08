@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/dns.c,v 1.19 2006/03/25 22:22:43 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/dns.c,v 1.20 2006/07/08 21:47:12 stevesk Exp $ */
 
 /*
  * Copyright (c) 2003 Wesley Griffin. All rights reserved.
@@ -26,6 +26,9 @@
  */
 
 #include "includes.h"
+
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <netdb.h>
 
