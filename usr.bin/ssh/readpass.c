@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/readpass.c,v 1.39 2006/06/08 14:45:49 markus Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/readpass.c,v 1.40 2006/07/09 15:15:10 stevesk Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <fcntl.h>
 #include <paths.h>
 #include <readpassphrase.h>
 
