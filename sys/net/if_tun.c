@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_tun.c,v 1.68 2005/06/08 06:53:32 henning Exp $	*/
+/*	$OpenBSD: src/sys/net/if_tun.c,v 1.68.2.1 2006/07/14 01:18:11 brad Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -833,7 +833,7 @@ tunwrite(dev_t dev, struct uio *uio, int ioflag)
 		 * this is neccessary for all strict aligned architectures.
 		 */
 		mlen -= ETHER_ALIGN;
-		m_adj(m, ETHER_ALIGN);
+		m->m_data += ETHER_ALIGN;
 	}
 	while (error == 0 && uio->uio_resid > 0) {
 		m->m_len = min(mlen, uio->uio_resid);
