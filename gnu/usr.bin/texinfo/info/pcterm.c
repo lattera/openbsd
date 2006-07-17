@@ -1,7 +1,7 @@
-/* pc_term.c -- How to handle the PC terminal for Info under MS-DOS/MS-Windows.
-   $Id: pcterm.c,v 1.5 2001/12/17 15:28:31 karl Exp $
+/* pcterm.c -- How to handle the PC terminal for Info under MS-DOS/MS-Windows.
+   $Id: pcterm.c,v 1.4 2004/04/11 17:56:46 karl Exp $
 
-   Copyright (C) 1998, 99 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2003, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -37,15 +37,6 @@
 
 extern int speech_friendly;	/* defined in info.c */
 
-#ifdef max
-# undef max
-#endif
-#ifdef min
-# undef min
-#endif
-#define max(x,y) ((x)>(y) ? (x) : (y))
-#define min(x,y) ((x)<(y) ? (x) : (y))
-
 /* **************************************************************** */
 /*                                                                  */
 /*                PC Terminal Output Functions                      */
@@ -77,7 +68,7 @@ pc_up_line (void)
 {
   int x, y;
   ScreenGetCursor (&y, &x);
-  ScreenSetCursor (max (y-1, 0), x);
+  ScreenSetCursor (MAX (y-1, 0), x);
 }
 
 /* Move the cursor down one line. */
@@ -86,7 +77,7 @@ pc_down_line (void)
 {
   int x, y;
   ScreenGetCursor (&y, &x);
-  ScreenSetCursor (min (screenheight-1, y+1), x);
+  ScreenSetCursor (MIN (screenheight-1, y+1), x);
 }
 
 /* Clear the entire terminal screen. */
@@ -671,7 +662,7 @@ int
 kill (pid_t pid, int sig)
 {
   static char interrupted_msg[] = "Interrupted\r\n";
-  static char stopped_msg[] = "Stopped.  Type \"exit RET\" to return.\r\n";
+  static char stopped_msg[] = "Stopped.  Type `exit RET' to return.\r\n";
   char cwd[PATH_MAX + 1];
 
   if (pid == getpid ()
