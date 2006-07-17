@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/arch/i386/include/smbiosvar.h,v 1.3 2006/07/17 20:34:31 fgsch Exp $	*/
 /*
  * Copyright (c) 2006 Gordon Willem Klok <gklok@cogeco.ca>
  * Copyright (c) 2005 Jordan Hargrave
