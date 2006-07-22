@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.53 2005/03/14 22:31:52 tom Exp $	*/
+/*	$OpenBSD: src/sys/msdosfs/msdosfs_vnops.c,v 1.53.4.1 2006/07/22 03:35:35 brad Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -1151,6 +1151,9 @@ abortit:
 				VOP_UNLOCK(fdvp, 0, p);
 			goto bad;
 		}
+
+		cache_purge(fvp);
+
 		if (!doingdirectory) {
 			error = pcbmap(dp, de_cluster(pmp, to_diroffset), 0,
 				       &ip->de_dirclust, 0);
@@ -1187,7 +1190,7 @@ abortit:
 			goto bad;
 		}
 		dotdotp = (struct direntry *)bp->b_data;
-		putushort(dotdotp[0].deStartCluster, dp->de_StartCluster);
+		putushort(dotdotp[0].deStartCluster, cn);
 		pcl = dp->de_StartCluster;
 		if (FAT32(pmp) && pcl == pmp->pm_rootdirblk)
 			pcl = 0;
