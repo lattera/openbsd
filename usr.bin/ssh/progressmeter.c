@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/progressmeter.c,v 1.33 2006/07/22 19:08:54 stevesk Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/progressmeter.c,v 1.34 2006/07/22 20:48:23 stevesk Exp $ */
 /*
  * Copyright (c) 2003 Nils Nordman.  All rights reserved.
  *
@@ -30,6 +30,7 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
