@@ -1,5 +1,4 @@
-#	$OpenBSD: src/etc/etc.zaurus/Makefile.inc,v 1.5 2006/06/07 18:23:52 deraadt Exp $
-#	etc.zaurus/Makefile.inc -- zaurus-specific etc Makefile targets
+#	$OpenBSD: src/etc/etc.zaurus/Makefile.inc,v 1.6 2006/07/27 01:58:21 deraadt Exp $
 
 .ifdef DESTDIR
 snap_md: bsd bootblocks distrib

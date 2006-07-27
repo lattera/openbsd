@@ -1,7 +1,4 @@
-#	$OpenBSD: src/etc/etc.vax/Makefile.inc,v 1.5 2002/06/13 15:09:08 hugh Exp $
-#
-#	etc.vax/Makefile.inc -- vax-specific etc Makefile targets
-#
+#	$OpenBSD: src/etc/etc.vax/Makefile.inc,v 1.6 2006/07/27 01:58:21 deraadt Exp $
 
 .ifdef DESTDIR
 snap_md: bsd bootblocks distrib
