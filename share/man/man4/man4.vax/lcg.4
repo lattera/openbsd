@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.vax/smg.4,v 1.5 2006/07/28 21:25:21 miod Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.vax/lcg.4,v 1.1 2006/07/28 21:25:21 miod Exp $
 .\"
 .\" Copyright (c) 2003 Jason L. Wright (jason@thought.net)
 .\" All rights reserved.
@@ -25,18 +25,19 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd July 28, 2006
-.Dt SMG 4 vax
+.Dt LCG 4 vax
 .Os
 .Sh NAME
-.Nm smg
-.Nd small monochrome graphics adapter
+.Nm lcg
+.Nd VAXstation 4000/60 and VLC color frame buffer
 .Sh SYNOPSIS
-.Cd "smg0 at vsbus0 csr 0x200f0000"
-.Cd "wsdisplay* at smg?"
+.Cd "lcg0 at vsbus0 csr 0x20100000"
+.Cd "wsdisplay* at lcg?"
 .Sh DESCRIPTION
 The
 .Nm
-is a monochrome frame buffer found on-board most VAXstation 3100 systems.
+is a 4 or 8 bit color frame buffer commonly encountered in VAXstation 4000/60
+and VAXstation VLC systems.
 .Pp
 The
 .Nm
@@ -47,27 +48,11 @@ It does not provide direct device driver entry points
 but makes its functions available via the internal
 .Xr wsdisplay 4
 interface.
-.Pp
-When a color option board (either a
-.Xr gpx 4
-or a spx frame buffer) is installed, the
-.Nm
-driver will not attach by default, since the color option takes over the
-video connector on the back of the system.
-However, the output signal pins are independent, and it is possible to
-connect a monochrome video cable even if a color option board is installed.
-To force the
-.Nm
-driver to attach in this case, change the device flags to 1.
-It will however not be possible to use the monochrome frame buffer
-as the
-.Ox
-console in this case.
 .Sh SEE ALSO
 .Xr gpx 4 ,
 .Xr intro 4 ,
-.Xr lcg 4 ,
 .Xr lcspx 4 ,
+.Xr smg 4 ,
 .Xr vsbus 4 ,
 .Xr wscons 4 ,
 .Xr wsdisplay 4

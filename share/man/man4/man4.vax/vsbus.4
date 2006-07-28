@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.vax/vsbus.4,v 1.9 2004/08/15 22:52:41 jmc Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.vax/vsbus.4,v 1.10 2006/07/28 21:25:21 miod Exp $
 .\"
 .\" Copyright (c) 2003 Jason L. Wright (jason@thought.net)
 .\" All rights reserved.
@@ -24,7 +24,7 @@
 .\" ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd March 6, 2003
+.Dd July 28, 2006
 .Dt VSBUS 4 vax
 .Os
 .Sh NAME
@@ -41,11 +41,17 @@ class systems.
 .Sh SUPPORTED DEVICES
 The following devices are supported on
 .Nm vsbus .
-.Bl -tag -width asc(4) -compact -offset indent
+.Bl -tag -width 8n -compact -offset indent
 .It Xr asc 4
 NCR 53c94 SCSI controller.
 .It Xr dz 4
 DZ-11 terminal multiplexer.
+.It Xr gpx 4
+GPX color frame buffer.
+.It Xr lcg 4
+VAXstation 4000/60 and VLC color frame buffer.
+.It Xr lcspx 4
+VAXstation 4000/90 color frame buffer.
 .It Xr le 4
 LANCE Ethernet interface.
 .It Xr ncr 4
@@ -58,7 +64,10 @@ SGEC Ethernet interface.
 .Sh SEE ALSO
 .Xr asc 4 ,
 .Xr dz 4 ,
+.Xr gpx 4 ,
 .Xr intro 4 ,
+.Xr lcg 4 ,
+.Xr lcspx 4 ,
 .Xr le 4 ,
 .Xr ncr 4 ,
 .Xr smg 4 ,
