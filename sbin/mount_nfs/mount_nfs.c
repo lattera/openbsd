@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/mount_nfs/mount_nfs.c,v 1.44 2005/06/29 20:50:37 jaredy Exp $	*/
+/*	$OpenBSD: src/sbin/mount_nfs/mount_nfs.c,v 1.45 2006/07/28 20:02:49 sturm Exp $	*/
 /*	$NetBSD: mount_nfs.c,v 1.12.4.1 1996/05/25 22:48:05 fvdl Exp $	*/
 
 /*
@@ -102,6 +102,7 @@ const struct mntopt mopts[] = {
 	MOPT_STDOPTS,
 	MOPT_FORCE,
 	MOPT_UPDATE,
+	MOPT_SYNC,
 	{ "bg", ALTF_BG, 0 },
 	{ "conn", ALTF_NOCONN, MFLAG_INVERSE },
 	{ "dumbtimer", ALTF_DUMBTIMR, 0 },
