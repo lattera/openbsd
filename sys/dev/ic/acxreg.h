@@ -1,4 +1,4 @@
-/* $Id: acxreg.h,v 1.2 2006/08/01 11:32:19 hacki Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/acxreg.h,v 1.2 2006/08/03 10:12:37 mglocker Exp $ */
 
 /*
  * Copyright (c) 2006 The DragonFly Project.  All rights reserved.

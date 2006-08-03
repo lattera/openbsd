@@ -1,4 +1,4 @@
-/* $Id: acx.c,v 1.6 2006/08/02 23:06:04 claudio Exp $ */
+/*	$OpenBSD: src/sys/dev/ic/acx.c,v 1.2 2006/08/03 10:12:37 mglocker Exp $ */
 
 /*
  * Copyright (c) 2006 The DragonFly Project.  All rights reserved.
@@ -40,7 +40,7 @@
  * Copyright (c) 2003-2004 wlan.kewl.org Project
  * All rights reserved.
  * 
- * $Id: acx.c,v 1.6 2006/08/02 23:06:04 claudio Exp $
+ * $Id: if_acx.c,v 1.3 2006/06/17 10:31:59 sephe Exp $
  *  
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
