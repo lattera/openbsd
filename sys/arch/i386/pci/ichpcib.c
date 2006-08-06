@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/pci/ichpcib.c,v 1.9 2005/12/11 03:42:19 brad Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/pci/ichpcib.c,v 1.10 2006/08/06 02:04:20 brad Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *
@@ -84,6 +84,7 @@ extern int setperf_prio;
 
 const struct pci_matchid ichpcib_devices[] = {
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_6300ESB_LPC },
+	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_6321ESB_LPC },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_LPC },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_LPC },
 	{ PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_LPC },
