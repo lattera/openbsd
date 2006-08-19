@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sbin/isakmpd/ipsec.c,v 1.121 2005/06/25 23:20:43 hshoexer Exp $	 */
+/* $OpenBSD: src/sbin/isakmpd/ipsec.c,v 1.121.2.1 2006/08/19 20:30:22 brad Exp $	 */
 /* $EOM: ipsec.c,v 1.143 2000/12/11 23:57:42 niklas Exp $	 */
 
 /*
@@ -2076,9 +2076,10 @@ ipsec_proto_init(struct proto *proto, char *section)
 {
 	struct ipsec_proto *iproto = proto->data;
 
-	if (proto->sa->phase == 2 && section)
-		iproto->replay_window = conf_get_num(section, "ReplayWindow",
-		    DEFAULT_REPLAY_WINDOW);
+	if (proto->sa->phase == 2)
+		iproto->replay_window = section ? conf_get_num(section,
+		    "ReplayWindow", DEFAULT_REPLAY_WINDOW) :
+		    DEFAULT_REPLAY_WINDOW;
 }
 
 /*
