@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.vax/lcspx.4,v 1.2 2006/08/27 17:32:58 miod Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.vax/vxtbus.4,v 1.1 2006/08/27 17:32:58 miod Exp $
 .\"
 .\" Copyright (c) 2003 Jason L. Wright (jason@thought.net)
 .\" All rights reserved.
@@ -25,36 +25,31 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 27, 2006
-.Dt LCSPX 4 vax
+.Dt VXTBUS 4 vax
 .Os
 .Sh NAME
-.Nm lcspx
-.Nd Low-Cost SPX color frame buffer
+.Nm vxtbus
+.Nd VXT2000 bus
 .Sh SYNOPSIS
-.Cd "lcspx0 at vsbus0 csr 0x39302000        " Pq "VAXstation 4000/90"
-.Cd "lcspx0 at vxtbus0                      " Pq "VXT2000"
-.Cd "wsdisplay* at lcspx?"
+.Cd "vxtbus0 at mainbus0"
 .Sh DESCRIPTION
 The
 .Nm
-is a 8 bit color frame buffer commonly encountered in VAXstation 4000/90
-systems and VXT2000 terminals.
-.Pp
-The
-.Nm
-driver interfaces the frame buffer with the
-.Xr wscons 4
-console framework.
-It does not provide direct device driver entry points
-but makes its functions available via the internal
-.Xr wsdisplay 4
-interface.
+driver is an abstraction for the internal I/O bus found on the VXT2000
+terminal.
+.Sh SUPPORTED DEVICES
+The following devices are supported on
+.Nm vxtbus .
+.Bl -tag -width 8n -compact -offset indent
+.It Xr qsc 4
+SC26C94 quad UART controller.
+.It Xr lcspx 4
+Low-Cost SPX color frame buffer.
+.It Xr ze 4
+SGEC Ethernet interface.
+.El
 .Sh SEE ALSO
-.Xr gpx 4 ,
 .Xr intro 4 ,
-.Xr lcg 4 ,
-.Xr smg 4 ,
-.Xr vsbus 4 ,
-.Xr vxtbus 4 ,
-.Xr wscons 4 ,
-.Xr wsdisplay 4
+.Xr lcspx 4 ,
+.Xr qsc 4 ,
+.Xr ze 4
