@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.36 2005/08/12 21:29:10 canacar Exp $	*/
+/*	$OpenBSD: src/sys/net/if_spppsubr.c,v 1.36.2.1 2006/09/02 18:08:23 brad Exp $	*/
 /*
  * Synchronous PPP/Cisco link level subroutines.
  * Keepalive protocol implemented in both Cisco and PPP modes.
@@ -1315,6 +1315,9 @@ sppp_cp_input(const struct cp *cp, struct sppp *sp, struct mbuf *m)
 			return;
 		}
 		rv = (cp->RCR)(sp, h, len);
+		/* silently drop illegal packets */
+		if (rv == -1)
+			return;
 		switch (sp->state[cp->protoidx]) {
 		case STATE_OPENED:
 			sppp_cp_change_state(cp, sp, rv?
@@ -2033,7 +2036,11 @@ sppp_lcp_RCR(struct sppp *sp, struct lcp_header *h, int len)
 
 	/* pass 1: check for things that need to be rejected */
 	p = (void*) (h+1);
-	for (rlen=0; len>1 && p[1]; len-=p[1], p+=p[1]) {
+	for (rlen = 0; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len) {
+			free(buf, M_TEMP);
+			return (-1);
+		}
 		if (debug)
 			addlog("%s ", sppp_lcp_opt_name(*p));
 		switch (*p) {
@@ -2220,19 +2227,18 @@ HIDE void
 sppp_lcp_RCN_rej(struct sppp *sp, struct lcp_header *h, int len)
 {
 	STDDCL;
-	u_char *buf, *p;
+	u_char *p;
 
 	len -= 4;
-	buf = malloc (len, M_TEMP, M_NOWAIT);
-	if (!buf)
-		return;
 
 	if (debug)
 		log(LOG_DEBUG, SPP_FMT "lcp rej opts: ",
 		    SPP_ARGS(ifp));
 
 	p = (void*) (h+1);
-	for (; len > 1 && p[1]; len -= p[1], p += p[1]) {
+	for (; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len)
+			return;
 		if (debug)
 			addlog("%s ", sppp_lcp_opt_name(*p));
 		switch (*p) {
@@ -2271,8 +2277,6 @@ sppp_lcp_RCN_rej(struct sppp *sp, struct lcp_header *h, int len)
 	}
 	if (debug)
 		addlog("\n");
-	free (buf, M_TEMP);
-	return;
 }
 
 /*
@@ -2283,20 +2287,19 @@ HIDE void
 sppp_lcp_RCN_nak(struct sppp *sp, struct lcp_header *h, int len)
 {
 	STDDCL;
-	u_char *buf, *p;
+	u_char *p;
 	u_long magic;
 
 	len -= 4;
-	buf = malloc (len, M_TEMP, M_NOWAIT);
-	if (!buf)
-		return;
 
 	if (debug)
 		log(LOG_DEBUG, SPP_FMT "lcp nak opts: ",
 		    SPP_ARGS(ifp));
 
 	p = (void*) (h+1);
-	for (; len > 1 && p[1]; len -= p[1], p += p[1]) {
+	for (; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len)
+			return;
 		if (debug)
 			addlog("%s ", sppp_lcp_opt_name(*p));
 		switch (*p) {
@@ -2351,8 +2354,6 @@ sppp_lcp_RCN_nak(struct sppp *sp, struct lcp_header *h, int len)
 	}
 	if (debug)
 		addlog("\n");
-	free (buf, M_TEMP);
-	return;
 }
 
 HIDE void
@@ -2653,7 +2654,11 @@ sppp_ipcp_RCR(struct sppp *sp, struct lcp_header *h, int len)
 		log(LOG_DEBUG, SPP_FMT "ipcp parse opts: ",
 		    SPP_ARGS(ifp));
 	p = (void*) (h+1);
-	for (rlen=0; len>1 && p[1]; len-=p[1], p+=p[1]) {
+	for (rlen = 0; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len) {
+			free(buf, M_TEMP);
+			return (-1);
+		}
 		if (debug)
 			addlog("%s ", sppp_ipcp_opt_name(*p));
 		switch (*p) {
@@ -2800,21 +2805,20 @@ sppp_ipcp_RCR(struct sppp *sp, struct lcp_header *h, int len)
 HIDE void
 sppp_ipcp_RCN_rej(struct sppp *sp, struct lcp_header *h, int len)
 {
-	u_char *buf, *p;
+	u_char *p;
 	struct ifnet *ifp = &sp->pp_if;
 	int debug = ifp->if_flags & IFF_DEBUG;
 
 	len -= 4;
-	buf = malloc (len, M_TEMP, M_NOWAIT);
-	if (!buf)
-		return;
 
 	if (debug)
 		log(LOG_DEBUG, SPP_FMT "ipcp rej opts: ",
 		    SPP_ARGS(ifp));
 
 	p = (void*) (h+1);
-	for (; len > 1 && p[1]; len -= p[1], p += p[1]) {
+	for (; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len)
+			return;
 		if (debug)
 			addlog("%s ", sppp_ipcp_opt_name(*p));
 		switch (*p) {
@@ -2834,8 +2838,6 @@ sppp_ipcp_RCN_rej(struct sppp *sp, struct lcp_header *h, int len)
 	}
 	if (debug)
 		addlog("\n");
-	free (buf, M_TEMP);
-	return;
 }
 
 /*
@@ -2845,22 +2847,21 @@ sppp_ipcp_RCN_rej(struct sppp *sp, struct lcp_header *h, int len)
 HIDE void
 sppp_ipcp_RCN_nak(struct sppp *sp, struct lcp_header *h, int len)
 {
-	u_char *buf, *p;
+	u_char *p;
 	struct ifnet *ifp = &sp->pp_if;
 	int debug = ifp->if_flags & IFF_DEBUG;
 	u_long wantaddr;
 
 	len -= 4;
-	buf = malloc (len, M_TEMP, M_NOWAIT);
-	if (!buf)
-		return;
 
 	if (debug)
 		log(LOG_DEBUG, SPP_FMT "ipcp nak opts: ",
 		    SPP_ARGS(ifp));
 
 	p = (void*) (h+1);
-	for (; len > 1 && p[1]; len -= p[1], p += p[1]) {
+	for (; len > 1; len -= p[1], p += p[1]) {
+		if (p[1] < 2 || p[1] > len)
+			return;
 		if (debug)
 			addlog("%s ", sppp_ipcp_opt_name(*p));
 		switch (*p) {
@@ -2901,8 +2902,6 @@ sppp_ipcp_RCN_nak(struct sppp *sp, struct lcp_header *h, int len)
 	}
 	if (debug)
 		addlog("\n");
-	free (buf, M_TEMP);
-	return;
 }
 
 HIDE void
