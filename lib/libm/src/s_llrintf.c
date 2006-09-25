@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libm/src/Attic/llrintf.c,v 1.1 2005/11/17 20:07:40 otto Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_llrintf.c,v 1.1 2006/09/25 20:25:41 kettenis Exp $	*/
 /* $NetBSD: llrintf.c,v 1.2 2004/10/13 15:18:32 drochner Exp $ */
 
 /*
