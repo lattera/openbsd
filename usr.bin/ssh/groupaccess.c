@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/groupaccess.c,v 1.6.12.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Copyright (c) 2001 Kevin Steves.  All rights reserved.
  *
@@ -22,11 +23,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/groupaccess.c,v 1.6 2003/04/08 20:21:28 itojun Exp $");
+#include <sys/types.h>
+#include <sys/param.h>
 
-#include "groupaccess.h"
+#include <grp.h>
+#include <unistd.h>
+#include <stdarg.h>
+
 #include "xmalloc.h"
+#include "groupaccess.h"
 #include "match.h"
 #include "log.h"
 

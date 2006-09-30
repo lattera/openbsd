@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.15 2004/07/11 17:48:47 deraadt Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/pathnames.h,v 1.15.8.1 2006/09/30 04:06:51 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

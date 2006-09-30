@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.6.8.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -23,10 +24,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_fdpass.c,v 1.6 2004/08/13 02:51:48 djm Exp $");
-
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/uio.h>
+
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
 
 #include "log.h"
 #include "monitor_fdpass.h"

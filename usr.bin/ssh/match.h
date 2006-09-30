@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/match.h,v 1.12 2002/03/01 13:12:10 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/match.h,v 1.12.18.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

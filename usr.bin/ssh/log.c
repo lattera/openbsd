@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/log.c,v 1.29.10.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -33,14 +34,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/log.c,v 1.29 2003/09/23 20:17:11 markus Exp $");
+#include <sys/types.h>
 
-#include "log.h"
-#include "xmalloc.h"
-
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 #include <vis.h>
+
+#include "xmalloc.h"
+#include "log.h"
 
 static LogLevel log_level = SYSLOG_LEVEL_INFO;
 static int log_on_stderr = 1;
@@ -121,6 +126,18 @@ error(const char *fmt,...)
 	do_log(SYSLOG_LEVEL_ERROR, fmt, args);
 	va_end(args);
 }
+
+void
+sigdie(const char *fmt,...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	do_log(SYSLOG_LEVEL_FATAL, fmt, args);
+	va_end(args);
+	_exit(1);
+}
+
 
 /* Log this message (information that usually should go to the log). */
 

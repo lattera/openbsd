@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/authfd.h,v 1.34 2003/11/21 11:57:03 djm Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/authfd.h,v 1.34.10.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -15,8 +15,6 @@
 
 #ifndef AUTHFD_H
 #define AUTHFD_H
-
-#include "buffer.h"
 
 /* Messages for the authentication agent connection. */
 #define SSH_AGENTC_REQUEST_RSA_IDENTITIES	1

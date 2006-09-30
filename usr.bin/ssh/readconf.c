@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/readconf.c,v 1.148.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -11,23 +12,31 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.148 2006/02/22 00:04:44 stevesk Exp $");
-
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+
+#include <netinet/in.h>
 
 #include <ctype.h>
+#include <errno.h>
+#include <netdb.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
-#include "ssh.h"
 #include "xmalloc.h"
+#include "ssh.h"
 #include "compat.h"
 #include "cipher.h"
 #include "pathnames.h"
 #include "log.h"
+#include "key.h"
 #include "readconf.h"
 #include "match.h"
 #include "misc.h"
+#include "buffer.h"
 #include "kex.h"
 #include "mac.h"
 
@@ -99,6 +108,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/readconf.c,v 1.148 2006/02/22 00:04:44 stevesk 
 typedef enum {
 	oBadOption,
 	oForwardAgent, oForwardX11, oForwardX11Trusted, oGatewayPorts,
+	oExitOnForwardFailure,
 	oPasswordAuthentication, oRSAAuthentication,
 	oChallengeResponseAuthentication, oXAuthLocation,
 	oIdentityFile, oHostName, oPort, oCipher, oRemoteForward, oLocalForward,
@@ -129,6 +139,7 @@ static struct {
 	{ "forwardagent", oForwardAgent },
 	{ "forwardx11", oForwardX11 },
 	{ "forwardx11trusted", oForwardX11Trusted },
+	{ "exitonforwardfailure", oExitOnForwardFailure },
 	{ "xauthlocation", oXAuthLocation },
 	{ "gatewayports", oGatewayPorts },
 	{ "useprivilegedport", oUsePrivilegedPort },
@@ -323,7 +334,8 @@ process_config_line(Options *options, const char *host,
 
 	s = line;
 	/* Get the keyword. (Each line is supposed to begin with a keyword). */
-	keyword = strdelim(&s);
+	if ((keyword = strdelim(&s)) == NULL)
+		return 0;
 	/* Ignore leading whitespace. */
 	if (*keyword == '\0')
 		keyword = strdelim(&s);
@@ -378,6 +390,10 @@ parse_flag:
 
 	case oGatewayPorts:
 		intptr = &options->gateway_ports;
+		goto parse_flag;
+
+	case oExitOnForwardFailure:
+		intptr = &options->exit_on_forward_failure;
 		goto parse_flag;
 
 	case oUsePrivilegedPort:
@@ -981,6 +997,7 @@ initialize_options(Options * options)
 	options->forward_agent = -1;
 	options->forward_x11 = -1;
 	options->forward_x11_trusted = -1;
+	options->exit_on_forward_failure = -1;
 	options->xauth_location = NULL;
 	options->gateway_ports = -1;
 	options->use_privileged_port = -1;
@@ -1061,6 +1078,8 @@ fill_default_options(Options * options)
 		options->forward_x11 = 0;
 	if (options->forward_x11_trusted == -1)
 		options->forward_x11_trusted = 0;
+	if (options->exit_on_forward_failure == -1)
+		options->exit_on_forward_failure = 0;
 	if (options->xauth_location == NULL)
 		options->xauth_location = _PATH_XAUTH;
 	if (options->gateway_ports == -1)

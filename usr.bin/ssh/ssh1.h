@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh1.h,v 1.5 2004/10/20 11:48:53 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/ssh1.h,v 1.5.6.1 2006/09/30 04:06:51 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/canohost.h,v 1.8 2001/06/26 17:27:23 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/canohost.h,v 1.8.20.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

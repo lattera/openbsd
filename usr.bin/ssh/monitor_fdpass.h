@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_fdpass.h,v 1.2 2002/03/26 03:24:01 stevesk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/monitor_fdpass.h,v 1.2.22.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>

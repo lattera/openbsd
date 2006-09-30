@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/readpass.c,v 1.35.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -22,20 +23,25 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/readpass.c,v 1.35 2006/02/10 01:44:26 stevesk Exp $");
-
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <errno.h>
+#include <fcntl.h>
 #include <paths.h>
 #include <readpassphrase.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "xmalloc.h"
 #include "misc.h"
 #include "pathnames.h"
 #include "log.h"
 #include "ssh.h"
+#include "uidswap.h"
 
 static char *
 ssh_askpass(char *askpass, const char *msg)
@@ -59,8 +65,7 @@ ssh_askpass(char *askpass, const char *msg)
 		return NULL;
 	}
 	if (pid == 0) {
-		seteuid(getuid());
-		setuid(getuid());
+		permanently_drop_suid(getuid());
 		close(p[0]);
 		if (dup2(p[1], STDOUT_FILENO) < 0)
 			fatal("ssh_askpass: dup2: %s", strerror(errno));

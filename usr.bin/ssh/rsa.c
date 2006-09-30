@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/rsa.c,v 1.24.18.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -59,12 +60,13 @@
  *     [gone - had to be deleted - what a pity]
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/rsa.c,v 1.24 2001/12/27 18:22:16 markus Exp $");
+#include <sys/types.h>
 
+#include <string.h>
+
+#include "xmalloc.h"
 #include "rsa.h"
 #include "log.h"
-#include "xmalloc.h"
 
 void
 rsa_public_encrypt(BIGNUM *out, BIGNUM *in, RSA *key)

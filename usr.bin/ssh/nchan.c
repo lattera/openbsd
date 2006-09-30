@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/nchan.c,v 1.51.8.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Copyright (c) 1999, 2000, 2001, 2002 Markus Friedl.  All rights reserved.
  *
@@ -22,8 +23,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/nchan.c,v 1.51 2004/07/11 17:48:47 deraadt Exp $");
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
 
 #include "ssh1.h"
 #include "ssh2.h"

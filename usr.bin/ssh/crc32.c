@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/crc32.c,v 1.9 2003/02/12 21:39:50 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/crc32.c,v 1.9.14.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright (c) 2003 Markus Friedl.  All rights reserved.
@@ -100,7 +100,7 @@ ssh_crc32(const u_char *buf, u_int32_t size)
 	u_int32_t i, crc;
 
 	crc = 0;
-	for (i = 0;  i < size;  i++)
+	for (i = 0; i < size; i++)
 		crc = crc32tab[(crc ^ buf[i]) & 0xff] ^ (crc >> 8);
 	return crc;
 }

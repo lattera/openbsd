@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/compat.h,v 1.39 2005/03/01 10:09:52 djm Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/compat.h,v 1.39.6.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright (c) 1999, 2000, 2001 Markus Friedl.  All rights reserved.

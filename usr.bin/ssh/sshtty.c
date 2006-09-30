@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.8.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -34,10 +35,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.8 2006/02/07 01:52:50 stevesk Exp $");
-
+#include <sys/types.h>
+#include <stdio.h>
 #include <termios.h>
+#include <pwd.h>
 
 #include "sshpty.h"
 

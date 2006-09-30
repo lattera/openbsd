@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/ssh.c,v 1.265.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -39,31 +40,38 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.265 2006/02/22 00:04:45 stevesk Exp $");
-
+#include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
 
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
 #include <paths.h>
+#include <pwd.h>
 #include <signal.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
 
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh1.h"
 #include "ssh2.h"
 #include "compat.h"
 #include "cipher.h"
-#include "xmalloc.h"
 #include "packet.h"
 #include "buffer.h"
-#include "bufaux.h"
 #include "channels.h"
 #include "key.h"
 #include "authfd.h"
@@ -82,6 +90,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/ssh.c,v 1.265 2006/02/22 00:04:45 stevesk Exp $
 #include "msg.h"
 #include "monitor_fdpass.h"
 #include "uidswap.h"
+#include "version.h"
 
 #ifdef SMARTCARD
 #include "scard.h"
@@ -172,7 +181,7 @@ usage(void)
 "           [-i identity_file] [-L [bind_address:]port:host:hostport]\n"
 "           [-l login_name] [-m mac_spec] [-O ctl_cmd] [-o option] [-p port]\n"
 "           [-R [bind_address:]port:host:hostport] [-S ctl_path]\n"
-"           [-w tunnel:tunnel] [user@]hostname [command]\n"
+"           [-w local_tun[:remote_tun]] [user@]hostname [command]\n"
 	);
 	exit(255);
 }
@@ -247,7 +256,7 @@ main(int ac, char **av)
 	/* Parse command-line arguments. */
 	host = NULL;
 
-again:
+ again:
 	while ((opt = getopt(ac, av,
 	    "1246ab:c:e:fgi:kl:m:no:p:qstvxACD:F:I:L:MNO:PR:S:TVw:XY")) != -1) {
 		switch (opt) {
@@ -619,7 +628,7 @@ again:
 	if (options.host_key_alias != NULL) {
 		for (p = options.host_key_alias; *p; p++)
 			if (isupper(*p))
-				*p = tolower(*p);
+				*p = (char)tolower(*p);
 	}
 
 	/* Get default port if port has not been set. */
@@ -636,15 +645,15 @@ again:
 		options.control_path = NULL;
 
 	if (options.control_path != NULL) {
-		char me[NI_MAXHOST];
+		char thishost[NI_MAXHOST];
 
-		if (gethostname(me, sizeof(me)) == -1)
+		if (gethostname(thishost, sizeof(thishost)) == -1)
 			fatal("gethostname: %s", strerror(errno));
 		snprintf(buf, sizeof(buf), "%d", options.port);
 		cp = tilde_expand_filename(options.control_path,
 		    original_real_uid);
 		options.control_path = percent_expand(cp, "p", buf, "h", host,
-		    "r", options.user, "l", me, (char *)NULL);
+		    "r", options.user, "l", thishost, (char *)NULL);
 		xfree(cp);
 	}
 	if (mux_command != 0 && options.control_path == NULL)
@@ -673,16 +682,16 @@ again:
 	if (options.rhosts_rsa_authentication ||
 	    options.hostbased_authentication) {
 		sensitive_data.nkeys = 3;
-		sensitive_data.keys = xmalloc(sensitive_data.nkeys *
+		sensitive_data.keys = xcalloc(sensitive_data.nkeys,
 		    sizeof(Key));
 
 		PRIV_START;
 		sensitive_data.keys[0] = key_load_private_type(KEY_RSA1,
-		    _PATH_HOST_KEY_FILE, "", NULL);
+		    _PATH_HOST_KEY_FILE, "", NULL, NULL);
 		sensitive_data.keys[1] = key_load_private_type(KEY_DSA,
-		    _PATH_HOST_DSA_KEY_FILE, "", NULL);
+		    _PATH_HOST_DSA_KEY_FILE, "", NULL, NULL);
 		sensitive_data.keys[2] = key_load_private_type(KEY_RSA,
-		    _PATH_HOST_RSA_KEY_FILE, "", NULL);
+		    _PATH_HOST_RSA_KEY_FILE, "", NULL, NULL);
 		PRIV_END;
 
 		if (options.hostbased_authentication == 1 &&
@@ -798,6 +807,8 @@ ssh_init_forwarding(void)
 		    options.local_forwards[i].connect_port,
 		    options.gateway_ports);
 	}
+	if (i > 0 && success != i && options.exit_on_forward_failure)
+		fatal("Could not request local forwarding.");
 	if (i > 0 && success == 0)
 		error("Could not request local forwarding.");
 
@@ -810,11 +821,17 @@ ssh_init_forwarding(void)
 		    options.remote_forwards[i].listen_port,
 		    options.remote_forwards[i].connect_host,
 		    options.remote_forwards[i].connect_port);
-		channel_request_remote_forwarding(
+		if (channel_request_remote_forwarding(
 		    options.remote_forwards[i].listen_host,
 		    options.remote_forwards[i].listen_port,
 		    options.remote_forwards[i].connect_host,
-		    options.remote_forwards[i].connect_port);
+		    options.remote_forwards[i].connect_port) < 0) {
+			if (options.exit_on_forward_failure)
+				fatal("Could not request remote forwarding.");
+			else
+				logit("Warning: Could not request remote "
+				    "forwarding.");
+		}
 	}
 }
 
@@ -875,10 +892,10 @@ ssh_session(void)
 		/* Store window size in the packet. */
 		if (ioctl(fileno(stdin), TIOCGWINSZ, &ws) < 0)
 			memset(&ws, 0, sizeof(ws));
-		packet_put_int(ws.ws_row);
-		packet_put_int(ws.ws_col);
-		packet_put_int(ws.ws_xpixel);
-		packet_put_int(ws.ws_ypixel);
+		packet_put_int((u_int)ws.ws_row);
+		packet_put_int((u_int)ws.ws_col);
+		packet_put_int((u_int)ws.ws_xpixel);
+		packet_put_int((u_int)ws.ws_ypixel);
 
 		/* Store tty modes in the packet. */
 		tty_make_modes(fileno(stdin), NULL);
@@ -996,9 +1013,16 @@ client_global_request_reply_fwd(int type, u_int32_t seq, void *ctxt)
 	    options.remote_forwards[i].listen_port,
 	    options.remote_forwards[i].connect_host,
 	    options.remote_forwards[i].connect_port);
-	if (type == SSH2_MSG_REQUEST_FAILURE)
-		logit("Warning: remote port forwarding failed for listen "
-		    "port %d", options.remote_forwards[i].listen_port);
+	if (type == SSH2_MSG_REQUEST_FAILURE) {
+		if (options.exit_on_forward_failure)
+			fatal("Error: remote port forwarding failed for "
+			    "listen port %d",
+			    options.remote_forwards[i].listen_port);
+		else
+			logit("Warning: remote port forwarding failed for "
+			    "listen port %d",
+			    options.remote_forwards[i].listen_port);
+	}
 }
 
 static void
@@ -1026,7 +1050,7 @@ ssh_control_listener(void)
 		fatal("%s socket(): %s", __func__, strerror(errno));
 
 	old_umask = umask(0177);
-	if (bind(control_fd, (struct sockaddr*)&addr, addr.sun_len) == -1) {
+	if (bind(control_fd, (struct sockaddr *)&addr, addr.sun_len) == -1) {
 		control_fd = -1;
 		if (errno == EINVAL || errno == EADDRINUSE)
 			fatal("ControlSocket %s already exists",
@@ -1173,15 +1197,16 @@ ssh_session2(void)
 static void
 load_public_identity_files(void)
 {
-	char *filename;
+	char *filename, *cp, thishost[NI_MAXHOST];
 	int i = 0;
 	Key *public;
+	struct passwd *pw;
 #ifdef SMARTCARD
 	Key **keys;
 
 	if (options.smartcard_device != NULL &&
 	    options.num_identity_files < SSH_MAX_IDENTITY_FILES &&
-	    (keys = sc_get_keys(options.smartcard_device, NULL)) != NULL ) {
+	    (keys = sc_get_keys(options.smartcard_device, NULL)) != NULL) {
 		int count = 0;
 		for (i = 0; keys[i] != NULL; i++) {
 			count++;
@@ -1199,9 +1224,18 @@ load_public_identity_files(void)
 		xfree(keys);
 	}
 #endif /* SMARTCARD */
+	if ((pw = getpwuid(original_real_uid)) == NULL)
+		fatal("load_public_identity_files: getpwuid failed");
+	if (gethostname(thishost, sizeof(thishost)) == -1)
+		fatal("load_public_identity_files: gethostname: %s",
+		    strerror(errno));
 	for (; i < options.num_identity_files; i++) {
-		filename = tilde_expand_filename(options.identity_files[i],
+		cp = tilde_expand_filename(options.identity_files[i],
 		    original_real_uid);
+		filename = percent_expand(cp, "d", pw->pw_dir,
+		    "u", pw->pw_name, "l", thishost, "h", host,
+		    "r", options.user, (char *)NULL);
+		xfree(cp);
 		public = key_load_public(filename, NULL);
 		debug("identity file %s type %d", filename,
 		    public ? public->type : -1);
@@ -1227,14 +1261,14 @@ control_client_sigrelay(int signo)
 static int
 env_permitted(char *env)
 {
-	int i;
+	int i, ret;
 	char name[1024], *cp;
 
-	strlcpy(name, env, sizeof(name));
-	if ((cp = strchr(name, '=')) == NULL)
+	if ((cp = strchr(env, '=')) == NULL || cp == env)
 		return (0);
-
-	*cp = '\0';
+	ret = snprintf(name, sizeof(name), "%.*s", (int)(cp - env), env);
+	if (ret <= 0 || (size_t)ret >= sizeof(name))
+		fatal("env_permitted: name '%.100s...' too long", env);
 
 	for (i = 0; i < options.num_send_env; i++)
 		if (match_pattern(name, options.send_env[i]))
@@ -1279,29 +1313,29 @@ control_client(const char *path)
 	if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
 		fatal("%s socket(): %s", __func__, strerror(errno));
 
-	if (connect(sock, (struct sockaddr*)&addr, addr.sun_len) == -1) {
+	if (connect(sock, (struct sockaddr *)&addr, addr.sun_len) == -1) {
 		if (mux_command != SSHMUX_COMMAND_OPEN) {
 			fatal("Control socket connect(%.100s): %s", path,
 			    strerror(errno));
 		}
 		if (errno == ENOENT)
-	 		debug("Control socket \"%.100s\" does not exist", path);
+			debug("Control socket \"%.100s\" does not exist", path);
 		else {
-	 		error("Control socket connect(%.100s): %s", path,
+			error("Control socket connect(%.100s): %s", path,
 			    strerror(errno));
 		}
- 		close(sock);
- 		return;
- 	}
+		close(sock);
+		return;
+	}
 
- 	if (stdin_null_flag) {
- 		if ((fd = open(_PATH_DEVNULL, O_RDONLY)) == -1)
- 			fatal("open(/dev/null): %s", strerror(errno));
- 		if (dup2(fd, STDIN_FILENO) == -1)
- 			fatal("dup2: %s", strerror(errno));
- 		if (fd > STDERR_FILENO)
- 			close(fd);
- 	}
+	if (stdin_null_flag) {
+		if ((fd = open(_PATH_DEVNULL, O_RDONLY)) == -1)
+			fatal("open(/dev/null): %s", strerror(errno));
+		if (dup2(fd, STDIN_FILENO) == -1)
+			fatal("dup2: %s", strerror(errno));
+		if (fd > STDERR_FILENO)
+			close(fd);
+	}
 
 	term = getenv("TERM");
 

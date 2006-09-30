@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.12 2003/06/12 19:12:03 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/Attic/scard.h,v 1.12.12.1 2006/09/30 04:06:51 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -26,8 +26,6 @@
 
 #ifndef SCARD_H
 #define SCARD_H
-
-#include "key.h"
 
 #define SCARD_ERROR_FAIL	-1
 #define SCARD_ERROR_NOCARD	-2

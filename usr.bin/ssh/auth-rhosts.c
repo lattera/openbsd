@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.35.2.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -13,20 +14,24 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-rhosts.c,v 1.35 2006/02/20 17:19:53 stevesk Exp $");
-
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include <netgroup.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 #include "packet.h"
+#include "buffer.h"
 #include "uidswap.h"
 #include "pathnames.h"
 #include "log.h"
 #include "servconf.h"
 #include "canohost.h"
+#include "key.h"
+#include "hostfile.h"
 #include "auth.h"
 
 /* import */

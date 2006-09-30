@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sshpty.c,v 1.16.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -11,16 +12,19 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.c,v 1.16 2006/02/20 17:19:54 stevesk Exp $");
-
-#include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
-
+#include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
 #include <paths.h>
+#include <pwd.h>
+#include <string.h>
 #include <termios.h>
+#include <unistd.h>
 #include <util.h>
+#include <stdarg.h>
 
 #include "sshpty.h"
 #include "log.h"
@@ -42,7 +46,7 @@ RCSID("$OpenBSD: src/usr.bin/ssh/sshpty.c,v 1.16 2006/02/20 17:19:54 stevesk Exp
  */
 
 int
-pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
+pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, size_t namebuflen)
 {
 	char buf[64];
 	int i;
@@ -118,11 +122,12 @@ pty_make_controlling_tty(int *ttyfd, const char *tty)
 /* Changes the window size associated with the pty. */
 
 void
-pty_change_window_size(int ptyfd, int row, int col,
-	int xpixel, int ypixel)
+pty_change_window_size(int ptyfd, u_int row, u_int col,
+	u_int xpixel, u_int ypixel)
 {
 	struct winsize w;
 
+	/* may truncate u_int -> u_short */
 	w.ws_row = row;
 	w.ws_col = col;
 	w.ws_xpixel = xpixel;

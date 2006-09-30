@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/gss-serv.c,v 1.14 2006/02/08 13:15:44 stevesk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/gss-serv.c,v 1.14.2.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -24,18 +24,21 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
+#include <sys/types.h>
 
 #ifdef GSSAPI
 
-#include "bufaux.h"
+#include <string.h>
+
+#include "xmalloc.h"
+#include "buffer.h"
+#include "key.h"
+#include "hostfile.h"
 #include "auth.h"
 #include "log.h"
 #include "channels.h"
 #include "session.h"
-#include "servconf.h"
-#include "xmalloc.h"
-#include "getput.h"
+#include "misc.h"
 
 #include "ssh-gss.h"
 
@@ -78,6 +81,8 @@ ssh_gssapi_supported_oids(gss_OID_set *oidset)
 			    &supported_mechs[i]->oid, oidset);
 		i++;
 	}
+
+	gss_release_oid_set(&min_status, &supported);
 }
 
 
@@ -151,7 +156,7 @@ ssh_gssapi_parse_ename(Gssctxt *ctx, gss_buffer_t ename, gss_buffer_t name)
 	 * second without.
 	 */
 
-	oidl = GET_16BIT(tok+2); /* length including next two bytes */
+	oidl = get_u16(tok+2); /* length including next two bytes */
 	oidl = oidl-2; /* turn it into the _real_ length of the variable OID */
 
 	/*
@@ -168,7 +173,7 @@ ssh_gssapi_parse_ename(Gssctxt *ctx, gss_buffer_t ename, gss_buffer_t name)
 	if (ename->length < offset+4)
 		return GSS_S_FAILURE;
 
-	name->length = GET_32BIT(tok+offset);
+	name->length = get_u32(tok+offset);
 	offset += 4;
 
 	if (ename->length < offset+name->length)

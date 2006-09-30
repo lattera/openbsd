@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.4 2005/10/13 19:08:08 stevesk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/gss-serv-krb5.c,v 1.4.2.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright (c) 2001-2003 Simon Wilkinson. All rights reserved.
@@ -24,16 +24,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-
 #ifdef GSSAPI
 #ifdef KRB5
 
-#include "auth.h"
-#include "xmalloc.h"
-#include "log.h"
-#include "servconf.h"
+#include <sys/types.h>
 
+#include "xmalloc.h"
+#include "key.h"
+#include "hostfile.h"
+#include "auth.h"
+#include "log.h"
+
+#include "buffer.h"
 #include "ssh-gss.h"
 
 #include <krb5.h>

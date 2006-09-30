@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/cipher.c,v 1.77.4.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -34,14 +35,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cipher.c,v 1.77 2005/07/16 01:35:24 djm Exp $");
+#include <sys/types.h>
+
+#include <openssl/md5.h>
+
+#include <string.h>
+#include <stdarg.h>
 
 #include "xmalloc.h"
 #include "log.h"
 #include "cipher.h"
-
-#include <openssl/md5.h>
 
 extern const EVP_CIPHER *evp_ssh1_bf(void);
 extern const EVP_CIPHER *evp_ssh1_3des(void);

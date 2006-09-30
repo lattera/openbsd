@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/monitor_mm.c,v 1.9.8.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -23,13 +24,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/monitor_mm.c,v 1.9 2004/05/11 19:01:43 deraadt Exp $");
-
+#include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/tree.h>
+#include <sys/param.h>
 
-#include "ssh.h"
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
+
 #include "xmalloc.h"
+#include "ssh.h"
 #include "log.h"
 #include "monitor_mm.h"
 

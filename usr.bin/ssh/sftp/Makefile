@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/sftp/Makefile,v 1.9 2004/11/05 12:19:56 djm Exp $
+#	$OpenBSD: src/usr.bin/ssh/sftp/Makefile,v 1.9.6.1 2006/09/30 04:06:51 brad Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -14,5 +14,4 @@ SRCS=	sftp.c sftp-client.c sftp-common.c sftp-glob.c
 
 .include <bsd.prog.mk>
 
-LDADD+=	-lcrypto -ledit -ltermcap
-DPADD+=	${LIBCRYPTO}
+LDADD+=	-ledit -ltermcap

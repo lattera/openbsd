@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.230 2006/02/24 20:31:31 jmc Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd.8,v 1.230.2.1 2006/09/30 04:06:51 brad Exp $
 .Dd September 25, 1999
 .Dt SSHD 8
 .Os
@@ -455,6 +455,9 @@ to restrict certain public keys to perform just a specific operation.
 An example might be a key that permits remote backups but nothing else.
 Note that the client may specify TCP and/or X11
 forwarding unless they are explicitly prohibited.
+The command originally supplied by the client is available in the
+.Ev SSH_ORIGINAL_COMMAND
+environment variable.
 Note that this option applies to shell, command or subsystem execution.
 .It Cm environment="NAME=value"
 Specifies that the string is to be added to the environment when
@@ -562,6 +565,13 @@ A pattern may also be preceded by
 to indicate negation: if the host name matches a negated
 pattern, it is not accepted (by that line) even if it matched another
 pattern on the line.
+A hostname or address may optionally be enclosed within
+.Ql \&[
+and
+.Ql \&]
+brackets then followed by
+.Ql \&:
+and a non-standard port number.
 .Pp
 Alternately, hostnames may be stored in a hashed form which hides host names
 and addresses should the file's contents be disclosed.
@@ -645,8 +655,22 @@ rlogin/rsh.
 .It ~/.ssh/authorized_keys
 Lists the public keys (RSA/DSA) that can be used for logging in as this user.
 The format of this file is described above.
-This file is not highly sensitive, but the recommended
+The content of the file is not highly sensitive, but the recommended
 permissions are read/write for the user, and not accessible by others.
+.Pp
+If this file, the
+.Pa ~/.ssh
+directory, or the user's home directory are writable
+by other users, then the file could be modified or replaced by unauthorized
+users.
+In this case,
+.Nm
+will not allow it to be used unless the
+.Cm StrictModes
+option has been set to
+.Dq no .
+The recommended permissions can be set by executing
+.Dq chmod go-w ~/ ~/.ssh ~/.ssh/authorized_keys .
 .Pp
 .It ~/.ssh/environment
 This file is read into the environment at login (if it exists).

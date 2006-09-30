@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/compress.c,v 1.21.10.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -11,12 +12,13 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compress.c,v 1.21 2004/01/13 19:45:15 markus Exp $");
+#include <sys/types.h>
+
+#include <stdarg.h>
+#include <zlib.h>
 
 #include "log.h"
 #include "buffer.h"
-#include "zlib.h"
 #include "compress.h"
 
 z_stream incoming_stream;

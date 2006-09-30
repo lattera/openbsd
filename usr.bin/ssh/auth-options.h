@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.13 2005/12/06 22:38:27 reyk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/auth-options.h,v 1.13.2.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

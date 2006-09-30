@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.11.2.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  * Copyright (c) 2001 Damien Miller.  All rights reserved.
@@ -23,16 +24,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-common.c,v 1.11 2006/02/20 17:19:54 stevesk Exp $");
-
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 
-#include "buffer.h"
-#include "bufaux.h"
-#include "log.h"
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <stdarg.h>
+
 #include "xmalloc.h"
+#include "buffer.h"
+#include "log.h"
 
 #include "sftp.h"
 #include "sftp-common.h"

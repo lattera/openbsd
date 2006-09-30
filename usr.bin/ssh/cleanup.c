@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/cleanup.c,v 1.1.14.1 2006/09/30 04:06:50 brad Exp $ */
 /*
  * Copyright (c) 2003 Markus Friedl <markus@openbsd.org>
  *
@@ -13,8 +14,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cleanup.c,v 1.1 2003/09/23 20:17:11 markus Exp $");
+
+#include <sys/types.h>
+
+#include <unistd.h>
+#include <stdarg.h>
 
 #include "log.h"
 

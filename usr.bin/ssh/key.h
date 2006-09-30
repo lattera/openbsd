@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/key.h,v 1.23 2003/11/10 16:23:41 jakob Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/key.h,v 1.23.10.1 2006/09/30 04:06:50 brad Exp $ */
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.

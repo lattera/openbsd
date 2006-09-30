@@ -34,7 +34,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $OpenBSD: src/usr.bin/ssh/sshd_config.5,v 1.55 2006/02/26 18:01:13 jmc Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sshd_config.5,v 1.55.2.1 2006/09/30 04:06:51 brad Exp $
 .Dd September 25, 1999
 .Dt SSHD_CONFIG 5
 .Os
@@ -56,6 +56,9 @@ The file contains keyword-argument pairs, one per line.
 Lines starting with
 .Ql #
 and empty lines are interpreted as comments.
+Arguments may optionally be enclosed in double quotes
+.Pq \&"
+in order to represent arguments containing spaces.
 .Pp
 The possible
 keywords and their meanings are as follows (note that
@@ -220,6 +223,7 @@ If
 .Cm ClientAliveCountMax
 is left at the default, unresponsive SSH clients
 will be disconnected after approximately 45 seconds.
+This option applies to protocol version 2 only.
 .It Cm ClientAliveInterval
 Sets a timeout interval in seconds after which if no data has been received
 from the client,
@@ -279,6 +283,18 @@ See
 in
 .Xr ssh_config 5
 for more information on patterns.
+.It Cm ForceCommand
+Forces the execution of the command specified by
+.Cm ForceCommand ,
+ignoring any command supplied by the client.
+The command is invoked by using the user's login shell with the -c option.
+This applies to shell, command, or subsystem execution.
+It is most useful inside a
+.Cm Match
+block.
+The command originally supplied by the client is available in the
+.Ev SSH_ORIGINAL_COMMAND
+environment variable.
 .It Cm GatewayPorts
 Specifies whether remote hosts are allowed to connect to ports
 forwarded for the client.
@@ -317,6 +333,23 @@ with successful public key client host authentication is allowed
 This option is similar to
 .Cm RhostsRSAAuthentication
 and applies to protocol version 2 only.
+The default is
+.Dq no .
+.It Cm HostbasedUsesNameFromPacketOnly
+Specifies whether or not the server will attempt to perform a reverse
+name lookup when matching the name in the
+.Pa ~/.shosts ,
+.Pa ~/.rhosts ,
+and
+.Pa /etc/hosts.equiv
+files during
+.Cm HostbasedAuthentication .
+A setting of
+.Dq yes
+means that
+.Xr sshd 8
+uses the name supplied by the client rather than
+attempting to resolve the name from the TCP connection itself.
 The default is
 .Dq no .
 .It Cm HostKey
@@ -459,6 +492,35 @@ for data integrity protection.
 Multiple algorithms must be comma-separated.
 The default is:
 .Dq hmac-md5,hmac-sha1,hmac-ripemd160,hmac-sha1-96,hmac-md5-96 .
+.It Cm Match
+Introduces a conditional block.
+If all of the criteria on the
+.Cm Match
+line are satisfied, the keywords on the following lines override those
+set in the global section of the config file, until either another
+.Cm Match
+line or the end of the file.
+The arguments to
+.Cm Match
+are one or more criteria-pattern pairs.
+The available criteria are
+.Cm User ,
+.Cm Group ,
+.Cm Host ,
+and
+.Cm Address .
+Only a subset of keywords may be used on the lines following a
+.Cm Match
+keyword.
+Available keywords are
+.Cm AllowTcpForwarding ,
+.Cm ForceCommand ,
+.Cm GatewayPorts ,
+.Cm PermitOpen ,
+.Cm X11DisplayOffset ,
+.Cm X11Forwarding ,
+and
+.Cm X11UseLocalHost .
 .It Cm MaxAuthTries
 Specifies the maximum number of authentication attempts permitted per
 connection.
@@ -498,6 +560,33 @@ When password authentication is allowed, it specifies whether the
 server allows login to accounts with empty password strings.
 The default is
 .Dq no .
+.It Cm PermitOpen
+Specifies the destinations to which TCP port forwarding is permitted.
+The forwarding specification must be one of the following forms:
+.Pp
+.Bl -item -offset indent -compact
+.It
+.Cm PermitOpen
+.Sm off
+.Ar host : port
+.Sm on
+.It
+.Cm PermitOpen
+.Sm off
+.Ar IPv4_addr : port
+.Sm on
+.It
+.Cm PermitOpen
+.Sm off
+.Ar \&[ IPv6_addr \&] : port
+.Sm on
+.El
+.Pp
+Multiple forwards may be specified by separating them with whitespace.
+An argument of
+.Dq any
+can be used to remove all restrictions and permit any forwarding requests.
+By default all port forwarding requests are permitted.
 .It Cm PermitRootLogin
 Specifies whether root can log in using
 .Xr ssh 1 .
@@ -533,10 +622,17 @@ Specifies whether
 device forwarding is allowed.
 The argument must be
 .Dq yes ,
-.Dq point-to-point ,
-.Dq ethernet ,
-or
+.Dq point-to-point
+(layer 3),
+.Dq ethernet
+(layer 2), or
 .Dq no .
+Specifying
+.Dq yes
+permits both
+.Dq point-to-point
+and
+.Dq ethernet .
 The default is
 .Dq no .
 .It Cm PermitUserEnvironment
@@ -632,8 +728,8 @@ The default is
 .Dq yes .
 .It Cm Subsystem
 Configures an external subsystem (e.g. file transfer daemon).
-Arguments should be a subsystem name and a command to execute upon subsystem
-request.
+Arguments should be a subsystem name and a command (with optional arguments)
+to execute upon subsystem request.
 The command
 .Xr sftp-server 8
 implements the
@@ -792,7 +888,7 @@ is a positive integer value and
 is one of the following:
 .Pp
 .Bl -tag -width Ds -compact -offset indent
-.It Cm <none>
+.It Aq Cm none
 seconds
 .It Cm s | Cm S
 seconds

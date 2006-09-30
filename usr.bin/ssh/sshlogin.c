@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.13.8.1 2006/09/30 04:06:51 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -38,11 +39,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshlogin.c,v 1.13 2004/08/12 09:18:24 djm Exp $");
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/socket.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include <util.h>
 #include <utmp.h>
+#include <stdarg.h>
+
 #include "sshlogin.h"
 #include "log.h"
 #include "buffer.h"
@@ -56,9 +66,9 @@ extern ServerOptions options;
  * information is not available.  This must be called before record_login.
  * The host the user logged in from will be returned in buf.
  */
-u_long
+time_t
 get_last_login_time(uid_t uid, const char *logname,
-    char *buf, u_int bufsize)
+    char *buf, size_t bufsize)
 {
 	struct lastlog ll;
 	char *lastlog;
@@ -91,7 +101,7 @@ get_last_login_time(uid_t uid, const char *logname,
 		bufsize = sizeof(ll.ll_host) + 1;
 	strncpy(buf, ll.ll_host, bufsize - 1);
 	buf[bufsize - 1] = '\0';
-	return ll.ll_time;
+	return (time_t)ll.ll_time;
 }
 
 /*
@@ -130,7 +140,7 @@ store_lastlog_message(const char *user, uid_t uid)
  */
 void
 record_login(pid_t pid, const char *tty, const char *user, uid_t uid,
-    const char *host, struct sockaddr * addr, socklen_t addrlen)
+    const char *host, struct sockaddr *addr, socklen_t addrlen)
 {
 	int fd;
 	struct lastlog ll;
