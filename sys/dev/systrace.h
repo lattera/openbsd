@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/systrace.h,v 1.18 2004/11/07 20:39:31 marius Exp $	*/
+/*	$OpenBSD: src/sys/dev/systrace.h,v 1.18.4.1 2006/10/06 05:53:38 brad Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -53,6 +53,7 @@ struct str_msg_execve {
 #define SYSTR_MAXARGS		64
 #define SYSTR_MAXFNAME		8
 #define SYSTR_MAXINJECTS        8
+#define SYSTR_MAXREPLEN		2048
 
 struct str_msg_ask {
 	int code;
