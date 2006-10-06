@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/cipher-3des1.c,v 1.2.8.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2003 Markus Friedl.  All rights reserved.
  *
@@ -22,10 +23,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cipher-3des1.c,v 1.2 2003/12/22 20:29:55 markus Exp $");
+#include <sys/types.h>
 
 #include <openssl/evp.h>
+
+#include <string.h>
+
 #include "xmalloc.h"
 #include "log.h"
 

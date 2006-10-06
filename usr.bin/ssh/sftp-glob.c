@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.15.8.1 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -14,17 +15,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.15 2004/02/17 07:17:29 djm Exp $");
+#include <sys/types.h>
+#include <sys/stat.h>
 
+#include <dirent.h>
 #include <glob.h>
+#include <string.h>
 
-#include "buffer.h"
-#include "bufaux.h"
 #include "xmalloc.h"
-#include "log.h"
-
 #include "sftp.h"
+#include "buffer.h"
 #include "sftp-common.h"
 #include "sftp-client.h"
 

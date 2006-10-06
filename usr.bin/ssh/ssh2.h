@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.9 2003/05/14 00:52:59 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/ssh2.h,v 1.9.10.1 2006/10/06 03:19:33 brad Exp $ */
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.

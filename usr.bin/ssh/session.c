@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/session.c,v 1.186.2.2 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
@@ -32,13 +33,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.186.2.1 2006/02/03 03:01:57 brad Exp $");
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/un.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/param.h>
 
+#include <errno.h>
+#include <grp.h>
+#include <paths.h>
+#include <pwd.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh1.h"
 #include "ssh2.h"
-#include "xmalloc.h"
 #include "sshpty.h"
 #include "packet.h"
 #include "buffer.h"
@@ -46,7 +61,10 @@ RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.186.2.1 2006/02/03 03:01:57 brad 
 #include "uidswap.h"
 #include "compat.h"
 #include "channels.h"
-#include "bufaux.h"
+#include "key.h"
+#include "cipher.h"
+#include "kex.h"
+#include "hostfile.h"
 #include "auth.h"
 #include "auth-options.h"
 #include "pathnames.h"
@@ -56,15 +74,13 @@ RCSID("$OpenBSD: src/usr.bin/ssh/session.c,v 1.186.2.1 2006/02/03 03:01:57 brad 
 #include "serverloop.h"
 #include "canohost.h"
 #include "session.h"
-#include "kex.h"
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
 #include "monitor_wrap.h"
 
 #ifdef KRB5
 #include <kafs.h>
-#endif
-
-#ifdef GSSAPI
-#include "ssh-gss.h"
 #endif
 
 /* func */
@@ -172,7 +188,7 @@ auth_input_request_forwarding(struct passwd * pw)
 	sunaddr.sun_family = AF_UNIX;
 	strlcpy(sunaddr.sun_path, auth_sock_name, sizeof(sunaddr.sun_path));
 
-	if (bind(sock, (struct sockaddr *) & sunaddr, sizeof(sunaddr)) < 0)
+	if (bind(sock, (struct sockaddr *)&sunaddr, sizeof(sunaddr)) < 0)
 		packet_disconnect("bind: %.100s", strerror(errno));
 
 	/* Restore the privileged uid. */
@@ -319,7 +335,11 @@ do_authenticated1(Authctxt *authctxt)
 				break;
 			}
 			debug("Received TCP/IP port forwarding request.");
-			channel_input_port_forward_request(s->pw->pw_uid == 0, options.gateway_ports);
+			if (channel_input_port_forward_request(s->pw->pw_uid == 0,
+			    options.gateway_ports) < 0) {
+				debug("Port forwarding failed.");
+				break;
+			}
 			success = 1;
 			break;
 
@@ -371,20 +391,12 @@ do_exec_no_pty(Session *s, const char *command)
 {
 	pid_t pid;
 
-#ifdef USE_PIPES
-	int pin[2], pout[2], perr[2];
-	/* Allocate pipes for communicating with the program. */
-	if (pipe(pin) < 0 || pipe(pout) < 0 || pipe(perr) < 0)
-		packet_disconnect("Could not create pipes: %.100s",
-				  strerror(errno));
-#else /* USE_PIPES */
 	int inout[2], err[2];
 	/* Uses socket pairs to communicate with the program. */
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, inout) < 0 ||
 	    socketpair(AF_UNIX, SOCK_STREAM, 0, err) < 0)
 		packet_disconnect("Could not create socket pairs: %.100s",
 				  strerror(errno));
-#endif /* USE_PIPES */
 	if (s == NULL)
 		fatal("do_exec_no_pty: no session");
 
@@ -404,28 +416,6 @@ do_exec_no_pty(Session *s, const char *command)
 		if (setsid() < 0)
 			error("setsid failed: %.100s", strerror(errno));
 
-#ifdef USE_PIPES
-		/*
-		 * Redirect stdin.  We close the parent side of the socket
-		 * pair, and make the child side the standard input.
-		 */
-		close(pin[1]);
-		if (dup2(pin[0], 0) < 0)
-			perror("dup2 stdin");
-		close(pin[0]);
-
-		/* Redirect stdout. */
-		close(pout[0]);
-		if (dup2(pout[1], 1) < 0)
-			perror("dup2 stdout");
-		close(pout[1]);
-
-		/* Redirect stderr. */
-		close(perr[0]);
-		if (dup2(perr[1], 2) < 0)
-			perror("dup2 stderr");
-		close(perr[1]);
-#else /* USE_PIPES */
 		/*
 		 * Redirect stdin, stdout, and stderr.  Stdin and stdout will
 		 * use the same socket, as some programs (particularly rdist)
@@ -439,7 +429,6 @@ do_exec_no_pty(Session *s, const char *command)
 			perror("dup2 stdout");
 		if (dup2(err[0], 2) < 0)	/* stderr */
 			perror("dup2 stderr");
-#endif /* USE_PIPES */
 
 		/* Do processing for the child (exec command etc). */
 		do_child(s, command);
@@ -450,24 +439,7 @@ do_exec_no_pty(Session *s, const char *command)
 	s->pid = pid;
 	/* Set interactive/non-interactive mode. */
 	packet_set_interactive(s->display != NULL);
-#ifdef USE_PIPES
-	/* We are the parent.  Close the child sides of the pipes. */
-	close(pin[0]);
-	close(pout[1]);
-	close(perr[1]);
 
-	if (compat20) {
-		if (s->is_subsystem) {
-			close(perr[0]);
-			perr[0] = -1;
-		}
-		session_set_fds(s, pin[1], pout[0], perr[0]);
-	} else {
-		/* Enter the interactive session. */
-		server_loop(pid, pin[1], pout[0], perr[0]);
-		/* server_loop has closed pin[1], pout[0], and perr[0]. */
-	}
-#else /* USE_PIPES */
 	/* We are the parent.  Close the child sides of the socket pairs. */
 	close(inout[0]);
 	close(err[0]);
@@ -482,7 +454,6 @@ do_exec_no_pty(Session *s, const char *command)
 		server_loop(pid, inout[1], inout[1], err[1]);
 		/* server_loop has closed inout[1] and err[1]. */
 	}
-#endif /* USE_PIPES */
 }
 
 /*
@@ -572,10 +543,14 @@ do_exec_pty(Session *s, const char *command)
 void
 do_exec(Session *s, const char *command)
 {
-	if (forced_command) {
+	if (options.adm_forced_command) {
+		original_command = command;
+		command = options.adm_forced_command;
+		debug("Forced command (config) '%.900s'", command);
+	} else if (forced_command) {
 		original_command = command;
 		command = forced_command;
-		debug("Forced command '%.900s'", command);
+		debug("Forced command (key option) '%.900s'", command);
 	}
 
 #ifdef GSSAPI
@@ -619,7 +594,7 @@ do_login(Session *s, const char *command)
 	fromlen = sizeof(from);
 	if (packet_connection_is_on_socket()) {
 		if (getpeername(packet_get_connection_in(),
-		    (struct sockaddr *) & from, &fromlen) < 0) {
+		    (struct sockaddr *)&from, &fromlen) < 0) {
 			debug("getpeername: %.100s", strerror(errno));
 			cleanup_exit(255);
 		}
@@ -721,7 +696,7 @@ child_set_env(char ***envp, u_int *envsizep, const char *name,
 			if (envsize >= 1000)
 				fatal("child_set_env: too many env vars");
 			envsize += 50;
-			env = (*envp) = xrealloc(env, envsize * sizeof(char *));
+			env = (*envp) = xrealloc(env, envsize, sizeof(char *));
 			*envsizep = envsize;
 		}
 		/* Need to set the NULL pointer at end of array beyond the new slot. */
@@ -1195,7 +1170,7 @@ do_child(Session *s, const char *command)
 		do_rc_files(s, shell);
 
 	/* restore SIGPIPE for child */
-	signal(SIGPIPE,  SIG_DFL);
+	signal(SIGPIPE, SIG_DFL);
 
 	if (options.use_login) {
 		launch_login(pw, hostname);
@@ -1459,7 +1434,7 @@ session_subsystem_req(Session *s)
 	struct stat st;
 	u_int len;
 	int success = 0;
-	char *cmd, *subsys = packet_get_string(&len);
+	char *prog, *cmd, *subsys = packet_get_string(&len);
 	u_int i;
 
 	packet_check_eom();
@@ -1467,9 +1442,10 @@ session_subsystem_req(Session *s)
 
 	for (i = 0; i < options.num_subsystems; i++) {
 		if (strcmp(subsys, options.subsystem_name[i]) == 0) {
-			cmd = options.subsystem_command[i];
-			if (stat(cmd, &st) < 0) {
-				error("subsystem: cannot stat %s: %s", cmd,
+			prog = options.subsystem_command[i];
+			cmd = options.subsystem_args[i];
+			if (stat(prog, &st) < 0) {
+				error("subsystem: cannot stat %s: %s", prog,
 				    strerror(errno));
 				break;
 			}
@@ -1566,8 +1542,8 @@ session_env_req(Session *s)
 	for (i = 0; i < options.num_accept_env; i++) {
 		if (match_pattern(name, options.accept_env[i])) {
 			debug2("Setting env %d: %s=%s", s->num_env, name, val);
-			s->env = xrealloc(s->env, sizeof(*s->env) *
-			    (s->num_env + 1));
+			s->env = xrealloc(s->env, s->num_env + 1,
+			    sizeof(*s->env));
 			s->env[s->num_env].name = name;
 			s->env[s->num_env].val = val;
 			s->num_env++;
@@ -1808,11 +1784,10 @@ session_exit_message(Session *s, int status)
 
 	/* disconnect channel */
 	debug("session_exit_message: release channel %d", s->chanid);
-	s->pid = 0;
 
 	/*
 	 * Adjust cleanup callback attachment to send close messages when
-	 * the channel gets EOF. The session will be then be closed 
+	 * the channel gets EOF. The session will be then be closed
 	 * by session_close_by_channel when the childs close their fds.
 	 */
 	channel_register_cleanup(c->self, session_close_by_channel, 1);
@@ -1848,12 +1823,13 @@ session_close(Session *s)
 	if (s->auth_proto)
 		xfree(s->auth_proto);
 	s->used = 0;
-	for (i = 0; i < s->num_env; i++) {
-		xfree(s->env[i].name);
-		xfree(s->env[i].val);
-	}
-	if (s->env != NULL)
+	if (s->env != NULL) {
+		for (i = 0; i < s->num_env; i++) {
+			xfree(s->env[i].name);
+			xfree(s->env[i].val);
+		}
 		xfree(s->env);
+	}
 	session_proctitle(s);
 }
 
@@ -1870,6 +1846,7 @@ session_close_by_pid(pid_t pid, int status)
 		session_exit_message(s, status);
 	if (s->ttyfd != -1)
 		session_pty_cleanup(s);
+	s->pid = 0;
 }
 
 /*
@@ -2044,7 +2021,7 @@ do_cleanup(Authctxt *authctxt)
 		return;
 	called = 1;
 
-	if (authctxt == NULL)
+	if (authctxt == NULL || !authctxt->authenticated)
 		return;
 #ifdef KRB5
 	if (options.kerberos_ticket_cleanup &&

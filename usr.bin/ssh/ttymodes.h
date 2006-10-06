@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.13 2004/07/11 17:48:47 deraadt Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/ttymodes.h,v 1.13.6.1 2006/10/06 03:19:33 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

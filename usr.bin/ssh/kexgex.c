@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.23.12.2 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2000 Niels Provos.  All rights reserved.
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -23,13 +24,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.23.12.1 2006/02/03 03:01:56 brad Exp $");
+#include <sys/types.h>
 
 #include <openssl/evp.h>
+#include <signal.h>
 
 #include "buffer.h"
-#include "bufaux.h"
+#include "key.h"
+#include "cipher.h"
 #include "kex.h"
 #include "ssh2.h"
 

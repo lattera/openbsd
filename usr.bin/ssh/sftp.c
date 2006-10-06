@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sftp.c,v 1.66.2.2 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -14,20 +15,31 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "includes.h"
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/param.h>
 
-RCSID("$OpenBSD: src/usr.bin/ssh/sftp.c,v 1.66.2.1 2006/02/03 03:01:57 brad Exp $");
-
+#include <errno.h>
 #include <glob.h>
 #include <histedit.h>
+#include <paths.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdarg.h>
 
-#include "buffer.h"
 #include "xmalloc.h"
 #include "log.h"
 #include "pathnames.h"
 #include "misc.h"
 
 #include "sftp.h"
+#include "buffer.h"
 #include "sftp-common.h"
 #include "sftp-client.h"
 
@@ -230,7 +242,7 @@ local_do_shell(const char *args)
 		if (errno != EINTR)
 			fatal("Couldn't wait for child: %s", strerror(errno));
 	if (!WIFEXITED(status))
-		error("Shell exited abormally");
+		error("Shell exited abnormally");
 	else if (WEXITSTATUS(status))
 		error("Shell exited with status %d", WEXITSTATUS(status));
 }
@@ -533,6 +545,7 @@ process_get(struct sftp_conn *conn, char *src, char *dst, char *pwd, int pflag)
 
 		if (g.gl_matchc == 1 && dst) {
 			/* If directory specified, append filename */
+			xfree(tmp);
 			if (is_dir(dst)) {
 				if (infer_path(g.gl_pathv[0], &tmp)) {
 					err = 1;
@@ -557,8 +570,6 @@ process_get(struct sftp_conn *conn, char *src, char *dst, char *pwd, int pflag)
 
 out:
 	xfree(abs_src);
-	if (abs_dst)
-		xfree(abs_dst);
 	globfree(&g);
 	return(err);
 }
@@ -1271,6 +1282,7 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 			if (parse_dispatch_command(conn, cmd, &pwd, 1) != 0) {
 				xfree(dir);
 				xfree(pwd);
+				xfree(conn);
 				return (-1);
 			}
 		} else {
@@ -1283,6 +1295,7 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 			err = parse_dispatch_command(conn, cmd, &pwd, 1);
 			xfree(dir);
 			xfree(pwd);
+			xfree(conn);
 			return (err);
 		}
 		xfree(dir);
@@ -1339,6 +1352,7 @@ interactive_loop(int fd_in, int fd_out, char *file1, char *file2)
 			break;
 	}
 	xfree(pwd);
+	xfree(conn);
 
 	if (el != NULL)
 		el_end(el);
@@ -1352,23 +1366,12 @@ connect_to_server(char *path, char **args, int *in, int *out)
 {
 	int c_in, c_out;
 
-#ifdef USE_PIPES
-	int pin[2], pout[2];
-
-	if ((pipe(pin) == -1) || (pipe(pout) == -1))
-		fatal("pipe: %s", strerror(errno));
-	*in = pin[0];
-	*out = pout[1];
-	c_in = pout[0];
-	c_out = pin[1];
-#else /* USE_PIPES */
 	int inout[2];
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, inout) == -1)
 		fatal("socketpair: %s", strerror(errno));
 	*in = *out = inout[0];
 	c_in = c_out = inout[1];
-#endif /* USE_PIPES */
 
 	if ((sshpid = fork()) == -1)
 		fatal("fork: %s", strerror(errno));
@@ -1435,7 +1438,7 @@ main(int argc, char **argv)
 
 	memset(&args, '\0', sizeof(args));
 	args.list = NULL;
-	addargs(&args, ssh_program);
+	addargs(&args, "%s", ssh_program);
 	addargs(&args, "-oForwardX11 no");
 	addargs(&args, "-oForwardAgent no");
 	addargs(&args, "-oPermitLocalCommand no");

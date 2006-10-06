@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.17.8.1 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -22,13 +23,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/uuencode.c,v 1.17 2003/11/10 16:23:41 jakob Exp $");
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <resolv.h>
+#include <stdio.h>
 
 #include "xmalloc.h"
 #include "uuencode.h"
-
-#include <resolv.h>
 
 int
 uuencode(const u_char *src, u_int srclength,
@@ -60,9 +61,14 @@ uudecode(const char *src, u_char *target, size_t targsize)
 void
 dump_base64(FILE *fp, u_char *data, u_int len)
 {
-	char *buf = xmalloc(2*len);
+	char *buf;
 	int i, n;
 
+	if (len > 65536) {
+		fprintf(fp, "dump_base64: len > 65536\n");
+		return;
+	}
+	buf = xmalloc(2*len);
 	n = uuencode(data, len, buf, 2*len);
 	for (i = 0; i < n; i++) {
 		fprintf(fp, "%c", buf[i]);

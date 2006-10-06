@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.6.6.1 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -34,11 +35,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshtty.c,v 1.6 2004/05/08 00:01:37 deraadt Exp $");
+#include <sys/types.h>
+#include <stdio.h>
+#include <termios.h>
+#include <pwd.h>
 
 #include "sshpty.h"
-#include "log.h"
 
 static struct termios _saved_tio;
 static int _in_raw_mode = 0;

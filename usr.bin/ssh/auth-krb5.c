@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/auth-krb5.c,v 1.15.8.2 2006/10/06 03:19:32 brad Exp $ */
 /*
  *    Kerberos v5 authentication and ticket-passing routines.
  *
@@ -27,16 +28,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth-krb5.c,v 1.15.8.1 2006/02/03 03:01:55 brad Exp $");
+#include <sys/types.h>
+#include <pwd.h>
+#include <stdarg.h>
 
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh1.h"
 #include "packet.h"
-#include "xmalloc.h"
 #include "log.h"
+#include "buffer.h"
 #include "servconf.h"
 #include "uidswap.h"
+#include "key.h"
+#include "hostfile.h"
 #include "auth.h"
 
 #ifdef KRB5

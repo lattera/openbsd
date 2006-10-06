@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/bufbn.c,v 1.3 2006/08/03 03:34:41 deraadt Exp $*/
+/* $OpenBSD: src/usr.bin/ssh/bufbn.c,v 1.3.6.1 2006/10/06 03:19:32 brad Exp $*/
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland

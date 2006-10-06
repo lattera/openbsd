@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh_config,v 1.20.4.1 2006/02/03 03:01:58 brad Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh_config,v 1.20.4.2 2006/10/06 03:19:33 brad Exp $
 
 # This is the ssh client system-wide configuration file.  See
 # ssh_config(5) for more information.  This file provides defaults for
@@ -24,6 +24,8 @@
 #   RSAAuthentication yes
 #   PasswordAuthentication yes
 #   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
 #   BatchMode no
 #   CheckHostIP yes
 #   AddressFamily any

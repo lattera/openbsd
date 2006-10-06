@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/fatal.c,v 1.2.8.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2002 Markus Friedl.  All rights reserved.
  *
@@ -22,8 +23,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/fatal.c,v 1.2 2003/09/23 20:17:11 markus Exp $");
+#include <sys/types.h>
+
+#include <stdarg.h>
 
 #include "log.h"
 
@@ -33,6 +35,7 @@ void
 fatal(const char *fmt,...)
 {
 	va_list args;
+
 	va_start(args, fmt);
 	do_log(SYSLOG_LEVEL_FATAL, fmt, args);
 	va_end(args);

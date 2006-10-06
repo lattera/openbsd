@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.19.10.1 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -42,15 +43,18 @@
  * suitable code.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ttymodes.c,v 1.19 2003/04/08 20:21:29 itojun Exp $");
+#include <sys/types.h>
+
+#include <errno.h>
+#include <string.h>
+#include <termios.h>
+#include <stdarg.h>
 
 #include "packet.h"
 #include "log.h"
 #include "ssh1.h"
 #include "compat.h"
 #include "buffer.h"
-#include "bufaux.h"
 
 #define TTY_OP_END		0
 /*
@@ -358,7 +362,8 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 			n_bytes += 4;
 			baud = packet_get_int();
 			debug3("tty_parse_modes: ispeed %d", baud);
-			if (failure != -1 && cfsetispeed(&tio, baud_to_speed(baud)) == -1)
+			if (failure != -1 &&
+			    cfsetispeed(&tio, baud_to_speed(baud)) == -1)
 				error("cfsetispeed failed for %d", baud);
 			break;
 
@@ -368,7 +373,8 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 			n_bytes += 4;
 			baud = packet_get_int();
 			debug3("tty_parse_modes: ospeed %d", baud);
-			if (failure != -1 && cfsetospeed(&tio, baud_to_speed(baud)) == -1)
+			if (failure != -1 &&
+			    cfsetospeed(&tio, baud_to_speed(baud)) == -1)
 				error("cfsetospeed failed for %d", baud);
 			break;
 
@@ -416,11 +422,12 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 					/*
 					 * It is a truly undefined opcode (160 to 255).
 					 * We have no idea about its arguments.  So we
-					 * must stop parsing.  Note that some data may be
-					 * left in the packet; hopefully there is nothing
-					 * more coming after the mode data.
+					 * must stop parsing.  Note that some data
+					 * may be left in the packet; hopefully there
+					 * is nothing more coming after the mode data.
 					 */
-					logit("parse_tty_modes: unknown opcode %d", opcode);
+					logit("parse_tty_modes: unknown opcode %d",
+					    opcode);
 					goto set;
 				}
 			} else {
@@ -436,7 +443,8 @@ tty_parse_modes(int fd, int *n_bytes_ptr)
 					(void) packet_get_int();
 					break;
 				} else {
-					logit("parse_tty_modes: unknown opcode %d", opcode);
+					logit("parse_tty_modes: unknown opcode %d",
+					    opcode);
 					goto set;
 				}
 			}

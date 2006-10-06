@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/cipher-bf1.c,v 1.1.14.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2003 Markus Friedl.  All rights reserved.
  *
@@ -22,10 +23,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/cipher-bf1.c,v 1.1 2003/05/15 03:08:29 markus Exp $");
+#include <sys/types.h>
 
 #include <openssl/evp.h>
+
+#include <string.h>
+
 #include "xmalloc.h"
 #include "log.h"
 /*

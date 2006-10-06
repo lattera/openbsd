@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/ssh-dss.c,v 1.19.8.1 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -22,15 +23,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/ssh-dss.c,v 1.19 2003/11/10 16:23:41 jakob Exp $");
+#include <sys/types.h>
 
 #include <openssl/bn.h>
 #include <openssl/evp.h>
 
+#include <string.h>
+
 #include "xmalloc.h"
 #include "buffer.h"
-#include "bufaux.h"
 #include "compat.h"
 #include "log.h"
 #include "key.h"

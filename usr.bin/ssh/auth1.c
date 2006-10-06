@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/auth1.c,v 1.62.2.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
@@ -9,8 +10,12 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.62 2005/07/16 01:35:24 djm Exp $");
+#include <sys/types.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <pwd.h>
 
 #include "xmalloc.h"
 #include "rsa.h"
@@ -20,10 +25,15 @@ RCSID("$OpenBSD: src/usr.bin/ssh/auth1.c,v 1.62 2005/07/16 01:35:24 djm Exp $");
 #include "log.h"
 #include "servconf.h"
 #include "compat.h"
+#include "key.h"
+#include "hostfile.h"
 #include "auth.h"
 #include "channels.h"
 #include "session.h"
 #include "uidswap.h"
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
 #include "monitor_wrap.h"
 
 /* import */
@@ -73,7 +83,7 @@ static const struct AuthMethod1
 {
 	int i;
 
-	for(i = 0; auth1_methods[i].name != NULL; i++)
+	for (i = 0; auth1_methods[i].name != NULL; i++)
 		if (auth1_methods[i].type == type)
 			return (&(auth1_methods[i]));
 
@@ -92,6 +102,7 @@ get_authname(int type)
 	return (buf);
 }
 
+/*ARGSUSED*/
 static int
 auth1_process_password(Authctxt *authctxt, char *info, size_t infolen)
 {
@@ -116,6 +127,7 @@ auth1_process_password(Authctxt *authctxt, char *info, size_t infolen)
 	return (authenticated);
 }
 
+/*ARGSUSED*/
 static int
 auth1_process_rsa(Authctxt *authctxt, char *info, size_t infolen)
 {
@@ -133,6 +145,7 @@ auth1_process_rsa(Authctxt *authctxt, char *info, size_t infolen)
 	return (authenticated);
 }
 
+/*ARGSUSED*/
 static int
 auth1_process_rhosts_rsa(Authctxt *authctxt, char *info, size_t infolen)
 {
@@ -173,6 +186,7 @@ auth1_process_rhosts_rsa(Authctxt *authctxt, char *info, size_t infolen)
 	return (authenticated);
 }
 
+/*ARGSUSED*/
 static int
 auth1_process_tis_challenge(Authctxt *authctxt, char *info, size_t infolen)
 {
@@ -191,6 +205,7 @@ auth1_process_tis_challenge(Authctxt *authctxt, char *info, size_t infolen)
 	return (-1);
 }
 
+/*ARGSUSED*/
 static int
 auth1_process_tis_response(Authctxt *authctxt, char *info, size_t infolen)
 {

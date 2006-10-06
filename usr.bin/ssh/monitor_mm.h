@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/monitor_mm.h,v 1.2 2002/03/26 03:24:01 stevesk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/monitor_mm.h,v 1.2.20.1 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
@@ -27,7 +27,6 @@
 
 #ifndef _MM_H_
 #define _MM_H_
-#include <sys/tree.h>
 
 struct mm_share {
 	RB_ENTRY(mm_share) next;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.9 2002/01/11 13:39:36 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/dispatch.h,v 1.9.16.1 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
@@ -33,6 +33,6 @@ typedef void dispatch_fn(int, u_int32_t, void *);
 void	 dispatch_init(dispatch_fn *);
 void	 dispatch_set(int, dispatch_fn *);
 void	 dispatch_range(u_int, u_int, dispatch_fn *);
-void	 dispatch_run(int, int *, void *);
+void	 dispatch_run(int, volatile sig_atomic_t *, void *);
 void	 dispatch_protocol_error(int, u_int32_t, void *);
 void	 dispatch_protocol_ignore(int, u_int32_t, void *);

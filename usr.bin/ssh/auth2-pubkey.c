@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/auth2-pubkey.c,v 1.9.4.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -22,24 +23,32 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-pubkey.c,v 1.9 2004/12/11 01:48:56 dtucker Exp $");
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <pwd.h>
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh2.h"
-#include "xmalloc.h"
 #include "packet.h"
 #include "buffer.h"
 #include "log.h"
 #include "servconf.h"
 #include "compat.h"
-#include "bufaux.h"
-#include "auth.h"
 #include "key.h"
+#include "hostfile.h"
+#include "auth.h"
 #include "pathnames.h"
 #include "uidswap.h"
 #include "auth-options.h"
 #include "canohost.h"
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
 #include "monitor_wrap.h"
 #include "misc.h"
 

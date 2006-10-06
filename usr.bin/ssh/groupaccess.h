@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/groupaccess.h,v 1.4 2001/06/26 17:27:23 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/groupaccess.h,v 1.4.18.1 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright (c) 2001 Kevin Steves.  All rights reserved.
@@ -26,8 +26,6 @@
 
 #ifndef GROUPACCESS_H
 #define GROUPACCESS_H
-
-#include <grp.h>
 
 int	 ga_init(const char *, gid_t);
 int	 ga_match(char * const *, int);

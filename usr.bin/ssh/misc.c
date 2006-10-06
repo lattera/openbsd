@@ -1,6 +1,7 @@
+/* $OpenBSD: src/usr.bin/ssh/misc.c,v 1.34.2.2 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
- * Copyright (c) 2005 Damien Miller.  All rights reserved.
+ * Copyright (c) 2005,2006 Damien Miller.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +24,29 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/misc.c,v 1.34.2.1 2006/02/03 03:01:56 brad Exp $");
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/param.h>
 
 #include <net/if.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <paths.h>
+#include <pwd.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "xmalloc.h"
 #include "misc.h"
 #include "log.h"
-#include "xmalloc.h"
+#include "ssh.h"
 
 /* remove newline at end of string */
 char *
@@ -121,6 +137,7 @@ set_nodelay(int fd)
 
 /* Characters considered whitespace in strsep calls. */
 #define WHITESPACE " \t\r\n"
+#define QUOTE	"\""
 
 /* return next token in configuration line */
 char *
@@ -134,15 +151,27 @@ strdelim(char **s)
 
 	old = *s;
 
-	*s = strpbrk(*s, WHITESPACE "=");
+	*s = strpbrk(*s, WHITESPACE QUOTE "=");
 	if (*s == NULL)
 		return (old);
+
+	if (*s[0] == '\"') {
+		memmove(*s, *s + 1, strlen(*s)); /* move nul too */
+		/* Find matching quote */
+		if ((*s = strpbrk(*s, QUOTE)) == NULL) {
+			return (NULL);		/* no matching quote */
+		} else {
+			*s[0] = '\0';
+			return (old);
+		}
+	}
 
 	/* Allow only one '=' to be skipped */
 	if (*s[0] == '=')
 		wspace = 1;
 	*s[0] = '\0';
 
+	/* Skip any extra whitespace after first token */
 	*s += strspn(*s + 1, WHITESPACE) + 1;
 	if (*s[0] == '=' && !wspace)
 		*s += strspn(*s + 1, WHITESPACE) + 1;
@@ -153,9 +182,8 @@ strdelim(char **s)
 struct passwd *
 pwcopy(struct passwd *pw)
 {
-	struct passwd *copy = xmalloc(sizeof(*copy));
+	struct passwd *copy = xcalloc(1, sizeof(*copy));
 
-	memset(copy, 0, sizeof(*copy));
 	copy->pw_name = xstrdup(pw->pw_name);
 	copy->pw_passwd = xstrdup(pw->pw_passwd);
 	copy->pw_gecos = xstrdup(pw->pw_gecos);
@@ -272,6 +300,7 @@ convtime(const char *s)
 		switch (*endp++) {
 		case '\0':
 			endp--;
+			break;
 		case 's':
 		case 'S':
 			break;
@@ -301,6 +330,23 @@ convtime(const char *s)
 	}
 
 	return total;
+}
+
+/*
+ * Returns a standardized host+port identifier string.
+ * Caller must free returned string.
+ */
+char *
+put_host_port(const char *host, u_short port)
+{
+	char *hoststr;
+
+	if (port == 0 || port == SSH_DEFAULT_PORT)
+		return(xstrdup(host));
+	if (asprintf(&hoststr, "[%s]:%d", host, (int)port) < 0)
+		fatal("put_host_port: asprintf: %s", strerror(errno));
+	debug3("put_host_port: %s", hoststr);
+	return hoststr;
 }
 
 /*
@@ -400,7 +446,7 @@ addargs(arglist *args, char *fmt, ...)
 	} else if (args->num+2 >= nalloc)
 		nalloc *= 2;
 
-	args->list = xrealloc(args->list, nalloc * sizeof(char *));
+	args->list = xrealloc(args->list, nalloc, sizeof(char *));
 	args->nalloc = nalloc;
 	args->list[args->num++] = cp;
 	args->list[args->num] = NULL;
@@ -658,18 +704,100 @@ sanitise_stdfd(void)
 }
 
 char *
-tohex(const u_char *d, u_int l)
+tohex(const void *vp, size_t l)
 {
+	const u_char *p = (const u_char *)vp;
 	char b[3], *r;
-	u_int i, hl;
+	size_t i, hl;
+
+	if (l > 65536)
+		return xstrdup("tohex: length > 65536");
 
 	hl = l * 2 + 1;
-	r = xmalloc(hl);
-	*r = '\0';
+	r = xcalloc(1, hl);
 	for (i = 0; i < l; i++) {
-		snprintf(b, sizeof(b), "%02x", d[i]);
+		snprintf(b, sizeof(b), "%02x", p[i]);
 		strlcat(r, b, hl);
 	}
 	return (r);
 }
 
+u_int64_t
+get_u64(const void *vp)
+{
+	const u_char *p = (const u_char *)vp;
+	u_int64_t v;
+
+	v  = (u_int64_t)p[0] << 56;
+	v |= (u_int64_t)p[1] << 48;
+	v |= (u_int64_t)p[2] << 40;
+	v |= (u_int64_t)p[3] << 32;
+	v |= (u_int64_t)p[4] << 24;
+	v |= (u_int64_t)p[5] << 16;
+	v |= (u_int64_t)p[6] << 8;
+	v |= (u_int64_t)p[7];
+
+	return (v);
+}
+
+u_int32_t
+get_u32(const void *vp)
+{
+	const u_char *p = (const u_char *)vp;
+	u_int32_t v;
+
+	v  = (u_int32_t)p[0] << 24;
+	v |= (u_int32_t)p[1] << 16;
+	v |= (u_int32_t)p[2] << 8;
+	v |= (u_int32_t)p[3];
+
+	return (v);
+}
+
+u_int16_t
+get_u16(const void *vp)
+{
+	const u_char *p = (const u_char *)vp;
+	u_int16_t v;
+
+	v  = (u_int16_t)p[0] << 8;
+	v |= (u_int16_t)p[1];
+
+	return (v);
+}
+
+void
+put_u64(void *vp, u_int64_t v)
+{
+	u_char *p = (u_char *)vp;
+
+	p[0] = (u_char)(v >> 56) & 0xff;
+	p[1] = (u_char)(v >> 48) & 0xff;
+	p[2] = (u_char)(v >> 40) & 0xff;
+	p[3] = (u_char)(v >> 32) & 0xff;
+	p[4] = (u_char)(v >> 24) & 0xff;
+	p[5] = (u_char)(v >> 16) & 0xff;
+	p[6] = (u_char)(v >> 8) & 0xff;
+	p[7] = (u_char)v & 0xff;
+}
+
+void
+put_u32(void *vp, u_int32_t v)
+{
+	u_char *p = (u_char *)vp;
+
+	p[0] = (u_char)(v >> 24) & 0xff;
+	p[1] = (u_char)(v >> 16) & 0xff;
+	p[2] = (u_char)(v >> 8) & 0xff;
+	p[3] = (u_char)v & 0xff;
+}
+
+
+void
+put_u16(void *vp, u_int16_t v)
+{
+	u_char *p = (u_char *)vp;
+
+	p[0] = (u_char)(v >> 8) & 0xff;
+	p[1] = (u_char)v & 0xff;
+}

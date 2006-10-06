@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/kex.h,v 1.37.2.1 2006/02/03 03:01:56 brad Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/kex.h,v 1.37.2.2 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
@@ -27,13 +27,11 @@
 #define KEX_H
 
 #include <openssl/evp.h>
-#include "buffer.h"
-#include "cipher.h"
-#include "key.h"
 
 #define	KEX_DH1			"diffie-hellman-group1-sha1"
 #define	KEX_DH14		"diffie-hellman-group14-sha1"
 #define	KEX_DHGEX_SHA1		"diffie-hellman-group-exchange-sha1"
+#define	KEX_DHGEX_SHA256	"diffie-hellman-group-exchange-sha256"
 
 #define COMP_NONE	0
 #define COMP_ZLIB	1
@@ -63,6 +61,7 @@ enum kex_exchange {
 	KEX_DH_GRP1_SHA1,
 	KEX_DH_GRP14_SHA1,
 	KEX_DH_GEX_SHA1,
+	KEX_DH_GEX_SHA256,
 	KEX_MAX
 };
 
@@ -112,7 +111,7 @@ struct Kex {
 	int	kex_type;
 	Buffer	my;
 	Buffer	peer;
-	int	done;
+	sig_atomic_t done;
 	int	flags;
 	const EVP_MD *evp_md;
 	char	*client_version_string;
@@ -142,7 +141,7 @@ kex_dh_hash(char *, char *, char *, int, char *, int, u_char *, int,
     BIGNUM *, BIGNUM *, BIGNUM *, u_char **, u_int *);
 void
 kexgex_hash(const EVP_MD *, char *, char *, char *, int, char *,
-    int, u_char *, int, int, int, int, BIGNUM *, BIGNUM *, BIGNUM *, 
+    int, u_char *, int, int, int, int, BIGNUM *, BIGNUM *, BIGNUM *,
     BIGNUM *, BIGNUM *, u_char **, u_int *);
 
 void

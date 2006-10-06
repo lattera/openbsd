@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.6.2.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2003 Markus Friedl <markus@openbsd.org>
  *
@@ -13,14 +14,16 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/Attic/cipher-ctr.c,v 1.6 2005/07/17 07:17:55 djm Exp $");
+
+#include <sys/types.h>
+
+#include <string.h>
 
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 
-#include "log.h"
 #include "xmalloc.h"
+#include "log.h"
 
 const EVP_CIPHER *evp_aes_128_ctr(void);
 void ssh_aes_ctr_iv(EVP_CIPHER_CTX *, int, u_char *, u_int);

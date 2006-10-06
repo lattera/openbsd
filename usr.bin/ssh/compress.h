@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/compress.h,v 1.11 2002/03/04 17:27:39 stevesk Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/compress.h,v 1.11.16.1 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>

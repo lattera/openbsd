@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/readconf.h,v 1.67.2.1 2006/02/03 03:01:56 brad Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/readconf.h,v 1.67.2.2 2006/10/06 03:19:33 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -16,8 +16,6 @@
 #ifndef READCONF_H
 #define READCONF_H
 
-#include "key.h"
-
 /* Data structure for representing a forwarding request. */
 
 typedef struct {
@@ -34,6 +32,7 @@ typedef struct {
 	int     forward_agent;	/* Forward authentication agent. */
 	int     forward_x11;	/* Forward X11 display. */
 	int     forward_x11_trusted;	/* Trust Forward X11 display. */
+	int     exit_on_forward_failure;	/* Exit if bind(2) fails for -L/-R */
 	char   *xauth_location;	/* Location for xauth program */
 	int     gateway_ports;	/* Allow remote connects to forwarded ports. */
 	int     use_privileged_port;	/* Don't use privileged port if false. */

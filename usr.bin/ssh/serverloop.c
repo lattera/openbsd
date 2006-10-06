@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.118.2.2 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -34,8 +35,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.118.2.1 2006/02/03 03:01:57 brad Exp $");
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/param.h>
+
+#include <netinet/in.h>
+
+#include <errno.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <signal.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <stdarg.h>
 
 #include "xmalloc.h"
 #include "packet.h"
@@ -48,13 +63,16 @@ RCSID("$OpenBSD: src/usr.bin/ssh/serverloop.c,v 1.118.2.1 2006/02/03 03:01:57 br
 #include "compat.h"
 #include "ssh1.h"
 #include "ssh2.h"
+#include "key.h"
+#include "cipher.h"
+#include "kex.h"
+#include "hostfile.h"
 #include "auth.h"
 #include "session.h"
 #include "dispatch.h"
 #include "auth-options.h"
 #include "serverloop.h"
 #include "misc.h"
-#include "kex.h"
 
 extern ServerOptions options;
 
@@ -142,17 +160,18 @@ notify_done(fd_set *readset)
 			debug2("notify_done: reading");
 }
 
+/*ARGSUSED*/
 static void
 sigchld_handler(int sig)
 {
 	int save_errno = errno;
-	debug("Received SIGCHLD.");
 	child_terminated = 1;
 	signal(SIGCHLD, sigchld_handler);
 	notify_parent();
 	errno = save_errno;
 }
 
+/*ARGSUSED*/
 static void
 sigterm_handler(int sig)
 {
@@ -346,7 +365,7 @@ wait_until_can_do_something(fd_set **readsetp, fd_set **writesetp, int *maxfdp,
  * in buffers and processed later.
  */
 static void
-process_input(fd_set * readset)
+process_input(fd_set *readset)
 {
 	int len;
 	char buf[16384];
@@ -405,7 +424,7 @@ process_input(fd_set * readset)
  * Sends data from internal buffers to client program stdin.
  */
 static void
-process_output(fd_set * writeset)
+process_output(fd_set *writeset)
 {
 	struct termios tio;
 	u_char *data;
@@ -747,6 +766,7 @@ collect_children(void)
 	sigaddset(&nset, SIGCHLD);
 	sigprocmask(SIG_BLOCK, &nset, &oset);
 	if (child_terminated) {
+		debug("Received SIGCHLD.");
 		while ((pid = waitpid(-1, &status, WNOHANG)) > 0 ||
 		    (pid < 0 && errno == EINTR))
 			if (pid > 0)
@@ -871,10 +891,10 @@ server_input_eof(int type, u_int32_t seq, void *ctxt)
 static void
 server_input_window_size(int type, u_int32_t seq, void *ctxt)
 {
-	int row = packet_get_int();
-	int col = packet_get_int();
-	int xpixel = packet_get_int();
-	int ypixel = packet_get_int();
+	u_int row = packet_get_int();
+	u_int col = packet_get_int();
+	u_int xpixel = packet_get_int();
+	u_int ypixel = packet_get_int();
 
 	debug("Window change received.");
 	packet_check_eom();
@@ -935,7 +955,7 @@ server_request_tun(void)
 
 	tun = packet_get_int();
 	if (forced_tun_device != -1) {
-	 	if (tun != SSH_TUNID_ANY && forced_tun_device != tun)
+		if (tun != SSH_TUNID_ANY && forced_tun_device != tun)
 			goto done;
 		tun = forced_tun_device;
 	}
@@ -1075,6 +1095,7 @@ server_input_global_request(int type, u_int32_t seq, void *ctxt)
 
 		success = channel_cancel_rport_listener(cancel_address,
 		    cancel_port);
+		xfree(cancel_address);
 	}
 	if (want_reply) {
 		packet_start(success ?
@@ -1084,6 +1105,7 @@ server_input_global_request(int type, u_int32_t seq, void *ctxt)
 	}
 	xfree(rtype);
 }
+
 static void
 server_input_channel_req(int type, u_int32_t seq, void *ctxt)
 {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dns.c,v 1.12.2.1 2006/02/03 03:01:56 brad Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/dns.c,v 1.12.2.2 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright (c) 2003 Wesley Griffin. All rights reserved.
@@ -25,10 +25,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/dns.c,v 1.12.2.1 2006/02/03 03:01:56 brad Exp $");
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <netdb.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "xmalloc.h"
 #include "key.h"
@@ -122,7 +124,7 @@ dns_read_rdata(u_int8_t *algorithm, u_int8_t *digest_type,
 			*digest = (u_char *) xmalloc(*digest_len);
 			memcpy(*digest, rdata + 2, *digest_len);
 		} else {
-			*digest = xstrdup("");
+			*digest = (u_char *)xstrdup("");
 		}
 
 		success = 1;

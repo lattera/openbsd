@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/compat.c,v 1.71.4.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 1999, 2000, 2001, 2002 Markus Friedl.  All rights reserved.
  *
@@ -22,12 +23,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/compat.c,v 1.71 2005/03/01 10:09:52 djm Exp $");
+#include <sys/types.h>
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+
+#include "xmalloc.h"
 #include "buffer.h"
 #include "packet.h"
-#include "xmalloc.h"
 #include "compat.h"
 #include "log.h"
 #include "match.h"

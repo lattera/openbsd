@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/match.c,v 1.20.2.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -34,11 +35,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/match.c,v 1.20 2005/06/17 02:44:32 djm Exp $");
+#include <sys/types.h>
 
-#include "match.h"
+#include <ctype.h>
+#include <string.h>
+
 #include "xmalloc.h"
+#include "match.h"
 
 /*
  * Returns true if the given string matches the pattern (which may contain ?
@@ -136,7 +139,7 @@ match_pattern_list(const char *string, const char *pattern, u_int len,
 		    i < len && subi < sizeof(sub) - 1 && pattern[i] != ',';
 		    subi++, i++)
 			sub[subi] = dolower && isupper(pattern[i]) ?
-			    tolower(pattern[i]) : pattern[i];
+			    (char)tolower(pattern[i]) : pattern[i];
 		/* If subpattern too long, return failure (no match). */
 		if (subi >= sizeof(sub) - 1)
 			return 0;

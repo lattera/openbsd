@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/Attic/md-sha256.c,v 1.5 2006/08/03 03:34:42 deraadt Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/Attic/md-sha256.c,v 1.5.6.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2005 Damien Miller <djm@openbsd.org>
  *

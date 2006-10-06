@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/packet.h,v 1.43 2005/07/25 11:59:40 markus Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/packet.h,v 1.43.2.1 2006/10/06 03:19:33 brad Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -15,6 +15,8 @@
 
 #ifndef PACKET_H
 #define PACKET_H
+
+#include <termios.h>
 
 #include <openssl/bn.h>
 

@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.141.2.2 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -58,21 +59,36 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.141.2.1 2006/02/03 03:01:56 brad Exp $");
 
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/param.h>
+
+#include <ctype.h>
+#include <errno.h>
+#include <paths.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+#include <pwd.h>
+#include <unistd.h>
+
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh1.h"
 #include "ssh2.h"
-#include "xmalloc.h"
 #include "packet.h"
 #include "buffer.h"
 #include "compat.h"
 #include "channels.h"
 #include "dispatch.h"
-#include "buffer.h"
-#include "bufaux.h"
 #include "key.h"
+#include "cipher.h"
 #include "kex.h"
 #include "log.h"
 #include "readconf.h"
@@ -118,7 +134,7 @@ static volatile sig_atomic_t received_signal = 0;
 static int in_non_blocking_mode = 0;
 
 /* Common data for the client loop code. */
-static int quit_pending;	/* Set to non-zero to quit the client loop. */
+static volatile sig_atomic_t quit_pending; /* Set non-zero to quit the loop. */
 static int escape_char;		/* Escape character. */
 static int escape_pending;	/* Last character was the escape character */
 static int last_was_cr;		/* Last character was a newline. */
@@ -178,7 +194,7 @@ enter_non_blocking(void)
  * Signal handler for the window change signal (SIGWINCH).  This just sets a
  * flag indicating that the window has changed.
  */
-
+/*ARGSUSED */
 static void
 window_change_handler(int sig)
 {
@@ -190,7 +206,7 @@ window_change_handler(int sig)
  * Signal handler for signals that cause the program to terminate.  These
  * signals must be trapped to restore terminal modes.
  */
-
+/*ARGSUSED */
 static void
 signal_handler(int sig)
 {
@@ -422,10 +438,10 @@ client_check_window_change(void)
 		if (ioctl(fileno(stdin), TIOCGWINSZ, &ws) < 0)
 			return;
 		packet_start(SSH_CMSG_WINDOW_SIZE);
-		packet_put_int(ws.ws_row);
-		packet_put_int(ws.ws_col);
-		packet_put_int(ws.ws_xpixel);
-		packet_put_int(ws.ws_ypixel);
+		packet_put_int((u_int)ws.ws_row);
+		packet_put_int((u_int)ws.ws_col);
+		packet_put_int((u_int)ws.ws_xpixel);
+		packet_put_int((u_int)ws.ws_ypixel);
 		packet_send();
 	}
 }
@@ -569,7 +585,7 @@ client_suspend_self(Buffer *bin, Buffer *bout, Buffer *berr)
 }
 
 static void
-client_process_net_input(fd_set * readset)
+client_process_net_input(fd_set *readset)
 {
 	int len;
 	char buf[8192];
@@ -677,7 +693,7 @@ client_extra_session2_setup(int id, void *arg)
 }
 
 static void
-client_process_control(fd_set * readset)
+client_process_control(fd_set *readset)
 {
 	Buffer m;
 	Channel *c;
@@ -808,8 +824,7 @@ client_process_control(fd_set * readset)
 		return;
 	}
 
-	cctx = xmalloc(sizeof(*cctx));
-	memset(cctx, 0, sizeof(*cctx));
+	cctx = xcalloc(1, sizeof(*cctx));
 	cctx->want_tty = (flags & SSHMUX_FLAG_TTY) != 0;
 	cctx->want_subsys = (flags & SSHMUX_FLAG_SUBSYS) != 0;
 	cctx->want_x_fwd = (flags & SSHMUX_FLAG_X11_FWD) != 0;
@@ -824,7 +839,7 @@ client_process_control(fd_set * readset)
 	env_len = MIN(env_len, 4096);
 	debug3("%s: receiving %d env vars", __func__, env_len);
 	if (env_len != 0) {
-		cctx->env = xmalloc(sizeof(*cctx->env) * (env_len + 1));
+		cctx->env = xcalloc(env_len + 1, sizeof(*cctx->env));
 		for (i = 0; i < env_len; i++)
 			cctx->env[i] = buffer_get_string(&m, &len);
 		cctx->env[i] = NULL;
@@ -832,6 +847,7 @@ client_process_control(fd_set * readset)
 
 	debug2("%s: accepted tty %d, subsys %d, cmd %s", __func__,
 	    cctx->want_tty, cctx->want_subsys, cmd);
+	xfree(cmd);
 
 	/* Gather fds from client */
 	new_fd[0] = mm_receive_fd(client_fd);
@@ -912,12 +928,16 @@ process_cmdline(void)
 
 	if (*s == 'h' || *s == 'H' || *s == '?') {
 		logit("Commands:");
-		logit("      -Lport:host:hostport    Request local forward");
-		logit("      -Rport:host:hostport    Request remote forward");
-		logit("      -KRhostport             Cancel remote forward");
+		logit("      -L[bind_address:]port:host:hostport    "
+		    "Request local forward");
+		logit("      -R[bind_address:]port:host:hostport    "
+		    "Request remote forward");
+		logit("      -KR[bind_address:]port                 "
+		    "Cancel remote forward");
 		if (!options.permit_local_command)
 			goto out;
-		logit("      !args                   Execute local command");
+		logit("      !args                                  "
+		    "Execute local command");
 		goto out;
 	}
 
@@ -978,9 +998,12 @@ process_cmdline(void)
 				goto out;
 			}
 		} else {
-			channel_request_remote_forwarding(fwd.listen_host,
+			if (channel_request_remote_forwarding(fwd.listen_host,
 			    fwd.listen_port, fwd.connect_host,
-			    fwd.connect_port);
+			    fwd.connect_port) < 0) {
+				logit("Port forwarding failed.");
+				goto out;
+			}
 		}
 
 		logit("Forwarding port.");
@@ -1172,7 +1195,7 @@ Supported escape sequences:\r\n\
 }
 
 static void
-client_process_input(fd_set * readset)
+client_process_input(fd_set *readset)
 {
 	int len;
 	char buf[8192];
@@ -1225,7 +1248,7 @@ client_process_input(fd_set * readset)
 }
 
 static void
-client_process_output(fd_set * writeset)
+client_process_output(fd_set *writeset)
 {
 	int len;
 	char buf[100];
@@ -1869,10 +1892,10 @@ client_session2_setup(int id, int want_tty, int want_subsystem,
 
 		channel_request_start(id, "pty-req", 0);
 		packet_put_cstring(term != NULL ? term : "");
-		packet_put_int(ws.ws_col);
-		packet_put_int(ws.ws_row);
-		packet_put_int(ws.ws_xpixel);
-		packet_put_int(ws.ws_ypixel);
+		packet_put_int((u_int)ws.ws_col);
+		packet_put_int((u_int)ws.ws_row);
+		packet_put_int((u_int)ws.ws_xpixel);
+		packet_put_int((u_int)ws.ws_ypixel);
 		tio = get_saved_tio();
 		tty_make_modes(-1, tiop != NULL ? tiop : &tio);
 		packet_send();

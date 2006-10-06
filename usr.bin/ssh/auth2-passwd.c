@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/auth2-passwd.c,v 1.5.8.1 2006/10/06 03:19:32 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -22,13 +23,21 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/auth2-passwd.c,v 1.5 2003/12/31 00:24:50 dtucker Exp $");
+#include <sys/types.h>
+
+#include <string.h>
+#include <stdarg.h>
 
 #include "xmalloc.h"
 #include "packet.h"
 #include "log.h"
+#include "key.h"
+#include "hostfile.h"
 #include "auth.h"
+#include "buffer.h"
+#ifdef GSSAPI
+#include "ssh-gss.h"
+#endif
 #include "monitor_wrap.h"
 #include "servconf.h"
 

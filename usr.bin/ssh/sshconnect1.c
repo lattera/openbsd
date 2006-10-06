@@ -1,3 +1,4 @@
+/* $OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.61.2.2 2006/10/06 03:19:33 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -12,29 +13,36 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-#include "includes.h"
-RCSID("$OpenBSD: src/usr.bin/ssh/sshconnect1.c,v 1.61.2.1 2006/02/03 03:01:58 brad Exp $");
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <openssl/bn.h>
 #include <openssl/md5.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <pwd.h>
+
+#include "xmalloc.h"
 #include "ssh.h"
 #include "ssh1.h"
-#include "xmalloc.h"
 #include "rsa.h"
 #include "buffer.h"
 #include "packet.h"
+#include "key.h"
+#include "cipher.h"
 #include "kex.h"
 #include "uidswap.h"
 #include "log.h"
 #include "readconf.h"
-#include "key.h"
 #include "authfd.h"
 #include "sshconnect.h"
 #include "authfile.h"
 #include "misc.h"
-#include "cipher.h"
 #include "canohost.h"
+#include "hostfile.h"
 #include "auth.h"
 
 /* Session id for the current session. */
@@ -197,7 +205,7 @@ try_rsa_authentication(int idx)
 	BIGNUM *challenge;
 	Key *public, *private;
 	char buf[300], *passphrase, *comment, *authfile;
-	int i, type, quit;
+	int i, perm_ok = 1, type, quit;
 
 	public = options.identity_keys[idx];
 	authfile = options.identity_files[idx];
@@ -243,15 +251,16 @@ try_rsa_authentication(int idx)
 	if (public->flags & KEY_FLAG_EXT)
 		private = public;
 	else
-		private = key_load_private_type(KEY_RSA1, authfile, "", NULL);
-	if (private == NULL && !options.batch_mode) {
+		private = key_load_private_type(KEY_RSA1, authfile, "", NULL,
+		    &perm_ok);
+	if (private == NULL && !options.batch_mode && perm_ok) {
 		snprintf(buf, sizeof(buf),
 		    "Enter passphrase for RSA key '%.100s': ", comment);
 		for (i = 0; i < options.number_of_password_prompts; i++) {
 			passphrase = read_passphrase(buf, 0);
 			if (strcmp(passphrase, "") != 0) {
 				private = key_load_private_type(KEY_RSA1,
-				    authfile, passphrase, NULL);
+				    authfile, passphrase, NULL, NULL);
 				quit = 0;
 			} else {
 				debug2("no passphrase given, try next key");
@@ -268,7 +277,7 @@ try_rsa_authentication(int idx)
 	xfree(comment);
 
 	if (private == NULL) {
-		if (!options.batch_mode)
+		if (!options.batch_mode && perm_ok)
 			error("Bad passphrase.");
 
 		/* Send a dummy response packet to avoid protocol error. */

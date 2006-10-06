@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ssh/dns.h,v 1.5.8.1 2006/02/03 03:01:56 brad Exp $	*/
+/* $OpenBSD: src/usr.bin/ssh/dns.h,v 1.5.8.2 2006/10/06 03:19:32 brad Exp $ */
 
 /*
  * Copyright (c) 2003 Wesley Griffin. All rights reserved.
@@ -24,8 +24,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "includes.h"
 
 #ifndef DNS_H
 #define DNS_H
