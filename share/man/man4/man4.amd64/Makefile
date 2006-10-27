@@ -1,6 +1,6 @@
-#	$OpenBSD: src/share/man/man4/man4.amd64/Makefile,v 1.1 2004/02/07 21:14:42 miod Exp $
+#	$OpenBSD: src/share/man/man4/man4.amd64/Makefile,v 1.2 2006/10/27 17:10:48 jmc Exp $
 
-MAN=	autoconf.4 intro.4 mem.4
+MAN=	autoconf.4 intro.4 ioapic.4 mem.4
 
 MLINKS+= mem.4 kmem.4
 MANSUBDIR=amd64
