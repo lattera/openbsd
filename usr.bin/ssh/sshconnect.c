@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.168.2.2 2006/10/06 03:19:33 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sshconnect.c,v 1.168.2.3 2006/11/08 00:44:05 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -311,9 +311,11 @@ ssh_connect(const char *host, struct sockaddr_storage * hostaddr,
 		    gai_strerror(gaierr));
 
 	for (attempt = 0; attempt < connection_attempts; attempt++) {
-		if (attempt > 0)
+		if (attempt > 0) {
+			/* Sleep a moment before retrying. */
+			sleep(1);
 			debug("Trying again...");
-
+		}
 		/*
 		 * Loop through addresses for this host, and try each one in
 		 * sequence until the connection succeeds.
@@ -350,9 +352,6 @@ ssh_connect(const char *host, struct sockaddr_storage * hostaddr,
 		}
 		if (sock != -1)
 			break;	/* Successful connection. */
-
-		/* Sleep a moment before retrying. */
-		sleep(1);
 	}
 
 	freeaddrinfo(aitop);

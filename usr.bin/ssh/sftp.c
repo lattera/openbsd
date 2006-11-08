@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp.c,v 1.66.2.2 2006/10/06 03:19:33 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp.c,v 1.66.2.3 2006/11/08 00:44:05 brad Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -481,7 +481,7 @@ is_dir(char *path)
 	if (stat(path, &sb) == -1)
 		return(0);
 
-	return(sb.st_mode & S_IFDIR);
+	return(S_ISDIR(sb.st_mode));
 }
 
 static int
@@ -505,7 +505,7 @@ remote_is_dir(struct sftp_conn *conn, char *path)
 		return(0);
 	if (!(a->flags & SSH2_FILEXFER_ATTR_PERMISSIONS))
 		return(0);
-	return(a->perm & S_IFDIR);
+	return(S_ISDIR(a->perm));
 }
 
 static int
@@ -965,6 +965,7 @@ parse_args(const char **cpp, int *pflag, int *lflag, int *iflag,
 	case I_CHOWN:
 	case I_CHGRP:
 		/* Get numeric arg (mandatory) */
+		errno = 0;
 		l = strtol(cp, &cp2, base);
 		if (cp2 == cp || ((l == LONG_MIN || l == LONG_MAX) &&
 		    errno == ERANGE) || l < 0) {

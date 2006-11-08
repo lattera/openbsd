@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/ssh-dss.c,v 1.19.8.1 2006/10/06 03:19:33 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ssh-dss.c,v 1.19.8.2 2006/11/08 00:44:05 brad Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  *
@@ -158,8 +158,9 @@ ssh_dss_verify(const Key *key, const u_char *signature, u_int signaturelen,
 		fatal("ssh_dss_verify: BN_new failed");
 	if ((sig->s = BN_new()) == NULL)
 		fatal("ssh_dss_verify: BN_new failed");
-	BN_bin2bn(sigblob, INTBLOB_LEN, sig->r);
-	BN_bin2bn(sigblob+ INTBLOB_LEN, INTBLOB_LEN, sig->s);
+	if ((BN_bin2bn(sigblob, INTBLOB_LEN, sig->r) == NULL) ||
+	    (BN_bin2bn(sigblob+ INTBLOB_LEN, INTBLOB_LEN, sig->s) == NULL))
+		fatal("ssh_dss_verify: BN_bin2bn failed");
 
 	/* clean up */
 	memset(sigblob, 0, len);

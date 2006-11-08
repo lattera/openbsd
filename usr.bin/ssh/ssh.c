@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/ssh.c,v 1.249.2.2 2006/10/06 03:19:33 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ssh.c,v 1.249.2.3 2006/11/08 00:44:05 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
