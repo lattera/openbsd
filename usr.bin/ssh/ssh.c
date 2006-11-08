@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/ssh.c,v 1.293 2006/08/03 03:34:42 deraadt Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ssh.c,v 1.293.4.1 2006/11/08 00:42:11 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -41,6 +41,7 @@
  */
 
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>

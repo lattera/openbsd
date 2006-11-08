@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/kexgexs.c,v 1.8 2006/08/03 03:34:42 deraadt Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/kexgexs.c,v 1.8.4.1 2006/11/08 00:42:10 brad Exp $ */
 /*
  * Copyright (c) 2000 Niels Provos.  All rights reserved.
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -52,8 +52,8 @@ kexgex_server(Kex *kex)
 	Key *server_host_key;
 	DH *dh;
 	u_char *kbuf, *hash, *signature = NULL, *server_host_key_blob = NULL;
-	u_int sbloblen, klen, kout, slen, hashlen;
-	int min = -1, max = -1, nbits = -1, type;
+	u_int sbloblen, klen, slen, hashlen;
+	int min = -1, max = -1, nbits = -1, type, kout;
 
 	if (kex->load_host_key == NULL)
 		fatal("Cannot load hostkey");
@@ -131,13 +131,15 @@ kexgex_server(Kex *kex)
 
 	klen = DH_size(dh);
 	kbuf = xmalloc(klen);
-	kout = DH_compute_key(kbuf, dh_client_pub, dh);
+	if ((kout = DH_compute_key(kbuf, dh_client_pub, dh)) < 0)
+		fatal("DH_compute_key: failed");
 #ifdef DEBUG_KEXDH
 	dump_digest("shared secret", kbuf, kout);
 #endif
 	if ((shared_secret = BN_new()) == NULL)
 		fatal("kexgex_server: BN_new failed");
-	BN_bin2bn(kbuf, kout, shared_secret);
+	if (BN_bin2bn(kbuf, kout, shared_secret) == NULL)
+		fatal("kexgex_server: BN_bin2bn failed");
 	memset(kbuf, 0, klen);
 	xfree(kbuf);
 

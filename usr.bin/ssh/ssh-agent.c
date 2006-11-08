@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.152 2006/08/04 20:46:05 stevesk Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ssh-agent.c,v 1.152.4.1 2006/11/08 00:42:11 brad Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -35,12 +35,12 @@
  */
 
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/queue.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <sys/time.h>
 #include <sys/param.h>
 
 #include <openssl/evp.h>

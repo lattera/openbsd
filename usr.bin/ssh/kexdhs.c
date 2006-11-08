@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/kexdhs.c,v 1.7 2006/08/03 03:34:42 deraadt Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/kexdhs.c,v 1.7.4.1 2006/11/08 00:42:10 brad Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -49,8 +49,8 @@ kexdh_server(Kex *kex)
 	DH *dh;
 	Key *server_host_key;
 	u_char *kbuf, *hash, *signature = NULL, *server_host_key_blob = NULL;
-	u_int sbloblen, klen, kout, hashlen;
-	u_int slen;
+	u_int sbloblen, klen, hashlen, slen;
+	int kout;
 
 	/* generate server DH public key */
 	switch (kex->kex_type) {
@@ -98,13 +98,15 @@ kexdh_server(Kex *kex)
 
 	klen = DH_size(dh);
 	kbuf = xmalloc(klen);
-	kout = DH_compute_key(kbuf, dh_client_pub, dh);
+	if ((kout = DH_compute_key(kbuf, dh_client_pub, dh)) < 0)
+		fatal("DH_compute_key: failed");
 #ifdef DEBUG_KEXDH
 	dump_digest("shared secret", kbuf, kout);
 #endif
 	if ((shared_secret = BN_new()) == NULL)
 		fatal("kexdh_server: BN_new failed");
-	BN_bin2bn(kbuf, kout, shared_secret);
+	if (BN_bin2bn(kbuf, kout, shared_secret) == NULL)
+		fatal("kexdh_server: BN_bin2bn failed");
 	memset(kbuf, 0, klen);
 	xfree(kbuf);
 
