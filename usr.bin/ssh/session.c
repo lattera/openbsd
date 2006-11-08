@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/session.c,v 1.197.2.1 2006/09/30 04:06:51 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/session.c,v 1.197.2.2 2006/11/08 00:17:14 brad Exp $ */
 /*
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
@@ -763,7 +763,7 @@ do_setup_env(Session *s, const char *shell)
 
 	/* Initialize the environment. */
 	envsize = 100;
-	env = xmalloc(envsize * sizeof(char *));
+	env = xcalloc(envsize, sizeof(char *));
 	env[0] = NULL;
 
 #ifdef GSSAPI

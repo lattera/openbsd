@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.24.2.1 2006/09/30 04:06:50 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/kexgex.c,v 1.24.2.2 2006/11/08 00:17:14 brad Exp $ */
 /*
  * Copyright (c) 2000 Niels Provos.  All rights reserved.
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.

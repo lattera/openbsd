@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.59.2.1 2006/09/30 04:06:51 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ssh-keyscan.c,v 1.59.2.2 2006/11/08 00:17:14 brad Exp $ */
 /*
  * Copyright 1995, 1996 by David Mazieres <dm@lcs.mit.edu>.
  *
@@ -10,8 +10,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/queue.h>
-#include <sys/resource.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 
 #include <openssl/bn.h>
 

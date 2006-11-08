@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.60.2.1 2006/09/30 04:06:51 brad Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.60.2.2 2006/11/08 00:17:14 brad Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -1124,6 +1124,8 @@ do_upload(struct sftp_conn *conn, char *local_path, char *remote_path,
 			if (status != SSH2_FX_OK) {
 				error("Couldn't write to remote file \"%s\": %s",
 				    remote_path, fx2txt(status));
+				if (showprogress)
+					stop_progress_meter();
 				do_close(conn, handle, handle_len);
 				close(local_fd);
 				xfree(data);
