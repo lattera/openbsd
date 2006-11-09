@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.62 2006/02/14 10:34:31 otto Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/in6.c,v 1.62.2.1 2006/11/09 02:31:28 brad Exp $	*/
 /*	$KAME: in6.c,v 1.372 2004/06/14 08:14:21 itojun Exp $	*/
 
 /*
@@ -702,6 +702,7 @@ in6_control(so, cmd, data, ifp, p)
 		 */
 		pfxlist_onlink_check();
 
+		dohooks(ifp->if_addrhooks, 0);
 		break;
 	}
 
@@ -742,6 +743,7 @@ in6_control(so, cmd, data, ifp, p)
 		in6_purgeaddr(&ia->ia_ifa);
 		if (pr && purgeprefix)
 			prelist_remove(pr);
+		dohooks(ifp->if_addrhooks, 0);
 		break;
 	}
 
@@ -751,7 +753,6 @@ in6_control(so, cmd, data, ifp, p)
 		return ((*ifp->if_ioctl)(ifp, cmd, data));
 	}
 
-	dohooks(ifp->if_addrhooks, 0);
 	return (0);
 }
 
