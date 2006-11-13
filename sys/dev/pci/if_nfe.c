@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_nfe.c,v 1.64 2006/07/23 02:12:12 brad Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_nfe.c,v 1.64.2.1 2006/11/13 23:41:38 brad Exp $	*/
 
 /*-
  * Copyright (c) 2006 Damien Bergamini <damien.bergamini@free.fr>
@@ -875,13 +875,13 @@ nfe_encap(struct nfe_softc *sc, struct mbuf *m0)
 	struct nfe_desc64 *desc64;
 	struct nfe_tx_data *data;
 	bus_dmamap_t map;
-	uint16_t flags = NFE_TX_VALID;
+	uint16_t flags = 0;
 #if NVLAN > 0
 	uint32_t vtag = 0;
 #endif
-	int error, i;
+	int error, i, first = sc->txq.cur;
 
-	map = sc->txq.data[sc->txq.cur].map;
+	map = sc->txq.data[first].map;
 
 	error = bus_dmamap_load_mbuf(sc->sc_dmat, map, m0, BUS_DMA_NOWAIT);
 	if (error != 0) {
@@ -934,28 +934,44 @@ nfe_encap(struct nfe_softc *sc, struct mbuf *m0)
 			desc32->flags = htole16(flags);
 		}
 
-		/* csum flags and vtag belong to the first fragment only */
 		if (map->dm_nsegs > 1) {
+			/*
+			 * Checksum flags and vtag belong to the first fragment
+			 * only.
+			 */
 			flags &= ~(NFE_TX_IP_CSUM | NFE_TX_TCP_CSUM);
 #if NVLAN > 0
 			vtag = 0;
 #endif
+			/*
+			 * Setting of the valid bit in the first descriptor is
+			 * deferred until the whole chain is fully setup.
+			 */
+			flags |= NFE_TX_VALID;
 		}
 
 		sc->txq.queued++;
 		sc->txq.cur = (sc->txq.cur + 1) % NFE_TX_RING_COUNT;
 	}
 
-	/* the whole mbuf chain has been DMA mapped, fix last descriptor */
+	/* the whole mbuf chain has been setup */
 	if (sc->sc_flags & NFE_40BIT_ADDR) {
+		/* fix last descriptor */
 		flags |= NFE_TX_LASTFRAG_V2;
 		desc64->flags = htole16(flags);
+
+		/* finally, set the valid bit in the first descriptor */
+		sc->txq.desc64[first].flags |= htole16(NFE_TX_VALID);
 	} else {
+		/* fix last descriptor */
 		if (sc->sc_flags & NFE_JUMBO_SUP)
 			flags |= NFE_TX_LASTFRAG_V2;
 		else
 			flags |= NFE_TX_LASTFRAG_V1;
 		desc32->flags = htole16(flags);
+
+		/* finally, set the valid bit in the first descriptor */
+		sc->txq.desc32[first].flags |= htole16(NFE_TX_VALID);
 	}
 
 	data->m = m0;
