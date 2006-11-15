@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/ld.so/loader.c,v 1.100 2005/11/09 16:41:29 kurt Exp $ */
+/*	$OpenBSD: src/libexec/ld.so/loader.c,v 1.100.2.1 2006/11/15 23:12:40 brad Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -833,8 +833,8 @@ _dl_unsetenv(const char *var, char **env)
 			for (P = env;; ++P)
 				if (!(*P = *(P + 1)))
 					break;
-		}
-		env++;
+		} else
+			env++;
 	}
 }
 
