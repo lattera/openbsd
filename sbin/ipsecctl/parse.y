@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/ipsecctl/parse.y,v 1.108 2006/06/18 18:18:01 hshoexer Exp $	*/
+/*	$OpenBSD: src/sbin/ipsecctl/parse.y,v 1.108.2.1 2006/11/16 22:27:53 brad Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -1945,7 +1945,8 @@ add_sagroup(struct ipsec_rule *r)
 	int			 found = 0;
 
 	TAILQ_FOREACH(rp, &ipsec->group_queue, group_entry) {
-		if (strcmp(rp->dst->name, r->dst->name) == 0) {
+		if ((strcmp(rp->src->name, r->src->name) == 0) &&
+		    (strcmp(rp->dst->name, r->dst->name) == 0)) {
 			found = 1;
 			break;
 		}
