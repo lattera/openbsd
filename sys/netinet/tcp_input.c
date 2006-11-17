@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.196 2006/03/12 18:42:40 markus Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_input.c,v 1.196.2.1 2006/11/17 04:14:38 brad Exp $	*/
 /*	$NetBSD: tcp_input.c,v 1.23 1996/02/13 23:43:44 christos Exp $	*/
 
 /*
@@ -4063,8 +4063,10 @@ syn_cache_add(src, dst, th, iphlen, so, m, optp, optlen, oi)
 	sc->sc_win = win;
 	sc->sc_timestamp = tb.ts_recent;
 	if ((tb.t_flags & (TF_REQ_TSTMP|TF_RCVD_TSTMP)) ==
-	    (TF_REQ_TSTMP|TF_RCVD_TSTMP))
+	    (TF_REQ_TSTMP|TF_RCVD_TSTMP)) {
 		sc->sc_flags |= SCF_TIMESTAMP;
+		sc->sc_modulate = arc4random();
+	}
 	if ((tb.t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 	    (TF_RCVD_SCALE|TF_REQ_SCALE)) {
 		sc->sc_requested_s_scale = tb.requested_s_scale;
@@ -4246,7 +4248,6 @@ syn_cache_respond(sc, m)
 		u_int32_t *lp = (u_int32_t *)(optp);
 		/* Form timestamp option as shown in appendix A of RFC 1323. */
 		*lp++ = htonl(TCPOPT_TSTAMP_HDR);
-		sc->sc_modulate = arc4random();
 		*lp++ = htonl(SYN_CACHE_TIMESTAMP(sc));
 		*lp   = htonl(sc->sc_timestamp);
 		optp += TCPOLEN_TSTAMP_APPA;
