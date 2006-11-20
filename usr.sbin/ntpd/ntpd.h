@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ntpd/ntpd.h,v 1.78 2006/10/27 12:22:41 henning Exp $ */
+/*	$OpenBSD: src/usr.sbin/ntpd/ntpd.h,v 1.79 2006/11/20 20:58:47 henning Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -138,6 +138,7 @@ struct ntp_sensor {
 	struct ntp_offset		 offsets[SENSOR_OFFSETS];
 	struct ntp_offset		 update;
 	time_t				 next;
+	time_t				 last;
 	char				*device;
 	int				 sensorid;
 	u_int8_t			 weight;
