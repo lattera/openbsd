@@ -1,4 +1,4 @@
-/* $OpenBSD: */
+/* $OpenBSD: src/sys/dev/vesa/vesabios.c,v 1.2 2006/12/02 13:26:15 matthieu Exp $ */
 
 /*
  * Copyright (c) 2002, 2004
