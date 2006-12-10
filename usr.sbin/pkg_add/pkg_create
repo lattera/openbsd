@@ -1,0 +1,610 @@
+#! /usr/bin/perl
+# ex:ts=8 sw=4:
+# $OpenBSD: src/usr.sbin/pkg_add/Attic/pkg_create,v 1.50 2006/12/10 23:15:00 steven Exp $
+#
+# Copyright (c) 2003-2004 Marc Espie <espie@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+use OpenBSD::PackingList;
+use OpenBSD::PackageInfo;
+use OpenBSD::Getopt;
+use OpenBSD::md5;
+use OpenBSD::Temp;
+use OpenBSD::Error;
+use OpenBSD::Ustar;
+use OpenBSD::ArcCheck;
+use Symbol;
+use File::Basename;
+
+# Extra stuff needed to archive files
+package OpenBSD::PackingElement;
+
+sub archive {}
+sub anything { ${$_[1]}++; }
+
+sub print_file {}
+package OpenBSD::PackingElement::FileBase;
+use POSIX;
+
+sub archive
+{
+	my ($self, $arc, $base, $verbose) = @_;
+
+	if (defined $arc) {
+	    my $o = $arc->prepare_long($self);
+	    $o->write();
+	    if (!defined $self->{owner} && !$o->isSymLink()) {
+		if ($o->{uname} ne 'root' && $o->{uname} ne 'bin') {
+			print STDERR "Warning: no \@owner for ",
+			$self->fullname(), " (", $o->{uname}, ")\n";
+		}
+	    }
+	    if (!defined $self->{group} && !$o->isSymLink()) {
+		if ($o->{gname} ne 'bin' && $o->{gname} ne 'wheel') {
+			print STDERR "Warning: no \@group for ",
+			$self->fullname(), " (", $o->{gname}, ")\n";
+		}
+	    }
+	    if (!defined $self->{mode} && $o->isFile()) {
+		if (($o->{mode} & (S_ISUID | S_ISGID | S_IWOTH)) != 0) {
+			print STDERR "Warning: weird mode for ", 
+			    $self->fullname(), ": ", 
+			    sprintf("%4o", $o->{mode} & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID)), "\n";
+		}
+	    }
+	}
+	if ($verbose) {
+		print "Adding ", $self->{name}, "\n";
+	}
+}
+
+sub print_file
+{
+	my ($item) = @_;
+	print '@', $item->keyword(), " ", $item->fullname(), "\n";
+}
+
+package OpenBSD::PackingElement::Cwd;
+use OpenBSD::Temp;
+sub archive
+{
+	my ($self, $arc, $base, $verbose) = @_;
+	if (defined $arc) {
+	    $arc->destdir($base."/".$self->{name});
+	}
+	if ($verbose) {
+		print "Cwd: ", $self->{name}, "\n";
+	}
+}
+
+package OpenBSD::PackingElement::DirRm;
+my $warned;
+
+sub compute_checksum
+{
+	if (!$warned) {
+		print STDERR "Warning: \@dirrm is deprecated\n";
+		$warned=1;
+	}
+}
+
+package OpenBSD::PackingElement;
+
+sub compute_checksum
+{
+}
+
+sub verify_checksum
+{
+}
+
+package OpenBSD::PackingElement::FileBase;
+use OpenBSD::md5;
+
+sub compute_checksum
+{
+	my ($self, $plist, $base, $stash) = @_;
+	my $fname = $self->fullname();
+	if (-l "$base/$fname") {
+		my $value = readlink "$base/$fname";
+		$self->make_symlink($value);
+		return if $base eq '/' or $base eq '';
+		if ($value =~ m/^\Q$base/) {
+			print STDERR "Error in package: symlink $base/$fname refers to $value\n";
+			$main::errors++;
+		}
+	} elsif (-f _) {
+		my ($dev, $ino, $size) = (stat _)[0,1,7];
+		if (defined $stash->{"$dev/$ino"}) {
+			$self->make_hardlink($stash->{"$dev/$ino"});
+		} else {
+			$stash->{"$dev/$ino"} = $fname;
+			$self->{md5} = OpenBSD::md5::fromfile("$base/$fname");
+			$self->{size} = $size;
+		}
+	} else {
+		print STDERR "Error in package: \"$base/$fname\" does not exist\n";
+		$main::errors++;
+	}
+}
+
+sub verify_checksum
+{
+	my ($self, $base, $stash) = @_;
+	my $fname = $self->fullname();
+	my $check = {};
+	if (-l "$base/$fname") {
+		my $value = readlink "$base/$fname";
+		$check->{symlink} = $value;
+	} elsif (-f _) {
+		my ($dev, $ino, $size) = (stat _)[0,1,7];
+		if (defined $stash->{"$dev/$ino"}) {
+			$check->{link} = $stash->{"$dev/$ino"};
+		} else {
+			$stash->{"$dev/$ino"} = $fname;
+			$check->{md5} = OpenBSD::md5::fromfile("$base/$fname");
+			$check->{size} = $size;
+		}
+	} else {
+		print STDERR "Error in package: $base/$fname does not exist\n";
+		$main::errors++;
+	}
+	for my $field (qw(symlink link md5 size)) {
+		if ((defined $check->{$field} && defined $self->{$field} &&
+		    $check->{$field} ne $self->{$field}) ||
+		    (defined $check->{$field} xor defined $self->{$field})) {
+			print STDERR "Error: $field inconsistency for $fname\n";
+			$main::errors++;
+		}
+	}
+}
+
+package OpenBSD::PackingElement::InfoFile;
+sub compute_checksum
+{
+	my ($self, $plist, $base, $stash) = @_;
+	$self->SUPER::compute_checksum($plist, $base, $stash);
+	my $fname = $self->fullname();
+	for (my $i = 1; ; $i++) {
+		if (-e "$base/$fname-$i") {
+			my $file = OpenBSD::PackingElement::File->add($plist, $self->{name}."-".$i);
+			$file->compute_checksum($plist, $base, $stash);
+		} else {
+			last;
+		}
+	}
+}
+
+package OpenBSD::PackingList;
+
+sub archive
+{
+	my ($self, $wrarc, $base, $verbose) = @_;
+	for my $item (@{$self->{items}}) {
+		$item->archive($wrarc, $base, $verbose);
+	}
+}
+
+sub makesum
+{
+	my ($self, $base) = @_;
+	my $stash = {};
+	my $oldlist = $self->{items};
+	$self->{items} = [];
+	for my $item (@$oldlist) {
+		push @{$self->{items}}, $item;
+		$self->{state}->{cwd} = $item->{cwd} if defined $item->{cwd};
+		$item->compute_checksum($self, $base, $stash);
+	}
+}
+
+sub checksum
+{
+	my ($self, $base) = @_;
+	my $stash = {};
+	for my $item (@{$self->{items}}) {
+		$self->{state}->{cwd} = $item->{cwd} if defined $item->{cwd};
+		$item->verify_checksum($base, $stash);
+	}
+}
+
+sub avert_duplicates
+{
+	my ($self) = @_;
+	my $allfiles = {};
+	for my $item (@{$self->{items}}) {
+		if ($item->NoDuplicateNames()) {
+			my $n = $item->fullname();
+			if (defined $allfiles->{$n}) {
+				print STDERR "Error in packing-list: duplicate file $n\n";
+				$main::errors++;
+			}
+			$allfiles->{$n} = 1;
+		} 
+	}
+}
+
+
+package main;
+
+my %defines;
+
+sub dosubst
+{
+	local $_ = shift;
+	while (my ($k, $v) = each %defines) {
+		s/\$\{\Q$k\E\}/$v/g;
+	}
+	s/\$\\/\$/g;
+	return $_;
+}
+
+sub copy_subst
+{
+	my ($srcname, $mode, $destname) = @_;
+	open my $src, '<', $srcname or die "can't open $srcname";
+	open my $dest, $mode, $destname or die "can't open $destname";
+	local $_;
+	while (<$src>) {
+		print $dest dosubst($_);
+	}
+}
+
+our ($opt_p, $opt_f, $opt_c, $opt_d, $opt_v, $opt_i, $opt_k, $opt_r, 
+	$opt_S, $opt_h, $opt_s, $opt_O, $opt_A, $opt_L,
+	$opt_m, $opt_M, $opt_U, $opt_P, $opt_W, $opt_n,
+	$opt_B, $opt_q, $opt_Q);
+
+sub deduce_name
+{
+	my ($o, $frag, $not) = @_;
+
+	my $noto = $o;
+	my $nofrag = "no-$frag";
+
+	$o =~ s/PFRAG\./PFRAG.$frag-/ or
+	    $o =~ s/PLIST/PFRAG.$frag/;
+
+	$noto =~ s/PFRAG\./PFRAG.no-$frag-/ or
+	    $noto =~ s/PLIST/PFRAG.no-$frag/;
+	unless (-e $o or -e $noto) {
+		die "Missing fragments for $frag: $o and $noto don't exist";
+	}
+	if ($not) {
+		print "Switching to $noto\n" if !defined $opt_q;
+		return $noto if -e $noto;
+    	} else {
+		print "Switching to $o\n" if !defined $opt_q;
+		return $o if -e $o;
+	}
+	return;
+}
+
+our $errors = 0;
+
+my @contents;
+my $regen_package = 0;
+
+set_usage(
+'pkg_create [-hnQqv] [-A arches] [-B pkg-destdir] [-D name=value]',
+'[-i iscript] [-k dscript] [-L localbase] [-M module] [-M displayfile]',
+'[-P pkg-dependency] [-p prefix] [-r rscript] [-S pkg-destdir]',
+'[-U undisplayfile] [-W wantedlib] -c desc -d desc -f packinglist pkg-name');
+
+my $plist = new OpenBSD::PackingList;
+try { 
+	getopts('hp:f:c:d:vi:k:r:m:M:U:S:hs:OA:L:B:D:P:W:nqQ', 
+	{'D' => 
+		sub { 
+			local $_ = shift;
+			if (m/\=/) {
+				$defines{$`} = $';
+			} else {
+				$defines{$_} = 1;
+			}
+		},
+	 'f' =>
+	 	sub {
+			push(@contents, shift);
+		},
+	 'h' => sub {	Usage(); },
+	 'P' => sub {
+	 		OpenBSD::PackingElement::Dependency->add($plist, shift);
+		},
+	 'W' => sub {
+	 		OpenBSD::PackingElement::Wantlib->add($plist, shift);
+		}
+	}); 
+} catchall {
+	Usage($_);
+};
+
+if (@ARGV == 0) {
+	$regen_package = 1;
+} elsif (@ARGV != 1) {
+	Usage "Exactly one single package name is required: ", join(' ', @ARGV);
+}
+
+try {
+my $dir;
+
+$dir = OpenBSD::Temp::dir() unless $opt_q;
+
+if (defined $opt_s) {
+	Usage "Option s is no longer supported";
+}
+
+if (defined $opt_O) {
+	Usage "Option O is no longer supported";
+}
+
+if (defined $opt_Q) {
+	$opt_q = 1;
+}
+
+if (!@contents) {
+	Usage "Packing list required";
+}
+
+my @extra_files = ();
+
+if (defined $opt_q) {
+	for my $special (info_names()) {
+		if ($special eq DESC or
+		    $special eq INSTALL and (defined $opt_i) or
+		    $special eq DEINSTALL and (defined $opt_k) or
+		    $special eq REQUIRE and (defined $opt_r) or
+		    $special eq DISPLAY and (defined $opt_M) or
+		    $special eq MODULE and (defined $opt_m) or
+		    $special eq UNDISPLAY and (defined $opt_U)) {
+			OpenBSD::PackingElement::File->add($plist, $special);
+		}
+	}
+} else {
+	if (defined $opt_c) {
+	    if ($opt_c =~ /^\-/) {
+		open(my $fh, '>', $dir.DESC) or die "Can't write COMMENT to DESC file: $!";
+		print $fh $';
+		close($fh);
+	    } else {
+		copy_subst($opt_c, '>', $dir.DESC);
+	    }
+	} else {
+		Usage "Comment required" unless $regen_package;
+	}
+
+	if (defined $opt_d) {
+	    if ($opt_d =~ /^\-/) {
+		open(my $fh, '>>', $dir.DESC) or die "Can't write to DESC: $!";
+		print $fh $';
+		close($fh);
+	    } else {
+		copy_subst($opt_d, '>>', $dir.DESC);
+	    }
+	} else {
+		Usage "Description required" unless $regen_package;
+	}
+
+	print "Creating package $ARGV[0]\n" if $opt_v && !$regen_package;
+
+	if (defined $opt_i) {
+	    copy_subst($opt_i, '>', $dir.INSTALL);
+	}
+		
+	if (defined $opt_k) {
+	    copy_subst($opt_k, '>', $dir.DEINSTALL);
+	}
+
+	if (defined $opt_r) {
+	    copy_subst($opt_r, '>', $dir.REQUIRE);
+	}
+
+	if (defined $opt_M) {
+	    copy_subst($opt_M, '>', $dir.DISPLAY);
+	}
+
+	if (defined $opt_m) {
+	    copy_subst($opt_m, '>', $dir.MODULE);
+	}
+	if (defined $opt_U) {
+	    copy_subst($opt_U, '>', $dir.UNDISPLAY);
+	}
+
+	for my $special (info_names()) {
+	    next unless -f $dir.$special;
+	    push(@extra_files, $special);
+	    my $f = OpenBSD::PackingElement::File->add($plist, $special);
+	    $f->{ignore} = 1;
+	    $f->{md5} = OpenBSD::md5::fromfile($dir.$special);
+	    $f->{size} = (stat $dir.$special)[7];
+	}
+}
+
+if (defined $opt_p) {
+	OpenBSD::PackingElement::Cwd->add($plist, $opt_p);
+} elsif (!$regen_package) {
+	Usage "Prefix required";
+}
+
+if (defined $opt_A) {
+	OpenBSD::PackingElement::Arch->add($plist, $opt_A);
+}
+
+if (defined $opt_L) {
+	OpenBSD::PackingElement::LocalBase->add($plist, $opt_L);
+}
+
+if ($regen_package) {
+	my $v = 0;
+	$plist->visit('anything', \$v);
+	if ($v != 0 || @contents != 1) {
+		Usage "Exactly one single packing list is required";
+	}
+	$dir = dirname($contents[0]);
+}
+
+for my $contentsfile (@contents) {
+    $plist->fromfile($contentsfile,
+	sub {
+		my ($fh, $cont) = @_;
+		local $_;
+		my (@fhstack, @namestack);
+		push(@fhstack, $fh);
+		push(@namestack, $contentsfile);
+		while($fh = pop @fhstack) {
+			my $fname = pop @namestack;
+			GETLINE:
+			while (<$fh>) {
+				if (m/^(\!)?\%\%(.*)\%\%$/) {
+					my ($not, $frag) = ($1, $2);
+					my $def = $frag;
+					if ($frag eq 'SHARED') {
+						$def = 'SHARED_LIBS';
+						$frag = 'shared';
+					}
+					if (!defined $defines{$def}) {
+						die "Error: unknown fragment $frag";
+					} elsif ($defines{$def} == 1) {
+						next GETLINE if defined $not;
+					} elsif ($defines{$def} == 0) {
+						next GETLINE unless defined $not;
+					} else {
+						die "Incorrect define for $frag";
+					}
+					my $newname = deduce_name($fname, $frag, $not);
+					if (defined $newname) {
+						push(@fhstack, $fh);
+						push(@namestack, $fname);
+						$fname = $newname;
+						$fh = gensym;
+						open($fh, '<', $fname) or die "missing file $fname";
+					}
+					next GETLINE;
+				}
+				if (m/^(\@comment\s+\$(?:Open)BSD\$)$/) {
+					$_ = '@comment $'.'OpenBSD: '.basename($fname).',v$';
+				}
+				if (m,^\@lib\s+.*/lib[^/]+\.so\.\d+\.\d+$,) {
+					Warn "Shared library without SHARED_LIBS: $_";
+					$main::errors++;
+				}
+				&$cont(dosubst($_));
+			}
+		}
+	}
+    ) or Fatal "Can't open packing list $contentsfile";
+}
+
+if (!$plist->has('name') && $ARGV[0] =~ m|([^/]+)$|) {
+	my $pkgname = $1;
+	$pkgname =~ s/\.tgz$//;
+	OpenBSD::PackingElement::Name->add($plist, $pkgname);
+} 
+
+
+my $base = '/';
+if (defined $opt_B) {
+	$base = $opt_B;
+} elsif (defined $opt_S) {
+	$base = $opt_S;
+} elsif (defined $ENV{'PKG_PREFIX'}) {
+	$base = $ENV{'PKG_PREFIX'};
+}
+
+my $fullpkgpath = $defines{'FULLPKGPATH'};
+my $cdrom = $defines{'PERMIT_PACKAGE_CDROM'};
+my $ftp = $defines{'PERMIT_PACKAGE_FTP'};
+if (!defined $plist->{extrainfo} && 
+    defined $fullpkgpath && defined $cdrom && defined $ftp) {
+	$cdrom = 'yes' if $cdrom =~ m/^yes$/i;
+	$ftp = 'yes' if $ftp =~ m/^yes$/i;
+
+	OpenBSD::PackingElement::ExtraInfo->add($plist, 
+	    $fullpkgpath, $cdrom, $ftp);
+}
+
+if ($plist->{need_modules}) {
+	print STDERR "Error: some needed modules were not found\n";
+	$errors++;
+}
+	
+
+unless (defined $opt_q && defined $opt_n) {
+	if ($regen_package) {
+		$plist->checksum($base);
+	} else {
+		$plist->makesum($base);
+	}
+}
+$plist->avert_duplicates();
+if (defined $plist->{pkgcfl}) {
+	print STDERR "Error: \@pkgcfl is obsolete, use \@conflict instead\n";
+	$errors++;
+}
+if (defined $plist->{pkgdep}) {
+	print STDERR "\@pkgdep is obsolete, use \@depend instead\n";
+	$errors++;
+}
+if ($errors) {
+	exit(1);
+}
+
+if (!defined $plist->{name}) {
+	print STDERR "Can't write unnamed packing list\n";
+	exit 1;
+}
+
+if (defined $opt_q) {
+	if (defined $opt_Q) {
+		$plist->visit('print_file');
+	} else {
+		$plist->write(\*STDOUT);
+	}
+	exit 0 if defined $opt_n;
+}
+my $wname;
+if ($regen_package) {
+	$wname = $plist->pkgname().".tgz";
+} else {
+	$plist->tofile($dir.CONTENTS) or Fatal "Can't write packing list";
+	$wname = $ARGV[0];
+}
+
+unshift(@extra_files, CONTENTS);
+
+if ($opt_n) {
+	for my $special (@extra_files) {
+		print "Adding $special\n" unless defined $opt_q;
+	}
+	$plist->archive(undef, $base, 1);
+} else {
+	print "Creating gzip'd tar ball in '$wname'\n" if $opt_v;
+	open(my $fh, "|gzip >$wname");
+	my $wrarc = OpenBSD::Ustar->new($fh, $dir);
+	for my $special (@extra_files) {
+		print "Adding $special\n" if $opt_v;
+		my $o = $wrarc->prepare($special);
+		$o->write();
+	}
+
+	$plist->archive($wrarc, $base, $opt_v);
+	$wrarc->pad();
+	close($fh);
+}
+} catch {
+	print STDERR "$0: $_\n";
+	exit(1);
+};
