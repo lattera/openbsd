@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/hostated/Attic/hce.c,v 1.6 2007/01/08 16:52:58 reyk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/hostated/Attic/hce.c,v 1.7 2007/01/08 20:46:18 reyk Exp $	*/
 
 /*
  * Copyright (c) 2006 Pierre-Yves Ritschard <pyr@spootnik.org>
@@ -35,7 +35,6 @@
 #include <unistd.h>
 #include <err.h>
 #include <pwd.h>
-#include <regex.h>
 
 #include "hostated.h"
 
