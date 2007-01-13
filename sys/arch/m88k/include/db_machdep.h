@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/include/db_machdep.h,v 1.11 2006/12/24 20:30:35 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/m88k/include/db_machdep.h,v 1.12 2007/01/13 22:00:56 miod Exp $ */
 /*
  * Mach Operating System
  * Copyright (c) 1993-1991 Carnegie Mellon University
@@ -36,7 +36,7 @@
 
 #ifndef	_LOCORE
 
-#include <machine/pcb.h>
+#include <machine/reg.h>
 #include <machine/trap.h>
 
 #include <uvm/uvm_param.h>
