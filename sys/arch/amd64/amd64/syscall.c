@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/Attic/syscall.c,v 1.8 2005/09/15 21:09:29 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/Attic/syscall.c,v 1.9 2007/01/15 23:19:05 jsg Exp $	*/
 /*	$NetBSD: syscall.c,v 1.1 2003/04/26 18:39:32 fvdl Exp $	*/
 
 /*-
@@ -65,8 +65,7 @@ void syscall(struct trapframe);
  * Like trap(), argument is call by reference.
  */
 void
-syscall(frame)
-	struct trapframe frame;
+syscall(struct trapframe frame)
 {
 	caddr_t params;
 	const struct sysent *callp;
