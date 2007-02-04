@@ -1,5 +1,5 @@
-# $OpenBSD: src/share/zoneinfo/datfiles/leapseconds,v 1.13 2005/07/19 15:48:37 millert Exp $
-# @(#)leapseconds	7.20
+# $OpenBSD: src/share/zoneinfo/datfiles/leapseconds,v 1.13.4.1 2007/02/04 19:19:47 millert Exp $
+# @(#)leapseconds	8.1
 
 # Allowance for leapseconds added to each timezone file.
 

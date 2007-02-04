@@ -1,5 +1,5 @@
-# $OpenBSD: src/share/zoneinfo/datfiles/solar87,v 1.8 2005/07/05 02:21:55 millert Exp $
-# @(#)solar87	7.4
+# $OpenBSD: src/share/zoneinfo/datfiles/solar87,v 1.8.4.1 2007/02/04 19:19:47 millert Exp $
+# @(#)solar87	8.1
 
 # So much for footnotes about Saudi Arabia.
 # Apparent noon times below are for Riyadh; your mileage will vary.

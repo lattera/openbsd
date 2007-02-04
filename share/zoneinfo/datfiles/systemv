@@ -1,5 +1,5 @@
-# $OpenBSD: src/share/zoneinfo/datfiles/systemv,v 1.7 2006/02/18 19:47:24 millert Exp $
-# @(#)systemv	7.5
+# $OpenBSD: src/share/zoneinfo/datfiles/systemv,v 1.7.2.1 2007/02/04 19:19:47 millert Exp $
+# @(#)systemv	8.1
 
 # Old rules, should the need arise.
 # No attempt is made to handle Newfoundland, since it cannot be expressed
