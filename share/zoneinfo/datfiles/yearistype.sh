@@ -1,7 +1,10 @@
 #! /bin/sh
-#	$OpenBSD: src/share/zoneinfo/datfiles/yearistype.sh,v 1.8 2005/03/02 12:35:45 millert Exp $
+#	$OpenBSD: src/share/zoneinfo/datfiles/yearistype.sh,v 1.8.8.1 2007/02/04 19:20:24 millert Exp $
 
-: '@(#)yearistype.sh	7.8'
+: 'This file is in the public domain, so clarified as of'
+: '2006-07-17 by Arthur David Olson.'
+
+: '@(#)yearistype.sh	8.2'
 
 case $#-$1 in
 	2-|2-0*|2-*[!0-9]*)
