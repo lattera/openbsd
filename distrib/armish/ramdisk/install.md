@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/armish/ramdisk/install.md,v 1.1 2006/06/06 00:01:49 drahn Exp $
+#	$OpenBSD: src/distrib/armish/ramdisk/install.md,v 1.2 2007/02/11 18:59:30 krw Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -39,7 +39,6 @@
 # machine dependent section of installation/upgrade script.
 #
 
-MDFSTYPE=msdos
 ARCH=ARCH
 
 md_installboot() {
