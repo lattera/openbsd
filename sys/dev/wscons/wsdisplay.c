@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.75 2007/01/07 13:28:04 miod Exp $ */
+/* $OpenBSD: src/sys/dev/wscons/wsdisplay.c,v 1.76 2007/02/14 00:53:48 jsg Exp $ */
 /* $NetBSD: wsdisplay.c,v 1.82 2005/02/27 00:27:52 perry Exp $ */
 
 /*
@@ -1304,7 +1304,7 @@ wsdisplay_cfg_ioctl(struct wsdisplay_softc *sc, u_long cmd, caddr_t data,
 		if (d->idx == -1 && d->type == WSMUX_KBD)
 			d->idx = wskbd_pickfree();
 #undef d
-		/* fall into */
+		/* FALLTHROUGH */
 	case WSMUXIO_INJECTEVENT:
 	case WSMUXIO_REMOVE_DEVICE:
 	case WSMUXIO_LIST_DEVICES:
