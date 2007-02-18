@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/mtrace/mtrace.c,v 1.25 2005/05/03 05:42:05 djm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/mtrace/mtrace.c,v 1.26 2007/02/18 21:16:03 jmc Exp $	*/
 /*	$NetBSD: mtrace.c,v 1.5 1995/12/10 10:57:15 mycroft Exp $	*/
 
 /*
@@ -53,7 +53,7 @@
 
 #ifndef lint
 static char rcsid[] =
-    "@(#) $Id: mtrace.c,v 1.24 2004/08/01 18:32:20 deraadt Exp $";
+    "@(#) $Id: mtrace.c,v 1.25 2005/05/03 05:42:05 djm Exp $";
 #endif
 
 #include <netdb.h>
@@ -1263,8 +1263,9 @@ main(int argc, char *argv[])
 
     if (argc > 0 || qsrc == 0) {
 usage:	printf("\
-Usage: mtrace [-Mlnps] [-w wait] [-m max_hops] [-q nqueries] [-g gateway]\n\
-              [-S statint] [-t ttl] [-r resp_dest] [-i if_addr] source [receiver] [group]\n");
+usage: mtrace [-lMnpsv] [-g gateway] [-i if_addr] [-m max_hops] [-q nqueries]\n\
+              [-r host] [-S stat_int] [-t ttl] [-w waittime] source [receiver]\n\
+	      [group]\n");
 	exit(1);
     }
 
