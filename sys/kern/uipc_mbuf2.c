@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.24.2.1 2007/03/07 19:21:48 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/kern/uipc_mbuf2.c,v 1.24.2.2 2007/03/17 20:50:50 henning Exp $	*/
 /*	$KAME: uipc_mbuf2.c,v 1.29 2001/02/14 13:42:10 itojun Exp $	*/
 /*	$NetBSD: uipc_mbuf.c,v 1.40 1999/04/01 00:23:25 thorpej Exp $	*/
 
@@ -231,6 +231,8 @@ m_dup1(struct mbuf *m, int off, int len, int wait)
 		return (NULL);
 	if (off == 0 && (m->m_flags & M_PKTHDR) != 0) {
 		MGETHDR(n, wait, m->m_type);
+		if (n == NULL)
+			return (NULL);
 		M_DUP_PKTHDR(n, m);
 		l = MHLEN;
 	} else {
