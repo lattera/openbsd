@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)amq_subr.c	8.1 (Berkeley) 6/6/93
- *	$Id: amq_subr.c,v 1.10 2003/06/02 23:36:51 millert Exp $
+ *	$Id: amq_subr.c,v 1.11 2005/02/18 15:51:02 henning Exp $
  */
 
 /*
@@ -215,7 +215,7 @@ struct svc_req *rqstp;
 	/*
 	 * Find start of value
 	 */
-	while (*cp && isascii(*cp) && isspace(*cp))
+	while (isascii(*cp) && isspace(*cp))
 		cp++;
 
 	root_newmap(s, cp, (char *) 0);
