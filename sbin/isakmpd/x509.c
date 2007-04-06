@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sbin/isakmpd/x509.c,v 1.106 2006/06/02 19:35:55 hshoexer Exp $	 */
+/* $OpenBSD: src/sbin/isakmpd/x509.c,v 1.106.2.1 2007/04/06 08:07:19 mbalmer Exp $	 */
 /* $EOM: x509.c,v 1.54 2001/01/16 18:42:16 ho Exp $	 */
 
 /*
@@ -608,7 +608,7 @@ x509_read_from_dir(X509_STORE *ctx, char *name, int hash)
 			continue;
 		}
 
-		if (!(sb.st_mode & S_IFREG)) {
+		if (!S_ISREG(sb.st_mode)) {
 			close(fd);
 			continue;
 		}
@@ -690,7 +690,7 @@ x509_read_crls_from_dir(X509_STORE *ctx, char *name)
 			continue;
 		}
 
-		if (!(sb.st_mode & S_IFREG)) {
+		if (!S_ISREG(sb.st_mode)) {
 			close(fd);
 			continue;
 		}
@@ -1099,7 +1099,12 @@ x509_cert_subjectaltname(X509 *scert, u_int8_t **altname, u_int32_t *len)
 	sanlen = sandata[3];
 	sandata += 4;
 
-	if (sanlen + 4 != subjectaltname->value->length) {
+	/*
+	 * The test here used to be !=, but some certificates can include
+	 * extra stuff in subjectAltName, so we will just take the first
+	 * salen bytes, and not worry about what follows.
+	 */
+	if (sanlen + 4 > subjectaltname->value->length) {
 		log_print("x509_cert_subjectaltname: subjectaltname invalid "
 		    "length");
 		return 0;
