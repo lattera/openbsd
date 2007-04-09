@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/sparc64/ramdisk/Makefile,v 1.15 2007/02/16 16:56:22 tsi Exp $
+#	$OpenBSD: src/distrib/sparc64/ramdisk/Makefile,v 1.16 2007/04/09 14:55:11 millert Exp $
 
 TOP=		${.CURDIR}/..
 
@@ -24,7 +24,7 @@ VND_CRDEV=	/dev/r${VND}c
 PID!=		echo $$$$
 
 GZIPCMD?=	gzip
-GZIPFLAGS?=	-9v
+GZIPFLAGS?=	-9nv
 GZIPEXT?=	.gz
 
 MOUNT_POINT?=	/mnt
