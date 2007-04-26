@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.72 2005/12/17 07:31:27 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/powerpc/powerpc/trap.c,v 1.72.4.1 2007/04/26 23:56:59 ckuethe Exp $	*/
 /*	$NetBSD: trap.c,v 1.3 1996/10/13 03:31:37 christos Exp $	*/
 
 /*
@@ -645,6 +645,12 @@ for (i = 0; i < errnum; i++) {
 		trapsignal(p, SIGILL, 0, ILL_ILLOPC, sv);
 		break;
 #endif
+
+	case EXC_VECAST|EXC_USER:
+		KERNEL_PROC_LOCK(p);
+		trapsignal(p, SIGFPE, 0, FPE_FLTRES, sv);
+		KERNEL_PROC_UNLOCK(p);
+		break;
 
 	case EXC_AST|EXC_USER:
 		uvmexp.softs++;
