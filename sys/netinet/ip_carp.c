@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.132 2006/12/13 09:01:59 itojun Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_carp.c,v 1.132.2.1 2007/04/30 20:39:44 ckuethe Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff. All rights reserved.
@@ -1672,8 +1672,9 @@ carp_addr_updated(void *v)
 	TAILQ_FOREACH(ifa, &sc->sc_if.if_addrlist, ifa_list) {
 		if (ifa->ifa_addr->sa_family == AF_INET)
 			new_naddrs++;
-		else if (ifa->ifa_addr->sa_family == AF_INET6)
-			new_naddrs6++;
+		else if (ifa->ifa_addr->sa_family == AF_INET6 &&
+		    !IN6_IS_ADDR_LINKLOCAL(&ifatoia6(ifa)->ia_addr.sin6_addr))
+				new_naddrs6++;
 	}
 
 	/* Handle a callback after SIOCDIFADDR */
