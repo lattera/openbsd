@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/trap.c,v 1.12 2007/04/20 16:15:36 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/trap.c,v 1.13 2007/05/11 10:06:55 pedro Exp $	*/
 /*	$NetBSD: trap.c,v 1.2 2003/05/04 23:51:56 fvdl Exp $	*/
 
 /*-
@@ -372,7 +372,7 @@ copyfault:
 			goto we_re_toast;
 #endif
 		cr2 = rcr2();
-		KERNEL_LOCK(LK_CANRECURSE|LK_EXCLUSIVE);
+		KERNEL_LOCK();
 		goto faultcommon;
 
 	case T_PAGEFLT|T_USER: {	/* page fault */
