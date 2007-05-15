@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/_types.h,v 1.4 2007/05/15 01:56:47 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/_types.h,v 1.5 2007/05/15 15:23:36 art Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -115,6 +115,5 @@ typedef	void *			__wctrans_t;
 typedef	void *			__wctype_t;
 
 /* Feature test macros */
-#define	__HAVE_MUTEX
 
 #endif	/* _MACHINE__TYPES_H_ */
