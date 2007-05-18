@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sbin/isakmpd/message.c,v 1.120 2006/07/02 13:19:00 hshoexer Exp $	 */
+/* $OpenBSD: src/sbin/isakmpd/message.c,v 1.120.2.1 2007/05/18 21:34:43 ckuethe Exp $	 */
 /* $EOM: message.c,v 1.156 2000/10/10 12:36:39 provos Exp $	 */
 
 /*
@@ -165,6 +165,7 @@ message_alloc_reply(struct message *msg)
 	reply = message_alloc(msg->transport, 0, ISAKMP_HDR_SZ);
 	reply->exchange = msg->exchange;
 	reply->isakmp_sa = msg->isakmp_sa;
+	reply->flags = msg->flags;
 	if (msg->isakmp_sa)
 		sa_reference(msg->isakmp_sa);
 	return reply;
