@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/udp_encap.c,v 1.19 2006/02/02 14:33:53 hshoexer Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/udp_encap.c,v 1.19.6.1 2007/05/18 21:34:07 ckuethe Exp $	*/
 
 /*
  * Copyright (c) 1998, 1999, 2001 Niklas Hallqvist.  All rights reserved.
@@ -336,10 +336,8 @@ udp_encap_report(struct transport *t)
 	LOG_DBG ((LOG_REPORT, 0, "udp_encap_report: fd %d src %s:%u dst %s:%u",
 	    u->s, src, ntohs(sport), dst ? dst : "*", ntohs(dport)));
 
-	if (dst)
-		free(dst);
-	if (src)
-		free(src);
+	free(dst);
+	free(src);
 }
 
 /*
