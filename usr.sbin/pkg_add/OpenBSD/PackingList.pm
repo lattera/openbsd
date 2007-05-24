@@ -1,5 +1,5 @@
 # ex:ts=8 sw=4:
-# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/PackingList.pm,v 1.64 2007/05/24 10:06:35 espie Exp $
+# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/PackingList.pm,v 1.65 2007/05/24 11:06:29 espie Exp $
 #
 # Copyright (c) 2003-2007 Marc Espie <espie@openbsd.org>
 #
@@ -315,6 +315,10 @@ sub localbase
 	}
 }
 
+sub is_signed
+{
+	return 0;
+}
 
 {
     package OpenBSD::PackingList::Visitor;
