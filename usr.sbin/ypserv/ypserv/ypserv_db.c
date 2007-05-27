@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv_db.c,v 1.23 2006/04/03 05:01:24 deraadt Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv_db.c,v 1.24 2007/05/27 20:15:04 pyr Exp $ */
 
 /*
  * Copyright (c) 1994 Mats O Jansson <moj@stacken.kth.se>
@@ -34,7 +34,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv_db.c,v 1.23 2006/04/03 05:01:24 deraadt Exp $";
+static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/ypserv/ypserv_db.c,v 1.24 2007/05/27 20:15:04 pyr Exp $";
 #endif
 
 /*
@@ -147,7 +147,7 @@ yp_private(datum key, int ypprivate)
 static void
 ypdb_close_last(void)
 {
-	struct opt_map *last = maps.cqh_last;
+	struct opt_map *last = CIRCLEQ_LAST(&maps);
 
 	if (last == (void *)&maps) {
 		yplog("  ypdb_close_last: LRU list is empty!");
