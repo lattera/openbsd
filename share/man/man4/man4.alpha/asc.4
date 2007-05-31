@@ -1,0 +1,31 @@
+.\"	$OpenBSD: src/share/man/man4/man4.alpha/asc.4,v 1.4 2007/05/31 19:19:53 jmc Exp $
+.\"
+.\" Copyright (c) 1998 The OpenBSD Project
+.\" All rights reserved.
+.\"
+.\"
+.Dd $Mdocdate$
+.Dt ASC 4 alpha
+.Os
+.Sh NAME
+.Nm asc
+.Nd NCR 53c[f]94 on-board or TURBOchannel SCSI controller
+.Sh SYNOPSIS
+.Cd "tcds* at tc?" Pq " TURBOchannel PMAZ cards"
+.Cd "asc* at tcds?"
+.Cd "asc* at tc?" Pq "on-board SCSI"
+.Cd "scsibus* at asc?"
+.Sh DESCRIPTION
+The
+.Nm
+is an on-board or TURBOchannel SCSI controller based on the
+NCR 53c[f]94 chips, found on DEC 3000/[3456789]00 series Alpha workstations.
+.Sh SEE ALSO
+.Xr cd 4 ,
+.Xr ch 4 ,
+.Xr intro 4 ,
+.Xr scsi 4 ,
+.Xr sd 4 ,
+.Xr ss 4 ,
+.Xr st 4 ,
+.Xr uk 4
