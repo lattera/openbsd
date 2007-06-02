@@ -1,0 +1,139 @@
+.\"	$OpenBSD: src/share/man/man4/softraid.4,v 1.11 2007/06/02 15:33:21 jmc Exp $
+.\"
+.\" Copyright (c) 2007 Todd T. Fries   <todd@OpenBSD.org>
+.\" Copyright (c) 2007 Marco Peereboom <marco@OpenBSD.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: May 31 2007 $
+.Dt SOFTRAID 4
+.Os
+.Sh NAME
+.Nm softraid
+.Nd Software RAID
+.Sh SYNOPSIS
+.Cd "softraid0 at root"
+.Cd "scsibus*  at softraid?"
+.Sh DESCRIPTION
+The
+.Nm
+device emulates an HBA (host bus adapter) that provides RAID and other IO
+related services.
+The idea is to tie chunks together into an IO discipline.
+A discipline can for example provide a volume that mirrors chunks (RAID 1).
+.Pp
+Currently
+.Nm
+only supports a mirroring discipline.
+.Pp
+A
+.Em discipline
+is a collection of functions that provides specific IO
+functionality.
+This includes IO path, bring-up, failure recovery, statistical
+information gathering etc.\&
+Essentially a discipline is a lower
+level driver that provides the IO transformation for the softraid
+device.
+.Pp
+A
+.Em volume
+is a virtual disk device that is made up of a collection of chunks.
+.Pp
+A
+.Em chunk
+is a partition or storage area of the type RAID.
+.Sh EXAMPLES
+An example to create a 3 chunk RAID 1 from scratch is as follows:
+.Pp
+Initialize the partition tables of all disks:
+.Bd -literal -offset indent
+echo y | fdisk -i wd1
+echo y | fdisk -i wd2
+echo y | fdisk -i wd3
+.Ed
+.Pp
+Now create RAID partitions on all disks:
+.Bd -literal -offset indent
+echo "d a\ena\en\en\en\enRAID\enw\enq\en" | disklabel -E wd1
+echo "d a\ena\en\en\en\enRAID\enw\enq\en" | disklabel -E wd2
+echo "d a\ena\en\en\en\enRAID\enw\enq\en" | disklabel -E wd3
+.Ed
+.Pp
+Assemble the RAID volume:
+.Bd -literal -offset indent
+bioctl -c 1 -l /dev/wd1a,/dev/wd2a,/dev/wd3a softraid0
+.Ed
+.Pp
+The console will give away what device was added to the system:
+.Bd -literal -offset indent
+scsibus0 at softraid0: 1 targets
+sd0 at scsibus0 targ 0 lun 0: <OPENBSD, SR RAID 1, 001> SCSI2
+sd0: 1MB, 0 cyl, 255 head, 63 sec, 512 bytes/sec, 3714 sec total
+.Ed
+.Pp
+It is good practice to wipe the front of the disk before using it:
+.Bd -literal -offset indent
+dd if=/dev/zero of=/dev/rsd0c bs=1m count=1
+.Ed
+.Pp
+Initialize the partition table and create a filesystem on the
+new RAID volume:
+.Bd -literal -offset indent
+echo y | fdisk -i sd0
+echo "d a\ena\en\en\en\en4.2BSD\enw\enq\en" | disklabel -E sd0
+newfs /dev/rsd0a
+.Ed
+.Pp
+The RAID volume is now ready to be used as a normal disk device.
+.Pp
+See
+.Xr bioctl 8
+for more information on configuration of RAID sets.
+.Pp
+All component partitions must be of type
+.Dv RAID .
+Some platforms, such as SUN, are not capable of using the
+.Dv RAID
+partition type.
+The
+.Dv 4.2BSD
+partition type should be used on such platforms.
+.Sh SEE ALSO
+.Xr sd 4 ,
+.Xr wd 4 ,
+.Xr bioctl 8 ,
+.Xr config 8 ,
+.Xr fsck 8 ,
+.Xr MAKEDEV 8 ,
+.Xr mount 8 ,
+.Xr newfs 8
+.Sh HISTORY
+The
+.Nm
+driver first appeared in
+.Ox 4.2 .
+.Sh AUTHORS
+.An Marco Peereboom .
+.Sh CAVEATS
+The driver relies on underlying hardware to properly fail chunks.
+Currently the RAID 1 support does not have the ability to recover a
+failed chunk.
+.Pp
+The RAID 1 discipline does not initialize the mirror upon creation.
+.Pp
+Certain RAID levels can protect against some data loss
+due to component failure.
+RAID is
+.Em not
+a substitute for good backup practices.
