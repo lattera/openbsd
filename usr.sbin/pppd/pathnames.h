@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/pppd/pathnames.h,v 1.5 1997/09/05 04:32:44 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/pppd/pathnames.h,v 1.6 2007/06/04 14:59:45 henning Exp $	*/
 
 /*
  * define path names
@@ -25,8 +25,3 @@
 #define _PATH_CONNERRS	"/etc/ppp/connect-errors"
 #define _PATH_USEROPT	".ppprc"
 #define _PATH_PEERFILES	"/etc/ppp/peers/"
-
-#ifdef IPX_CHANGE
-#define _PATH_IPXUP	"/etc/ppp/ipx-up"
-#define _PATH_IPXDOWN	"/etc/ppp/ipx-down"
-#endif /* IPX_CHANGE */
