@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/lib/libc/gen/readdir.c,v 1.12 2007/06/05 18:11:48 kurt Exp $ */
+/*	$OpenBSD: src/lib/libpthread/uthread/Attic/uthread_ftruncate.c,v 1.1 2007/06/05 18:11:49 kurt Exp $ */
 /*
- * Copyright (c) 1983, 1993
+ * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,72 +28,30 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <dirent.h>
-#include <string.h>
-#include <errno.h>
-#include "thread_private.h"
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#ifdef _THREAD_SAFE
+#include <pthread.h>
+#include "pthread_private.h"
+
+register_t __syscall(quad_t, ...);
 
 /*
- * get next entry in a directory.
+ * This function provides 64-bit offset padding that
+ * is not supplied by GCC 1.X but is supplied by GCC 2.X.
  */
-struct dirent *
-_readdir_unlocked(DIR *dirp)
-{
-	struct dirent *dp;
-
-	for (;;) {
-		if (dirp->dd_loc >= dirp->dd_size) {
-			dirp->dd_loc = 0;
-		}
-		if (dirp->dd_loc == 0) {
-			dirp->dd_size = getdirentries(dirp->dd_fd,
-			    dirp->dd_buf, dirp->dd_len, &dirp->dd_seek);
-			if (dirp->dd_size <= 0)
-				return (NULL);
-		}
-		dp = (struct dirent *)(dirp->dd_buf + dirp->dd_loc);
-		if ((long)dp & 03)	/* bogus pointer check */
-			return (NULL);
-		if (dp->d_reclen <= 0 ||
-		    dp->d_reclen > dirp->dd_len + 1 - dirp->dd_loc)
-			return (NULL);
-		dirp->dd_loc += dp->d_reclen;
-		if (dp->d_ino == 0)
-			continue;
-		return (dp);
-	}
-}
-
-struct dirent *
-readdir(DIR *dirp)
-{
-	struct dirent *dp;
-
-	_MUTEX_LOCK(&dirp->dd_lock);
-	dp = _readdir_unlocked(dirp);
-	_MUTEX_UNLOCK(&dirp->dd_lock);
-
-	return (dp);
-}
-
 int
-readdir_r(DIR *dirp, struct dirent *entry, struct dirent **result)
+ftruncate(int fd, off_t length)
 {
-	struct dirent *dp;
+	int retval;
 
-	_MUTEX_LOCK(&dirp->dd_lock);
-	dp = _readdir_unlocked(dirp);
-	if (dp == NULL && errno != 0) {
-		_MUTEX_UNLOCK(&dirp->dd_lock);
-		return errno;
+	if (_FD_LOCK(fd, FD_RDWR, NULL) != 0) {
+		retval = -1;
+	} else {
+		retval = __syscall((quad_t)SYS_ftruncate, fd, 0, length);
+		_FD_UNLOCK(fd, FD_RDWR);
 	}
-	if (dp != NULL) 
-		memcpy(entry, dp, sizeof (struct dirent) - MAXNAMLEN + dp->d_namlen);
-	_MUTEX_UNLOCK(&dirp->dd_lock);
-	if (dp != NULL)
-		*result = entry;
-	else
-		*result = NULL;
-	return 0;
+	return retval;
 }
+#endif

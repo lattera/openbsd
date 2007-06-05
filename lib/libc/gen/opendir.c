@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/gen/opendir.c,v 1.18 2007/02/09 14:58:09 millert Exp $ */
+/*	$OpenBSD: src/lib/libc/gen/opendir.c,v 1.19 2007/06/05 18:11:48 kurt Exp $ */
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -97,6 +97,7 @@ __opendir2(const char *name, int flags)
 	dirp->dd_loc = 0;
 	dirp->dd_fd = fd;
 	dirp->dd_flags = flags;
+	dirp->dd_lock = NULL;
 
 	/*
 	 * Set up seek point for rewinddir.
