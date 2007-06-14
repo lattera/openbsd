@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf.c,v 1.11 2006/04/21 23:09:34 cloder Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf.c,v 1.12 2007/06/14 03:23:49 reyk Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996, 1997
@@ -25,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ospf.c,v 1.10 2005/12/17 17:24:30 stevesk Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ospf.c,v 1.11 2006/04/21 23:09:34 cloder Exp $ (LBL)";
 #endif
 
 #include <sys/param.h>
@@ -320,9 +320,9 @@ ospf_print_lsa(register const struct lsa *lsap)
 				    ipaddr_string(&almp->asla_forward));
 			}
 			TCHECK(almp->asla_tag);
-			if (almp->asla_tag.s_addr) {
-				printf(" tag %s",
-				    ipaddr_string(&almp->asla_tag));
+			if (almp->asla_tag) {
+				printf(" tag %u",
+				    ntohl(almp->asla_tag));
 			}
 			++almp;
 		}
