@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/aviion/aviion/disksubr.c,v 1.34 2007/06/14 03:35:29 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/aviion/aviion/disksubr.c,v 1.35 2007/06/14 03:37:23 deraadt Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -294,8 +294,6 @@ done:
 	disklabeltokernlabel(lp);
 	return (msg);
 }
-
-
 
 /*
  * Write disk label back to device after modification.

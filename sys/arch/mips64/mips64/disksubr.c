@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips64/mips64/Attic/disksubr.c,v 1.55 2007/06/14 03:35:29 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips64/mips64/Attic/disksubr.c,v 1.56 2007/06/14 03:37:23 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1999 Michael Shalayeff
@@ -499,8 +499,6 @@ static struct {int m; int b;} maptab[] = {
 		}
 	}
 }
-
-
 
 /*
  * Write disk label back to device after modification.
