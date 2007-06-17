@@ -1,5 +1,5 @@
 #
-#	$OpenBSD: src/distrib/mvme88k/ramdisk/Makefile.inc,v 1.7 2003/08/07 20:57:05 miod Exp $
+#	$OpenBSD: src/distrib/mvme88k/ramdisk/Makefile.inc,v 1.8 2007/06/17 00:28:21 deraadt Exp $
 #
 
 # TOP is assumed to be defined by Makefile including this one.
@@ -13,7 +13,6 @@ MOUNT_POINT?=	${TOP}/${BASE}/fs
 
 CRUNCHCONF?=	${COMMONDIR}/${CBIN}.conf
 MTREE=		${UTILS}/mtree.conf
-RAWLABEL=	
 
 ${CBIN}.conf: ${LISTS}
 	awk -f ${UTILS}/makeconf.awk CBIN=${CBIN} ${LISTS} > ${CBIN}.conf
