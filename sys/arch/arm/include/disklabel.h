@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.12 2007/06/17 00:27:26 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/disklabel.h,v 1.13 2007/06/20 18:15:45 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1994 Mark Brinicombe.
@@ -41,8 +41,5 @@
 #define LABELSECTOR	1		/* sector containing label */
 #define LABELOFFSET	0		/* offset of label in sector */
 #define MAXPARTITIONS	16		/* number of partitions */
-
-struct cpu_disklabel {
-};
 
 #endif /* _ARM_DISKLABEL_H_ */
