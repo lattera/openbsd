@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/include/vmparam.h,v 1.35 2006/04/27 15:37:53 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/include/vmparam.h,v 1.35.2.1 2007/06/30 15:25:57 ckuethe Exp $	*/
 /*	$NetBSD: vmparam.h,v 1.15 1994/10/27 04:16:34 cgd Exp $	*/
 
 /*-
@@ -100,7 +100,7 @@ extern vaddr_t vm_max_address;
 /* virtual sizes (bytes) for various kernel submaps */
 #define VM_PHYS_SIZE		(USRIOSIZE*PAGE_SIZE)
 
-#define	VM_PHYSSEG_MAX	8	/* actually we could have this many segments */
+#define	VM_PHYSSEG_MAX	16	/* actually we could have this many segments */
 #define	VM_PHYSSEG_STRAT	VM_PSTRAT_BSEARCH
 #define	VM_PHYSSEG_NOADD	/* can't add RAM after vm_mem_init */
 
