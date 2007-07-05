@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.94 2006/08/28 12:18:10 mickey Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/pmap.c,v 1.94.2.1 2007/07/05 11:09:39 reyk Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -2264,6 +2264,11 @@ pmap_release(pmap)
 		pmaps_hand = LIST_NEXT(pmaps_hand, pm_list);
 	LIST_REMOVE(pmap, pm_list);
 	simple_unlock(&pmaps_lock);
+
+	/*
+	 * Before we free the pmap just make sure it's not cached anywhere.
+	 */
+	tlbflushg();
 
 	/*
 	 * free any remaining PTPs
