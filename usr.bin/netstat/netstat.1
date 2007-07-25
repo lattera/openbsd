@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/netstat/netstat.1,v 1.51 2007/07/25 11:50:47 claudio Exp $
+.\"	$OpenBSD: src/usr.bin/netstat/netstat.1,v 1.52 2007/07/25 18:49:09 claudio Exp $
 .\"	$NetBSD: netstat.1,v 1.11 1995/10/03 21:42:43 thorpej Exp $
 .\"
 .\" Copyright (c) 1983, 1990, 1992, 1993
@@ -30,7 +30,7 @@
 .\"
 .\"	from: @(#)netstat.1	8.8 (Berkeley) 4/18/94
 .\"
-.Dd $Mdocdate: June 4 2007 $
+.Dd $Mdocdate: July 25 2007 $
 .Dt NETSTAT 1
 .Os
 .Sh NAME
@@ -43,10 +43,13 @@
 .Op Fl M Ar core
 .Op Fl N Ar system
 .Nm netstat
+.Bk -words
 .Op Fl bdFgilmnqrstu
 .Op Fl f Ar address_family
 .Op Fl M Ar core
 .Op Fl N Ar system
+.Op Fl T Ar tableid
+.Ek
 .Nm netstat
 .Op Fl bdn
 .Op Fl I Ar interface
