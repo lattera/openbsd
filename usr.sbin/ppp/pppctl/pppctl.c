@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$Id: pppctl.c,v 1.17 2004/05/24 09:30:11 jmc Exp $
+ *	$Id: pppctl.c,v 1.18 2005/07/11 22:32:28 brad Exp $
  */
 
 #include <sys/types.h>
@@ -124,7 +124,7 @@ Receive(int fd, int display)
                  if (display & REC_PASSWD) {
                     /* password time */
                     if (!passwd)
-                        if ((passwd = getpass("Password: ")) == NULL)
+                        if ((passwd = getpass("Password:")) == NULL)
 				err(1, "getpass");
                     snprintf(Buffer, sizeof Buffer, "passwd %s\n", passwd);
                     memset(passwd, '\0', strlen(passwd));
