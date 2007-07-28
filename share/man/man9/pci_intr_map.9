@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/pci_intr_map.9,v 1.6 2007/05/31 19:20:00 jmc Exp $
+.\"	$OpenBSD: src/share/man/man9/pci_intr_map.9,v 1.7 2007/07/28 14:32:59 kettenis Exp $
 .\"
 .\" Copyright (c) 2005 Michael Shalayeff
 .\" All rights reserved.
@@ -35,7 +35,7 @@
 .Ft int
 .Fn pci_intr_map "struct pci_attach_args *paa" "pci_intr_handle_t *ih"
 .Ft int
-.Fn pci_intr_line "pci_intr_handle_t *ih"
+.Fn pci_intr_line "pci_intr_handle_t ih"
 .Ft const char *
 .Fn pci_intr_string "pci_chipset_tag_t pc" "pci_intr_handle_t ih"
 .Ft void *
