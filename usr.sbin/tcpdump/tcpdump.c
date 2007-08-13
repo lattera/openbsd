@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/tcpdump.c,v 1.56 2007/06/01 18:19:40 todd Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/tcpdump.c,v 1.57 2007/08/13 20:27:13 krw Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -26,7 +26,7 @@ static const char copyright[] =
     "@(#) Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997\n\
 The Regents of the University of California.  All rights reserved.\n";
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.55 2006/06/16 16:55:46 deraadt Exp $ (LBL)";
+    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/tcpdump.c,v 1.56 2007/06/01 18:19:40 todd Exp $ (LBL)";
 #endif
 
 /*
@@ -62,7 +62,6 @@ static const char rcsid[] =
 
 #include <sys/socket.h>
 #include <net/if.h>
-#include <netinet/in.h>
 #include <net/pfvar.h>
 #include "pfctl.h"
 #include "pfctl_parser.h"
