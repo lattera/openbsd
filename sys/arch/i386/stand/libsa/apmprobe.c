@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.14 2005/11/14 23:50:26 martin Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/libsa/apmprobe.c,v 1.15 2007/09/13 06:58:47 weingart Exp $	*/
 
 /*
  * Copyright (c) 1997-2000 Michael Shalayeff
@@ -171,7 +171,9 @@ apmprobe(void)
 		apm_disconnect();
 
 		if (apm_connect(&ai) != 0) {
+#ifdef DEBUG
 			printf("\napm: connect error\n");
+#endif
 			return;
 		}
 #ifdef DEBUG
