@@ -35,7 +35,7 @@ char copyright[] =
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)sliplogin.c	5.6 (Berkeley) 3/2/91";*/
-static char rcsid[] = "$Id: sliplogin.c,v 1.26 2007/03/06 03:22:11 ray Exp $";
+static char rcsid[] = "$Id: sliplogin.c,v 1.27 2007/09/11 16:30:59 gilles Exp $";
 #endif /* not lint */
 
 /*
@@ -109,7 +109,7 @@ findid(char *name)
 	static char laddr[16];
 	static char raddr[16];
 	static char mask[16];
-	char user[MAXLOGNAME], *p;
+	char user[MAXLOGNAME];
 	int n;
 
 	strlcpy(loginname, name, sizeof loginname);
