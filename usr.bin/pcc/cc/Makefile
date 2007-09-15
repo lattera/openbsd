@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.1.1.1 2007/09/15 18:12:31 otto Exp $
+#	$OpenBSD: src/usr.bin/pcc/cc/Attic/Makefile,v 1.2 2007/09/15 21:48:06 ray Exp $
 #
 # Makefile for top-level of pcc/cc.
 #
