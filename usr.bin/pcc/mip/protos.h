@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/pcc/mip/Attic/protos.h,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 struct optab;
 struct symtab;

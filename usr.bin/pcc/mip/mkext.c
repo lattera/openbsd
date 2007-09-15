@@ -1,4 +1,4 @@
-
+/*	$OpenBSD: src/usr.bin/pcc/mip/Attic/mkext.c,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 /*
  * Generate defines for the needed hardops.
  */

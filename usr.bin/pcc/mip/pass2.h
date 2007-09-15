@@ -1,4 +1,4 @@
-/*	$Id: pass2.h,v 1.98 2006/12/22 06:23:09 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/mip/Attic/pass2.h,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *

@@ -1,4 +1,4 @@
-/*      $Id: match.c,v 1.72 2006/07/30 09:32:15 ragge Exp $   */
+/*	$OpenBSD: src/usr.bin/pcc/mip/Attic/match.c,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

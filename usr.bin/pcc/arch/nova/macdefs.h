@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.1 2006/07/30 09:30:48 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/arch/nova/Attic/macdefs.h,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright (c) 2006 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

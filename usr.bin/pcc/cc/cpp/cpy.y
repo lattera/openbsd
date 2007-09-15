@@ -1,4 +1,4 @@
-/*	$Id: cpy.y,v 1.12 2006/10/08 13:41:39 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/cpp/Attic/cpy.y,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).

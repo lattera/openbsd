@@ -1,4 +1,4 @@
-/*	$Id: reader.c,v 1.200 2007/09/15 07:37:46 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/mip/Attic/reader.c,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

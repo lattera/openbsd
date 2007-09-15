@@ -1,4 +1,4 @@
-/*	$Id: table.c,v 1.1 2006/06/18 10:17:45 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/arch/vax/Attic/table.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *

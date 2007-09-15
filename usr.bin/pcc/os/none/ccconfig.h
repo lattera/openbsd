@@ -1,4 +1,4 @@
-/*	$Id: ccconfig.h,v 1.2 2006/07/30 09:29:27 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/os/none/Attic/ccconfig.h,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).

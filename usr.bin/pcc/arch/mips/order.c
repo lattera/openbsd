@@ -1,4 +1,4 @@
-/*	$Id: order.c,v 1.1.1.1 2006/04/17 13:23:52 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/arch/mips/Attic/order.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

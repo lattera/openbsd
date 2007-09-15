@@ -1,4 +1,4 @@
-/*	$Id: token.c,v 1.11 2006/09/28 11:10:08 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/cpp/Attic/token.c,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson. All rights reserved.

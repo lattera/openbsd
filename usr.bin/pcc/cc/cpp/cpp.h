@@ -1,4 +1,4 @@
-/*	$Id: cpp.h,v 1.26 2007/09/09 09:58:54 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/cpp/Attic/cpp.h,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).

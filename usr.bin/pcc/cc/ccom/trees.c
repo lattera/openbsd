@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.162 2007/09/15 07:37:44 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/ccom/Attic/trees.c,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

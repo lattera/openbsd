@@ -1,4 +1,4 @@
-/*	$Id: init.c,v 1.26 2007/08/19 19:24:52 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/ccom/Attic/init.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 
 /*
  * Copyright (c) 2004, 2007 Anders Magnusson (ragge@ludd.ltu.se).

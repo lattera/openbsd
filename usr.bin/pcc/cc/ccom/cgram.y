@@ -1,4 +1,4 @@
-/*	$Id: cgram.y,v 1.169 2007/09/15 07:37:43 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/ccom/Attic/cgram.y,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).

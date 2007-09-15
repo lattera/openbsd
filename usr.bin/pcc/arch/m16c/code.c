@@ -1,4 +1,4 @@
-/*	$Id: code.c,v 1.15 2006/02/02 14:22:56 janeno-1 Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/arch/m16c/Attic/code.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

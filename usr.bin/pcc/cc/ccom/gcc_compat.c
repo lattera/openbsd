@@ -1,4 +1,4 @@
-/*      $Id: gcc_compat.c,v 1.7 2006/05/13 06:35:36 ragge Exp $     */
+/*	$OpenBSD: src/usr.bin/pcc/cc/ccom/Attic/gcc_compat.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

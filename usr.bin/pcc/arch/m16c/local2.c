@@ -1,4 +1,4 @@
-/*	$Id: local2.c,v 1.32 2006/02/06 09:33:09 janeno-1 Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/arch/m16c/Attic/local2.c,v 1.2 2007/09/15 22:04:38 ray Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

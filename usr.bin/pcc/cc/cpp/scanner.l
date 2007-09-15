@@ -1,5 +1,5 @@
 %{
-/*	$Id: scanner.l,v 1.15 2007/09/09 17:42:33 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/cpp/Attic/scanner.l,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson. All rights reserved.
