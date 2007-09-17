@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/pcc/cc/cpp/Attic/cpp.h,v 1.2 2007/09/15 22:04:39 ray Exp $	*/
+/*	$Id: cpp.h,v 1.26 2007/09/09 09:58:54 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).
@@ -44,7 +44,7 @@ extern	int	flslvl;
 extern	int	elflvl;
 extern	int	elslvl;
 extern	int	tflag, Cflag;
-extern	int	Mflag;
+extern	int	Mflag, dMflag;
 extern	usch	*Mfile;
 extern	int	ofd;
 
