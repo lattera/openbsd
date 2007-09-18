@@ -1,4 +1,4 @@
-/*	$Id: cc.c,v 1.56 2007/09/16 19:42:49 ragge Exp $	*/
+/*	$OpenBSD: src/usr.bin/pcc/cc/cc/Attic/cc.c,v 1.6 2007/09/18 07:16:01 otto Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *
