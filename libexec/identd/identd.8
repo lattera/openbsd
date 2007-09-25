@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/libexec/identd/Attic/identd.8,v 1.24 2007/05/31 19:19:39 jmc Exp $
+.\"	$OpenBSD: src/libexec/identd/Attic/identd.8,v 1.25 2007/09/25 13:37:01 jmc Exp $
 .\"
 .\" Copyright (c) 1997, Jason Downs.  All rights reserved.
 .\"
@@ -183,7 +183,7 @@ check for a file
 .Pa .ident
 in the user's home directory.
 If this file is accessible, return
-the contents of the file
+at most 20 characters of the first line of the file
 instead of the normal USERID response.
 .It Fl m
 Allow multiple requests to be processed per session.
