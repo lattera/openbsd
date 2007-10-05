@@ -1,0 +1,3 @@
+# $OpenBSD: src/regress/usr.bin/pcc/cc/ccom/Attic/Makefile,v 1.1 2007/10/05 16:49:37 otto Exp $
+
+regress:
