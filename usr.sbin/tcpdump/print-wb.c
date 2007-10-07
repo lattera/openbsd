@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-wb.c,v 1.6 2000/10/03 14:31:58 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-wb.c,v 1.7 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-wb.c,v 1.5 1996/12/12 16:22:24 bitblt Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #include <sys/types.h>

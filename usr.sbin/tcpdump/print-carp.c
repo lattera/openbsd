@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-carp.c,v 1.4 2006/06/02 19:57:50 mcbride Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-carp.c,v 1.5 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2000 William C. Fenner.
@@ -30,7 +30,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-carp.c,v 1.3 2004/05/13 08:35:06 mcbride Exp $";
+    "@(#) $Id$";
 #endif
 
 #ifdef HAVE_CONFIG_H

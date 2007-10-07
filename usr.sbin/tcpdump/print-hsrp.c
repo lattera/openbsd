@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-hsrp.c,v 1.2 2002/01/22 18:52:38 mickey Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-hsrp.c,v 1.3 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (C) 2001 Julian Cowley
@@ -33,7 +33,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-hsrp.c,v 1.1 2002/01/22 18:33:07 mickey Exp $";
+    "@(#) $Id$";
 #endif
 
 #ifdef HAVE_CONFIG_H

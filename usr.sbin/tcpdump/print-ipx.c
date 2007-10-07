@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ipx.c,v 1.10 2006/05/29 17:41:14 moritz Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ipx.c,v 1.11 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996
@@ -26,7 +26,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ipx.c,v 1.9 2002/02/19 19:39:40 millert Exp $";
+    "@(#) $Id$";
 #endif
 
 #include <sys/param.h>

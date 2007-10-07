@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-l2tp.c,v 1.2 2003/12/22 22:22:24 otto Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-l2tp.c,v 1.3 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993, 1994, 1995, 1996, 1997
@@ -25,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-l2tp.c,v 1.1 2000/01/16 10:54:58 jakob Exp $";
+    "@(#) $Id$";
 #endif
 
 #include <sys/types.h>

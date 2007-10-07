@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-etherip.c,v 1.4 2006/06/01 17:18:39 moritz Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-etherip.c,v 1.5 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -32,7 +32,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-etherip.c,v 1.3 2006/05/29 18:05:22 moritz Exp $";
+    "@(#) $Id$";
 #endif
 
 #include <sys/param.h>

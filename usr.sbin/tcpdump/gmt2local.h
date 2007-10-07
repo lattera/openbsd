@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/gmt2local.h,v 1.2 2000/10/03 14:31:55 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/gmt2local.h,v 1.3 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997
@@ -20,7 +20,7 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @(#) $Header: /cvs/src/usr.sbin/tcpdump/gmt2local.h,v 1.1 1999/07/28 20:41:35 jakob Exp $ (LBL)
+ * @(#) $Id$ (LBL)
  */
 #ifndef gmt2local_h
 #define gmt2local_h

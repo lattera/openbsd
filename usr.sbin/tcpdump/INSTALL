@@ -1,4 +1,4 @@
-@(#) $Header: /cvs/src/usr.sbin/tcpdump/INSTALL,v 1.2 1999/07/28 20:41:34 jakob Exp $ (LBL)
+@(#) $Id$ (LBL)
 
 If you have not built libpcap, do so first.  See the README
 file in this directory for the ftp location.

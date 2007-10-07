@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/addrtoname.c,v 1.29 2007/06/21 03:13:14 ray Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/addrtoname.c,v 1.30 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
@@ -25,7 +25,7 @@
  */
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /home/ray/openbsd/src/usr.sbin/tcpdump/addrtoname.c,v 1.28 2006/02/26 21:10:54 otto Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #include <sys/param.h>

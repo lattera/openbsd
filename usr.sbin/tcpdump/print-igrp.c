@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-igrp.c,v 1.3 2000/10/03 14:31:57 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-igrp.c,v 1.4 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1996, 1997
@@ -25,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-igrp.c,v 1.2 1999/09/16 20:58:47 brad Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #include <sys/param.h>

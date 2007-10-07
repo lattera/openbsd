@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf.c,v 1.12 2007/06/14 03:23:49 reyk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf.c,v 1.13 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993, 1994, 1995, 1996, 1997
@@ -25,7 +25,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-ospf.c,v 1.11 2006/04/21 23:09:34 cloder Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #include <sys/param.h>

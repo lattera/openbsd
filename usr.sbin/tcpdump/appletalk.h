@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/appletalk.h,v 1.7 2000/10/03 14:31:54 ho Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/appletalk.h,v 1.8 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1988, 1989, 1990, 1993, 1994, 1995, 1996
@@ -22,7 +22,7 @@
  *
  * AppleTalk protocol formats (courtesy Bill Croft of Stanford/SUMEX).
  *
- * @(#) $Header: /cvs/src/usr.sbin/tcpdump/appletalk.h,v 1.6 1997/07/23 02:59:00 denny Exp $ (LBL)
+ * @(#) $Id$ (LBL)
  */
 
 struct LAP {

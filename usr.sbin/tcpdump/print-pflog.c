@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-pflog.c,v 1.17 2005/11/23 22:33:11 cloder Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-pflog.c,v 1.18 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996
@@ -23,7 +23,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-pflog.c,v 1.16 2005/05/27 17:22:41 dhartmei Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #include <sys/param.h>

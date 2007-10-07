@@ -29,7 +29,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvs/src/usr.sbin/tcpdump/print-lwres.c,v 1.2 2001/03/08 00:36:42 itojun Exp $ (LBL)";
+    "@(#) $Id$ (LBL)";
 #endif
 
 #ifdef HAVE_CONFIG_H

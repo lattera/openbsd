@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.5 2006/04/08 01:52:09 ray Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.6 2007/10/07 16:41:05 deraadt Exp $	*/
 
 /*
    Copyright (C) Andrew Tridgell 1995-1999
@@ -13,7 +13,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-     "@(#) $Header: /cvs/src/usr.sbin/tcpdump/smbutil.c,v 1.4 2006/04/07 05:16:52 ray Exp $";
+     "@(#) $Id$";
 #endif
 
 #include <sys/param.h>
