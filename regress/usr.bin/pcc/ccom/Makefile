@@ -1,8 +1,10 @@
-# $OpenBSD: src/regress/usr.bin/pcc/ccom/Attic/Makefile,v 1.1 2007/10/07 18:12:43 otto Exp $
+# $OpenBSD: src/regress/usr.bin/pcc/ccom/Attic/Makefile,v 1.2 2007/10/16 12:49:53 otto Exp $
 
 CC=/usr/local/bin/cc
 
-REGRESS_TARGETS=const001 \
+REGRESS_TARGETS=\
+	arith001 \
+	const001 \
 	darray001 \
 	enum001 \
 	init001 init004 \
