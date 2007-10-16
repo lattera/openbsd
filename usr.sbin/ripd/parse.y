@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ripd/parse.y,v 1.11 2007/10/16 06:06:49 deraadt Exp $ */
+/*	$OpenBSD: src/usr.sbin/ripd/parse.y,v 1.12 2007/10/16 20:01:23 mpf Exp $ */
 
 /*
  * Copyright (c) 2006 Michele Marchetto <mydecay@openbeer.it>
@@ -590,7 +590,7 @@ top:
 	}
 
 #define allowed_to_end_number(x) \
-	(isspace(x) || x == ')' || x ==',' || x == '/' || x == '}')
+	(isspace(x) || x == ')' || x ==',' || x == '/' || x == '}' || x == '=')
 
 	if (c == '-' || isdigit(c)) {
 		do {
