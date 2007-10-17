@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/i2c/thmc50.c,v 1.3 2007/10/14 14:01:22 cnst Exp $	*/
+/*	$OpenBSD: src/sys/dev/i2c/thmc50.c,v 1.4 2007/10/17 17:14:54 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2007 Theo de Raadt
@@ -23,7 +23,7 @@
 
 #include <dev/i2c/i2cvar.h>
 
-/* ADM 1022 registers */
+/* THMC50 registers */
 #define THMC50_TEMP0		0x27
 #define THMC50_TEMP1		0x26
 #define THMC50_TEMP2		0x20
