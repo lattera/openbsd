@@ -1,8 +1,8 @@
-#	$OpenBSD: src/distrib/alpha/Makefile,v 1.7 2007/08/14 18:57:32 deraadt Exp $
+#	$OpenBSD: src/distrib/alpha/Makefile,v 1.8 2007/10/18 18:16:19 deraadt Exp $
 
 SUBDIR= bsd.rd floppy floppyB cdfs # floppyC
 
-.if	make(obj)
+.if	make(obj) || make(cleandir) || make(clean)
 SUBDIR+= iso
 .endif
 

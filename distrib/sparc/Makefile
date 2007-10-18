@@ -1,8 +1,8 @@
-#	$OpenBSD: src/distrib/sparc/Makefile,v 1.7 2007/08/14 18:57:32 deraadt Exp $
+#	$OpenBSD: src/distrib/sparc/Makefile,v 1.8 2007/10/18 18:16:20 deraadt Exp $
 
 SUBDIR+= ../ramdisk ../miniroot cdfs
 
-.if	make(obj)
+.if	make(obj) || make(cleandir) || make(clean)
 SUBDIR+= iso
 .endif
 
