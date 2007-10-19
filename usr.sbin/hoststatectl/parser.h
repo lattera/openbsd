@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/hoststatectl/Attic/parser.h,v 1.6 2007/09/28 13:29:56 pyr Exp $	*/
+/*	$OpenBSD: src/usr.sbin/hoststatectl/Attic/parser.h,v 1.7 2007/10/19 12:08:55 pyr Exp $	*/
 
 /*
  * Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -29,6 +29,7 @@ enum actions {
 	HOST_DISABLE,
 	HOST_ENABLE,
 	SHUTDOWN,
+	POLL,
 	RELOAD,
 	MONITOR
 };
