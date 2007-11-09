@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/include/psl.h,v 1.6 2007/05/16 19:37:06 thib Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/include/psl.h,v 1.7 2007/11/09 17:28:29 miod Exp $	*/
 /*	$NetBSD: psl.h,v 1.5 1994/10/26 07:50:50 cgd Exp $	*/
 
 /*
@@ -94,8 +94,8 @@ do {									\
 /*
  * Convert PSL values to CPU IPLs and vice-versa.
  */
-#define	PSLTOIPL(x)		(((x) >> 8) & 0xf)
-#define	IPLTOPSL(x)		((((x) & 0xf) << 8) | PSL_S)
+#define	PSLTOIPL(x)		(((x) >> 8) & 0x7)
+#define	IPLTOPSL(x)		((((x) & 0x7) << 8) | PSL_S)
 
 /*
  * spl functions; all but spl0 are done in-line
