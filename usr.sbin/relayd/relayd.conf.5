@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/relayd/relayd.conf.5,v 1.67 2007/11/24 19:00:44 jmc Exp $
+.\"	$OpenBSD: src/usr.sbin/relayd/relayd.conf.5,v 1.68 2007/11/25 20:02:02 reyk Exp $
 .\"
 .\" Copyright (c) 2006, 2007 Reyk Floeter <reyk@openbsd.org>
 .\" Copyright (c) 2006, 2007 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -574,7 +574,8 @@ request query expect "bar" from "foo"
 .Ed
 .It Ic url
 Look up the entity as a URL suffix/prefix expression consisting of a
-hostname without port or suffix and a path name or prefix when using the
+canonicalized hostname without port or suffix and a path name or
+prefix when using the
 .Ic http
 protocol.
 This type is only available with the direction
