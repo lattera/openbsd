@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_syscall.h,v 1.9 2004/07/09 23:55:31 millert Exp $	*/
+/*	$OpenBSD: src/sys/compat/ibcs2/Attic/ibcs2_syscall.h,v 1.10 2007/11/27 18:05:59 art Exp $	*/
 
 /*
  * System call numbers.
