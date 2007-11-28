@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.i386/apm.4,v 1.27 2007/11/28 12:58:30 tedu Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.i386/apm.4,v 1.28 2007/11/28 13:06:57 tedu Exp $
 .\"
 .\"	Copyright (c) 1998 Marco S. Hyman
 .\"
@@ -9,7 +9,7 @@
 .\"	LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 .\"	FOR A PARTICULAR PURPOSE.
 .\"
-.Dd $Mdocdate: May 31 2007 $
+.Dd $Mdocdate: November 28 2007 $
 .Dt APM 4 i386
 .Os
 .Sh NAME
@@ -25,6 +25,10 @@ driver provides an interface to the Advanced Power Management
 .Tn BIOS
 functions.
 The driver supports versions 1.0, 1.1, and 1.2 interface specifications.
+.Pp
+This driver also provides an interface to
+.Xr acpi 4
+on some machines.
 .Pp
 The low two bytes of the flags specify the version of the specification
 driver should conform to in binary decimal notation.
