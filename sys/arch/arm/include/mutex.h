@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/arm/xscale/Attic/i80321_mutex.h,v 1.1 2007/05/15 05:26:44 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/arm/include/mutex.h,v 1.1 2007/12/05 16:08:04 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2004 Artur Grabowski <art@openbsd.org>
