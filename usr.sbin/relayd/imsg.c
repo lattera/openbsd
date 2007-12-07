@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/relayd/Attic/imsg.c,v 1.9 2007/11/24 17:07:28 reyk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/relayd/Attic/imsg.c,v 1.10 2007/12/07 17:17:00 reyk Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -31,7 +31,7 @@
 
 #include <openssl/ssl.h>
 
-#include "hoststated.h"
+#include "relayd.h"
 
 void
 imsg_init(struct imsgbuf *ibuf, int fd, void (*handler)(int, short, void *))
