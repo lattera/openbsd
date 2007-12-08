@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/relayd/relayd.8,v 1.12 2007/12/08 17:07:09 reyk Exp $
+.\"	$OpenBSD: src/usr.sbin/relayd/relayd.8,v 1.13 2007/12/08 18:00:13 pyr Exp $
 .\"
 .\" Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: December 7 2007 $
+.Dd $Mdocdate: December 8 2007 $
 .Dt RELAYD 8
 .Os
 .Sh NAME
@@ -60,7 +60,7 @@ itself.
 .Nm
 works in terms of the following
 .Em entities :
-relays, protocols, services, and tables.
+relays, protocols, redirections, and tables.
 A
 .Em relay
 represents a Layer 7 load-balancing instance.
@@ -70,7 +70,7 @@ A
 defines which actions, if any, must be taken on the
 packet payload as data crosses a relay.
 A
-.Em service
+.Em redirection
 represents a Layer 3 load-balancing instance.
 Each instance translates to a
 .Xr pf 4
