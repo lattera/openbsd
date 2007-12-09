@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/gprof/gprof.h,v 1.12 2006/03/25 19:06:36 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/gprof/gprof.h,v 1.13 2007/12/09 19:51:30 espie Exp $	*/
 /*	$NetBSD: gprof.h,v 1.13 1996/04/01 21:54:06 mark Exp $	*/
 
 /*
@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <err.h>
 
-#include "machine.h"
+#include MD_INCLUDE
 
     /*
      * booleans
