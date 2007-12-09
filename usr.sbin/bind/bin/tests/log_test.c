@@ -15,7 +15,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: log_test.c,v 1.23.206.1 2004/03/06 10:21:37 marka Exp $ */
+/* $ISC: log_test.c,v 1.24 2004/03/05 04:58:38 marka Exp $ */
 
 /* Principal Authors: DCL */
 

@@ -15,7 +15,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: shutdown_test.c,v 1.18.12.5 2004/08/28 06:25:31 marka Exp $ */
+/* $ISC: shutdown_test.c,v 1.20.18.1 2004/08/28 06:17:29 marka Exp $ */
 
 #include <config.h>
 

@@ -15,7 +15,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: sym_test.c,v 1.22.12.5 2005/03/17 03:58:29 marka Exp $ */
+/* $ISC: sym_test.c,v 1.24.18.2 2005/03/17 03:57:08 marka Exp $ */
 
 #include <config.h>
 
