@@ -1,0 +1,351 @@
+.\" $OpenBSD: src/share/man/man4/ural.4,v 1.4 2007/12/10 10:32:54 jmc Exp $
+.\"
+.\" Copyright (c) 2005-2007
+.\"	Damien Bergamini <damien.bergamini@free.fr>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: November 27 2007 $
+.Os
+.Dt URAL 4
+.Sh NAME
+.Nm ural
+.Nd Ralink Technology USB IEEE 802.11b/g wireless network device
+.Sh SYNOPSIS
+.Cd "ural* at uhub? port ?"
+.Sh DESCRIPTION
+The
+.Nm
+driver supports USB 2.0 wireless adapters based on the Ralink RT2500USB
+chipset.
+.Pp
+The RT2500USB chipset is the first generation of 802.11b/g adapters from Ralink.
+It consists of two integrated chips, an RT2570 MAC/BBP and an RT2526 radio
+transceiver.
+.Pp
+These are the modes the
+.Nm
+driver can operate in:
+.Bl -tag -width "IBSS-masterXX"
+.It BSS mode
+Also known as
+.Em infrastructure
+mode, this is used when associating with an access point, through
+which all traffic passes.
+This mode is the default.
+.It IBSS mode
+Also known as
+.Em IEEE ad-hoc
+mode or
+.Em peer-to-peer
+mode.
+This is the standardized method of operating without an access point.
+Stations associate with a service set.
+However, actual connections between stations are peer-to-peer.
+.It Host AP
+In this mode the driver acts as an access point (base station)
+for other cards.
+.It monitor mode
+In this mode the driver is able to receive packets without
+associating with an access point.
+This disables the internal receive filter and enables the card to
+capture packets from networks which it wouldn't normally have access to,
+or to scan for access points.
+.El
+.Pp
+.Nm
+supports software WEP.
+Wired Equivalent Privacy (WEP) is the de facto encryption standard
+for wireless networks.
+It can be typically configured in one of three modes:
+no encryption; 40-bit encryption; or 104-bit encryption.
+Unfortunately, due to serious weaknesses in WEP protocol
+it is strongly recommended that it not be used as the
+sole mechanism to secure wireless communication.
+WEP is not enabled by default.
+.Pp
+The transmit speed is user-selectable or can be adapted automatically by the
+driver depending on the number of hardware transmission retries.
+.Sh CONFIGURATION
+The
+.Nm
+driver can be configured at runtime with
+.Xr ifconfig 8
+or on boot with
+.Xr hostname.if 5
+using the following parameters:
+.Bl -tag -width Ds
+.It Cm bssid Ar bssid
+Set the desired BSSID.
+.It Fl bssid
+Unset the desired BSSID.
+The interface will automatically select a BSSID in this mode, which is
+the default.
+.It Cm chan Ar n
+Set the channel (radio frequency) to be used by the driver based on
+the given channel ID
+.Ar n .
+.It Fl chan
+Unset the desired channel to be used by the driver.
+The driver will automatically select a channel in this mode, which is
+the default.
+.It Cm media Ar media
+The
+.Nm
+driver supports the following
+.Ar media
+types:
+.Pp
+.Bl -tag -width autoselect -compact
+.It Cm autoselect
+Enable autoselection of the media type and options.
+.It Cm DS1
+Set 802.11b DS 1Mbps operation.
+.It Cm DS2
+Set 802.11b DS 2Mbps operation.
+.It Cm DS5
+Set 802.11b DS 5.5Mbps operation.
+.It Cm DS11
+Set 802.11b DS 11Mbps operation.
+.It Cm OFDM6
+Set 802.11g OFDM 6Mbps operation.
+.It Cm OFDM9
+Set 802.11g OFDM 9Mbps operation.
+.It Cm OFDM12
+Set 802.11g OFDM 12Mbps operation.
+.It Cm OFDM18
+Set 802.11g OFDM 18Mbps operation.
+.It Cm OFDM24
+Set 802.11g OFDM 24Mbps operation.
+.It Cm OFDM36
+Set 802.11g OFDM 36Mbps operation.
+.It Cm OFDM48
+Set 802.11g OFDM 48Mbps operation.
+.It Cm OFDM54
+Set 802.11g OFDM 54Mbps operation.
+.El
+.It Cm mediaopt Ar opts
+The
+.Nm
+driver supports the following media options:
+.Pp
+.Bl -tag -width monitor -compact
+.It Cm hostap
+Select Host AP operation.
+.It Cm ibss
+Select IBSS operation.
+.It Cm monitor
+Select monitor mode.
+.El
+.It Fl mediaopt Ar opts
+Disable the specified media options on the driver and return it to the
+default mode of operation (BSS).
+.It Cm mode Ar mode
+The
+.Nm
+driver supports the following modes:
+.Pp
+.Bl -tag -width 11b -compact
+.It Cm 11b
+Force 802.11b operation.
+.It Cm 11g
+Force 802.11g operation.
+.El
+.It Cm nwflag Ar flag
+Set a specified flag for the wireless network interface.
+The flag name can be either
+.Ql hidenwid
+or
+.Ql nobridge .
+The
+.Ql hidenwid
+flag will hide the network ID (ESSID) in beacon frames when operating
+in Host AP mode.
+It will also prevent responses to probe requests with an unspecified
+network ID.
+The
+.Ql nobridge
+flag will disable the direct bridging of frames between associated
+nodes when operating in Host AP mode.
+Setting this flag will block and filter direct inter-station
+communications.
+.Pp
+Note that the
+.Ql hidenwid
+and
+.Ql nobridge
+options do not provide any security.
+The hidden network ID will be sent in clear text by associating
+stations and can be easily discovered with tools like
+.Xr tcpdump 8
+and
+.Xr hostapd 8 .
+.It Fl nwflag Ar flag
+Remove a specified flag for the wireless network interface.
+.It Cm nwid Ar id
+Set the network ID.
+The
+.Ar id
+can either be any text string up to 32 characters in length,
+or a series of hexadecimal digits up to 64 digits.
+An empty
+.Ar id
+string allows the interface to connect to any available access points.
+By default the
+.Nm
+driver uses an empty string.
+Note that network ID is synonymous with Extended Service Set ID (ESSID).
+.It Fl nwid
+Set the network ID to the empty string to allow the interface to connect
+to any available access point.
+.It Cm nwkey Ar key
+Enable WEP encryption using the specified
+.Ar key .
+The
+.Ar key
+can either be a string, a series of hexadecimal digits (preceded by
+.Sq 0x ) ,
+or a set of keys of the form
+.Dq n:k1,k2,k3,k4 ,
+where
+.Sq n
+specifies which of the keys will be used for transmitted packets,
+and the four keys,
+.Dq k1
+through
+.Dq k4 ,
+are configured as WEP keys.
+If a set of keys is specified, a comma
+.Pq Sq \&,
+within the key must be escaped with a backslash.
+Note that if multiple keys are used, their order must be the same within
+the network.
+.Nm
+is capable of using both 40-bit (5 characters or 10 hexadecimal digits)
+or 104-bit (13 characters or 26 hexadecimal digits) keys.
+.It Fl nwkey
+Disable WEP encryption.
+This is the default mode of operation.
+.El
+.Sh HARDWARE
+The following adapters should work:
+.Pp
+.Bl -tag -width Ds -offset indent -compact
+.It AMIT WL532U
+.It ASUS WL-167g v1
+.It Belkin F5D7050 v2000
+.It Buffalo WLI-U2-KG54
+.It Buffalo WLI-U2-KG54-AI
+.It Buffalo WLI-U2-KG54-YB
+.It CNet CWD-854
+.It Compex WLU54G 2A1100
+.It Conceptronic C54RU
+.It D-Link DWL-G122 (b1)
+.It Dynalink WLG25USB
+.It E-Tech WGUS02
+.It Eminent EM3035
+.It Gigabyte GN-WBKG
+.It Hercules HWGUSB2-54
+.It KCORP LifeStyle KLS-685
+.It Linksys HU200-TS
+.It Linksys WUSB54G v4
+.It Linksys WUSB54GP v4
+.It MSI MS-6861
+.It MSI MS-6865
+.It MSI MS-6869
+.It Nintendo Wi-Fi USB Connector
+.It Nova Tech NV-902W
+.It OvisLink Evo-W54USB
+.It SerComm UB801R
+.It SparkLAN WL-685R
+.It Sphairon UB801R
+.It Surecom EP-9001-g rev 3A
+.It Sweex LC100060
+.It Tonze UW-6200C
+.It Zaapa ZNWUSB-54
+.It Zinwell ZPlus-G250
+.It Zinwell ZWX-G261
+.It Zonet ZEW2500P
+.El
+.Sh EXAMPLES
+The following
+.Xr hostname.if 5
+example configures ural0 to join whatever network is available on boot,
+using WEP key
+.Dq 0x1deadbeef1 ,
+channel 11, obtaining an IP address using DHCP:
+.Bd -literal -offset indent
+dhcp NONE NONE NONE nwkey 0x1deadbeef1 chan 11
+.Ed
+.Pp
+The following
+.Xr hostname.if 5
+example creates a host-based access point on boot:
+.Bd -literal -offset indent
+inet 192.168.1.1 255.255.255.0 NONE media autoselect \e
+	mediaopt hostap nwid my_net chan 11
+.Ed
+.Pp
+Configure ural0 for WEP, using hex key
+.Dq 0x1deadbeef1 :
+.Bd -literal -offset indent
+# ifconfig ural0 nwkey 0x1deadbeef1
+.Ed
+.Pp
+Return ural0 to its default settings:
+.Bd -literal -offset indent
+# ifconfig ural0 -bssid -chan media autoselect \e
+	nwid "" -nwkey
+.Ed
+.Pp
+Join an existing BSS network,
+.Dq my_net :
+.Bd -literal -offset indent
+# ifconfig ural0 192.168.1.1 netmask 0xffffff00 nwid my_net
+.Ed
+.Sh DIAGNOSTICS
+.Bl -diag
+.It "ural%d: device timeout"
+A frame dispatched to the hardware for transmission did not complete in time.
+The driver will reset the hardware.
+This should not happen.
+.El
+.Sh SEE ALSO
+.Xr arp 4 ,
+.Xr ifmedia 4 ,
+.Xr intro 4 ,
+.Xr netintro 4 ,
+.Xr usb 4 ,
+.Xr hostname.if 5 ,
+.Xr hostapd 8 ,
+.Xr ifconfig 8
+.Pp
+Ralink Technology:
+.Pa http://www.ralinktech.com/
+.Sh HISTORY
+The
+.Nm
+driver first appeared in
+.Ox 3.7 .
+.Sh AUTHORS
+The
+.Nm
+driver was written by
+.An Damien Bergamini Aq damien@openbsd.org .
+.Sh CAVEATS
+The
+.Nm
+driver supports automatic control of the transmit speed in BSS mode only.
+Therefore the use of an
+.Nm
+adapter in Host AP mode is discouraged.
