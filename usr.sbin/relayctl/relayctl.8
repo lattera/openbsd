@@ -1,0 +1,109 @@
+.\" $OpenBSD: src/usr.sbin/relayctl/relayctl.8,v 1.21 2007/12/20 20:22:11 reyk Exp $
+.\"
+.\" Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: December 20 2007 $
+.Dt RELAYCTL 8
+.Os
+.Sh NAME
+.Nm relayctl
+.Nd control the relay daemon
+.Sh SYNOPSIS
+.Nm
+.Ar command
+.Op Ar arguments ...
+.Sh DESCRIPTION
+The
+.Nm
+program controls the
+.Xr relayd 8
+daemon.
+.Pp
+The following commands are available:
+.Bl -tag -width Ds
+.It Cm host disable Op Ar name | id
+Disable a host.
+Treat it as though it were always down.
+.It Cm host enable Op Ar name | id
+Enable the host.
+Start checking its health again.
+.It Cm monitor
+Continuously report any changes in the host checking engine and the
+.Xr pf 4
+engine.
+.It Cm poll
+Schedule an immediate check of all hosts.
+.It Cm redirect disable Op Ar name | id
+Disable a redirection.
+If it has
+.Xr pf 4
+redirection rules installed, remove them.
+Mark the redirection's main table and \(en
+if applicable \(en disable the backup table as well.
+.It Cm redirect enable Op Ar name | id
+Enable a redirection.
+Mark the redirection's main table and \(en if applicable \(en enable
+the backup table as well.
+.It Cm reload
+Reload the configuration file.
+.It Cm show hosts
+Show detailed status of hosts and tables.
+.It Cm show redirects
+Show detailed status of redirections including the current and average
+access statistics.
+The statistics will be updated every minute.
+Redirections using the
+.Ic sticky-address
+option will count the number of sticky states,
+not the total number of redirected connections.
+.It Cm show relays
+Show detailed status of relays including the current and average
+access statistics.
+The statistics will be updated every minute.
+.It Cm show sessions
+Dump the complete list of running relay sessions.
+.It Cm show summary
+Display a list of all relays, redirections, tables, and hosts.
+.It Cm table disable Op Ar name | id
+Disable a table.
+Consider all hosts disabled.
+If it is a main table of a redirection which has a non-empty backup table,
+swap the contents of the
+.Xr pf 4
+table with those of the backup table.
+.It Cm table enable Op Ar name | id
+Enable a table.
+Start doing checks for all hosts that aren't individually disabled
+again.
+.El
+.Sh FILES
+.Bl -tag -width "/var/run/relayd.sockXX" -compact
+.It /var/run/relayd.sock
+Unix-domain socket used for communication with
+.Xr relayd 8 .
+.El
+.Sh SEE ALSO
+.Xr relayd 8
+.Sh HISTORY
+The
+.Nm
+program, formerly known as
+.Ic hoststatectl ,
+first appeared in
+.Ox 4.1 .
+It was renamed to
+.Nm
+in
+.Ox 4.3 .
