@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man3/tree.3,v 1.13 2007/05/31 19:19:48 jmc Exp $
+.\"	$OpenBSD: src/share/man/man3/tree.3,v 1.14 2007/12/24 12:04:13 otto Exp $
 .\"/*
 .\" * Copyright 2002 Niels Provos <provos@citi.umich.edu>
 .\" * All rights reserved.
@@ -78,7 +78,7 @@
 .Ft "struct TYPE *"
 .Fn SPLAY_INITIALIZER "SPLAY_HEAD *head"
 .Fn SPLAY_ROOT "SPLAY_HEAD *head"
-.Ft "bool"
+.Ft "int"
 .Fn SPLAY_EMPTY "SPLAY_HEAD *head"
 .Ft "struct TYPE *"
 .Fn SPLAY_NEXT "NAME" "SPLAY_HEAD *head" "struct TYPE *elm"
@@ -107,7 +107,7 @@
 .Fn RB_INITIALIZER "RB_HEAD *head"
 .Ft "struct TYPE *"
 .Fn RB_ROOT "RB_HEAD *head"
-.Ft "bool"
+.Ft "int"
 .Fn RB_EMPTY "RB_HEAD *head"
 .Ft "struct TYPE *"
 .Fn RB_NEXT "NAME" "RB_HEAD *head" "struct TYPE *elm"
