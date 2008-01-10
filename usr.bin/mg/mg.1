@@ -1,0 +1,201 @@
+.\"	$OpenBSD: src/usr.bin/mg/mg.1,v 1.35 2008/01/10 21:56:24 jmc Exp $
+.\" This file is in the public domain.
+.\"
+.Dd $Mdocdate: January 10 2008 $
+.Dt MG 1
+.Os
+.Sh NAME
+.Nm mg
+.Nd emacs-like text editor
+.Sh SYNOPSIS
+.Nm mg
+.Op Ar options
+.Op Ar file ...
+.Sh DESCRIPTION
+.Nm
+is intended to be a small, fast, and portable editor for
+people who can't (or don't want to) run emacs for one
+reason or another, or are not familiar with the
+.Xr vi 1
+editor.
+It is compatible with emacs because there shouldn't
+be any reason to learn more editor types than emacs or
+.Xr vi 1 .
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Ar +number
+Go to the line specified by number (do not insert
+a space between the
+.Sq +
+sign and the number).
+If a negative number is specified, the line number counts
+backwards from the end of the file i.e. +-1 will be the last
+line of the file, +-2 will be second last, and so on.
+.It Fl f Ar <mode>
+Run the mode command for all buffers created from
+arguments on the command line, including the
+scratch buffer and all files.
+.It Fl n
+Turn off backup file generation.
+.El
+.Sh WINDOWS AND BUFFERS
+When a file is loaded into
+.Nm ,
+it is stored in a
+.Em buffer .
+This buffer may be displayed on the screen in more than one window.
+At present, windows may only be split horizontally, so each window is
+delineated by a modeline at the bottom.
+If changes are made to a buffer, it will be reflected in all open windows.
+.Sh POINT AND MARK
+The current cursor location in
+.Nm
+is called the
+.Em point .
+It is possible to define a window-specific region of text by setting a second
+location, called the
+.Em mark .
+The
+.Em region
+is the text between point and mark inclusive.
+Deleting the character at the mark position leaves
+the mark at the point of deletion.
+.Pp
+Note: The point and mark are window-specific in
+.Nm ,
+not buffer-specific, as in other emacs flavours.
+.Sh DEFAULT KEY BINDINGS
+Normal editing commands are very similar to Gnu Emacs.
+In the following examples, ^X means control-X, and M-X means Meta-X,
+where the Meta key may be either a special key on your keyboard
+or the ALT key; otherwise ESC followed by the key X works as well.
+.Pp
+.Bl -tag -width xxxxx -compact
+.It ^F
+Forward character.
+.It ^B
+Backwards character.
+.It ^N
+Next line.
+.It ^P
+Previous line.
+.It ^A
+Start of line.
+.It ^E
+End of line.
+.It ^D
+Delete current character.
+.It ^S
+Interactive search forward.
+.It ^R
+Interactive search backwards.
+.It M-%
+Interactive search-and-replace.
+.It ^O
+Open a new line at cursor position.
+.It ^T
+Transpose characters.
+.It ^U
+Repeat next command 4 times
+(can be cascaded i.e. ^U^U^F will move 16 characters forward).
+.Pp
+.It ^K
+Kill to end of line (placing into kill buffer).
+.It ^Y
+Yank kill buffer into current location.
+.It ^SPC
+Set mark.
+.It ^W
+Kill region
+(cuts from previously set mark to current location, into kill buffer).
+.It M-W
+Copy region (into kill buffer).
+.Pp
+.It ^V
+Next page.
+.It M-V
+Previous page.
+.It M-<
+Start of buffer.
+.It M->
+End of buffer.
+.Pp
+.It ^X^C
+Save buffers and quit.
+.It ^X-O
+Next window.
+.It ^X-N
+Next window.
+.It ^X-P
+Previous window.
+.It ^X-U
+Undo.
+.It ^_
+Undo.
+.El
+.Pp
+For a complete set of key bindings, type
+.Dq M-x describe-bindings .
+.Sh COMMANDS
+Commands are invoked by
+.Dq M-x ,
+or by binding to a key.
+Many commands take an optional numerical parameter,
+.Va n .
+This parameter is set either by
+M-<n> (where
+.Va n
+is the numerical argument) before the command, or by
+one or more invocations of the universal argument, usually bound to C-U.
+When invoked in this manner, the value of the numeric parameter to
+be passed is displayed in the minibuffer before the M-x.
+.\" A complete list of commands is given in mg(5)
+.Sh CONFIGURATION FILES
+There are two configuration files,
+.Pa .mg ,
+and
+.Pa .mg-TERM .
+Here,
+.Ev TERM
+represents the name of your terminal type; e.g., if your terminal type
+is set to
+.Dq vt100 ,
+.Nm
+will use
+.Pa .mg-vt100
+as a startup file.
+The terminal type startup file is used first.
+.Pp
+The startup file format is a list of commands, one per line, as used for
+interactive evaluation.
+Strings that are normally entered by the user at any subsequent prompts
+may be specified after the command name; e.g.:
+.Bd -literal -offset indent
+auto-fill-mode
+set-fill-column 72
+global-set-key "\e^x\e^f" find-file
+.Ed
+.Sh FILES
+.Bl -tag -width ~/.mg-TERM -compact
+.It Pa ~/.mg
+normal startup file
+.It Pa ~/.mg-TERM
+terminal-specific startup file
+.El
+.Sh SEE ALSO
+.Xr vi 1
+.Sh CAVEATS
+.Nm
+differs from other emacs implementations primarily in not having many
+special modes for tasks other than straight editing, and in not having
+special modes that support various programming languages.
+.Pp
+Since it is written completely in C, there is no
+language in which you can write extensions;
+however, you can rebind keys and change certain parameters.
+.Pp
+In order to use 8-bit characters (such as German umlauts), the Meta key
+needs to be disabled via the
+.Dq meta-key-mode
+command.
