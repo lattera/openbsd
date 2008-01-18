@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/snmpd/trap.c,v 1.7 2008/01/17 23:36:26 reyk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/snmpd/trap.c,v 1.8 2008/01/18 02:09:30 reyk Exp $	*/
 
 /*
  * Copyright (c) 2008 Reyk Floeter <reyk@vantronix.net>
