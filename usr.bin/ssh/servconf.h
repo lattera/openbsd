@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/servconf.h,v 1.80 2007/02/19 10:45:58 dtucker Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/servconf.h,v 1.81 2008/02/08 23:24:08 djm Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -139,6 +139,8 @@ typedef struct {
 	int	permit_tun;
 
 	int	num_permitted_opens;
+
+	char   *chroot_directory;
 }       ServerOptions;
 
 void	 initialize_server_options(ServerOptions *);
