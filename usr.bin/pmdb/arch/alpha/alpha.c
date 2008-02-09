@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/pmdb/arch/alpha/Attic/alpha.c,v 1.3 2002/07/22 02:54:23 art Exp $	*/
+/*	$OpenBSD: src/usr.bin/pmdb/arch/alpha/Attic/alpha.c,v 1.4 2008/02/09 20:59:09 martin Exp $	*/
 /*
  * Copyright (c) 2002 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
