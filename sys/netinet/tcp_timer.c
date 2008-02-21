@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.39 2007/06/15 18:23:07 markus Exp $	*/
+/*	$OpenBSD: src/sys/netinet/tcp_timer.c,v 1.39.2.1 2008/02/21 15:53:16 henning Exp $	*/
 /*	$NetBSD: tcp_timer.c,v 1.14 1996/02/13 23:44:09 christos Exp $	*/
 
 /*
@@ -463,10 +463,10 @@ tcp_timer_keep(void *arg)
 		 * to get a 4.2 host to respond.
 		 */
 		tcp_respond(tp, mtod(tp->t_template, caddr_t),
-		    (struct mbuf *)NULL, tp->rcv_nxt - 1, tp->snd_una - 1, 0);
+		    NULL, tp->rcv_nxt - 1, tp->snd_una - 1, 0);
 #else
 		tcp_respond(tp, mtod(tp->t_template, caddr_t),
-		    (struct mbuf *)NULL, tp->rcv_nxt, tp->snd_una - 1, 0);
+		    NULL, tp->rcv_nxt, tp->snd_una - 1, 0);
 #endif
 		TCP_TIMER_ARM(tp, TCPT_KEEP, tcp_keepintvl);
 	} else
