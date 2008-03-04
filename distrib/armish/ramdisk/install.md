@@ -1,4 +1,4 @@
-#	$OpenBSD: src/distrib/armish/ramdisk/install.md,v 1.2 2007/02/11 18:59:30 krw Exp $
+#	$OpenBSD: src/distrib/armish/ramdisk/install.md,v 1.3 2008/03/04 00:36:38 krw Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -121,4 +121,7 @@ __EOT
 }
 
 md_congrats() {
+}
+
+md_consoleinfo() {
 }
