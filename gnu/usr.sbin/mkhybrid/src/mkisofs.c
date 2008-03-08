@@ -20,14 +20,13 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-static char rcsid[] ="$Id: mkisofs.c,v 1.3 2001/10/01 17:05:05 drahn Exp $";
-
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 12/3/99 */
 
 #include <errno.h>
 #include "config.h"
 #include "mkisofs.h"
 #include "match.h"
+#include "apple_proto.h"
 
 #ifdef linux
 #include <getopt.h>
@@ -54,8 +53,6 @@ static char rcsid[] ="$Id: mkisofs.c,v 1.3 2001/10/01 17:05:05 drahn Exp $";
 #endif
 #endif
 #include <fctldefs.h>
-
-#include "exclude.h"
 
 #if defined(__NetBSD__) || defined(__OpenBSD__) 
 #include <sys/time.h>

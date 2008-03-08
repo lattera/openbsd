@@ -40,11 +40,6 @@
 #include <errno.h>
 #include "file.h"
 
-#ifndef	lint
-static char *moduleid = 
-	"@(#)$Id: apprentice.c,v 1.1 2000/10/10 20:40:36 beck Exp $";
-#endif	/* lint */
-
 #define	EATAB {while (isascii((unsigned char) *l) && \
 		      isspace((unsigned char) *l))  ++l;}
 #define LOWCASE(l) (isupper((unsigned char) (l)) ? \

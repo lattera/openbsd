@@ -17,8 +17,6 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-static char rcsid[] ="$Id: joliet.c,v 1.14 1999/03/07 17:41:19 eric Exp $";
-
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 12/3/99 */
 
 /*
@@ -74,6 +72,7 @@ static char rcsid[] ="$Id: joliet.c,v 1.14 1999/03/07 17:41:19 eric Exp $";
 #include "config.h"
 #include "mkisofs.h"
 #include "iso9660.h"
+
 
 #include <stdlib.h>
 #include <time.h>

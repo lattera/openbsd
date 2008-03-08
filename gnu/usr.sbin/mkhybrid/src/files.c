@@ -21,7 +21,6 @@
 
 /* ADD_FILES changes made by Ross Biro biro@yggdrasil.com 2/23/95 */
 
-static char rcsid[] ="$Id: files.c,v 1.6 1998/02/16 17:56:54 eric Exp $";
 
 #include "config.h"
 #include <errno.h>
