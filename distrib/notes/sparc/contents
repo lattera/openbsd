@@ -1,0 +1,62 @@
+dnl	$OpenBSD: src/distrib/notes/sparc/contents,v 1.57 2008/03/10 21:25:53 miod Exp $
+TopPart
+
+OpenBSDminiroot
+			It can be copied to the swap partition of an existing
+			OpenBSD, NetBSD, Linux, SunOS, or Solaris installation
+			to allow installing or upgrading to OpenBSD OSREV.
+
+OpenBSDfloppy
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+	bsd.scsi3	A kernel with SCSI target 3 re-mapped as 0 and 0
+			mapped as 3.
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	installboot	The OpenBSD/MACHINE boot loader installation program.
+	bootxx		The OpenBSD/MACHINE boot block.
+	boot		The OpenBSD/MACHINE secondary boot loader.
+	boot.net	The OpenBSD/MACHINE network boot loader.
+
+
+Please note that there are multiple bootable images and kernels, intended
+to allow installing OpenBSD/MACHINE in a variety of situations without
+requiring a pre-existing working operating system.
+
+The kernel and boot images are provided for net booting installations.
+While the OpenBSD bootblocks will work with the provided miniroot images,
+Sun bootblocks require a separate kernel image and root filesystem.
+
+OpenBSDfloppydesc(single,The)
+
+DistributionDescription(eleven)
+
+OpenBSDbase(41308903,121322118,shared)
+
+OpenBSDcomp(63260167,236522182,shared)
+
+OpenBSDetc(1223052,4035889)
+
+OpenBSDgame(2677934,6032588)
+
+OpenBSDman(7436835,26822328)
+
+OpenBSDmisc(2306723,7714263)
+
+OpenBSDxbase(9983245,30079166)
+
+OpenBSDxetc(77085,295566)
+
+OpenBSDxfont(35584459,43728442)
+
+OpenBSDxserv(7145463,21227449)
+
+OpenBSDxshare(2745602,14575990)

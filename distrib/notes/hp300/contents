@@ -1,0 +1,37 @@
+dnl	$OpenBSD: src/distrib/notes/hp300/contents,v 1.39 2008/03/10 21:25:52 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+	SYS_UBOOT	Unified boot file, used for booting from disk or
+			from the network.
+
+	SYS_CDBOOT	Raw boot file, used for booting from CD-ROM.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(35424451,103167070,shared)
+
+OpenBSDcomp(16443607,51652247,shared)
+
+OpenBSDetc(1220413,4023047)
+
+OpenBSDgame(2648340,6303982)
+
+OpenBSDman(7106337,25531170)
+
+OpenBSDmisc(2306852,7714263)
+
+OpenBSDxbase(8045988,23747800)
+
+OpenBSDxetc(96840,394407)
+
+OpenBSDxfont(33239606,37524796)
+
+OpenBSDxserv(4200558,10843778)
+
+OpenBSDxshare(2102301,11038806)
