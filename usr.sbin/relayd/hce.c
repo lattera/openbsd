@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/relayd/hce.c,v 1.40 2008/02/11 10:42:50 reyk Exp $	*/
+/*	$OpenBSD: src/usr.sbin/relayd/hce.c,v 1.41 2008/03/12 10:50:44 pyr Exp $	*/
 
 /*
  * Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -52,8 +52,6 @@ void	hce_disable_events(void);
 static struct relayd *env = NULL;
 struct imsgbuf		*ibuf_pfe;
 struct imsgbuf		*ibuf_main;
-int			 pipe_pfe;
-int			 pipe_parent;
 int			 running = 0;
 
 void
