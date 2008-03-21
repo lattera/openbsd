@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/re.c,v 1.69 2007/03/02 17:49:51 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/re.c,v 1.69.2.1 2008/03/21 20:33:12 brad Exp $	*/
 /*	$FreeBSD: if_re.c,v 1.31 2004/09/04 07:54:05 ru Exp $	*/
 /*
  * Copyright (c) 1997, 1998-2003
@@ -1859,7 +1859,8 @@ re_init(struct ifnet *ifp)
 
 	CSR_WRITE_1(sc, RL_EARLY_TX_THRESH, 16);
 
-	CSR_WRITE_4(sc, RL_RXCFG, RL_RXCFG_CONFIG);
+	CSR_WRITE_4(sc, RL_RXCFG,
+	    RL_RXFIFO_NOTHRESH|RL_RX_MAXDMA|RL_RX_BUF_SZ);
 
 	/* Set the individual bit to receive frames for this host only. */
 	rxcfg = CSR_READ_4(sc, RL_RXCFG);
