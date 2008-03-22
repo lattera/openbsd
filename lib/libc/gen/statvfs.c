@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/sys/Attic/statvfs.c,v 1.2 2008/03/16 19:46:14 deraadt Exp $	*/
+/*	$OpenBSD: src/lib/libc/gen/statvfs.c,v 1.1 2008/03/22 19:18:42 otto Exp $	*/
 
 /*
  * Copyright (c) 2008 Otto Moerbeek <otto@drijf.net>
