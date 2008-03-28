@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sgi/stand/boot/boot.c,v 1.9 2008/03/08 16:52:28 jsing Exp $ */
+/*	$OpenBSD: src/sys/arch/sgi/stand/boot/boot.c,v 1.10 2008/03/28 02:50:02 jsing Exp $ */
 
 /*
  * Copyright (c) 2004 Opsycon AB, www.opsycon.se.
@@ -113,8 +113,8 @@ main(int argc, char *argv[])
 		((void (*)())entry)(argc, argv);
 
 	/* We failed to load the kernel. */
-	printf("Boot FAILED!\n                ");
-	Bios_Restart();
+	printf("Boot FAILED!\n");
+	Bios_EnterInteractiveMode();
 }
 
 /*
