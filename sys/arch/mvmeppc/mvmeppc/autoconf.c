@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/autoconf.c,v 1.20 2007/11/04 13:43:39 martin Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvmeppc/mvmeppc/Attic/autoconf.c,v 1.21 2008/03/30 22:29:09 deraadt Exp $	*/
 /*
  * Copyright (c) 1996, 1997 Per Fogelstrom
  * Copyright (c) 1995 Theo de Raadt
@@ -37,7 +37,7 @@
  * from: Utah Hdr: autoconf.c 1.31 91/01/21
  *
  *	from: @(#)autoconf.c	8.1 (Berkeley) 6/10/93
- *      $Id: autoconf.c,v 1.19 2007/06/01 23:14:07 deraadt Exp $
+ *      $Id: autoconf.c,v 1.20 2007/11/04 13:43:39 martin Exp $
  */
 
 /*
@@ -178,6 +178,7 @@ getdevunit(name, unit)
 struct nam2blk nam2blk[] = {
 	{ "wd",		0 },
 	{ "sd",		2 },
+	{ "rd",		17 },
 	{ "raid",	19 },
 	{ NULL,		-1 }
 };
