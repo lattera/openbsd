@@ -1,3 +1,8 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/tftpboot/version.c,v 1.2 2006/05/16 22:52:55 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/tftpboot/version.c,v 1.3 2008/03/31 22:14:43 miod Exp $ */
 
-char *version = "1.2";
+/*
+ *	1.3	kernel loaded with loadfile, a.out and ELF formats
+ *	1.2	rewritten startup code and general cleanup
+ *	1.1	initial revision
+ */
+char *version = "1.3";
