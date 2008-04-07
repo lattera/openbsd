@@ -1,0 +1,175 @@
+#	$OpenBSD: src/sys/arch/sgi/conf/files.sgi,v 1.22 2008/04/07 22:36:26 miod Exp $
+#
+# maxpartitions must be first item in files.${ARCH}
+#
+maxpartitions 16
+
+maxusers 2 8 64
+
+#	Required files
+
+file	arch/sgi/sgi/disksubr.c			disk
+file	arch/sgi/sgi/autoconf.c
+file	arch/sgi/sgi/bus_dma.c
+file	arch/sgi/sgi/conf.c
+file	arch/sgi/sgi/ip27_machdep.c		tgt_origin200 | tgt_origin2000
+file	arch/sgi/sgi/ip30_machdep.c		tgt_octane
+file	arch/sgi/sgi/ip32_machdep.c		tgt_o2
+file	arch/sgi/sgi/machdep.c
+file	arch/sgi/sgi/mutex.c
+file	arch/sgi/sgi/sginode.c			tgt_origin200 | tgt_origin2000
+file	arch/sgi/sgi/wscons_machdep.c		wsdisplay
+
+#
+# Media Indepedent Interface (mii)
+#
+include	"dev/mii/files.mii"
+
+#
+#	Machine-independent ATAPI drivers
+#
+
+include	"dev/atapiscsi/files.atapiscsi"
+include	"dev/ata/files.ata"
+
+#
+#	System BUS types
+#
+define	mainbus {}
+device	mainbus
+attach	mainbus at root
+
+#	Our CPU configurator
+device	cpu
+attach	cpu at mainbus
+
+#	Clock device
+device	clock
+attach	clock at mainbus
+
+#
+#	O2 MACE localbus autoconfiguration devices
+#
+define	macebus {[base = -1], [irq = -1]}
+device	macebus
+attach	macebus at mainbus
+file	arch/sgi/localbus/macebus.c		macebus
+file	arch/sgi/localbus/macectrl.S		macebus
+
+#
+#	Origin200/Origin2000 XBOW mux bridge
+#
+define	xbow {[vendor = -1], [product = -1]}
+device	xbow
+attach	xbow at mainbus
+file	arch/sgi/xbow/xbow.c			xbow
+
+include "dev/onewire/files.onewire"
+
+include "arch/sgi/xbow/files.xbow"
+
+#
+#	PCI Bus bridges
+#
+device	macepcibr {} : pcibus
+attach	macepcibr at macebus
+file	arch/sgi/pci/macepcibridge.c		macepcibr needs-flag
+file	arch/sgi/pci/macepcimap.c		macepcibr
+
+#	Use machine independent SCSI driver routines
+include	"scsi/files.scsi"
+major	{sd = 0}
+major	{cd = 3}
+
+include	"dev/i2o/files.i2o"
+
+include	"dev/pci/files.pci"
+
+# IOC3
+define	ioc {[base = -1], [irq = -1]}
+device	ioc: onewirebus
+attach	ioc at pci
+file	arch/sgi/pci/ioc.c			ioc
+
+# IOC3 serial ports
+attach	com at ioc with com_ioc
+file	arch/sgi/dev/com_ioc.c			com_ioc
+
+# DS1687 Time-Of-Day calendar device
+device	dsrtc
+attach	dsrtc at macebus with dsrtc_macebus
+attach	dsrtc at ioc with dsrtc_ioc
+file	arch/sgi/dev/dsrtc.c			dsrtc
+
+# GBE framebuffer
+device	gbe: wsemuldisplaydev, rasops8, rasops16, rasops32
+attach	gbe at mainbus
+file	arch/sgi/dev/gbe.c			gbe	needs-flag
+
+# 16[45]50-based "com" ports on localbus
+attach	com at macebus with com_macebus
+file	arch/sgi/localbus/com_lbus.c		com_macebus
+
+# MACE MAC-110 ethernet
+device	mec: ether, ifnet, ifmedia, mii
+attach	mec at macebus
+file	arch/sgi/dev/if_mec.c			mec
+
+# Moosehead A/V Board audio
+device	mavb: audio
+attach	mavb at macebus
+file	arch/sgi/dev/mavb.c			mavb
+
+# MACE PS/2 Controller
+include	"dev/pckbc/files.pckbc"
+device	mkbc: pckbcslot
+attach	mkbc at macebus
+file	arch/sgi/dev/mkbc.c			mkbc	needs-flag
+
+# Power button
+device	power
+attach	power at macebus
+file 	arch/sgi/dev/power.c			power
+
+# Raster operations
+include	"dev/rasops/files.rasops"
+include	"dev/wsfont/files.wsfont"
+
+#
+# wscons console
+#
+include	"dev/wscons/files.wscons"
+
+#
+#	PCI Bus support
+#
+
+#
+# Machine-independent USB drivers
+#
+include	"dev/usb/files.usb"
+
+#
+# Number-In-a-Can containers
+#
+# Ethernet address
+device	owmac
+attach	owmac at onewire
+file	arch/sgi/dev/owmac.c			owmac
+# Serial numbers
+device	owserial
+attach	owserial at onewire
+file	arch/sgi/dev/owserial.c			owserial
+file	arch/sgi/dev/owmem_subr.c		owmac | owserial
+
+#
+# Specials.
+#
+# RAM disk for boot
+major	{rd = 8}
+
+#
+#	Common files
+#
+
+file	dev/cninit.c
