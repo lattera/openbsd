@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.1 2008/05/11 18:50:58 espie Exp $
+.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.2 2008/05/11 19:24:00 espie Exp $
 .\"
 .\" Copyright (c) 2008 Marc Espie
 .\"
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate$
+.Dd $Mdocdate: May 11 2008 $
 .Dt PORT-MODULES 5
 .Os
 .Sh NAME
@@ -60,7 +60,7 @@ ${PKGPATH}.
 If the module is
 .Pa some/dir/portname ,
 the ports framework will look for a file named
-.Pa ${PORTSDIR}/some/dir/portname/portname.mk
+.Pa ${PORTSDIR}/some/dir/portname/portname.port.mk
 and include it.
 .Pp
 Most modules should conform to this syntax.
