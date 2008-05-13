@@ -1,5 +1,4 @@
-$OpenBSD: src/usr.sbin/httpd/Attic/README.v6,v 1.1 2008/05/09 08:06:27 mbalmer Exp $
-$Id: README.v6,v 1.29 2001/03/09 13:15:30 itojun Exp $
+$OpenBSD: src/usr.sbin/httpd/README.IPv6,v 1.1 2008/05/13 20:09:19 mbalmer Exp $
 
 IPv6 support for the OpenBSD httpd(8)
 
