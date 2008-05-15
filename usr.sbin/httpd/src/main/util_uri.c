@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.sbin/httpd/src/main/util_uri.c,v 1.11 2008/05/15 06:05:44 mbalmer Exp $ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
