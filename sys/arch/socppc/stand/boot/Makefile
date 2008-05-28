@@ -1,6 +1,7 @@
-#	$OpenBSD: src/sys/arch/socppc/stand/boot/Makefile,v 1.3 2008/05/16 18:57:01 kettenis Exp $
+#	$OpenBSD: src/sys/arch/socppc/stand/boot/Makefile,v 1.4 2008/05/28 21:40:55 miod Exp $
 
-NOMAN=
+MAN=	boot.8
+MLINKS=	boot.8 boot.conf.5
 
 .if ${MACHINE} == "socppc"
 PROG=		boot
