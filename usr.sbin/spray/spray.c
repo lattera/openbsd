@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/spray/spray.c,v 1.8 2008/03/17 16:28:43 sobrado Exp $	*/
+/*	$OpenBSD: src/usr.sbin/spray/spray.c,v 1.9 2008/06/02 19:06:17 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1993 Winning Strategies, Inc.
@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: spray.c,v 1.7 2005/09/28 16:24:43 deraadt Exp $
+ *	$Id: spray.c,v 1.8 2008/03/17 16:28:43 sobrado Exp $
  */
 
 #include <err.h>
@@ -228,6 +228,6 @@ void
 usage(void)
 {
 	fprintf(stderr,
-	    "usage: spray [-c count] [-d delay] [-l length] host ...\n");
+	    "usage: spray [-c count] [-d delay] [-l length] host\n");
 	exit(1);
 }
