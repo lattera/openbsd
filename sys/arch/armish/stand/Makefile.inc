@@ -1,3 +1,4 @@
-#	$OpenBSD: src/sys/arch/armish/stand/Makefile.inc,v 1.1 2006/07/28 17:24:21 deraadt Exp $
+#	$OpenBSD: src/sys/arch/armish/stand/Makefile.inc,v 1.2 2008/06/09 15:01:54 deraadt Exp $
 
 BINDIR=/usr/mdec
+MANSUBDIR=armish
