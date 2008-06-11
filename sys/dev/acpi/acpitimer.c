@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/acpi/acpitimer.c,v 1.7 2007/11/04 22:25:53 mikeb Exp $	*/
+/* $OpenBSD: src/sys/dev/acpi/acpitimer.c,v 1.8 2008/06/11 04:42:09 marco Exp $ */
 /*
  * Copyright (c) 2005 Thorsten Lockert <tholo@sigmasoft.com>
  *

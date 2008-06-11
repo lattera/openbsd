@@ -1,5 +1,4 @@
-
-/* $OpenBSD: src/sys/dev/acpi/dsdt.c,v 1.122 2008/06/08 17:20:52 art Exp $ */
+/* $OpenBSD: src/sys/dev/acpi/dsdt.c,v 1.123 2008/06/11 04:42:09 marco Exp $ */
 /*
  * Copyright (c) 2005 Jordan Hargrave <jordan@openbsd.org>
  *
