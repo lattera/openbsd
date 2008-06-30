@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libc/sys/mquery.2,v 1.8 2007/05/31 19:19:33 jmc Exp $
+.\"	$OpenBSD: src/lib/libc/sys/mquery.2,v 1.9 2008/06/30 05:59:19 otto Exp $
 .\"
 .\" Copyright (c) 2003 Artur Grabowski <art@openbsd.org>
 .\" All rights reserved.
@@ -122,6 +122,10 @@ is not a valid open file descriptor.
 .El
 .Sh SEE ALSO
 .Xr mmap 2
+.Sh STANDARDS
+The
+.Fn mquery
+function should not be used in portable applications.
 .Sh HISTORY
 The
 .Fn mquery
