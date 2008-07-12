@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC.MP,v 1.3 2008/07/06 08:53:38 kettenis Exp $
+#	$OpenBSD: src/sys/arch/sparc64/conf/GENERIC.MP,v 1.4 2008/07/12 14:26:07 kettenis Exp $
 
 include "arch/sparc64/conf/GENERIC"
 
@@ -8,3 +8,4 @@ option	MULTIPROCESSOR
 cpu*	at mainbus?
 cpu*	at ssm?
 cpu*	at cmp?
+cpu*	at core?
