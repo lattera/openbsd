@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.222 2008/02/20 12:17:25 brad Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.222.2.1 2008/07/15 17:34:01 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 Wind River Systems
@@ -3467,12 +3467,7 @@ bge_stop(struct bge_softc *sc)
 
 	sc->bge_tx_saved_considx = BGE_TXCONS_UNSET;
 
-	/*
-	 * We can't just call bge_link_upd() cause chip is almost stopped so
-	 * bge_link_upd -> bge_tick_locked -> bge_stats_update sequence may
-	 * lead to hardware deadlock. So we just clearing MAC's link state
-	 * (PHY may still have link UP).
-	 */
+	/* Clear MAC's link state (PHY may still have link UP). */
 	BGE_STS_CLRBIT(sc, BGE_STS_LINK);
 }
 
@@ -3519,8 +3514,7 @@ bge_link_upd(struct bge_softc *sc)
 	    sc->bge_chipid != BGE_CHIPID_BCM5700_B2) {
 		status = CSR_READ_4(sc, BGE_MAC_STS);
 		if (status & BGE_MACSTAT_MI_INTERRUPT) {
-			timeout_del(&sc->bge_timeout);
-			bge_tick(sc);
+			mii_pollstat(mii);
 
 			if (!BGE_STS_BIT(sc, BGE_STS_LINK) &&
 			    mii->mii_media_status & IFM_ACTIVE &&
@@ -3579,8 +3573,7 @@ bge_link_upd(struct bge_softc *sc)
 
 		if (BGE_STS_BIT(sc, BGE_STS_LINK) != link ||
 		    BGE_ASICREV(sc->bge_chipid) == BGE_ASICREV_BCM5700) {
-			timeout_del(&sc->bge_timeout);
-			bge_tick(sc);
+			mii_pollstat(mii);
 
 			if (!BGE_STS_BIT(sc, BGE_STS_LINK) &&
 			    mii->mii_media_status & IFM_ACTIVE &&
