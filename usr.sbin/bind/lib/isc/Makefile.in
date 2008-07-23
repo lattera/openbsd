@@ -60,10 +60,12 @@ OBJS =		@ISC_EXTRA_OBJS@ \
 		ratelimiter.@O@ region.@O@ result.@O@ rwlock.@O@ \
 		serial.@O@ sha1.@O@ sockaddr.@O@ string.@O@ strtoul.@O@ \
 		symtab.@O@ task.@O@ taskpool.@O@ timer.@O@ version.@O@ \
+		shuffle.@O@ \
 		${UNIXOBJS} ${NLSOBJS} ${THREADOBJS}
 
 # Alphabetically
 SRCS =		@ISC_EXTRA_SRCS@ \
+		shuffle.c \
 		assertions.c base64.c bitstring.c buffer.c \
 		bufferlist.c commandline.c error.c event.c \
 		heap.c hex.c hmacmd5.c \

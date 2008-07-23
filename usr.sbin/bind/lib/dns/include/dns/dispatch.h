@@ -112,6 +112,9 @@ struct dns_dispatchevent {
  * _MAKEQUERY
  *	The dispatcher can be used to issue queries to other servers, and
  *	accept replies from them.
+ *
+ * _RANDOMPORT
+ *	Allocate UDP port randomly.
  */
 #define DNS_DISPATCHATTR_PRIVATE	0x00000001U
 #define DNS_DISPATCHATTR_TCP		0x00000002U
@@ -121,6 +124,7 @@ struct dns_dispatchevent {
 #define DNS_DISPATCHATTR_NOLISTEN	0x00000020U
 #define DNS_DISPATCHATTR_MAKEQUERY	0x00000040U
 #define DNS_DISPATCHATTR_CONNECTED	0x00000080U
+#define DNS_DISPATCHATTR_RANDOMPORT	0x00000100U
 
 isc_result_t
 dns_dispatchmgr_create(isc_mem_t *mctx, isc_entropy_t *entropy,
