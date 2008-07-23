@@ -15,7 +15,7 @@
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $OpenBSD: src/usr.sbin/bind/lib/isc/shuffle.c,v 1.2 2008/03/02 22:39:12 djm Exp $ */
+/* $OpenBSD: src/usr.sbin/bind/lib/isc/shuffle.c,v 1.2.2.1 2008/07/23 17:39:39 brad Exp $ */
 
 #include <config.h>
 
@@ -31,21 +31,16 @@
 void
 isc_shuffle_init(isc_shuffle_t *shuffle)
 {
-	isc_uint16_t r;
 	int i, i2;
 
 	REQUIRE(VALID_SHUFFLE(shuffle));
 
 	shuffle->isindex = 0;
-	for (i = 0; i < 65536; ++i)
-		shuffle->id_shuffle[i] = i;
-
-	/* Initialize using a Durstenfeld shuffle */
-	for (i = 65536; --i; ) {
+	/* Initialize using a Knuth shuffle */
+	for (i = 0; i < 65536; ++i) {
 		i2 = isc_random_uniform(i + 1);
-		r = shuffle->id_shuffle[i];
 		shuffle->id_shuffle[i] = shuffle->id_shuffle[i2];
-		shuffle->id_shuffle[i2] = r;
+		shuffle->id_shuffle[i2] = i;
 	}
 }
 
