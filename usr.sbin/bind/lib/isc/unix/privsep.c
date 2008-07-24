@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/bind/lib/isc/unix/privsep.c,v 1.6 2005/05/04 08:29:07 djm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/bind/lib/isc/unix/privsep.c,v 1.6.10.1 2008/07/24 05:28:41 brad Exp $	*/
 
 /*
  * Copyright (c) 2004 Henning Brauer <henning@openbsd.org>
@@ -189,7 +189,7 @@ check_bind(const struct sockaddr *sa, socklen_t salen)
 
 	if (port != NAMED_PORT_DEFAULT && port != RNDC_PORT_DEFAULT &&
 	    port != LWRES_PORT_DEFAULT) {
-		if (port || child_pid)
+		if ((port && port < 1024) || child_pid)
 			logmsg(LOG_ERR, "%s: disallowed port %u", pname, port);
 		return (1);
 	}
