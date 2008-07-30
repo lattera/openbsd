@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.89 2007/04/10 17:47:55 miod Exp $	*/
+/*	$OpenBSD: src/sys/netinet/in_pcb.c,v 1.89.2.1 2008/07/30 05:27:03 brad Exp $	*/
 /*	$NetBSD: in_pcb.c,v 1.25 1996/02/13 23:41:53 christos Exp $	*/
 
 /*
@@ -486,9 +486,10 @@ in_pcbdetach(v)
 	if (inp->inp_route.ro_rt)
 		rtfree(inp->inp_route.ro_rt);
 #ifdef INET6
-	if (inp->inp_flags & INP_IPV6)
+	if (inp->inp_flags & INP_IPV6) {
+		ip6_freepcbopts(inp->inp_outputopts6);
 		ip6_freemoptions(inp->inp_moptions6);
-	else
+	} else
 #endif
 		ip_freemoptions(inp->inp_moptions);
 #ifdef IPSEC
