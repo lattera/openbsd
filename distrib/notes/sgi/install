@@ -1,0 +1,99 @@
+dnl	$OpenBSD: src/distrib/notes/sgi/install,v 1.13 2008/08/05 22:58:01 miod Exp $
+OpenBSDInstallPrelude
+
+There are several ways to install OpenBSD onto a disk. The easiest way
+in terms of preliminary setup is to use the OpenBSD ramdisk kernel that
+can be booted via BOOTP. The normal way is to use the bootable CD-ROM
+mini image.
+
+Booting over the network:
+dnl XXX provide more details!!!
+
+First, a bootp or dhcpd server needs to be set up. The bootpd(8) or
+dhcpd(8) manual page on your server should provide detailed information
+on how to set up the server.
+
+The bootp or dhcp server needs to know the ethernet address of the
+system. This address can be found by using the ``printenv'' command
+in the Maintenance Console, looking for the ``eaddr'' variable.
+
+The server should also provide a tftp location, where the bsd.rd file
+should be available.
+
+Once the server is set up, boot with the following command in the
+Maintenance Console:
+
+> bootp()/bsd.rd
+
+Booting from CD-ROM installation media:
+
+From the System Maintenance Menu, select '2' (or click on the
+appropriate icon if in graphics console) to Install System Software.
+
+If necessary, select the proper CD-ROM drive, and press enter to
+confirm your choice.  Insert the installation CD-ROM (if you did not
+do so already) and press enter to boot the system.
+
+If the boot is successful, you will get a loader version message,
+executable sizes, and then the kernel copyright and device probe
+messages.  Boot failure modes are typically a lot of CD-ROM drive
+activity, but no messages or complaints about magic numbers,
+checksums or formats.
+
+Installing the system:
+
+OpenBSDInstallPart2
+
+	Boot your machine from the installation media as described above.
+
+	It will take a while to load the kernel especially from a slow
+	network connection, most likely more than a minute.  If some action
+	doesn't eventually happen, or the spinning cursor has stopped and
+	nothing further has happened, either your boot media is bad, your
+	diskless setup isn't correct, or you may have a hardware or
+	configuration problem.
+
+OpenBSDBootMsgs(,"sd0")
+
+	You will next be asked for your terminal type.  If you are
+	installing from a non-serial console, the default of "vt220"
+	is correct.  If you are installing from a serial console
+	you should choose the terminal type from amongst those listed.
+	(If your terminal type is xterm, just use vt220.)
+
+OpenBSDInstallPart3
+
+OpenBSDInstallPart4
+
+	No partitions should overlap with the SGI Volume Header, which by
+	default will use the first 3134 sectors. Additionally, the 'a'
+	partition must be the first partition on the disk, immediately
+	following the SGI Volume Header. If the default Volume Header size is
+	used, the 'a' partition should be located at offset 3135. If the 'a'
+	partition is not located immediately after the Volume Header the boot
+	loader will not be able to locate and load the kernel.
+
+OpenBSDInstallPart5(sd0)
+
+dnl OpenBSDInstallNet({:-CD-ROM, NFS, -:})
+OpenBSDInstallNet({:-NFS -:})
+
+OpenBSDFTPInstall
+
+OpenBSDHTTPInstall
+
+OpenBSDTAPEInstall
+dnl
+dnl OpenBSDCDROMInstall
+
+OpenBSDNFSInstall
+
+OpenBSDCommonFS(NFS)
+
+OpenBSDCommonURL
+
+OpenBSDInstallWrapup
+
+OpenBSDInstallWrapupPart2
+
+OpenBSDCongratulations
