@@ -1,0 +1,37 @@
+dnl	$OpenBSD: src/distrib/notes/socppc/contents,v 1.4 2008/08/06 20:43:44 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+	bsd.bin		A RAMDISK kernel that can be loaded directly
+			by the U-Boot firmware.  Used for installation.
+
+	boot		The OpenBSD/MACHINE secondary boot loader.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(56664671,164600530,shared)
+
+OpenBSDcomp(100333981,259529010,shared)
+
+OpenBSDetc(649809,2033256)
+
+OpenBSDgame(2754879,6234465)
+
+OpenBSDman(7732317,27958056)
+
+OpenBSDmisc(2934864,9911964)
+
+OpenBSDxbase(10956325,31940849)
+
+OpenBSDxetc(80015,299916)
+
+OpenBSDxfont(35581928,43728442)
+
+OpenBSDxserv(8363563,24144694)
+
+OpenBSDxshare(2736723,14667444)
