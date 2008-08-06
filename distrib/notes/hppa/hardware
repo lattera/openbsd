@@ -1,0 +1,418 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/hardware,v 1.37 2008/08/06 18:23:56 miod Exp $
+OpenBSD/MACHINE OSREV runs on the following classes of HP9000 machines:
+dnl - PA7000-based
+dnl	705, 710, 720, 730, 750
+- PA7100-based
+	715/33, 715/50, 715/75
+	725/50, 725/75
+	735/100, 755/100
+	742i, 745i, 747i
+- PA7100LC-based
+	712
+	715/64, 715/80, 715/100, 715/100XC
+	725/64, 725/100
+	743i, 748i
+	Saic Galaxy 1100
+- PA7150-based
+	735/125, 755/125
+- PA7200-based
+	J200, J210, J210XC
+	C100, C110
+- PA7300LC-based
+	A180, A180C
+	B132L, B132L+, B160L, B180L+, C132L, C160L
+	744, 745, 748
+	RDI PrecisionBook
+- PA8000-based (in 32-bit mode):
+	C160, C180
+- PA8200-based (in 32-bit mode):
+	C200, C230, C240, J2240
+- PA8500-based (in 32-bit mode):
+	B1000, B2000, C360, C3000, J5000, J7000
+- PA8600-based (in 32-bit mode):
+	B2600, C3600, J5600, J6000, J7600
+- PA8700-based (in 32-bit mode):
+	C3650, C3700, C3750, J6700, J6750
+
+A minimum of 16MB of RAM is required.
+
+Supported devices {:-include-:}:
+- Ethernet Controllers
+	built-in Intel 82596 (ie)
+	Intel/DEC 21443 "Tulip" clones (dc)
+	Novell NE1000, NE2000 (not bootable)
+	Intel i8255x-based (fxp) (not bootable), including:
+		Intel EtherExpress PRO/10+
+		Intel EtherExpress PRO/100, PRO/100B, and PRO/100+
+		Intel EtherExpress PRO/100+ "Management Adapter"
+		Intel EtherExpress PRO/100 Dual Port
+		Intel PRO/100 VE, PRO/100 VM, and PRO/100 S
+	3Com 3c9xx EtherLink XL adapters (xl), including:
+		3Com 3c900/3c900B PCI adapters
+		3Com 3c905/3c905B/3c905C PCI adapters
+		3Com 3c980/3c980C server adapters
+		3Com 3cSOHO adapter
+		3Com 3c900B-FL and 3c900B-FL/FX fiber optic adapters
+		3Com 3c555/3c556/3c556B MiniPCI adapters
+	Broadcom BCM570x (Tigon3) based PCI adapters, including:
+		3Com 3c996-T
+		3Com 3c996-SX
+		3Com 3c996B-T
+		HP ProLiant NC7770 PCI-X Gigabit NIC
+		Netgear GA302T
+		SysKonnect SK-9D21
+		SysKonnect SK-9D41
+	Realtek 8129/8139 based PCI Ethernet adapters (rl), including:
+		Accton MPX 5030/5038
+		Allied Telesyn AT2550
+		Corega FEther CB-TXD 10/100 Ethernet 
+		D-Link DFE530TX+, DFE538TX
+		Encore ENL832-TX-RENT 10/100 M PCI
+		Genius GF100TXR
+		KTX-9130TX 10/100 Fast Ethernet
+		Longshine LCS-8038TX-R
+		NDC NE100TX-E
+		Netgear FA311 v2
+		Netronix EA-1210 Net Ether 10/100
+		Nortel BayStack 21
+		OvisLink LEF-8129TX, LEF-8139TX
+		SMC EZ Card 10/100 PCI 1211-TX
+		TRENDnet TE100-PCBUSR CardBus 
+	SysKonnect and Marvell based adapters (not bootable), including:
+		SysKonnect SK-9821 (1000baseT)
+		SysKonnect SK-9822 (dual 1000baseT)
+		SysKonnect SK-9841 (1000baseLX)
+		SysKonnect SK-9842 (dual 1000baseLX)
+		SysKonnect SK-9843 (1000baseSX)
+		SysKonnect SK-9844 (dual 1000baseSX)
+		SysKonnect SK-9521 v2.0 (1000baseT 32-bit)
+		SysKonnect SK-9821 v2.0 (1000baseT)
+		SysKonnect SK-9843 v2.0 (1000baseSX)
+		3Com 3c940 (1000baseT)
+		D-Link DGE-530T (1000baseT)
+		Linksys EG1032v2 (1000baseT)
+		Linksys EG1064v2 (1000baseT)
+		SMC 9452TX (1000baseT)
+- SCSI controllers
+	built-in 53C700 SCSI (oosiop)
+	built-in 53C710 SCSI (osiop)
+	53C720/53C8xx-based SCSI (siop)
+	Adaptec AIC-7770, AIC-7850, AIC-7860, AIC-7870, AIC-7880,
+	    AIC-7890, AIC-7891, AIC-7892, AIC-7895, AIC-7896, AIC-7897
+	    and AIC-7899 based host adapters (ahc) (not bootable), including:
+		AHA-274X[W,T]
+		AHA-284X
+		AHA-2910, AHA-2915 
+		AHA-2920
+		AHA-2930[C,U2]
+		AHA-2940[J,N,U,AU,UW,UW Dual,UW Pro,U2W,U2B]
+		AHA-2950[U2W,U2B]
+		AHA-3940[U,AU,UW,AUW,U2W]
+		AHA-3950U2
+		AHA-3960
+		AHA-3985
+		AHA-4944UW
+		AHA-19160B
+		AHA-29160[B,N]
+		AHA-39160
+- SGC/GSC graphics
+	Artist (as found on 712) (sti)
+	CRX-8, CRX-24, HCRX-8, HCRX-24 (sti)
+- RS-232 devices
+	on-board NS16550 or similar serial ports (com)
+- Parallel ports
+	on-board parallel port (lpt)
+- Audio devices
+	Harmony CS4215/AD1849 LASI audio (harmony)
+- Input devices
+	PS/2 keyboard (pckbd) and mouse (pms)
+	HIL keyboard (hilkbd), mouse and tablets (hilms)
+- Wireless Ethernet Adapters
+	Aironet Communications 4500/4800 IEEE 802.11FH/b PCMCIA adapters
+	    Aironet 4500/4800
+	    Cisco 340/350
+	Atmel AT76C50x IEEE 802.11b USB adapters
+	    3Com 3CRSHEW696
+	    AboCom BWU613
+	    Accton 2664W
+	    Acer Peripherals AWL300
+	    Acer Peripherals AWL400
+	    Actiontec 802UAT1
+	    Addtron AWU120
+	    Aincomm AWU2000B
+	    Askey Computer Voyager 1010
+	    Askey Computer WLL013 (Intersil Radio)
+	    Askey Computer WLL013 (RFMD Radio)
+	    Atmel AT76C503 (Intersil Radio)
+	    Atmel AT76C503 (RFMD Radio)
+	    Atmel AT76C505 (RFMD Radio)
+	    Atmel AT76C505 (RFMD 2958 Radio)
+	    Atmel AT76C505A (RFMD 2958 Radio)
+	    Atmel AT76C505AS (RFMD 2958 Radio)
+	    Belkin F5D6050
+	    Bluetake BW002
+	    Compaq iPAQ h54xx/h55xx Internal WLAN
+	    Conceptronic C11U
+	    Conceptronic WL210
+	    Corega WLAN USB Stick 11
+	    Dick Smith Electronics CHUSB 611G
+	    Dick Smith Electronics WL200U
+	    Dick Smith Electronics WL240U
+	    Dick Smith Electronics XH1153
+	    D-Link DWL-120 rev E
+	    Geowave GW-US11S
+	    Gigabyte GN-WLBM101
+	    Gigaset WLAN
+	    Hewlett-Packard HN210W
+	    Intel AP310 AnyPoint II
+	    I/O DATA USB WN-B11
+	    Lexar 2662W-AR
+	    Linksys WUSB11 802.11b
+	    Linksys WUSB11 802.11b v2.8
+	    MSI WLAN
+	    Netgear MA101
+	    Netgear MA101 rev B
+	    OQO model 01 WiFi
+	    Ovislink AirLive WL-1120USB
+	    OvisLink AirLive WL-1130USB
+	    Planex Communications GW-US11S
+	    Samsung SWL2100W
+	    Siemens WLL013
+	    SMC EZ Connect 11Mbps (SMC2662w)
+	    SMC EZ Connect 11Mbps v2 (SMC2662wV2)
+	    Tekram U-300C
+	    TRENDnet TEW-229UB
+	    W-Buddie WN210
+	    Z-Com M4Y-750
+	Ralink Technology IEEE 802.11b/g USB adapters
+	    AMIT WL532U
+	    ASUS WL-167g
+	    Belkin F5D7050
+	    Buffalo WLI-U2-KG54
+	    Buffalo WLI-U2-KG54-AI
+	    Buffalo WLI-U2-KG54-YB
+	    CNet CWD-854
+	    Compex WLU54G
+	    Conceptronic C54RU
+	    D-Link DWL-G122 (b1)
+	    Dynalink WLG25USB
+	    E-Tech WGUS02
+	    Eminent 3035
+	    Gigabyte GN-WBKG
+	    Hercules HWGUSB2-54
+	    KCORP LifeStyle KLS-685
+	    Linksys WUSB54G v4
+	    Linksys WUSB54GP v4
+	    MSI MS-6861
+	    MSI MS-6865
+	    MSI MS-6869
+	    Nintendo Wi-Fi USB Connector
+	    Nova Tech NV-902W
+	    OvisLink Evo-W54USB
+	    SerComm UB801R
+	    SparkLAN WL-685R
+	    Sphairon UB801R
+	    Surecom EP-9001-g rev 3A
+	    Sweex LC100060
+	    Tonze UW-6200C
+	    Zaapa ZNWUSB-54
+	    Zinwell ZPlus-G250
+	    Zinwell ZWX-G261
+	    Zonet ZEW2500
+	Ralink Technology USB IEEE 802.11a/b/g USB adapters
+	    3Com Aolynk WUB320g
+	    Abocom WUG2700
+	    Airlink101 AWLL5025
+	    ASUS WL-167g ver 2
+	    Atlantis Land A02-UP1-W54
+	    Belkin F5D7050 ver 3
+	    Belkin F5D9050 ver 3
+	    Buffalo WLI-U2-SG54HP
+	    Buffalo WLI-U2-G54HP
+	    CNet CWD-854 ver F
+	    Conceptronic C54RU ver 2
+	    Corega CG-WLUSB2GL
+	    Corega CG-WLUSB2GO
+	    Corega CG-WLUSB2GPX
+	    D-Link DWL-G122 rev C1
+	    D-Link WUA-1340
+	    Digitus DN-7003GR
+	    Edimax EW-7318USG
+	    Gigabyte GN-WB01GS
+	    Gigabyte GN-WI05GS
+	    Hawking HWUG1
+	    Hawking HWU54DM
+	    Hercules HWGUSB2-54-LB
+	    Hercules HWGUSB2-54V2-AP
+	    LevelOne WNC-0301USB v3
+	    Linksys WUSB54G rev C
+	    Linksys WUSB54GR
+	    Planex GW-US54HP
+	    Planex GW-US54Mini2
+	    Planex GW-USMM
+	    Senao NUB-3701
+	    Sitecom WL-113 ver 2
+	    Sitecom WL-172
+	    Sweex LW053
+	    TP-LINK TL-WN321G
+	WaveLAN/IEEE, PRISM 2-3, and Spectrum24 IEEE 802.11b Compact Flash
+	adapters (will be detected as PCMCIA adapters)
+	    AmbiCom WL1100C-CF
+	    ASUS SpaceLink WL-110
+	    Belkin F5D6060 (version 1 only)
+	    Buffalo AirStation
+	    D-Link DCF-660W
+	    ELSA XI800
+	    Linksys WCF12
+	    Netgear MA701
+	    Pretec Compact WLAN OC-WLBXX-A
+	    Senao NL-2511CF
+	WaveLAN/IEEE, PRISM 2-3, and Spectrum24 IEEE 802.11b PCMCIA adapters
+	    3Com AirConnect 3CRWE737A
+	    Actiontec HWC01170
+	    Adaptec AWN-8030
+	    Addtron AWP-100
+	    Agere ORiNOCO
+	    ARtem Onair
+	    ASUS SpaceLink WL-100
+	    Belkin F5D6020 (version 1 only)
+	    Buffalo AirStation
+	    Cabletron RoamAbout
+	    Compaq Agency NC5004
+	    Contec FLEXLAN/FX-DS110-PCC
+	    Corega PCC-11
+	    Corega PCCA-11
+	    Corega PCCB-11
+	    D-Link DWL-650 (rev A1-J3 only)
+	    ELSA XI300
+	    ELSA XI325
+	    ELSA XI325H
+	    EMTAC A2424i
+	    Ericsson Wireless LAN CARD C11
+	    Gemtek WL-311
+	    Hawking Technology WE110P
+	    I-O DATA WN-B11/PCM
+	    Intel PRO/Wireless 2011
+	    Intersil Prism II
+	    Linksys Instant Wireless WPC11
+	    Linksys Instant Wireless WPC11 2.5
+	    Linksys Instant Wireless WPC11 3.0
+	    Lucent WaveLAN
+	    Microsoft MN520
+	    NANOSPEED ROOT-RZ2000
+	    NEC CMZ-RT-WP
+	    Netgear MA401
+	    Netgear MA401RA
+	    Nokia C020 Wireless LAN
+	    Nokia C110/C111 Wireless LAN
+	    NTT-ME 11Mbps Wireless LAN
+	    Planex GW-NS11H
+	    Proxim Harmony
+	    Proxim RangeLAN-DS
+	    Samsung MagicLAN SWL-2000N
+	    Siemens SpeedStream SS1021
+	    SMC 2632 EZ Connect
+	    Symbol Spectrum24
+	    TDK LAK-CD011WL
+	    US Robotics 2410
+	    US Robotics 2445
+	WaveLAN/IEEE, PRISM 2-3, and Spectrum24 IEEE 802.11b USB adapters
+	    Acer Warplink USB-400
+	    Actiontec HWU01170
+	    AirVast WM168b
+	    Ambit WLAN
+	    Apacer Wireless Steno MB112
+	    ASUS WL-140
+	    Compaq W100
+	    Corega WLUSB-11
+	    Corega WLUSB-11 Key
+	    D-Link DWL-120 (rev F)
+	    D-Link DWL-122
+	    I-O DATA WN-B11/USB
+	    Intel PRO/Wireless 2011B
+	    Intersil Prism 2X
+	    JVC MP-XP7250
+	    Linksys WUSB11 v3.0
+	    Linksys WUSB12
+	    Melco WLI-USB-KB11
+	    Melco WLI-USB-KS11G
+	    Melco WLI-USB-S11
+	    Microsoft MN510
+	    Netgear MA111 (version 1 only)
+	    Pheenet WL-503IA
+	    Planex GW-US11H
+	    Siemens SpeedStream SS1022
+	    Sitecom WL-022
+	    Syntax USB-400
+	    US Robotics 1120
+	    ViewSonic Airsync
+	    Z-Com XI-725/726
+	    Z-Com XI-735
+	    ZyXEL ZyAIR B-200
+- PC Cards (PCMCIA and CardBus)
+	ATA cards, including:
+	    ATA/IDE card drives
+	    ATA/IDE CD-ROM adapters
+	    CF/ATA flash cards and disk drives
+	Ethernet adapters, including:
+	    NE2000-based, including:
+		Accton EN2212, EN2216
+		Allied Telesis LA-PCM
+		AmbiCom AMB8002T
+		Arowana FE
+		Belkin F5D5020
+		Billionton Systems LNT-10TN
+		CNet NE2000
+		Compex Linkport ENET-B
+		Corega PCC-T, PCC-TD, EtherII PCC-T,
+		Corega FastEther PCC-T, FastEther PCC-TX
+		Corega FastEther PCC-TXD, FastEther PCC-TXF
+		D-Link DE-650, DE-660, DE-660+, DFE-670TXD
+		Dayna CommuniCard E
+		Digital DEPCM-XX
+		Dual NE2000
+		Edimax NE2000
+		Genius ME 3000II SE
+		Grey Cell GCS2000 Gold II
+		GVC NIC-2000p, NP0335
+		Hawking PN650TX
+		I-O DATA PCLA, PCLA/TE
+		IC-Card
+		Kingston KNE-PC2
+		Linksys PCMPC100, EC2T Combo, EthernetCard
+		Linksys Combo EthernetCard, Trust Combo EthernetCard
+		Linksys Etherfast 10/100
+		MACNICA ME1 for JEIDA
+		Melco LPC3-TX
+		National Semiconductor InfoMover
+		NDC Instant-Link
+		Netgear FA410TX, FA410TXC, FA411
+		Network Everywhere NP10T
+		New Media LiveWire 10/100
+		Planet SmartCom 2000
+		Planex FNW-3600-T, FNW-3700-T
+		Premax PE-200
+		RPTI EP-400, EP-401
+		Seiko Epson EN10B
+		SMC EZCard, 8041
+		Socket Communications LP-CF, LP-E
+		SVEC PN650TX, ComboCard, LANCard
+		Synergy S21810
+		Tamarack NE2000
+		Telecom Device TCD-HPC100
+		Wisecom T210CT, iPort
+		Xircom CFE-10
+- Universal Serial Bus (USB) Devices
+		USB Generic Human Interface Devices (catch-all)
+		USB Hubs
+		USB Keyboards
+		USB Mass Storage devices, i.e., USB floppy drives and
+		  USB memory stick controllers
+		USB Mice
+- Miscellaneous devices:
+	battery-backed real time clock
+	``soft'' power button as available on some models (power)
+	LCD display available on some models (lcd)
+
+If your hardware is not listed above, there is currently no support for it
+in this release.

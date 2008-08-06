@@ -1,0 +1,17 @@
+dnl	$OpenBSD: src/distrib/notes/sgi/xfer,v 1.5 2008/08/06 18:23:56 miod Exp $
+Installation is supported from several media types, including:
+
+	CD-ROM
+	FFS partitions (for upgrades only)
+	Tape
+	Remote NFS partition
+	FTP
+	HTTP
+
+OpenBSDXferShortPrelude
+
+OpenBSDXferBareTape(xbase xetc xfont xserv xshare)
+
+OpenBSDXferNFS
+
+OpenBSDXferFFS
