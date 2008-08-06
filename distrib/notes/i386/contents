@@ -1,0 +1,83 @@
+dnl	$OpenBSD: src/distrib/notes/i386/contents,v 1.62 2008/08/06 20:42:56 miod Exp $
+TopPart
+
+OpenBSDfloppy
+
+	floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy; this one
+			features all the drivers not available in floppy{:--:}OSrev.fs,
+			such as SCSI, RAID, Gigabit Ethernet, and such; see
+			below.
+
+	floppyC{:--:}OSrev.fs	Another MACHINE boot and installation floppy; this one
+			features most of the cardbus and PCMCIA drivers; see
+			below.
+
+	pxeboot		MACHINE-specific second-stage PXE bootstrap (for
+			network installs); see below.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	cdbr		First-stage CD bootstrap (boot sector), which loads
+			the cdboot second-stage bootstrap.  This file is
+			included in the cd{:--:}OSrev.iso image, and is provided as
+			a convenience, but will rarely be needed.
+
+	cdboot		Second-stage CD bootstrap loader for non-emulation
+			OpenBSD El Torito CD-ROMs. It processes boot.conf
+			then loads the bsd.rd installation ramdisk kernel.
+			This file is included in the cd{:--:}OSrev.iso image, and is
+			provided as a convenience, but will rarely be needed.
+
+	cdemu{:--:}OSrev.iso	Another bootable CD-ROM image, for older systems
+			where the BIOS only supports the ``large floppy
+			emulation'' mode for bootable CD-ROMs, and which
+			are therefore unable to boot cd{:--:}OSrev.iso.  This image
+			is provided as a convenience, but should rarely be
+			needed.
+
+Additionally, you may be interested in
+
+.../OSREV/tools/
+	miscellaneous MACHINE installation utilities like rawrite.exe,
+	ntrw.exe, gzip.exe, and pfdisk.exe; see installation section,
+	below.
+
+
+OpenBSDfloppydesc(three,Each,s)
+
+In addition, the "tools/" directory contains some utilities that might be
+useful for the installation.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(43933965,131888684,shared)
+
+OpenBSDcomp(80461065,228004172,shared)
+
+OpenBSDetc(646577,2022102)
+
+OpenBSDgame(2613394,5974889)
+
+OpenBSDman(7733131,27958947)
+
+OpenBSDmisc(2935014,9911964)
+
+OpenBSDxbase(9713418,27699341)
+
+OpenBSDxetc(75436,292330)
+
+OpenBSDxfont(35579038,43728442)
+
+OpenBSDxserv(20292180,55906508)
+
+OpenBSDxshare(2735978,14667444)
