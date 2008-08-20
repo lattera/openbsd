@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/dec/dzcons.c,v 1.2 2008/08/20 16:31:41 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/dec/dzcons.c,v 1.3 2008/08/20 18:55:24 miod Exp $	*/
 /*	$NetBSD: dz_ibus.c,v 1.15 1999/08/27 17:50:42 ragge Exp $ */
 /*
  * Copyright (c) 1998 Ludd, University of Lule}, Sweden.
@@ -149,7 +149,7 @@ dzcngetc(dev)
 
 	s = spltty();
 	do {
-		c = dzcngetc_internal(line) & 0x7f;
+		c = dzcngetc_internal(line);
 	} while (c == 17 || c == 19);		/* ignore XON/XOFF */
 	splx(s);
 
