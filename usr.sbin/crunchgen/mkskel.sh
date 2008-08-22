@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$OpenBSD: src/distrib/crunch/crunchgen/Attic/mkskel.sh,v 1.2 2000/03/01 22:10:03 todd Exp $
+#	$OpenBSD: src/usr.sbin/crunchgen/mkskel.sh,v 1.1 2008/08/22 15:18:55 deraadt Exp $
 
 # idea and sed lines taken straight from flex
 
