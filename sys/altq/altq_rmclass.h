@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.10 2007/06/17 19:58:58 jasper Exp $	*/
+/*	$OpenBSD: src/sys/altq/altq_rmclass.h,v 1.11 2008/08/27 01:37:16 deraadt Exp $	*/
 /*	$KAME: altq_rmclass.h,v 1.6 2000/12/09 09:22:44 kjc Exp $	*/
 
 /*
@@ -38,8 +38,6 @@
 #define	_ALTQ_ALTQ_RMCLASS_H_
 
 #include <altq/altq_classq.h>
-
-/* #pragma ident "@(#)rm_class.h  1.20     97/10/23 SMI" */
 
 #ifdef __cplusplus
 extern "C" {
