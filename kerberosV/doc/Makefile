@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.4 2003/08/22 13:49:33 hin Exp $
+# $Id: Makefile,v 1.5 2006/07/12 23:00:07 espie Exp $
 
 KRBDEPTH=..
 .include "../Makefile.inc"
 
 .PATH:	${KRB5SRC}/doc
 
-MAKEINFO = /usr/bin/makeinfo --no-split
+MAKEINFO = /usr/bin/makeinfo
 INSTALL-INFO = /usr/bin/install-info
 
 infodir = ${DESTDIR}/usr/share/info
@@ -20,7 +20,7 @@ SRCS = 	heimdal.texi intro.texi install.texi setup.texi kerberos4.texi
 all: $(info)
 
 install: $(info)
-	$(INSTALL-INFO) ${.OBJDIR}/$(info) $(infodir)/dir 
+	$(INSTALL-INFO) ${.OBJDIR}/$(info) $(infodir)/dir
 	${INSTALL} ${INSTALL_COPY} -m 444 -o ${BINOWN} -g ${BINGRP} -p ${.OBJDIR}/$(info) $(infodir)
 
 $(info): $(SRCS)
