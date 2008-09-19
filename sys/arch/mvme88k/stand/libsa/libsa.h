@@ -1,10 +1,13 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/libsa.h,v 1.4 2006/05/16 22:52:26 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/stand/libsa/libsa.h,v 1.5 2008/09/19 20:18:03 miod Exp $	*/
 
 /*
  * libsa prototypes
  */
 
 #include "libbug.h"
+
+/* board.c */
+void board_setup();
 
 /* bugdev.c */
 int bugscopen(struct open_file *, ...);
