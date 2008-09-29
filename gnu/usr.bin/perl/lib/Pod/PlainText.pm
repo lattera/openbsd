@@ -1,5 +1,5 @@
 # Pod::PlainText -- Convert POD data to formatted ASCII text.
-# $Id: PlainText.pm,v 1.3 2004/04/07 21:33:06 millert Exp $
+# $Id: Text.pm,v 2.1 1999/09/20 11:53:33 eagle Exp $
 #
 # Copyright 1999-2000 by Russ Allbery <rra@stanford.edu>
 #
@@ -302,6 +302,23 @@ sub cmd_head2 {
         $self->output (' ' x ($$self{indent} / 2) . $_ . "\n\n");
     }
 }
+
+# third level heading - not strictly perlpodspec compliant
+sub cmd_head3 {
+    my $self = shift;
+    local $_ = shift;
+    s/\s+$//;
+    $_ = $self->interpolate ($_, shift);
+    if ($$self{alt}) {
+        $self->output ("\n= $_ =\n");
+    } else {
+        $self->output (' ' x ($$self{indent}) . $_ . "\n");
+    }
+}
+
+# fourth level heading - not strictly perlpodspec compliant
+# just like head3
+*cmd_head4 = \&cmd_head3;
 
 # Start a list.
 sub cmd_over {
