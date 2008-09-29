@@ -1320,7 +1320,7 @@ EOF
 	$intrinsics{$_[1]} = $template{$_[0]};
     }
     close(PIPE) || die "couldn't read intrinsics!";
-    unlink($TMP, '$SAFEDIR/a.out');
+    unlink($TMP, "$SAFEDIR/a.out");
     print STDERR "done\n" if $trace;
 }
 
@@ -1435,9 +1435,9 @@ sub repeat_template {
 close OUT or die "Can't close $file: $!";
 chmod 0755, $file or die "Can't reset permissions for $file: $!\n";
 unlink 'pstruct';
-print "Linking c2ph to pstruct.\n";
+print "Linking $file to pstruct.\n";
 if (defined $Config{d_link}) {
-  link 'c2ph', 'pstruct';
+    link $file, 'pstruct';
 } else {
   unshift @INC, '../lib';
   require File::Copy;

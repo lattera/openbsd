@@ -2179,13 +2179,21 @@ int yyparse (void);
 #define YYREJECT goto yyabort
 #define YYACCEPT goto yyaccept
 #define YYERROR goto yyerrlab
+
+#if YYDEBUG
+#  if defined(WIN32) && !defined(__BORLANDC__)
+EXTERN_C _CRTIMP char *getenv(const char *);
+#  else
+EXTERN_C char *getenv(const char *);
+#  endif
+#endif
+
 int
 yyparse(void)
 {
     register int yym, yyn, yystate;
 #if YYDEBUG
     register char *yys;
-    extern char *getenv();
 
     if ((yys = getenv("YYDEBUG")))
     {
