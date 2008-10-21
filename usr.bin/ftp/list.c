@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/usr.bin/ftp/list.c,v 1.2 2008/10/21 17:54:00 martynas Exp $	*/
 /*
  * Copyright (c) 2008 Martynas Venckus <martynas@openbsd.org>
  *
