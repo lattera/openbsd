@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/it.4,v 1.18 2008/10/22 05:45:45 form Exp $
+.\"	$OpenBSD: src/share/man/man4/it.4,v 1.19 2008/10/23 08:08:44 form Exp $
 .\"
 .\" Copyright (c) 2007-2008 Oleg Safiullin <form@pdp-11.org.ru>
 .\" Copyright (c) 2003 Julien Bordet <zejames@greygats.org>
@@ -92,4 +92,5 @@ by
 .An Oleg Safiullin Aq form@pdp-11.org.ru .
 .Sh BUGS
 Watchdog timer functionality is not supported for ITE IT8705
-or SiS SiS950 chips.
+or SiS SiS950 chips.  For older IT8712 chips watchdog timeout values
+more than 255 seconds are rounded up to the nearest minute.
