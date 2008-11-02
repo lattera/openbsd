@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.75 2008/07/24 19:01:28 thib Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vr.c,v 1.75.2.1 2008/11/02 03:58:35 brad Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
@@ -808,7 +808,8 @@ vr_rxeof(struct vr_softc *sc)
 		{
 			m0 = m_devget(mtod(m, caddr_t) - ETHER_ALIGN,
 			    total_len + ETHER_ALIGN, 0, ifp, NULL);
-			if (m0 == NULL || vr_alloc_mbuf(sc, cur_rx, m)) {
+			vr_alloc_mbuf(sc, cur_rx, m);
+			if (m0 == NULL) {
 				ifp->if_ierrors++;
 				continue;
 			}
