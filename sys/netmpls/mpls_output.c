@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $OpenBSD: src/sys/netmpls/mpls_output.c,v 1.2 2008/11/06 19:32:51 michele Exp $ */
 
 /*
  * Copyright (c) 2008 Claudio Jeker <claudio@openbsd.org>
