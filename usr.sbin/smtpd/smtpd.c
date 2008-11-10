@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.5 2008/11/10 03:41:53 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.6 2008/11/10 17:24:24 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@openbsd.org>
@@ -472,7 +472,7 @@ parent_sig_handler(int sig, short event, void *p)
 			}
 		} while (pid > 0 || (pid == -1 && errno == EINTR));
 
-		/**/		
+		/**/
 		break;
 	default:
 		fatalx("unexpected signal");
