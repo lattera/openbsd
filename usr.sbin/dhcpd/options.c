@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/dhcpd/options.c,v 1.21 2008/04/16 00:36:48 krw Exp $	*/
+/*	$OpenBSD: src/usr.sbin/dhcpd/options.c,v 1.21.2.1 2008/11/16 06:04:11 brad Exp $	*/
 
 /* DHCP options parsing and reassembly. */
 
@@ -207,11 +207,11 @@ void
 create_priority_list(unsigned char *priority_list, unsigned char *prl,
     int prl_len)
 {
-	int stored_list[256];
+	unsigned char stored_list[256];
 	int i, priority_len = 0;
 
-	bzero(stored_list, 256);
-	bzero(priority_list, 256);
+	/* clear stored_list, priority_list should be cleared before */
+	bzero(&stored_list, sizeof(stored_list));
 
 	/* Some options we don't want on the priority list. */
 	stored_list[DHO_PAD] = 1;
@@ -304,6 +304,7 @@ cons_options(struct packet *inpacket, struct dhcp_packet *outpacket,
 	 * list provided in the options. Lacking that use the list provided by
 	 * prl. If that is not available just use the default list.
 	 */
+	bzero(&priority_list, sizeof(priority_list));
 	if (inpacket && inpacket->options[DHO_DHCP_PARAMETER_REQUEST_LIST].data)
 		create_priority_list(priority_list,
 		    inpacket->options[DHO_DHCP_PARAMETER_REQUEST_LIST].data,
@@ -380,19 +381,19 @@ store_options(unsigned char *buffer, int main_buffer_size,
 	int second_cutoff;
 	int bufix = 0;
 
+	overload &= 3; /* Only consider valid bits. */
+
 	cutoff = main_buffer_size;
 	second_cutoff = cutoff + ((overload & 1) ? DHCP_FILE_LEN : 0);
 	buflen = second_cutoff + ((overload & 2) ? DHCP_SNAME_LEN : 0);
+
 	memset(buffer, DHO_PAD, buflen);
-
 	memcpy(buffer, DHCP_OPTIONS_COOKIE, 4);
-	bufix = 4;
 
-	if (overload) {
-		buffer[bufix++] = DHO_DHCP_OPTION_OVERLOAD;
-		buffer[bufix++] = 1;
-		buffer[bufix++] = 0; /* Note: value is at index [6] */
-	}
+	if (overload)
+		bufix = 7; /* Reserve space for DHO_DHCP_OPTION_OVERLOAD. */
+	else
+		bufix = 4;
 
 	/*
 	 * Store options in the order they appear in the priority list.
@@ -459,14 +460,27 @@ zapfrags:
 		buffer[bufix++] = DHO_END;
 
 	/* Fill in overload option value based on space used for options. */
-	if (overload && bufix > main_buffer_size) {
+	if (overload) {
 		overflow = bufix - main_buffer_size;
-		if (overload & 1) {
-			buffer[6] = 1;
-			overflow -= DHCP_FILE_LEN;
+		if (overflow > 0) {
+			buffer[4] = DHO_DHCP_OPTION_OVERLOAD;
+			buffer[5] = 1;
+			if (overload & 1) {
+				buffer[6] |= 1;
+				overflow -= DHCP_FILE_LEN;
+			}
+			if ((overload & 2) && overflow > 0)
+				buffer[6] |= 2;
+		} else {
+			/*
+			 * Compact buffer to eliminate the unused
+			 * DHO_DHCP_OPTION_OVERLOAD option. Some clients
+			 * choke on DHO_PAD options there.
+			 */
+			memmove(&buffer[4], &buffer[7], buflen - 7);
+			bufix -= 3;
+			memset(&buffer[bufix], DHO_PAD, 3);
 		}
-		if (overflow > 0)
-			buffer[6] |= 2;
 	}
 
 	return (bufix);
