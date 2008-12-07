@@ -1,0 +1,37 @@
+/*	$OpenBSD: src/usr.bin/aucat/Attic/safile.h,v 1.3 2008/12/07 17:10:41 ratchov Exp $	*/
+/*
+ * Copyright (c) 2008 Alexandre Ratchov <alex@caoua.org>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+#ifndef SAFILE_H
+#define SAFILE_H
+
+struct file;
+struct fileops;
+struct safile;
+struct aparams;
+
+struct safile *safile_new(struct fileops *, char *,
+    struct aparams *, struct aparams *, unsigned *, unsigned *);
+
+extern struct fileops safile_ops;
+
+/*
+ * Sun API specific functions
+ */
+struct audio_prinfo;
+int sun_infotopar(struct audio_prinfo *, struct aparams *);
+void sun_partoinfo(struct audio_prinfo *, struct aparams *);
+
+#endif /* !defined(SUN_H) */
