@@ -1,4 +1,4 @@
-/* $Id: cache.c,v 1.1 2008/06/12 22:26:01 canacar Exp $ */
+/* $Id: cache.c,v 1.2 2008/07/16 10:23:39 canacar Exp $ */
 /*
  * Copyright (c) 2001, 2007 Can Erkin Acar <canacar@openbsd.org>
  *
@@ -45,7 +45,7 @@ static __inline int sc_cmp(struct sc_ent *s1, struct sc_ent *s2);
 /* initialize the tree and queue */
 RB_HEAD(sc_tree, sc_ent) sctree;
 TAILQ_HEAD(sc_queue, sc_ent) scq1, scq2, scq_free;
-RB_GENERATE(sc_tree, sc_ent, tlink, sc_cmp);
+RB_GENERATE(sc_tree, sc_ent, tlink, sc_cmp)
 
 struct sc_queue *scq_act = NULL;
 struct sc_queue *scq_exp = NULL;
