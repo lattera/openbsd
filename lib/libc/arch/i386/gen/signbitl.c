@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa64/gen/Attic/isinfl.c,v 1.2 2008/12/09 19:52:33 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/i386/gen/signbitl.c,v 1.1 2008/12/09 19:52:33 martynas Exp $	*/
 /*
  * Copyright (c) 2008 Martynas Venckus <martynas@openbsd.org>
  *
@@ -20,11 +20,9 @@
 #include <math.h>
 
 int
-__isinfl(long double e)
+__signbitl(long double e)
 {
 	struct ieee_ext *p = (struct ieee_ext *)&e;
 
-	return (p->ext_exp == EXT_EXP_INFNAN &&
-	    p->ext_frach == 0 && p->ext_frachm == 0 &&
-	    p->ext_fraclm == 0 && p->ext_fracl == 0);
+	return p->ext_sign;
 }

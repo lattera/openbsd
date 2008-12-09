@@ -1,3 +1,3 @@
-#	$OpenBSD: src/lib/libc/arch/sparc/gdtoa/Makefile.inc,v 1.1 2008/09/07 20:36:07 martynas Exp $
+#	$OpenBSD: src/lib/libc/arch/sparc/gdtoa/Makefile.inc,v 1.2 2008/12/09 19:52:34 martynas Exp $
 
-SRCS+= strtord.c strtorQ.c
+SRCS+= strtord.c
