@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/lib/libc/arch/hppa/gen/fabs.c,v 1.4 2008/12/09 20:21:06 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/hppa/gen/fabs.c,v 1.5 2008/12/10 00:59:07 deraadt Exp $	*/
 
 /*
  * Written by Miodrag Vallat.  Public domain
  */
 
-#include <machine/cdefs.h>
+#include <sys/cdefs.h>
 
 double
 fabs(double val)
