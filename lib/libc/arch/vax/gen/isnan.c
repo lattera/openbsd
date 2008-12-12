@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/vax/gen/isnan.c,v 1.3 2008/12/10 01:15:02 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/vax/gen/isnan.c,v 1.4 2008/12/12 18:53:06 martynas Exp $	*/
 /*
  * Copyright (c) Martynas Venckus <martynas@openbsd.org>
  *
@@ -16,7 +16,6 @@
  */
 
 #include <sys/cdefs.h>
-#include <math.h>
 
 /* ARGSUSED */
 int
