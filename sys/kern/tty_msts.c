@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/tty_msts.c,v 1.6 2008/12/25 21:04:36 stevesk Exp $ */
+/*	$OpenBSD: src/sys/kern/tty_msts.c,v 1.7 2008/12/25 21:14:07 stevesk Exp $ */
 
 /*
  * Copyright (c) 2008 Marc Balmer <mbalmer@openbsd.org>
@@ -67,7 +67,6 @@ struct msts {
 	int			sync;		/* if 1, waiting for <STX> */
 	int			pos;		/* position in rcv buffer */
 	int			no_pps;		/* no PPS although requested */
-	char			mode;		/* GPS mode */
 };
 
 /* MSTS decoding */
