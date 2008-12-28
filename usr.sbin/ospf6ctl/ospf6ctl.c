@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ospf6ctl/ospf6ctl.c,v 1.15 2008/12/28 21:32:33 claudio Exp $ */
+/*	$OpenBSD: src/usr.sbin/ospf6ctl/ospf6ctl.c,v 1.16 2008/12/28 22:05:04 sobrado Exp $ */
 
 /*
  * Copyright (c) 2005 Claudio Jeker <claudio@openbsd.org>
@@ -75,7 +75,7 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s <command> [arg [...]]\n", __progname);
+	fprintf(stderr, "usage: %s command [argument ...]\n", __progname);
 	exit(1);
 }
 
