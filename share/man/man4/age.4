@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/age.4,v 1.1 2009/01/16 05:03:52 kevlo Exp $
+.\"	$OpenBSD: src/share/man/man4/age.4,v 1.2 2009/01/16 06:03:44 jmc Exp $
 .\"
 .\" Copyright (c) 2009 Kevin Lo <kevlo@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: January 08 2009 $
+.Dd $Mdocdate: January 16 2009 $
 .Dt AGE 4
 .Os
 .Sh NAME
@@ -48,11 +48,18 @@ Set 100Mbps (Fast Ethernet) operation.
 .It Cm 1000baseT
 Set 1000Mbps (Gigabit Ethernet) operation.
 .El
+.Pp
+For more information on configuring this device, see
+.Xr ifconfig 8 .
+To view a list of media types and options supported by the card, try
+.Ic ifconfig <device> media .
+For example,
+.Ic ifconfig age0 media .
 .Sh SEE ALSO
 .Xr arp 4 ,
+.Xr atphy 4 ,
 .Xr ifmedia 4 ,
 .Xr intro 4 ,
-.Xr atphy 4 ,
 .Xr netintro 4 ,
 .Xr pci 4 ,
 .Xr hostname.if 5 ,
