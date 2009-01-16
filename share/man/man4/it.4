@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/it.4,v 1.20 2008/10/23 13:13:03 jmc Exp $
+.\"	$OpenBSD: src/share/man/man4/it.4,v 1.21 2009/01/16 06:58:32 form Exp $
 .\"
 .\" Copyright (c) 2007-2008 Oleg Safiullin <form@pdp-11.org.ru>
 .\" Copyright (c) 2003 Julien Bordet <zejames@greygats.org>
@@ -29,7 +29,7 @@
 .Os
 .Sh NAME
 .Nm it
-.Nd ITE IT8705F/IT8712F/IT8716F/IT8718F/IT8726F and SiS SiS950
+.Nd ITE IT8705F/IT8712F/IT8716F/IT8718F/IT8720F/IT8726F and SiS SiS950
 temperature, voltage, and fan sensor with watchdog timer
 .Sh SYNOPSIS
 .Cd "it* at isa? port 0x2e"
@@ -38,7 +38,7 @@ temperature, voltage, and fan sensor with watchdog timer
 The
 .Nm
 driver provides support for the
-ITE IT8705F, IT8712F, IT8716F, IT8718F, IT8726F,
+ITE IT8705F, IT8712F, IT8716F, IT8718F, IT8720F, IT8726F,
 and SiS SiS950
 hardware monitors and
 .Xr watchdog 4
