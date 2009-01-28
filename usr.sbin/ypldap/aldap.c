@@ -1,5 +1,5 @@
-/*	$Id: aldap.c,v 1.16 2009/01/27 15:37:03 aschrijver Exp $ */
-/*	$OpenBSD: src/usr.sbin/ypldap/aldap.c,v 1.17 2009/01/27 16:17:49 aschrijver Exp $ */
+/*	$Id: aldap.c,v 1.17 2009/01/27 16:17:49 aschrijver Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypldap/aldap.c,v 1.18 2009/01/28 00:53:29 aschrijver Exp $ */
 
 /*
  * Copyright (c) 2008 Alexander Schrijver <aschrijver@openbsd.org>
@@ -547,7 +547,7 @@ done:
 	free(dupstr);
 	return (1);
 fail:
-	free(dup);
+	free(dupstr);
 	return (-1);
 }
 
