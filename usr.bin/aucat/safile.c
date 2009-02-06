@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/aucat/Attic/safile.c,v 1.11 2009/02/04 20:35:14 ratchov Exp $	*/
+/*	$OpenBSD: src/usr.bin/aucat/Attic/safile.c,v 1.12 2009/02/06 08:26:34 ratchov Exp $	*/
 /*
  * Copyright (c) 2008 Alexandre Ratchov <alex@caoua.org>
  *
@@ -97,15 +97,9 @@ safile_new(struct fileops *ops, char *path,
 		mode |= SIO_REC;
 	if (opar)
 		mode |= SIO_PLAY;
-	if (!mode) {
-		fprintf(stderr, "select at least play or record mode\n");
-		return NULL;
-	}
 	hdl = sio_open(path, mode, 1);
-	if (hdl == NULL) {
-		fprintf(stderr, "safile_new: can't open device\n");
+	if (hdl == NULL)
 		return NULL;
-	}
 	sio_initpar(&par);
 	if (ipar) {
 		par.bits = ipar->bits;
