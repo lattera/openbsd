@@ -1,10 +1,10 @@
-#	$OpenBSD: src/regress/lib/libc/glob/Makefile,v 1.1 2008/10/01 23:04:36 millert Exp $
+#	$OpenBSD: src/regress/lib/libc/glob/Makefile,v 1.2 2009/02/18 15:17:55 millert Exp $
 
 PROG=	globtest
 
 run-regress-${PROG}:
 	mkdir -p `sed 's@/[^/]*$$@@' ${.CURDIR}/files | sort -u`
-	touch `cat files`
+	touch `cat ${.CURDIR}/files`
 	./${PROG} ${.CURDIR}/${PROG}.in
 
 clean:
