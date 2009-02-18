@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.mvme68k/vs.4,v 1.1 2009/02/18 04:07:09 deraadt Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.mvme68k/vs.4,v 1.2 2009/02/18 07:12:21 miod Exp $
 .\"
 .\" Copyright (c) 2003 Paul Weissmann
 .\" All rights reserved.
@@ -25,19 +25,19 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: January 5 2008 $
+.Dd $Mdocdate: February 18 2009 $
 .Dt VS 4 mvme68k
 .Os
 .Sh NAME
 .Nm vs
 .Nd MVME328, MVME328S and MVME328XT high performance SCSI controller
 .Sh SYNOPSIS
-.Cd "vs0 at vmes0 addr 0xffff9000 ipl 2"
-.Cd "vs1 at vmes0 addr 0xffff9800 ipl 2"
-.Cd "vs2 at vmes0 addr 0xffff4800 ipl 2"
-.Cd "vs3 at vmes0 addr 0xffff5800 ipl 2"
-.Cd "vs4 at vmes0 addr 0xffff7000 ipl 2"
-.Cd "vs5 at vmes0 addr 0xffff7800 ipl 2"
+.Cd "vs* at vmes0 addr 0xffff9000 ipl 2 vec 0x80"
+.Cd "vs* at vmes0 addr 0xffff9800 ipl 2 vec 0x82"
+.Cd "vs* at vmes0 addr 0xffff4800 ipl 2 vec 0x84"
+.Cd "vs* at vmes0 addr 0xffff5800 ipl 2 vec 0x86"
+.Cd "vs* at vmes0 addr 0xffff7000 ipl 2 vec 0x88"
+.Cd "vs* at vmes0 addr 0xffff7800 ipl 2 vec 0x8a"
 .Cd "scsibus* at vs?"
 .Sh DESCRIPTION
 The
