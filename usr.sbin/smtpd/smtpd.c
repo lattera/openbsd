@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.31 2009/02/22 11:44:29 form Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.32 2009/02/23 00:51:32 chl Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@openbsd.org>
@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sysexits.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <keynote.h>
