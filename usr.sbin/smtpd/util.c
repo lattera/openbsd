@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/util.c,v 1.14 2009/02/23 22:59:40 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/util.c,v 1.15 2009/02/24 12:07:47 gilles Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@openbsd.org>
