@@ -1,0 +1,50 @@
+dnl	$OpenBSD: src/distrib/notes/mvme88k/contents,v 1.19 2009/02/28 20:53:00 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+	installboot	The OpenBSD/MACHINE boot loader installation
+			program.
+	bootxx		The OpenBSD/MACHINE boot block.
+	bootsd		The OpenBSD/MACHINE disk boot loader.
+	bootst		The OpenBSD/MACHINE tape boot loader.
+	netboot		The OpenBSD/MACHINE Sun-compatible network boot
+			loader.
+	stboot		A VID tape block.
+	tftpboot	The OpenBSD/MACHINE tftp-compatible network boot
+			loader.
+
+These files can be used to make a bootable tape suitable for installation.
+They can also be used to configure an NFS server to support installation
+over the network. See the section "Getting the OpenBSD system onto Useful
+Media" for more information.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(96380121,240764525)
+
+OpenBSDcomp(43894040,153463990)
+
+OpenBSDetc(510439,1359183)
+
+OpenBSDgame(7505251,15869696)
+
+OpenBSDman(7716201,28069759)
+
+OpenBSDmisc(2935598,9912406)
+
+OpenBSDxbase(84008254,169047294)
+
+OpenBSDxetc(983696,2021991)
+
+OpenBSDxfont(35583966,43705666)
+
+OpenBSDxserv(5450524,16155272)
+
+OpenBSDxshare(2746787,14575968)
