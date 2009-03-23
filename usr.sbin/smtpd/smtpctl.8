@@ -1,0 +1,75 @@
+.\" $OpenBSD: src/usr.sbin/smtpd/smtpctl.8,v 1.8 2009/03/23 21:48:40 jmc Exp $
+.\"
+.\" Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: March 16 2009 $
+.Dt SMTPCTL 8
+.Os
+.Sh NAME
+.Nm smtpctl
+.Nd control the Simple Mail Transfer Protocol daemon
+.Sh SYNOPSIS
+.Nm
+.Ar command
+.Op Ar argument ...
+.Sh DESCRIPTION
+The
+.Nm
+program controls
+.Xr smtpd 8 .
+.Pp
+The following commands are available:
+.Bl -tag -width Ds
+.It Cm pause incoming
+Temporarily stop accepting incoming sessions.
+.It Cm pause local
+Temporarily stop deliveries to local users.
+.It Cm pause outgoing
+Temporarily stop relaying and deliveries to
+remote users.
+.It Cm resume incoming
+Resume accepting incoming sessions.
+.It Cm resume local
+Resume deliveries to local users.
+.It Cm resume outgoing
+Resume relaying and deliveries to remote users.
+.It Cm schedule message-id
+Marks all messages with same message ID as ready
+for immediate delivery.
+.It Cm schedule message-uid
+Marks a message as ready for immediate delivery.
+.It Cm show queue
+Displays information concerning envelopes
+that are currently in a queue.
+.It Cm show runqueue
+Displays information concerning envelopes
+that are scheduled for delivery.
+.It Cm show stats
+Displays runtime statistics concerning
+.Xr smtpd 8 .
+.El
+.Sh FILES
+.Bl -tag -width "/var/run/smtpd.sockXX" -compact
+.It /var/run/smtpd.sock
+Unix-domain socket used for communication with
+.Xr smtpd 8 .
+.El
+.Sh SEE ALSO
+.Xr smtpd 8
+.Sh HISTORY
+The
+.Nm
+program first appeared in
+.Ox 4.6 .
