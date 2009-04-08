@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/lib/libm/arch/amd64/abi.h,v 1.3 2009/04/08 23:31:34 martynas Exp $	*/
 /*	$NetBSD: abi.h,v 1.2 2003/09/14 21:26:14 fvdl Exp $	*/
 
 /*
