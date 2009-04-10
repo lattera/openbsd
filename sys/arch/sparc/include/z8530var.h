@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/z8530var.h,v 1.3 2004/09/29 07:35:13 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/z8530var.h,v 1.4 2009/04/10 20:53:54 miod Exp $	*/
 /*	$NetBSD: z8530var.h,v 1.1 1997/10/18 00:01:30 gwr Exp $	*/
 
 /*
@@ -45,6 +45,7 @@
 
 struct zsc_softc {
 	struct	device zsc_dev;		/* required first: base device */
+	void	*zsc_softih;		/* softintr cookie */
 	struct	zs_chanstate zsc_cs[2];	/* channel A and B soft state */
 };
 

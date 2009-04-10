@@ -1,5 +1,5 @@
-/*	$OpenBSD: src/sys/arch/sparc/dev/Attic/amd7930var.h,v 1.8 2009/04/10 20:53:51 miod Exp $	*/
-/*	$NetBSD: amd7930var.h,v 1.3 1996/02/01 22:32:25 mycroft Exp $ */
+/*	$OpenBSD: src/sys/arch/sparc/include/intr.h,v 1.1 2009/04/10 20:53:54 miod Exp $	*/
+/*	$NetBSD: cpu.h,v 1.24 1997/03/15 22:25:15 pk Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -38,49 +38,65 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bsd_audiovar.h	8.1 (Berkeley) 6/11/93
+ *	@(#)cpu.h	8.4 (Berkeley) 1/5/94
  */
 
-#ifndef _LOCORE
+#ifndef _SPARC_INTR_H_
+#define _SPARC_INTR_H_
 
-/* XXX I think these defines should go into some other header file */
-#define SUNAUDIO_MIC_PORT	0
-#define SUNAUDIO_SPEAKER	1
-#define SUNAUDIO_HEADPHONES	2
-#define SUNAUDIO_MONITOR	3
-#define SUNAUDIO_SOURCE		4
-#define SUNAUDIO_OUTPUT		5
-#define SUNAUDIO_INPUT_CLASS	6
-#define SUNAUDIO_OUTPUT_CLASS	7
-#define SUNAUDIO_RECORD_CLASS	8
-#define SUNAUDIO_MONITOR_CLASS	9
-
-struct auio {
-	volatile struct amd7930 *au_amd;/* chip registers */
-
-	u_char	*au_rdata;		/* record data */
-	u_char	*au_rend;		/* end of record data */
-	u_char	*au_pdata;		/* play data */
-	u_char	*au_pend;		/* end of play data */
-
-	struct	intrhand au_ih;
-	void	*au_swih;		/* software interrupt cookie */
-};
+#ifdef _KERNEL
+#include <sys/evcount.h>
 
 /*
- * Chip interface
+ * Interrupt handler chains.  Interrupt handlers should return 0 for
+ * ``not me'' or 1 (``I took care of it'').  intr_establish() inserts a
+ * handler into the list.  The handler is called with its (single)
+ * argument, or with a pointer to a clockframe if ih_arg is NULL.
+ * ih_ipl specifies the interrupt level that should be blocked when
+ * executing this handler.
  */
-struct mapreg {
-        u_short mr_x[8];
-        u_short mr_r[8];
-        u_short mr_gx;
-        u_short mr_gr;
-        u_short mr_ger;
-        u_short mr_stgr;
-        u_short mr_ftgr;
-        u_short mr_atgr;
-        u_char  mr_mmr1;
-        u_char  mr_mmr2;
+struct intrhand {
+	int			(*ih_fun)(void *);
+	void			*ih_arg;
+	int			ih_ipl;
+	int			ih_vec;		/* ipl for vmstat */
+	struct	evcount		ih_count;
+	struct	intrhand	*ih_next;	/* global list */
+};
+extern struct intrhand *intrhand[15];		/* XXX obio.c */
+
+void	intr_establish(int, struct intrhand *, int, const char *);
+void	vmeintr_establish(int, int, struct intrhand *, int, const char *);
+
+/*
+ * intr_fasttrap() is a lot like intr_establish, but is used for ``fast''
+ * interrupt vectors (vectors that are not shared and are handled in the
+ * trap window).  Such functions must be written in assembly.
+ */
+int	intr_fasttrap(int, void (*)(void), int (*)(void *), void *);
+void	intr_fastuntrap(int);
+
+void	intr_init(void);
+
+/*
+ * Soft interrupt handler chains. In addition to a struct intrhand for
+ * proper dispatching, we also remember a pending state as well as the
+ * bits to frob in the software interrupt register.
+ */
+struct sintrhand {
+	struct intrhand	sih_ih;
+	int		sih_pending;	/* nonzero if triggered */
+	int		sih_hw;		/* hw dependent */
+	int		sih_ipl;	/* ipl it's registered at */
 };
 
-#endif /* !_LOCORE */
+void	 softintr_disestablish(void *);
+void	*softintr_establish(int, void (*)(void *), void *);
+void	 softintr_schedule(void *);
+
+/* XXX legacy software interrupts */
+extern void *softnet_ih;
+#define	 setsoftnet()	softintr_schedule(softnet_ih)
+
+#endif /* _KERNEL */
+#endif /* _SPARC_INTR_H_ */
