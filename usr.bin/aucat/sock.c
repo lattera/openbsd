@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/aucat/Attic/sock.c,v 1.14 2009/02/06 08:29:35 ratchov Exp $	*/
+/*	$OpenBSD: src/usr.bin/aucat/Attic/sock.c,v 1.14.2.1 2009/04/27 20:42:51 ratchov Exp $	*/
 /*
  * Copyright (c) 2008 Alexandre Ratchov <alex@caoua.org>
  *
@@ -127,7 +127,7 @@ rsock_opos(struct aproc *p, struct abuf *obuf, int delta)
 {
 	struct sock *f = (struct sock *)p->u.io.file;
 
-	if (!(f->mode & AMSG_PLAY))
+	if (f->mode & AMSG_REC)
 		return;
 
 	f->delta += delta;
