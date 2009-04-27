@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bus_dma.c,v 1.3 2009/02/05 01:13:21 oga Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/bus_dma.c,v 1.3.2.1 2009/04/27 20:47:59 ratchov Exp $	*/
 /*-
  * Copyright (c) 1996, 1997 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -370,6 +370,7 @@ _bus_dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs,
 	bus_addr_t addr;
 	int curseg, pmapflags;
 
+	pmapflags = VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED;
 	if (flags & BUS_DMA_NOCACHE)
 		pmapflags |= PMAP_NOCACHE;
 
@@ -387,9 +388,7 @@ _bus_dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs,
 			if (size == 0)
 				panic("_bus_dmamem_map: size botch");
 			pmap_enter(pmap_kernel(), va, addr,
-			    VM_PROT_READ | VM_PROT_WRITE,
-			    VM_PROT_READ | VM_PROT_WRITE | PMAP_WIRED |
-			    pmapflags);
+			    VM_PROT_READ | VM_PROT_WRITE, pmapflags);
 		}
 	}
 	pmap_update(pmap_kernel());
