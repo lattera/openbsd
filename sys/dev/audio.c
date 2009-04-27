@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/audio.c,v 1.101 2009/01/16 23:07:33 jakemsr Exp $	*/
+/*	$OpenBSD: src/sys/dev/audio.c,v 1.101.2.1 2009/04/27 20:45:26 ratchov Exp $	*/
 /*	$NetBSD: audio.c,v 1.119 1999/11/09 16:50:47 augustss Exp $	*/
 
 /*
@@ -860,8 +860,6 @@ audio_init_ringbuffer(struct audio_ringbuffer *rp)
 	rp->stamp_last = 0;
 	rp->drops = 0;
 	rp->pdrops = 0;
-	rp->copying = 0;
-	rp->needfill = 0;
 	rp->mmapped = 0;
 }
 
@@ -1138,12 +1136,6 @@ audio_drain(struct audio_softc *sc)
 	 * XXX This should be done some other way to avoid
 	 * playing silence.
 	 */
-#ifdef DIAGNOSTIC
-	if (cb->copying) {
-		printf("audio_drain: copying in progress!?!\n");
-		cb->copying = 0;
-	}
-#endif
 	drops = cb->drops;
 	error = 0;
 	s = splaudio();
@@ -1233,7 +1225,7 @@ audio_read(dev_t dev, struct uio *uio, int ioflag)
 	struct audio_softc *sc = audio_cd.cd_devs[unit];
 	struct audio_ringbuffer *cb = &sc->sc_rr;
 	u_char *outp;
-	int error, s, used, cc, n;
+	int error, s, cc, n, resid;
 
 	if (cb->mmapped)
 		return EINVAL;
@@ -1279,7 +1271,7 @@ audio_read(dev_t dev, struct uio *uio, int ioflag)
 		}
 		return (error);
 	}
-	while (uio->uio_resid > 0 && !error) {
+	while (uio->uio_resid > 0) {
 		s = splaudio();
 		while (cb->used <= 0) {
 			if (!sc->sc_rbus && !sc->sc_rr.pause) {
@@ -1302,34 +1294,28 @@ audio_read(dev_t dev, struct uio *uio, int ioflag)
 				return error;
 			}
 		}
-		used = cb->used;
+		resid = uio->uio_resid * sc->sc_rparams.factor;
 		outp = cb->outp;
-		cb->copying = 1;
-		splx(s);
-		cc = used - cb->usedlow; /* maximum to read */
+		cc = cb->used - cb->usedlow; /* maximum to read */
 		n = cb->end - outp;
-		if (n < cc)
-			cc = n;	/* don't read beyond end of buffer */
-
-		 /* and no more than we want */
-		if (uio->uio_resid < cc / sc->sc_rparams.factor)
-			cc = uio->uio_resid * sc->sc_rparams.factor;
-
+		if (cc > n)
+			cc = n;		/* don't read beyond end of buffer */
+		
+		if (cc > resid)
+			cc = resid;	/* and no more than we want */
+		cb->used -= cc;
+		cb->outp += cc;
+		if (cb->outp >= cb->end)
+			cb->outp = cb->start;
+		splx(s);
+		DPRINTFN(1,("audio_read: outp=%p, cc=%d\n", outp, cc));
 		if (sc->sc_rparams.sw_code)
 			sc->sc_rparams.sw_code(sc->hw_hdl, outp, cc);
-		DPRINTFN(1,("audio_read: outp=%p, cc=%d\n", outp, cc));
 		error = uiomove(outp, cc / sc->sc_rparams.factor, uio);
-		used -= cc;
-		outp += cc;
-		if (outp >= cb->end)
-			outp = cb->start;
-		s = splaudio();
-		cb->outp = outp;
-		cb->used = used;
-		cb->copying = 0;
-		splx(s);
+		if (error)
+			return error;
 	}
-	return (error);
+	return 0;
 }
 
 void
@@ -1473,8 +1459,8 @@ audio_write(dev_t dev, struct uio *uio, int ioflag)
 	int unit = AUDIOUNIT(dev);
 	struct audio_softc *sc = audio_cd.cd_devs[unit];
 	struct audio_ringbuffer *cb = &sc->sc_pr;
-	u_char *inp, *einp;
-	int saveerror, error, s, n, cc, used;
+	u_char *inp;
+	int error, s, n, cc, resid, avail;
 
 	DPRINTFN(2, ("audio_write: sc=%p(unit=%d) count=%d used=%d(hi=%d)\n", sc, unit,
 		 uio->uio_resid, sc->sc_pr.used, sc->sc_pr.usedhigh));
@@ -1513,12 +1499,18 @@ audio_write(dev_t dev, struct uio *uio, int ioflag)
 	    sc->sc_pparams.precision, sc->sc_pparams.channels,
 	    sc->sc_pparams.sw_code, sc->sc_pparams.factor));
 
-	error = 0;
-	while (uio->uio_resid > 0 && !error) {
+	while (uio->uio_resid > 0) {
 		s = splaudio();
 		while (cb->used >= cb->usedhigh) {
 			DPRINTFN(2, ("audio_write: sleep used=%d lowat=%d hiwat=%d\n",
 				 cb->used, cb->usedlow, cb->usedhigh));
+			if (!sc->sc_pbus && !cb->pause) {
+				error = audiostartp(sc);
+				if (error) {
+					splx(s);
+					return error;
+				}
+			}
 			if (ioflag & IO_NDELAY) {
 				splx(s);
 				return (EWOULDBLOCK);
@@ -1531,103 +1523,36 @@ audio_write(dev_t dev, struct uio *uio, int ioflag)
 				return error;
 			}
 		}
-		used = cb->used;
+		resid = uio->uio_resid * sc->sc_pparams.factor;
+		avail = cb->end - cb->inp;
 		inp = cb->inp;
-		cb->copying = 1;
-		splx(s);
-		cc = cb->usedhigh - used;	/* maximum to write */
-		n = cb->end - inp;
-		if (sc->sc_pparams.factor != 1) {
-			/* Compensate for software coding expansion factor. */
-			n /= sc->sc_pparams.factor;
-			cc /= sc->sc_pparams.factor;
-		}
-		if (n < cc)
-			cc = n;			/* don't write beyond end of buffer */
-		if (uio->uio_resid < cc)
-			cc = uio->uio_resid;	/* and no more than we have */
-
-#ifdef DIAGNOSTIC
-		/*
-		 * This should never happen since the block size and and
-		 * block pointers are always nicely aligned.
-		 */
-		if (cc == 0) {
-			printf("audio_write: cc == 0, swcode=%p, factor=%d\n",
-			    sc->sc_pparams.sw_code, sc->sc_pparams.factor);
-			cb->copying = 0;
-			return EINVAL;
-		}
-#endif
-		DPRINTFN(1, ("audio_write: uiomove cc=%d inp=%p, left=%d\n",
-		    cc, inp, uio->uio_resid));
-		n = uio->uio_resid;
-		error = uiomove(inp, cc, uio);
-		cc = n - uio->uio_resid; /* number of bytes actually moved */
-#ifdef AUDIO_DEBUG
-		if (error)
-			printf("audio_write:(1) uiomove failed %d; cc=%d inp=%p\n",
-			    error, cc, inp);
-#endif
-		/*
-		 * Continue even if uiomove() failed because we may have
-		 * gotten a partial block.
-		 */
-
-		if (sc->sc_pparams.sw_code) {
-			sc->sc_pparams.sw_code(sc->hw_hdl, inp, cc);
-			/* Adjust count after the expansion. */
-			cc *= sc->sc_pparams.factor;
-			DPRINTFN(1, ("audio_write: expanded cc=%d\n", cc));
-		}
-
-		einp = cb->inp + cc;
-		if (einp >= cb->end)
-			einp = cb->start;
-
-		s = splaudio();
+		cc = cb->usedhigh - cb->used;
+		if (cc > resid)
+			cc = resid;
+		if (cc > avail)
+			cc = avail;
+		cb->inp += cc;
+		if (cb->inp >= cb->end)
+			cb->inp = cb->start;
+		cb->used += cc;
 		/*
 		 * This is a very suboptimal way of keeping track of
 		 * silence in the buffer, but it is simple.
 		 */
 		sc->sc_sil_count = 0;
-
-		cb->inp = einp;
-		cb->used += cc;
-		/* If the interrupt routine wants the last block filled AND
-		 * the copy did not fill the last block completely it needs to
-		 * be padded.
-		 */
-		if (cb->needfill &&
-		    (inp  - cb->start) / cb->blksize ==
-		    (einp - cb->start) / cb->blksize) {
-			/* Figure out how many bytes there is to a block boundary. */
-			cc = cb->blksize - (einp - cb->start) % cb->blksize;
-			DPRINTF(("audio_write: partial fill %d\n", cc));
-		} else
-			cc = 0;
-		cb->needfill = 0;
-		cb->copying = 0;
-		if (!sc->sc_pbus && !cb->pause) {
-			saveerror = error;
-			error = audiostartp(sc);
-			if (saveerror != 0) {
-				/* Report the first error that occurred. */
-				error = saveerror;
-			}
-		}
 		splx(s);
-		if (cc) {
-			DPRINTFN(1, ("audio_write: fill %d\n", cc));
-			if (sc->sc_pparams.sw_code) {
-				int ncc = cc / sc->sc_pparams.factor;
-				audio_fill_silence(&sc->sc_pparams, cb->start, einp, ncc);
-				sc->sc_pparams.sw_code(sc->hw_hdl, einp, ncc);
-			} else
-				audio_fill_silence(&sc->sc_pparams, cb->start, einp, cc);
+		cc /= sc->sc_pparams.factor;
+		DPRINTFN(1, ("audio_write: uiomove cc=%d inp=%p, left=%d\n",
+		    cc, inp, uio->uio_resid));
+		error = uiomove(inp, cc, uio);
+		if (error)
+			return 0;
+		if (sc->sc_pparams.sw_code) {
+			sc->sc_pparams.sw_code(sc->hw_hdl, inp, cc);
+			DPRINTFN(1, ("audio_write: expanded cc=%d\n", cc));
 		}
 	}
-	return (error);
+	return 0;
 }
 
 int
@@ -2115,30 +2040,24 @@ audio_pint(void *v)
 	cb->used -= blksize;
 	if (cb->used < blksize) {
 		/* we don't have a full block to use */
-		if (cb->copying) {
-			/* writer is in progress, don't disturb */
-			cb->needfill = 1;
-			DPRINTFN(1, ("audio_pint: copying in progress\n"));
-		} else {
-			inp = cb->inp;
-			cc = blksize - (inp - cb->start) % blksize;
-			if (cb->pause)
-				cb->pdrops += cc;
-			else {
-				cb->drops += cc;
-				sc->sc_playdrop += cc;
-			}
-			audio_pint_silence(sc, cb, inp, cc);
-			inp += cc;
-			if (inp >= cb->end)
-				inp = cb->start;
-			cb->inp = inp;
-			cb->used += cc;
-
-			/* Clear next block so we keep ahead of the DMA. */
-			if (cb->used + cc < cb->usedhigh)
-				audio_pint_silence(sc, cb, inp, blksize);
+		inp = cb->inp;
+		cc = blksize - (inp - cb->start) % blksize;
+		if (cb->pause)
+			cb->pdrops += cc;
+		else {
+			cb->drops += cc;
+			sc->sc_playdrop += cc;
 		}
+		audio_pint_silence(sc, cb, inp, cc);
+		inp += cc;
+		if (inp >= cb->end)
+			inp = cb->start;
+		cb->inp = inp;
+		cb->used += cc;
+
+		/* Clear next block so we keep ahead of the DMA. */
+		if (cb->used + cc < cb->usedhigh)
+			audio_pint_silence(sc, cb, inp, blksize);
 	}
 
 	DPRINTFN(5, ("audio_pint: outp=%p cc=%d\n", cb->outp, blksize));
@@ -2232,7 +2151,7 @@ audio_rint(void *v)
 		if (cb->outp >= cb->end)
 			cb->outp = cb->start;
 		cb->used -= blksize;
-	} else if (cb->used >= cb->usedhigh && !cb->copying) {
+	} else if (cb->used >= cb->usedhigh) {
 		DPRINTFN(1, ("audio_rint: drops %lu\n", cb->drops));
 		cb->drops += blksize;
 		cb->outp += blksize;
