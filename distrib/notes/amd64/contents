@@ -1,0 +1,70 @@
+dnl	$OpenBSD: src/distrib/notes/amd64/contents,v 1.25 2009/05/12 21:06:50 miod Exp $
+TopPart
+
+OpenBSDfloppy
+
+	pxeboot		amd64-specific second-stage PXE bootstrap (for
+			network installs); see below.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	cdbr		First-stage CD bootstrap (boot sector), which loads
+			the cdboot second-stage bootstrap.  This file is
+			included in the cd{:--:}OSrev.iso image, and is
+			provided as a convenience, but will rarely be needed.
+
+	cdboot		Second-stage CD bootstrap loader for non-emulation
+			OpenBSD El Torito CD-ROMs. It processes boot.conf
+			then loads the bsd.rd installation ramdisk kernel.
+			This file is included in the cd{:--:}OSrev.iso image,
+			and is provided as a convenience, but will rarely be
+			needed.
+
+dnl Uncomment if this really is worth providing...
+dnl
+dnl Additionally, you may be interested in
+dnl
+dnl .../OSREV/tools/
+dnl		miscellaneous MACHINE installation utilities like
+dnl		rawrite.exe, ntrw.exe, gzip.exe, and pfdisk.exe;
+dnl		see installation section, below.
+dnl
+dnl
+OpenBSDfloppydesc(single,The)
+dnl
+dnl In addition, the "tools/" directory contains some utilities that might be
+dnl useful for the installation.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(52573257,162742420)
+
+OpenBSDcomp(103205981,357455630)
+
+OpenBSDetc(511845,1524576)
+
+OpenBSDgame(2706304,6180608)
+
+OpenBSDman(8225009,30048580)
+
+OpenBSDmisc(2935057,9912406)
+
+OpenBSDxbase(11266924,35662369)
+
+OpenBSDxetc(78070,292391)
+
+OpenBSDxfont(35579519,43728442)
+
+OpenBSDxserv(21490949,59597125)
+
+OpenBSDxshare(2762645,14738214)
