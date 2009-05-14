@@ -1,6 +1,6 @@
-#	$OpenBSD: src/sys/arch/sgi/conf/GENERIC-IP32,v 1.2 2009/05/14 21:27:02 miod Exp $
+#	$OpenBSD: src/sys/arch/sgi/conf/GENERIC-IP27,v 1.1 2009/05/14 21:27:02 miod Exp $
 #
-# THIS KERNEL IS FOR O2 (IP32) SYSTEMS ONLY.
+# THIS KERNEL IS FOR Origin, Onyx, Fuel, Tezro (IP27, IP35) SYSTEMS ONLY.
 #
 # For further information on compiling OpenBSD kernels, see the config(8)
 # man page.
@@ -16,18 +16,19 @@ include		"../../../conf/GENERIC"
 maxusers	32		# Estimated number of users
 
 # Make options
-makeoption	LINK_ADDRESS="0xffffffff80100000"
+makeoption	LINK_ADDRESS="0xa800000000040000"
 
 # MD options
 option		ARCBIOS		# We use arcbios for FW communication.
 
-option	WSDISPLAY_COMPAT_RAWKBD	# Provide raw scancodes; needed for X11
-
 option		PCIVERBOSE
 option		USER_PCICONF	# User-space PCI configuration
+option		USBVERBOSE
 
 # Define what targets to support
-option		TGT_O2		# O2, O2+
+option		TGT_ORIGIN200	# Origin 200/300, Onyx 2/3, Fuel
+option		TGT_ORIGIN2000	# Origin 2000/3000, Tezro
+option		TGT_COHERENT
 
 # Specify storage configuration (it's a joke..)
 config		bsd	swap generic
@@ -40,30 +41,29 @@ cpu*		at mainbus0
 clock0		at mainbus0
 
 #### Main local buses
-macebus0	at mainbus0	# MACE controller localbus.
+xbow0		at mainbus0
 
-# GBE Framebuffer
-gbe0		at mainbus0
+# XBow devices
+xbridge*	at xbow?
+pci*		at xbridge?
 
-# Localbus devices
-mec0		at macebus0 base 0x00280000 irq 4
-mavb0		at macebus0 base 0x00300000 irq 7
-mkbc0		at macebus0 base 0x00320000 irq 6
-com0		at macebus0 base 0x00390000 irq 5
-com1		at macebus0 base 0x00398000 irq 5
-dsrtc0		at macebus0
-power0		at macebus0 irq 6
+# IOC3
+ioc*		at pci?
+com0		at ioc? base 0x00020178
+com1		at ioc? base 0x00020170
+dsrtc0		at ioc?
 
-#### PCI Bus
-macepcibr0	at macebus0	# MACE controller PCI Bus bridge.
-pci*		at macepcibr?
+onewire*	at ioc?
+option ONEWIREVERBOSE
+owmac*		at onewire?
+owserial*	at onewire?
 
 #### SCSI
-ahc*		at pci?
+isp*		at pci?
 siop*		at pci?
 mpi*		at pci?
+scsibus*	at isp?
 scsibus*	at siop?
-scsibus*	at ahc?
 scsibus*	at mpi?
 
 # USB Controllers
@@ -140,22 +140,9 @@ urlphy*		at mii?		# Realtek RTL8150L internal PHY
 rgephy*		at mii?		# Realtek 8169S/8110S PHY
 ukphy*		at mii?		# "unknown" PHYs
 
-#### Wireless
-wi*		at pci?
-
 #### Audio
-audio*		at mavb?
 emu*		at pci?
 audio*		at emu?
-
-#### WS Console
-wsdisplay*	at gbe?
-
-#### Keyboard and Mouse
-pckbd*		at mkbc?
-pms*		at mkbc?
-wskbd*		at pckbd? mux 1
-wsmouse*	at pms? mux 0
 
 #### SCSI Bus devices
 sd*		at scsibus?
@@ -168,7 +155,6 @@ ses*		at scsibus?
 uk*		at scsibus?
 
 #### Crypto devices
-hifn*		at pci?		# Hi/fn 7751 crypto card
+#hifn*		at pci?		# Hi/fn 7751 crypto card
 
-pseudo-device	wsmux	2       # Mouse and keyboard multiplexor
 pseudo-device	crypto	1
