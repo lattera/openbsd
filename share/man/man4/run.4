@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man4/run.4,v 1.14 2009/05/15 15:44:29 damien Exp $
+.\" $OpenBSD: src/share/man/man4/run.4,v 1.15 2009/05/15 15:53:55 damien Exp $
 .\"
 .\" Copyright (c) 2008 Damien Bergamini <damien.bergamini@free.fr>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: May 12 2009 $
+.Dd $Mdocdate: May 11 2009 $
 .Os
 .Dt RUN 4
 .Sh NAME
@@ -78,11 +78,12 @@ driver can be configured at runtime with
 or on boot with
 .Xr hostname.if 5 .
 .Sh FILES
-The driver needs at least version 1.0 of the following firmware file,
-which is loaded when an interface is brought up:
+The driver needs the following firmware files,
+which are loaded when an interface is brought up:
 .Pp
 .Bl -tag -width Ds -offset indent -compact
 .It /etc/firmware/run-rt2870
+.It /etc/firmware/run-rt3071
 .El
 .Sh HARDWARE
 The following adapters should work:
