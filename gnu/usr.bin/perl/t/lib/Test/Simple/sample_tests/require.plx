@@ -1,0 +1,2 @@
+require Test::Simple;
+# $Id$
