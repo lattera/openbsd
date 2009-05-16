@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# $Id$
 
 BEGIN {
     if( $ENV{PERL_CORE} ) {
@@ -317,7 +318,8 @@ ERR
 ERR
 
 
-    if( eval { require overload } ) {
+    # Overloaded object tests
+    {
 	my $foo = bless [], "Foo";
 	my $bar = bless {}, "Bar";
 
@@ -336,9 +338,6 @@ ERR
 #     \$expected->[0] = 'wibble'
 ERR
 
-    }
-    else {
-	$TB->skip("Needs overload.pm") for 1..3;
     }
 }
 
