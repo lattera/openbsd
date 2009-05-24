@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.50 2009/05/20 16:07:26 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.51 2009/05/24 14:38:56 jacekm Exp $	*/
 
 /*
  * Copyright (c) 2008 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -725,8 +725,8 @@ lka(struct smtpd *env)
 
 	pw = env->sc_pw;
 
-	setproctitle("lookup agent");
 	smtpd_process = PROC_LKA;
+	setproctitle("%s", env->sc_title[smtpd_process]);
 
 #ifndef DEBUG
 	if (setgroups(1, &pw->pw_gid) ||
