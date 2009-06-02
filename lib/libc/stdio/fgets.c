@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/stdio/fgets.c,v 1.10 2005/08/08 08:05:36 espie Exp $ */
+/*	$OpenBSD: src/lib/libc/stdio/fgets.c,v 1.11 2009/06/02 22:28:18 ray Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -31,6 +31,7 @@
  * SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include "local.h"
@@ -48,8 +49,10 @@ fgets(char *buf, int n, FILE *fp)
 	char *s;
 	unsigned char *p, *t;
 
-	if (n <= 0)		/* sanity check */
+	if (n <= 0) {		/* sanity check */
+		errno = EINVAL;
 		return (NULL);
+	}
 
 	_SET_ORIENTATION(fp, -1);
 	s = buf;
