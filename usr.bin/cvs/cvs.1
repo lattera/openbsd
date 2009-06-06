@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/cvs/cvs.1,v 1.124 2009/04/28 11:43:43 jmc Exp $
+.\"	$OpenBSD: src/usr.bin/cvs/cvs.1,v 1.125 2009/06/06 14:17:27 ray Exp $
 .\"
 .\" Copyright (c) 2004 Jean-Francois Brousseau <jfb@openbsd.org>
 .\" Copyright (c) 2004-2008 Xavier Santolaria <xsa@openbsd.org>
@@ -591,6 +591,14 @@ and the working copy or
 and
 .Ar rev2
 (if specified).
+.It Fl t
+Will expand tabs in output lines.
+Normal or
+.Fl c
+output adds character(s) to the front of each line which may screw up
+the indentation of the original source lines and make the output listing
+difficult to interpret.
+This option will preserve the original source's indentation.
 .It Fl u
 Produces a unified diff with three lines of context.
 See
