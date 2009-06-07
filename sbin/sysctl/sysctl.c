@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/sysctl/sysctl.c,v 1.160 2008/08/04 04:26:42 miod Exp $	*/
+/*	$OpenBSD: src/sbin/sysctl/sysctl.c,v 1.161 2009/06/07 03:07:19 millert Exp $	*/
 /*	$NetBSD: sysctl.c,v 1.9 1995/09/30 07:12:50 thorpej Exp $	*/
 
 /*
@@ -40,7 +40,7 @@ static const char copyright[] =
 #if 0
 static const char sccsid[] = "@(#)sysctl.c	8.5 (Berkeley) 5/9/95";
 #else
-static const char rcsid[] = "$OpenBSD: src/sbin/sysctl/sysctl.c,v 1.160 2008/08/04 04:26:42 miod Exp $";
+static const char rcsid[] = "$OpenBSD: src/sbin/sysctl/sysctl.c,v 1.161 2009/06/07 03:07:19 millert Exp $";
 #endif
 #endif /* not lint */
 
@@ -450,6 +450,11 @@ parse(char *string, int flags)
 			break;
 		case KERN_EMUL:
 			sysctl_emul(string, newval, flags);
+			return;
+		case KERN_FILE2:
+			if (flags == 0)
+				return;
+			warnx("use fstat to view %s information", string);
 			return;
 		}
 		break;
