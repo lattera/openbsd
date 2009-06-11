@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libkvm/kvm_file2.c,v 1.3 2009/06/07 21:35:11 millert Exp $	*/
+/*	$OpenBSD: src/lib/libkvm/kvm_file2.c,v 1.4 2009/06/11 17:00:31 chl Exp $	*/
 
 /*
  * Copyright (c) 2009 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -46,7 +46,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: src/lib/libkvm/kvm_file2.c,v 1.3 2009/06/07 21:35:11 millert Exp $";
+static char *rcsid = "$OpenBSD: src/lib/libkvm/kvm_file2.c,v 1.4 2009/06/11 17:00:31 chl Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 /*
@@ -113,6 +113,9 @@ static char *rcsid = "$OpenBSD: src/lib/libkvm/kvm_file2.c,v 1.3 2009/06/07 21:3
 #include <nlist.h>
 #include <kvm.h>
 #include <db.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "kvm_private.h"
 
