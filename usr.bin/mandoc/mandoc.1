@@ -1,4 +1,4 @@
-.\"	$Id: mandoc.1,v 1.18 2009/06/11 07:26:35 kristaps Exp $
+.\"	$Id: mandoc.1,v 1.3 2009/06/14 23:00:57 schwarze Exp $
 .\"
 .\" Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate$
+.Dd $Mdocdate: June 14 2009 $
 .Dt MANDOC 1
 .Os
 .\" SECTION
@@ -24,6 +24,7 @@
 .\" SECTION
 .Sh SYNOPSIS
 .Nm mandoc
+.Op Fl V
 .Op Fl f Ns Ar option...
 .Op Fl m Ns Ar format
 .Op Fl W Ns Ar err...
@@ -54,6 +55,9 @@ Output format.  See
 .Sx Output Formats
 for available formats.  Defaults to
 .Fl T Ns Ar ascii .
+.\" ITEM
+.It Fl V
+Print version and exit.
 .\" ITEM
 .It Fl W Ns Ar err...
 Print warning messages.  May be set to 
