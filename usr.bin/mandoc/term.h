@@ -19,7 +19,8 @@
 
 /* FIXME - clean up tabs. */
 
-#define	INDENT		  6
+#define	INDENT		  5
+#define	HALFINDENT	  3
 
 __BEGIN_DECLS
 
