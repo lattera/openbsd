@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/sys/syscallargs.h,v 1.107 2009/06/15 17:01:26 beck Exp $	*/
+/*	$OpenBSD: src/sys/sys/syscallargs.h,v 1.108 2009/06/15 17:31:49 deraadt Exp $	*/
 
 /*
  * System call argument lists.
