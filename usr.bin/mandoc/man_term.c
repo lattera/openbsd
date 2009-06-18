@@ -1,4 +1,4 @@
-/*	$Id: man_term.c,v 1.2 2009/06/14 23:00:57 schwarze Exp $ */
+/*	$Id: man_term.c,v 1.3 2009/06/17 22:27:34 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -289,9 +289,12 @@ pre_IP(DECL_ARGS)
 	} else
 		offs = strlen(nn->string);
 
-	p->offset += offs;
-#endif
 	p->flags |= TERMP_NOSPACE;
+	/* FIXME */
+	if ((p->offset += offs) > p->rmargin)
+		errx(1, "line too long");
+#endif
+
 	return(0);
 }
 
