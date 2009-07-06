@@ -1,4 +1,4 @@
-/*	$Id: mdoc_term.c,v 1.18 2009/06/27 12:43:11 schwarze Exp $ */
+/*	$Id: mdoc_term.c,v 1.19 2009/06/27 13:03:51 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -603,7 +603,7 @@ arg_offset(const struct mdoc_argv *arg)
 	if (0 == strcmp(*arg->value, "indent"))
 		return(INDENT + 1);
 	if (0 == strcmp(*arg->value, "indent-two"))
-		return(INDENT * 2);
+		return((INDENT + 1) * 2);
 
 	/* FIXME: needs to support field-widths (10n, etc.). */
 
