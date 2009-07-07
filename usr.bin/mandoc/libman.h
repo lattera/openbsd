@@ -1,4 +1,4 @@
-/*	$Id: libman.h,v 1.2 2009/06/14 23:00:57 schwarze Exp $ */
+/*	$Id: libman.h,v 1.3 2009/06/23 22:05:42 schwarze Exp $ */
 /*
  * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -47,7 +47,8 @@ enum	merr {
 	WTSPACE,
 	WTQUOTE,
 	WNODATA,
-	WNOTITLE
+	WNOTITLE,
+	WESCAPE
 };
 
 __BEGIN_DECLS
