@@ -1,4 +1,4 @@
-/*	$Id: mdoc_term.c,v 1.20 2009/07/06 22:55:33 schwarze Exp $ */
+/*	$Id: mdoc_term.c,v 1.21 2009/07/06 23:37:27 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -527,10 +527,6 @@ arg_width(const struct mdoc_argv *arg, int pos)
 
 	assert(pos < (int)arg->sz && pos >= 0);
 	assert(arg->value[pos]);
-	if (0 == strcmp(arg->value[pos], "indent"))
-		return(INDENT);
-	if (0 == strcmp(arg->value[pos], "indent-two"))
-		return(INDENT * 2);
 
 	if (0 == (len = (int)strlen(arg->value[pos])))
 		return(0);
