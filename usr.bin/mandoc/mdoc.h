@@ -1,4 +1,4 @@
-/*	$Id: mdoc.h,v 1.6 2009/06/21 20:17:32 schwarze Exp $ */
+/*	$Id: mdoc.h,v 1.7 2009/06/23 23:02:54 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -279,8 +279,7 @@ struct	mdoc_node {
 /* FIXME: unify somehow with man_cb. */
 struct	mdoc_cb {
 	int	(*mdoc_err)(void *, int, int, const char *);
-	int	(*mdoc_warn)(void *, int, int, 
-			enum mdoc_warn, const char *);
+	int	(*mdoc_warn)(void *, int, int, const char *);
 };
 
 /* See mdoc.3 for documentation. */
