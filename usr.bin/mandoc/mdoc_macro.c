@@ -1,4 +1,4 @@
-/*	$Id: mdoc_macro.c,v 1.4 2009/06/18 23:34:53 schwarze Exp $ */
+/*	$Id: mdoc_macro.c,v 1.5 2009/07/12 18:35:57 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -283,7 +283,7 @@ swarn(struct mdoc *mdoc, enum mdoc_type type,
 	}
 
 	if ( ! (MDOC_IGN_SCOPE & mdoc->pflags))
-		return(mdoc_perr(mdoc, line, pos, 
+		return(mdoc_verr(mdoc, line, pos, 
 				"%s scope breaks %s scope of %s", 
 				tt, t, n));
 	return(mdoc_vwarn(mdoc, line, pos, 
