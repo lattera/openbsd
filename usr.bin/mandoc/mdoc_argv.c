@@ -1,4 +1,4 @@
-/*	$Id: mdoc_argv.c,v 1.3 2009/06/18 23:34:53 schwarze Exp $ */
+/*	$Id: mdoc_argv.c,v 1.4 2009/06/21 19:09:58 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -52,12 +52,6 @@ enum 	mwarn {
 	WARGVPARM,
 	WCOLEMPTY,
 	WTAILWS	
-};
-
-enum	merr {
-	EQUOTTERM,
-	EMALLOC,
-	EARGVAL	
 };
 
 static	int		 argv_a2arg(int, const char *);
