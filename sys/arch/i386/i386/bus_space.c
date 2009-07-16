@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/bus_space.c,v 1.3 2009/01/07 01:36:43 jsg Exp $ */
+/*	$OpenBSD: src/sys/arch/i386/i386/bus_space.c,v 1.4 2009/07/16 21:07:41 mk Exp $ */
 /*-
  * Copyright (c) 1996, 1997 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -62,7 +62,7 @@
  */
 
 #include <sys/param.h>
-#include<sys/systm.h>
+#include <sys/systm.h>
 #include <sys/malloc.h>
 #include <sys/extent.h>
 
