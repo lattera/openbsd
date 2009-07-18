@@ -1,4 +1,4 @@
-/*	$Id: mdoc_validate.c,v 1.24 2009/07/13 01:00:50 schwarze Exp $ */
+/*	$Id: mdoc_validate.c,v 1.25 2009/07/18 15:34:27 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -1148,7 +1148,7 @@ post_sh_body(POST_ARGS)
 {
 	struct mdoc_node *n;
 
-	if (SEC_NAME != mdoc->lastnamed)
+	if (SEC_NAME != mdoc->lastsec)
 		return(1);
 
 	/*
