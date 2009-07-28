@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.76 2009/07/28 13:54:35 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/smtpd.c,v 1.77 2009/07/28 21:12:26 jsg Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@openbsd.org>
@@ -1065,7 +1065,7 @@ setup_spool(uid_t uid, gid_t gid)
 		uid_t	owner;
 		gid_t	group;
 
-		if (paths[n] == PATH_OFFLINE) {
+		if (!strcmp(paths[n], PATH_OFFLINE)) {
 			mode = 01777;
 			owner = 0;
 			group = 0;
