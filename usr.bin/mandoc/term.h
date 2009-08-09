@@ -1,4 +1,4 @@
-/*	$Id: term.h,v 1.5 2009/07/26 23:39:54 schwarze Exp $ */
+/*	$Id: term.h,v 1.6 2009/08/09 18:43:29 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -48,6 +48,9 @@ struct	termp {
 #define	TERMP_DANGLE	 (1 << 8)	/* See term_flushln(). */
 #define	TERMP_HANG	 (1 << 9)	/* See term_flushln(). */
 #define	TERMP_TWOSPACE	 (1 << 10)	/* See term_flushln(). */
+#define	TERMP_NOSPLIT	 (1 << 11)	/* See termp_an_pre/post(). */
+#define	TERMP_SPLIT	 (1 << 12)	/* See termp_an_pre/post(). */
+#define	TERMP_ANPREC	 (1 << 13)	/* See termp_an_pre(). */
 	char		 *buf;		/* Output buffer. */
 	enum termenc	  enc;		/* Type of encoding. */
 	void		 *symtab;	/* Encoded-symbol table. */
