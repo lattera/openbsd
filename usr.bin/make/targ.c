@@ -1,5 +1,5 @@
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/targ.c,v 1.58 2009/05/12 09:24:16 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/targ.c,v 1.59 2009/08/16 09:49:22 espie Exp $ */
 /*	$NetBSD: targ.c,v 1.11 1997/02/20 16:51:50 christos Exp $	*/
 
 /*
