@@ -1,4 +1,4 @@
-/*	$Id: man_term.c,v 1.7 2009/06/21 20:49:33 schwarze Exp $ */
+/*	$Id: man_term.c,v 1.8 2009/06/23 22:43:30 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -76,6 +76,7 @@ static const struct termact termacts[MAN_MAX] = {
 	{ pre_RI, NULL }, /* RI */
 	{ NULL, NULL }, /* na */
 	{ pre_I, post_I }, /* i */
+	{ NULL, NULL }, /* sp */
 };
 
 static	void		  print_head(struct termp *, 
