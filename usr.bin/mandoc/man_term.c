@@ -1,4 +1,4 @@
-/*	$Id: man_term.c,v 1.8 2009/06/23 22:43:30 schwarze Exp $ */
+/*	$Id: man_term.c,v 1.9 2009/08/22 15:15:37 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -22,6 +22,9 @@
 
 #include "term.h"
 #include "man.h"
+
+#define	INDENT		  7
+#define	HALFINDENT	  3
 
 #define	DECL_ARGS 	  struct termp *p, \
 			  const struct man_node *n, \

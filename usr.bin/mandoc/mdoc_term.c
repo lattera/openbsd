@@ -1,4 +1,4 @@
-/*	$Id: mdoc_term.c,v 1.49 2009/08/09 21:59:41 schwarze Exp $ */
+/*	$Id: mdoc_term.c,v 1.50 2009/08/22 15:36:58 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -25,6 +25,9 @@
 
 #include "term.h"
 #include "mdoc.h"
+
+#define	INDENT		  5
+#define	HALFINDENT	  3
 
 /* FIXME: macro arguments can be escaped. */
 
