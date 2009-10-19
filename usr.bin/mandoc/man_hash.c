@@ -1,4 +1,4 @@
-/*	$Id: man_hash.c,v 1.5 2009/08/22 23:17:40 schwarze Exp $ */
+/*	$Id: man_hash.c,v 1.6 2009/09/21 21:11:37 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -14,6 +14,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include <sys/types.h>
+
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
