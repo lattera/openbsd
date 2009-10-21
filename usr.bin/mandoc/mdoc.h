@@ -1,4 +1,4 @@
-/*	$Id: mdoc.h,v 1.12 2009/08/09 22:05:01 schwarze Exp $ */
+/*	$Id: mdoc.h,v 1.13 2009/08/22 22:11:24 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -179,7 +179,8 @@
 #define	MDOC_Emphasis	 23
 #define	MDOC_Symbolic	 24
 #define	MDOC_Nested	 25
-#define	MDOC_ARG_MAX	 26
+#define	MDOC_Centred	 26
+#define	MDOC_ARG_MAX	 27
 
 /* Type of a syntax node. */
 enum	mdoc_type {

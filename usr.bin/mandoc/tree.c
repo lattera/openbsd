@@ -1,4 +1,4 @@
-/*	$Id: tree.c,v 1.3 2009/08/22 20:14:37 schwarze Exp $ */
+/*	$Id: tree.c,v 1.4 2009/09/21 20:57:57 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -21,6 +21,7 @@
 
 #include "mdoc.h"
 #include "man.h"
+#include "main.h"
 
 static	void	print_mdoc(const struct mdoc_node *, int);
 static	void	print_man(const struct man_node *, int);
