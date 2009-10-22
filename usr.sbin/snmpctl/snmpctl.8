@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.sbin/snmpctl/snmpctl.8,v 1.10 2009/10/22 12:35:53 sobrado Exp $
+.\" $OpenBSD: src/usr.sbin/snmpctl/snmpctl.8,v 1.11 2009/10/22 15:02:13 sobrado Exp $
 .\"
 .\" Copyright (c) 2007, 2008 Reyk Floeter <reyk@vantronix.net>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: September 26 2008 $
+.Dd $Mdocdate: October 22 2009 $
 .Dt SNMPCTL 8
 .Os
 .Sh NAME
@@ -106,8 +106,8 @@ An string describing an Object ID, for example
 .Bl -tag -width "/var/run/snmpd.sockXX" -compact
 .It /var/run/snmpd.sock
 default
-.Ux
-domain socket used for communication with
+.Ux Ns -domain
+socket used for communication with
 .Xr snmpd 8
 .El
 .Sh SEE ALSO

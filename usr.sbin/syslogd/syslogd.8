@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/syslogd/syslogd.8,v 1.25 2009/10/22 12:35:53 sobrado Exp $
+.\"	$OpenBSD: src/usr.sbin/syslogd/syslogd.8,v 1.26 2009/10/22 15:02:13 sobrado Exp $
 .\"
 .\" Copyright (c) 1983, 1986, 1991, 1993
 .\"	The Regents of the University of California.  All rights reserved.
@@ -30,7 +30,7 @@
 .\"     from: @(#)syslogd.8	8.1 (Berkeley) 6/6/93
 .\"	$NetBSD: syslogd.8,v 1.3 1996/01/02 17:41:48 perry Exp $
 .\"
-.Dd $Mdocdate: May 31 2007 $
+.Dd $Mdocdate: October 22 2009 $
 .Dt SYSLOGD 8
 .Os
 .Sh NAME
@@ -124,8 +124,8 @@ will only use this socket to send messages outwards, but in
 mode it will also read messages from this socket.
 .Nm
 also opens and reads messages from the
-.Ux
-domain socket
+.Ux Ns -domain
+socket
 .Pa /dev/log ,
 and from the special device
 .Pa /dev/klog
@@ -157,8 +157,8 @@ process ID of current
 .Nm syslogd
 .It Pa /dev/log
 name of the
-.Ux
-domain datagram log socket
+.Ux Ns -domain
+datagram log socket
 .It Pa /dev/klog
 kernel log device
 .El
