@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.276 2009/06/19 21:31:54 naddy Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_bge.c,v 1.276.4.1 2009/10/23 00:38:00 william Exp $	*/
 
 /*
  * Copyright (c) 2001 Wind River Systems
@@ -1224,10 +1224,6 @@ bge_chipinit(struct bge_softc *sc)
 		} else if (BGE_ASICREV(sc->bge_chipid) == BGE_ASICREV_BCM5704) {
 			/* 1536 bytes for read, 384 bytes for write. */
 			dma_rw_ctl |= BGE_PCIDMARWCTL_RD_WAT_SHIFT(7) |
-			    BGE_PCIDMARWCTL_WR_WAT_SHIFT(3);
-		} else if (BGE_ASICREV(sc->bge_chipid) == BGE_ASICREV_BCM5703) {
-			/* 512 bytes for read, 384 bytes for write. */
-			dma_rw_ctl |= BGE_PCIDMARWCTL_RD_WAT_SHIFT(4) |
 			    BGE_PCIDMARWCTL_WR_WAT_SHIFT(3);
 		} else {
 			/* 384 bytes for read and write. */
