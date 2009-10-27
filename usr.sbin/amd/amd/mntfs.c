@@ -32,12 +32,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-/*static char sccsid[] = "from: @(#)mntfs.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: mntfs.c,v 1.4 2002/08/05 07:24:26 pvalchev Exp $";
-#endif /* not lint */
-
-
 #include "am.h"
 
 extern qelem mfhead;

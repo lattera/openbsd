@@ -1,9 +1,5 @@
-/*	$OpenBSD: src/usr.bin/gprof/m68k.c,v 1.4 2006/03/25 19:06:36 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/gprof/m68k.c,v 1.5 2009/10/27 23:59:38 deraadt Exp $	*/
 /*	$NetBSD: m68k.c,v 1.4 1995/04/19 07:16:07 cgd Exp $	*/
-
-#ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/gprof/m68k.c,v 1.4 2006/03/25 19:06:36 espie Exp $";
-#endif /* not lint */
 
 #include "gprof.h"
 

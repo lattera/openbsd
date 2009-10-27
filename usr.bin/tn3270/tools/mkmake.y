@@ -29,11 +29,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-/*static char sccsid[] = "from: @(#)mkmake.y	4.2 (Berkeley) 4/26/91";*/
-static char rcsid[] = "$Id: mkmake.y,v 1.4 2003/06/03 02:56:19 millert Exp $";
-#endif /* not lint */
-
 typedef struct string {
     int
 	hashval,

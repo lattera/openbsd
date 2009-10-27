@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/file/softmagic.c,v 1.14 2009/04/24 18:54:34 chl Exp $ */
+/*	$OpenBSD: src/usr.bin/file/softmagic.c,v 1.15 2009/10/27 23:59:38 deraadt Exp $ */
 /*
  * Copyright (c) Ian F. Darwin 1986-1995.
  * Software written by Ian F. Darwin and others;
@@ -37,10 +37,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-
-#ifndef	lint
-FILE_RCSID("@(#)$Id: softmagic.c,v 1.13 2008/05/08 01:40:56 chl Exp $")
-#endif	/* lint */
 
 private int match(struct magic_set *, struct magic *, uint32_t,
     const unsigned char *, size_t, int);

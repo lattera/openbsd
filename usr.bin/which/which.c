@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/which/which.c,v 1.14 2007/08/14 17:41:10 sobrado Exp $	*/
+/*	$OpenBSD: src/usr.bin/which/which.c,v 1.15 2009/10/27 23:59:50 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -15,10 +15,6 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
-#ifndef lint                                                              
-static const char rcsid[] = "$OpenBSD: src/usr.bin/which/which.c,v 1.14 2007/08/14 17:41:10 sobrado Exp $";
-#endif /* not lint */                                                        
 
 #include <sys/param.h>
 #include <sys/stat.h>

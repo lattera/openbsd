@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/tn3270/api/Attic/api_bsd.c,v 1.5 2003/11/15 00:26:36 tedu Exp $	*/
+/*	$OpenBSD: src/usr.bin/tn3270/api/Attic/api_bsd.c,v 1.6 2009/10/27 23:59:45 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1988 The Regents of the University of California.
@@ -28,11 +28,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "from: @(#)api_bsd.c	4.2 (Berkeley) 4/26/91";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/tn3270/api/Attic/api_bsd.c,v 1.5 2003/11/15 00:26:36 tedu Exp $";
-#endif /* not lint */
 
 #if	defined(unix)
 

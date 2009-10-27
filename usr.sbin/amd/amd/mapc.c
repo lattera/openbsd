@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/amd/amd/mapc.c,v 1.12 2003/10/30 16:04:06 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/amd/amd/mapc.c,v 1.13 2009/10/27 23:59:50 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1989 Jan-Simon Pendry
@@ -33,11 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "from: @(#)mapc.c	8.1 (Berkeley) 6/6/93";*/
-static char *rcsid = "$Id: mapc.c,v 1.11 2003/06/02 23:36:51 millert Exp $";
-#endif /* not lint */
 
 /*
  * Mount map cache

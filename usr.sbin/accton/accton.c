@@ -27,17 +27,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1988 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-/* from: static char sccsid[] = "@(#)accton.c	4.3 (Berkeley) 6/1/90"; */
-static char *rcsid = "$Id: accton.c,v 1.6 2003/06/02 23:36:51 millert Exp $";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <err.h>
 #include <stdio.h>

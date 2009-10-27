@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/indent/args.c,v 1.14 2004/07/20 03:50:26 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.bin/indent/args.c,v 1.15 2009/10/27 23:59:39 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1980, 1993
@@ -31,11 +31,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "@(#)args.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/indent/args.c,v 1.14 2004/07/20 03:50:26 deraadt Exp $";
-#endif /* not lint */
 
 /*
  * Argument scanning and profile reading code.  Default parameters are set

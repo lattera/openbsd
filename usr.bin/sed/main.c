@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sed/main.c,v 1.16 2009/08/07 03:30:56 djm Exp $	*/
+/*	$OpenBSD: src/usr.bin/sed/main.c,v 1.17 2009/10/27 23:59:43 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1992 Diomidis Spinellis.
@@ -32,14 +32,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static const char copyright[] =
-"@(#) Copyright (c) 1992, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-/* from: static char sccsid[] = "@(#)main.c	8.2 (Berkeley) 1/3/94"; */
-static const char rcsid[] = "$OpenBSD: src/usr.bin/sed/main.c,v 1.16 2009/08/07 03:30:56 djm Exp $";
-#endif /* not lint */
 
 #include <sys/types.h>
 

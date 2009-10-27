@@ -32,25 +32,12 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)mk-amd-map.c	8.1 (Berkeley) 6/28/93
- *	$Id: mk-amd-map.c,v 1.8 2004/05/07 15:51:12 millert Exp $
+ *	$Id: mk-amd-map.c,v 1.9 2007/03/20 04:00:32 tedu Exp $
  */
 
 /*
  * Convert a file map into an ndbm map
  */
-
-#ifndef lint
-char copyright[] = "\
-@(#)Copyright (c) 1990, 1993 Jan-Simon Pendry\n\
-@(#)Copyright (c) 1990 Imperial College of Science, Technology & Medicine\n\
-@(#)Copyright (c) 1990, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char rcsid[] = "$Id: mk-amd-map.c,v 1.8 2004/05/07 15:51:12 millert Exp $";
-static char sccsid[] = "@(#)mk-amd-map.c	8.1 (Berkeley) 6/28/93";
-#endif /* not lint */
 
 #include "am.h"
 

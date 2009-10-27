@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.145 2009/08/10 20:29:54 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.146 2009/10/27 23:59:34 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -123,11 +123,6 @@ u_int32_t	widebug = WIDEBUG;
 #else	/* !WIDEBUG */
 #define DPRINTF(mask,args)
 #endif	/* WIDEBUG */
-
-#if !defined(lint) && !defined(__OpenBSD__)
-static const char rcsid[] =
-	"$OpenBSD: src/sys/dev/ic/if_wi.c,v 1.145 2009/08/10 20:29:54 deraadt Exp $";
-#endif	/* lint */
 
 #ifdef foo
 static u_int8_t	wi_mcast_addr[6] = { 0x01, 0x60, 0x1D, 0x00, 0x01, 0x00 };

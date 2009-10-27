@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ranlib/Attic/build.c,v 1.12 2004/10/09 20:36:05 mickey Exp $	*/
+/*	$OpenBSD: src/usr.bin/ranlib/Attic/build.c,v 1.13 2009/10/27 23:59:42 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -31,11 +31,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "from: @(#)build.c	5.3 (Berkeley) 3/12/91";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/ranlib/Attic/build.c,v 1.12 2004/10/09 20:36:05 mickey Exp $";
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/stat.h>

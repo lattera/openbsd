@@ -29,10 +29,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char *rcsid = "$Id: str.c,v 1.2 2004/08/01 18:32:20 deraadt Exp $";
-#endif
-
 /*
  * Counted strings
  */

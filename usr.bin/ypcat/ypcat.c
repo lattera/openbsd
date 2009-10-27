@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ypcat/ypcat.c,v 1.13 2008/05/29 07:42:08 sobrado Exp $ */
+/*	$OpenBSD: src/usr.bin/ypcat/ypcat.c,v 1.14 2009/10/27 23:59:50 deraadt Exp $ */
 
 /*
  * Copyright (c) 1992, 1993, 1996 Theo de Raadt <deraadt@theos.com>
@@ -25,10 +25,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/ypcat/ypcat.c,v 1.13 2008/05/29 07:42:08 sobrado Exp $";
-#endif
 
 #include <sys/param.h>
 #include <sys/types.h>

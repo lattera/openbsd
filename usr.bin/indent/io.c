@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/indent/io.c,v 1.10 2005/05/15 03:27:04 millert Exp $	*/
+/*	$OpenBSD: src/usr.bin/indent/io.c,v 1.11 2009/10/27 23:59:39 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1985 Sun Microsystems, Inc.
@@ -30,11 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "@(#)io.c	8.1 (Berkeley) 6/6/93";*/
-static char rcsid[] = "$OpenBSD: src/usr.bin/indent/io.c,v 1.10 2005/05/15 03:27:04 millert Exp $";
-#endif /* not lint */
 
 #include <stdio.h>
 #include <ctype.h>

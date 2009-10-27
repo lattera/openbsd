@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/file/apprentice.c,v 1.27 2009/08/27 16:26:42 deraadt Exp $ */
+/*	$OpenBSD: src/usr.bin/file/apprentice.c,v 1.28 2009/10/27 23:59:37 deraadt Exp $ */
 /*
  * Copyright (c) Ian F. Darwin 1986-1995.
  * Software written by Ian F. Darwin and others;
@@ -49,10 +49,6 @@
 #include <sys/mman.h>
 #endif
 #include <dirent.h>
-
-#ifndef	lint
-FILE_RCSID("@(#)$Id: apprentice.c,v 1.26 2009/04/24 18:54:34 chl Exp $")
-#endif	/* lint */
 
 #define	EATAB {while (isascii((unsigned char) *l) && \
 		      isspace((unsigned char) *l))  ++l;}

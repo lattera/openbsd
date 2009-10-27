@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.20 2008/10/10 15:24:24 claudio Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ppp.c,v 1.21 2009/10/27 23:59:55 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1990, 1991, 1993, 1994, 1995, 1996, 1997
@@ -20,11 +20,6 @@
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Id: print-ppp.c,v 1.19 2007/10/07 16:41:05 deraadt Exp $ (LBL)";
-#endif
 
 #ifdef PPP
 #include <sys/param.h>

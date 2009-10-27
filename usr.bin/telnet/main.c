@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/telnet/main.c,v 1.18 2009/08/06 22:51:52 sobrado Exp $	*/
+/*	$OpenBSD: src/usr.bin/telnet/main.c,v 1.19 2009/10/27 23:59:44 deraadt Exp $	*/
 /*	$NetBSD: main.c,v 1.5 1996/02/28 21:04:05 thorpej Exp $	*/
 
 /*
@@ -29,12 +29,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1988, 1990, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
 
 #include "telnet_locl.h"
 

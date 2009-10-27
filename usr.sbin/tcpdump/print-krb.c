@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-krb.c,v 1.7 2007/10/07 16:41:05 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-krb.c,v 1.8 2009/10/27 23:59:55 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1995, 1996, 1997
@@ -22,11 +22,6 @@
  *
  * Initial contribution from John Hawkinson (jhawk@mit.edu).
  */
-
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Id$";
-#endif
 
 #include <sys/param.h>
 #include <sys/time.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/cron/misc.c,v 1.39 2008/01/05 16:59:06 chl Exp $	*/
+/*	$OpenBSD: src/usr.sbin/cron/misc.c,v 1.40 2009/10/27 23:59:51 deraadt Exp $	*/
 
 /* Copyright 1988,1990,1993,1994 by Paul Vixie
  * All rights reserved
@@ -20,10 +20,6 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
-#if !defined(lint) && !defined(LINT)
-static char const rcsid[] = "$OpenBSD: src/usr.sbin/cron/misc.c,v 1.39 2008/01/05 16:59:06 chl Exp $";
-#endif
 
 /* vix 26jan87 [RCS has the rest of the log]
  * vix 30dec86 [written]

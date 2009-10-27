@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ypserv/stdhosts/stdhosts.c,v 1.15 2006/04/03 05:01:23 deraadt Exp $ */
+/*	$OpenBSD: src/usr.sbin/ypserv/stdhosts/stdhosts.c,v 1.16 2009/10/27 23:59:58 deraadt Exp $ */
 
 /*
  * Copyright (c) 1994 Mats O Jansson <moj@stacken.kth.se>
@@ -25,10 +25,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/ypserv/stdhosts/stdhosts.c,v 1.15 2006/04/03 05:01:23 deraadt Exp $";
-#endif
 
 #include <sys/types.h>
 #include <sys/socket.h>

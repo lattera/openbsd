@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.6 2007/10/07 16:41:05 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/smbutil.c,v 1.7 2009/10/27 23:59:57 deraadt Exp $	*/
 
 /*
    Copyright (C) Andrew Tridgell 1995-1999
@@ -9,11 +9,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
-
-#ifndef lint
-static const char rcsid[] =
-     "@(#) $Id$";
 #endif
 
 #include <sys/param.h>

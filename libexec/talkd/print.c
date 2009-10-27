@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/talkd/print.c,v 1.10 2006/03/17 08:23:14 otto Exp $	*/
+/*	$OpenBSD: src/libexec/talkd/print.c,v 1.11 2009/10/27 23:59:31 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1983 Regents of the University of California.
@@ -28,11 +28,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-/*static char sccsid[] = "from: @(#)print.c	5.8 (Berkeley) 2/26/91";*/
-static char rcsid[] = "$Id: print.c,v 1.9 2004/03/10 04:32:45 deraadt Exp $";
-#endif /* not lint */
 
 /* debug print routines */
 

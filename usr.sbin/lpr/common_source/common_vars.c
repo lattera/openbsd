@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/lpr/common_source/common_vars.c,v 1.3 2003/06/02 23:36:53 millert Exp $	*/
+/*	$OpenBSD: src/usr.sbin/lpr/common_source/common_vars.c,v 1.4 2009/10/27 23:59:51 deraadt Exp $	*/
 /*	$NetBSD: common.c,v 1.15 1999/09/26 10:32:27 mrg Exp $	*/
 
 /*
@@ -34,10 +34,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static const char rcsid[] = "$OpenBSD: src/usr.sbin/lpr/common_source/common_vars.c,v 1.3 2003/06/02 23:36:53 millert Exp $";
-#endif /* not lint */
 
 #include <sys/param.h>
 

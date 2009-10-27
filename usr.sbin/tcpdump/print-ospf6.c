@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf6.c,v 1.4 2007/10/07 16:41:05 deraadt Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tcpdump/print-ospf6.c,v 1.5 2009/10/27 23:59:55 deraadt Exp $	*/
 
 
 /*
@@ -23,11 +23,6 @@
  *
  * OSPF support contributed by Jeffrey Honig (jch@mitchell.cit.cornell.edu)
  */
-
-#ifndef lint
-static const char rcsid[] =
-    "@(#) $Id$ (LBL)";
-#endif
 
 #ifdef INET6
 

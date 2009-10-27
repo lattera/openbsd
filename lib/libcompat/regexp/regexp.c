@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libcompat/regexp/Attic/regexp.c,v 1.5 2006/04/09 04:58:37 deraadt Exp $	*/
+/*	$OpenBSD: src/lib/libcompat/regexp/Attic/regexp.c,v 1.6 2009/10/27 23:59:28 deraadt Exp $	*/
 
 /*
  * regcomp and regexec -- regsub and regerror are elsewhere
@@ -34,10 +34,6 @@
  * precedence is structured in regular expressions.  Serious changes in
  * regular-expression syntax might require a total rethink.
  */
-
-#ifndef lint
-static char *rcsid = "$OpenBSD: src/lib/libcompat/regexp/Attic/regexp.c,v 1.5 2006/04/09 04:58:37 deraadt Exp $";
-#endif /* not lint */
 
 #include <regexp.h>
 #include <stdio.h>

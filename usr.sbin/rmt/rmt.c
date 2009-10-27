@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/rmt/rmt.c,v 1.12 2005/03/07 16:08:19 henning Exp $	*/
+/*	$OpenBSD: src/usr.sbin/rmt/rmt.c,v 1.13 2009/10/27 23:59:54 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1983 Regents of the University of California.
@@ -28,17 +28,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1983 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-/*static char sccsid[] = "from: @(#)rmt.c	5.6 (Berkeley) 6/1/90";*/
-static char rcsid[] = "$Id: rmt.c,v 1.11 2003/06/02 23:36:54 millert Exp $";
-#endif /* not lint */
 
 /*
  * rmt
