@@ -1,4 +1,4 @@
-/*	$Id: libman.h,v 1.8 2009/08/22 23:17:39 schwarze Exp $ */
+/*	$Id: libman.h,v 1.9 2009/09/21 21:11:36 schwarze Exp $ */
 /*
  * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -54,7 +54,6 @@ enum	merr {
 	WHEADARGS,
 	WBODYARGS,
 	WNHEADARGS,
-	WMACRO,
 	WMACROFORM,
 	WEXITSCOPE,
 	WNOSCOPE,

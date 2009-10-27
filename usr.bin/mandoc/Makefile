@@ -1,8 +1,8 @@
-#	$OpenBSD: src/usr.bin/mandoc/Makefile,v 1.20 2009/10/21 19:13:50 schwarze Exp $
+#	$OpenBSD: src/usr.bin/mandoc/Makefile,v 1.21 2009/10/27 21:40:07 schwarze Exp $
 
 .include <bsd.own.mk>
 
-VERSION=1.9.9
+VERSION=1.9.11
 CFLAGS+=-DVERSION=\"${VERSION}\"
 CFLAGS+=-W -Wall -Wstrict-prototypes
 .if ${USE_GCC3:L} != "no"

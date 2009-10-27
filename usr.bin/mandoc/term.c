@@ -1,4 +1,4 @@
-/*	$Id: term.c,v 1.110 2009/10/24 06:19:34 kristaps Exp $ */
+/*	$Id: term.c,v 1.17 2009/10/24 13:13:20 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -204,7 +204,8 @@ term_flushln(struct termp *p)
 				vis = 0;
 			}
 			/* Remove the overstep width. */
-			bp += overstep;
+			bp += (int)/* LINTED */
+				overstep;
 			overstep = 0;
 		} else {
 			for (j = 0; j < (int)vbl; j++)
@@ -222,14 +223,15 @@ term_flushln(struct termp *p)
 		}
 		vis += vsz;
 	}
+
 	p->col = 0;
+	overstep = 0;
 
 	if ( ! (TERMP_NOBREAK & p->flags)) {
 		putchar('\n');
 		return;
 	}
 
-	overstep = 0;
 	if (TERMP_HANG & p->flags) {
 		/* We need one blank after the tag. */
 		overstep = /* LINTED */
@@ -545,12 +547,12 @@ encode(struct termp *p, char c)
 {
 	
 	if (' ' != c) {
-		if (p->bold) {
-			buffer(p, c);
-			buffer(p, 8);
-		}
 		if (p->under) {
 			buffer(p, '_');
+			buffer(p, 8);
+		}
+		if (p->bold) {
+			buffer(p, c);
 			buffer(p, 8);
 		}
 	}
