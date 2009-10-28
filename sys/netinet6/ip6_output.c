@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.106 2008/10/22 14:36:08 markus Exp $	*/
+/*	$OpenBSD: src/sys/netinet6/ip6_output.c,v 1.106.6.1 2009/10/28 21:19:18 claudio Exp $	*/
 /*	$KAME: ip6_output.c,v 1.172 2001/03/25 09:55:56 itojun Exp $	*/
 
 /*
@@ -1892,6 +1892,7 @@ do { \
 			case IPV6_ESP_TRANS_LEVEL:
 			case IPV6_ESP_NETWORK_LEVEL:
 			case IPV6_IPCOMP_LEVEL:
+				*mp = m = m_get(M_WAIT, MT_SOOPTS);
 #ifndef IPSEC
 				m->m_len = sizeof(int);
 				*mtod(m, int *) = IPSEC_LEVEL_NONE;
