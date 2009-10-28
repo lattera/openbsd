@@ -1,8 +1,7 @@
-#	$OpenBSD: src/distrib/special/ifconfig/Makefile,v 1.1 2004/12/25 11:22:08 deraadt Exp $
+#	$OpenBSD: src/distrib/special/ifconfig/Makefile,v 1.2 2009/10/28 07:36:49 deraadt Exp $
 
 PROG=	ifconfig
-MAN=	
-COPTS+=-Os -DSMALL
+COPTS+=	-DSMALL
 .PATH:  ${.CURDIR}/../../../sbin/ifconfig
 
 CPPFLAGS+=-DINET6
