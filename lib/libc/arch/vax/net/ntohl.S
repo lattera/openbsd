@@ -27,11 +27,6 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS)
-	.text
-	.asciz "$OpenBSD: src/lib/libc/arch/vax/net/ntohl.S,v 1.3 2003/06/02 20:18:33 millert Exp $"
-#endif /* LIBC_SCCS */
-
 /* hostorder = ntohl(netorder) */
 
 #include "DEFS.h"
