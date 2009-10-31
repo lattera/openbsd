@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sh/dev/scif.c,v 1.7 2008/10/15 19:12:19 blambert Exp $	*/
+/*	$OpenBSD: src/sys/arch/sh/dev/scif.c,v 1.8 2009/10/31 06:40:16 deraadt Exp $	*/
 /*	$NetBSD: scif.c,v 1.47 2006/07/23 22:06:06 ad Exp $ */
 
 /*-
@@ -491,6 +491,7 @@ scifstart(struct tty *tp)
 			wakeup(&tp->t_outq);
 		}
 		selwakeup(&tp->t_wsel);
+		KNOTE(&tp->t_wsel.si_note, 0);
 		if (tp->t_outq.c_cc == 0)
 			goto out;
 	}
