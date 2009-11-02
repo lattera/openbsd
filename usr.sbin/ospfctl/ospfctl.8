@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/ospfctl/ospfctl.8,v 1.22 2009/10/22 15:02:12 sobrado Exp $
+.\"	$OpenBSD: src/usr.sbin/ospfctl/ospfctl.8,v 1.23 2009/11/02 20:23:29 claudio Exp $
 .\"
 .\" Copyright (c) 2004, 2005 Esben Norby <norby@openbsd.org>
 .\"
@@ -54,6 +54,10 @@ a.k.a. the kernel routing table.
 Decoupling the FIB from an OSPF router may create routing loops and could cause
 major routing issues in the complete OSPF cloud.
 Only routers with just one link to the OSPF cloud can safely decouple the FIB.
+.It Cm log verbose
+Enable verbose debug logging.
+.It Cm log brief
+Disable verbose debug logging.
 .It Cm reload
 Reload the configuration file.
 .It Cm show database Op Ar filter
