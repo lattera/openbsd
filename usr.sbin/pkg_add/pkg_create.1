@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/pkg_add/pkg_create.1,v 1.49 2009/04/14 17:53:58 espie Exp $
+.\"	$OpenBSD: src/usr.sbin/pkg_add/pkg_create.1,v 1.50 2009/11/07 08:10:07 espie Exp $
 .\"
 .\" Documentation and design originally from FreeBSD. All the code has
 .\" been rewritten since. We keep the documentation's notice:
@@ -605,6 +605,13 @@ Effects vary depending on
 .Ar name .
 Some options are not documented yet.
 .Bl -tag -width indent
+.It Ar always-update
+By default,
+.Xr pkg_add 1
+uses some simplified information to decide whether an installed package
+needs updating.
+With this option, the package is updated whenever anything changes.
+To be used sparingly, as this is more expensive.
 .It Ar no-default-conflict
 By default, a package conflicts with other versions of the same package.
 With this option, the older package version will still be noticed, but the
