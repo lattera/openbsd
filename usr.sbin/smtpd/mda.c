@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/mda.c,v 1.30 2009/09/23 09:40:39 jacekm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/mda.c,v 1.31 2009/11/11 10:04:05 chl Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@openbsd.org>
@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "smtpd.h"
