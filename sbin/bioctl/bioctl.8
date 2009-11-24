@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/sbin/bioctl/bioctl.8,v 1.75 2009/10/22 15:27:15 jmc Exp $
+.\"	$OpenBSD: src/sbin/bioctl/bioctl.8,v 1.76 2009/11/24 02:19:35 jsing Exp $
 .\"
 .\" Copyright (c) 2004, 2005 Marco Peereboom
 .\"
@@ -43,7 +43,7 @@
 .Pp
 .Nm bioctl
 .Bk -words
-.Op Fl dhiqv
+.Op Fl Pdhiqv
 .Op Fl C Ar flag[,flag,...]
 .Op Fl c Ar raidlevel
 .Op Fl l Ar special[,special,...]
@@ -214,6 +214,8 @@ device list to create within the
 framework.
 Requires
 .Fl c .
+.It Fl P
+Change the passphrase on the selected crypto volume.
 .It Fl r Ar rounds
 When creating an encrypted volume, specifies the number of iterations of
 the algorithm used to convert a passphrase into a key.
