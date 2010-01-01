@@ -1,4 +1,4 @@
-/*	$Id: mdoc_macro.c,v 1.25 2009/10/27 21:40:07 schwarze Exp $ */
+/*	$Id: mdoc_macro.c,v 1.39 2010/01/01 13:17:58 kristaps Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -808,6 +808,17 @@ in_line(MACRO_PROT_ARGS)
 			cnt++;
 		if ( ! mdoc_word_alloc(m, line, la, p))
 			return(0);
+
+		/*
+		 * `Fl' macros have their scope re-opened with each new
+		 * word so that the `-' can be added to each one without
+		 * having to parse out spaces.
+		 */
+		if (0 == lastpunct && MDOC_Fl == tok) {
+			if ( ! rew_elem(m, tok))
+				return(0);
+			lastpunct = 1;
+		}
 	}
 
 	if (0 == lastpunct && ! rew_elem(m, tok))
