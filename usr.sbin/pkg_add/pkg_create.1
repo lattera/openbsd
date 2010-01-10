@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/pkg_add/pkg_create.1,v 1.54 2010/01/05 11:31:07 espie Exp $
+.\"	$OpenBSD: src/usr.sbin/pkg_add/pkg_create.1,v 1.55 2010/01/10 21:27:59 espie Exp $
 .\"
 .\" Documentation and design originally from FreeBSD. All the code has
 .\" been rewritten since. We keep the documentation's notice:
@@ -34,7 +34,8 @@
 .Op Fl A Ar arches
 .Op Fl B Ar pkg-destdir
 .Oo Fl D Ar name
-.Ns = Ns Ar value
+.Ns Oo Ns = Ns Ar value
+.Oc
 .Oc
 .Op Fl L Ar localbase
 .Op Fl M Ar displayfile
