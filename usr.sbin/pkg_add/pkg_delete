@@ -1,0 +1,167 @@
+#!/usr/bin/perl
+# ex:ts=8 sw=4:
+# $OpenBSD: src/usr.sbin/pkg_add/Attic/pkg_delete,v 1.133 2010/01/10 21:27:59 espie Exp $
+#
+# Copyright (c) 2003-2010 Marc Espie <espie@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+
+use OpenBSD::AddDelete;
+
+package OpenBSD::State;
+our @ISA=(qw(OpenBSD::UI));
+
+sub todo
+{
+	my $state = shift;
+	return $state->{todo};
+}
+
+package OpenBSD::AddDelete;
+our ($state, %defines, $bad, $opt_B);
+
+use OpenBSD::PackingList;
+use OpenBSD::RequiredBy;
+use OpenBSD::Delete;
+use OpenBSD::PackageInfo;
+use OpenBSD::UpdateSet;
+
+handle_options('chxDnq', {},
+    'pkg_delete [-cIinqsvx] [-B pkg-destdir] [-D name[=value]] pkg-name [...]');
+
+local $SIG{'INFO'} = sub { $state->status->print($state); };
+$opt_B = $ENV{'PKG_DESTDIR'} unless defined $opt_B;
+$opt_B = '' unless defined $opt_B;
+if ($opt_B ne '') {
+	$opt_B.='/' unless $opt_B =~ m/\/$/o;
+}
+$ENV{'PKG_DESTDIR'} = $opt_B;
+
+$state->{destdir} = $opt_B;
+if ($opt_B eq '') {
+    $state->{destdirname} = '';
+} else {
+    $state->{destdirname} = '${PKG_DESTDIR}';
+}
+
+$ENV{'PKG_DELETE_EXTRA'} = $state->{extra} ? "Yes" : "No";
+
+
+my %done;
+my $removed;
+
+# Resolve pkg names
+my @realnames;
+my @todo;
+
+sub process_parameters
+{
+	OpenBSD::PackageInfo::solve_installed_names(\@ARGV, \@realnames, 
+	    "(removing them all)", $state);
+
+	@todo = OpenBSD::RequiredBy->compute_closure(@realnames);
+
+	if (@todo > @realnames) {
+		my $details = $state->verbose >= 2 || $defines{verbosedeps};
+		my $show    = sub {
+			my ($p, $d) = @_;
+			$state->say("Can't remove ", join(' ', @$p), 
+			    " without also removing:\n",
+			    join(' ', @$d));
+		};
+		if ($state->{interactive} || !$details) {
+			my %deps = map {($_, 1)} @todo;
+			for my $p (@realnames) {
+				delete $deps{$p};
+			}
+			&$show([@realnames], [keys %deps]);
+			if (@realnames > 1 && (keys %deps) > 1 && 
+			    $state->confirm("Do you want details", 1)) {
+				$details = 1;
+			}
+		}
+		if ($details) {
+			for my $pkg (@realnames) {
+				my @deps = OpenBSD::RequiredBy->compute_closure($pkg);
+				next unless @deps > 1;
+				@deps = grep {$_ ne $pkg} @deps;
+				&$show([$pkg], [@deps]);
+			}
+		}
+		my $them = @todo > 1 ? 'them' : 'it';
+		if ($defines{dependencies} or 
+		    $state->confirm("Do you want to remove $them as well", 0)) {
+			$state->say("(removing $them as well)");
+		} else {
+			$bad = 1;
+		}
+	}
+}
+
+sub finish_display
+{
+}
+
+framework(
+sub {
+	# and finally, handle the removal
+	do {
+		$removed = 0;
+		if ($state->{not}) {
+			$state->status->what("Pretending to delete");
+		} else {
+			$state->status->what("Deleting");
+		}
+		DELETE: for my $pkgname (@todo) {
+			$state->{todo} = scalar @todo - scalar keys %done;
+			next if $done{$pkgname};
+			unless (is_installed($pkgname)) {
+				$state->errsay("$pkgname was not installed");
+				$done{$pkgname} = 1;
+				$removed++;
+				next;
+			}
+			my $r = OpenBSD::RequiredBy->new($pkgname);
+			if ($r->list > 0) {
+				if ($defines{baddepend}) {
+					for my $p ($r->list) {
+						if ($done{$p}) {
+							$r->delete($p);
+						} else {
+							next DELETE;
+						}
+					}
+				} else {
+					next;
+				}
+			}
+			my $info = sub {
+			};
+
+			$state->status->object($pkgname);
+			if (!$state->progress->set_header($pkgname)) {
+				$state->say($state->{not} ? 
+				    "Pretending to delete " : 
+				    "Deleting ", 
+				    $pkgname) if $state->verbose;
+			}
+			$state->log->set_context('-'.$pkgname);
+			OpenBSD::Delete::delete_package($pkgname, $state);
+			$done{$pkgname} = 1;
+			$removed++;
+		}
+	} while ($removed);
+});
