@@ -1,7 +1,5 @@
-/*	$OpenBSD: src/lib/libcurses/base/Attic/sigaction.c,v 1.4 2001/01/22 18:01:48 millert Exp $	*/
-
 /****************************************************************************
- * Copyright (c) 1998,2000 Free Software Foundation, Inc.                   *
+ * Copyright (c) 2004 Free Software Foundation, Inc.                        *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,92 +27,44 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Zeyd M. Ben-Halim <zmbenhal@netcom.com> 1992,1995               *
- *     and: Eric S. Raymond <esr@snark.thyrsus.com>                         *
+ *   Author:  Thomas E. Dickey                                              *
  ****************************************************************************/
 
-#include <curses.priv.h>
+#include "form.priv.h"
 
-#include <signal.h>
-#include <SigAction.h>
+MODULE_ID("$Id: f_trace.c,v 1.1 2004/12/25 23:28:49 tom Exp $")
 
-/* This file provides sigaction() emulation using sigvec() */
-/* Use only if this is non POSIX system */
-
-#if !HAVE_SIGACTION && HAVE_SIGVEC
-
-MODULE_ID("$From: sigaction.c,v 1.11 2000/12/10 02:43:28 tom Exp $")
-
-NCURSES_EXPORT(int)
-sigaction
-(int sig, sigaction_t * sigact, sigaction_t * osigact)
+NCURSES_EXPORT(FIELD **)
+_nc_retrace_field_ptr(FIELD **code)
 {
-    return sigvec(sig, sigact, osigact);
+  T((T_RETURN("%p"), code));
+  return code;
 }
 
-NCURSES_EXPORT(int)
-sigemptyset
-(sigset_t * mask)
+NCURSES_EXPORT(FIELD *)
+_nc_retrace_field(FIELD *code)
 {
-    *mask = 0;
-    return 0;
+  T((T_RETURN("%p"), code));
+  return code;
 }
 
-NCURSES_EXPORT(int)
-sigprocmask
-(int mode, sigset_t * mask, sigset_t * omask)
+NCURSES_EXPORT(FIELDTYPE *)
+_nc_retrace_field_type(FIELDTYPE *code)
 {
-    sigset_t current = sigsetmask(0);
-
-    if (omask)
-	*omask = current;
-
-    if (mode == SIG_BLOCK)
-	current |= *mask;
-    else if (mode == SIG_UNBLOCK)
-	current &= ~*mask;
-    else if (mode == SIG_SETMASK)
-	current = *mask;
-
-    sigsetmask(current);
-    return 0;
+  T((T_RETURN("%p"), code));
+  return code;
 }
 
-NCURSES_EXPORT(int)
-sigsuspend(sigset_t * mask)
+NCURSES_EXPORT(FORM *)
+_nc_retrace_form(FORM *code)
 {
-    return sigpause(*mask);
+  T((T_RETURN("%p"), code));
+  return code;
 }
 
-NCURSES_EXPORT(int)
-sigdelset
-(sigset_t * mask, int sig)
+NCURSES_EXPORT(Form_Hook)
+_nc_retrace_form_hook(Form_Hook code)
 {
-    *mask &= ~sigmask(sig);
-    return 0;
+  T((T_RETURN("%p"), code));
+  return code;
 }
-
-NCURSES_EXPORT(int)
-sigaddset
-(sigset_t * mask, int sig)
-{
-    *mask |= sigmask(sig);
-    return 0;
-}
-
-NCURSES_EXPORT(int)
-sigismember
-(sigset_t * mask, int sig)
-{
-    return (*mask & sigmask(sig)) != 0;
-}
-
-#else
-extern
-NCURSES_EXPORT(void)
-_nc_sigaction(void);		/* quiet's gcc warning */
-NCURSES_EXPORT(void)
-_nc_sigaction(void)
-{
-}				/* nonempty for strict ANSI compilers */
-#endif

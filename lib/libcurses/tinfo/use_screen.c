@@ -1,7 +1,7 @@
-/*	$OpenBSD: src/lib/libform/Attic/frm_adabind.c,v 1.2 1998/07/24 02:37:24 millert Exp $	*/
+/* $OpenBSD: src/lib/libcurses/tinfo/use_screen.c,v 1.1 2010/01/12 23:22:06 nicm Exp $ */
 
 /****************************************************************************
- * Copyright (c) 1998 Free Software Foundation, Inc.                        *
+ * Copyright (c) 2007,2008 Free Software Foundation, Inc.                   *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,55 +29,32 @@
  ****************************************************************************/
 
 /****************************************************************************
- *   Author: Juergen Pfeifer <Juergen.Pfeifer@T-Online.de> 1995,1997        *
+ *     Author: Thomas E. Dickey                        2007                 *
  ****************************************************************************/
 
-/***************************************************************************
-* Module frm_adabind.c                                                     *
-* Helper routines to ease the implementation of an Ada95 binding to        *
-* ncurses. For details and copyright of the binding see the ../Ada95       *
-* subdirectory.                                                            *
-***************************************************************************/
-#include "form.priv.h"
+#include <curses.priv.h>
 
-MODULE_ID("$From: frm_adabind.c,v 1.5 1998/02/11 12:13:43 tom Exp $")
+MODULE_ID("$Id: use_screen.c,v 1.6 2008/06/07 19:16:56 tom Exp $")
 
-/* Prototypes for the functions in this module */
-void   _nc_ada_normalize_field_opts (int *opt);
-void   _nc_ada_normalize_form_opts (int *opt);
-void*  _nc_ada_getvarg(va_list *);
-FIELD* _nc_get_field(const FORM*, int);
-
-
-void _nc_ada_normalize_field_opts (int *opt)
+NCURSES_EXPORT(int)
+use_screen(SCREEN *screen, NCURSES_SCREEN_CB func, void *data)
 {
-  *opt = ALL_FIELD_OPTS & (*opt);
-}
+    SCREEN *save_SP;
+    int code = OK;
 
-void _nc_ada_normalize_form_opts (int *opt)
-{
-  *opt = ALL_FORM_OPTS & (*opt);
-}
+    T((T_CALLED("use_screen(%p,%p,%p)"), screen, func, data));
 
+    /*
+     * FIXME - add a flag so a given thread can check if _it_ has already
+     * recurred through this point, return an error if so.
+     */
+    _nc_lock_global(curses);
+    save_SP = SP;
+    set_term(screen);
 
-/*  This tiny stub helps us to get a void pointer from an argument list.
-//  The mechanism for libform to handle arguments to field types uses
-//  unfortunately functions with variable argument lists. In the Ada95
-//  binding we replace this by a mechanism that only uses one argument
-//  that is a pointer to a record describing all the specifics of an
-//  user defined field type. So we need only this simple generic
-//  procedure to get the pointer from the arglist.
-*/
-void *_nc_ada_getvarg(va_list *ap)
-{
-  return va_arg(*ap,void*);
-}
+    code = func(screen, data);
 
-FIELD* _nc_get_field(const FORM* frm, int idx) {
-  if (frm && frm->field && idx>=0 && (idx<frm->maxfield))
-    {
-      return frm->field[idx];
-    }
-  else
-    return (FIELD*)0;
+    set_term(save_SP);
+    _nc_unlock_global(curses);
+    returnCode(code);
 }

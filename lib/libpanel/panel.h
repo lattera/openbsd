@@ -1,7 +1,5 @@
-/*	$OpenBSD: src/lib/libpanel/panel.h,v 1.6 2001/01/22 18:02:11 millert Exp $	*/
-
 /****************************************************************************
- * Copyright (c) 1998,2000 Free Software Foundation, Inc.                   *
+ * Copyright (c) 1998-2001,2006 Free Software Foundation, Inc.              *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -33,10 +31,12 @@
  *     and: Eric S. Raymond <esr@snark.thyrsus.com>                         *
  ****************************************************************************/
 
+/* $Id: panel.h,v 1.10 2006/05/27 19:49:40 tom Exp $ */
+
 /* panel.h -- interface file for panels library */
 
-#ifndef _PANEL_H
-#define _PANEL_H
+#ifndef NCURSES_PANEL_H_incl
+#define NCURSES_PANEL_H_incl 1
 
 #include <curses.h>
 
@@ -72,6 +72,6 @@ extern NCURSES_EXPORT(int)     panel_hidden (const PANEL *);
 }
 #endif
 
-#endif /* _PANEL_H */
+#endif /* NCURSES_PANEL_H_incl */
 
 /* end of panel.h */

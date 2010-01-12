@@ -1,7 +1,5 @@
-/*	$OpenBSD: src/lib/libcurses/base/Attic/lib_insstr.c,v 1.4 2001/01/22 18:01:40 millert Exp $	*/
-
 /****************************************************************************
- * Copyright (c) 1998,1999,2000 Free Software Foundation, Inc.              *
+ * Copyright (c) 2004,2005 Free Software Foundation, Inc.                   *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,55 +27,51 @@
  ****************************************************************************/
 
 /****************************************************************************
- *  Author: Zeyd M. Ben-Halim <zmbenhal@netcom.com> 1992,1995               *
- *     and: Eric S. Raymond <esr@snark.thyrsus.com>                         *
+ *   Author:  Thomas E. Dickey                                              *
  ****************************************************************************/
 
-/*
-**	lib_insstr.c
-**
-**	The routine winsnstr().
-**
-*/
+#include "menu.priv.h"
 
-#include <curses.priv.h>
-#include <ctype.h>
+MODULE_ID("$Id: m_trace.c,v 1.3 2005/01/16 01:06:11 tom Exp $")
 
-MODULE_ID("$From: lib_insstr.c,v 1.17 2000/12/10 02:43:27 tom Exp $")
-
-NCURSES_EXPORT(int)
-winsnstr(WINDOW *win, const char *s, int n)
+NCURSES_EXPORT(ITEM *)
+_nc_retrace_item(ITEM * code)
 {
-    int code = ERR;
-    NCURSES_SIZE_T oy;
-    NCURSES_SIZE_T ox;
-    const unsigned char *str = (const unsigned char *) s;
-    const unsigned char *cp;
+  T((T_RETURN("%p"), code));
+  return code;
+}
 
-    T((T_CALLED("winsnstr(%p,%s,%d)"), win, _nc_visbuf(s), n));
+NCURSES_EXPORT(ITEM **)
+_nc_retrace_item_ptr(ITEM ** code)
+{
+  T((T_RETURN("%p"), code));
+  return code;
+}
 
-    if (win && str) {
-	oy = win->_cury;
-	ox = win->_curx;
-	for (cp = str; *cp && (n <= 0 || (cp - str) < n); cp++) {
-	    if (*cp == '\n' || *cp == '\r' || *cp == '\t' || *cp == '\b')
-		_nc_waddch_nosync(win, (chtype) (*cp));
-	    else if (is7bits(*cp) && iscntrl(*cp)) {
-		winsch(win, ' ' + (chtype) (*cp));
-		winsch(win, (chtype) '^');
-		win->_curx += 2;
-	    } else {
-		winsch(win, (chtype) (*cp));
-		win->_curx++;
-	    }
-	    if (win->_curx > win->_maxx)
-		win->_curx = win->_maxx;
-	}
+NCURSES_EXPORT(Item_Options)
+_nc_retrace_item_opts(Item_Options code)
+{
+  T((T_RETURN("%d"), code));
+  return code;
+}
 
-	win->_curx = ox;
-	win->_cury = oy;
-	_nc_synchook(win);
-	code = OK;
-    }
-    returnCode(code);
+NCURSES_EXPORT(MENU *)
+_nc_retrace_menu(MENU * code)
+{
+  T((T_RETURN("%p"), code));
+  return code;
+}
+
+NCURSES_EXPORT(Menu_Hook)
+_nc_retrace_menu_hook(Menu_Hook code)
+{
+  T((T_RETURN("%p"), code));
+  return code;
+}
+
+NCURSES_EXPORT(Menu_Options)
+_nc_retrace_menu_opts(Menu_Options code)
+{
+  T((T_RETURN("%d"), code));
+  return code;
 }
