@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/pf.conf.5,v 1.468 2009/12/24 17:00:48 deraadt Exp $
+.\"	$OpenBSD: src/share/man/man5/pf.conf.5,v 1.469 2010/01/12 03:20:51 mcbride Exp $
 .\"
 .\" Copyright (c) 2002, Daniel Hartmeier
 .\" All rights reserved.
@@ -2712,7 +2712,8 @@ hosts          = "all" |
 ipspec         = "any" | host | "{" host-list "}"
 host           = [ "!" ] ( address [ "/" mask-bits ] | "\*(Lt" string "\*(Gt" )
 redirhost      = address [ "/" mask-bits ]
-routehost      = "(" interface-name [ address [ "/" mask-bits ] ] ")"
+routehost      = host | host "@" interface-name |
+                 (" interface-name [ address [ "/" mask-bits ] ] ")"
 address        = ( interface-name | interface-group |
                  "(" ( interface-name | interface-group ) ")" |
                  hostname | ipv4-dotted-quad | ipv6-coloned-hex )
