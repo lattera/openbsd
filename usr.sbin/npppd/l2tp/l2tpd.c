@@ -29,7 +29,7 @@
 /*
  * RFC 2661
  */
-// $Id: l2tpd.c 39106 2010-01-10 21:01:39Z yasuoka $
+// $Id: l2tpd.c,v 1.1 2010/01/11 04:20:57 yasuoka Exp $
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -411,7 +411,9 @@ l2tpd_start(l2tpd *_this)
 		_this->state = L2TPD_STATE_RUNNING;
 
 	return rval;
+#if 0
 reigai:
+#endif
 	if (ipsec_policy_in != NULL)
 		free(ipsec_policy_in);
 	if (ipsec_policy_out != NULL)
