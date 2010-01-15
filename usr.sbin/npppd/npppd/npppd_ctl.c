@@ -27,7 +27,7 @@
  * npppd 制御。UNIXドメインソケット /var/run/npppd_ctl を open して、
  * npppdctlコマンドからのコマンドを受け付ける。
  */
-/* $Id: npppd_ctl.c 39106 2010-01-10 21:01:39Z yasuoka $ */
+/* $Id: npppd_ctl.c,v 1.1 2010/01/11 04:20:57 yasuoka Exp $ */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -142,7 +142,7 @@ npppd_ctl_start(npppd_ctl *_this)
 	}
 	unlink(_this->pathname);
 	memset(&sun, 0, sizeof(sun));
-	sun.sun_family = AF_INET;
+	sun.sun_family = AF_UNIX;
 	sun.sun_len = sizeof(sun);
 	strlcpy(sun.sun_path, _this->pathname, sizeof(sun.sun_path));
 
