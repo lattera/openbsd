@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/ssh/ssh-agent.1,v 1.49 2009/10/22 15:02:12 sobrado Exp $
+.\" $OpenBSD: src/usr.bin/ssh/ssh-agent.1,v 1.50 2010/01/17 21:49:09 tedu Exp $
 .\"
 .\" Author: Tatu Ylonen <ylo@cs.hut.fi>
 .\" Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -119,8 +119,9 @@ and
 .Pa ~/.ssh/identity .
 If the identity has a passphrase,
 .Xr ssh-add 1
-asks for the passphrase (using a small X11 application if running
-under X11, or from the terminal if running without X).
+asks for the passphrase on the terminal if it has one or from a small X11
+program if running under X11.
+If neither of these is the case then the authentication will fail.
 It then sends the identity to the agent.
 Several identities can be stored in the
 agent; the agent can automatically use any of these identities.
