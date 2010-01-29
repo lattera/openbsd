@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/kern_prot.c,v 1.39 2009/06/02 20:03:59 guenther Exp $	*/
+/*	$OpenBSD: src/sys/kern/kern_prot.c,v 1.39.4.1 2010/01/29 21:33:13 sthen Exp $	*/
 /*	$NetBSD: kern_prot.c,v 1.33 1996/02/09 18:59:42 christos Exp $	*/
 
 /*
@@ -282,7 +282,7 @@ sys_setpgid(struct proc *curp, void *v, register_t *retval)
 	newpgrp = pool_get(&pgrp_pool, PR_WAITOK);
 
 	if (pid != 0 && pid != curp->p_pid) {
-		if ((targp = pfind(pid)) == 0 || !inferior(targp)) {
+		if ((targp = pfind(pid)) == 0 || !inferior(targp, curp)) {
 			error = ESRCH;
 			goto out;
 		}

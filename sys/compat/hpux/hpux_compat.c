@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.30 2008/11/01 05:59:21 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/compat/hpux/Attic/hpux_compat.c,v 1.30.6.1 2010/01/29 21:33:13 sthen Exp $	*/
 /*	$NetBSD: hpux_compat.c,v 1.35 1997/05/08 16:19:48 mycroft Exp $	*/
 
 /*
@@ -966,7 +966,7 @@ hpux_sys_getpgrp2(cp, v, retval)
 	if (p == 0)
 		return (ESRCH);
 	if (cp->p_ucred->cr_uid && p->p_ucred->cr_uid != cp->p_ucred->cr_uid &&
-	    !inferior(p))
+	    !inferior(p, cp))
 		return (EPERM);
 	*retval = p->p_pgid;
 	return (0);
