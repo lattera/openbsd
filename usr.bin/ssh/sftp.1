@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/ssh/sftp.1,v 1.82 2010/01/13 12:48:34 jmc Exp $
+.\" $OpenBSD: src/usr.bin/ssh/sftp.1,v 1.83 2010/02/08 10:50:20 markus Exp $
 .\"
 .\" Copyright (c) 2001 Damien Miller.  All rights reserved.
 .\"
@@ -202,6 +202,7 @@ For full details of the options listed below, and their possible values, see
 .It NoHostAuthenticationForLocalhost
 .It NumberOfPasswordPrompts
 .It PasswordAuthentication
+.It PKCS11Provider
 .It Port
 .It PreferredAuthentications
 .It Protocol
@@ -213,7 +214,6 @@ For full details of the options listed below, and their possible values, see
 .It SendEnv
 .It ServerAliveInterval
 .It ServerAliveCountMax
-.It SmartcardDevice
 .It StrictHostKeyChecking
 .It TCPKeepAlive
 .It UsePrivilegedPort

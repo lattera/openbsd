@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/ssh/ssh-agent/Makefile,v 1.22 2002/08/12 10:46:35 markus Exp $
+#	$OpenBSD: src/usr.bin/ssh/ssh-agent/Makefile,v 1.23 2010/02/08 10:50:20 markus Exp $
 
 .PATH:		${.CURDIR}/..
 
@@ -12,6 +12,7 @@ BINDIR=	/usr/bin
 MAN=	ssh-agent.1
 
 SRCS=	ssh-agent.c
+#SRCS+=	ssh-pkcs11-client.c
 
 .include <bsd.prog.mk>
 
