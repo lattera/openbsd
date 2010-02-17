@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/relayd/relayd.c,v 1.95 2010/02/04 13:00:20 jsg Exp $	*/
+/*	$OpenBSD: src/usr.sbin/relayd/relayd.c,v 1.96 2010/02/17 14:39:30 jsg Exp $	*/
 
 /*
  * Copyright (c) 2007, 2008 Reyk Floeter <reyk@openbsd.org>
@@ -301,6 +301,8 @@ main(int argc, char *argv[])
 
 	event_dispatch();
 
+	main_shutdown(env);
+	/* NOTREACHED */
 	return (0);
 }
 
