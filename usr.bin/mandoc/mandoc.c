@@ -1,4 +1,4 @@
-/*	$Id: mandoc.c,v 1.5 2009/12/23 22:30:17 schwarze Exp $ */
+/*	$Id: mandoc.c,v 1.6 2009/12/24 02:08:14 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -39,8 +39,6 @@ mandoc_special(const char *p)
 		return(0);
 
 	switch (*p) {
-	case ('\\'):
-		/* FALLTHROUGH */
 	case ('\''):
 		/* FALLTHROUGH */
 	case ('`'):
