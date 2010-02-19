@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/arch/i386/pci/Attic/auglx.c,v 1.4 2009/01/13 19:44:20 grange Exp $	*/
+/*      $OpenBSD: src/sys/dev/pci/auglx.c,v 1.1 2010/02/19 15:00:15 miod Exp $	*/
 
 /*
  * Copyright (c) 2008 Marc Balmer <mbalmer@openbsd.org>
