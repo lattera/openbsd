@@ -1,5 +1,4 @@
-/*	$OpenBSD: src/sys/arch/macppc/dev/aoa.c,v 1.5 2008/10/29 00:04:14 jakemsr Exp $	*/
-/*	$Id: aoa.c,v 1.4 2008/04/21 00:32:42 jakemsr Exp $	*/
+/*	$OpenBSD: src/sys/arch/macppc/dev/aoa.c,v 1.6 2010/02/26 21:52:14 jasper Exp $	*/
 
 /*-
  * Copyright (c) 2005 Tsubai Masanari.  All rights reserved.
@@ -149,7 +148,7 @@ aoa_getdev(void *h, struct audio_device *retp)
 void
 aoa_set_volume(struct aoa_softc *sc, int left, int right)
 {
-	printf("aoa_set_volume() not supported yet\n");
+	/* This device doesn't provide volume control. */
 }
 
 void
