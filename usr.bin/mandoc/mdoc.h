@@ -1,4 +1,4 @@
-/*	$Id: mdoc.h,v 1.15 2009/10/27 21:40:07 schwarze Exp $ */
+/*	$Id: mdoc.h,v 1.16 2009/12/22 23:58:00 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -264,6 +264,7 @@ struct	mdoc_node {
 	struct mdoc_node *head;		/* BLOCK */
 	struct mdoc_node *body;		/* BLOCK */
 	struct mdoc_node *tail;		/* BLOCK */
+	struct mdoc_node *pending;	/* BLOCK */
 	char		 *string;	/* TEXT */
 };
 
