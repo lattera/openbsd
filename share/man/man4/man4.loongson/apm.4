@@ -1,4 +1,4 @@
-.\"     $OpenBSD: src/share/man/man4/man4.loongson/apm.4,v 1.1 2010/02/28 08:52:32 otto Exp $
+.\"     $OpenBSD: src/share/man/man4/man4.loongson/apm.4,v 1.2 2010/02/28 10:47:43 otto Exp $
 .\"
 .\" Copyright (c) 1999 Jason L. Wright (jason@thought.net)
 .\" All rights reserved.
@@ -34,7 +34,7 @@
 .\"	AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT
 .\"	LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 .\"	FOR A PARTICULAR PURPOSE.
-.Dd $Mdocdate: May 31 2007 $
+.Dd $Mdocdate: February 28 2010 $
 .Dt APM 4 loongson
 .Os
 .Sh NAME
@@ -134,9 +134,7 @@ value contains the estimated percentage of battery life available.
 .Pp
 The
 .Va minutes_left
-value is always -1,
-as the hardware does not provide an estimated number of minutes of
-battery life remaining.
+value contains the estimated number of minutes of battery life remaining.
 .\" .It Dv APM_IOC_NEXTEVENT
 .\" .Em NOT YET SUPPORTED on loongson
 .\" .Pq Li "struct apm_event_info"
