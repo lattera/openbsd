@@ -1,4 +1,4 @@
-/*	$Id: mdoc.h,v 1.16 2009/12/22 23:58:00 schwarze Exp $ */
+/*	$Id: mdoc.h,v 1.17 2010/02/26 12:12:24 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -148,7 +148,8 @@
 #define MDOC_br		 118
 #define MDOC_sp		 119
 #define MDOC__U		 120
-#define	MDOC_MAX	 121
+#define MDOC_eos	 121
+#define MDOC_MAX	 122
 
 /* What follows is a list of ALL possible macro arguments. */
 

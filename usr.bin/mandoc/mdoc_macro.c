@@ -177,6 +177,7 @@ const	struct mdoc_macro __mdoc_macros[MDOC_MAX] = {
 	{ in_line_eoln, 0 }, /* br */
 	{ in_line_eoln, 0 }, /* sp */
 	{ in_line_eoln, 0 }, /* %U */
+	{ NULL, 0 }, /* eos */
 };
 
 const	struct mdoc_macro * const mdoc_macros = __mdoc_macros;
