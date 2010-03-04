@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/ssh/ssh-keygen.1,v 1.85 2010/02/26 22:09:28 jmc Exp $
+.\"	$OpenBSD: src/usr.bin/ssh/ssh-keygen.1,v 1.86 2010/03/04 20:35:08 djm Exp $
 .\"
 .\"  -*- nroff -*-
 .\"
@@ -115,6 +115,10 @@
 .Op Fl O Ar constraint
 .Op Fl V Ar validity_interval
 .Ar
+.Nm ssh-keygen
+.Bk -words
+.Fl L
+.Op Fl f Ar input_keyfile
 .Ek
 .Sh DESCRIPTION
 .Nm
@@ -275,6 +279,8 @@ also reads the
 RFC 4716 SSH Public Key File Format.
 This option allows importing keys from several commercial
 SSH implementations.
+.It Fl L
+Prints the contents of a certificate.
 .It Fl l
 Show fingerprint of specified public key file.
 Private RSA1 keys are also supported.
