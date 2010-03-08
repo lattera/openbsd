@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/ssh/ssh-keygen.1,v 1.87 2010/03/04 22:52:40 jmc Exp $
+.\"	$OpenBSD: src/usr.bin/ssh/ssh-keygen.1,v 1.88 2010/03/08 00:28:55 djm Exp $
 .\"
 .\"  -*- nroff -*-
 .\"
@@ -329,6 +329,10 @@ This is useful for clearing the default set of permissions so permissions may
 be added individually.
 .It Ic permit-x11-forwarding
 Allows X11 forwarding.
+.It Ic permit-agent-forwarding
+Allows
+.Xr ssh-agent 1
+forwarding.
 .It Ic permit-port-forwarding
 Allows port forwarding.
 .It Ic permit-pty
