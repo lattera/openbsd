@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/pool.9,v 1.40 2009/01/15 21:20:15 jmc Exp $
+.\"	$OpenBSD: src/share/man/man9/pool.9,v 1.41 2010/03/08 21:56:17 oga Exp $
 .\"	$NetBSD: pool.9,v 1.18 2001/06/21 11:59:01 wiz Exp $
 .\"
 .\" Copyright (c) 1997, 1998 The NetBSD Foundation, Inc.
@@ -150,7 +150,8 @@ The handle identifying the pool resource instance.
 .It Fa flags
 One or more of
 .Dv PR_URGENT ,
-.Dv PR_WAITOK
+.Dv PR_WAITOK ,
+.Dv PR_NOWAIT
 or
 .Dv PR_LIMITFAIL ,
 that define behaviour in case the pooled resources are depleted.
@@ -162,6 +163,10 @@ Otherwise
 .Fn pool_get
 returns
 .Dv NULL .
+.Dv PR_NOWAIT
+should be provided in cases where
+.Dv PR_WAITOK
+is not.
 If
 .Dv PR_URGENT
 is specified and no items are available and
