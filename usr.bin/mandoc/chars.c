@@ -1,4 +1,4 @@
-/*	$Id: chars.c,v 1.4 2009/12/24 02:08:14 schwarze Exp $ */
+/*	$Id: chars.c,v 1.5 2010/02/18 02:11:25 schwarze Exp $ */
 /*
  * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -38,7 +38,7 @@ struct	ln {
 #define CHARS_BOTH	 (CHARS_CHAR | CHARS_STRING)
 };
 
-#define	LINES_MAX	  350
+#define	LINES_MAX	  369
 
 #define CHAR(w, x, y, z, a, b) \
 	{ NULL, (w), (y), (a), (x), (z), (b), CHARS_CHAR },
