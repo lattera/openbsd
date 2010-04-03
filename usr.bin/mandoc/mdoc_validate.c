@@ -618,8 +618,12 @@ pre_bl(PRE_ARGS)
 		case (MDOC_Inset):
 			/* FALLTHROUGH */
 		case (MDOC_Column):
-			if (type >= 0) 
-				return(mdoc_nerr(mdoc, n, EMULTILIST));
+			if (type >= 0) {
+				if ( ! mdoc_nwarn(mdoc, n, EMULTILIST))
+					return(0);
+				mdoc_argn_free(n->args, pos);
+				break;
+			}
 			type = n->args->argv[pos].arg;
 			break;
 		case (MDOC_Compact):
