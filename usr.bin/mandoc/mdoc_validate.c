@@ -1,4 +1,4 @@
-/*	$Id: mdoc_validate.c,v 1.43 2010/03/02 00:38:59 schwarze Exp $ */
+/*	$Id: mdoc_validate.c,v 1.44 2010/04/02 12:39:47 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -1306,8 +1306,9 @@ post_sh_head(POST_ARGS)
 	 * non-CUSTOM has a conventional order to be followed.
 	 */
 
-	if (SEC_NAME != sec && SEC_NONE == mdoc->lastnamed)
-		return(mdoc_nerr(mdoc, mdoc->last, ESECNAME));
+	if (SEC_NAME != sec && SEC_NONE == mdoc->lastnamed &&
+	    ! mdoc_nwarn(mdoc, mdoc->last, ESECNAME))
+		return(0);
 	if (SEC_CUSTOM == sec)
 		return(1);
 	if (sec == mdoc->lastnamed)
