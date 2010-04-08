@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.158 2009/09/13 14:42:52 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/hifn7751.c,v 1.159 2010/04/08 00:23:53 tedu Exp $	*/
 
 /*
  * Invertex AEON / Hifn 7751 driver
@@ -47,7 +47,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/proc.h>
+#include <sys/timeout.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
