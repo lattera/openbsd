@@ -184,14 +184,15 @@ add_key(region_type* region, const char* opt, tsig_algorithm_type** algo)
 	/* parse -y key:secret_base64 format option */
 	char* delim = strchr(opt, ':');
 	char* delim2 = NULL;
-
-	if (delim)
-		delim2 = strchr(delim+1, ':');
-
 	tsig_key_type *key = (tsig_key_type*)region_alloc(
 		region, sizeof(tsig_key_type));
 	size_t len;
 	int sz;
+
+	if (delim) {
+		delim2 = strchr(delim+1, ':');
+	}
+
 	if(!key) {
 		log_msg(LOG_ERR, "region_alloc failed (add_key)");
 		return 0;
@@ -271,6 +272,8 @@ main (int argc, char *argv[])
 	}
 #endif /* TSIG */
 
+	srandom((unsigned long) getpid() * (unsigned long) time(NULL));
+
 	/* Parse the command line... */
 	while ((c = getopt(argc, argv, "46a:hp:y:z:")) != -1) {
 		switch (c) {
@@ -330,7 +333,7 @@ main (int argc, char *argv[])
 
 	/* Set up the header */
 	OPCODE_SET(q.packet, OPCODE_NOTIFY);
-	ID_SET(q.packet, 42);	/* Does not need to be random. */
+	ID_SET(q.packet, qid_generate());
 	AA_SET(q.packet);
 	QDCOUNT_SET(q.packet, 1);
 	buffer_skip(q.packet, QHEADERSZ);
