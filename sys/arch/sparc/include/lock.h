@@ -1,9 +1,11 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/lock.h,v 1.1 2007/05/01 18:56:31 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/lock.h,v 1.2 2010/04/21 03:03:24 deraadt Exp $	*/
 
 /* public domain */
 
 #ifndef	_SPARC_LOCK_H_
 #define	_SPARC_LOCK_H_
+
+#include <machine/atomic.h>
 
 typedef volatile u_int8_t __cpu_simple_lock_t;
 
