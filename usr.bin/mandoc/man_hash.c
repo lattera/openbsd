@@ -1,4 +1,4 @@
-/*	$Id: man_hash.c,v 1.7 2009/10/19 10:20:24 schwarze Exp $ */
+/*	$Id: man_hash.c,v 1.8 2010/03/26 01:22:05 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -24,7 +24,7 @@
 
 #include "libman.h"
 
-#define	HASH_DEPTH	 6
+#define	HASH_DEPTH	 8
 
 #define	HASH_ROW(x) do { \
 		if ('.' == (x)) \
