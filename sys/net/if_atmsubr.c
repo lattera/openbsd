@@ -1,4 +1,4 @@
-/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.29 2009/11/03 10:59:04 claudio Exp $       */
+/*      $OpenBSD: src/sys/net/Attic/if_atmsubr.c,v 1.30 2010/05/01 08:14:26 mk Exp $       */
 
 /*
  *
@@ -279,7 +279,7 @@ atm_input(ifp, ah, m, rxhand)
 		return;
 	}
 
-	/* mark incomming routing domain */
+	/* mark incoming routing domain */
 	m->m_pkthdr.rdomain = ifp->if_rdomain;
 
 	ifp->if_ibytes += m->m_pkthdr.len;
