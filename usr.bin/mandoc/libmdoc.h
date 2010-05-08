@@ -1,4 +1,4 @@
-/*	$Id: libmdoc.h,v 1.26 2010/04/03 16:30:42 schwarze Exp $ */
+/*	$Id: libmdoc.h,v 1.27 2010/04/07 23:15:05 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -93,6 +93,7 @@ enum	merr {
 	ELIB,
 	EBADCHILD,
 	ENOTYPE,
+	EBADCOMMENT,
 	MERRMAX
 };
 
