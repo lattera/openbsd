@@ -1,4 +1,4 @@
-/*	$Id: man_hash.c,v 1.8 2010/03/26 01:22:05 schwarze Exp $ */
+/*	$Id: man_hash.c,v 1.9 2010/04/25 16:32:19 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -56,9 +56,10 @@ man_hash_init(void)
 
 	memset(table, UCHAR_MAX, sizeof(table));
 
-	assert(/* CONSTCOND */ MAN_MAX < UCHAR_MAX);
+	assert(/* LINTED */ 
+			MAN_MAX < UCHAR_MAX);
 
-	for (i = 0; i < MAN_MAX; i++) {
+	for (i = 0; i < (int)MAN_MAX; i++) {
 		x = man_macronames[i][0];
 
 		assert(isalpha((u_char)x) || '.' == x);
