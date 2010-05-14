@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/if_pfsync.c,v 1.143.2.1 2010/03/24 20:52:09 pyr Exp $	*/
+/*	$OpenBSD: src/sys/net/if_pfsync.c,v 1.143.2.2 2010/05/14 09:02:41 stephan Exp $	*/
 
 /*
  * Copyright (c) 2002 Michael Shalayeff
@@ -1473,6 +1473,7 @@ pfsync_out_upd_c(struct pf_state *st, void *buf)
 {
 	struct pfsync_upd_c *up = buf;
 
+	bzero(up, sizeof(*up));
 	up->id = st->id;
 	pf_state_peer_hton(&st->src, &up->src);
 	pf_state_peer_hton(&st->dst, &up->dst);
@@ -1484,8 +1485,6 @@ pfsync_out_upd_c(struct pf_state *st, void *buf)
 	else
 		up->expire = htonl(up->expire - time_second);
 	up->timeout = st->timeout;
-
-	bzero(up->_pad, sizeof(up->_pad)); /* XXX */
 }
 
 void
