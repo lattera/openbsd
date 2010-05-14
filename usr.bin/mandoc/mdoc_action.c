@@ -1,4 +1,4 @@
-/*	$Id: mdoc_action.c,v 1.30 2010/04/07 23:15:05 schwarze Exp $ */
+/*	$Id: mdoc_action.c,v 1.31 2010/05/14 01:54:37 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -416,7 +416,7 @@ post_sh(POST_ARGS)
 
 	if ( ! concat(m, buf, n->child, BUFSIZ))
 		return(0);
-	sec = mdoc_atosec(buf);
+	sec = mdoc_str2sec(buf);
 	/*
 	 * The first section should always make us move into a non-new
 	 * state.
