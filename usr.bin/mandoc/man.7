@@ -1,4 +1,4 @@
-.\"	$Id: man.7,v 1.22 2010/05/14 14:47:44 schwarze Exp $
+.\"	$Id: man.7,v 1.23 2010/05/14 19:52:43 schwarze Exp $
 .\"
 .\" Copyright (c) 2009 Kristaps Dzonsons <kristaps@bsd.lv>
 .\"
@@ -216,8 +216,13 @@ literal text.
 When composing a manual, make sure that your sentences end at the end of
 a line.
 By doing so, front-ends will be able to apply the proper amount of
-spacing after the end of sentence (unescaped) period, exclamation, or question
-mark.
+spacing after the end of sentence (unescaped) period, exclamation mark,
+or question mark followed by zero or more non-sentence closing
+delimiters (
+.Ns Sq \&) ,
+.Sq \&] ,
+.Sq \&' ,
+.Sq \&" ) .
 .Sh MANUAL STRUCTURE
 Each
 .Nm
