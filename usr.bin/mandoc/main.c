@@ -1,4 +1,4 @@
-/*	$Id: main.c,v 1.29 2010/05/15 22:00:22 schwarze Exp $ */
+/*	$Id: main.c,v 1.30 2010/05/16 00:54:03 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -563,7 +563,7 @@ pset(const char *buf, int pos, struct curparse *curp,
 	 * default to -man, which is more lenient.
 	 */
 
-	if (buf[0] == '.') {
+	if ('.' == buf[0] || '\'' == buf[0]) {
 		for (i = 1; buf[i]; i++)
 			if (' ' != buf[i] && '\t' != buf[i])
 				break;
