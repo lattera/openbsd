@@ -1,8 +1,9 @@
-#	$Id: Makefile,v 1.7 2006/04/27 19:52:21 martin Exp $
+#	$Id: Makefile,v 1.8 2006/05/11 17:20:40 martin Exp $
 
 .if ${MACHINE} == "macppc" || ${MACHINE} == "mac68k"
 PROG=	pdisk
-
+LDADD=  -lutil
+DPADD=  ${LIBUTIL}
 CFLAGS+=-Wall
 
 SRCS=	bitfield.c convert.c deblock_media.c dump.c errors.c \
