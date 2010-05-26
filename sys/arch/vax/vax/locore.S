@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/vax/Attic/intvec.s,v 1.23 2009/03/20 18:39:30 miod Exp $   */
+/*	$OpenBSD: src/sys/arch/vax/vax/locore.S,v 1.1 2010/05/26 16:35:28 deraadt Exp $   */
 /*	$NetBSD: intvec.s,v 1.39 1999/06/28 08:20:48 itojun Exp $   */
 
 /*
