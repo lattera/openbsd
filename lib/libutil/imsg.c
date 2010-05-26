@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/bgpd/Attic/imsg.c,v 1.50 2010/05/26 13:56:07 nicm Exp $	*/
+/*	$OpenBSD: src/lib/libutil/imsg.c,v 1.1 2010/05/26 16:44:32 nicm Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
