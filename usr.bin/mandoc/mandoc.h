@@ -1,4 +1,4 @@
-/*	$Id: mandoc.h,v 1.3 2010/05/23 22:45:00 schwarze Exp $ */
+/*	$Id: mandoc.h,v 1.4 2010/05/23 23:35:26 schwarze Exp $ */
 /*
  * Copyright (c) 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -16,6 +16,10 @@
  */
 #ifndef MANDOC_H
 #define MANDOC_H
+
+#define ASCII_NBRSP	 31  /* non-breaking space */
+#define	ASCII_HYPH	 30  /* breakable hyphen */
+
 
 __BEGIN_DECLS
 
