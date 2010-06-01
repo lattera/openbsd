@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/enqueue.c,v 1.34 2010/05/31 23:38:56 jacekm Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/enqueue.c,v 1.35 2010/06/01 19:47:08 jacekm Exp $	*/
 
 /*
  * Copyright (c) 2005 Henning Brauer <henning@bulabula.org>
@@ -163,6 +163,7 @@ enqueue(int argc, char *argv[])
 		case 'x':
 			break;
 		case 'q':
+			/* XXX: implement "process all now" */
 			return (0);
 		default:
 			usage();
