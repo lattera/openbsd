@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hp300/hp300/autoconf.c,v 1.48 2010/04/15 20:38:11 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hp300/hp300/autoconf.c,v 1.49 2010/06/09 15:44:17 miod Exp $	*/
 /*	$NetBSD: autoconf.c,v 1.45 1999/04/10 17:31:02 kleink Exp $	*/
 
 /*
@@ -753,6 +753,7 @@ console_scan(func, arg)
 }
 
 int consolepass = -1;
+struct consdev *cn_tab;
 
 /*
  * Special version of cninit().  Actually, crippled somewhat.
