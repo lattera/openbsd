@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.53 2010/05/25 08:57:51 jmc Exp $
+.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.54 2010/06/15 21:21:54 jasper Exp $
 .\"
 .\" Copyright (c) 2008 Marc Espie
 .\"
@@ -411,6 +411,7 @@ It heeds NO_BUILD.
 .It lang/ghc
 Sets ONLY_FOR_ARCHS, MODGHC_VERSION, BUILD_DEPENDS, and RUN_DEPENDS.
 .It lang/lua
+Sets MODLUA_VERSION, MODLUA_LIBDIR, MODLUA_DATADIR.
 Appends to RUN_DEPENDS and CATEGORIES.
 Also appends to BUILD_DEPENDS,
 unless NO_BUILD has been set to Yes.
