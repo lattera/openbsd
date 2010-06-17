@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.246 2010/06/16 12:14:40 espie Exp $
+.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.247 2010/06/17 03:19:39 william Exp $
 .\"
 .\" Copyright (c) 2000-2008 Marc Espie
 .\"
@@ -2005,6 +2005,9 @@ During ports building,
 .Pa ${WRKDIR}/bin
 is put at the front of the
 .Ev PATH .
+.It Ev WRKDIR_LINKNAME
+Name of a symbolic link to create within the port directory which will
+point to the port's ${WRKDIR}.
 .It Ev WRKDIST
 Subdirectory of ${WRKDIR} in which the distribution files normally unpacks.
 Base for all patches (default: ${WRKDIR}/${DISTNAME}).
