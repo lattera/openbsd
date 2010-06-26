@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/zs.c,v 1.31 2010/04/12 12:57:52 tedu Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/zs.c,v 1.32 2010/06/26 23:24:43 guenther Exp $ */
 
 /*
  * Copyright (c) 2000 Steve Murphree, Jr.
@@ -32,7 +32,6 @@
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <sys/proc.h>
-#include <sys/user.h>
 #include <sys/tty.h>
 #include <sys/uio.h>
 #include <sys/systm.h>
