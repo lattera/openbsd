@@ -1,6 +1,6 @@
-/*	$Id: tree.c,v 1.6 2009/12/22 23:58:00 schwarze Exp $ */
+/*	$Id: tree.c,v 1.7 2010/05/23 22:45:01 schwarze Exp $ */
 /*
- * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -20,6 +20,7 @@
 #include <time.h>
 
 #include "mandoc.h"
+#include "regs.h"
 #include "mdoc.h"
 #include "man.h"
 #include "main.h"

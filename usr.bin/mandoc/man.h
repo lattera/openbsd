@@ -1,6 +1,6 @@
-/*	$Id: man.h,v 1.22 2010/05/23 22:45:00 schwarze Exp $ */
+/*	$Id: man.h,v 1.23 2010/06/06 18:08:41 schwarze Exp $ */
 /*
- * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -106,7 +106,7 @@ __BEGIN_DECLS
 struct	man;
 
 void	 	  man_free(struct man *);
-struct	man	 *man_alloc(void *, int, mandocmsg);
+struct	man	 *man_alloc(struct regset *, void *, int, mandocmsg);
 void		  man_reset(struct man *);
 int	 	  man_parseln(struct man *, int, char *, int);
 int		  man_endparse(struct man *);
