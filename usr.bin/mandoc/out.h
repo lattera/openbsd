@@ -1,4 +1,4 @@
-/*	$Id: out.h,v 1.3 2009/12/24 02:08:14 schwarze Exp $ */
+/*	$Id: out.h,v 1.4 2010/04/07 23:15:05 schwarze Exp $ */
 /*
  * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
  *
@@ -53,7 +53,6 @@ enum	roffdeco {
 struct	roffsu {
 	enum roffscale	  unit;
 	double		  scale;
-	int		  pt;
 };
 
 #define	SCALE_INVERT(p) \
@@ -62,14 +61,12 @@ struct	roffsu {
 
 #define	SCALE_VS_INIT(p, v) \
 	do { (p)->unit = SCALE_VS; \
-	     (p)->scale = (v); \
-	     (p)->pt = 0; } \
+	     (p)->scale = (v); } \
 	while (/* CONSTCOND */ 0)
 
 #define	SCALE_HS_INIT(p, v) \
 	do { (p)->unit = SCALE_BU; \
-	     (p)->scale = (v); \
-	     (p)->pt = 0; } \
+	     (p)->scale = (v); } \
 	while (/* CONSTCOND */ 0)
 
 int		  a2roffsu(const char *, 
