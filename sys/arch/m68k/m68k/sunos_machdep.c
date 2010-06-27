@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/sunos_machdep.c,v 1.20 2010/06/26 23:24:43 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/m68k/m68k/Attic/sunos_machdep.c,v 1.21 2010/06/27 22:04:01 miod Exp $	*/
 /*	$NetBSD: sunos_machdep.c,v 1.12 1996/10/13 03:19:22 christos Exp $	*/
 
 /*
@@ -58,6 +58,7 @@
 #include <compat/sunos/sunos.h>
 #include <compat/sunos/sunos_syscallargs.h>
 
+#include <machine/frame.h>
 #include <machine/reg.h>
 
 #ifdef DEBUG
