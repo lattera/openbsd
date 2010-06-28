@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.41 2010/04/12 12:57:52 tedu Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme88k/dev/vx.c,v 1.42 2010/06/28 14:13:29 deraadt Exp $ */
 /*
  * Copyright (c) 1999 Steve Murphree, Jr.
  * All rights reserved.
@@ -415,7 +415,7 @@ vxopen(dev_t dev, int flag, int mode, struct proc *p)
 	if (vxt->tty) {
 		tp = vxt->tty;
 	} else {
-		tp = vxt->tty = ttymalloc();
+		tp = vxt->tty = ttymalloc(0);
 	}
 
 	/* set line status */
