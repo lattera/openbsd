@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/usb/if_uath.c,v 1.41 2010/04/20 22:05:43 tedu Exp $	*/
+/*	$OpenBSD: src/sys/dev/usb/if_uath.c,v 1.42 2010/06/29 07:12:31 matthew Exp $	*/
 
 /*-
  * Copyright (c) 2006
@@ -191,7 +191,7 @@ int uath_detach(struct device *, int);
 int uath_activate(struct device *, int); 
 
 struct cfdriver uath_cd = { 
-	NULL, "uath", DV_DULL 
+	NULL, "uath", DV_IFNET
 }; 
 
 const struct cfattach uath_ca = { 
