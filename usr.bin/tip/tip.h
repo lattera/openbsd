@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/tip/tip.h,v 1.38 2010/06/29 18:39:18 nicm Exp $	*/
+/*	$OpenBSD: src/usr.bin/tip/tip.h,v 1.39 2010/06/29 20:09:39 nicm Exp $	*/
 /*	$NetBSD: tip.h,v 1.7 1997/04/20 00:02:46 mellon Exp $	*/
 
 /*
@@ -284,10 +284,6 @@ void	 unraw(void);
 
 /* tipout.c */
 void	tipout(void);
-
-/* uucplock.c */
-int	uu_lock(char *);
-int	uu_unlock(char *);
 
 /* value.c */
 void	vinit(void);
