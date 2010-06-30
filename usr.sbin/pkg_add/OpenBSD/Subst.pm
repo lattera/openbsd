@@ -1,5 +1,5 @@
 # ex:ts=8 sw=4:
-# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/Subst.pm,v 1.11 2010/06/30 10:41:42 espie Exp $
+# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/Subst.pm,v 1.12 2010/06/30 10:51:04 espie Exp $
 #
 # Copyright (c) 2008 Marc Espie <espie@openbsd.org>
 #
