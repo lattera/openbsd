@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* $Id: rtev_common.c 38545 2009-12-04 13:38:25Z yasuoka $ */
+/* $Id: rtev_common.c,v 1.1 2010/01/11 04:20:57 yasuoka Exp $ */
 /*
  * PF_ROUTE related utility functions.
  * <p>
@@ -283,7 +283,7 @@ rtev_base_init(rtev_impl *impl, int flags)
 	if (rtev_sndbuf == NULL) {
 		if ((rtev_sndbuf = bytebuffer_wrap(rtev_buffer_space,
 		    sizeof(rtev_buffer_space))) == NULL)
-			goto reigai;
+			goto fail;
 		bytebuffer_clear(rtev_sndbuf);
 	}
 	impl->base_on_rtevent = rtev_base_on_rtevent;
@@ -292,7 +292,7 @@ rtev_base_init(rtev_impl *impl, int flags)
 	singleton_impl = impl;
 
 	return 0;
-reigai:
+fail:
 	rtev_fini();
 
 	return 1;
