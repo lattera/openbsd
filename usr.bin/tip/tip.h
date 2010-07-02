@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/tip/tip.h,v 1.50 2010/07/02 05:52:48 nicm Exp $	*/
+/*	$OpenBSD: src/usr.bin/tip/tip.h,v 1.51 2010/07/02 05:56:29 nicm Exp $	*/
 /*	$NetBSD: tip.h,v 1.7 1997/04/20 00:02:46 mellon Exp $	*/
 
 /*
@@ -223,7 +223,6 @@ void	tipout(void);
 /* value.c */
 void	vinit(void);
 void	vlex(char *);
-int	vstring(char *, char *);
 char   *vgetstr(int);
 int	vgetnum(int);
 void	vsetstr(int, char *);
