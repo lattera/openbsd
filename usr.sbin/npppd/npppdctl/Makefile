@@ -1,6 +1,5 @@
-#
-# $Id: Makefile,v 1.1 2010/01/13 07:49:44 yasuoka Exp $
-#
+#	$OpenBSD: src/usr.sbin/npppd/npppdctl/Attic/Makefile,v 1.3 2010/07/02 21:20:57 yasuoka Exp $
+
 .include <bsd.own.mk>
 
 PROG=		npppdctl

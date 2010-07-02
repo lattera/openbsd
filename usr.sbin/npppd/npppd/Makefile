@@ -1,8 +1,5 @@
-# $OpenBSD: src/usr.sbin/npppd/npppd/Makefile,v 1.5 2010/07/01 03:38:17 yasuoka Exp $
-# $OpenBSD: src/usr.sbin/npppd/npppd/Makefile,v 1.5 2010/07/01 03:38:17 yasuoka Exp $
-#
-# $Id
-#
+#	$OpenBSD: src/usr.sbin/npppd/npppd/Makefile,v 1.6 2010/07/02 21:20:57 yasuoka Exp $
+
 NPPPD_COMMON_DIR=	${.CURDIR}/../common
 
 PROG=		npppd

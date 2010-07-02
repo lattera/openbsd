@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/usr.sbin/npppd/l2tp/l2tp_subr.h,v 1.2 2010/07/01 03:38:17 yasuoka Exp $	*/
+/* $OpenBSD: src/usr.sbin/npppd/l2tp/l2tp_subr.h,v 1.3 2010/07/02 21:20:57 yasuoka Exp $	*/
+
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
  * All rights reserved.
@@ -26,7 +27,7 @@
  */
 #ifndef	L2TP_SUBR_H
 #define	L2TP_SUBR_H	1
-/* $Id: l2tp_subr.h,v 1.1 2010/01/11 04:20:57 yasuoka Exp $ */
+/* $Id: l2tp_subr.h,v 1.2 2010/07/01 03:38:17 yasuoka Exp $ */
 
 /**
  * structure of L2TP Attribute Value Pair (AVP) packet header
@@ -91,7 +92,7 @@ short_hash(const void *v, int sz)
 	return (int)v % sz;
 }
 
-/* 
+/*
  * macro to check AVP size.
  * Prepare 1) char emes[256] for error message, 2) size_check_failed label
  * before use this macro.
