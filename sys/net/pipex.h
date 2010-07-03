@@ -1,4 +1,5 @@
-/*	$Id: pipex.h,v 1.1 2010/01/11 03:50:56 yasuoka Exp $	*/
+/*	$OpenBSD: src/sys/net/pipex.h,v 1.3 2010/07/03 00:16:07 yasuoka Exp $	*/
+
 /*
  * Copyright (c) 2009 Internet Initiative Japan Inc.
  * All rights reserved.
