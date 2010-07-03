@@ -1,4 +1,4 @@
-/*	$Id: regs.h,v 1.3 2010/06/27 16:36:22 kristaps Exp $ */
+/*	$Id: regs.h,v 1.1 2010/06/27 21:58:57 schwarze Exp $ */
 /*
  * Copyright (c) 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -40,6 +40,11 @@ struct	reg {
 struct	regset {
 	struct reg	 regs[REG__MAX];
 };
+
+char		 *roff_setstr(const char *, const char *);
+char		 *roff_getstr(const char *);
+char		 *roff_getstrn(const char *, size_t);
+void		  roff_freestr(void);
 
 __END_DECLS
 
