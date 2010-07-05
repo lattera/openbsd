@@ -1,5 +1,5 @@
 #	from: @(#)Makefile	8.2 (Berkeley) 4/22/94
-#	$Id: Makefile,v 1.1.1.1 1995/10/18 08:47:09 deraadt Exp $
+#	$Id: Makefile,v 1.2 2005/02/18 15:51:02 henning Exp $
 
 .include "../config/Makefile.config"
 
@@ -22,9 +22,6 @@ CFLAGS+=-DARCH_REP=\"${MACHINE}\"
 CFLAGS+=-DOS_REP=\"${OS}\"
 CFLAGS+=-DOS_HDR=\"os-${OS}.h\"
 CFLAGS+=${CONFIG}
-
-DPADD+=	${LIBCOMPAT}
-LDADD+=	-lcompat
 
 .PATH: ${.CURDIR}/../rpcx ${.CURDIR}/../config
 .include "../../Makefile.inc"
