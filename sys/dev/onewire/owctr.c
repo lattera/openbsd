@@ -1,3 +1,4 @@
+/*	$OpenBSD: src/sys/dev/onewire/owctr.c,v 1.2 2010/07/07 16:15:53 deraadt Exp $	*/
 /*
  * Copyright (c) 2010 John L. Scarfone <john@scarfone.net>
  *
