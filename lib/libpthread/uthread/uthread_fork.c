@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpthread/uthread/Attic/uthread_fork.c,v 1.21 2009/12/06 17:54:59 kurt Exp $	*/
+/*	$OpenBSD: src/lib/libpthread/uthread/Attic/uthread_fork.c,v 1.22 2010/07/12 03:52:52 guenther Exp $	*/
 /*
  * Copyright (c) 1995-1998 John Birrell <jb@cimlogic.com.au>
  * All rights reserved.
@@ -183,6 +183,9 @@ _dofork(int vfork)
 
 			/* Re-init the threads mutex queue: */
 			TAILQ_INIT(&curthread->mutexq);
+
+			/* no one is joining the remaining thread */
+			curthread->joiner = NULL;
 
 			/* single threaded now */
 			__isthreaded = 0;
