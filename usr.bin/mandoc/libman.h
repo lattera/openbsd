@@ -1,6 +1,6 @@
-/*	$Id: libman.h,v 1.22 2010/06/26 17:56:43 schwarze Exp $ */
+/*	$Id: libman.h,v 1.23 2010/06/27 21:54:41 schwarze Exp $ */
 /*
- * Copyright (c) 2009 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,6 @@
 #ifndef LIBMAN_H
 #define LIBMAN_H
 
-#include "regs.h"
 #include "man.h"
 
 enum	man_next {

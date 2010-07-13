@@ -1,6 +1,6 @@
-/*	$Id: man_html.c,v 1.15 2010/06/06 18:08:41 schwarze Exp $ */
+/*	$Id: man_html.c,v 1.16 2010/06/27 21:54:42 schwarze Exp $ */
 /*
- * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2008, 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -25,7 +25,6 @@
 #include "mandoc.h"
 #include "out.h"
 #include "html.h"
-#include "regs.h"
 #include "man.h"
 #include "main.h"
 
