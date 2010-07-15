@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/elf.5,v 1.18 2010/07/15 16:48:41 jmc Exp $
+.\"	$OpenBSD: src/share/man/man5/elf.5,v 1.19 2010/07/15 18:15:31 jmc Exp $
 .\"Copyright (c) 1999 Jeroen Ruigrok van der Werven
 .\"All rights reserved.
 .\"
@@ -25,7 +25,7 @@
 .\"
 .\"	$FreeBSD: src/share/man/man5/elf.5,v 1.21 2001/10/01 16:09:23 ru Exp $
 .\"
-.Dd $Mdocdate: May 2 2010 $
+.Dd $Mdocdate: July 15 2010 $
 .Dt ELF 5
 .Os
 .Sh NAME
@@ -80,24 +80,22 @@ symbol tables.
 The following types are used for 32-bit architectures:
 .Bd -literal -offset indent
 Elf32_Addr	Unsigned program address
-Elf32_Half	Unsigned halfword field
 Elf32_Off	Unsigned file offset
 Elf32_Sword	Signed large integer
-Elf32_Word	Field or unsigned large integer
-.\" Elf32_Size	Unsigned object size
+Elf32_Word	Unsigned large integer
+Elf32_Half	Unsigned medium integer
 .Ed
 .Pp
 And the following types are used for 64-bit architectures:
 .Bd -literal -offset indent
 Elf64_Addr	Unsigned program address
-Elf64_Shalf	Signed halfword field
-Elf64_Half	Unsigned halfword field
 Elf64_Off	Unsigned file offset
+Elf64_Shalf	Signed halfword field
 Elf64_Sword	Signed large integer
 Elf64_Word	Field or unsigned large integer
-.\" Elf64_Size	Unsigned object size
-Elf64_Xword	Unsigned object size or alignment
 Elf64_Sxword	Signed object size or alignment
+Elf64_Xword	Unsigned object size or alignment
+Elf64_Half	Unsigned halfword field
 Elf64_Quarter	Unsigned quarterword field
 .Ed
 .Pp
