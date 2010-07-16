@@ -1,4 +1,4 @@
-/*	$Id: man.c,v 1.35 2010/06/27 21:54:42 schwarze Exp $ */
+/*	$Id: man.c,v 1.36 2010/07/13 01:09:13 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -405,7 +405,7 @@ man_ptext(struct man *m, int line, char *buf, int offs)
 	 */
 
 	assert(i);
-	if (mandoc_eos(buf, (size_t)i))
+	if (mandoc_eos(buf, (size_t)i, 0))
 		m->last->flags |= MAN_EOS;
 
 descope:
