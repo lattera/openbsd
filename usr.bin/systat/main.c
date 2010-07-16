@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.55 2009/07/21 17:07:38 sthen Exp $	 */
+/* $Id: main.c,v 1.56 2010/07/02 13:30:03 lum Exp $	 */
 /*
  * Copyright (c) 2001, 2007 Can Erkin Acar
  * Copyright (c) 2001 Daniel Hartmeier
@@ -465,7 +465,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (!isatty(STDOUT_FILENO)) {
+	if (check_termcap()) {
 		rawmode = 1;
 		interactive = 0;
 	}
