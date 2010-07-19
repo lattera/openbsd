@@ -1,7 +1,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/error.h,v 1.9 2008/11/04 07:22:35 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/error.h,v 1.10 2010/07/19 19:30:37 espie Exp $ */
 
 /*
  * Copyright (c) 2001 Marc Espie.

@@ -2,7 +2,7 @@
 #define TIMESTAMP_H
 
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/timestamp.h,v 1.4 2007/09/17 09:44:20 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/timestamp.h,v 1.5 2010/07/19 19:30:38 espie Exp $ */
 
 /*
  * Copyright (c) 2001 Marc Espie.

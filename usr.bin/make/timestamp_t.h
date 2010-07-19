@@ -1,5 +1,5 @@
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/Attic/timestamp_t.h,v 1.1 2001/05/23 12:34:51 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/Attic/timestamp_t.h,v 1.2 2010/07/19 19:30:38 espie Exp $ */
 
 /*
  * Copyright (c) 2001 Marc Espie.

@@ -2,7 +2,7 @@
 #define EXTERN_H
 
 /*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/extern.h,v 1.41 2007/09/17 12:42:09 espie Exp $	*/
+/*	$OpenBSD: src/usr.bin/make/extern.h,v 1.42 2010/07/19 19:30:37 espie Exp $	*/
 /*	$NetBSD: nonints.h,v 1.12 1996/11/06 17:59:19 christos Exp $	*/
 
 /*-
