@@ -1,5 +1,4 @@
-/*	$OpenPackages$ */
-/*	$OpenBSD: src/usr.bin/make/lowparse.c,v 1.23 2010/07/15 10:41:11 espie Exp $ */
+/*	$OpenBSD: src/usr.bin/make/lowparse.c,v 1.24 2010/07/19 19:46:44 espie Exp $ */
 
 /* low-level parsing functions. */
 
