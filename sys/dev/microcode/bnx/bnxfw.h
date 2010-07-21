@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/microcode/bnx/bnxfw.h,v 1.3 2009/07/03 04:34:51 dlg Exp $ */
+/*	$OpenBSD: src/sys/dev/microcode/bnx/bnxfw.h,v 1.4 2010/07/21 02:17:15 todd Exp $ */
 
 /*-
  * Copyright (c) 2006-2009 Broadcom Corporation
