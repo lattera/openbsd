@@ -1,8 +1,8 @@
-/*	$OpenBSD: src/lib/libc/locale/Attic/mbrtowc_sb.c,v 1.4 2005/11/27 20:03:06 cloder Exp $	*/
-/*	$NetBSD: multibyte_sb.c,v 1.4 2003/08/07 16:43:04 agc Exp $	*/
+/*	$OpenBSD: src/lib/libc/locale/multibyte.h,v 1.1 2010/07/27 16:59:04 stsp Exp $ */
+/*	$NetBSD: multibyte.h,v 1.5 2009/01/11 02:46:28 christos Exp $	*/
 
-/*
- * Copyright (c) 1991 The Regents of the University of California.
+/*-
+ * Copyright (c)2002 Citrus Project,
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,14 +13,11 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -30,35 +27,24 @@
  * SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <stdlib.h>
-#include <wchar.h>
+#ifndef _MULTIBYTE_H_
+#define _MULTIBYTE_H_
 
-/*ARGSUSED*/
-size_t
-mbrtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *ps)
-{
+typedef struct _RuneStatePriv {
+	_RuneLocale	*__runelocale;
+	char		__private __attribute__((__aligned__));
+} _RuneStatePriv;
 
-	/* pwc may be NULL */
-	/* s may be NULL */
-	/* ps appears to be unused */
+typedef union _RuneState {
+	mbstate_t		__pad;
+	struct _RuneStatePriv	__priv;
+#define rs_runelocale		__priv.__runelocale
+#define rs_private		__priv.__private
+} _RuneState;
+#define _RUNE_STATE_PRIVSIZE	(sizeof(mbstate_t)-offsetof(_RuneStatePriv, __private))
 
-	if (s == NULL)
-		return 0;
-	if (n == 0)
-		return (size_t)-1;
-	if (pwc)
-		*pwc = (wchar_t)(unsigned char)*s;
-	return (*s != '\0');
-}
-
-int
-mbtowc(wchar_t *pwc, const char *s, size_t n)
-{
-
-	/* pwc may be NULL */
-	/* s may be NULL */
-
-	return mbrtowc(pwc, s, n, NULL);
-}
-
+#define _ps_to_runestate(ps)	((_RuneState *)(void *)(ps))
+#define _ps_to_runelocale(ps)	(_ps_to_runestate(ps)->rs_runelocale)
+#define _ps_to_private(ps)	((void *)&_ps_to_runestate(ps)->rs_private)
+	
+#endif /*_MULTIBYTE_H_*/
