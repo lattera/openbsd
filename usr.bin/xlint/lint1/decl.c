@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/xlint/lint1/Attic/decl.c,v 1.25 2010/07/24 22:17:03 guenther Exp $	*/
+/*	$OpenBSD: src/usr.bin/xlint/lint1/Attic/decl.c,v 1.26 2010/07/27 20:07:56 guenther Exp $	*/
 /*	$NetBSD: decl.c,v 1.11 1995/10/02 17:34:16 jpo Exp $	*/
 
 /*
@@ -33,13 +33,15 @@
  */
 
 #ifndef lint
-static char rcsid[] = "$OpenBSD: src/usr.bin/xlint/lint1/Attic/decl.c,v 1.25 2010/07/24 22:17:03 guenther Exp $";
+static char rcsid[] = "$OpenBSD: src/usr.bin/xlint/lint1/Attic/decl.c,v 1.26 2010/07/27 20:07:56 guenther Exp $";
 #endif
 
 #include <sys/param.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <complex.h>
 
 #include "lint1.h"
 
