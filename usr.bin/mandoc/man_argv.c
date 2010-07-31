@@ -1,6 +1,6 @@
-/*	$Id: man_argv.c,v 1.1 2009/08/23 11:22:19 schwarze Exp $ */
+/*	$Id: man_argv.c,v 1.2 2010/05/23 22:45:00 schwarze Exp $ */
 /*
- * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

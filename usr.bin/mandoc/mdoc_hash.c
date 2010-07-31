@@ -1,6 +1,6 @@
-/*	$Id: mdoc_hash.c,v 1.9 2010/05/14 01:54:37 schwarze Exp $ */
+/*	$Id: mdoc_hash.c,v 1.10 2010/05/23 22:45:00 schwarze Exp $ */
 /*
- * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

@@ -1,6 +1,6 @@
-/*	$Id: vol.c,v 1.3 2009/12/22 23:58:00 schwarze Exp $ */
+/*	$Id: vol.c,v 1.4 2010/05/23 22:45:01 schwarze Exp $ */
 /*
- * Copyright (c) 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

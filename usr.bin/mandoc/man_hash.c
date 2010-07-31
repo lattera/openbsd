@@ -1,6 +1,6 @@
-/*	$Id: man_hash.c,v 1.11 2010/05/16 00:54:03 schwarze Exp $ */
+/*	$Id: man_hash.c,v 1.12 2010/05/23 22:45:00 schwarze Exp $ */
 /*
- * Copyright (c) 2008, 2009 Kristaps Dzonsons <kristaps@kth.se>
+ * Copyright (c) 2008, 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
