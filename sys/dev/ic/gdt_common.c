@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.47 2010/01/09 23:15:06 krw Exp $	*/
+/*	$OpenBSD: src/sys/dev/ic/gdt_common.c,v 1.47.2.1 2010/08/19 10:48:53 stephan Exp $	*/
 
 /*
  * Copyright (c) 1999, 2000, 2003 Niklas Hallqvist.  All rights reserved.
@@ -593,6 +593,7 @@ gdt_scsi_cmd(struct scsi_xfer *xs)
 	bus_dmamap_t xfer;
 	int error, retval = SUCCESSFULLY_QUEUED;
 	int s;
+	int polled;
 
 	GDT_DPRINTF(GDT_D_CMD, ("gdt_scsi_cmd "));
 
@@ -621,6 +622,7 @@ gdt_scsi_cmd(struct scsi_xfer *xs)
 		ccb = NULL;
 		link = xs->sc_link;
 		target = link->target;
+		polled = ISSET(xs->flags, SCSI_POLL);
  
 		if (!gdt_polling && !(xs->flags & SCSI_POLL) &&
 		    sc->sc_test_busy(sc)) {
@@ -759,7 +761,6 @@ gdt_scsi_cmd(struct scsi_xfer *xs)
 					    ccb->gc_cmd_index);
 					return (NO_CCB);
 				}
-				scsi_done(xs);
 			}
 		}
 
@@ -767,7 +768,7 @@ gdt_scsi_cmd(struct scsi_xfer *xs)
 		/*
 		 * Don't process the queue if we are polling.
 		 */
-		if (xs->flags & SCSI_POLL) {
+		if (polled) {
 			retval = COMPLETE;
 			break;
 		}
@@ -1093,7 +1094,7 @@ gdt_intr(void *arg)
 	struct gdt_intr_ctx ctx;
 	int chain = 1;
 	int sync_val = 0;
-	struct scsi_xfer *xs;
+	struct scsi_xfer *xs = NULL;
 	int prev_cmd;
 	struct gdt_ccb *ccb;
 
@@ -1165,6 +1166,10 @@ gdt_intr(void *arg)
  finish:
 
 	switch (sync_val) {
+	case 0:
+		if (xs && gdt_from_wait)
+			scsi_done(xs);
+		break;
 	case 1:
 		scsi_done(xs);
 		break;
