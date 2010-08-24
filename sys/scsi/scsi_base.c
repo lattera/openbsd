@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/scsi/scsi_base.c,v 1.166 2010/01/15 06:27:12 krw Exp $	*/
+/*	$OpenBSD: src/sys/scsi/scsi_base.c,v 1.166.2.1 2010/08/24 09:10:14 stephan Exp $	*/
 /*	$NetBSD: scsi_base.c,v 1.43 1997/04/02 02:29:36 mycroft Exp $	*/
 
 /*
@@ -723,6 +723,7 @@ scsi_xs_exec(struct scsi_xfer *xs)
 	xs->error = XS_NOERROR;
 	xs->resid = xs->datalen;
 	xs->status = 0;
+	CLR(xs->flags, ITSDONE);
 
 #ifdef SCSIDEBUG
 	if (xs->sc_link->flags & SDEV_DB1) {
