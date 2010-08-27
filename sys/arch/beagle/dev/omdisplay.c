@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/beagle/dev/Attic/omdisplay.c,v 1.2 2010/08/07 03:50:01 krw Exp $ */
+/* $OpenBSD: src/sys/arch/beagle/dev/Attic/omdisplay.c,v 1.3 2010/08/27 05:04:08 deraadt Exp $ */
 /*
  * Copyright (c) 2007 Dale Rahn <drahn@openbsd.org>
  *
@@ -870,7 +870,6 @@ omdisplay_power(int why, void *v)
 
         switch (why) {
         case PWR_SUSPEND:
-        case PWR_STANDBY:
                 omdisplay_set_brightness(0);
 		omdisplay_suspend(sc);
                 break;
