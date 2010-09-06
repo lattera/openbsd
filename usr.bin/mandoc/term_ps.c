@@ -1,4 +1,4 @@
-/*	$Id: term_ps.c,v 1.10 2010/08/20 00:53:35 schwarze Exp $ */
+/*	$Id: term_ps.c,v 1.11 2010/08/26 02:05:02 deraadt Exp $ */
 /*
  * Copyright (c) 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -907,7 +907,7 @@ ps_pletter(struct termp *p, int c)
 
 	f = (int)p->engine.ps.lastf;
 
-	if (c <= 32 || (c - 32 > MAXCHAR)) {
+	if (c <= 32 || (c - 32 >= MAXCHAR)) {
 		ps_putchar(p, ' ');
 		p->engine.ps.pscol += (size_t)fonts[f].gly[0].wx;
 		return;
