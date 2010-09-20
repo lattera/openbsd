@@ -88,6 +88,7 @@ static	void	  termp_sh_post(DECL_ARGS);
 static	void	  termp_sq_post(DECL_ARGS);
 static	void	  termp_ss_post(DECL_ARGS);
 
+static	int	  termp__a_pre(DECL_ARGS);
 static	int	  termp_an_pre(DECL_ARGS);
 static	int	  termp_ap_pre(DECL_ARGS);
 static	int	  termp_aq_pre(DECL_ARGS);
@@ -174,7 +175,7 @@ static	const struct termact termacts[MDOC_MAX] = {
 	{ termp_under_pre, NULL }, /* Va */
 	{ termp_vt_pre, NULL }, /* Vt */
 	{ termp_xr_pre, NULL }, /* Xr */
-	{ NULL, termp____post }, /* %A */
+	{ termp__a_pre, termp____post }, /* %A */
 	{ termp_under_pre, termp____post }, /* %B */
 	{ NULL, termp____post }, /* %D */
 	{ termp_under_pre, termp____post }, /* %I */
@@ -1068,6 +1069,19 @@ termp_fl_pre(DECL_ARGS)
 		p->flags |= TERMP_NOSPACE;
 	else if (n->next && n->next->line == n->line)
 		p->flags |= TERMP_NOSPACE;
+
+	return(1);
+}
+
+
+/* ARGSUSED */
+static int
+termp__a_pre(DECL_ARGS)
+{
+
+	if (n->prev && MDOC__A == n->prev->tok)
+		if (NULL == n->next || MDOC__A != n->next->tok)
+			term_word(p, "and");
 
 	return(1);
 }
@@ -2093,6 +2107,16 @@ termp_ap_pre(DECL_ARGS)
 static void
 termp____post(DECL_ARGS)
 {
+
+	/*
+	 * Handle lists of authors.  In general, print each followed by
+	 * a comma.  Don't print the comma if there are only two
+	 * authors.
+	 */
+	if (MDOC__A == n->tok && n->next && MDOC__A == n->next->tok)
+		if (NULL == n->next->next || MDOC__A != n->next->next->tok)
+			if (NULL == n->prev || MDOC__A != n->prev->tok)
+				return;
 
 	/* TODO: %U. */
 
