@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sgi/pci/iof.c,v 1.6 2010/04/06 19:12:34 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sgi/pci/iof.c,v 1.7 2010/09/20 06:33:47 matthew Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -284,7 +284,7 @@ iof_intr_establish(void *cookie, uint dev, int level, int (*func)(void *),
 	ii->ii_arg = arg;
 	ii->ii_level = level;
 
-	evcount_attach(&ii->ii_count, name, &ii->ii_level, &evcount_intr);
+	evcount_attach(&ii->ii_count, name, &ii->ii_level);
 	sc->sc_intr[dev] = ii;
 
 	/* enable hardware source if necessary */
