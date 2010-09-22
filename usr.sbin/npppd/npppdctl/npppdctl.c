@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppdctl/Attic/npppdctl.c,v 1.5 2010/07/31 09:33:09 yasuoka Exp $ */
+/* $OpenBSD: src/usr.sbin/npppd/npppdctl/Attic/npppdctl.c,v 1.6 2010/09/22 00:32:48 jsg Exp $ */
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* $Id: npppdctl.c,v 1.4 2010/07/02 21:20:57 yasuoka Exp $ */
+/* $Id: npppdctl.c,v 1.5 2010/07/31 09:33:09 yasuoka Exp $ */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -105,7 +105,7 @@ usage(void)
 	    "\t-r: Receive buffer size (default %d).\n"
 	    "\t-s: Show statistics informations instead of who.\n"
 	    "\t-u: Show 'since' field as unix time.\n",
-	    progname, progname, progname, rcvbuf_sz);
+	    progname, progname, rcvbuf_sz);
 }
 
 static void
