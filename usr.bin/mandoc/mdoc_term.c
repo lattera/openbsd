@@ -2126,8 +2126,14 @@ termp____post(DECL_ARGS)
 
 	/* TODO: %U. */
 
-	p->flags |= TERMP_NOSPACE;
-	term_word(p, n->next ? "," : ".");
+	if (NULL == n->parent || MDOC_Rs != n->parent->tok)
+		return;
+
+	if (NULL == n->next) {
+		term_word(p, ".");
+		p->flags |= TERMP_SENTENCE;
+	} else
+		term_word(p, ",");
 }
 
 
