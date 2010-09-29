@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/pckbc/pms.c,v 1.5 2010/09/27 18:16:25 miod Exp $ */
+/* $OpenBSD: src/sys/dev/pckbc/pms.c,v 1.6 2010/09/29 19:39:18 deraadt Exp $ */
 /* $NetBSD: psm.c,v 1.11 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-
@@ -141,7 +141,7 @@ pmsprobe(parent, match, aux)
 		return (0);
 	}
 
-	return (10);
+	return (1);
 }
 
 void
