@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/luna88k/dev/siotty.c,v 1.14 2010/07/02 17:27:01 nicm Exp $ */
+/* $OpenBSD: src/sys/arch/luna88k/dev/siotty.c,v 1.15 2010/09/29 13:39:03 miod Exp $ */
 /* $NetBSD: siotty.c,v 1.9 2002/03/17 19:40:43 atatat Exp $ */
 
 /*-
@@ -387,7 +387,7 @@ sioopen(dev, flag, mode, p)
 #endif
 	}
 
-	error = ttyopen(dev, tp);
+	error = ttyopen(dev, tp, p);
 	if (error > 0)
 		return error;
 /*
