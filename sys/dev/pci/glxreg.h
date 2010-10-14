@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/loongson/dev/Attic/glxreg.h,v 1.2 2010/02/12 19:37:29 miod Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/glxreg.h,v 1.1 2010/10/14 21:23:05 pirofti Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
