@@ -27,7 +27,7 @@ void		 tbl_reset(struct tbl *);
 
 int	 	 tbl_read(struct tbl *, const char *, int, const char *, int);
 int		 tbl_close(struct tbl *, const char *, int);
-int		 tbl_write(const struct tbl *);
+int		 tbl_write(struct termp *, const struct tbl *);
 
 __END_DECLS
 

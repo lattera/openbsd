@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "out.h"
+#include "term.h"
 #include "tbl.h"
 #include "tbl_extern.h"
 
@@ -104,11 +106,11 @@ tbl_close(struct tbl *tbl, const char *f, int ln)
 
 
 int
-tbl_write(const struct tbl *tbl)
+tbl_write(struct termp *p, const struct tbl *tbl)
 {
 
 #if 1
-	return(tbl_write_term(tbl));
+	return(tbl_write_term(p, tbl));
 #else
 	return(tbl_write_tree(tbl));
 #endif

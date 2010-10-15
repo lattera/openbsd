@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "out.h"
+#include "term.h"
 #include "tbl_extern.h"
 
 struct	tbl_phrase {

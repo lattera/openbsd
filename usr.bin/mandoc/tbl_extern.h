@@ -173,7 +173,7 @@ struct tbl_cell	*tbl_cell_alloc(struct tbl_row *, enum tbl_cellt);
 struct tbl_span	*tbl_span_alloc(struct tbl *);
 struct tbl_data	*tbl_data_alloc(struct tbl_span *);
 
-int		 tbl_write_term(const struct tbl *);
+int		 tbl_write_term(struct termp *, const struct tbl *);
 int		 tbl_calc_term(struct tbl *);
 int		 tbl_write_tree(const struct tbl *);
 int		 tbl_calc_tree(struct tbl *);
