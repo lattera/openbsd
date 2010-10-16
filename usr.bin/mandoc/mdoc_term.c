@@ -2100,10 +2100,8 @@ termp_ts_pre(DECL_ARGS)
 	if (MDOC_BLOCK != n->type)
 		return(0);
 
-	if ( ! tbl_close(p, n->data.TS, "<mdoc>", n->line))
-		return(0);
-
-	tbl_write(p, n->data.TS);
+	if (tbl_close(p, n->data.TS, "mdoc tbl postprocess", n->line))
+		tbl_write(p, n->data.TS);
 
 	return(0);
 }
