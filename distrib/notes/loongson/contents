@@ -1,0 +1,34 @@
+dnl	$OpenBSD: src/distrib/notes/loongson/contents,v 1.6 2010/10/18 04:24:07 deraadt Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+
+	boot		The OpenBSD/MACHINE bootloader.
+
+DistributionDescription(eleven)
+
+OpenBSDbase(56815681,198860931)
+
+OpenBSDcomp(76547924,269340459)
+
+OpenBSDetc(520657,1415328)
+
+OpenBSDgame(2783627,6680728)
+
+OpenBSDman(9461489,34562433)
+
+OpenBSDxbase(14474638,52124493)
+
+OpenBSDxetc(71850,278151)
+
+OpenBSDxfont(39687242,51387549)
+
+OpenBSDxserv(5253685,16860217)
+
+OpenBSDxshare(2946824,16053948)
