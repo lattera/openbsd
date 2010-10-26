@@ -1,4 +1,4 @@
-/*	$Id: mdoc_validate.c,v 1.73 2010/10/23 17:04:51 schwarze Exp $ */
+/*	$Id: mdoc_validate.c,v 1.74 2010/10/24 18:15:43 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -731,11 +731,9 @@ pre_bl(PRE_ARGS)
 	case (LIST_inset):
 		/* FALLTHROUGH */
 	case (LIST_item):
-		if (NULL == n->data.Bl->width)
-			break;
-		if (mdoc_nmsg(mdoc, n, MANDOCERR_WIDTHARG))
-			break;
-		return(0);
+		if (n->data.Bl->width)
+			mdoc_nmsg(mdoc, n, MANDOCERR_IGNARGV);
+		break;
 	default:
 		break;
 	}
