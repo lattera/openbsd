@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/relayd/relay.c,v 1.119 2010/02/18 16:33:25 jsg Exp $	*/
+/*	$OpenBSD: src/usr.sbin/relayd/relay.c,v 1.119.2.1 2010/10/26 01:49:49 william Exp $	*/
 
 /*
  * Copyright (c) 2006, 2007, 2008 Reyk Floeter <reyk@openbsd.org>
@@ -2387,6 +2387,12 @@ relay_close(struct rsession *con, const char *msg)
 		bufferevent_free(con->se_out.bev);
 	else if (con->se_out.output != NULL)
 		evbuffer_free(con->se_out.output);
+	if (con->se_out.ssl != NULL) {
+		/* XXX handle non-blocking shutdown */
+		if (SSL_shutdown(con->se_out.ssl) == 0)
+			SSL_shutdown(con->se_out.ssl);
+		SSL_free(con->se_out.ssl);
+	}
 	if (con->se_out.s != -1)
 		close(con->se_out.s);
 	if (con->se_out.path != NULL)
