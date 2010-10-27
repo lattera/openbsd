@@ -1,5 +1,5 @@
 # ex:ts=8 sw=4:
-# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/Attic/PkgConfig.pm,v 1.16 2010/06/30 10:51:04 espie Exp $
+# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/Attic/PkgConfig.pm,v 1.17 2010/10/27 14:35:56 espie Exp $
 #
 # Copyright (c) 2006 Marc Espie <espie@openbsd.org>
 #
