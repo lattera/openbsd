@@ -1,6 +1,7 @@
-#	$OpenBSD: src/regress/lib/libsndio/fd/Makefile,v 1.1 2008/10/27 00:26:33 ratchov Exp $
+#	$OpenBSD: src/regress/lib/libsndio/fd/Makefile,v 1.2 2010/11/06 20:25:42 ratchov Exp $
 PROG= fd
 LDADD= -lsndio
+SRCS = fd.c tools.c
 REGRESS_SKIP=
-
+.PATH: ${.CURDIR}/..
 .include <bsd.regress.mk>
