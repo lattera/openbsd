@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.28 2010/06/29 21:12:01 krw Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/Attic/sbic.c,v 1.29 2010/11/18 21:13:19 miod Exp $ */
 /*	$NetBSD: sbic.c,v 1.2 1996/04/23 16:32:54 chuck Exp $	*/
 
 /*
@@ -55,7 +55,6 @@
 #include <sys/device.h>
 #include <sys/kernel.h> /* For hz */
 #include <sys/disklabel.h>
-#include <sys/dkstat.h>
 #include <sys/buf.h>
 #include <sys/queue.h>
 #include <scsi/scsi_all.h>
