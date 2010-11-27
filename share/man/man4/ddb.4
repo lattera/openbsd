@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/ddb.4,v 1.70 2010/11/27 19:57:21 miod Exp $
+.\"	$OpenBSD: src/share/man/man4/ddb.4,v 1.71 2010/11/27 19:59:10 miod Exp $
 .\"	$NetBSD: ddb.4,v 1.5 1994/11/30 16:22:09 jtc Exp $
 .\"
 .\" Mach Operating System
@@ -25,7 +25,7 @@
 .\" any improvements or extensions that they make and grant Carnegie Mellon
 .\" the rights to redistribute these changes.
 .\"
-.Dd $Mdocdate: November 5 2010 $
+.Dd $Mdocdate: November 27 2010 $
 .Dt DDB 4
 .Os
 .Sh NAME
@@ -481,7 +481,6 @@ with an error message.
 .Sy Warning:
 attempts to watch wired kernel memory
 may cause an unrecoverable error on some systems (e.g., i386).
-Watchpoints on user addresses work best.
 .\" --------------------
 .It Ic dwatch Ar addr
 Delete the watchpoint at address
