@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/Attic/map_backend.c,v 1.3 2010/11/28 13:56:43 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/Attic/map_backend.c,v 1.4 2010/11/28 14:35:58 gilles Exp $	*/
 
 /*
  * Copyright (c) 2010 Gilles Chehade <gilles@openbsd.org>
@@ -22,10 +22,9 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 
-#include <ctype.h>
 #include <db.h>
+#include <ctype.h>
 #include <err.h>
-#include <errno.h>
 #include <event.h>
 #include <fcntl.h>
 #include <imsg.h>

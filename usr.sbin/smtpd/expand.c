@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/expand.c,v 1.10 2010/11/28 13:56:43 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/expand.c,v 1.11 2010/11/28 14:35:58 gilles Exp $	*/
 
 /*
  * Copyright (c) 2009 Gilles Chehade <gilles@openbsd.org>
@@ -22,10 +22,7 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 
-#include <ctype.h>
-#include <errno.h>
 #include <event.h>
-#include <fcntl.h>
 #include <imsg.h>
 #include <stdio.h>
 #include <stdlib.h>
