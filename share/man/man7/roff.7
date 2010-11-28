@@ -74,6 +74,12 @@ The
 .Nm
 language defines many more requests and macros not implemented in
 .Xr mandoc 1 .
+.Ss \&ad
+Set line adjustment mode.
+This line-scoped request is intended to have one argument to select
+normal, left, right, or center adjustment for subsequent text.
+Currently, it is ignored including its arguments,
+and the number of arguments is not checked.
 .Ss \&am
 Append to a macro definition.
 The syntax of this request is the same as that of
@@ -283,6 +289,9 @@ then false is assumed.
 The syntax of this macro is similar to
 .Sx \&if
 except that the conditional is missing.
+.Ss \&hy
+Set automatic hyphenation mode.
+This line-scoped request is currently ignored.
 .Ss \&ie
 The
 .Qq if
@@ -433,9 +442,16 @@ Otherwise, it only terminates the
 and arguments following it or the
 .Sq \&..
 macro are discarded.
+.Ss \&ne
+Declare the need for the specified minimum vertical space
+before the next trap or the bottom of the page.
+This line-scoped request is currently ignored.
+.Ss \&nh
+Turn off automatic hyphenation mode.
+This line-scoped request is currently ignored.
 .Ss \&rm
 Remove a request, macro or string.
-This macro is intended to have one argument,
+This request is intended to have one argument,
 the name of the request, macro or string to be undefined.
 Currently, it is ignored including its arguments,
 and the number of arguments is not checked.
