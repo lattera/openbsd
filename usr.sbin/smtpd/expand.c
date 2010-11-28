@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/expand.c,v 1.9 2010/10/09 22:05:35 gilles Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/expand.c,v 1.10 2010/11/28 13:56:43 gilles Exp $	*/
 
 /*
  * Copyright (c) 2009 Gilles Chehade <gilles@openbsd.org>
@@ -26,11 +26,13 @@
 #include <errno.h>
 #include <event.h>
 #include <fcntl.h>
+#include <imsg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "smtpd.h"
+#include "log.h"
 
 struct expandnode *
 expandtree_lookup(struct expandtree *expandtree, struct expandnode *node)
