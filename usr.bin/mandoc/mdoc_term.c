@@ -1,4 +1,4 @@
-/*	$Id: mdoc_term.c,v 1.112 2010/10/23 16:08:36 schwarze Exp $ */
+/*	$Id: mdoc_term.c,v 1.113 2010/10/23 23:30:41 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010 Ingo Schwarze <schwarze@openbsd.org>
@@ -2076,7 +2076,7 @@ termp_lk_pre(DECL_ARGS)
 
 	nn = sv = n->child;
 
-	if (NULL == nn->next)
+	if (NULL == nn || NULL == nn->next)
 		return(1);
 
 	for (nn = nn->next; nn; nn = nn->next) 
