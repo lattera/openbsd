@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.19 2009/03/01 21:37:41 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/mvme68k/dev/sram.c,v 1.20 2010/12/26 15:40:59 miod Exp $ */
 
 /*
  * Copyright (c) 1995 Theo de Raadt
@@ -219,5 +219,5 @@ srammmap(dev, off, prot)
 	/* allow access only in RAM */
 	if (off < 0 || off >= round_page(sc->sc_len))
 		return (-1);
-	return (atop(sc->sc_paddr + off));
+	return (sc->sc_paddr + off);
 }
