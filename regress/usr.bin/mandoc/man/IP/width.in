@@ -1,43 +1,53 @@
-.TH IP-WIDTH 1
+.TH TP-WIDTH 1
 .SH NAME
-IP-width \- indentation width of indented paragraphs
+TP-width \- indentation width of indented paragraphs
 .SH DESCRIPTION
 Regular mode:
-.IP tag 1n
+.TP 1n
+tag
 indented
 .br
 text
-.IP tag 2n
+.TP 2n
+tag
 indented
 .br
 text
-.IP tag 3n
+.TP 3n
+tag
 indented
 .br
 text
-.IP tag 4n
+.TP 4n
+tag
 indented
 .br
 text
-.IP tag 5n
+.TP 5n
+tag
 indented
 .br
 text
 .PP
 Literal mode:
 .nf
-.IP tag 1n
+.TP 1n
+tag
 indented
 text
-.IP tag 2n
+.TP 2n
+tag
 indented
 text
-.IP tag 3n
+.TP 3n
+tag
 indented
 text
-.IP tag 4n
+.TP 4n
+tag
 indented
 text
-.IP tag 5n
+.TP 5n
+tag
 indented
 text
