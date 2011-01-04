@@ -1,39 +1,45 @@
-.TH IP-MANYARGS 1
+.TH TP-MANYARGS 1
 .SH NAME
-IP-manyargs \- too many header args for indented blocks
+TP-manyargs \- too many header args for indented blocks
 .SH DESCRIPTION
 regular
 text
-.IP tag1 10n
+.TP 10n
+tag1
 indented
 text
 .PP
 regular
 text
-.IP tag2 10n tag1
+.TP 10n tag1
+tag2
 indented
 text
 .PP
 regular
 text
-.IP tag3 10n tag2 tag1
+.TP 10n tag2 tag1
+tag3
 indented
 text
 .nf
 literal
 text
-.IP tag1 10n
+.TP 10n
+tag1
 indented
 text
 .PP
 literal
 text
-.IP tag2 10n tag1
+.TP 10n tag1
+tag2
 indented
 text
 .PP
 literal
 text
-.IP tag3 10n tag2 tag1
+.TP 10n tag2 tag1
+tag3
 indented
 text
