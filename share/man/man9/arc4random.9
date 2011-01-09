@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/arc4random.9,v 1.4 2011/01/09 00:06:50 deraadt Exp $
+.\"	$OpenBSD: src/share/man/man9/arc4random.9,v 1.5 2011/01/09 02:20:53 jmc Exp $
 .\"
 .\" Copyright (c) 1996,2000 Michael Shalayeff
 .\" All rights reserved.
@@ -23,7 +23,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: October 2 2010 $
+.Dd $Mdocdate: January 9 2011 $
 .Dt ARC4RANDOM 9
 .Os
 .Sh NAME
@@ -78,7 +78,8 @@ mostly by means of timing the random driver's operations.
 .Fn arc4random
 and
 .Fn arc4random_buf
-provide random numbers.  They may be called safely in any kernel context.
+provide random numbers.
+They may be called safely in any kernel context.
 .Pp
 .Fn arc4random_uniform
 will return a uniformly distributed random number less than
