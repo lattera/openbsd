@@ -1,4 +1,4 @@
-/*	$Id: mandoc.h,v 1.26 2011/01/03 23:39:27 schwarze Exp $ */
+/*	$Id: mandoc.h,v 1.27 2011/01/04 22:28:17 schwarze Exp $ */
 /*
  * Copyright (c) 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -152,7 +152,6 @@ struct	tbl {
 	char		  tab; /* cell-separator */
 	char		  decimal; /* decimal point */
 	int		  linesize;
-	char		  delims[2]; /* FIXME: deprecate */
 	int		  opts;
 #define	TBL_OPT_CENTRE	 (1 << 0)
 #define	TBL_OPT_EXPAND	 (1 << 1)
