@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/rtsock.c,v 1.105 2010/07/14 20:56:35 claudio Exp $	*/
+/*	$OpenBSD: src/sys/net/rtsock.c,v 1.105.2.1 2011/01/13 15:53:46 jsg Exp $	*/
 /*	$NetBSD: rtsock.c,v 1.18 1996/03/29 00:32:10 cgd Exp $	*/
 
 /*
@@ -820,6 +820,8 @@ flush:
 			rtm->rtm_flags |= RTF_DONE;
 		}
 	}
+	if (dst)
+		route_proto.sp_protocol = dst->sa_family;
 	if (rt)
 		rtfree(rt);
 
@@ -838,8 +840,6 @@ flush:
 	}
 	if (rp)
 		rp->rcb_proto.sp_family = 0; /* Avoid us */
-	if (dst)
-		route_proto.sp_protocol = dst->sa_family;
 	if (rtm) {
 		m_copyback(m, 0, rtm->rtm_msglen, rtm, M_NOWAIT);
 		if (m->m_pkthdr.len < rtm->rtm_msglen) {
