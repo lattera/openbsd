@@ -1,4 +1,4 @@
-/*	$Id: term_ascii.c,v 1.3 2010/07/13 01:09:13 schwarze Exp $ */
+/*	$Id: term_ascii.c,v 1.4 2011/01/04 22:28:17 schwarze Exp $ */
 /*
  * Copyright (c) 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -44,8 +44,7 @@ ascii_alloc(char *outopts)
 	const char	*toks[2];
 	char		*v;
 
-	if (NULL == (p = term_alloc(TERMENC_ASCII)))
-		return(NULL);
+	p = term_alloc(TERMENC_ASCII);
 
 	p->tabwidth = 5;
 	p->defrmargin = 78;
