@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net/pf.c,v 1.690 2010/02/04 14:10:12 sthen Exp $ */
+/*	$OpenBSD: src/sys/net/pf.c,v 1.690.2.1 2011/02/16 19:13:44 sthen Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
@@ -2181,8 +2181,8 @@ pf_match_addr_range(struct pf_addr *b, struct pf_addr *e,
 	switch (af) {
 #ifdef INET
 	case AF_INET:
-		if ((a->addr32[0] < b->addr32[0]) ||
-		    (a->addr32[0] > e->addr32[0]))
+		if ((ntohl(a->addr32[0]) < ntohl(b->addr32[0])) ||
+		    (ntohl(a->addr32[0]) > ntohl(e->addr32[0])))
 			return (0);
 		break;
 #endif /* INET */
@@ -2192,15 +2192,15 @@ pf_match_addr_range(struct pf_addr *b, struct pf_addr *e,
 
 		/* check a >= b */
 		for (i = 0; i < 4; ++i)
-			if (a->addr32[i] > b->addr32[i])
+			if (ntohl(a->addr32[i]) > ntohl(b->addr32[i]))
 				break;
-			else if (a->addr32[i] < b->addr32[i])
+			else if (ntohl(a->addr32[i]) < ntohl(b->addr32[i]))
 				return (0);
 		/* check a <= e */
 		for (i = 0; i < 4; ++i)
-			if (a->addr32[i] < e->addr32[i])
+			if (ntohl(a->addr32[i]) < ntohl(e->addr32[i]))
 				break;
-			else if (a->addr32[i] > e->addr32[i])
+			else if (ntohl(a->addr32[i]) > ntohl(e->addr32[i]))
 				return (0);
 		break;
 	}
