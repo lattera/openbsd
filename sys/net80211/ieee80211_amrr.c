@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/net80211/ieee80211_amrr.c,v 1.6 2010/04/20 22:05:43 tedu Exp $	*/
+/*	$OpenBSD: src/sys/net80211/ieee80211_amrr.c,v 1.7 2011/03/02 08:48:59 fgsch Exp $	*/
 
 /*-
  * Copyright (c) 2006
@@ -18,6 +18,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/socket.h>
 
