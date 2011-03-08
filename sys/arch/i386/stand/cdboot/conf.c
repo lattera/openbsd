@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/stand/cdboot/conf.c,v 1.16 2010/12/06 22:51:45 jasper Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/stand/cdboot/conf.c,v 1.17 2011/03/08 17:24:31 krw Exp $	*/
 
 /*
  * Copyright (c) 2004 Tom Cosgrove
@@ -44,7 +44,7 @@
 #include <dev/cons.h>
 #include "debug.h"
 
-const char version[] = "3.15";
+const char version[] = "3.16";
 int	debug = 1;
 
 #undef _TEST
