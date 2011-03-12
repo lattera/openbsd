@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libkvm/kvm_getprocs.3,v 1.14 2011/03/12 04:54:28 guenther Exp $
+.\"	$OpenBSD: src/lib/libkvm/kvm_getprocs.3,v 1.15 2011/03/12 07:28:22 jmc Exp $
 .\"	$NetBSD: kvm_getprocs.3,v 1.13 2003/08/07 16:44:37 agc Exp $
 .\"
 .\" Copyright (c) 1992, 1993
@@ -34,7 +34,7 @@
 .\"
 .\"     @(#)kvm_getprocs.3	8.1 (Berkeley) 6/4/93
 .\"
-.Dd $Mdocdate: May 31 2007 $
+.Dd $Mdocdate: March 12 2011 $
 .Dt KVM_GETPROCS 3
 .Os
 .Sh NAME
@@ -173,6 +173,7 @@ function is similar to
 but returns the vector of environment strings.
 This data is also alterable by the process.
 .Pp
+The
 .Fn kvm_getproc2 ,
 .Fn kvm_getargv2 ,
 and
