@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/armish/stand/boot/wdc.c,v 1.3 2008/06/26 05:42:10 ray Exp $	*/
+/*	$OpenBSD: src/sys/arch/armish/stand/boot/wdc.c,v 1.4 2011/03/13 00:13:52 deraadt Exp $	*/
 /*	$NetBSD: wdc.c,v 1.7 2005/12/11 12:17:06 christos Exp $	*/
 
 /*-
@@ -330,7 +330,7 @@ int
 wdc_exec_read(wd, cmd, blkno, data)
 	struct wd_softc *wd;
 	u_int8_t cmd;
-	daddr_t blkno;
+	daddr32_t blkno;
 	void *data;
 {
 	int error;
