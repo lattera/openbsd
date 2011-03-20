@@ -1,4 +1,4 @@
-/*	$Id: man_validate.c,v 1.40 2011/01/17 00:15:19 schwarze Exp $ */
+/*	$Id: man_validate.c,v 1.41 2011/03/07 01:35:33 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010 Ingo Schwarze <schwarze@openbsd.org>
@@ -118,6 +118,8 @@ man_valid_pre(struct man *m, struct man_node *n)
 		/* FALLTHROUGH */
 	case (MAN_ROOT):
 		/* FALLTHROUGH */
+	case (MAN_EQN):
+		/* FALLTHROUGH */
 	case (MAN_TBL):
 		return(1);
 	default:
@@ -147,6 +149,8 @@ man_valid_post(struct man *m)
 		return(check_text(m, m->last));
 	case (MAN_ROOT):
 		return(check_root(m, m->last));
+	case (MAN_EQN):
+		/* FALLTHROUGH */
 	case (MAN_TBL):
 		return(1);
 	default:
