@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/sys/arch/sgi/include/atomic.h,v 1.2 2007/02/19 17:18:43 deraadt Exp $	*/
+/*	$OpenBSD: src/sys/arch/sgi/include/atomic.h,v 1.3 2011/03/23 16:54:36 pirofti Exp $	*/
 
 /* Public Domain */
 
-#ifndef __SGI_ATOMIC_H__
-#define __SGI_ATOMIC_H__
+#ifndef _MACHINE_ATOMIC_H_
+#define _MACHINE_ATOMIC_H_
 
 #include <mips64/atomic.h>
 
-#endif /* __SGI_ATOMIC_H__ */
+#endif /* _MACHINE_ATOMIC_H_ */

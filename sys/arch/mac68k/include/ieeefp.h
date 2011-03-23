@@ -1,9 +1,9 @@
-/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/ieeefp.h,v 1.3 1997/11/30 06:10:31 gene Exp $	*/
+/*	$OpenBSD: src/sys/arch/mac68k/include/Attic/ieeefp.h,v 1.4 2011/03/23 16:54:36 pirofti Exp $	*/
 /*	$NetBSD: ieeefp.h,v 1.2 1995/04/16 16:47:07 jtc Exp $	*/
 
-#ifndef _MAC68K_IEEEFP_H_
-#define _MAC68K_IEEEFP_H_
+#ifndef _MACHINE_IEEEFP_H_
+#define _MACHINE_IEEEFP_H_
 
 #include <m68k/ieeefp.h>
 
-#endif	/* _MAC68K_IEEEFP_H_ */
+#endif	/* _MACHINE_IEEEFP_H_ */
