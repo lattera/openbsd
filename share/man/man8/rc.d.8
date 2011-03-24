@@ -1,4 +1,4 @@
-.\" 	$OpenBSD: src/share/man/man8/rc.d.8,v 1.9 2011/03/17 21:37:27 jmc Exp $
+.\" 	$OpenBSD: src/share/man/man8/rc.d.8,v 1.10 2011/03/24 11:15:40 ajacoutot Exp $
 .\"
 .\" Copyright (c) 2011 Robert Nagy, Antoine Jacoutot, Ingo Schwarze
 .\" All rights reserved.
@@ -75,6 +75,10 @@ The following two can be overridden by site-specific values provided in
 .Bl -tag -width daemon_flags -offset indent -compact
 .It Ar daemon Ns _flags
 Arguments to call the daemon with.
+If set to
+.Dq NO ,
+it will prevent the daemon from starting even when listed in
+.Va rc_scripts .
 .It Ar daemon Ns _user
 User to run the daemon as, using
 .Xr su 1 .
