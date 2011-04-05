@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.57 2010/07/16 05:22:48 lum Exp $	 */
+/* $Id: main.c,v 1.58 2011/03/31 06:12:34 lum Exp $	 */
 /*
  * Copyright (c) 2001, 2007 Can Erkin Acar
  * Copyright (c) 2001 Daniel Hartmeier
@@ -326,6 +326,10 @@ keyboard_callback(int ch)
 		break;
 	case 's':
 		command_set(&cm_delay, NULL);
+		break;
+	case ',':
+		separate_thousands = !separate_thousands;
+		gotsig_alarm = 1;
 		break;
 	case ':':
 		command_set(&cm_compat, NULL);
