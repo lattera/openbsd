@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.218 2011/04/11 06:44:39 nicm Exp $
+.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.219 2011/04/11 16:44:36 nicm Exp $
 .\"
 .\" Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
 .\"
@@ -14,7 +14,7 @@
 .\" IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 .\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: April 5 2011 $
+.Dd $Mdocdate: April 11 2011 $
 .Dt TMUX 1
 .Os
 .Sh NAME
@@ -575,8 +575,8 @@ recently used
 session.
 .It Xo Ic detach-client
 .Op Fl P
-.Op Fl t Ar target-client
 .Op Fl s Ar target-session
+.Op Fl t Ar target-client
 .Xc
 .D1 (alias: Ic detach )
 Detach the current client if bound to a key, the client specified with
