@@ -1,4 +1,4 @@
-#	$OpenBSD: src/etc/etc.palm/Attic/Makefile.inc,v 1.1 2009/09/05 02:19:09 marex Exp $
+#	$OpenBSD: src/etc/etc.palm/Attic/Makefile.inc,v 1.2 2011/04/15 03:11:38 deraadt Exp $
 
 kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/palm/compile/GENERIC/bsd \
@@ -7,7 +7,7 @@ kernels: bsd bootblocks
 bsd:
 	cd ${.CURDIR}/../sys/arch/palm/conf && config GENERIC
 	cd ${.CURDIR}/../sys/arch/palm/compile/GENERIC && \
-	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
+	    ${MAKE} clean && exec ${MAKE}
 
 bootblocks:
 	cp ${DESTDIR}/usr/mdec/zboot ${RELEASEDIR}

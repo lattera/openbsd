@@ -1,4 +1,4 @@
-#	$OpenBSD: src/etc/etc.mvme68k/Makefile.inc,v 1.12 2010/08/17 19:17:14 deraadt Exp $
+#	$OpenBSD: src/etc/etc.mvme68k/Makefile.inc,v 1.13 2011/04/15 03:11:38 deraadt Exp $
 
 kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/mvme68k/compile/GENERIC/bsd \
@@ -7,7 +7,7 @@ kernels: bsd bootblocks
 bsd:
 	cd ${.CURDIR}/../sys/arch/mvme68k/conf && config GENERIC
 	cd ${.CURDIR}/../sys/arch/mvme68k/compile/GENERIC && \
-	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
+	    ${MAKE} clean && exec ${MAKE}
 
 bootblocks:
 	cp ${DESTDIR}/usr/mdec/* ${RELEASEDIR}/
