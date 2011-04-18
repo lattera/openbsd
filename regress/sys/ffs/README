@@ -1,0 +1,4 @@
+$OpenBSD: src/regress/sys/ffs/README,v 1.2 2011/04/18 16:52:11 thib Exp $
+
+These tests must be run as root, on a system with free vnd0 and vnd1 slots.
+It is also advised that /mnt be unmounted, and clean.
