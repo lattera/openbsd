@@ -17,7 +17,7 @@ use Config;
 use File::Spec::Functions;
 
 BEGIN { require './test.pl'; }
-plan tests => 301;
+plan tests => 305;
 
 $| = 1;
 
@@ -1314,6 +1314,19 @@ foreach my $ord (78, 163, 256) {
 
     my $zz = pack "a*a*", q{print "Hello world\n"}, $TAINT;
     ok(tainted($zz), "pack a*a* preserves tainting");
+}
+
+{
+    # [perl #87336] lc/uc(first) failing to taint the returned string
+    my $source = "foo$TAINT";
+    my $dest = lc $source;
+    ok(tainted($dest), "lc(tainted) taints its return value");
+    $dest = lcfirst $source;
+    ok(tainted($dest), "lcfirst(tainted) taints its return value");
+    $dest = uc $source;
+    ok(tainted($dest), "uc(tainted) taints its return value");
+    $dest = ucfirst $source;
+    ok(tainted($dest), "ucfirst(tainted) taints its return value");
 }
 
 # This may bomb out with the alarm signal so keep it last
