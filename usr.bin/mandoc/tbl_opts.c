@@ -1,4 +1,4 @@
-/*	$Id: tbl_opts.c,v 1.1 2011/01/04 22:28:17 schwarze Exp $ */
+/*	$Id: tbl_opts.c,v 1.2 2011/01/09 14:30:48 schwarze Exp $ */
 /*
  * Copyright (c) 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -188,7 +188,7 @@ again:	/*
 	/* Copy up to first non-alpha character. */
 
 	for (sv = *pos, i = 0; i < KEY_MAXNAME; i++, (*pos)++) {
-		buf[i] = tolower((unsigned char)p[*pos]);
+		buf[i] = (char)tolower((unsigned char)p[*pos]);
 		if ( ! isalpha((unsigned char)buf[i]))
 			break;
 	}

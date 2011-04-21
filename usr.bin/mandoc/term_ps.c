@@ -1,4 +1,4 @@
-/*	$Id: term_ps.c,v 1.14 2011/01/31 02:36:55 schwarze Exp $ */
+/*	$Id: term_ps.c,v 1.15 2011/03/07 01:58:19 schwarze Exp $ */
 /*
  * Copyright (c) 2010 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -366,14 +366,9 @@ ps_growbuf(struct termp *p, size_t sz)
 
 	p->engine.ps.psmargsz += sz;
 
-	p->engine.ps.psmarg = realloc
+	p->engine.ps.psmarg = mandoc_realloc
 		(p->engine.ps.psmarg,
 		 p->engine.ps.psmargsz);
-	
-	if (NULL == p->engine.ps.psmarg) {
-		perror(NULL);
-		exit((int)MANDOCLEVEL_SYSERR);
-	}
 }
 
 static	double		  ps_hspan(const struct termp *,

@@ -1,4 +1,4 @@
-/*	$Id: man_validate.c,v 1.41 2011/03/07 01:35:33 schwarze Exp $ */
+/*	$Id: man_validate.c,v 1.42 2011/03/20 23:36:42 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010 Ingo Schwarze <schwarze@openbsd.org>
@@ -219,9 +219,8 @@ check_text(CHKARGS)
 		if ('\t' == *p) {
 			if (MAN_LITERAL & m->flags)
 				continue;
-			if (man_pmsg(m, n->line, pos, MANDOCERR_BADTAB))
-				continue;
-			return(0);
+			man_pmsg(m, n->line, pos, MANDOCERR_BADTAB);
+			continue;
 		}
 
 		/* Check the special character. */
