@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sh/include/fenv.h,v 1.2 2011/04/28 17:34:23 martynas Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa64/include/fenv.h,v 1.1 2011/04/28 17:34:23 martynas Exp $	*/
 
 /*
  * Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
@@ -16,8 +16,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef	_SH_FENV_H_
-#define	_SH_FENV_H_
+#ifndef	_HPPA64_FENV_H_
+#define	_HPPA64_FENV_H_
 
 /*
  * Each symbol representing a floating point exception expands to an integer
@@ -26,11 +26,11 @@
  *
  * We use such values that allow direct bitwise operations on FPU registers.
  */
-#define	FE_INEXACT		0x04
-#define	FE_UNDERFLOW		0x08
-#define	FE_OVERFLOW		0x10
-#define	FE_DIVBYZERO		0x20
-#define	FE_INVALID		0x40
+#define	FE_INEXACT		0x01
+#define	FE_UNDERFLOW		0x02
+#define	FE_OVERFLOW		0x04
+#define	FE_DIVBYZERO		0x08
+#define	FE_INVALID		0x10
 
 /*
  * The following symbol is simply the bitwise-inclusive OR of all floating-point
@@ -38,7 +38,7 @@
  */
 #define	FE_ALL_EXCEPT		(FE_INEXACT | FE_UNDERFLOW | FE_OVERFLOW | \
 				 FE_DIVBYZERO | FE_INVALID)
-#define	_MASK_SHIFT		5
+#define	_MASK_SHIFT		27
 
 /*
  * Each symbol representing the rounding direction, expands to an integer
@@ -46,10 +46,10 @@
  *
  * We use such values that allow direct bitwise operations on FPU registers.
  */
-#define	FE_TONEAREST		0x0
-#define	FE_TOWARDZERO		0x1
-#define	FE_UPWARD		0x2
-#define	FE_DOWNWARD		0x3
+#define	FE_TONEAREST		0x000
+#define	FE_TOWARDZERO		0x200
+#define	FE_UPWARD		0x400
+#define	FE_DOWNWARD		0x600
 
 /*
  * The following symbol is simply the bitwise-inclusive OR of all floating-point
@@ -89,4 +89,4 @@ extern	fenv_t			__fe_dfl_env;
  */
 typedef	unsigned int		fexcept_t;
 
-#endif	/* !_SH_FENV_H_ */
+#endif	/* !_HPPA64_FENV_H_ */
