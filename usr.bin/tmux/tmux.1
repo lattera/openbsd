@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.228 2011/05/18 20:24:29 nicm Exp $
+.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.229 2011/05/20 19:03:58 nicm Exp $
 .\"
 .\" Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
 .\"
@@ -2832,6 +2832,15 @@ See the
 option above and the
 .Xr xterm 1
 man page.
+.It Em Cc, Cr
+The first takes one string argument and is used to set the cursor colour;
+the second takes no arguments and restores the default cursor colour.
+If they present, a sequence such as this may be used to change the
+cursor colour from inside
+.Nm :
+.Bd -literal -offset indent
+$ printf '\e033]12;red\e033\e\e'
+.Ed
 .El
 .Sh FILES
 .Bl -tag -width "/etc/tmux.confXXX" -compact
