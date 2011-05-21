@@ -2088,7 +2088,7 @@ yyreduce:
     { 
 		acl_options_t* acl = parse_acl_info(cfg_parser->opt->region, (yyvsp[(2) - (2)].str), "NOKEY");
 		OUTYY(("P(zone_outgoing_interface:%s)\n", (yyvsp[(2) - (2)].str))); 
-
+		if(acl->rangetype!=acl_range_single) c_error("address range used for outgoing interface");
 		if(cfg_parser->current_outgoing_interface)
 			cfg_parser->current_outgoing_interface->next = acl;
 		else

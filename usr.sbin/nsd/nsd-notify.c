@@ -1,7 +1,7 @@
 /*
  * nsd-notify.c -- sends notify(rfc1996) message to a list of servers
  *
- * Copyright (c) 2001-2006, NLnet Labs. All rights reserved.
+ * Copyright (c) 2001-2011, NLnet Labs. All rights reserved.
  *
  * See LICENSE for the license.
  *
@@ -213,7 +213,7 @@ add_key(region_type* region, const char* opt, tsig_algorithm_type** algo)
 		*algo = tsig_get_algorithm_by_name("hmac-md5");
 	else {
 		char* by_name = (char*) malloc(sizeof(char)*(5+strlen(delim2)));
-		snprintf(by_name, 5+strlen(delim2), "hmac-%s", delim2+1);
+		snprintf(by_name, 5+strlen(delim2), "%s", delim2+1);
 		*algo = tsig_get_algorithm_by_name(by_name);
 		free(by_name);
 		*delim2 = '\0';

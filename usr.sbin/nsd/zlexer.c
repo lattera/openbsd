@@ -533,7 +533,7 @@ char *yytext;
 /*
  * zlexer.lex - lexical analyzer for (DNS) zone files
  * 
- * Copyright (c) 2001-2006, NLnet Labs. All rights reserved
+ * Copyright (c) 2001-2011, NLnet Labs. All rights reserved.
  *
  * See LICENSE for the license.
  *

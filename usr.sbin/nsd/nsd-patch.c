@@ -1,7 +1,7 @@
 /*
  * nsd-patch - read database and ixfrs and patch up zone files.
  *
- * Copyright (c) 2001-2006, NLnet Labs. All rights reserved.
+ * Copyright (c) 2001-2011, NLnet Labs. All rights reserved.
  *
  * See LICENSE for the license.
  *
@@ -243,7 +243,7 @@ write_to_zonefile(struct zone* zone, struct diff_log* commit_log)
 	time_t now = time(0);
 	FILE *out;
 
-	fprintf(stderr, "writing zone %s to file %s\n", zone->opts->name,
+	fprintf(stdout, "writing zone %s to file %s\n", zone->opts->name,
 		filename);
 
 	if(!zone->apex) {

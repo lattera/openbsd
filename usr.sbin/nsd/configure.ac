@@ -4,7 +4,7 @@ dnl
 
 sinclude(acx_nlnetlabs.m4)
 
-AC_INIT(NSD,3.2.6,nsd-bugs@nlnetlabs.nl)
+AC_INIT(NSD,3.2.8,nsd-bugs@nlnetlabs.nl)
 AC_CONFIG_HEADER([config.h])
 
 AC_AIX
@@ -60,6 +60,11 @@ AC_ARG_WITH([kill_priority],
 	AC_HELP_STRING([--with-kill_priority=number], [NSD shutdown priority]),
 	[kill_priority=$withval])
 AC_SUBST(kill_priority)
+
+#
+# Default logfile
+#
+logfile=${localstatedir}/log/nsd.log
 
 #
 # Database directory
@@ -275,7 +280,9 @@ AC_DEFUN([CHECK_SSL], [
             if test -f "$dir/include/openssl/ssl.h"; then
                 found_ssl="yes";
                 AC_DEFINE_UNQUOTED([HAVE_SSL], [], [Define if you have the SSL libraries installed.])
-                CPPFLAGS="$CPPFLAGS -I$ssldir/include";
+                if test x_$ssldir != x_/usr; then
+                    CPPFLAGS="$CPPFLAGS -I$ssldir/include";
+                fi
                 break;
             fi
         done 
@@ -284,7 +291,9 @@ AC_DEFUN([CHECK_SSL], [
         else
             AC_MSG_RESULT(found in $ssldir)
             HAVE_SSL=yes 
-            LDFLAGS="$LDFLAGS -L$ssldir/lib";
+            if test x_$ssldir != x_/usr; then
+                LDFLAGS="$LDFLAGS -L$ssldir/lib";
+            fi
 	    if test x_$ssldir = x_/usr/sfw; then
 		LDFLAGS="$LDFLAGS -R$ssldir/lib";
 	    fi
@@ -463,6 +472,7 @@ AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_FSEEKO
 AC_SYS_LARGEFILE
+AC_CHECK_FUNCS([arc4random arc4random_uniform])
 AC_CHECK_FUNCS([alarm chroot dup2 endpwent gethostname memset memcpy socket strcasecmp strchr strdup strerror strncasecmp strtol getaddrinfo getnameinfo freeaddrinfo gai_strerror sigaction sigprocmask strptime setusercontext initgroups setresuid setreuid setresgid setregid getpwnam])
 
 # check if setreuid en setregid fail, on MacOSX10.4(darwin8).
@@ -527,7 +537,7 @@ AC_ARG_WITH([facility],
 AC_DEFINE_UNQUOTED([FACILITY], $facility, [Define to the default facility for syslog.])
 
 dnl
-dnl Determine the maximum number of interfaces that are allowed
+dnl Determine the maximum number of ip-addresses that are allowed
 dnl
 max_ips=8
 AC_ARG_WITH([max_ips],
