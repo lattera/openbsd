@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/pci/drm/Attic/radeon_mem.c,v 1.13 2011/06/02 18:22:00 weerd Exp $ */
 /*
  * Copyright (C) The Weather Channel, Inc.  2002.  All Rights Reserved.
  *

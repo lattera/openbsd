@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/pci/drm/Attic/ati_pcigart.c,v 1.16 2011/06/02 18:22:00 weerd Exp $ */
 /*-
  * Copyright 2000 VA Linux Systems, Inc., Sunnyvale, California.
  * All Rights Reserved.

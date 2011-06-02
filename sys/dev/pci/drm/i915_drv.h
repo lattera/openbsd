@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/pci/drm/Attic/i915_drv.h,v 1.69 2011/06/02 18:22:00 weerd Exp $ */
 /* i915_drv.h -- Private header for the I915 driver -*- linux-c -*-
  */
 /*

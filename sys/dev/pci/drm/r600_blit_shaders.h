@@ -1,3 +1,4 @@
+/* $OpenBSD: src/sys/dev/pci/drm/Attic/r600_blit_shaders.h,v 1.3 2011/06/02 18:22:00 weerd Exp $ */
 /*
  * Copyright 2009 Advanced Micro Devices, Inc.
  *
