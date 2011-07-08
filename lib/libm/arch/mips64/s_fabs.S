@@ -1,12 +1,10 @@
-/*	$OpenBSD: src/lib/libc/arch/sparc64/gen/fabs.S,v 1.5 2008/12/09 20:54:02 martynas Exp $	*/
-/*	$NetBSD: fabs.S,v 1.2 2000/07/23 07:12:22 eeh Exp $	*/
-/*
- * Copyright (c) 1992, 1993
+/* $OpenBSD: src/lib/libm/arch/mips64/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/*-
+ * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
  *
- * This software was developed by the Computer Systems Engineering group
- * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
- * contributed to Berkeley.
+ * This code is derived from software contributed to Berkeley by
+ * Ralph Campbell.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,8 +33,14 @@
 
 #include <machine/asm.h>
 
-/* fabs - floating absolute value */
-
-ENTRY(fabs)
-	retl
-	 fabsd	%f0, %f0		! return absolute value
+/*
+ * fabs(x)
+ *	double x;
+ *
+ * Return absolute value of x.
+ */
+LEAF(fabs, 0)
+	.set	noreorder
+	j	ra
+	abs.d	$f0, $f12		# compute absolute value of x
+END(fabs)

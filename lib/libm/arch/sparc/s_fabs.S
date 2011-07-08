@@ -1,4 +1,4 @@
-/* $OpenBSD: src/lib/libc/arch/sparc/gen/fabs.S,v 1.6 2008/12/09 20:21:07 martynas Exp $ */
+/* $OpenBSD: src/lib/libm/arch/sparc/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.

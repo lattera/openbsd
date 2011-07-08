@@ -1,10 +1,7 @@
-/* $OpenBSD: src/lib/libc/arch/mips64/gen/fabs.S,v 1.5 2008/12/09 20:54:02 martynas Exp $ */
-/*-
- * Copyright (c) 1993
+/* $OpenBSD: src/lib/libm/arch/vax/Attic/n_modf.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/*
+ * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Ralph Campbell.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,16 +28,27 @@
  * SUCH DAMAGE.
  */
 
-#include <machine/asm.h>
-
 /*
- * fabs(x)
- *	double x;
+ * double modf (value, iptr)
+ * double value, *iptr;
  *
- * Return absolute value of x.
+ * Modf returns the fractional part of "value",
+ * and stores the integer part indirectly through "iptr".
  */
-LEAF(fabs, 0)
-	.set	noreorder
-	j	ra
-	abs.d	$f0, $f12		# compute absolute value of x
-END(fabs)
+
+#include "DEFS.h"
+
+ENTRY(modf, R2)
+	cvtdl	4(ap),r2
+	bvs	0f
+	cvtld	r2,*12(ap)
+	subd3	*12(ap),4(ap),r0
+	ret
+0:
+	emodd	4(ap),$0,$0f1.0,r2,r0
+	bvs	1f			# integer overflow
+	cvtld	r2,*12(ap)
+	ret
+1:
+	subd3	r0,4(ap),*12(ap)
+	ret

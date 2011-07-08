@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/sh/gen/fabs.c,v 1.7 2009/04/05 17:21:46 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/arch/sh/Attic/s_fabs.c,v 1.1 2011/07/08 19:21:42 martynas Exp $	*/
 /*
  * Copyright (c) 2006 Miodrag Vallat.
  *
