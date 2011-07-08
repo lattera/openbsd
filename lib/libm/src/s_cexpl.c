@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/lib/libm/src/s_ccosh.c,v 1.2 2011/07/08 19:25:31 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_cexpl.c,v 1.1 2011/07/08 19:25:31 martynas Exp $	*/
+
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
  *
@@ -15,57 +16,55 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* LINTLIBRARY */
-
-/*							ccosh
+/*							cexpl()
  *
- *	Complex hyperbolic cosine
+ *	Complex exponential function
  *
  *
  *
  * SYNOPSIS:
  *
- * double complex ccosh();
- * double complex z, w;
+ * long double complex cexpl();
+ * long double complex z, w;
  *
- * w = ccosh (z);
+ * w = cexpl( z );
  *
  *
  *
  * DESCRIPTION:
  *
- * ccosh(z) = cosh x  cos y + i sinh x sin y .
+ * Returns the exponential of the complex argument z
+ * into the complex result w.
+ *
+ * If
+ *     z = x + iy,
+ *     r = exp(x),
+ *
+ * then
+ *
+ *     w = r cos y + i r sin y.
+ *
  *
  * ACCURACY:
  *
  *                      Relative error:
  * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       2.9e-16     8.1e-17
+ *    DEC       -10,+10      8700       3.7e-17     1.1e-17
+ *    IEEE      -10,+10     30000       3.0e-16     8.7e-17
  *
  */
 
-#include <sys/cdefs.h>
 #include <complex.h>
-#include <float.h>
 #include <math.h>
 
-double complex
-ccosh(double complex z)
+long double complex
+cexpl(long double complex z)
 {
-	double complex w;
-	double x, y;
+	long double complex w;
+	long double r;
 
-	x = creal(z);
-	y = cimag(z);
-	w = cosh (x) * cos (y)  +  (sinh (x) * sin (y)) * I;
+	r = expl(creal(z));
+	w = r * cosl((long double)cimag(z)) +
+	    (r * sinl((long double)cimag(z))) * I;
 	return (w);
 }
-
-#if	LDBL_MANT_DIG == 53
-#ifdef	lint
-/* PROTOLIB1 */
-long double complex ccoshl(long double complex);
-#else	/* lint */
-__weak_alias(ccoshl, ccosh);
-#endif	/* lint */
-#endif	/* LDBL_MANT_DIG == 53 */

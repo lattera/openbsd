@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/lib/libm/src/s_ccosh.c,v 1.2 2011/07/08 19:25:31 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_casinhl.c,v 1.1 2011/07/08 19:25:31 martynas Exp $	*/
+
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
  *
@@ -15,57 +16,41 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* LINTLIBRARY */
-
-/*							ccosh
+/*							casinhl
  *
- *	Complex hyperbolic cosine
+ *	Complex inverse hyperbolic sine
  *
  *
  *
  * SYNOPSIS:
  *
- * double complex ccosh();
- * double complex z, w;
+ * long double complex casinhf();
+ * long double complex z, w;
  *
- * w = ccosh (z);
+ * w = casinhl (z);
  *
  *
  *
  * DESCRIPTION:
  *
- * ccosh(z) = cosh x  cos y + i sinh x sin y .
+ * casinh z = -i casin iz .
  *
  * ACCURACY:
  *
  *                      Relative error:
  * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       2.9e-16     8.1e-17
+ *    IEEE      -10,+10     30000       1.8e-14     2.6e-15
  *
  */
 
-#include <sys/cdefs.h>
 #include <complex.h>
-#include <float.h>
 #include <math.h>
 
-double complex
-ccosh(double complex z)
+long double complex
+casinhl(long double complex z)
 {
-	double complex w;
-	double x, y;
+	long double complex w;
 
-	x = creal(z);
-	y = cimag(z);
-	w = cosh (x) * cos (y)  +  (sinh (x) * sin (y)) * I;
+	w = -1.0L * I * casinl(z * I);
 	return (w);
 }
-
-#if	LDBL_MANT_DIG == 53
-#ifdef	lint
-/* PROTOLIB1 */
-long double complex ccoshl(long double complex);
-#else	/* lint */
-__weak_alias(ccoshl, ccosh);
-#endif	/* lint */
-#endif	/* LDBL_MANT_DIG == 53 */

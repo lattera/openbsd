@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libm/src/s_ctanh.c,v 1.1 2008/09/07 20:36:09 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_ctanh.c,v 1.2 2011/07/08 19:25:31 martynas Exp $	*/
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
  *
@@ -14,6 +14,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+/* LINTLIBRARY */
 
 /*							ctanh
  *
@@ -42,7 +44,9 @@
  *
  */
 
+#include <sys/cdefs.h>
 #include <complex.h>
+#include <float.h>
 #include <math.h>
 
 double complex
@@ -57,3 +61,12 @@ ctanh(double complex z)
 	w = sinh (2.0 * x) / d  +  (sin (2.0 * y) / d) * I;
 	return (w);
 }
+
+#if	LDBL_MANT_DIG == 53
+#ifdef	lint
+/* PROTOLIB1 */
+long double complex ctanhl(long double complex);
+#else	/* lint */
+__weak_alias(ctanhl, ctanh);
+#endif	/* lint */
+#endif	/* LDBL_MANT_DIG == 53 */

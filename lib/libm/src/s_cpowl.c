@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/lib/libm/src/s_ccosh.c,v 1.2 2011/07/08 19:25:31 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_cpowl.c,v 1.1 2011/07/08 19:25:31 martynas Exp $	*/
+
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
  *
@@ -15,57 +16,57 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* LINTLIBRARY */
-
-/*							ccosh
+/*							cpowl
  *
- *	Complex hyperbolic cosine
+ *	Complex power function
  *
  *
  *
  * SYNOPSIS:
  *
- * double complex ccosh();
- * double complex z, w;
+ * long double complex cpowl();
+ * long double complex a, z, w;
  *
- * w = ccosh (z);
+ * w = cpowl (a, z);
  *
  *
  *
  * DESCRIPTION:
  *
- * ccosh(z) = cosh x  cos y + i sinh x sin y .
+ * Raises complex A to the complex Zth power.
+ * Definition is per AMS55 # 4.2.8,
+ * analytically equivalent to cpow(a,z) = cexp(z clog(a)).
  *
  * ACCURACY:
  *
  *                      Relative error:
  * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       2.9e-16     8.1e-17
+ *    IEEE      -10,+10     30000       9.4e-15     1.5e-15
  *
  */
 
-#include <sys/cdefs.h>
 #include <complex.h>
-#include <float.h>
 #include <math.h>
 
-double complex
-ccosh(double complex z)
+long double complex
+cpowl(long double complex a, long double complex z)
 {
-	double complex w;
-	double x, y;
+	long double complex w;
+	long double x, y, r, theta, absa, arga;
 
 	x = creal(z);
 	y = cimag(z);
-	w = cosh (x) * cos (y)  +  (sinh (x) * sin (y)) * I;
+	absa = cabsl(a);
+	if (absa == 0.0L) {
+		return (0.0L + 0.0L * I);
+	}
+	arga = cargl(a);
+	r = powl(absa, x);
+	theta = x * arga;
+	if (y != 0.0L) {
+		r = r * expl(-y * arga);
+		theta = theta + y * logl(absa);
+	}
+	w = r * cosl(theta) + (r * sinl(theta)) * I;
 	return (w);
 }
-
-#if	LDBL_MANT_DIG == 53
-#ifdef	lint
-/* PROTOLIB1 */
-long double complex ccoshl(long double complex);
-#else	/* lint */
-__weak_alias(ccoshl, ccosh);
-#endif	/* lint */
-#endif	/* LDBL_MANT_DIG == 53 */

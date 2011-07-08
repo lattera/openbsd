@@ -1,4 +1,5 @@
-/*	$OpenBSD: src/lib/libm/src/s_ccosh.c,v 1.2 2011/07/08 19:25:31 martynas Exp $	*/
+/*	$OpenBSD: src/lib/libm/src/s_csinl.c,v 1.1 2011/07/08 19:25:31 martynas Exp $	*/
+
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
  *
@@ -15,57 +16,69 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* LINTLIBRARY */
-
-/*							ccosh
+/*							csinl()
  *
- *	Complex hyperbolic cosine
+ *	Complex circular sine
  *
  *
  *
  * SYNOPSIS:
  *
- * double complex ccosh();
- * double complex z, w;
+ * long double complex csinl();
+ * long double complex z, w;
  *
- * w = ccosh (z);
+ * w = csinl( z );
  *
  *
  *
  * DESCRIPTION:
  *
- * ccosh(z) = cosh x  cos y + i sinh x sin y .
+ * If
+ *     z = x + iy,
+ *
+ * then
+ *
+ *     w = sin x  cosh y  +  i cos x sinh y.
+ *
+ *
  *
  * ACCURACY:
  *
  *                      Relative error:
  * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       2.9e-16     8.1e-17
+ *    DEC       -10,+10      8400       5.3e-17     1.3e-17
+ *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
+ * Also tested by csin(casin(z)) = z.
  *
  */
 
-#include <sys/cdefs.h>
 #include <complex.h>
-#include <float.h>
 #include <math.h>
 
-double complex
-ccosh(double complex z)
+static void
+cchshl(long double x, long double *c, long double *s)
 {
-	double complex w;
-	double x, y;
+	long double e, ei;
 
-	x = creal(z);
-	y = cimag(z);
-	w = cosh (x) * cos (y)  +  (sinh (x) * sin (y)) * I;
-	return (w);
+	if(fabsl(x) <= 0.5L) {
+		*c = coshl(x);
+		*s = sinhl(x);
+	} else {
+		e = expl(x);
+		ei = 0.5L/e;
+		e = 0.5L * e;
+		*s = e - ei;
+		*c = e + ei;
+	}
 }
 
-#if	LDBL_MANT_DIG == 53
-#ifdef	lint
-/* PROTOLIB1 */
-long double complex ccoshl(long double complex);
-#else	/* lint */
-__weak_alias(ccoshl, ccosh);
-#endif	/* lint */
-#endif	/* LDBL_MANT_DIG == 53 */
+long double complex
+csinl(long double complex z)
+{
+	long double complex w;
+	long double ch, sh;
+
+	cchshl(cimag(z), &ch, &sh);
+	w = sinl(creal(z)) * ch + (cosl(creal(z)) * sh) * I;
+	return (w);
+}
