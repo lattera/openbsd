@@ -1,4 +1,4 @@
-/* $OpenBSD: src/lib/libm/arch/mc68881/Attic/s_modf.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/* $OpenBSD: src/lib/libc/arch/m68k/gen/fabs.S,v 1.8 2011/07/08 22:28:33 martynas Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -32,18 +32,15 @@
  * SUCH DAMAGE.
  */
 
+/* fabs - floating absolute value */
+
 #include "DEFS.h"
 
-/*
- * double modf(val, iptr)
- * returns: xxx and n (in *iptr) where val == n.xxx
- */
-ENTRY(modf)
+ENTRY(fabs)
 	fmoved	sp@(4),fp0
-	movel	sp@(12),a0
-	fintrzx	fp0,fp1
-	fmoved	fp1,a0@
-	fsubx	fp1,fp0
+	fjnlt	L1
+	fnegx	fp0
+L1:
 	fmoved	fp0,sp@-
 	movel	sp@+,d0
 	movel	sp@+,d1

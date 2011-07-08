@@ -1,12 +1,7 @@
-/*	$OpenBSD: src/lib/libm/arch/sparc64/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $	*/
-/*	$NetBSD: fabs.S,v 1.2 2000/07/23 07:12:22 eeh Exp $	*/
+/* $OpenBSD: src/lib/libc/arch/vax/gen/modf.S,v 1.8 2011/07/08 22:28:33 martynas Exp $ */
 /*
- * Copyright (c) 1992, 1993
+ * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
- *
- * This software was developed by the Computer Systems Engineering group
- * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
- * contributed to Berkeley.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,10 +28,27 @@
  * SUCH DAMAGE.
  */
 
-#include <machine/asm.h>
+/*
+ * double modf (value, iptr)
+ * double value, *iptr;
+ *
+ * Modf returns the fractional part of "value",
+ * and stores the integer part indirectly through "iptr".
+ */
 
-/* fabs - floating absolute value */
+#include "DEFS.h"
 
-ENTRY(fabs)
-	retl
-	 fabsd	%f0, %f0		! return absolute value
+ENTRY(modf, R2)
+	cvtdl	4(ap),r2
+	bvs	0f
+	cvtld	r2,*12(ap)
+	subd3	*12(ap),4(ap),r0
+	ret
+0:
+	emodd	4(ap),$0,$0f1.0,r2,r0
+	bvs	1f			# integer overflow
+	cvtld	r2,*12(ap)
+	ret
+1:
+	subd3	r0,4(ap),*12(ap)
+	ret

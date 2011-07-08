@@ -1,11 +1,10 @@
-/* $OpenBSD: src/lib/libm/arch/mc68881/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/* $OpenBSD: src/lib/libc/arch/mips64/gen/fabs.S,v 1.7 2011/07/08 22:28:33 martynas Exp $ */
 /*-
- * Copyright (c) 1990 The Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1993
+ *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
- * the Systems Programming Group of the University of Utah Computer
- * Science Department.
+ * Ralph Campbell.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,16 +31,16 @@
  * SUCH DAMAGE.
  */
 
-/* fabs - floating absolute value */
+#include <machine/asm.h>
 
-#include "DEFS.h"
-
-ENTRY(fabs)
-	fmoved	sp@(4),fp0
-	fjnlt	L1
-	fnegx	fp0
-L1:
-	fmoved	fp0,sp@-
-	movel	sp@+,d0
-	movel	sp@+,d1
-	rts
+/*
+ * fabs(x)
+ *	double x;
+ *
+ * Return absolute value of x.
+ */
+LEAF(fabs, 0)
+	.set	noreorder
+	j	ra
+	abs.d	$f0, $f12		# compute absolute value of x
+END(fabs)

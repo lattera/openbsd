@@ -1,4 +1,5 @@
-/* $OpenBSD: src/lib/libm/arch/sparc/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/*	$OpenBSD: src/lib/libc/arch/sparc64/gen/fabs.S,v 1.7 2011/07/08 22:28:33 martynas Exp $	*/
+/*	$NetBSD: fabs.S,v 1.2 2000/07/23 07:12:22 eeh Exp $	*/
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,13 +33,10 @@
  * SUCH DAMAGE.
  */
 
+#include <machine/asm.h>
+
 /* fabs - floating absolute value */
 
-#include "DEFS.h"
-
-WEAK_ALIAS(fabsl, fabs)
 ENTRY(fabs)
-	std	%o0, [%sp + 32]		! return value => %f0:f1
-	ldd	[%sp + 32], %f0		! (via kernel %o0/%o1 slot)
 	retl
-	 fabss	%f0, %f0		! return absolute value
+	 fabsd	%f0, %f0		! return absolute value

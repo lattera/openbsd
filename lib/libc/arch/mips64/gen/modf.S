@@ -1,6 +1,6 @@
-/* $OpenBSD: src/lib/libm/arch/mips64/Attic/s_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/* $OpenBSD: src/lib/libc/arch/mips64/gen/modf.S,v 1.5 2011/07/08 22:28:33 martynas Exp $ */
 /*-
- * Copyright (c) 1993
+ * Copyright (c) 1991, 1993, 1995
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
@@ -34,13 +34,38 @@
 #include <machine/asm.h>
 
 /*
- * fabs(x)
- *	double x;
- *
- * Return absolute value of x.
+ * double modf(val, iptr)
+ *	double val, *iptr;
+ * returns: xxx and n (in *iptr) where val == n.xxx
  */
-LEAF(fabs, 0)
-	.set	noreorder
+LEAF(modf, 0)
+	.set	reorder
+	cfc1	t0, $31			# get the control register
+	li.d	$f2, 4503599627370496e0 # f2 <- 2^52
+
+	or	t1, t0, 0x3		# set rounding mode to round to zero
+	xor	t1, t1, 0x2		#  (i.e., 01)
+	ctc1	t1, $31
+
+	mov.d	$f0, $f12		# f0 <- f12
+	abs.d	$f4, $f12		# f4 <- |f12|
+	c.olt.d $f4, $f2		# f4 ? < f2 
+	bc1f	1f			# leave f0 alone if Nan, infinity 
+					# or >=2^52
+	c.eq.d	$f12,$f4		# was f12 positive ?
+	add.d	$f4,$f2,$f4		# round off to integer
+	bc1f	2f			# No -> will have to negate result
+	sub.d	$f0,$f4,$f2		# Remove fudge factor
+	j	1f			# integer fraction got
+2:	
+	sub.d	$f0,$f2,$f4		# Remove fudge factor and negate
+1:	
+	ctc1	t0, $31			# restore old rounding mode
+#ifdef __mips64
+	s.d	$f0, 0(a1)		# save the integer part
+#else
+	s.d	$f0, 0(a2)		# save the integer part
+#endif
+	sub.d	$f0, $f12, $f0		# subtract val - integer part
 	j	ra
-	abs.d	$f0, $f12		# compute absolute value of x
-END(fabs)
+END(modf)

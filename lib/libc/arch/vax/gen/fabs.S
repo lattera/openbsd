@@ -1,4 +1,4 @@
-/* $OpenBSD: src/lib/libm/arch/vax/Attic/n_fabs.S,v 1.1 2011/07/08 19:21:42 martynas Exp $ */
+/* $OpenBSD: src/lib/libc/arch/vax/gen/fabs.S,v 1.8 2011/07/08 22:28:33 martynas Exp $ */
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
