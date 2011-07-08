@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/bootparamd,v 1.2 2011/07/08 02:15:34 robert Exp $
+
+daemon="/usr/sbin/rpc.bootparamd"
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+
+rc_pre() {
+	[ -s /etc/bootparams ]
+}
+
+rc_cmd $1
