@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/spamd,v 1.2 2011/07/08 02:15:34 robert Exp $
+
+daemon="/usr/libexec/spamd"
+
+. /etc/rc.d/rc.subr
+
+pexp="spamd: \[priv\]"
+
+rc_pre() {
+	[ X"${spamd_black}" != X"NO" ] && \
+		daemon_flags="-b ${daemon_flags}"
+	return 0
+}
+
+rc_cmd $1
