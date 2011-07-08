@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/rarpd,v 1.2 2011/07/08 02:15:34 robert Exp $
+
+daemon="/usr/sbin/rarpd"
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+
+rc_pre() {
+	[ -s /etc/ethers ]
+}
+
+rc_cmd $1
