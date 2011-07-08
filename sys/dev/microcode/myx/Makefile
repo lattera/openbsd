@@ -1,8 +1,10 @@
-# $OpenBSD: src/sys/dev/microcode/myx/Makefile,v 1.2 2011/06/26 20:50:35 deraadt Exp $
+# $OpenBSD: src/sys/dev/microcode/myx/Makefile,v 1.3 2011/07/08 03:58:27 dlg Exp $
 
 NOPROG=
 NOMAN=
 CC=${HOSTCC}
+LDADD=-lz
+DPADD=${LIBZ}
 
 # full-size PCI capable systems only
 .if (${MACHINE} == "macppc") || (${MACHINE} == "alpha") || \
