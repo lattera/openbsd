@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/isakmpd/dh.c,v 1.12 2010/06/29 19:50:16 reyk Exp $	*/
+/*	$OpenBSD: src/sbin/isakmpd/dh.c,v 1.12.2.1 2011/07/14 14:43:22 otto Exp $	*/
 /*	$vantronix: dh.c,v 1.13 2010/05/28 15:34:35 reyk Exp $	*/
 
 /*
@@ -401,15 +401,24 @@ modp_getlen(struct group *group)
 int
 modp_create_exchange(struct group *group, u_int8_t *buf)
 {
-	int	 codes;
+	int	 codes, len, ret;
 	DH	*dh = group->dh;
 
 	if (!DH_generate_key(dh))
 		return (-1);
 	if (!DH_check(dh, &codes))
 		return (-1);
-	if (!BN_bn2bin(dh->pub_key, buf))
+	ret = BN_bn2bin(dh->pub_key, buf);
+	if (!ret)
 		return (-1);
+
+	len = dh_getlen(group);
+
+	/* add zero padding */
+	if (ret < len) {
+		bcopy(buf, buf + (len - ret), ret);
+		bzero(buf, len - ret);
+	}
 
 	return (0);
 }
@@ -418,15 +427,23 @@ int
 modp_create_shared(struct group *group, u_int8_t *secret, u_int8_t *exchange)
 {
 	BIGNUM	*ex;
-	int	 ret;
+	int	 len, ret;
 
-	if ((ex = BN_bin2bn(exchange, dh_getlen(group), NULL)) == NULL)
+	len = dh_getlen(group);
+
+	if ((ex = BN_bin2bn(exchange, len, NULL)) == NULL)
 		return (-1);
 
 	ret = DH_compute_key(secret, ex, group->dh);
 	BN_clear_free(ex);
 	if (!ret)
 		return (-1);
+
+	/* add zero padding */
+	if (ret < len) {
+		bcopy(secret, secret + (len - ret), ret);
+		bzero(secret, len - ret);
+	}
 
 	return (0);
 }
