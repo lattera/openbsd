@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libc/sys/utimes.2,v 1.13 2011/07/19 03:37:40 matthew Exp $
+.\"	$OpenBSD: src/lib/libc/sys/utimes.2,v 1.14 2011/07/19 06:48:20 matthew Exp $
 .\"	$NetBSD: utimes.2,v 1.9 1996/04/23 10:34:16 mycroft Exp $
 .\"
 .\" Copyright (c) 1990, 1993
@@ -30,12 +30,12 @@
 .\"
 .\"     @(#)utimes.2	8.1 (Berkeley) 6/4/93
 .\"
-.Dd $Mdocdate: July 18 2011 $
+.Dd $Mdocdate: July 19 2011 $
 .Dt UTIMES 2
 .Os
 .Sh NAME
 .Nm utimes ,
-.Nm futimens ,
+.Nm futimes ,
 .Nm utimensat ,
 .Nm futimens
 .Nd set file access and modification times
@@ -50,7 +50,7 @@
 .Ft int
 .Fn utimensat "int fd" "const char *file" "const struct timespec times[2]" "int flag"
 .Ft int
-.Fn futimes "int fd" "const struct timespec times[2]"
+.Fn futimens "int fd" "const struct timespec times[2]"
 .Sh DESCRIPTION
 The access and modification times of the file named by
 .Fa path
