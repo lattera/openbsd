@@ -1,6 +1,6 @@
-.\"	$OpenBSD: src/lib/libm/man/cimag.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
+.\"	$OpenBSD: src/lib/libm/man/creal.3,v 1.1 2011/07/20 17:50:43 martynas Exp $
 .\"
-.\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
+.\" Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -14,46 +14,45 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 19 2010 $
-.Dt CIMAG 3
+.Dd $Mdocdate$
+.Dt CREAL 3
 .Os
 .Sh NAME
-.Nm cimag ,
-.Nm cimagf ,
-.Nm cimagl
-.Nd compute the imaginary part of a complex number
+.Nm creal ,
+.Nm crealf ,
+.Nm creall
+.Nd complex real functions
 .Sh SYNOPSIS
 .Fd #include <complex.h>
 .Ft double
-.Fn cimag "double complex z"
+.Fn creal "double complex z"
 .Ft float
-.Fn cimagf "float complex z"
+.Fn crealf "float complex z"
 .Ft long double
-.Fn cimagl "long double complex z"
+.Fn creall "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn creal ,
+.Fn crealf
 and
-.Fn cimagl
-functions compute the imaginary part of
+.Fn creall
+functions compute the real part of
 .Fa z .
 .Sh RETURN VALUES
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn creal ,
+.Fn crealf
 and
-.Fn cimagl
-functions return the imaginary part of the complex number
-.Fa z
-as a real number.
+.Fn creall
+functions return the real part of
+.Fa z .
 .Sh SEE ALSO
 .Xr carg 3
 .Sh STANDARDS
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn creal ,
+.Fn crealf
 and
-.Fn cimagl
+.Fn creall
 functions conform to
 .St -isoC-99 .

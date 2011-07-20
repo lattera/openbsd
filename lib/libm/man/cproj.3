@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libm/man/cproj.3,v 1.1 2010/07/19 12:48:23 millert Exp $
+.\"	$OpenBSD: src/lib/libm/man/cproj.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
 .\"
 .\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
 .\"
@@ -14,12 +14,13 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate$
+.Dd $Mdocdate: July 19 2010 $
 .Dt CPROJ 3
 .Os
 .Sh NAME
 .Nm cproj ,
-.Nm cprojf
+.Nm cprojf ,
+.Nm cprojl
 .Nd compute projection onto Riemann sphere
 .Sh SYNOPSIS
 .Fd #include <complex.h>
@@ -27,19 +28,23 @@
 .Fn cproj "double complex z"
 .Ft float complex
 .Fn cprojf "float complex z"
+.Ft long double complex
+.Fn cprojl "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cproj
-and
+.Fn cproj ,
 .Fn cprojf
+and
+.Fn cprojl
 functions compute a projection of
 .Fa z
 onto the Riemann sphere.
 .Sh RETURN VALUES
 The
-.Fn cproj
-and
+.Fn cproj ,
 .Fn cprojf
+and
+.Fn cprojl
 functions return
 .Fa z
 for all finite complex numbers.
@@ -54,8 +59,9 @@ INFINITY + I * copysign(0.0, cimag(z))
 .Xr cimag 3
 .Sh STANDARDS
 The
-.Fn cproj
-and
+.Fn cproj ,
 .Fn cprojf
+and
+.Fn cprojl
 functions conform to
 .St -isoC-99 .

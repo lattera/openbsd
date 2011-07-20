@@ -1,6 +1,6 @@
-.\"	$OpenBSD: src/lib/libm/man/cimag.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
+.\"	$OpenBSD: src/lib/libm/man/ccosh.3,v 1.1 2011/07/20 17:50:43 martynas Exp $
 .\"
-.\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
+.\" Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -14,46 +14,53 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 19 2010 $
-.Dt CIMAG 3
+.Dd $Mdocdate$
+.Dt CCOSH 3
 .Os
 .Sh NAME
-.Nm cimag ,
-.Nm cimagf ,
-.Nm cimagl
-.Nd compute the imaginary part of a complex number
+.Nm ccosh ,
+.Nm ccoshf ,
+.Nm ccoshl
+.Nd complex hyperbolic cosine
 .Sh SYNOPSIS
 .Fd #include <complex.h>
-.Ft double
-.Fn cimag "double complex z"
-.Ft float
-.Fn cimagf "float complex z"
-.Ft long double
-.Fn cimagl "long double complex z"
+.Ft double complex
+.Fn ccosh "double complex z"
+.Ft float complex
+.Fn ccoshf "float complex z"
+.Ft long double complex
+.Fn ccoshl "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ccosh ,
+.Fn ccoshf
 and
-.Fn cimagl
-functions compute the imaginary part of
+.Fn ccoshl
+functions compute the complex hyperbolic cosine of
 .Fa z .
+.Pp
+If
+.Fa z
+= x + iy, then
+.Bd -literal -offset indent
+ccosh(z) = cosh(x) cos(y) + i sinh(x) sin(y).
+.Ed
 .Sh RETURN VALUES
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ccosh ,
+.Fn ccoshf
 and
-.Fn cimagl
-functions return the imaginary part of the complex number
-.Fa z
-as a real number.
+.Fn ccoshl
+functions return the complex hyperbolic cosine of
+.Fa z .
 .Sh SEE ALSO
-.Xr carg 3
+.Xr csinh 3 ,
+.Xr ctanh 3
 .Sh STANDARDS
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ccosh ,
+.Fn ccoshf
 and
-.Fn cimagl
+.Fn ccoshl
 functions conform to
 .St -isoC-99 .

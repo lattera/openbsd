@@ -1,6 +1,6 @@
-.\"	$OpenBSD: src/lib/libm/man/cimag.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
+.\"	$OpenBSD: src/lib/libm/man/ctan.3,v 1.1 2011/07/20 17:50:43 martynas Exp $
 .\"
-.\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
+.\" Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -14,46 +14,59 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 19 2010 $
-.Dt CIMAG 3
+.Dd $Mdocdate$
+.Dt CTAN 3
 .Os
 .Sh NAME
-.Nm cimag ,
-.Nm cimagf ,
-.Nm cimagl
-.Nd compute the imaginary part of a complex number
+.Nm ctan ,
+.Nm ctanf ,
+.Nm ctanl
+.Nd complex circular tangent
 .Sh SYNOPSIS
 .Fd #include <complex.h>
-.Ft double
-.Fn cimag "double complex z"
-.Ft float
-.Fn cimagf "float complex z"
-.Ft long double
-.Fn cimagl "long double complex z"
+.Ft double complex
+.Fn ctan "double complex z"
+.Ft float complex
+.Fn ctanf "float complex z"
+.Ft long double complex
+.Fn ctanl "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ctan ,
+.Fn ctanf
 and
-.Fn cimagl
-functions compute the imaginary part of
+.Fn ctanl
+functions compute the complex circular tangent of
 .Fa z .
+.Pp
+If
+.Fa z
+= x + iy, then
+.Bd -literal -offset indent
+ctan(z) = (sin(2x) + i sinh(2y)) / (cos(2x) + cosh(2y)).
+.Ed
+.Pp
+On the real axis the denominator is zero at odd multiples of Pi/2.
+The denominator is evaluated by its Taylor series near these points.
+.Bd -literal -offset indent
+ctan(z) = -i ctanh(iz).
+.Ed
 .Sh RETURN VALUES
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ctan ,
+.Fn ctanf
 and
-.Fn cimagl
-functions return the imaginary part of the complex number
-.Fa z
-as a real number.
+.Fn ctanl
+functions return the complex circular tangent of
+.Fa z .
 .Sh SEE ALSO
-.Xr carg 3
+.Xr ccos 3 ,
+.Xr csin 3
 .Sh STANDARDS
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn ctan ,
+.Fn ctanf
 and
-.Fn cimagl
+.Fn ctanl
 functions conform to
 .St -isoC-99 .

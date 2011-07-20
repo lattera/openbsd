@@ -1,6 +1,6 @@
-.\"	$OpenBSD: src/lib/libm/man/cimag.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
+.\"	$OpenBSD: src/lib/libm/man/cacos.3,v 1.1 2011/07/20 17:50:43 martynas Exp $
 .\"
-.\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
+.\" Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -14,46 +14,54 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 19 2010 $
-.Dt CIMAG 3
+.Dd $Mdocdate$
+.Dt CACOS 3
 .Os
 .Sh NAME
-.Nm cimag ,
-.Nm cimagf ,
-.Nm cimagl
-.Nd compute the imaginary part of a complex number
+.Nm cacos ,
+.Nm cacosf ,
+.Nm cacosl
+.Nd complex circular arc cosine
 .Sh SYNOPSIS
 .Fd #include <complex.h>
-.Ft double
-.Fn cimag "double complex z"
-.Ft float
-.Fn cimagf "float complex z"
-.Ft long double
-.Fn cimagl "long double complex z"
+.Ft double complex
+.Fn cacos "double complex z"
+.Ft float complex
+.Fn cacosf "float complex z"
+.Ft long double complex
+.Fn cacosl "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn cacos ,
+.Fn cacosf
 and
-.Fn cimagl
-functions compute the imaginary part of
+.Fn cacosl
+functions compute the complex circular arc cosine of
 .Fa z .
+.Pp
+For all complex floating-point numbers
+.Fa z ,
+.Bd -literal -offset indent
+cacos(z) = Pi/2 - casin(z).
+.Ed
 .Sh RETURN VALUES
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn cacos ,
+.Fn cacosf
 and
-.Fn cimagl
-functions return the imaginary part of the complex number
+.Fn cacosl
+functions return the complex circular arc cosine of
 .Fa z
-as a real number.
+with unbounded imaginary part, and real part in the interval
+.Bq 0, Pi .
 .Sh SEE ALSO
-.Xr carg 3
+.Xr casin 3 ,
+.Xr catan 3
 .Sh STANDARDS
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn cacos ,
+.Fn cacosf
 and
-.Fn cimagl
+.Fn cacosl
 functions conform to
 .St -isoC-99 .

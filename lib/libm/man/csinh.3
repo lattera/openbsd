@@ -1,6 +1,6 @@
-.\"	$OpenBSD: src/lib/libm/man/cimag.3,v 1.2 2011/07/20 17:50:43 martynas Exp $
+.\"	$OpenBSD: src/lib/libm/man/csinh.3,v 1.1 2011/07/20 17:50:43 martynas Exp $
 .\"
-.\" Copyright (c) 2010 Todd C. Miller <Todd.Miller@courtesan.com>
+.\" Copyright (c) 2011 Martynas Venckus <martynas@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -14,46 +14,52 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 19 2010 $
-.Dt CIMAG 3
+.Dd $Mdocdate$
+.Dt CSINH 3
 .Os
 .Sh NAME
-.Nm cimag ,
-.Nm cimagf ,
-.Nm cimagl
-.Nd compute the imaginary part of a complex number
+.Nm csinh ,
+.Nm csinhf ,
+.Nm csinhl
+.Nd complex hyperbolic sine
 .Sh SYNOPSIS
 .Fd #include <complex.h>
-.Ft double
-.Fn cimag "double complex z"
-.Ft float
-.Fn cimagf "float complex z"
-.Ft long double
-.Fn cimagl "long double complex z"
+.Ft double complex
+.Fn csinh "double complex z"
+.Ft float complex
+.Fn csinhf "float complex z"
+.Ft long double complex
+.Fn csinhl "long double complex z"
 .Sh DESCRIPTION
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn csinh ,
+.Fn csinhf
 and
-.Fn cimagl
-functions compute the imaginary part of
+.Fn csinhl
+functions compute the complex hyperbolic sine of
 .Fa z .
+.Pp
+For all complex floating-point numbers
+.Fa z ,
+.Bd -literal -offset indent
+csinh(z) = (cexp(z) - cexp(-z)) / 2.
+.Ed
 .Sh RETURN VALUES
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn csinh ,
+.Fn csinhf
 and
-.Fn cimagl
-functions return the imaginary part of the complex number
-.Fa z
-as a real number.
+.Fn csinhl
+functions return the complex hyperbolic sine of
+.Fa z .
 .Sh SEE ALSO
-.Xr carg 3
+.Xr ccosh 3 ,
+.Xr ctanh 3
 .Sh STANDARDS
 The
-.Fn cimag ,
-.Fn cimagf
+.Fn csinh ,
+.Fn csinhf
 and
-.Fn cimagl
+.Fn csinhl
 functions conform to
 .St -isoC-99 .
