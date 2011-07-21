@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/sysmerge/sysmerge.8,v 1.34 2010/11/11 12:51:31 ajacoutot Exp $
+.\"	$OpenBSD: src/usr.sbin/sysmerge/sysmerge.8,v 1.35 2011/07/21 12:31:51 ajacoutot Exp $
 .\"
 .\" Copyright (c) 2008 Antoine Jacoutot <ajacoutot@openbsd.org>
 .\"
@@ -61,7 +61,7 @@ The default, if no source is specified on the command line,
 is to use
 .Pa /usr/src .
 All work is done under
-.Pa ${TMPDIR}/sysmerge.XXXXX
+.Pa ${TMPDIR}/sysmerge.XXXXXXXXXX
 (known as the
 .Em work directory ) .
 The temporary root directory
@@ -231,8 +231,8 @@ If unset, this defaults to
 .Pa /var/tmp .
 .El
 .Sh FILES
-.Bl -tag -width "${TMPDIR}/sysmerge.XXXXXXXX" -compact
-.It ${TMPDIR}/sysmerge.XXXXX
+.Bl -tag -width "${TMPDIR}/sysmerge.XXXXXXXXXX" -compact
+.It ${TMPDIR}/sysmerge.XXXXXXXXXX
 Default work directory.
 The
 .Sy temproot
