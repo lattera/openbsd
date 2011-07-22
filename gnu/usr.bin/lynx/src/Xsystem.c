@@ -1,9 +1,16 @@
-/* $Id: Xsystem.c 1.15 Thu, 30 Dec 2004 04:11:59 -0800 dickey $
+/* $Id: Xsystem.c,v 1.4 2009/05/31 09:16:52 avsm Exp $
  *	like system("cmd") but return with exit code of "cmd"
  *	for Turbo-C/MS-C/LSI-C
  *  This code is in the public domain.
  *
- * $Log: xsystem.c,v $
+ * $Log: Xsystem.c,v $
+ * Revision 1.4  2009/05/31 09:16:52  avsm
+ * Update to lynx-2.8.6.rel5, with our local patches maintained where relevant.
+ * tests from miod@ sthen@ jmc@ jsing@
+ * two additional fixes from miod:
+ * - fix uninitialized stack variable use, leading to occasional crash.
+ * - modify the socklen_t test to include <sys/types.h>, fixes gcc2 build failures
+ *
  *
  * Revision 1.14  1997/10/17 (Fri) 16:28:24  senshu
  * *** for Win32 version ***
@@ -26,6 +33,7 @@
  */
 #include <LYUtils.h>
 #include <LYStrings.h>
+#include <LYGlobalDefs.h>
 
 #ifdef DOSPATH
 #include <io.h>
@@ -82,7 +90,7 @@ static char *NEAR xmalloc(size_t n)
 
     if ((bp = typecallocn(char, n)) == 0) {
 	write(2, "xsystem: Out of memory.!\n", 25);
-	exit_immediately(1);
+	exit_immediately(EXIT_FAILURE);
     }
     return bp;
 }
@@ -93,17 +101,13 @@ static char *NEAR xrealloc(void *p, size_t n)
 
     if ((bp = realloc(p, n)) == (char *) 0) {
 	write(2, "xsystem: Out of memory!.\n", 25);
-	exit_immediately(1);
+	exit_immediately(EXIT_FAILURE);
     }
     return bp;
 }
 
 static int NEAR is_builtin_command(char *s)
 {
-#ifdef WIN_EX
-    extern int system_is_NT;	/* 1997/11/05 (Wed) 22:10:35 */
-#endif
-
     static char *cmdtab[] =
     {
 	"dir", "type", "rem", "ren", "rename", "erase", "del",
@@ -134,15 +138,18 @@ static int NEAR is_builtin_command(char *s)
 
 static int NEAR getswchar(void)
 {
+    int result;
+
 #ifdef __WIN32__
-    return '/';
+    result = '/';
 #else
     union REGS reg;
 
     reg.x.ax = 0x3700;
     intdos(&reg, &reg);
-    return reg.h.dl;
+    result = reg.h.dl;
 #endif
+    return result;
 }
 
 static int NEAR csystem(PRO * p, int flag)
@@ -169,7 +176,7 @@ static PRO *NEAR pars1c(char *s)
     int q;
 
     pp = (PRO *) xmalloc(sizeof(PRO));
-    for (q = 0; q < TABLESIZE(pp->ored); q++)
+    for (q = 0; q < (int) TABLESIZE(pp->ored); q++)
 	pp->ored[q] = q;
     while (isspc(*s))
 	s++;
@@ -254,7 +261,7 @@ static PRO *NEAR pars(char *s)
     char *lb;
     int li, ls, q;
     int c;
-    PRO *pp;
+    PRO *pp = 0;
 
     lb = xmalloc(ls = STR_MAX);	/* about */
     li = q = 0;
@@ -318,7 +325,7 @@ static int NEAR prog_go(PRO * p, int flag)
     char *extp = 0;
     char cmdb[STR_MAX];
     char *ep;
-    int rc, lc, cmd_len;
+    int rc, lc = 0, cmd_len;
 
     cmd_len = strlen(p->cmd);
 
@@ -427,7 +434,7 @@ static void NEAR redswitch(PRO * p)
 {
     int d;
 
-    for (d = 0; d < TABLESIZE(p->ored); d++) {
+    for (d = 0; d < (int) TABLESIZE(p->ored); d++) {
 	if (d != p->ored[d]) {
 	    p->sred[d] = dup(d);
 	    dup2(p->ored[d], d);
@@ -439,7 +446,7 @@ static void NEAR redunswitch(PRO * p)
 {
     int d;
 
-    for (d = 0; d < TABLESIZE(p->ored); d++) {
+    for (d = 0; d < (int) TABLESIZE(p->ored); d++) {
 	if (d != p->ored[d]) {
 	    dup2(p->sred[d], d);
 	    close(p->sred[d]);
@@ -454,7 +461,10 @@ int xsystem(char *cmd)
     int psstdin, psstdout;
     int rdstdin, rdstdout;
     int rc = 0;
+
+#if USECMDLINE
     static char *cmdline = 0;
+#endif
 
 #ifdef SH_EX			/* 1997/11/01 (Sat) 10:04:03 add by JH7AYN */
     pif = cmd;
@@ -525,14 +535,15 @@ int xsystem(char *cmd)
     return rc < 0 ? 0xFF00 : rc;
 }
 
-int exec_command(char *cmd, int wait_flag)
+int exec_command(char *cmd, int wait_flag GCC_UNUSED)
 {
+    int rc;
+
 #if defined(__MINGW32__)
-    return system(cmd);
+    rc = system(cmd);
 #else
     PRO *p;
     char *pif;
-    int rc = 0;
     int cmd_str;
 
     pif = cmd;
@@ -564,8 +575,8 @@ int exec_command(char *cmd, int wait_flag)
     else
 	rc = prog_go(p, P_NOWAIT);
 
-    return rc;
 #endif
+    return rc;
 }
 
 #ifdef TEST
