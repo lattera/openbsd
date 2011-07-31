@@ -1,0 +1,157 @@
+#	$OpenBSD: src/etc/rc.d/rc.subr,v 1.45 2011/07/31 20:22:34 robert Exp $
+#
+# Copyright (c) 2010, 2011 Antoine Jacoutot <ajacoutot@openbsd.org>
+# Copyright (c) 2010, 2011 Ingo Schwarze <schwarze@openbsd.org>
+# Copyright (c) 2010, 2011 Robert Nagy <robert@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
+# Default functions and variables used by rc.d(8) scripts.
+
+rc_err() {
+	echo $1 1>&2
+	exit 1
+}
+
+rc_start() {
+	${rcexec} "${daemon} ${daemon_flags} ${_bg}"
+}
+
+rc_check() {
+	pkill -0 -f "^${pexp}"
+}
+
+rc_reload() {
+	pkill -HUP -f "^${pexp}"
+}
+
+rc_stop() {
+	pkill -f "^${pexp}"
+}
+
+rc_do() {
+	if [ -n "${RC_DEBUG}" ]; then
+		echo "doing $@" && "$@"
+	else
+		"$@" >/dev/null 2>&1
+	fi
+}
+
+rc_exit() {
+	[ -z "${INRC}" -o X"$1" != X"ok" ] && _pfix="($1)"
+	echo ${INRC:+'-n'} "${_pfix}"
+	[ X"$1" = X"ok" ] && exit 0 || exit 1
+}
+
+rc_wait() {
+	i=0
+	[ -n "$2" ] && w=$2 || w=30
+	while [ $i -lt $w ]; do
+		case "$1" in
+			reload|start)
+				rc_do rc_check && return 0
+				;;
+			stop)
+				rc_do rc_check || return 0
+				;;
+			*)
+				break
+				;;
+		esac
+		sleep 1
+		i=$((i+1))
+	done
+	return 1
+}
+
+rc_cmd() {
+	[ $(id -u) -eq 0 ] || \
+		rc_err "$0: need root privileges"
+
+	[ X"${daemon_flags}" = X"NO" ] && exit 1
+
+	eval _enotsup=\${rc_${1}}
+	[ X"${_enotsup}" != X"NO" ] || rc_err "$0: $1 is not supported"
+
+	[ X"${rc_bg}" = X"YES" ] && local _bg="&"
+	[ -n "${RC_DEBUG}" ] || local _n="-n"
+
+	case "$1" in
+	check)
+		rc_do rc_check
+		;;
+	start)
+		[ -z "${INRC}" ] && rc_do rc_check && exit 0
+		echo $_n "${INRC:+ }${_name}"
+		while true; do  # no real loop, only needed to break
+			if type rc_pre >/dev/null; then
+				rc_do rc_pre || break
+			fi
+			rc_do rc_start || break
+			if [ -n "${_bg}" ]; then
+				sleep 1
+				rc_do rc_wait start || break
+			fi
+			rc_exit ok
+		done
+		# handle failure
+		type rc_post >/dev/null && rc_do rc_post
+		rc_exit failed
+		;;
+	stop)
+		rc_do rc_check || exit 0
+		echo $_n "${INRC:+ }${_name}"
+		rc_do rc_stop || rc_exit failed
+		rc_do rc_wait stop || rc_exit failed
+		if type rc_post >/dev/null; then \
+			rc_do rc_post || rc_exit failed
+		fi
+		rc_exit ok
+		;;
+	reload)
+		rc_do rc_check || exit 0
+		echo $_n "${INRC:+ }${_name}"
+		rc_do rc_reload || rc_exit failed
+		rc_do rc_wait reload || rc_exit failed
+		rc_exit ok
+		;;
+	restart)
+		/etc/rc.d/${_name} stop && /etc/rc.d/${_name} start
+		;;
+	*)
+		rc_err "usage: $0 {start|check|reload|restart|stop}"
+	esac
+}
+
+[ -z "${local_rcconf}" ] && . /etc/rc.conf
+
+[ -n "${daemon}" ] || rc_err "$0: daemon is not set"
+
+_name=$(basename $0)
+eval _rcflags=\${${_name}_flags}
+eval _rcuser=\${${_name}_user}
+
+getcap -f /etc/login.conf ${_name} 1>/dev/null 2>&1 && \
+	daemon_class=${_name}
+
+[ -z "${daemon_class}" ] && daemon_class=daemon
+[ -z "${daemon_user}"  ] && daemon_user=root
+
+[ -n "${_rcflags}" ] && daemon_flags=${_rcflags}
+[ -n "${_rcuser}"  ] && daemon_user=${_rcuser}
+
+daemon_flags=$(printf ' %s' ${daemon_flags})
+daemon_flags=${daemon_flags## }
+pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
+rcexec="su -l -c ${daemon_class} -s /bin/sh ${daemon_user} -c"
