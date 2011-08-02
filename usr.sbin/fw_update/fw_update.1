@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.sbin/fw_update/fw_update.1,v 1.7 2011/08/02 17:35:40 jmc Exp $
+.\" $OpenBSD: src/usr.sbin/fw_update/fw_update.1,v 1.8 2011/08/02 23:46:39 deraadt Exp $
 .\"
 .\" Copyright (c) 2011 Alexander Hall <alexander@beard.se>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 28 2011 $
+.Dd $Mdocdate: August 2 2011 $
 .Dt FW_UPDATE 1
 .Os
 .Sh NAME
@@ -26,9 +26,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-utility checks which firmware are needed on the host system,
-retrieves the relevant packages from the Internet,
-and then installs them.
+utility checks which firmware are needed on the system and then
+installs or updates the relevant packages from the Internet.
 Since firmware with acceptable licenses are already present in
 .Ox ,
 .Nm
