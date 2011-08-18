@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libkvm/kvm_getprocs.3,v 1.15 2011/03/12 07:28:22 jmc Exp $
+.\"	$OpenBSD: src/lib/libkvm/kvm_getprocs.3,v 1.16 2011/08/18 13:01:26 jmc Exp $
 .\"	$NetBSD: kvm_getprocs.3,v 1.13 2003/08/07 16:44:37 agc Exp $
 .\"
 .\" Copyright (c) 1992, 1993
@@ -197,13 +197,10 @@ all return
 on failure.
 .Sh SEE ALSO
 .Xr kvm 3 ,
-.Xr kvm_close 3 ,
 .Xr kvm_geterr 3 ,
 .Xr kvm_nlist 3 ,
 .Xr kvm_open 3 ,
-.Xr kvm_openfiles 3 ,
-.Xr kvm_read 3 ,
-.Xr kvm_write 3
+.Xr kvm_read 3
 .Sh BUGS
 These routines do not belong in the
 .Xr kvm 3
