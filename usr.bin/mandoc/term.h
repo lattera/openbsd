@@ -1,4 +1,4 @@
-/*	$Id: term.h,v 1.29 2011/01/09 14:30:48 schwarze Exp $ */
+/*	$Id: term.h,v 1.30 2011/05/29 21:22:18 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -96,6 +96,7 @@ struct	termp {
 	struct termp_ps	 *ps;
 };
 
+void		  term_eqn(struct termp *, const struct eqn *);
 void		  term_tbl(struct termp *, const struct tbl_span *);
 void		  term_free(struct termp *);
 void		  term_newln(struct termp *);
