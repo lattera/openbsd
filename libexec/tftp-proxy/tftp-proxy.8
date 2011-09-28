@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/libexec/tftp-proxy/Attic/tftp-proxy.8,v 1.6 2011/09/28 12:38:59 dlg Exp $
+.\"	$OpenBSD: src/libexec/tftp-proxy/Attic/tftp-proxy.8,v 1.7 2011/09/28 13:25:24 jmc Exp $
 .\"
 .\" Copyright (c) 2005 joshua stein <jcs@openbsd.org>
 .\"
@@ -25,7 +25,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: June 22 2011 $
+.Dd $Mdocdate: September 28 2011 $
 .Dt TFTP-PROXY 8
 .Os
 .Sh NAME
@@ -50,7 +50,7 @@ the client.
 The connection from the proxy to the server needs to be passed by
 a rule with divert-reply set.
 .Pp
-The proxy inserts a
+The proxy inserts
 .Xr pf 4
 pass rules using the
 .Ar anchor
