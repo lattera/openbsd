@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ospf6d/rde.c,v 1.58 2011/07/07 17:10:48 claudio Exp $ */
+/*	$OpenBSD: src/usr.sbin/ospf6d/rde.c,v 1.59 2011/11/06 10:29:05 guenther Exp $ */
 
 /*
  * Copyright (c) 2004, 2005 Claudio Jeker <claudio@openbsd.org>
@@ -18,6 +18,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/param.h>			/* for MIN() */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/queue.h>
