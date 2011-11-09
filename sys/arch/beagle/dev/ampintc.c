@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/arch/beagle/dev/Attic/ampintc.c,v 1.5 2011/11/09 00:15:06 drahn Exp $ */
+/* $OpenBSD: src/sys/arch/beagle/dev/Attic/ampintc.c,v 1.6 2011/11/09 00:17:15 drahn Exp $ */
 /*
  * Copyright (c) 2007,2009,2011 Dale Rahn <drahn@openbsd.org>
  *
@@ -399,8 +399,9 @@ ampintc_splx(int new)
 {
 	struct cpu_info *ci = curcpu();
 
-        if (ci->ci_ipending & arm_smask[ci->ci_cpl])
-		arm_do_pending_intr(ci->ci_cpl);
+        if (ci->ci_ipending & arm_smask[new])
+		arm_do_pending_intr(new);
+
 	ampintc_setipl(new);
 }
 
