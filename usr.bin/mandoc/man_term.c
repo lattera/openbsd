@@ -963,9 +963,15 @@ print_man_foot(struct termp *p, const void *arg)
 	term_fontrepl(p, TERMFONT_NONE);
 
 	term_vspace(p);
-	term_vspace(p);
-	term_vspace(p);
-	snprintf(title, BUFSIZ, "%s(%s)", meta->title, meta->msec);
+	if ( ! p->mdocstyle) {
+		term_vspace(p);
+		term_vspace(p);
+		snprintf(title, BUFSIZ, "%s(%s)", meta->title, meta->msec);
+	} else if (meta->source) {
+		strlcpy(title, meta->source, BUFSIZ);
+	} else {
+		title[0] = '\0';
+	}
 	datelen = term_strlen(p, meta->date);
 
 	p->flags |= TERMP_NOSPACE | TERMP_NOBREAK;
@@ -1059,6 +1065,8 @@ print_man_head(struct termp *p, const void *arg)
 	 */
 
 	term_vspace(p);
-	term_vspace(p);
-	term_vspace(p);
+	if ( ! p->mdocstyle) {
+		term_vspace(p);
+		term_vspace(p);
+	}
 }
