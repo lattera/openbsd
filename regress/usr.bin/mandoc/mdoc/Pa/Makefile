@@ -1,6 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Pa/Makefile,v 1.1 2009/12/25 02:00:46 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Pa/Makefile,v 1.2 2011/11/17 16:28:46 schwarze Exp $
 
 REGRESS_TARGETS=FILES
-GROFF_TARGETS=FILES
 
 .include <bsd.regress.mk>

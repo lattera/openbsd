@@ -1,6 +1,7 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Bd/Makefile,v 1.3 2011/01/04 02:11:32 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Bd/Makefile,v 1.4 2011/11/17 16:28:45 schwarze Exp $
 
 REGRESS_TARGETS=empty blank offset-empty
-GROFF_TARGETS=empty blank offset-empty
+
+SKIP_TMAN ?= empty offset-empty
 
 .include <bsd.regress.mk>
