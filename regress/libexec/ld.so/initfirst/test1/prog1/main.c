@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/regress/libexec/ld.so/initfirst/Attic/lib.c,v 1.1 2011/11/08 23:51:02 guenther Exp $	*/
+/*	$OpenBSD: src/regress/libexec/ld.so/initfirst/test1/prog1/main.c,v 1.1 2011/11/29 04:36:15 kurt Exp $	*/
 
 /*
  * Copyright (c) 2011 Philip Guenther <guenther@openbsd.org>
@@ -14,27 +14,16 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
  */
 
 #include <stdio.h>
 
-static void init(void) __attribute__((constructor));
-static void
-init(void)
-{
-	printf("init %s\n", NAME);
-}
+void func(void);
 
-
-static void fini(void) __attribute__((destructor));
-static void
-fini(void)
+int
+main()
 {
-	printf("fini %s\n", NAME);
-}
-
-void func(void)
-{
-	printf("func %s\n", NAME);
+	printf("main\n");
+	func();
+	return 0;
 }

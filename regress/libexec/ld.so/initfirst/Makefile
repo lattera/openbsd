@@ -1,3 +1,5 @@
-SUBDIR=libae libad libac libab libaa prog1 prog2
+# $OpenBSD: src/regress/libexec/ld.so/initfirst/Makefile,v 1.2 2011/11/29 04:36:15 kurt Exp $
+
+SUBDIR+= test1 test2
 
 .include <bsd.subdir.mk>

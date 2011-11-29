@@ -1,7 +1,7 @@
 /*
  * Public Domain 2011 Kurt Miller
  *
- * $OpenBSD: src/regress/libexec/ld.so/initfirst/libad/Attic/ad.C,v 1.1.1.1 2011/11/29 03:38:26 kurt Exp $
+ * $OpenBSD: src/regress/libexec/ld.so/initfirst/test2/libad/ad.C,v 1.1 2011/11/29 04:36:15 kurt Exp $
  */
 
 #include <iostream>

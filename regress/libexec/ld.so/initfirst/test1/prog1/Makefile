@@ -1,4 +1,4 @@
-# $OpenBSD: src/regress/libexec/ld.so/initfirst/prog1/Attic/Makefile,v 1.2 2011/11/29 04:06:42 guenther Exp $
+# $OpenBSD: src/regress/libexec/ld.so/initfirst/test1/prog1/Makefile,v 1.1 2011/11/29 04:36:15 kurt Exp $
 
 PROGS=		prog1 prog2 prog3 prog4
 SRCS=		main.c

@@ -1,4 +1,4 @@
-# $OpenBSD: src/regress/libexec/ld.so/initfirst/Attic/Makefile.inc,v 1.1 2011/11/08 23:51:02 guenther Exp $
+# $OpenBSD: src/regress/libexec/ld.so/initfirst/test1/Makefile.inc,v 1.1 2011/11/29 04:36:15 kurt Exp $
 
 .include <bsd.obj.mk>
 
