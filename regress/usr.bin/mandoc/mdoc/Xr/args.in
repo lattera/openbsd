@@ -1,0 +1,25 @@
+.Dd December 3, 2011
+.Dt XR-ARGS 1
+.Os OpenBSD
+.Sh NAME
+.Nm Xr-args
+.Nd additional arguments to cross references
+.Sh DESCRIPTION
+One single
+.Xr echo 1
+is fine, and so is an
+.Xr echo 1 followed by something else.
+.Pp
+But listen for multiple
+.Xr echo 1 Ns s .
+.Pp
+A call, an
+.Xr echo 1 , and
+another
+.Xr echo 1 .
+.Pp
+Finally, half an
+.Xr echo
+and no
+.Xr
+echo at all.
