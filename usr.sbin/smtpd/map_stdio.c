@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/Attic/map_backend_stdio.c,v 1.2 2011/08/30 11:19:51 chl Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/Attic/map_stdio.c,v 1.1 2011/12/13 23:00:52 eric Exp $	*/
 
 /*
  * Copyright (c) 2011 Gilles Chehade <gilles@openbsd.org>
