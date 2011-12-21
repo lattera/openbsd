@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/identd,v 1.3 2011/12/21 09:26:29 ajacoutot Exp $
+
+daemon="/usr/libexec/identd -b"
+daemon_flags="-elo"
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+
+rc_cmd $1
