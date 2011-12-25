@@ -1,4 +1,4 @@
-/*      $Id: mandocdb.h,v 1.2 2011/11/17 15:38:27 schwarze Exp $ */
+/*      $Id: mandocdb.h,v 1.3 2011/11/26 16:41:35 schwarze Exp $ */
 /*
  * Copyright (c) 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -16,11 +16,6 @@
  */
 #ifndef MANDOCDB_H
 #define MANDOCDB_H
-
-struct db_val {
-	uint64_t	mask;
-	uint32_t	rec;
-};
 
 #define	MANDOC_DB	"mandoc.db"
 #define	MANDOC_IDX	"mandoc.index"
