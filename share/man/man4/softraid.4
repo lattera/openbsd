@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/softraid.4,v 1.27 2009/12/08 14:12:05 jmc Exp $
+.\"	$OpenBSD: src/share/man/man4/softraid.4,v 1.28 2011/12/31 17:06:10 jsing Exp $
 .\"
 .\" Copyright (c) 2007 Todd T. Fries   <todd@OpenBSD.org>
 .\" Copyright (c) 2007 Marco Peereboom <marco@OpenBSD.org>
@@ -101,6 +101,12 @@ An
 discipline.
 It encrypts data on a single chunk to provide for data confidentiality.
 CRYPTO does not provide redundancy.
+.It CONCAT
+A
+.Em concatenating
+discipline.
+It writes data to each chunk in serial to provide increased capacity.
+CONCAT does not provide redundancy.
 .El
 .Sh EXAMPLES
 An example to create a 3 chunk RAID 1 from scratch is as follows:
