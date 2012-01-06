@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.223 2011/07/04 06:54:49 claudio Exp $	*/
+/*	$OpenBSD: src/sys/netinet/ip_output.c,v 1.223.2.1 2012/01/06 00:15:15 haesbaert Exp $	*/
 /*	$NetBSD: ip_output.c,v 1.28 1996/02/13 23:43:07 christos Exp $	*/
 
 /*
@@ -748,7 +748,8 @@ sendit:
 	 */
 	if (ntohs(ip->ip_len) <= mtu) {
 		ip->ip_sum = 0;
-		if ((ifp->if_capabilities & IFCAP_CSUM_IPv4)) {
+		if ((ifp->if_capabilities & IFCAP_CSUM_IPv4) &&
+		    (ifp->if_bridge == NULL)) {
 			m->m_pkthdr.csum_flags |= M_IPV4_CSUM_OUT;
 			ipstat.ips_outhwcsum++;
 		} else
@@ -894,7 +895,8 @@ ip_fragment(struct mbuf *m, struct ifnet *ifp, u_long mtu)
 		mhip->ip_off = htons((u_int16_t)mhip->ip_off);
 		mhip->ip_sum = 0;
 		if ((ifp != NULL) &&
-		    (ifp->if_capabilities & IFCAP_CSUM_IPv4)) {
+		    (ifp->if_capabilities & IFCAP_CSUM_IPv4) &&
+		    (ifp->if_bridge == NULL)) {
 			m->m_pkthdr.csum_flags |= M_IPV4_CSUM_OUT;
 			ipstat.ips_outhwcsum++;
 		} else
@@ -913,7 +915,8 @@ ip_fragment(struct mbuf *m, struct ifnet *ifp, u_long mtu)
 	ip->ip_off |= htons(IP_MF);
 	ip->ip_sum = 0;
 	if ((ifp != NULL) &&
-	    (ifp->if_capabilities & IFCAP_CSUM_IPv4)) {
+	    (ifp->if_capabilities & IFCAP_CSUM_IPv4) &&
+	    (ifp->if_bridge == NULL)) {
 		m->m_pkthdr.csum_flags |= M_IPV4_CSUM_OUT;
 		ipstat.ips_outhwcsum++;
 	} else
