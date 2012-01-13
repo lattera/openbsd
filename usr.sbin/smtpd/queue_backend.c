@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/queue_backend.c,v 1.18 2011/12/23 12:10:06 eric Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/queue_backend.c,v 1.19 2012/01/13 21:58:35 eric Exp $	*/
 
 /*
  * Copyright (c) 2011 Gilles Chehade <gilles@openbsd.org>
@@ -72,12 +72,6 @@ int
 queue_message_commit(enum queue_kind qkind, u_int32_t msgid)
 {
 	return env->sc_queue->message(qkind, QOP_COMMIT, &msgid);
-}
-
-int
-queue_message_purge(enum queue_kind qkind, u_int32_t msgid)
-{
-	return env->sc_queue->message(qkind, QOP_PURGE, &msgid);
 }
 
 int
