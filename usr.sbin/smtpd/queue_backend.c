@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/queue_backend.c,v 1.19 2012/01/13 21:58:35 eric Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/queue_backend.c,v 1.20 2012/01/14 15:13:14 chl Exp $	*/
 
 /*
  * Copyright (c) 2011 Gilles Chehade <gilles@openbsd.org>
@@ -26,6 +26,7 @@
 #include <ctype.h>
 #include <event.h>
 #include <imsg.h>
+#include <inttypes.h>
 #include <libgen.h>
 #include <pwd.h>
 #include <stdio.h>
