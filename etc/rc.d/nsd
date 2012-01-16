@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/nsd,v 1.3 2012/01/16 17:51:42 camield Exp $
+
+daemon="/usr/sbin/nsd"
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+
+daemon_ctl="/usr/sbin/nsdc"
+
+rc_stop() {
+	${daemon_ctl} stop
+}
+
+rc_check() {
+	${daemon_ctl} running
+}
+
+rc_cmd $1
