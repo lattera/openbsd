@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/librthread/arch/mips64/Attic/rfork_thread.S,v 1.2 2011/10/17 06:39:20 guenther Exp $	*/
+/*	$OpenBSD: src/lib/librthread/arch/mips64/Attic/rfork_thread.S,v 1.3 2012/01/17 02:34:18 guenther Exp $	*/
 
 /*
  * Copyright (c) 2005, Miodrag Vallat
@@ -64,7 +64,7 @@ LEAF(__tfork_thread, 32)
 	 move	v0, zero
 
 	move	a0, zero
-	__DO_SYSCALL(threxit)
+	__DO_SYSCALL(__threxit)
 
 9:
 	/*
