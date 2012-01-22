@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/softraid.c,v 1.270 2012/01/22 10:43:50 jsing Exp $ */
+/* $OpenBSD: src/sys/dev/softraid.c,v 1.271 2012/01/22 10:46:12 jsing Exp $ */
 /*
  * Copyright (c) 2007, 2008, 2009 Marco Peereboom <marco@peereboom.us>
  * Copyright (c) 2008 Chris Kuethe <ckuethe@openbsd.org>
@@ -1818,6 +1818,8 @@ sr_detach(struct device *self, int flags)
 
 	if (sc->sc_shutdownhook)
 		shutdownhook_disestablish(sc->sc_shutdownhook);
+
+	softraid_disk_attach = NULL;
 
 	sr_shutdown(sc);
 
