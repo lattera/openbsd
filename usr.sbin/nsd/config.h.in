@@ -25,6 +25,9 @@
 /* Define to the default facility for syslog. */
 #undef FACILITY
 
+/* Define this to enable NSEC3 full prehashing. */
+#undef FULL_PREHASH
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
@@ -304,6 +307,9 @@
 
 /* Define if memcmp() does not compare unsigned bytes */
 #undef MEMCMP_IS_BROKEN
+
+/* Define this to enable response minimalization to reduce truncation. */
+#undef MINIMAL_RESPONSES
 
 /* Undefine this to enable internal runtime checks. */
 #undef NDEBUG
