@@ -1,5 +1,4 @@
-/* $OpenBSD: src/libexec/login_yubikey/yubikey.h,v 1.1 2012/01/18 15:49:46 dhill Exp $ */
-/* $Id: yubikey.h,v 1.1.1.1 2010/03/16 14:13:08 dhartmei Exp $ */
+/* $OpenBSD: src/libexec/login_yubikey/yubikey.h,v 1.2 2012/01/31 16:58:38 sobrado Exp $ */
 
 /*
  * Written by Simon Josefsson <simon@josefsson.org>.
