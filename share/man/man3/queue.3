@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man3/queue.3,v 1.54 2012/01/11 19:26:34 bluhm Exp $
+.\"	$OpenBSD: src/share/man/man3/queue.3,v 1.55 2012/03/06 23:41:59 haesbaert Exp $
 .\"	$NetBSD: queue.3,v 1.4 1995/07/03 00:25:36 mycroft Exp $
 .\"
 .\" Copyright (c) 1993 The Regents of the University of California.
@@ -966,7 +966,7 @@ TAILQ_FOREACH(np, &head, entries)
 for (np = n2; np != NULL; np = TAILQ_NEXT(np, entries))
 	np-> ...
 					/* Delete. */
-while (np = TAILQ_FIRST(&head)) {
+while ((np = TAILQ_FIRST(&head))) {
 	TAILQ_REMOVE(&head, np, entries);
 	free(np);
 }
