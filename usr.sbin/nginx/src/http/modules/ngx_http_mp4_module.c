@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 #include <ngx_config.h>
@@ -165,10 +166,10 @@ typedef struct {
     ((u_char *) (p))[7] = n4
 
 #define ngx_mp4_get_32value(p)                                                \
-    ( (((u_char *) (p))[0] << 24)                                             \
-    + (((u_char *) (p))[1] << 16)                                             \
-    + (((u_char *) (p))[2] << 8)                                              \
-    + (((u_char *) (p))[3]) )
+    ( ((uint32_t) ((u_char *) (p))[0] << 24)                                  \
+    + (           ((u_char *) (p))[1] << 16)                                  \
+    + (           ((u_char *) (p))[2] << 8)                                   \
+    + (           ((u_char *) (p))[3]) )
 
 #define ngx_mp4_set_32value(p, n)                                             \
     ((u_char *) (p))[0] = (u_char) ((n) >> 24);                               \
@@ -1066,7 +1067,6 @@ ngx_http_mp4_update_mdat_atom(ngx_http_mp4_file_t *mp4, off_t start_offset)
 
     atom_data_size = mp4->mdat_data.buf->file_last - start_offset;
     mp4->mdat_data.buf->file_pos = start_offset;
-    mp4->content_length += atom_data_size;
 
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, mp4->file.log, 0,
                    "mdat new offset @%O:%O", start_offset, atom_data_size);
@@ -1082,6 +1082,8 @@ ngx_http_mp4_update_mdat_atom(ngx_http_mp4_file_t *mp4, off_t start_offset)
         atom_size = sizeof(ngx_mp4_atom_header_t) + atom_data_size;
         atom_header_size = sizeof(ngx_mp4_atom_header_t);
     }
+
+    mp4->content_length += atom_header_size + atom_data_size;
 
     ngx_mp4_set_32value(atom_header, atom_size);
     ngx_mp4_set_atom_name(atom_header, 'm', 'd', 'a', 't');
@@ -1882,7 +1884,7 @@ ngx_http_mp4_update_stts_atom(ngx_http_mp4_file_t *mp4,
     }
 
     entries = trak->time_to_sample_entries;
-    start_time = mp4->start * trak->timescale / 1000;
+    start_time = (uint64_t) mp4->start * trak->timescale / 1000;
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, mp4->file.log, 0,
                    "time-to-sample start_time:%uL", start_time);
@@ -1898,7 +1900,7 @@ ngx_http_mp4_update_stts_atom(ngx_http_mp4_file_t *mp4,
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, mp4->file.log, 0,
                        "count:%uD, duration:%uD", count, duration);
 
-        if (start_time < count * duration) {
+        if (start_time < (uint64_t) count * duration) {
             start_sample += (ngx_uint_t) (start_time / duration);
             count -= start_sample;
             ngx_mp4_set_32value(entry->count, count);
@@ -2380,6 +2382,8 @@ found:
 
     data->pos = (u_char *) entry;
     atom_size = sizeof(ngx_mp4_stsc_atom_t) + (data->last - data->pos);
+
+    ngx_mp4_set_32value(entry->chunk, 1);
 
     if (trak->chunk_samples) {
 

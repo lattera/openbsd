@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -138,6 +139,8 @@ ngx_http_static_handler(ngx_http_request_t *r)
     if (of.is_dir) {
 
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, log, 0, "http dir");
+
+        ngx_http_clear_location(r);
 
         r->headers_out.location = ngx_palloc(r->pool, sizeof(ngx_table_elt_t));
         if (r->headers_out.location == NULL) {

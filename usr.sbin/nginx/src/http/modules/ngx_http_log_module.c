@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -160,8 +161,8 @@ static ngx_http_module_t  ngx_http_log_module_ctx = {
     NULL,                                  /* create server configuration */
     NULL,                                  /* merge server configuration */
 
-    ngx_http_log_create_loc_conf,          /* create location configration */
-    ngx_http_log_merge_loc_conf            /* merge location configration */
+    ngx_http_log_create_loc_conf,          /* create location configuration */
+    ngx_http_log_merge_loc_conf            /* merge location configuration */
 };
 
 
@@ -374,10 +375,10 @@ ngx_http_log_script_write(ngx_http_request_t *r, ngx_http_log_script_t *script,
 
     if (!r->root_tested) {
 
-        /* test root directory existance */
+        /* test root directory existence */
 
         if (ngx_http_map_uri_to_path(r, &path, &root, 0) == NULL) {
-            /* simulate successfull logging */
+            /* simulate successful logging */
             return len;
         }
 
@@ -398,14 +399,14 @@ ngx_http_log_script_write(ngx_http_request_t *r, ngx_http_log_script_t *script,
             != NGX_OK)
         {
             if (of.err == 0) {
-                /* simulate successfull logging */
+                /* simulate successful logging */
                 return len;
             }
 
             ngx_log_error(NGX_LOG_ERR, r->connection->log, of.err,
                           "testing \"%s\" existence failed", path.data);
 
-            /* simulate successfull logging */
+            /* simulate successful logging */
             return len;
         }
 
@@ -413,7 +414,7 @@ ngx_http_log_script_write(ngx_http_request_t *r, ngx_http_log_script_t *script,
             ngx_log_error(NGX_LOG_ERR, r->connection->log, NGX_ENOTDIR,
                           "testing \"%s\" existence failed", path.data);
 
-            /* simulate successfull logging */
+            /* simulate successful logging */
             return len;
         }
     }
@@ -422,7 +423,7 @@ ngx_http_log_script_write(ngx_http_request_t *r, ngx_http_log_script_t *script,
                             script->values->elts)
         == NULL)
     {
-        /* simulate successfull logging */
+        /* simulate successful logging */
         return len;
     }
 
@@ -446,7 +447,7 @@ ngx_http_log_script_write(ngx_http_request_t *r, ngx_http_log_script_t *script,
     {
         ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno,
                       "%s \"%s\" failed", of.failed, log.data);
-        /* simulate successfull logging */
+        /* simulate successful logging */
         return len;
     }
 
@@ -690,12 +691,12 @@ ngx_http_log_escape(u_char *dst, u_char *src, size_t size)
         0x10000000, /* 0001 0000 0000 0000  0000 0000 0000 0000 */
 
                     /*  ~}| {zyx wvut srqp  onml kjih gfed cba` */
-        0x00000000, /* 0000 0000 0000 0000  0000 0000 0000 0000 */
+        0x80000000, /* 1000 0000 0000 0000  0000 0000 0000 0000 */
 
-        0x00000000, /* 0000 0000 0000 0000  0000 0000 0000 0000 */
-        0x00000000, /* 0000 0000 0000 0000  0000 0000 0000 0000 */
-        0x00000000, /* 0000 0000 0000 0000  0000 0000 0000 0000 */
-        0x00000000, /* 0000 0000 0000 0000  0000 0000 0000 0000 */
+        0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
+        0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
+        0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
+        0xffffffff, /* 1111 1111 1111 1111  1111 1111 1111 1111 */
     };
 
 
@@ -960,7 +961,7 @@ buffer:
 
         if (log->script) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "buffered logs can not have variables in name");
+                               "buffered logs cannot have variables in name");
             return NGX_CONF_ERROR;
         }
 
@@ -1054,25 +1055,6 @@ ngx_http_log_compile_format(ngx_conf_t *cf, ngx_array_t *flushes,
     value = args->elts;
 
     for ( /* void */ ; s < args->nelts; s++) {
-
-        for (i = 0; i < value[s].len; i++) {
-            if (value[s].data[i] != '%') {
-                continue;
-            }
-
-            ch = value[s].data[i + 1];
-
-            if ((ch >= 'A' && ch <= 'Z')
-                 || (ch >= 'a' && ch <= 'z')
-                 || ch == '{')
-            {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                     "the parameters in the \"%%name\" form are not supported, "
-                     "use the \"$variable\" instead");
-
-                return NGX_CONF_ERROR;
-            }
-        }
 
         i = 0;
 

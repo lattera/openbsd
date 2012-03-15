@@ -1,5 +1,6 @@
 
 # Copyright (C) Igor Sysoev
+# Copyright (C) Nginx, Inc.
 
 use 5.006001;
 use ExtUtils::MakeMaker;
@@ -24,7 +25,11 @@ WriteMakefile(
                          "-I ../../../../../$ENV{NGX_OBJS} " .
                          ($ENV{NGX_PCRE} =~ /^(YES|NO)/ ? "" :
                              ($ENV{NGX_PCRE} =~ m#^/# ? "-I $ENV{NGX_PCRE} " :
-                                  "-I ../../../../../$ENV{NGX_PCRE} ")),
+                                  "-I ../../../../../$ENV{NGX_PCRE} ")) .
+                         ($ENV{NGX_OPENSSL} =~ /^(YES|NO)/ ? "" :
+                             ($ENV{NGX_OPENSSL} =~ m#^/# ?
+                                  "-I $ENV{NGX_OPENSSL}/.openssl/include " :
+                      "-I ../../../../../$ENV{NGX_OPENSSL}/.openssl/include ")),
 
     depend => {
         'nginx.c'     =>
