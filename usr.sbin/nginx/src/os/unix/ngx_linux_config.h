@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -94,11 +95,6 @@ typedef struct iocb  ngx_aiocb_t;
 
 
 #define NGX_LISTEN_BACKLOG        511
-
-
-#if defined TCP_DEFER_ACCEPT && !defined NGX_HAVE_DEFERRED_ACCEPT
-#define NGX_HAVE_DEFERRED_ACCEPT  1
-#endif
 
 
 #ifndef NGX_HAVE_SO_SNDLOWAT

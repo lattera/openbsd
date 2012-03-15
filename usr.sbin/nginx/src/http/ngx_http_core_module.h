@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -363,6 +364,7 @@ struct ngx_http_core_loc_conf_s {
     ngx_uint_t    satisfy;                 /* satisfy */
     ngx_uint_t    lingering_close;         /* lingering_close */
     ngx_uint_t    if_modified_since;       /* if_modified_since */
+    ngx_uint_t    max_ranges;              /* max_ranges */
     ngx_uint_t    client_body_in_file_only; /* client_body_in_file_only */
 
     ngx_flag_t    client_body_in_single_buffer;
@@ -526,6 +528,13 @@ extern ngx_str_t  ngx_http_core_get_method;
     if (r->headers_out.last_modified) {                                       \
         r->headers_out.last_modified->hash = 0;                               \
         r->headers_out.last_modified = NULL;                                  \
+    }
+
+#define ngx_http_clear_location(r)                                            \
+                                                                              \
+    if (r->headers_out.location) {                                            \
+        r->headers_out.location->hash = 0;                                    \
+        r->headers_out.location = NULL;                                       \
     }
 
 

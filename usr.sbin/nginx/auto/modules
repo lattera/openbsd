@@ -1,5 +1,6 @@
 
 # Copyright (C) Igor Sysoev
+# Copyright (C) Nginx, Inc.
 
 
 if [ $EVENT_SELECT = NO -a $EVENT_FOUND = NO ]; then
@@ -332,6 +333,11 @@ fi
 if [ $HTTP_FLV = YES ]; then
     HTTP_MODULES="$HTTP_MODULES $HTTP_FLV_MODULE"
     HTTP_SRCS="$HTTP_SRCS $HTTP_FLV_SRCS"
+fi
+
+if [ $HTTP_MP4 = YES ]; then
+    HTTP_MODULES="$HTTP_MODULES $HTTP_MP4_MODULE"
+    HTTP_SRCS="$HTTP_SRCS $HTTP_MP4_SRCS"
 fi
 
 if [ $HTTP_UPSTREAM_IP_HASH = YES ]; then

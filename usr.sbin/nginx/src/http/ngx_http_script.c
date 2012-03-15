@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -1105,6 +1106,8 @@ ngx_http_script_regex_end_code(ngx_http_script_engine_t *e)
             ngx_log_error(NGX_LOG_NOTICE, r->connection->log, 0,
                           "rewritten redirect: \"%V\"", &e->buf);
         }
+
+        ngx_http_clear_location(r);
 
         r->headers_out.location = ngx_list_push(&r->headers_out.headers);
         if (r->headers_out.location == NULL) {

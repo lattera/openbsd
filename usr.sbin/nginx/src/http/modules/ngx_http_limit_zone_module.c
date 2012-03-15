@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -95,8 +96,8 @@ static ngx_http_module_t  ngx_http_limit_zone_module_ctx = {
     NULL,                                  /* create server configuration */
     NULL,                                  /* merge server configuration */
 
-    ngx_http_limit_zone_create_conf,       /* create location configration */
-    ngx_http_limit_zone_merge_conf         /* merge location configration */
+    ngx_http_limit_zone_create_conf,       /* create location configuration */
+    ngx_http_limit_zone_merge_conf         /* merge location configuration */
 };
 
 
@@ -193,31 +194,26 @@ ngx_http_limit_zone_handler(ngx_http_request_t *r)
 
         /* hash == node->key */
 
-        do {
-            lz = (ngx_http_limit_zone_node_t *) &node->color;
+        lz = (ngx_http_limit_zone_node_t *) &node->color;
 
-            rc = ngx_memn2cmp(vv->data, lz->data, len, (size_t) lz->len);
+        rc = ngx_memn2cmp(vv->data, lz->data, len, (size_t) lz->len);
 
-            if (rc == 0) {
-                if ((ngx_uint_t) lz->conn < lzcf->conn) {
-                    lz->conn++;
-                    goto done;
-                }
-
-                ngx_shmtx_unlock(&shpool->mutex);
-
-                ngx_log_error(lzcf->log_level, r->connection->log, 0,
-                              "limiting connections by zone \"%V\"",
-                              &lzcf->shm_zone->shm.name);
-
-                return NGX_HTTP_SERVICE_UNAVAILABLE;
+        if (rc == 0) {
+            if ((ngx_uint_t) lz->conn < lzcf->conn) {
+                lz->conn++;
+                goto done;
             }
 
-            node = (rc < 0) ? node->left : node->right;
+            ngx_shmtx_unlock(&shpool->mutex);
 
-        } while (node != sentinel && hash == node->key);
+            ngx_log_error(lzcf->log_level, r->connection->log, 0,
+                          "limiting connections by zone \"%V\"",
+                          &lzcf->shm_zone->shm.name);
 
-        break;
+            return NGX_HTTP_SERVICE_UNAVAILABLE;
+        }
+
+        node = (rc < 0) ? node->left : node->right;
     }
 
     n = offsetof(ngx_rbtree_node_t, color)
@@ -421,7 +417,8 @@ ngx_http_limit_zone_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_limit_zone_conf_t *conf = child;
 
     if (conf->shm_zone == NULL) {
-        *conf = *prev;
+        conf->shm_zone = prev->shm_zone;
+        conf->conn = prev->conn;
     }
 
     ngx_conf_merge_uint_value(conf->log_level, prev->log_level, NGX_LOG_ERR);

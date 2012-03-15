@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -128,6 +129,7 @@ ngx_write_fd(ngx_fd_t fd, void *buf, size_t n)
 
 #define ngx_linefeed(p)          *p++ = LF;
 #define NGX_LINEFEED_SIZE        1
+#define NGX_LINEFEED             "\x0a"
 
 
 #define ngx_rename_file(o, n)    rename((const char *) o, (const char *) n)
@@ -157,7 +159,7 @@ ngx_int_t ngx_set_file_time(u_char *name, ngx_fd_t fd, time_t s);
 #define ngx_is_exec(sb)          (((sb)->st_mode & S_IXUSR) == S_IXUSR)
 #define ngx_file_access(sb)      ((sb)->st_mode & 0777)
 #define ngx_file_size(sb)        (sb)->st_size
-#define ngx_file_fs_size(sb)     ((sb)->st_blocks * 512)
+#define ngx_file_fs_size(sb)     ngx_max((sb)->st_size, (sb)->st_blocks * 512)
 #define ngx_file_mtime(sb)       (sb)->st_mtime
 #define ngx_file_uniq(sb)        (sb)->st_ino
 
@@ -253,7 +255,8 @@ ngx_de_info(u_char *name, ngx_dir_t *dir)
 
 #define ngx_de_access(dir)       (((dir)->info.st_mode) & 0777)
 #define ngx_de_size(dir)         (dir)->info.st_size
-#define ngx_de_fs_size(dir)      ((dir)->info.st_blocks * 512)
+#define ngx_de_fs_size(dir)                                                  \
+    ngx_max((dir)->info.st_size, (dir)->info.st_blocks * 512)
 #define ngx_de_mtime(dir)        (dir)->info.st_mtime
 
 

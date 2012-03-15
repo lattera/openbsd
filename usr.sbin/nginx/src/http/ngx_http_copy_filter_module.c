@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -158,6 +159,11 @@ ngx_http_copy_filter(ngx_http_request_t *r, ngx_chain_t *in)
             ngx_file_t            *file;
             ngx_http_ephemeral_t  *e;
 
+            if (r->aio) {
+                c->busy_sendfile = NULL;
+                return rc;
+            }
+
             file = c->busy_sendfile->file;
             offset = c->busy_sendfile->file_pos;
 
@@ -184,7 +190,7 @@ ngx_http_copy_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
             rc = n;
 
-            if (file->aio) {
+            if (rc == NGX_AGAIN) {
                 file->aio->data = r;
                 file->aio->handler = ngx_http_copy_aio_sendfile_event_handler;
 

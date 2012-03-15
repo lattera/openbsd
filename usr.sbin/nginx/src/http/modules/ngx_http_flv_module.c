@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 #include <ngx_config.h>
@@ -23,7 +24,7 @@ static ngx_command_t  ngx_http_flv_commands[] = {
 };
 
 
-static u_char  ngx_flv_header[] = "FLV\x1\x1\0\0\0\x9\0\0\0\x9";
+static u_char  ngx_flv_header[] = "FLV\x1\x5\0\0\0\x9\0\0\0\0";
 
 
 static ngx_http_module_t  ngx_http_flv_module_ctx = {

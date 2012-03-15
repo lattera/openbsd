@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) Igor Sysoev
+ * Copyright (C) Nginx, Inc.
  */
 
 
@@ -11,7 +12,7 @@
 
 /*
  * Although FreeBSD sendfile() allows to pass a header and a trailer,
- * it can not send a header with a part of the file in one packet until
+ * it cannot send a header with a part of the file in one packet until
  * FreeBSD 5.3.  Besides, over the fast ethernet connection sendfile()
  * may send the partially filled packets, i.e. the 8 file pages may be sent
  * as the 11 full 1460-bytes packets, then one incomplete 324-bytes packet,
@@ -177,7 +178,7 @@ ngx_freebsd_sendfile_chain(ngx_connection_t *c, ngx_chain_t *in, off_t limit)
 
         if (file) {
 
-            /* create the tailer iovec and coalesce the neighbouring bufs */
+            /* create the trailer iovec and coalesce the neighbouring bufs */
 
             prev = NULL;
             iov = NULL;
@@ -246,9 +247,14 @@ ngx_freebsd_sendfile_chain(ngx_connection_t *c, ngx_chain_t *in, off_t limit)
                 }
             }
 
-            hdtr.headers = (struct iovec *) header.elts;
+            /*
+             * sendfile() does unneeded work if sf_hdtr's count is 0,
+             * but corresponding pointer is not NULL
+             */
+
+            hdtr.headers = header.nelts ? (struct iovec *) header.elts: NULL;
             hdtr.hdr_cnt = header.nelts;
-            hdtr.trailers = (struct iovec *) trailer.elts;
+            hdtr.trailers = trailer.nelts ? (struct iovec *) trailer.elts: NULL;
             hdtr.trl_cnt = trailer.nelts;
 
             /*
