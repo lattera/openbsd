@@ -1,4 +1,4 @@
-/* $Id: cmd-respawn-pane.c,v 1.3 2011/07/09 01:37:00 nicm Exp $ */
+/* $OpenBSD: src/usr.bin/tmux/cmd-respawn-pane.c,v 1.5 2012/03/17 22:34:12 nicm Exp $ */
 
 /*
  * Copyright (c) 2008 Nicholas Marriott <nicm@users.sourceforge.net>
