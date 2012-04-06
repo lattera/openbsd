@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/disk.9,v 1.30 2011/10/06 22:22:11 jmc Exp $
+.\"	$OpenBSD: src/share/man/man9/disk.9,v 1.31 2012/04/06 15:42:56 jsing Exp $
 .\"	$NetBSD: disk.9,v 1.2 1996/04/08 20:41:25 jtc Exp $
 .\"
 .\" Copyright (c) 1995, 1996 Jason R. Thorpe.
@@ -345,16 +345,11 @@ and
 .Pp
 The
 .Ox
-.Xr raid 4
-and
 .Xr vnd 4
-drivers utilize the detachment capability of the framework.
-They are located in
-.Pa sys/dev/raidframe/
-and
+driver utilizes the detachment capability of the framework.
+This is located in
 .Pa sys/dev/vnd.c .
 .Sh SEE ALSO
-.Xr raid 4 ,
 .Xr vnd 4 ,
 .Xr spl 9
 .Sh HISTORY
