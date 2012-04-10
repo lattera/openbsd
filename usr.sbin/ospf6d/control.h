@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ospf6d/control.h,v 1.2 2009/06/06 09:02:46 eric Exp $ */
+/*	$OpenBSD: src/usr.sbin/ospf6d/control.h,v 1.3 2012/04/10 07:56:50 deraadt Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -25,6 +25,7 @@
 
 struct {
 	struct event	ev;
+	struct event	evt;
 	int		fd;
 } control_state;
 
