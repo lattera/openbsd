@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppd/ppp.c,v 1.12 2012/01/23 03:36:22 yasuoka Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/npppd/ppp.c,v 1.13 2012/05/08 13:15:12 yasuoka Exp $ */
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* $Id: ppp.c,v 1.11 2012/01/18 03:13:04 yasuoka Exp $ */
+/* $Id: ppp.c,v 1.12 2012/01/23 03:36:22 yasuoka Exp $ */
 /**@file
  * This file provides PPP(Point-to-Point Protocol, RFC 1661) and
  * {@link :: _npppd_ppp PPP instance} related functions.

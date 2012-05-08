@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/pppoe/pppoed.c,v 1.8 2012/01/18 02:53:56 yasuoka Exp $	*/
+/*	$OpenBSD: src/usr.sbin/npppd/pppoe/pppoed.c,v 1.9 2012/05/08 13:15:12 yasuoka Exp $	*/
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -28,7 +28,7 @@
 /**@file
  * This file provides the PPPoE(RFC2516) server(access concentrator)
  * implementaion.
- * $Id: pppoed.c,v 1.7 2011/02/28 02:31:55 dlg Exp $
+ * $Id: pppoed.c,v 1.8 2012/01/18 02:53:56 yasuoka Exp $
  */
 #include <sys/types.h>
 #include <sys/param.h>
@@ -1131,7 +1131,7 @@ pppoed_log(pppoed *_this, int prio, const char *fmt, ...)
 
 	PPPOED_ASSERT(_this != NULL);
 	va_start(ap, fmt);
-#ifdef	PPPOED_MULITPLE
+#ifdef	PPPOED_MULTIPLE
 	snprintf(logbuf, sizeof(logbuf), "pppoed id=%u %s", _this->id, fmt);
 #else
 	snprintf(logbuf, sizeof(logbuf), "pppoed %s", fmt);

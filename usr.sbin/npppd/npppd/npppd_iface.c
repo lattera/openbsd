@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppd/npppd_iface.c,v 1.5 2011/04/02 12:04:44 dlg Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/npppd/npppd_iface.c,v 1.6 2012/05/08 13:15:12 yasuoka Exp $ */
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* $Id: npppd_iface.c,v 1.4 2010/07/02 21:20:57 yasuoka Exp $ */
+/* $Id: npppd_iface.c,v 1.5 2011/04/02 12:04:44 dlg Exp $ */
 /**@file
  * The interface of npppd and kernel.
  * This is an implementation to use tun(4) or pppx(4).

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppd/privsep.c,v 1.4 2012/01/18 03:13:04 yasuoka Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/npppd/privsep.c,v 1.5 2012/05/08 13:15:12 yasuoka Exp $ */
 
 /*
  * Copyright (c) 2010 Yasuoka Masahiko <yasuoka@openbsd.org>

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppd/fsm.h,v 1.4 2011/10/15 03:24:11 yasuoka Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/npppd/fsm.h,v 1.5 2012/05/08 13:15:11 yasuoka Exp $ */
 /*	$NetBSD: fsm.h,v 1.10 2000/09/23 22:39:35 christos Exp $	*/
 
 /*

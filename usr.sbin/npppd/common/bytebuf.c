@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/common/bytebuf.c,v 1.4 2012/02/24 06:19:00 guenther Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/common/bytebuf.c,v 1.5 2012/05/08 13:15:11 yasuoka Exp $ */
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
  * All rights reserved.
@@ -41,7 +41,7 @@
  *	}</pre>
  *
  * @author Yasuoka Masahiko
- * $Id: bytebuf.c,v 1.3 2010/07/02 21:20:57 yasuoka Exp $
+ * $Id: bytebuf.c,v 1.4 2012/02/24 06:19:00 guenther Exp $
  */
 #include <stdlib.h>
 #include <string.h>

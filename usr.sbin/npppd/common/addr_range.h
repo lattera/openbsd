@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/common/addr_range.h,v 1.2 2010/07/01 03:38:17 yasuoka Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/common/addr_range.h,v 1.3 2012/05/08 13:15:11 yasuoka Exp $ */
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
  * All rights reserved.

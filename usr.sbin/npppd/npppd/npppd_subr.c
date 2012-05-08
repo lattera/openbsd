@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.sbin/npppd/npppd/npppd_subr.c,v 1.6 2010/09/23 01:45:10 jsg Exp $ */
+/*	$OpenBSD: src/usr.sbin/npppd/npppd/npppd_subr.c,v 1.7 2012/05/08 13:15:12 yasuoka Exp $ */
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -28,7 +28,7 @@
 /**@file
  * This file provides helper functions for npppd.
  */
-/* $Id: npppd_subr.c,v 1.5 2010/07/02 21:20:57 yasuoka Exp $ */
+/* $Id: npppd_subr.c,v 1.6 2010/09/23 01:45:10 jsg Exp $ */
 #include <sys/cdefs.h>
 #ifndef LINT
 __COPYRIGHT(
