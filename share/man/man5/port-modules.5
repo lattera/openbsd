@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.127 2012/04/19 21:42:14 sthen Exp $
+.\"	$OpenBSD: src/share/man/man5/port-modules.5,v 1.128 2012/05/11 20:54:13 jasper Exp $
 .\"
 .\" Copyright (c) 2008 Marc Espie
 .\"
@@ -645,6 +645,10 @@ Also affects
 when
 .Ev SHARED_ONLY
 is not set or set to No.
+Appends
+.Ev MODLUA_VERSION
+to
+.Ev SUBST_VARS .
 .It lang/mono
 Sets
 .Ev MODMONO_ONLY_FOR_ARCHS ,
