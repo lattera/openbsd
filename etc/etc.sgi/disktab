@@ -1,0 +1,17 @@
+# $OpenBSD: src/etc/etc.sgi/disktab,v 1.12 2012/05/25 17:32:38 miod Exp $
+
+rdroot|ramdiskroot|RAM-disk root FS image:\
+	:ty=simulated:se#512:nc#20:nt#4:ns#128:\
+	:ta=4.2BSD:oa#0:pa#10240:fa#512:ba#4096:\
+	:ob#0:pb#0:oc#0:pc#10240:
+
+minicdroot|minicdramdiskroot|Boot CD-ROM image:\
+	:ty=simulated:se#512:nc#48:nt#4:ns#128:\
+	:ta=4.2BSD:oa#0:pa#24576:fa#512:ba#4096:\
+	:ob#0:pb#0:oc#0:pc#24576:
+
+cdroot|cdramdiskroot|Installation CD-ROM image:\
+	:ty=simulated:se#2048:nc#16:nt#300:ns#32:\
+	:ta=4.2BSD:oa#128:pa#153472:fa#2048:ba#16384:\
+	:ob#0:pb#0:oc#0:pc#153600:op#0:pp#128:
+
