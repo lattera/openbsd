@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/Attic/filter.h,v 1.7 2012/01/18 13:41:54 chl Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/Attic/filter_api.h,v 1.1 2012/06/14 21:56:13 gilles Exp $	*/
 
 /*
  * Copyright (c) 2011 Gilles Chehade <gilles@openbsd.org>
