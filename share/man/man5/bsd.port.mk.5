@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.341 2012/06/08 21:01:22 sthen Exp $
+.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.342 2012/06/18 12:16:19 espie Exp $
 .\"
 .\" Copyright (c) 2000-2008 Marc Espie
 .\"
@@ -2447,6 +2447,18 @@ if port can only be built on architectures with shared libraries.
 .It Ev SKIPDIR
 See
 .Xr ports 7 .
+.It Ev STATIC_PLIST
+Normally set to
+.Sq yes .
+Can be set to no for ports that do not have a static plist.
+Do not change without a very good reason.
+Note that the only good reason to not have a static plist is for ports such
+as
+.Pa databases/ports-readmes
+which actually build a bunch of files depending on the current ports tree.
+This breaks all introspection mechanisms within the ports tree, including
+.Pa databases/pkglocatedb
+which will not include that port.
 .It Ev STARTAFTER
 See
 .Xr ports 7 .
@@ -3180,6 +3192,7 @@ The following variables are subpackage dependent:
 .Ev UNMESSAGE ,
 .Ev DESCR ,
 .Ev PLIST ,
+.Ev STATIC_PLIST ,
 .Ev PKGSPEC .
 .Pp
 The usual non-MULTI_PACKAGES variables are simply used as default values
