@@ -1,6 +1,6 @@
-#	$Id: Makefile,v 1.9 2010/05/25 19:01:32 deraadt Exp $
+#	$Id: Makefile,v 1.10 2012/06/20 18:33:59 matthew Exp $
 
-.if ${MACHINE} == "macppc" || ${MACHINE} == "mac68k"
+.if ${MACHINE} == "macppc"
 PROG=	pdisk
 LDADD=  -lutil
 DPADD=  ${LIBUTIL}
