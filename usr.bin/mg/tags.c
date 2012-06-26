@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/usr.bin/mg/tags.c,v 1.4 2012/06/26 16:59:23 jasper Exp $	*/
+
 /*
  * Copyright (c) 2011 Sunil Nimmagadda <sunil@sunilnimmagadda.com>
  *
