@@ -1,0 +1,25 @@
+.Dd July 6, 2012
+.Dt BD-OFFSET-EMPTY 1
+.Os OpenBSD
+.Sh NAME
+.Nm Bd-offset-empty
+.Nd no argument specified to Bd offset
+.Sh DESCRIPTION
+.Bd -literal -offset
+Bd literal offset empty
+.Ed
+.Bd -literal -offset left
+Bd literal offset left
+.Ed
+.Bd -literal -offset indent
+Bd literal offset indent
+.Ed
+.Bd -literal -offset indent-two
+Bd literal offset indent-two
+.Ed
+.Bd -literal -offset 4n
+Bd literal offset 4n
+.Ed
+.Bd -literal -offset mystring
+Bd literal offset mystring
+.Ed
