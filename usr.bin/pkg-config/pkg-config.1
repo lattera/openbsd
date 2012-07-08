@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.bin/pkg-config/pkg-config.1,v 1.27 2012/07/08 08:53:37 ajacoutot Exp $
+.\"	$OpenBSD: src/usr.bin/pkg-config/pkg-config.1,v 1.28 2012/07/08 17:32:58 espie Exp $
 .\"
 .\"	Copyright (c) 2006 Chris Kuethe <ckuethe@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\"	ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\"	OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 19 2012 $
+.Dd $Mdocdate: July 8 2012 $
 .Dt PKG-CONFIG 1
 .Os
 .Sh NAME
@@ -42,7 +42,7 @@ Libraries from base install their metadata in
 .Pa /usr/lib/pkgconfig ;
 packages controlled by the
 .Xr ports 7
-system store their metadata, if provided, in
+system store their metadata in
 .Pa ${LOCALBASE}/lib/pkgconfig
 and
 .Pa ${LOCALBASE}/share/pkgconfig ;
