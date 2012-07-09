@@ -1,5 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Nm/Makefile,v 1.3 2012/07/07 14:10:55 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Nm/Makefile,v 1.4 2012/07/09 17:52:09 schwarze Exp $
 
-REGRESS_TARGETS=empty
+REGRESS_TARGETS = empty font
 
 .include <bsd.regress.mk>
