@@ -1,3 +1,5 @@
+/* $OpenBSD: src/lib/libutil/duid.c,v 1.2 2012/07/09 14:26:40 nicm Exp $ */
+
 /*
  * Copyright (c) 2010 Joel Sing <jsing@openbsd.org>
  *
