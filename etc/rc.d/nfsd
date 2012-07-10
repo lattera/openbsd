@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/nfsd,v 1.4 2012/07/10 15:03:24 halex Exp $
+
+daemon="/sbin/nfsd"
+
+. /etc/rc.d/rc.subr
+
+pexp="(${daemon}( |$)|nfsd: (master|server)$)"
+
+rc_reload=NO
+
+rc_pre() {
+	[ -s /etc/exports -a `sed -e '/^#/d' < /etc/exports | wc -l` -ne 0 ]
+}
+
+rc_cmd $1
