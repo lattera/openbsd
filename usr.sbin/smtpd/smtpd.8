@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/smtpd/smtpd.8,v 1.14 2011/10/22 06:42:44 jmc Exp $
+.\"	$OpenBSD: src/usr.sbin/smtpd/smtpd.8,v 1.15 2012/07/15 18:42:28 gilles Exp $
 .\"
 .\" Copyright (c) 2008, Gilles Chehade <gilles@openbsd.org>
 .\" Copyright (c) 2008, Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -90,7 +90,7 @@ ensure the mail queue is empty,
 then stop
 .Xr sendmail 8 :
 .Bd -literal -offset indent
-# pkill sendmail
+# /etc/rc.d/sendmail stop
 .Ed
 .Pp
 Modify the current
@@ -111,7 +111,7 @@ and enable the daemon:
 # newaliases
 # echo "sendmail_flags=NO" \*(Gt\*(Gt /etc/rc.conf.local
 # echo "smtpd_flags=" \*(Gt\*(Gt /etc/rc.conf.local
-# smtpd
+# /etc/rc.d/smtpd start
 .Ed
 .Sh FILES
 .Bl -tag -width "/var/run/smtpd.sockXXX" -compact
