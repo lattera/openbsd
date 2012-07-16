@@ -1,0 +1,19 @@
+SPACE-MULTIPLE(1)          OpenBSD Reference Manual          SPACE-MULTIPLE(1)
+
+NNAAMMEE
+     ssppaaccee--mmuullttiippllee - handling of multiple adjacent space characters
+
+DDEESSCCRRIIPPTTIIOONN
+     one space here
+
+     two spaces  here
+
+     three spaces   here
+
+     one non-collapsing space here
+
+     two non-collapsing spaces  here
+
+     three non-collapsing spaces   here
+
+OpenBSD                         April 23, 2010                         OpenBSD
