@@ -1,4 +1,4 @@
-/*	$Id: mdoc_man.c,v 1.36 2012/07/13 23:56:35 schwarze Exp $ */
+/*	$Id: mdoc_man.c,v 1.37 2012/07/14 09:05:58 schwarze Exp $ */
 /*
  * Copyright (c) 2011, 2012 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -1338,7 +1338,11 @@ static int
 pre_sp(DECL_ARGS)
 {
 
-	print_line(".sp", MMAN_nl);
+	if (MMAN_PP & outflags) {
+		outflags &= ~MMAN_PP;
+		print_line(".PP", 0);
+	} else
+		print_line(".sp", 0);
 	return(1);
 }
 
