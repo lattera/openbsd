@@ -1,7 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Ox/Makefile,v 1.2 2011/11/17 16:28:46 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Ox/Makefile,v 1.3 2012/07/18 16:55:54 schwarze Exp $
 
-REGRESS_TARGETS=keep
-
-SKIP_TMAN ?= keep
+REGRESS_TARGETS = keep
 
 .include <bsd.regress.mk>
