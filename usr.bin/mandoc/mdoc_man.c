@@ -1,4 +1,4 @@
-/*	$Id: mdoc_man.c,v 1.38 2012/07/16 10:45:28 schwarze Exp $ */
+/*	$Id: mdoc_man.c,v 1.39 2012/07/29 16:29:56 millert Exp $ */
 /*
  * Copyright (c) 2011, 2012 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -971,7 +971,7 @@ pre_fl(DECL_ARGS)
 {
 
 	font_push('B');
-	print_word("-");
+	print_word("\\-");
 	outflags &= ~MMAN_spc;
 	return(1);
 }
