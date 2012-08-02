@@ -1,10 +1,9 @@
-# $OpenBSD: src/usr.sbin/watchdogd/Makefile,v 1.2 2005/08/09 15:09:06 mickey Exp $
+# $OpenBSD: src/usr.sbin/watchdogd/Makefile,v 1.3 2012/08/02 13:38:39 okan Exp $
 
 PROG=		watchdogd
 SRCS=		watchdogd.c
 
 CFLAGS+=	-Wall
-LINTFLAGS+=	-u -z
 LDSTATIC=	${STATIC}
 
 MAN=		watchdogd.8
