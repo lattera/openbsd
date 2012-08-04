@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/nsd,v 1.4 2012/08/04 15:28:39 ajacoutot Exp $
+
+daemon="/usr/sbin/nsd"
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+rc_usercheck=NO
+
+daemon_ctl="/usr/sbin/nsdc"
+
+rc_stop() {
+	${daemon_ctl} stop
+}
+
+rc_check() {
+	${daemon_ctl} running
+}
+
+rc_cmd $1
