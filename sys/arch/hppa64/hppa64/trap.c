@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa64/hppa64/trap.c,v 1.31 2012/08/07 05:16:53 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa64/hppa64/trap.c,v 1.32 2012/08/07 17:17:46 guenther Exp $	*/
 
 /*
  * Copyright (c) 2005 Michael Shalayeff
@@ -23,7 +23,6 @@
 #include <sys/systm.h>
 #include <sys/syscall.h>
 #include <sys/syscall_mi.h>
-#include <sys/ktrace.h>
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/user.h>
