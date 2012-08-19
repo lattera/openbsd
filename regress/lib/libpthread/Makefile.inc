@@ -1,9 +1,9 @@
-# $OpenBSD: src/regress/lib/libpthread/Makefile.inc,v 1.9 2003/06/16 13:35:33 mickey Exp $
+# $OpenBSD: src/regress/lib/libpthread/Makefile.inc,v 1.10 2012/08/19 18:55:16 fgsch Exp $
 # Copyright (c) 1993 Chris Provenzano, proven@athena.mit.edu
 
 LIBPTHREAD=	/usr/lib/libpthread.a
 
-LDADD+=		-pthread
+LDADD+=		-lpthread
 DPADD+=		${LIBPTHREAD}
 
 CFLAGS+=	-Wall # -Werror
