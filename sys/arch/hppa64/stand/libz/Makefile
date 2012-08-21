@@ -1,8 +1,10 @@
-#	$OpenBSD: src/sys/arch/hppa64/stand/libz/Makefile,v 1.1 2005/04/01 10:40:49 mickey Exp $
+#	$OpenBSD: src/sys/arch/hppa64/stand/libz/Makefile,v 1.2 2012/08/21 14:46:18 pascal Exp $
 
 S=${.CURDIR}/../../../..
 ZDST=${.OBJDIR}
 SADIR=${.CURDIR}/..
+
+NOPIE=
 
 .PATH: ${S}/lib/libz
 

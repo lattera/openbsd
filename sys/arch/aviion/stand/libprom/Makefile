@@ -1,9 +1,10 @@
-#	$OpenBSD: src/sys/arch/aviion/stand/libprom/Makefile,v 1.1 2006/05/16 22:48:18 miod Exp $
+#	$OpenBSD: src/sys/arch/aviion/stand/libprom/Makefile,v 1.2 2012/08/21 14:46:18 pascal Exp $
 
 LIB=prom
 
 NOPIC=
 NOPROFILE=
+NOPIE=
 
 S=${.CURDIR}/../../../..
 DIR_SA=$S/lib/libsa

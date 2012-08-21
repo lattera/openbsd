@@ -1,6 +1,7 @@
-#	$OpenBSD: src/sys/arch/mvme88k/stand/prtvid/Makefile,v 1.3 2006/05/16 22:52:26 miod Exp $
+#	$OpenBSD: src/sys/arch/mvme88k/stand/prtvid/Makefile,v 1.4 2012/08/21 14:46:19 pascal Exp $
 PROG=	prtvid
 NOMAN=
+NOPIE=
 
 install:
 
