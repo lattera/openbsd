@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/sparc/sys/Attic/setlogin.S,v 1.4 2005/08/07 16:40:15 espie Exp $ */
+/*	$OpenBSD: src/lib/libc/arch/sparc/sys/Attic/setlogin.S,v 1.5 2012/08/22 17:19:35 pascal Exp $ */
 /*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -37,7 +37,7 @@
 	.globl	___logname_valid		/* in getlogin() */
 
 SYSCALL(setlogin)
-#ifdef PIC
+#ifdef __PIC__
 	PIC_PROLOGUE(%g1,%g2)
 	ld	[%g1 + ___logname_valid], %g1
 	retl

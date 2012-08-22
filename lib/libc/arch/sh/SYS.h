@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/sh/SYS.h,v 1.3 2011/04/04 12:42:39 guenther Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/sh/SYS.h,v 1.4 2012/08/22 17:19:35 pascal Exp $	*/
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -74,7 +74,7 @@
 		SYSENTRY(x);				\
 		SYSTRAP(y)
 
-#ifdef PIC
+#ifdef __PIC__
 
 #define JUMP_CERROR					\
 		mov	r0, r4;				\
