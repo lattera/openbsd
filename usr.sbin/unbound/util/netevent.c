@@ -115,6 +115,10 @@ struct internal_base {
 	uint32_t secs;
 	/** timeval with current time */
 	struct timeval now;
+	/** the event used for slow_accept timeouts */
+	struct event slow_accept;
+	/** true if slow_accept is enabled */
+	int slow_accept_enabled;
 };
 
 /**
@@ -225,6 +229,11 @@ comm_base_delete(struct comm_base* b)
 {
 	if(!b)
 		return;
+	if(b->eb->slow_accept_enabled) {
+		if(event_del(&b->eb->slow_accept) != 0) {
+			log_err("could not event_del slow_accept");
+		}
+	}
 #ifdef USE_MINI_EVENT
 	event_base_free(b->eb->base);
 #elif defined(HAVE_EVENT_BASE_FREE) && defined(HAVE_EVENT_BASE_ONCE)
@@ -261,6 +270,14 @@ void comm_base_exit(struct comm_base* b)
 	if(event_base_loopexit(b->eb->base, NULL) != 0) {
 		log_err("Could not loopexit");
 	}
+}
+
+void comm_base_set_slow_accept_handlers(struct comm_base* b,
+	void (*stop_acc)(void*), void (*start_acc)(void*), void* arg)
+{
+	b->stop_accept = stop_acc;
+	b->start_accept = start_acc;
+	b->cb_arg = arg;
 }
 
 struct event_base* comm_base_internal(struct comm_base* b)
@@ -306,6 +323,11 @@ udp_send_errno_needs_log(struct sockaddr* addr, socklen_t addrlen)
 		verbosity < VERB_DETAIL)
 		return 0;
 	return 1;
+}
+
+int tcp_connect_errno_needs_log(struct sockaddr* addr, socklen_t addrlen)
+{
+	return udp_send_errno_needs_log(addr, addrlen);
 }
 
 /* send a UDP reply */
@@ -367,11 +389,15 @@ static void p_ancil(const char* str, struct comm_reply* r)
 			strncpy(buf1, "(inet_ntop error)", sizeof(buf1));
 		}
 		buf1[sizeof(buf1)-1]=0;
+#ifdef HAVE_STRUCT_IN_PKTINFO_IPI_SPEC_DST
 		if(inet_ntop(AF_INET, &r->pktinfo.v4info.ipi_spec_dst, 
 			buf2, (socklen_t)sizeof(buf2)) == 0) {
 			strncpy(buf2, "(inet_ntop error)", sizeof(buf2));
 		}
 		buf2[sizeof(buf2)-1]=0;
+#else
+		buf2[0]=0;
+#endif
 		log_info("%s: %d %s %s", str, r->pktinfo.v4info.ipi_ifindex,
 			buf1, buf2);
 #elif defined(IP_RECVDSTADDR)
@@ -646,6 +672,19 @@ setup_tcp_handler(struct comm_point* c, int fd)
 	comm_point_start_listening(c, fd, TCP_QUERY_TIMEOUT);
 }
 
+void comm_base_handle_slow_accept(int ATTR_UNUSED(fd),
+	short ATTR_UNUSED(event), void* arg)
+{
+	struct comm_base* b = (struct comm_base*)arg;
+	/* timeout for the slow accept, re-enable accepts again */
+	if(b->start_accept) {
+		verbose(VERB_ALGO, "wait is over, slow accept disabled");
+		fptr_ok(fptr_whitelist_start_accept(b->start_accept));
+		(*b->start_accept)(b->cb_arg);
+		b->eb->slow_accept_enabled = 0;
+	}
+}
+
 int comm_point_perform_accept(struct comm_point* c,
 	struct sockaddr_storage* addr, socklen_t* addrlen)
 {
@@ -667,6 +706,38 @@ int comm_point_perform_accept(struct comm_point* c,
 #endif /* EPROTO */
 			)
 			return -1;
+#if defined(ENFILE) && defined(EMFILE)
+		if(errno == ENFILE || errno == EMFILE) {
+			/* out of file descriptors, likely outside of our
+			 * control. stop accept() calls for some time */
+			if(c->ev->base->stop_accept) {
+				struct comm_base* b = c->ev->base;
+				struct timeval tv;
+				verbose(VERB_ALGO, "out of file descriptors: "
+					"slow accept");
+				b->eb->slow_accept_enabled = 1;
+				fptr_ok(fptr_whitelist_stop_accept(
+					b->stop_accept));
+				(*b->stop_accept)(b->cb_arg);
+				/* set timeout, no mallocs */
+				tv.tv_sec = NETEVENT_SLOW_ACCEPT_TIME/1000;
+				tv.tv_usec = NETEVENT_SLOW_ACCEPT_TIME%1000;
+				event_set(&b->eb->slow_accept, -1, EV_TIMEOUT, 
+					comm_base_handle_slow_accept, b);
+				if(event_base_set(b->eb->base,
+					&b->eb->slow_accept) != 0) {
+					/* we do not want to log here, because
+					 * that would spam the logfiles.
+					 * error: "event_base_set failed." */
+				}
+				if(event_add(&b->eb->slow_accept, &tv) != 0) {
+					/* we do not want to log here,
+					 * error: "event_add failed." */
+				}
+			}
+			return -1;
+		}
+#endif
 		log_err("accept failed: %s", strerror(errno));
 #else /* USE_WINSOCK */
 		if(WSAGetLastError() == WSAEINPROGRESS ||
@@ -1186,8 +1257,9 @@ comm_point_tcp_handle_write(int fd, struct comm_point* c)
 #if defined(EINPROGRESS) && defined(EWOULDBLOCK)
 		if(error == EINPROGRESS || error == EWOULDBLOCK)
 			return 1; /* try again later */
+		else
 #endif
-		else if(error != 0 && verbosity < 2)
+		if(error != 0 && verbosity < 2)
 			return 0; /* silence lots of chatter in the logs */
                 else if(error != 0) {
 			log_err("tcp connect: %s", strerror(error));
