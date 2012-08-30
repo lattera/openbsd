@@ -1,8 +1,7 @@
-#	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot.net/Makefile,v 1.2 2012/08/21 14:46:20 pascal Exp $
+#	$OpenBSD: src/sys/arch/sparc64/stand/ofwboot.net/Makefile,v 1.3 2012/08/30 19:29:14 pascal Exp $
 
 CPPFLAGS+=	-DNETBOOT
 PROG=		ofwboot.net
-NOPIE=
 .include "../ofwboot/Makefile"
 
 .PATH: ${.CURDIR}/../ofwboot
