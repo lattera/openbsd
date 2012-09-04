@@ -1,4 +1,3 @@
-#	$OpenBSD: src/lib/libc/arch/amd64/net/Makefile.inc,v 1.1 2004/01/28 01:44:45 mickey Exp $
+#	$OpenBSD: src/lib/libc/arch/amd64/net/Makefile.inc,v 1.2 2012/09/04 03:10:42 okan Exp $
 
 SRCS+=  htonl.S htons.S ntohl.S ntohs.S
-LSRCS+=	htonl.c htons.c ntohl.c ntohs.c
