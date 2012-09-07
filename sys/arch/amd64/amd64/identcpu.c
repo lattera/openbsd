@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/amd64/identcpu.c,v 1.37 2012/08/24 02:49:23 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/amd64/identcpu.c,v 1.38 2012/09/07 22:02:34 naddy Exp $	*/
 /*	$NetBSD: identcpu.c,v 1.1 2003/04/26 18:39:28 fvdl Exp $	*/
 
 /*
@@ -55,7 +55,7 @@ int amd64_has_aesni;
 
 const struct {
 	u_int32_t	bit;
-	char		str[8];
+	char		str[12];
 } cpu_cpuid_features[] = {
 	{ CPUID_FPU,	"FPU" },
 	{ CPUID_VME,	"VME" },
