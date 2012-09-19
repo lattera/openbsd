@@ -1,4 +1,4 @@
-.\"     $OpenBSD: src/share/man/man4/vio.4,v 1.1 2012/09/19 19:24:33 sf Exp $
+.\"     $OpenBSD: src/share/man/man4/vio.4,v 1.2 2012/09/19 21:12:30 jmc Exp $
 .\"
 .\" Copyright (c) 2012 Stefan Fritsch <sf@sfritsch.de>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate$
+.Dd $Mdocdate: September 19 2012 $
 .Dt VIO 4
 .Os
 .Sh NAME
@@ -25,23 +25,28 @@
 .Sh DESCRIPTION
 The
 .Nm
-driver provides support for the virtio network interface provided by some
+driver provides support for the
+.Xr virtio 4
+network interface provided by some
 hypervisors like kvm or virtualbox.
-.Pp
 .Sh SEE ALSO
-.Xr virtio 4 ,
 .Xr intro 4 ,
+.Xr virtio 4
 .Sh HISTORY
 The
 .Nm
 driver first appeared in
 .Ox 5.3 .
 .Sh AUTHORS
+.An -nosplit
 The
 .Nm
-driver was ported to OpenBSD and improved by
+driver was ported to
+.Ox
+and improved by
 .An Stefan Fritsch Aq sf@sfritsch.de .
-It is based on the NetBSD
+It is based on the
+.Nx
 .Nm vioif
 driver by
 .An Minoura Makoto .
