@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/tmux/input.c,v 1.53 2012/07/10 11:53:01 nicm Exp $ */
+/* $OpenBSD: src/usr.bin/tmux/input.c,v 1.54 2012/09/25 07:41:22 nicm Exp $ */
 
 /*
  * Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
@@ -752,6 +752,7 @@ input_parse(struct window_pane *wp)
 
 	buf = EVBUFFER_DATA(evb);
 	len = EVBUFFER_LENGTH(evb);
+	notify_input(wp, evb);
 	off = 0;
 
 	/* Parse the input. */
