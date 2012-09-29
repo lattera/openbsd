@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sgi/sgi/machdep.c,v 1.128 2012/09/29 19:11:08 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/sgi/sgi/machdep.c,v 1.129 2012/09/29 19:24:31 miod Exp $ */
 
 /*
  * Copyright (c) 2003-2004 Opsycon AB  (www.opsycon.se / www.opsycon.com)
@@ -832,7 +832,7 @@ haltsys:
 void
 arcbios_halt(int howto)
 {
-	uint32_t sr;
+	register_t sr;
 
 	sr = disableintr();
 
