@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips64/mips64/pmap.c,v 1.65 2012/09/29 21:37:03 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips64/mips64/pmap.c,v 1.66 2012/10/03 22:46:07 miod Exp $	*/
 
 /*
  * Copyright (c) 2001-2004 Opsycon AB  (www.opsycon.se / www.opsycon.com)
@@ -36,7 +36,6 @@
 #include <sys/shm.h>
 #endif
 
-#include <mips64/archtype.h>
 #include <mips64/cache.h>
 #include <machine/autoconf.h>
 #include <machine/cpu.h>
