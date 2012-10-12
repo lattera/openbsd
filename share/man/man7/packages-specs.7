@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man7/packages-specs.7,v 1.22 2011/11/21 12:36:34 espie Exp $
+.\" $OpenBSD: src/share/man/man7/packages-specs.7,v 1.23 2012/10/12 15:00:25 espie Exp $
 .\"
 .\" Copyright (c) 2001 Marc Espie
 .\"
@@ -52,7 +52,17 @@ part starts at the first digit that follows a
 .Sq - ,
 and goes on up to the following
 .Sq - ,
-or to the end of the package name, if no flavor modifier is present.
+or to the end of the package name, whichever comes first.
+.Pp
+It is followed by the (possibly empty) 
+.Op - Ns Ar flavors
+part.
+.Pp
+Thus, version numbers should always start with a digit and cannot contain
+a
+.Sq - ,
+whereas flavors should never start with a digit.
+.Pp
 All packages must have a version number.
 Normally, the version number directly matches the original software
 distribution version number, or release date.
@@ -80,6 +90,11 @@ Version comparison is done using the dewey notation with a few specific rules.
 .It
 The version number is cut into separate parts on each dot
 .Sq \&. .
+Therefore, replace other upstream separators such as
+.Sq _
+or
+.Sq -
+with dots.
 .It
 Comparison checks each part in turn, the first part that differs yields
 a comparison result.
