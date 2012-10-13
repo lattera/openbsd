@@ -1,0 +1,16 @@
+# $OpenBSD: src/regress/usr.bin/make/mk10,v 1.2 2012/10/13 10:07:15 espie Exp $
+
+all: a b/o/d.e z.b
+
+a: 
+	# ${@D} ${@F}
+
+b/o/d.e:
+	# ${@D} ${@F}
+
+.SUFFIXES: .a .b
+
+.a.b:
+	# ${*D} ${*F}
+
+.PHONY: a b/o/d.e
