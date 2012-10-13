@@ -1,4 +1,4 @@
-#	$OpenBSD: src/sys/arch/i386/stand/boot/Makefile,v 1.43 2012/10/12 15:03:22 jsing Exp $
+#	$OpenBSD: src/sys/arch/i386/stand/boot/Makefile,v 1.44 2012/10/13 14:10:35 jsing Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -57,7 +57,7 @@ CLEANFILES+= ${PROG}.new
 
 ${PROG}: $(OBJS)
 	$(LD) $(LDFLAGS) -o ${PROG}.new $(OBJS)
-	@perl ${.CURDIR}/check-boot.pl ${PROG}.new
+	@perl ${SADIR}/boot/check-boot.pl ${PROG}.new
 	@mv ${PROG}.new ${PROG}
 	@$(SIZE) ${PROG}
 
