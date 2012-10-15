@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.sbin/smtpd/smtpctl.8,v 1.31 2012/10/14 13:22:33 gilles Exp $
+.\" $OpenBSD: src/usr.sbin/smtpd/smtpctl.8,v 1.32 2012/10/15 18:32:25 eric Exp $
 .\"
 .\" Copyright (c) 2006 Pierre-Yves Ritschard <pyr@openbsd.org>
 .\"
@@ -74,6 +74,8 @@ Displays runtime statistics concerning
 For map backends that provide caching, causes
 .Xr smtpd 8
 to update the cache.
+.It Cm stop
+Shutdown the server.
 .El
 .Pp
 When
