@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ldomctl/ldomctl.c,v 1.7 2012/10/21 12:47:58 kettenis Exp $	*/
+/*	$OpenBSD: src/usr.sbin/ldomctl/ldomctl.c,v 1.8 2012/10/21 12:56:45 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2012 Mark Kettenis
@@ -27,8 +27,7 @@
 
 #include "ds.h"
 #include "mdesc.h"
-
-#define DPRINTF(x)	printf x
+#include "util.h"
 
 struct hv_io {
 	uint64_t	hi_cookie;
