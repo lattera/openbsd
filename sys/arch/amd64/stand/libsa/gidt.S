@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gidt.S,v 1.10 2012/10/09 13:57:41 jsing Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/stand/libsa/gidt.S,v 1.11 2012/10/27 15:43:42 jsing Exp $	*/
 
 /*
  * Copyright (c) 1997 Michael Shalayeff
@@ -123,7 +123,7 @@
 	.globl	_C_LABEL(_rtt)
 
 ENTRY(_rtt)
-#ifdef BOOT_CRYPTO
+#ifdef SOFTRAID
 	call	_C_LABEL(sr_clear_keys)
 #endif
 #ifdef GIDT_DEBUG
