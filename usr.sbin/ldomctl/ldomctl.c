@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ldomctl/ldomctl.c,v 1.8 2012/10/21 12:56:45 kettenis Exp $	*/
+/*	$OpenBSD: src/usr.sbin/ldomctl/ldomctl.c,v 1.9 2012/10/27 18:21:00 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2012 Mark Kettenis
@@ -317,6 +317,8 @@ add_guest(struct md_node *node)
 	}
 
 	TAILQ_INSERT_TAIL(&guests, guest, link);
+	return;
+
 free:
 	free(guest);
 }
