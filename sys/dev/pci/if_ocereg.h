@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/Attic/ocereg.h,v 1.14 2012/10/29 18:22:45 mikeb Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_ocereg.h,v 1.1 2012/10/29 18:36:42 mikeb Exp $	*/
 
 /*-
  * Copyright (C) 2012 Emulex
