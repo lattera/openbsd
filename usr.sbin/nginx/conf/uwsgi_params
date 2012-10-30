@@ -1,3 +1,4 @@
+# $OpenBSD: src/usr.sbin/nginx/conf/uwsgi_params,v 1.3 2012/10/30 13:00:35 ajacoutot Exp $
 
 uwsgi_param  QUERY_STRING       $query_string;
 uwsgi_param  REQUEST_METHOD     $request_method;
