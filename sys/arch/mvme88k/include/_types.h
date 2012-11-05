@@ -1,7 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mvme88k/include/_types.h,v 1.4 2009/03/09 19:51:18 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mvme88k/include/_types.h,v 1.5 2012/11/05 19:39:34 miod Exp $	*/
 
 /* public domain */
 #include <m88k/_types.h>
-
-/* Feature test macros */
-#define	__HAVE_TIMECOUNTER
