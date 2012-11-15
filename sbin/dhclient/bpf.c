@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sbin/dhclient/bpf.c,v 1.21 2012/01/15 13:05:23 phessler Exp $	*/
+/*	$OpenBSD: src/sbin/dhclient/bpf.c,v 1.22 2012/11/15 14:54:18 krw Exp $	*/
 
 /* BPF socket interface code, originally contributed by Archie Cobbs. */
 
@@ -48,7 +48,6 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
-#include <netinet/if_ether.h>
 
 #define BPF_FORMAT "/dev/bpf%d"
 
