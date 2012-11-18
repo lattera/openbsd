@@ -1,5 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Cd/Makefile,v 1.3 2012/07/09 17:52:09 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Cd/Makefile,v 1.4 2012/11/18 00:05:28 schwarze Exp $
 
-REGRESS_TARGETS = noarg font
+REGRESS_TARGETS = noarg font eos
 
 .include <bsd.regress.mk>

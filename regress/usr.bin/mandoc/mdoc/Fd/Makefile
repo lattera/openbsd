@@ -1,5 +1,7 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Fd/Makefile,v 1.1 2012/07/09 23:52:47 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/mdoc/Fd/Makefile,v 1.2 2012/11/18 00:05:28 schwarze Exp $
 
-REGRESS_TARGETS = break font
+REGRESS_TARGETS = break font eos
+
+SKIP_TMAN = eos
 
 .include <bsd.regress.mk>
