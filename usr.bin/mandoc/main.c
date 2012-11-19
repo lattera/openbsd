@@ -1,4 +1,4 @@
-/*	$Id: main.c,v 1.82 2011/12/25 17:34:57 schwarze Exp $ */
+/*	$Id: main.c,v 1.83 2012/05/24 23:33:23 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010, 2011, 2012 Ingo Schwarze <schwarze@openbsd.org>
@@ -187,12 +187,12 @@ usage(void)
 
 	fprintf(stderr, "usage: %s "
 			"[-V] "
-			"[-foption] "
+			"[-Ios=name] "
 			"[-mformat] "
 			"[-Ooption] "
 			"[-Toutput] "
-			"[-Wlevel] "
-			"[file...]\n", 
+			"[-Wlevel]\n"
+			"\t      [file ...]\n", 
 			progname);
 
 	exit((int)MANDOCLEVEL_BADARG);
