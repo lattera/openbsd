@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/hostname.if.5,v 1.57 2012/11/26 17:42:05 krw Exp $
+.\"	$OpenBSD: src/share/man/man5/hostname.if.5,v 1.58 2012/11/26 21:35:20 krw Exp $
 .\"	$NetBSD: hosts.5,v 1.4 1994/11/30 19:31:20 jtc Exp $
 .\"
 .\" Copyright (c) 1983, 1991, 1993
@@ -30,7 +30,7 @@
 .\"
 .\"     @(#)hosts.5	8.2 (Berkeley) 12/11/93
 .\"
-.Dd $Mdocdate: July 8 2011 $
+.Dd $Mdocdate: November 26 2012 $
 .Dt HOSTNAME.IF 5
 .Os
 .Sh NAME
@@ -63,6 +63,17 @@ For example:
 .Bd -literal -offset indent
 inet 10.0.0.1 255.255.255.0 10.0.0.255 description "Bob's uplink"
 .Ed
+.Pp
+Each line is processed separately and in order.
+For example:
+.Bd -literal -offset indent
+nwid mynwid
+wpakey mywpakey
+dhcp
+.Ed
+.Pp
+would run ifconfig to set the nwid of the interface, run it again to set the wpakey of the interface, and then start
+.Xr dhclient 8 .
 .Sh STATIC ADDRESS CONFIGURATION
 The following packed formats are valid for configuring network
 interfaces with static addresses:
