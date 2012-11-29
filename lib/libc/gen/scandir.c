@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/gen/scandir.c,v 1.14 2012/03/22 04:11:53 matthew Exp $ */
+/*	$OpenBSD: src/lib/libc/gen/scandir.c,v 1.15 2012/11/29 02:15:44 guenther Exp $ */
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -57,7 +57,7 @@
 
 int
 scandir(const char *dirname, struct dirent ***namelist,
-    int (*select)(struct dirent *),
+    int (*select)(const struct dirent *),
     int (*dcomp)(const struct dirent **, const struct dirent **))
 {
 	struct dirent *d, *p, **names = NULL;
