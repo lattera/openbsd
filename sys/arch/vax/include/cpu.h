@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.41 2012/12/02 07:03:31 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/vax/include/cpu.h,v 1.42 2012/12/05 23:20:15 deraadt Exp $	*/
 /*	$NetBSD: cpu.h,v 1.41 1999/10/21 20:01:36 ragge Exp $	*/
 
 /*
@@ -35,7 +35,6 @@
 #define _MACHINE_CPU_H_
 #ifdef _KERNEL
 
-#include <sys/cdefs.h>
 #include <sys/device.h>
 #include <sys/evcount.h>
 

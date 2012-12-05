@@ -1,10 +1,10 @@
-/*	$OpenBSD: src/regress/libexec/ld.so/weak/libweak/weak.c,v 1.2 2002/11/13 21:51:04 fgsch Exp $	*/
+/*	$OpenBSD: src/regress/libexec/ld.so/weak/libweak/weak.c,v 1.3 2012/12/05 23:20:08 deraadt Exp $	*/
 
 /*
  * Public domain. 2002, Federico Schwindt <fgsch@openbsd.org>.
  */
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 #include "defs.h"
 
 int

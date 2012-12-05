@@ -28,11 +28,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: str.h,v 1.1.1.1 1995/10/18 08:47:57 deraadt Exp $
+ * $Id: str.h,v 1.2 2002/02/16 21:28:06 millert Exp $
  */
 
 #include <sys/types.h>
-#include <sys/cdefs.h>
 
 struct string {
 	char  *s_str;
