@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/sndiod/opt.c,v 1.1 2012/11/23 07:03:28 ratchov Exp $	*/
+/*	$OpenBSD: src/usr.bin/sndiod/opt.c,v 1.2 2012/12/07 08:04:58 ratchov Exp $	*/
 /*
  * Copyright (c) 2008-2011 Alexandre Ratchov <alex@caoua.org>
  *
@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "dev.h"
-#include "defs.h"
 #include "opt.h"
 #include "utils.h"
 
