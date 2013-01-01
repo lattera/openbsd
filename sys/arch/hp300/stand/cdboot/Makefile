@@ -1,11 +1,11 @@
-#	$OpenBSD: src/sys/arch/hp300/stand/cdboot/Makefile,v 1.6 2012/08/21 14:46:18 pascal Exp $
+#	$OpenBSD: src/sys/arch/hp300/stand/cdboot/Makefile,v 1.7 2013/01/01 17:17:44 miod Exp $
 
 PROG=	cdboot
 
 NOMAN=
 NOPIE=
 
-.include "${.CURDIR}/../Makefile.inc"
+CPPFLAGS+=	${SA_CPPFLAGS}
 
 .PATH:	${.CURDIR}/../uboot
 
