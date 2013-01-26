@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $OpenBSD: src/etc/rc.d/mountd,v 1.4 2013/01/26 08:00:11 ajacoutot Exp $
+
+daemon="/sbin/mountd"
+
+. /etc/rc.d/rc.subr
+
+rc_stop=NO
+
+rc_pre() {
+	[ -s /etc/exports ] && grep -qv '^#' /etc/exports && \
+		rm -f /var/db/mountdtab && \
+		echo -n > /var/db/mountdtab
+}
+
+rc_cmd $1
