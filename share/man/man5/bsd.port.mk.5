@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.363 2013/02/03 16:04:24 jmc Exp $
+.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.364 2013/02/16 11:35:12 ajacoutot Exp $
 .\"
 .\" Copyright (c) 2000-2008 Marc Espie
 .\"
@@ -2783,8 +2783,9 @@ to build ports under an
 .Xr mfs 8
 filesystem.
 Mostly for use by
-.Xr dpb 1 ,
-see
+.Xr dpb 1
+and not intended to be a user setting.
+See
 .Ev WRKOBJDIR_MFS
 for configuration.
 .It Ev USE_SYSTRACE
