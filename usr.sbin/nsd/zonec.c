@@ -40,6 +40,9 @@
 #include "options.h"
 #include "nsec3.h"
 
+#define ILNP_MAXDIGITS 4
+#define ILNP_NUMGROUPS 4
+
 const dname_type *error_dname;
 domain_type *error_domain;
 
@@ -382,17 +385,88 @@ zparser_conv_aaaa(region_type *region, const char *text)
 	return r;
 }
 
+
+uint16_t *
+zparser_conv_ilnp64(region_type *region, const char *text)
+{
+	uint16_t *r = NULL;
+	int ngroups, num;
+	unsigned long hex;
+	const char *ch;
+	int c;
+	char digits[ILNP_MAXDIGITS+1];
+	unsigned int ui[ILNP_NUMGROUPS];
+	uint16_t a[ILNP_NUMGROUPS];
+
+	ngroups = 1; /* Always at least one group */
+	num = 0;
+	for (ch = text; *ch != '\0'; ch++) {
+		if (*ch == ':') {
+			if (num <= 0) {
+				zc_error_prev_line("ilnp64: empty group of "
+					"digits is not allowed");
+				return NULL;
+			}
+			digits[num] = '\0';
+			hex = (unsigned long) strtol(digits, NULL, 16);
+			num = 0;
+			ui[ngroups - 1] = hex;
+			if (ngroups >= ILNP_NUMGROUPS) {
+				zc_error_prev_line("ilnp64: more than %d groups "
+					"of digits", ILNP_NUMGROUPS);
+				return NULL;
+			}
+			ngroups++;
+		} else {
+			/* Our grammar is stricter than the one accepted by
+			 * strtol. */
+			c = (int) *ch;
+			if (!isxdigit(c)) {
+				zc_error_prev_line("ilnp64: invalid "
+					"(non-hexadecimal) character %c", c);
+				return NULL;
+			}
+			if (num >= ILNP_MAXDIGITS) {
+				zc_error_prev_line("ilnp64: more than %d digits "
+					"in a group", ILNP_MAXDIGITS);
+				return NULL;
+			}
+			digits[num++] = *ch;
+		}
+	}
+	if (num <= 0) {
+		zc_error_prev_line("ilnp64: empty group of digits is not "
+			"allowed");
+		return NULL;
+	}
+	digits[num] = '\0';
+	hex = (unsigned long) strtol(digits, NULL, 16);
+	ui[ngroups - 1] = hex;
+	if (ngroups < 4) {
+		zc_error_prev_line("ilnp64: less than %d groups of digits",
+			ILNP_NUMGROUPS);
+		return NULL;
+	}
+
+	a[0] = htons(ui[0]);
+	a[1] = htons(ui[1]);
+	a[2] = htons(ui[2]);
+	a[3] = htons(ui[3]);
+	r = alloc_rdata_init(region, a, sizeof(a));
+	return r;
+}
+
 uint16_t *
 zparser_conv_text(region_type *region, const char *text, size_t len)
 {
 	uint16_t *r = NULL;
+	uint8_t *p;
 
 	if (len > 255) {
 		zc_error_prev_line("text string is longer than 255 characters,"
 				   " try splitting it into multiple parts");
 		len = 255;
 	}
-	uint8_t *p;
 	r = alloc_rdata(region, len + 1);
 	p = (uint8_t *) (r + 1);
 	*p = len;
