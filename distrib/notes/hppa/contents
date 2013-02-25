@@ -1,0 +1,41 @@
+dnl	$OpenBSD: src/distrib/notes/hppa/contents,v 1.28 2013/02/25 20:07:38 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	lif{:--:}OSrev.fs	A LIF bootable bsd.rd image, suitable for
+			network boot.
+
+	xxboot		The OpenBSD/MACHINE LIF boot block.
+
+DistributionDescription(ten)
+
+OpenBSDbase(65362295,186053544)
+
+OpenBSDcomp(50195611,150999804)
+
+OpenBSDetc(523226,1650613)
+
+OpenBSDgame(2914433,6584605)
+
+OpenBSDman(9739155,37526539)
+
+OpenBSDxbase(12013461,31717732)
+
+OpenBSDxetc(63704,259345)
+
+OpenBSDxfont(39798037,51939787)
+
+OpenBSDxserv(6871632,17557401)
+
+OpenBSDxshare(4338212,25441992)

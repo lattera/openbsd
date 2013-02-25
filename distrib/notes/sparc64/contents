@@ -1,0 +1,69 @@
+dnl	$OpenBSD: src/distrib/notes/sparc64/contents,v 1.48 2013/02/25 20:07:38 miod Exp $
+TopPart
+
+OpenBSDminiroot
+			It can be copied to the swap partition of an existing
+			OpenBSD, Solaris, NetBSD, or Linux installation to
+			allow installing or upgrading to OpenBSD OSREV.
+
+OpenBSDfloppy
+			This floppy image will boot on some SBus-based
+			MACHINE models, such as:
+			- Ultra 1/1E
+			- Ultra 2
+
+	floppyB{:--:}OSrev.fs	Another MACHINE boot and installation floppy;
+			see below.
+			This floppy image will boot on some PCI-based
+			MACHINE models, such as:
+			- SPARCengineUltra AX
+			- SPARCengineUltra AXe
+			- SPARCengineUltra AXi
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	installboot	The OpenBSD/MACHINE boot loader installation program.
+	bootblk		The OpenBSD/MACHINE boot block.
+	ofwboot		The OpenBSD/MACHINE secondary boot loader.
+	ofwboot.net	The OpenBSD/MACHINE network boot loader.
+
+
+Please note that there are multiple bootable images and kernels, intended
+to allow installing OpenBSD/MACHINE in a variety of situations without
+requiring a pre-existing working operating system.
+
+The kernel and boot images are provided for net booting installations.
+
+OpenBSDfloppydesc(two,Each,s)
+
+DistributionDescription(ten)
+
+OpenBSDbase(63511504,204802771)
+
+OpenBSDcomp(52221287,192214814)
+
+OpenBSDetc(523876,1655484)
+
+OpenBSDgame(2874020,6912785)
+
+OpenBSDman(9738763,37526545)
+
+OpenBSDxbase(11315555,35618877)
+
+OpenBSDxetc(63706,259345)
+
+OpenBSDxfont(39798673,51939787)
+
+OpenBSDxserv(7204511,20548570)
+
+OpenBSDxshare(4338023,25441992)

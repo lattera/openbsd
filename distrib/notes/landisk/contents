@@ -1,0 +1,38 @@
+dnl	$OpenBSD: src/distrib/notes/landisk/contents,v 1.11 2013/02/25 20:07:38 miod Exp $
+TopPart
+
+dnl can't use OpenBSDminiroot here - comment is inappropriate
+	miniroot{:--:}OSrev.fs	A miniroot filesystem image to be copied to
+			the beginning of the disk to allow installing
+			OpenBSD OSREV.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+dnl XXX describe boot, mbr, and xxboot. Or stop providing them?
+
+DistributionDescription(ten)
+
+OpenBSDbase(61370580,165567513)
+
+OpenBSDcomp(51885370,151462402)
+
+OpenBSDetc(523577,1650367)
+
+OpenBSDgame(2807142,6172909)
+
+OpenBSDman(9740798,37526545)
+
+OpenBSDxbase(10998218,26329094)
+
+OpenBSDxetc(63730,259345)
+
+OpenBSDxfont(39804470,51939787)
+
+OpenBSDxserv(1369674,3521146)
+
+OpenBSDxshare(4339946,25441992)

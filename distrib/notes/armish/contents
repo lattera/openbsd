@@ -1,0 +1,32 @@
+dnl	$OpenBSD: src/distrib/notes/armish/contents,v 1.11 2013/02/25 20:07:38 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+
+DistributionDescription(ten)
+
+OpenBSDbase(57784012,168059604)
+
+OpenBSDcomp(45921745,139667586)
+
+OpenBSDetc(523612,1650769)
+
+OpenBSDgame(2674279,6014713)
+
+OpenBSDman(9740195,37526543)
+
+OpenBSDxbase(10479526,27539717)
+
+OpenBSDxetc(63708,259350)
+
+OpenBSDxfont(39799168,51939787)
+
+OpenBSDxserv(6043689,15278450)
+
+OpenBSDxshare(4338537,25440426)
