@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.365 2013/03/04 13:47:14 jasper Exp $
+.\" $OpenBSD: src/share/man/man5/bsd.port.mk.5,v 1.366 2013/03/04 15:54:33 jasper Exp $
 .\"
 .\" Copyright (c) 2000-2008 Marc Espie
 .\"
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: February 16 2013 $
+.Dd $Mdocdate: March 4 2013 $
 .Dt BSD.PORT.MK 5
 .Os
 .Sh NAME
@@ -2270,7 +2270,7 @@ This is highly experimental and not recommended.
 .It Ev PREFERRED_CIPHERS
 List of cryptographic ciphers to use, in order of preference.
 Default is
-.Sq sha256 sha1 rmd160 md5 .
+.Sq sha256 .
 The first cipher that matches in ${CHECKSUM_FILE} is verified.
 .It Ev PREFIX
 Base directory for the current port installation.
