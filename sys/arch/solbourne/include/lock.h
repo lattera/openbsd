@@ -1,3 +1,3 @@
-/* $OpenBSD: src/sys/arch/solbourne/include/lock.h,v 1.1 2007/05/01 18:56:31 miod Exp $ */
-/* public domain */
+/*	$OpenBSD: src/sys/arch/solbourne/include/lock.h,v 1.2 2013/03/21 02:10:37 deraadt Exp $ */
+
 #include <sparc/lock.h>
