@@ -1,0 +1,3 @@
+/*	$OpenBSD: src/sys/arch/solbourne/include/sun_disklabel.h,v 1.2 2013/03/21 02:10:37 deraadt Exp $ */
+
+#include <sparc/sun_disklabel.h>
