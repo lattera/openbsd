@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/ospf6d/database.c,v 1.13 2013/03/25 14:26:16 markus Exp $ */
+/*	$OpenBSD: src/usr.sbin/ospf6d/database.c,v 1.14 2013/03/25 14:29:34 markus Exp $ */
 
 /*
  * Copyright (c) 2005 Claudio Jeker <claudio@openbsd.org>
