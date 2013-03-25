@@ -1,157 +1,128 @@
+=encoding utf8
+
 =head1 NAME
 
-perldelta - what is new for perl v5.8.2
+perldelta - what is new for perl v5.16.3
 
 =head1 DESCRIPTION
 
-This document describes differences between the 5.8.1 release and
-the 5.8.2 release.
+This document describes differences between the 5.16.2 release and
+the 5.16.3 release.
 
-If you are upgrading from an earlier release such as 5.6.1, first read
-the L<perl58delta>, which describes differences between 5.6.0 and
-5.8.0, and the L<perl581delta>, which describes differences between
-5.8.0 and 5.8.1.
-
-=head1 Incompatible Changes
-
-For threaded builds for modules calling certain re-entrant system calls,
-binary compatibility was accidentally lost between 5.8.0 and 5.8.1.
-Binary compatibility with 5.8.0 has been restored in 5.8.2, which
-necessitates breaking compatibility with 5.8.1. We see this as the
-lesser of two evils.
-
-This will only affect people who have a threaded perl 5.8.1, and compiled
-modules which use these calls, and now attempt to run the compiled modules
-with 5.8.2. The fix is to re-compile and re-install the modules using 5.8.2.
+If you are upgrading from an earlier release such as 5.16.1, first read
+L<perl5162delta>, which describes differences between 5.16.1 and
+5.16.2.
 
 =head1 Core Enhancements
 
-=head2 Hash Randomisation
+No changes since 5.16.0.
 
-The hash randomisation introduced with 5.8.1 has been amended. It
-transpired that although the implementation introduced in 5.8.1 was source
-compatible with 5.8.0, it was not binary compatible in certain cases. 5.8.2
-contains an improved implementation which is both source and binary
-compatible with both 5.8.0 and 5.8.1, and remains robust against the form of
-attack which prompted the change for 5.8.1.
+=head1 Security
 
-We are grateful to the Debian project for their input in this area.
-See L<perlsec/"Algorithmic Complexity Attacks"> for the original
-rationale behind this change.
+This release contains one major and a number of minor security fixes.
+These latter are included mainly to allow the test suite to pass cleanly
+with the clang compiler's address sanitizer facility.
 
-=head2 Threading
+=head2 CVE-2013-1667: memory exhaustion with arbitrary hash keys
 
-Several memory leaks associated with variables shared between threads
-have been fixed.
+With a carefully crafted set of hash keys (for example arguments on a
+URL), it is possible to cause a hash to consume a large amount of memory
+and CPU, and thus possibly to achieve a Denial-of-Service.
+
+This problem has been fixed.
+
+=head2 wrap-around with IO on long strings
+
+Reading or writing strings greater than 2**31 bytes in size could segfault
+due to integer wraparound.
+
+This problem has been fixed.
+
+=head2 memory leak in Encode
+
+The UTF-8 encoding implementation in Encode.xs had a memory leak which has been
+fixed.
+
+=head1 Incompatible Changes
+
+There are no changes intentionally incompatible with 5.16.0. If any
+exist, they are bugs and reports are welcome.
+
+=head1 Deprecations
+
+There have been no deprecations since 5.16.0.
 
 =head1 Modules and Pragmata
 
-=head2 Updated Modules And Pragmata
-
-The following modules and pragmata have been updated since Perl 5.8.1:
-
-=over 4
-
-=item Devel::PPPort
-
-=item Digest::MD5
-
-=item I18N::LangTags
-
-=item libnet
-
-=item MIME::Base64
-
-=item Pod::Perldoc
-
-=item strict
-
-Documentation improved
-
-=item Tie::Hash
-
-Documentation improved
-
-=item Time::HiRes
-
-=item Unicode::Collate
-
-=item Unicode::Normalize
-
-=item UNIVERSAL
-
-Documentation improved
-
-=back
-
-=head1 Selected Bug Fixes
-
-Some syntax errors involving unrecognized filetest operators are now handled
-correctly by the parser.
-
-=head1 Changed Internals
-
-Interpreter initialization is more complete when -DMULTIPLICITY is off.
-This should resolve problems with initializing and destroying the Perl
-interpreter more than once in a single process.                      
-
-=head1 Platform Specific Problems
-
-Dynamic linker flags have been tweaked for Solaris and OS X, which should
-solve problems seen while building some XS modules.
-
-Bugs in OS/2 sockets and tmpfile have been fixed.
-
-In OS X C<setreuid> and friends are troublesome - perl will now work
-around their problems as best possible.
-
-=head1 Future Directions
-
-Starting with 5.8.3 we intend to make more frequent maintenance releases,
-with a smaller number of changes in each. The intent is to propagate
-bug fixes out to stable releases more rapidly and make upgrading stable
-releases less of an upheaval. This should give end users more
-flexibility in their choice of upgrade timing, and allow them easier
-assessment of the impact of upgrades. The current plan is for code freezes
-as follows
+=head2 Updated Modules and Pragmata
 
 =over 4
 
 =item *
 
-5.8.3 23:59:59 GMT, Wednesday December 31st 2003
+L<Encode> has been upgraded from version 2.44 to version 2.44_01.
 
 =item *
 
-5.8.4 23:59:59 GMT, Wednesday March 31st 2004
+L<Module::CoreList> has been upgraded from version 2.76 to version 2.76_02.
 
 =item *
 
-5.8.5 23:59:59 GMT, Wednesday June 30th 2004
+L<XS::APItest> has been upgraded from version 0.38 to version 0.39.
 
 =back
 
-with the release following soon after, when testing is complete.
+=head1 Known Problems
 
-See L<perl581delta/"Future Directions"> for more soothsaying.
+None.
+
+=head1 Acknowledgements
+
+Perl 5.16.3 represents approximately 4 months of development since Perl 5.16.2
+and contains approximately 870 lines of changes across 39 files from 7 authors.
+
+Perl continues to flourish into its third decade thanks to a vibrant community
+of users and developers. The following people are known to have contributed the
+improvements that became Perl 5.16.3:
+
+Andy Dougherty, Chris 'BinGOs' Williams, Dave Rolsky, David Mitchell, Michael
+Schroeder, Ricardo Signes, Yves Orton.
+
+The list above is almost certainly incomplete as it is automatically generated
+from version control history. In particular, it does not include the names of
+the (very much appreciated) contributors who reported issues to the Perl bug
+tracker.
+
+For a more complete list of all of Perl's historical contributors, please see
+the F<AUTHORS> file in the Perl source distribution.
 
 =head1 Reporting Bugs
 
 If you find what you think is a bug, you might check the articles
 recently posted to the comp.lang.perl.misc newsgroup and the perl
-bug database at http://bugs.perl.org/.  There may also be
-information at http://www.perl.com/, the Perl Home Page.
+bug database at http://rt.perl.org/perlbug/ .  There may also be
+information at http://www.perl.org/ , the Perl Home Page.
 
-If you believe you have an unreported bug, please run the B<perlbug>
+If you believe you have an unreported bug, please run the L<perlbug>
 program included with your release.  Be sure to trim your bug down
 to a tiny but sufficient test case.  Your bug report, along with the
 output of C<perl -V>, will be sent off to perlbug@perl.org to be
-analysed by the Perl porting team.  You can browse and search
-the Perl 5 bugs at http://bugs.perl.org/
+analysed by the Perl porting team.
+
+If the bug you are reporting has security implications, which make it
+inappropriate to send to a publicly archived mailing list, then please
+send it to perl5-security-report@perl.org. This points to a closed
+subscription unarchived mailing list, which includes all the core
+committers, who will be able to help assess the impact of issues, figure
+out a resolution, and help co-ordinate the release of patches to
+mitigate or fix the problem across all platforms on which Perl is
+supported. Please only use this address for security issues in the Perl
+core, not for modules independently distributed on CPAN.
 
 =head1 SEE ALSO
 
-The F<Changes> file for exhaustive details on what changed.
+The F<Changes> file for an explanation of how to view exhaustive details
+on what changed.
 
 The F<INSTALL> file for how to build Perl.
 

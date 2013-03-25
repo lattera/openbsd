@@ -4,7 +4,7 @@ package Compress::Raw::Bzip2;
 use strict ;
 use warnings ;
 
-require 5.004 ;
+require 5.006 ;
 require Exporter;
 use AutoLoader;
 use Carp ;
@@ -12,7 +12,7 @@ use Carp ;
 use bytes ;
 our ($VERSION, $XS_VERSION, @ISA, @EXPORT, $AUTOLOAD);
 
-$VERSION = '2.024';
+$VERSION = '2.048';
 $XS_VERSION = $VERSION; 
 $VERSION = eval $VERSION;
 
@@ -90,6 +90,31 @@ or do {
 #    my $obj = bless [$ptr], $class ;
 #    return wantarray ? ($obj, $status) : $obj;
 #}
+
+sub Compress::Raw::Bzip2::STORABLE_freeze
+{
+    my $type = ref shift;
+    croak "Cannot freeze $type object\n";
+}
+
+sub Compress::Raw::Bzip2::STORABLE_thaw
+{
+    my $type = ref shift;
+    croak "Cannot thaw $type object\n";
+}
+
+sub Compress::Raw::Bunzip2::STORABLE_freeze
+{
+    my $type = ref shift;
+    croak "Cannot freeze $type object\n";
+}
+
+sub Compress::Raw::Bunzip2::STORABLE_thaw
+{
+    my $type = ref shift;
+    croak "Cannot thaw $type object\n";
+}
+
 
 package Compress::Raw::Bzip2;
 
@@ -220,7 +245,7 @@ Returns C<BZ_STREAM_END> on success and a C<bzip2> error code on failure.
 
 =head1 Uncompression
 
-=head2 ($z, $status) = new Compress::Raw::Bunzip2 $appendOutput, $consumeInput, $small, $limitOutput;
+=head2 ($z, $status) = new Compress::Raw::Bunzip2 $appendOutput, $consumeInput, $small, $verbosity, $limitOutput;
 
 If successful, it will return the initialised uncompression object, C<$z>
 and a C<$status> of C<BZ_OK> in a list context. In scalar context it
@@ -272,6 +297,12 @@ If C<LimitOutput> is enabled, the C<ConsumeInput> option will also be
 enabled.
 
 This option defaults to false.
+
+=item B<$verbosity>
+
+This parameter is ignored.
+
+Defaults to 0.
 
 =back
 
@@ -328,7 +359,7 @@ The following bzip2 constants are exported by this module
 
 L<Compress::Zlib>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzip>, L<IO::Compress::Deflate>, L<IO::Uncompress::Inflate>, L<IO::Compress::RawDeflate>, L<IO::Uncompress::RawInflate>, L<IO::Compress::Bzip2>, L<IO::Uncompress::Bunzip2>, L<IO::Compress::Lzma>, L<IO::Uncompress::UnLzma>, L<IO::Compress::Xz>, L<IO::Uncompress::UnXz>, L<IO::Compress::Lzop>, L<IO::Uncompress::UnLzop>, L<IO::Compress::Lzf>, L<IO::Uncompress::UnLzf>, L<IO::Uncompress::AnyInflate>, L<IO::Uncompress::AnyUncompress>
 
-L<Compress::Zlib::FAQ|Compress::Zlib::FAQ>
+L<IO::Compress::FAQ|IO::Compress::FAQ>
 
 L<File::GlobMapper|File::GlobMapper>, L<Archive::Zip|Archive::Zip>,
 L<Archive::Tar|Archive::Tar>,
@@ -348,7 +379,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2010 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2012 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

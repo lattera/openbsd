@@ -25,7 +25,7 @@ package main;
 
 
 my $TB = Test::Builder->create;
-$TB->plan(tests => 73);
+$TB->plan(tests => 100);
 
 # Utility testing functions.
 sub ok ($;$) {
@@ -368,4 +368,54 @@ ERR
 #     \\\$expected = GLOB\\(0x[0-9a-f]+\\)
 ERR
 
+}
+
+
+# rt.cpan.org 53469
+{
+
+    # Accept both old and new-style stringification
+    my $modifiers = (qr/foobar/ =~ /\Q(?^/) ? '^' : '-xism';
+#line 380
+    ok !is_deeply( qr/a/, qr/b/, "different regexes" );
+    is( $out, "not ok 29 - different regexes\n" );
+    is( $err, <<ERR,          '  right diagnostic' );
+#   Failed test 'different regexes'
+#   at $0 line 380.
+#     Structures begin differing at:
+#          \$got = (?$modifiers:a)
+#     \$expected = (?$modifiers:b)
+ERR
+}
+
+
+# false values that should not compare equal
+{
+    ok !is_deeply( 0, '', "0 != ''" );
+    is( $out, "not ok 30 - 0 != ''\n" );
+    ok !is_deeply( 0, undef, "0 != undef" );
+    is( $out,    "not ok 31 - 0 != undef\n" );
+    ok !is_deeply( '', undef, "'' != undef" );
+    is( $out,     "not ok 32 - '' != undef\n" );
+
+    ok !is_deeply( [0], [''], "[0] != ['']" );
+    is( $out,     "not ok 33 - [0] != ['']\n" );
+    ok !is_deeply( [0], [undef], "[0] != [undef]" );
+    is( $out,        "not ok 34 - [0] != [undef]\n" );
+    ok !is_deeply( [''], [undef], "[''] != [undef]" );
+    is( $out,         "not ok 35 - [''] != [undef]\n" );
+
+    ok !is_deeply( [0], [], "[0] != []" );
+    is( $out,   "not ok 36 - [0] != []\n" );
+    ok !is_deeply( [undef], [], "[undef] != []" );
+    is( $out,       "not ok 37 - [undef] != []\n" );
+    ok !is_deeply( [''], [], "[''] != []" );
+    is( $out,    "not ok 38 - [''] != []\n" );
+
+    ok !is_deeply( {x => 0}, {x => ''}, "{x => 0} != {x => ''}" );
+    is( $out,               "not ok 39 - {x => 0} != {x => ''}\n" );
+    ok !is_deeply( {x => 0}, {x => undef}, "{x => 0} != {x => undef}" );
+    is( $out,                  "not ok 40 - {x => 0} != {x => undef}\n" );
+    ok !is_deeply( {x => ''}, {x => undef}, "{x => ''} != {x => undef}" );
+    is( $out,                   "not ok 41 - {x => ''} != {x => undef}\n" );
 }

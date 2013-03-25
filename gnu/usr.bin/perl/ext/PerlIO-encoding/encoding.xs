@@ -1,7 +1,3 @@
-/*
- * $Id: encoding.xs,v 0.3 2002/04/21 22:14:41 dankogai Exp $
- */
-
 #define PERL_NO_GET_CONTEXT
 #include "EXTERN.h"
 #include "perl.h"
@@ -58,6 +54,8 @@ PerlIOEncode_getarg(pTHX_ PerlIO * f, CLONE_PARAMS * param, int flags)
 {
     PerlIOEncode *e = PerlIOSelf(f, PerlIOEncode);
     SV *sv = &PL_sv_undef;
+    PERL_UNUSED_ARG(param);
+    PERL_UNUSED_ARG(flags);
     if (e->enc) {
 	dSP;
 	/* Not 100% sure stack swap is right thing to do during dup ... */
@@ -540,8 +538,8 @@ Off_t
 PerlIOEncode_tell(pTHX_ PerlIO * f)
 {
     PerlIOBuf *b = PerlIOSelf(f, PerlIOBuf);
-    /* Unfortunately the only way to get a postion is to (re-)translate,
-       the UTF8 we have in bufefr and then ask layer below
+    /* Unfortunately the only way to get a position is to (re-)translate,
+       the UTF8 we have in buffer and then ask layer below
      */
     PerlIO_flush(f);
     if (b->buf && b->ptr > b->buf) {
