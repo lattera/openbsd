@@ -1,6 +1,6 @@
-#	$OpenBSD: src/etc/etc.octeon/Makefile.inc,v 1.1 2013/03/26 17:58:11 jasper Exp $
+#	$OpenBSD: src/etc/etc.octeon/Makefile.inc,v 1.2 2013/03/30 23:00:28 jasper Exp $
 
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/boot ${RELEASEDIR}/boot
+	# None yet.
 
 MDEXT=	bsd.rd
