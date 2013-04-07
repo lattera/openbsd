@@ -1,5 +1,5 @@
 #!/bin/sh
-#       $OpenBSD: src/regress/usr.bin/ssh/sshd-log-wrapper.sh,v 1.2 2005/02/27 11:40:30 dtucker Exp $
+#       $OpenBSD: src/regress/usr.bin/ssh/sshd-log-wrapper.sh,v 1.3 2013/04/07 02:16:03 dtucker Exp $
 #       Placed in the Public Domain.
 #
 # simple wrapper for sshd proxy mode to catch stderr output
@@ -10,4 +10,4 @@ log=$2
 shift
 shift
 
-exec $sshd $@ -e 2>>$log
+exec $sshd -E$log $@
