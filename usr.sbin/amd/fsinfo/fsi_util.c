@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)fsi_util.c	8.1 (Berkeley) 6/6/93
- *	$Id: fsi_util.c,v 1.6 2002/06/11 05:29:55 itojun Exp $
+ *	$Id: fsi_util.c,v 1.7 2003/06/02 23:36:52 millert Exp $
  */
 
 #include "../fsinfo/fsinfo.h"
@@ -127,7 +127,7 @@ char *hn;
 static void make_banner(fp)
 FILE *fp;
 {
-	time_t t = time((time_t*) 0);
+	time_t t = time(NULL);
 	char *ctime(), *cp = ctime(&t);
 
 	fprintf(fp,
