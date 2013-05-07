@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/login_token/token.c,v 1.14 2013/01/13 21:21:17 fgsch Exp $	*/
+/*	$OpenBSD: src/libexec/login_token/token.c,v 1.15 2013/05/07 12:17:20 tedu Exp $	*/
 
 /*-
  * Copyright (c) 1995 Migration Associates Corp. All Rights Reserved
@@ -63,7 +63,7 @@
 typedef	union {
 	DES_cblock	cb;
 	char		ct[9];
-	unsigned long	ul[2];
+	uint32_t	ul[2];
 } TOKEN_CBlock;
 
 /*
