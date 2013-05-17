@@ -1864,6 +1864,10 @@ data:
 
     }
 
+    if (ctx->size < 0 || ctx->length < 0) {
+        goto invalid;
+    }
+
     return rc;
 
 done:
