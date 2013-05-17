@@ -1,3 +1,4 @@
-/* $OpenBSD: src/sys/arch/mvme88k/include/trap.h,v 1.24 2004/04/26 14:31:11 miod Exp $ */
+/* $OpenBSD: src/sys/arch/mvme88k/include/trap.h,v 1.25 2013/05/17 22:46:28 miod Exp $ */
 /* public domain */
+#include <machine/board.h>	/* md_interrupt_func */
 #include <m88k/trap.h>
