@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/mbuf_tags.9,v 1.27 2013/05/17 17:20:09 mpi Exp $
+.\"	$OpenBSD: src/share/man/man9/mbuf_tags.9,v 1.28 2013/05/17 22:42:20 jmc Exp $
 .\"
 .\" The author of this man page is Angelos D. Keromytis (angelos@cis.upenn.edu)
 .\"
@@ -15,7 +15,7 @@
 .\" MERCHANTABILITY OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR
 .\" PURPOSE.
 .\"
-.Dd $Mdocdate: January 29 2011 $
+.Dd $Mdocdate: May 17 2013 $
 .Dt MBUF_TAGS 9
 .Os
 .Sh NAME
@@ -259,14 +259,14 @@ move the tags from the old to the new mbuf.
 The tag-manipulating code is contained in the file
 .Pa sys/kern/uipc_mbuf2.c .
 .Sh SEE ALSO
-.Xr bpf 4,
+.Xr bpf 4 ,
 .Xr bridge 4 ,
 .Xr gif 4 ,
 .Xr gre 4 ,
 .Xr ipsec 4 ,
-.Xr mbuf 9 ,
 .Xr pf 4 ,
-.Xr pipex 4
+.Xr pipex 4 ,
+.Xr mbuf 9
 .Sh HISTORY
 The packet tags first appeared in
 .Ox 2.9
