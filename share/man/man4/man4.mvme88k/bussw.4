@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man4/man4.mvme88k/bussw.4,v 1.6 2008/01/05 21:02:15 jmc Exp $
+.\"	$OpenBSD: src/share/man/man4/man4.mvme88k/bussw.4,v 1.7 2013/05/18 11:26:01 miod Exp $
 .\"
 .\" Copyright (c) 2003 Paul Weissmann
 .\" All rights reserved.
@@ -32,7 +32,8 @@
 .Nm bussw
 .Nd BusSwitch local peripheral bus interface
 .Sh SYNOPSIS
-.Cd "bussw0 at mainbus0 addr 0xfff00000"
+.Cd "bussw0  at mainbus0 addr 0xfff00000"
+.Cd "pcctwo0 at bussw0 offset 0x00000"
 .Sh DESCRIPTION
 The
 .Nm
@@ -63,5 +64,4 @@ Four 32-bit general purpose registers
 .El
 .Sh SEE ALSO
 .Xr intro 4 ,
-.Xr pcctwo 4 ,
-.Xr syscon 4
+.Xr pcctwo 4
