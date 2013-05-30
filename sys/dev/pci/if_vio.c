@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/dev/pci/if_vio.c,v 1.9.2.1 2013/05/30 21:49:33 sthen Exp $	*/
+/*	$OpenBSD: src/sys/dev/pci/if_vio.c,v 1.9.2.2 2013/05/30 21:52:12 sthen Exp $	*/
 
 /*
  * Copyright (c) 2012 Stefan Fritsch, Alexander Fiveg.
@@ -743,6 +743,10 @@ again:
 			break;
 		}
 		IFQ_DEQUEUE(&ifp->if_snd, m);
+		if (m != sc->sc_tx_mbufs[slot]) {
+			m_freem(m);
+			m = sc->sc_tx_mbufs[slot];
+		}
 
 		hdr = &sc->sc_tx_hdrs[slot];
 		memset(hdr, 0, sc->sc_hdr_size);
@@ -1114,7 +1118,6 @@ vio_encap(struct vio_softc *sc, int slot, struct mbuf *m,
 		    r);
 		return ENOBUFS;
 	}
-	m_freem(m);
 	*mnew = m0;
 	return 0;
 }
