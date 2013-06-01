@@ -1,4 +1,6 @@
-#	$OpenBSD: src/etc/etc.octeon/Makefile.inc,v 1.2 2013/03/30 23:00:28 jasper Exp $
+#	$OpenBSD: src/etc/etc.octeon/Makefile.inc,v 1.3 2013/06/01 17:55:29 jasper Exp $
+
+KERNELS += GENERIC.MP bsd.mp
 
 bootblocks:
 	# None yet.
