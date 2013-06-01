@@ -1,5 +1,5 @@
-#	$OpenBSD: src/distrib/beagle/Attic/Makefile,v 1.1 2011/03/14 16:40:23 drahn Exp $
+#	$OpenBSD: src/distrib/beagle/Attic/Makefile,v 1.2 2013/06/01 01:23:21 bmercer Exp $
 
-SUBDIR= ramdisk
+SUBDIR= ramdisk miniroot
 
 .include <bsd.subdir.mk>
