@@ -1,3 +1,5 @@
+/*	$OpenBSD: src/sys/arch/amd64/include/hibernate_var.h,v 1.5 2013/06/04 01:20:23 pirofti Exp $	*/
+
 /*
  * Copyright (c) 2011 Mike Larkin <mlarkin@openbsd.org>
  *
