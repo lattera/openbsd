@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/tvtohz.9,v 1.7 2013/04/24 20:44:53 matthew Exp $
+.\"	$OpenBSD: src/share/man/man9/tvtohz.9,v 1.8 2013/06/04 19:27:15 schwarze Exp $
 .\"
 .\" Copyright (c) 1999 Marc Espie
 .\" All rights reserved.
@@ -31,9 +31,9 @@
 .Nm tstohz
 .Nd translate time period to timeout delay
 .Sh SYNOPSIS
-.Fd #include <sys/types.h>
-.Fd #include <sys/time.h>
-.Fd #include <sys/systm.h>
+.In sys/types.h
+.In sys/time.h
+.In sys/systm.h
 .Ft int
 .Fn tvtohz "const struct timeval *tv"
 .Ft int
