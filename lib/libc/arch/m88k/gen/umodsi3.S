@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/m88k/gen/udivsi3.S,v 1.2 2013/06/05 22:06:30 miod Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/m88k/gen/umodsi3.S,v 1.1 2013/06/05 22:06:30 miod Exp $	*/
 
 /*
  * Copyright (c) 2013 Miodrag Vallat.
@@ -20,16 +20,18 @@
 #include "SYS.h"
 
 /*
- * uint __udivsi3(uint n, uint d);
+ * uint __umodsi3(uint n, uint d);
  */
 
 #ifndef LDSO
-.weak	_C_LABEL(__udivsi3)
+.weak	_C_LABEL(__umodsi3)
 #endif
-ENTRY(__udivsi3)
+ENTRY(__umodsi3)
 	/* if divider is zero, trap */
 	tcnd	eq0, %r3, 503
 
+	divu	%r4, %r2, %r3
+	mulu	%r5, %r4, %r3
 	jmp.n	%r1
-	 divu	%r2, %r2, %r3
-END(__udivsi3)
+	 subu	%r2, %r2, %r5
+END(__umodsi3)

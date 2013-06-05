@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/m88k/gen/divsi3.S,v 1.1 2013/06/05 20:15:01 miod Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/m88k/gen/divsi3.S,v 1.2 2013/06/05 22:06:30 miod Exp $	*/
 
 /*
  * Copyright (c) 2013 Miodrag Vallat.
@@ -23,6 +23,9 @@
  * int __divsi3(int n, int d);
  */
 
+#ifndef LDSO
+.weak	_C_LABEL(__divsi3)
+#endif
 ENTRY(__divsi3)
 	/* if divider is zero, trap */
 	tcnd	eq0, %r3, 503

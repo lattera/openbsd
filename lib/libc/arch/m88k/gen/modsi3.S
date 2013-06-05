@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libc/arch/m88k/gen/udivsi3.S,v 1.2 2013/06/05 22:06:30 miod Exp $	*/
+/*	$OpenBSD: src/lib/libc/arch/m88k/gen/modsi3.S,v 1.1 2013/06/05 22:06:30 miod Exp $	*/
 
 /*
  * Copyright (c) 2013 Miodrag Vallat.
@@ -20,16 +20,46 @@
 #include "SYS.h"
 
 /*
- * uint __udivsi3(uint n, uint d);
+ * int __modsi3(int n, int d);
  */
 
 #ifndef LDSO
-.weak	_C_LABEL(__udivsi3)
+.weak	_C_LABEL(__modsi3)
 #endif
-ENTRY(__udivsi3)
+ENTRY(__modsi3)
 	/* if divider is zero, trap */
 	tcnd	eq0, %r3, 503
 
+	bb1	31, %r2, 1f
+	bb1	31, %r3, 2f
+
+	/* both operands are positive */
+	divu	%r4, %r2, %r3
+9:
+	mulu	%r5, %r4, %r3
 	jmp.n	%r1
-	 divu	%r2, %r2, %r3
-END(__udivsi3)
+	 subu	%r2, %r2, %r5
+
+1:
+	bb1	31, %r3, 3f
+
+	/* r2 is negative, r3 is positive */
+	subu	%r4, %r0, %r2
+	divu	%r5, %r4, %r3
+	subu	%r4, %r0, %r5
+	br	9b
+
+2:
+	/* r2 is positive, r3 is negative */
+	subu	%r5, %r0, %r3
+	divu	%r4, %r2, %r5
+	subu	%r4, %r0, %r4
+	br	9b
+
+3:
+	/* both operands are negative */
+	subu	%r4, %r0, %r2
+	subu	%r5, %r0, %r3
+	divu	%r4, %r4, %r5
+	br	9b
+END(__modsi3)
