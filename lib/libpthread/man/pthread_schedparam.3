@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/lib/libpthread/man/pthread_schedparam.3,v 1.4 2010/11/07 18:16:43 jmc Exp $
+.\" $OpenBSD: src/lib/libpthread/man/pthread_schedparam.3,v 1.5 2013/06/05 03:44:50 tedu Exp $
 .\" Copyright (C) 2000 Jason Evans <jasone@freebsd.org>.
 .\" All rights reserved.
 .\"
@@ -35,7 +35,7 @@
 .Nm pthread_getschedparam
 .Nd thread scheduling parameter manipulation
 .Sh SYNOPSIS
-.Fd #include <pthread.h>
+.In pthread.h
 .Ft int
 .Fn pthread_setschedparam "pthread_t thread" "int policy" "const struct sched_param *param"
 .Ft int
