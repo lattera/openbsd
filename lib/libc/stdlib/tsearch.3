@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/lib/libc/stdlib/tsearch.3,v 1.18 2012/07/08 10:25:55 guenther Exp $
+.\" $OpenBSD: src/lib/libc/stdlib/tsearch.3,v 1.19 2013/06/05 03:39:23 tedu Exp $
 .\"
 .\" Copyright (c) 1997 Todd C. Miller <Todd.Miller@courtesan.com>
 .\"
@@ -24,7 +24,7 @@
 .Nm twalk
 .Nd manipulate binary search trees
 .Sh SYNOPSIS
-.Fd #include <search.h>
+.In search.h
 .Ft void *
 .Fn tdelete "const void *key" "void **rootp" "int (*compar)(const void *, const void *)"
 .Ft void *
