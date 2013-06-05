@@ -1,0 +1,39 @@
+.\" $OpenBSD: src/lib/libpthread/man/pthread_main_np.3,v 1.6 2013/06/05 03:44:50 tedu Exp $
+.\"
+.\" Peter Valchev <pvalchev@openbsd.org> Public Domain, 2001
+.\"
+.Dd $Mdocdate: May 31 2007 $
+.Dt PTHREAD_MAIN_NP 3
+.Os
+.Sh NAME
+.Nm pthread_main_np
+.Nd identify the main thread
+.Sh SYNOPSIS
+.In pthread.h
+.In pthread_np.h
+.Ft int
+.Fn pthread_main_np "void"
+.Sh DESCRIPTION
+The
+.Fn pthread_main_np
+function identifies the main thread.
+.Sh RETURN VALUES
+The
+.Fn pthread_main_np
+function returns:
+.Bl -tag -width hrmf
+.It 1
+if the calling thread is the main thread
+.It 0
+if the calling thread is not the main thread
+.It -1
+if the thread initialization has not completed
+.El
+.Sh SEE ALSO
+.Xr pthread_self 3 ,
+.Xr pthreads 3
+.Sh STANDARDS
+The
+.Fn pthread_main_np
+function is non-portable and may not be supported with the above
+semantics on other POSIX systems.
