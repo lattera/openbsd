@@ -1,0 +1,3 @@
+# $OpenBSD: src/lib/libsqlite3/shlib_version,v 1.7 2013/06/09 14:56:30 landry Exp $
+major=23
+minor=0
