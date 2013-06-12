@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/tftpd/tftpd.c,v 1.8 2012/07/13 02:31:46 gsoares Exp $	*/
+/*	$OpenBSD: src/usr.sbin/tftpd/tftpd.c,v 1.8.4.1 2013/06/12 10:34:18 jasper Exp $	*/
 
 /*
  * Copyright (c) 2012 David Gwynne <dlg@uq.edu.au>
@@ -168,7 +168,7 @@ void		tftp_end(struct tftp_client *);
 void		tftp(struct tftp_client *, struct tftphdr *, size_t);
 void		tftp_open(struct tftp_client *, const char *);
 void		nak(struct tftp_client *, int);
-void		oack(struct tftp_client *);
+int		oack(struct tftp_client *);
 void		oack_done(int, short, void *);
 
 void		sendfile(struct tftp_client *);
@@ -565,7 +565,7 @@ client_alloc()
 {
 	struct tftp_client *client;
 
-	client = calloc(sizeof(*client), 1);
+	client = calloc(1, sizeof(*client));
 	if (client == NULL)
 		return (NULL);
 
@@ -812,7 +812,7 @@ again:
 	client->fgetc = pf->f_getc;
 	client->fputc = pf->f_putc;
 
-	client->options = options = calloc(sizeof(*client->options), NOPT);
+	client->options = options = calloc(NOPT, sizeof(*client->options));
 	if (options == NULL) {
 		ecode = 100 + ENOMEM;
 		goto error;
@@ -876,7 +876,8 @@ tftp_open(struct tftp_client *client, const char *filename)
 		goto error;
 
 	if (client->options) {
-		oack(client);
+		if (oack(client) == -1)
+			goto error;
 
 		free(client->options);
 		client->options = NULL;
@@ -886,7 +887,6 @@ tftp_open(struct tftp_client *client, const char *filename)
 		sendfile(client);
 
 	return;
-
 error:
 	nak(client, ecode);
 }
@@ -1386,7 +1386,7 @@ nak(struct tftp_client *client, int error)
 /*
  * Send an oack packet (option acknowledgement).
  */
-void
+int
 oack(struct tftp_client *client)
 {
 	struct opt_client *options = client->options;
@@ -1396,7 +1396,7 @@ oack(struct tftp_client *client)
 
 	tp = (struct tftphdr *)client->buf;
 	bp = (char *)tp->th_stuff;
-	size = client->packet_size - 2;
+	size = sizeof(client->buf) - 2;
 
 	tp->th_opcode = htons((u_short)OACK);
 	for (i = 0; i < NOPT; i++) {
@@ -1406,14 +1406,14 @@ oack(struct tftp_client *client)
 		n = snprintf(bp, size, "%s%c%lld", opt_names[i], '\0',
 		    options[i].o_reply);
 		if (n == -1 || n >= size) {
-			lwarn("oack: no buffer space");
+			lwarnx("oack: no buffer space");
 			goto error;
 		}
 
 		bp += n + 1;
 		size -= n + 1;
 		if (size < 0) {
-			lwarn("oack: no buffer space");
+			lwarnx("oack: no buffer space");
 			goto error;
 		}
 	}
@@ -1436,10 +1436,10 @@ oack(struct tftp_client *client)
 		    oack_done, client);
 
 	event_add(&client->sev, &client->tv);
-	return;
+	return (0);
 
 error:
-	client_free(client);
+	return (-1);
 }
 
 int
