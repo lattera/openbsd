@@ -1,0 +1,121 @@
+dnl	$OpenBSD: src/distrib/notes/octeon/install,v 1.9 2013/06/13 18:24:21 jasper Exp $
+OpenBSDInstallPrelude
+
+Booting the installation media:
+
+There are two ways to load an OpenBSD/MACHINE kernel (or ramdisk),
+over TFTP or from the internal CompactFlash storage.
+
+For TFTP you will first need to setup a TFTP server as described in
+diskless(8). Assuming tftpd(8) chroots into /tftpboot, copy bsd.rd into that
+directory.
+
+Power on your OpenBSD/MACHINE device and from the U-Boot prompt set up
+networking. In this example it is assumed you have a DHCP server in your
+network:
+
+	# dhcp
+
+If you don't have a DHCP server, you need to set the ipaddr U-Boot environment
+variable:
+
+	# setenv ipaddr <static ip address>
+
+Now set the IP address of your TFTP server:
+
+	# setenv serverip <server ip>
+
+The ramdisk kernel needs to be loaded into memory. If you use "0" as the
+address, the default address location will be used by U-Boot:
+
+	# tftpboot 0 bsd.rd
+	Using octeth0 device
+	TFTP from server 192.168.178.30; our IP address is 192.168.178.89
+	Filename 'bsd.rd'.
+	Load address: 0x9f00000
+	Loading: #########################
+	done
+	Bytes transferred = 7191474 (6dbbb2 hex), 8617 Kbytes/sec
+
+Now the kernel can be booted from the default memory location, with no
+arguments provided:
+
+	# bootoctlinux
+
+OpenBSD/MACHINE currently lacks a real bootloader. It is possible however to
+boot into bsd upon powering on the machine.
+
+From the U-Boot commandline, make a copy of the current ${bootcmd} so you can
+restore it later if needed:
+
+	# setenv old_bootcmd ${bootcmd}
+
+${bootcmd} is run by U-Boot when ${autoload} is enabled. Now create a new
+${bootcmd} which will load an ELF file called 'bsd' from the first active FAT
+partition on the first CF card (created by the installer) and save the
+environment to persistent storage:
+
+	# setenv bootcmd 'fatload ide 0:1 ${loadaddr} bsd;bootoctlinux root=/dev/octcf0'
+	# setenv bootdelay 5
+	# saveenv
+	Saving Environment to Flash...
+	Un-Protected 1 sectors
+	Erasing Flash...
+	. done
+	Erased 1 sectors
+	Writing to Flash... .done
+	Protected 1 sectors
+	#
+
+Depending on your hardware you may need to replace 'ide' with 'usb'.
+
+No miniroot is provided at this time.
+
+OpenBSDInstallPart2
+
+OpenBSDInstallPart3(,"octcf0 for internal CompactFlash storage.")
+dnl sd0 for USB storage, or wd0 for internal hard disk storage attached to the SATA port
+
+OpenBSDInstallPart4
+
+OpenBSDInstallMBRPart1
+
+dnl OpenBSDInstallMBRPart2
+	The fdisk(8) utility will be invoked to let you edit your MBR
+	partitioning.  The current MBR partitions defined will be
+	displayed and you will be allowed to modify them, and add new
+	partitions.
+
+	The setup will need two partitions, one 'OpenBSD' for the
+	OpenBSD/MACHINE installation, and one 'MSDOS' for the
+	U-Boot scripts/bootloader.
+
+	If you use the whole disk option, the install script
+	will create a small 'MSDOS' partition and use the rest of
+	the disk for the OpenBSD installation.
+
+	After your OpenBSD MBR partition has been setup, the real
+	partition setup can follow.
+
+OpenBSDInstallPart5({:-
+	U-Boot partitions defined on the disk will usually show up as
+	partition 'i', 'j' and so on.-:})
+
+dnl OpenBSDInstallPart6({:-CD-ROM, -:})
+OpenBSDInstallPart6
+
+OpenBSDURLInstall
+
+dnl OpenBSDCDROMInstall
+
+OpenBSDNFSInstall
+
+OpenBSDDISKInstall({:-"octcfN" or -:},,{:-, Linux (ext2) or MS-DOS-:})
+
+OpenBSDCommonInstall
+
+OpenBSDInstallWrapup
+
+dnl CAM-0100 systems final steps:
+
+OpenBSDCongratulations
