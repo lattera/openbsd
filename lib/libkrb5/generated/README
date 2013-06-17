@@ -1,8 +1,0 @@
-#
-# $Id$
-#
-
-This directory contains files generated with asn1_compile and compile_et.
-
-Regenerate with `make regen' in ${BSDSRCDIR}/lib/libkrb5 when the sources
-or tools are updated.
