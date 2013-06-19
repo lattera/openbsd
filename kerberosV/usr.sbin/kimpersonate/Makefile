@@ -1,4 +1,4 @@
-# $OpenBSD: src/kerberosV/libexec/kimpersonate/Attic/Makefile,v 1.1 2013/06/17 19:11:35 robert Exp $
+# $OpenBSD: src/kerberosV/usr.sbin/kimpersonate/Makefile,v 1.1 2013/06/19 07:06:22 ajacoutot Exp $
 
 PROG=	kimpersonate
 MAN=	kimpersonate.8
