@@ -1,8 +1,6 @@
-#$OpenBSD: src/kerberosV/lib/libheimbase/Makefile,v 1.1 2013/06/17 19:11:35 robert Exp $
+#$OpenBSD: src/kerberosV/lib/libheimbase/Makefile,v 1.2 2013/06/21 10:59:40 ajacoutot Exp $
 
 LIB=	heimbase
-LDFLAGS=	-Wl,--no-undefined
-VERSION_MAP= ${KRB5DIR}/base/version-script.map
 
 INCS=	heimbase.h
 
