@@ -1,7 +1,6 @@
-#$OpenBSD: src/kerberosV/lib/libkdc/Makefile,v 1.3 2013/06/21 10:59:40 ajacoutot Exp $
+#$OpenBSD: src/kerberosV/lib/libkdc/Makefile,v 1.4 2013/06/21 11:01:17 ajacoutot Exp $
 
 LIB=	kdc
-LDFLAGS=	-Wl,--no-undefined
 
 INCS=	kdc.h \
 	kdc-protos.h
