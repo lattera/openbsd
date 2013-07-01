@@ -1,7 +1,8 @@
-# $OpenBSD: src/kerberosV/usr.bin/krb5-config/Makefile,v 1.3 2013/06/20 08:41:22 ajacoutot Exp $
+# $OpenBSD: src/kerberosV/usr.bin/krb5-config/Makefile,v 1.4 2013/07/01 05:15:24 ajacoutot Exp $
 
 SCRIPTS=krb5-config
-MAN=	krb5-config.1
+MPAGES=	krb5-config.1
+MSRC=	${KRB5DIR}/tools
 
 CLEANFILES= krb5-config
 
