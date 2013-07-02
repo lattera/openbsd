@@ -1,0 +1,40 @@
+# $OpenBSD: src/kerberosV/lib/libkafs5/Attic/Makefile,v 1.4 2013/07/02 19:00:10 ajacoutot Exp $
+
+LIB=	kafs5
+INCS=	kafs.h
+MPAGES=	kafs.3
+MSRC=	${KRB5DIR}/lib/kafs
+
+MLINKS=	kafs.3 k_afs_cell_of_file.3 \
+	kafs.3 k_hasafs.3 \
+	kafs.3 k_pioctl.3 \
+	kafs.3 k_setpag.3 \
+	kafs.3 k_unlog.3 \
+	kafs.3 kafs5.3 \
+	kafs.3 kafs_set_verbose.3 \
+	kafs.3 kafs_settoken.3 \
+	kafs.3 kafs_settoken5.3 \
+	kafs.3 kafs_settoken_rxkad.3 \
+	kafs.3 krb5_afslog.3 \
+	kafs.3 krb5_afslog_uid.3 \
+	kafs.3 krb_afslog.3 \
+	kafs.3 krb_afslog_uid.3
+
+SRCS=	afssys.c afskrb5.c common.c krb5_err.h
+SRCS=	afssys.c \
+	afskrb5.c \
+	common.c
+
+CPPFLAGS=	-I${KRB5DIR}/lib/kafs \
+		-I${KRB5DIR}/lib/krb5 \
+		-I${.OBJDIR}/../libkrb5/ \
+		-I${KRB5DIR}/lib/roken
+
+CLEANFILES= kafs5.3
+
+kafs5.3: kafs.3
+	sed -e 's/libkafs, -lkafs/libkafs5, -lkafs5/g' ${.ALLSRC} >${.TARGET}
+
+.include <bsd.lib.mk>
+
+.PATH: ${KRB5DIR}/lib/kafs
