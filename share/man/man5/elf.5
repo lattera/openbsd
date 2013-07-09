@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man5/elf.5,v 1.21 2013/07/09 17:28:10 matthew Exp $
+.\"	$OpenBSD: src/share/man/man5/elf.5,v 1.22 2013/07/09 22:03:14 miod Exp $
 .\"Copyright (c) 1999 Jeroen Ruigrok van der Werven
 .\"All rights reserved.
 .\"
@@ -25,7 +25,7 @@
 .\"
 .\"	$FreeBSD: src/share/man/man5/elf.5,v 1.21 2001/10/01 16:09:23 ru Exp $
 .\"
-.Dd $Mdocdate: January 17 2013 $
+.Dd $Mdocdate: July 9 2013 $
 .Dt ELF 5
 .Os
 .Sh NAME
@@ -311,14 +311,22 @@ HPPA.
 SPARC with enhanced instruction set.
 .It Dv EM_PPC
 PowerPC.
+.It Dv EM_ARM
+Advanced RISC Machines ARM.
 .It Dv EM_ALPHA
 Compaq [DEC] Alpha.
+.It Dv EM_SH
+Hitachi/Renesas Super-H.
 .It Dv EM_SPARCV9
 SPARC v9 64-bit.
-.It Dv EM_ALPHA_EXP
-Compaq [DEC] Alpha with enhanced instruction set.
+.It Dv EM_IA_64
+Intel IA-64.
+.It Dv EM_AMD64
+AMD64.
 .It Dv EM_VAX
 DEC Vax.
+.It Dv EM_ALPHA_EXP
+Compaq [DEC] Alpha with enhanced instruction set.
 .El
 .It Dv e_version
 This member identifies the file version:
