@@ -1,7 +1,7 @@
-/*	$Id: mandoc.h,v 1.50 2012/11/19 22:28:35 schwarze Exp $ */
+/*	$Id: mandoc.h,v 1.51 2013/05/31 21:37:08 schwarze Exp $ */
 /*
  * Copyright (c) 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
- * Copyright (c) 2012 Ingo Schwarze <schwarze@openbsd.org>
+ * Copyright (c) 2012, 2013 Ingo Schwarze <schwarze@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -145,6 +145,7 @@ enum	mandocerr {
 	MANDOCERR_NOARGS, /* macro requires line argument(s) */
 	MANDOCERR_NOBODY, /* macro requires body argument(s) */
 	MANDOCERR_NOARGV, /* macro requires argument(s) */
+	MANDOCERR_NUMERIC, /* request requires a numeric argument */
 	MANDOCERR_LISTTYPE, /* missing list type */
 	MANDOCERR_ARGSLOST, /* line argument(s) will be lost */
 	MANDOCERR_BODYLOST, /* body argument(s) will be lost */
