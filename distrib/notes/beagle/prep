@@ -1,0 +1,19 @@
+dnl	$OpenBSD: src/distrib/notes/beagle/Attic/prep,v 1.2 2013/07/16 18:15:10 florian Exp $
+Please be aware that OpenBSD support for this platform is far from
+complete.
+
+At the moment the only way to boot the OpenBSD install is to copy the
+miniroot for your board "miniroot-{am335x,beagle,panda}-{:--:}OSrev.fs"
+image to a sdcard.
+
+As a result you need another machine to plug the sdcard in. Any
+machine type will do, as long as it supports sdcard storage devices.
+Under OpenBSD, it will appear as a ``sd'' device, for example sd1.
+
+Use the dd(1) utility to copy the miniroot to the hard drive.
+The command would likely be, under OpenBSD:
+	dd if=miniroot-beagle-{:--:}OSrev.fs of=/dev/rsd1c
+
+When you have connected the BeagleBoard to you computer, a command such
+as "tip -115200 tty00" (assuming tty00 is your serial port device) should
+connect you to the board's console.
