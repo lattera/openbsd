@@ -1,0 +1,41 @@
+dnl	$OpenBSD: src/distrib/notes/vax/contents,v 1.31 2013/07/26 20:07:30 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+OpenBSDfloppy
+
+	boot.mop	MOP-bootable image (for network installs);
+			see below.
+
+OpenBSDfloppydesc(single,The)
+
+DistributionDescription(ten)
+
+OpenBSDbase(97529454,227470985)
+
+OpenBSDcomp(64311626,225573294)
+
+OpenBSDetc(525185,1644708)
+
+OpenBSDgame(6545810,12837399)
+
+OpenBSDman(9554157,37021904)
+
+OpenBSDxbase(82090134,137354884)
+
+OpenBSDxetc(64682,271806)
+
+OpenBSDxfont(39807807,51943721)
+
+OpenBSDxserv(16640,68772)
+
+OpenBSDxshare(4484149,24957579)

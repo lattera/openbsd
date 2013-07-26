@@ -1,0 +1,44 @@
+dnl	$OpenBSD: src/distrib/notes/beagle/Attic/contents,v 1.4 2013/07/26 20:07:29 miod Exp $
+TopPart
+
+	miniroot-am335x-{:--:}OSrev.fs
+			A miniroot filesystem to be used for
+			installation; BeagleBone version.
+
+	miniroot-beagle-{:--:}OSrev.fs
+			A miniroot filesystem to be used for
+			installation; BeagleBoard version.
+
+	miniroot-panda-{:--:}OSrev.fs
+			A miniroot filesystem to be used for
+			installation; PandaBoard (ES) version.
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+
+DistributionDescription(ten)
+
+OpenBSDbase(57200072,160429598)
+
+OpenBSDcomp(48715241,148174537)
+
+OpenBSDetc(523911,1644246)
+
+OpenBSDgame(2674656,6016273)
+
+OpenBSDman(9956540,38700830)
+
+OpenBSDxbase(10973881,28807741)
+
+OpenBSDxetc(64834,272324)
+
+OpenBSDxfont(39797846,51943721)
+
+OpenBSDxserv(5825255,14409683)
+
+OpenBSDxshare(4479383,24953178)

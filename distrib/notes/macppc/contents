@@ -1,0 +1,40 @@
+dnl	$OpenBSD: src/distrib/notes/macppc/contents,v 1.32 2013/07/26 20:07:29 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDbsdmp
+
+OpenBSDrd
+
+OpenBSDinstalliso
+
+OpenBSDcd
+
+	ofwboot		The OpenBSD/MACHINE secondary boot loader.
+dnl
+dnl	bsd.tbxi
+
+DistributionDescription(ten)
+
+OpenBSDbase(66173648,186894868)
+
+OpenBSDcomp(57297224,162586162)
+
+OpenBSDetc(523768,1644742)
+
+OpenBSDgame(2711060,6112359)
+
+OpenBSDman(9995817,38833810)
+
+OpenBSDxbase(11619543,30973047)
+
+OpenBSDxetc(64775,272253)
+
+OpenBSDxfont(39799750,51943721)
+
+OpenBSDxserv(15882380,41387335)
+
+OpenBSDxshare(4479227,24957504)

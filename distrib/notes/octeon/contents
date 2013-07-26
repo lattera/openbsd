@@ -1,0 +1,26 @@
+dnl	$OpenBSD: src/distrib/notes/octeon/contents,v 1.2 2013/07/26 20:07:29 miod Exp $
+TopPart
+
+OpenBSDdistsets
+
+OpenBSDbsd
+
+OpenBSDrd
+dnl not yet...
+dnl OpenBSDcd
+dnl
+dnl OpenBSDminiroot
+dnl
+dnl	boot		The OpenBSD/MACHINE bootloader.
+
+DistributionDescription(five)
+
+OpenBSDbase(59332612,198745241)
+
+OpenBSDcomp(61587109,233687937)
+
+OpenBSDetc(524099,1643980)
+
+OpenBSDgame(2822104,6853143)
+
+OpenBSDman(9958711,38703416)
