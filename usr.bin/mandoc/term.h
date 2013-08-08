@@ -1,4 +1,4 @@
-/*	$Id: term.h,v 1.35 2012/05/27 01:01:24 schwarze Exp $ */
+/*	$Id: term.h,v 1.36 2012/05/28 13:00:51 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -37,6 +37,7 @@ enum	termfont {
 	TERMFONT_NONE = 0,
 	TERMFONT_BOLD,
 	TERMFONT_UNDER,
+	TERMFONT_BI,
 	TERMFONT__MAX
 };
 
