@@ -1,4 +1,4 @@
-# $OpenBSD: src/kerberosV/libexec/hprop/Makefile,v 1.15 2013/08/05 16:13:30 ajacoutot Exp $
+# $OpenBSD: src/kerberosV/libexec/hprop/Makefile,v 1.16 2013/08/09 18:29:57 ajacoutot Exp $
 
 PROG=	hprop
 MPAGES=	hprop.8
