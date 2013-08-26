@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/m88k/trap.c,v 1.86 2013/08/18 22:17:26 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/trap.c,v 1.87 2013/08/26 21:38:09 miod Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -1401,6 +1401,9 @@ child_return(arg)
 	tf->tf_r[2] = 0;
 	tf->tf_r[3] = 0;
 	tf->tf_epsr &= ~PSR_C;
+	/* reset r26 (used by the threads library) if __tfork */
+	if (p->p_flag & P_THREAD)
+		tf->tf_r[26] = 0;
 	/* skip br instruction as in syscall() */
 #ifdef M88100
 	if (CPU_IS88100) {
