@@ -1,7 +1,7 @@
-# $OpenBSD: src/usr.sbin/hotplugd/Makefile,v 1.15 2013/05/30 15:55:53 florian Exp $
+# $OpenBSD: src/usr.sbin/hotplugd/Makefile,v 1.16 2013/09/04 14:54:13 patrick Exp $
 
 .if ${MACHINE} == "alpha" || ${MACHINE} == "amd64" || \
-    ${MACHINE} == "armish" || ${MACHINE} == "beagle" || \
+    ${MACHINE} == "armish" || ${MACHINE} == "armv7" || \
     ${MACHINE} == "hppa" || ${MACHINE} == "hppa64" || \
     ${MACHINE} == "i386" || ${MACHINE} == "landisk" || \
     ${MACHINE} == "loongson" || ${MACHINE} == "macppc" || \
