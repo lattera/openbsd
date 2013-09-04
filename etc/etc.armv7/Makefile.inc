@@ -1,4 +1,4 @@
-#	$OpenBSD: src/etc/etc.beagle/Attic/Makefile.inc,v 1.3 2013/06/22 10:12:11 florian Exp $
+#	$OpenBSD: src/etc/etc.armv7/Makefile.inc,v 1.1 2013/09/04 16:53:40 patrick Exp $
 
 bootblocks:
 
