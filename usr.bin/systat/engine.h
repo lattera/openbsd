@@ -1,4 +1,4 @@
-/* $Id: engine.h,v 1.6 2010/07/16 05:22:48 lum Exp $	 */
+/* $Id: engine.h,v 1.7 2011/04/05 07:35:32 mpf Exp $	 */
 /*
  * Copyright (c) 2001, 2007 Can Erkin Acar <canacar@openbsd.org>
  *
@@ -148,6 +148,7 @@ extern int sortdir;
 extern useconds_t udelay;
 extern int dispstart;
 extern int interactive;
+extern int averageonly;
 extern int maxprint;
 extern int paused;
 extern int rawmode;
