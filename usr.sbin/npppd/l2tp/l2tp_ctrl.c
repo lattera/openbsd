@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/npppd/l2tp/l2tp_ctrl.c,v 1.15 2013/04/16 07:45:19 yasuoka Exp $	*/
+/*	$OpenBSD: src/usr.sbin/npppd/l2tp/l2tp_ctrl.c,v 1.16 2013/09/13 03:25:27 yasuoka Exp $	*/
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -26,7 +26,7 @@
  * SUCH DAMAGE.
  */
 /**@file Control connection processing functions for L2TP LNS */
-/* $Id: l2tp_ctrl.c,v 1.14 2012/11/13 06:34:13 yasuoka Exp $ */
+/* $Id: l2tp_ctrl.c,v 1.15 2013/04/16 07:45:19 yasuoka Exp $ */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -46,6 +46,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef USE_LIBSOCKUTIL
 #include <seil/sockfromto.h>
