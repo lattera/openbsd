@@ -1,4 +1,4 @@
-/*	$Id: out.c,v 1.17 2012/05/26 20:03:34 schwarze Exp $ */
+/*	$Id: out.c,v 1.18 2013/05/31 21:37:09 schwarze Exp $ */
 /*
  * Copyright (c) 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2011 Ingo Schwarze <schwarze@openbsd.org>
@@ -138,7 +138,6 @@ void
 tblcalc(struct rofftbl *tbl, const struct tbl_span *sp)
 {
 	const struct tbl_dat	*dp;
-	const struct tbl_head	*hp;
 	struct roffcol		*col;
 	int			 spans;
 
@@ -151,8 +150,6 @@ tblcalc(struct rofftbl *tbl, const struct tbl_span *sp)
 	assert(NULL == tbl->cols);
 	tbl->cols = mandoc_calloc
 		((size_t)sp->opts->cols, sizeof(struct roffcol));
-
-	hp = sp->head;
 
 	for ( ; sp; sp = sp->next) {
 		if (TBL_SPAN_DATA != sp->pos)

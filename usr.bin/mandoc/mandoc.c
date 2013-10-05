@@ -1,4 +1,4 @@
-/*	$Id: mandoc.c,v 1.36 2013/06/20 22:29:38 schwarze Exp $ */
+/*	$Id: mandoc.c,v 1.37 2013/08/08 20:07:24 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2011, 2012, 2013 Ingo Schwarze <schwarze@openbsd.org>
@@ -36,7 +36,7 @@ static	char	*time2a(time_t);
 
 
 enum mandoc_esc
-mandoc_escape(const char **end, const char **start, int *sz)
+mandoc_escape(const char const **end, const char const **start, int *sz)
 {
 	const char	*local_start;
 	int		 local_sz;
