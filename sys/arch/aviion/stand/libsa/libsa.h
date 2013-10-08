@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/aviion/stand/libsa/libsa.h,v 1.2 2010/04/18 15:09:00 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/aviion/stand/libsa/libsa.h,v 1.3 2013/10/08 21:55:22 miod Exp $	*/
 
 /*
  * libsa prototypes 
@@ -10,5 +10,6 @@ extern int boothowto;
 
 #define	BOOT_ETHERNET_ZERO	0x0001
 
-void	exec_aout(char *, const char *, int, int, int);
-int	parse_args(char *, char **, int);
+void	delay(unsigned int);
+void	exec(char *, const char *, int, int, int);
+int	parse_args(const char *, char **, int);
