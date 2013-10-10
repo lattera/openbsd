@@ -1,4 +1,4 @@
-/* $Id: cmd-choose-list.c,v 1.6 2013/03/21 16:09:59 nicm Exp $ */
+/* $Id: cmd-choose-list.c,v 1.7 2013/03/24 09:54:10 nicm Exp $ */
 
 /*
  * Copyright (c) 2012 Thomas Adam <thomas@xteddy.org>
@@ -38,7 +38,6 @@ const struct cmd_entry cmd_choose_list_entry = {
 	"l:t:", 0, 1,
 	"[-l items] " CMD_TARGET_WINDOW_USAGE "[template]",
 	0,
-	NULL,
 	NULL,
 	cmd_choose_list_exec
 };
