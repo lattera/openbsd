@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/aviion/stand/netboot/Attic/if_lereg.h,v 1.1 2006/05/16 22:48:18 miod Exp $ */
+/*	$OpenBSD: src/sys/arch/aviion/stand/boot/if_lereg.h,v 1.1 2013/10/17 16:30:07 miod Exp $ */
 
 /*-
  * Copyright (c) 1982, 1992, 1993
