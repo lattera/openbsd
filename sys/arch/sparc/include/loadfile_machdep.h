@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/sparc/include/loadfile_machdep.h,v 1.1 2010/06/29 21:33:52 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/sparc/include/loadfile_machdep.h,v 1.2 2013/10/17 11:54:01 miod Exp $	*/
 /*	$NetBSD: loadfile_machdep.h,v 1.3 2000/08/16 08:16:58 mrg Exp $	 */
 
 /*-
@@ -47,4 +47,3 @@
 #define PROGRESS(a)		(void) printf a
 #define ALLOC(a)		alloc(a)
 #define FREE(a, b)		free(a, b)
-#define OKMAGIC(a)		((a) == OMAGIC)
