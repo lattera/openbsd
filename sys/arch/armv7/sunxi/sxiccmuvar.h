@@ -1,6 +1,6 @@
-/*	$OpenBSD: src/sys/arch/armv7/allwinner/Attic/awpiovar.h,v 1.1 2013/10/22 13:22:19 jasper Exp $	*/
+/*	$OpenBSD: src/sys/arch/armv7/sunxi/sxiccmuvar.h,v 1.1 2013/10/23 17:08:48 jasper Exp $	*/
 /*
- * Copyright (c) 2013 Artturi Alm
+ * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,27 +15,25 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <sys/gpio.h>
+void sxiccmu_enablemodule(int);
 
-/*
- * XXX To keep things simple for now, functions below work as if there
- * is 32pins per port, this needs to be taken into account when writing
- * these pin defines.
- */
-
-#define	AWPIO_INPUT		0
-#define	AWPIO_OUTPUT		1
-
-#define AWPIO_USB1_PWR		230
-#define AWPIO_USB2_PWR		227
-#define AWPIO_LED_GREEN		244
-#define AWPIO_LED_BLUE		245
-#define AWPIO_SATA_PWR		40
-#define	AWPIO_EMAC_NPINS	18	/* PORTA 0-17 */
-
-int awpio_getcfg(int);
-void awpio_setcfg(int, int);
-int awpio_getpin(int);
-void awpio_setpin(int);
-void awpio_clrpin(int);
-int awpio_togglepin(int);
+enum CCMU_MODULES {
+	CCMU_EHCI0,
+	CCMU_EHCI1,
+	CCMU_OHCI,
+	CCMU_AHCI,
+	CCMU_EMAC,
+	CCMU_DMA,
+	CCMU_UART0,
+	CCMU_UART1,
+	CCMU_UART2,
+	CCMU_UART3,
+	CCMU_UART4,
+	CCMU_UART5,
+	CCMU_UART6,
+	CCMU_UART7,
+	CCMU_TWI0,
+	CCMU_TWI1,
+	CCMU_TWI2,
+	CCMU_TWI3
+};
