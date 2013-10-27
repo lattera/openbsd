@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.155 2013/10/27 07:56:25 eric Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.156 2013/10/27 19:12:12 eric Exp $	*/
 
 /*
  * Copyright (c) 2008 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -311,6 +311,7 @@ lka_imsg(struct mproc *p, struct imsg *imsg)
 			m_msg(&m, imsg);
 			m_get_id(&m, &reqid);
 			m_get_string(&m, &tablename);
+			m_end(&m);
 
 			table = table_find(tablename, NULL);
 
