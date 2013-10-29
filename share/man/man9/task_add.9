@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/share/man/man9/task_add.9,v 1.1 2013/10/29 04:35:20 dlg Exp $
+.\"	$OpenBSD: src/share/man/man9/task_add.9,v 1.2 2013/10/29 04:35:46 dlg Exp $
 .\"
 .\" Copyright (c) 2013 David Gwynne <dlg@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: October 24 2013 $
+.Dd $Mdocdate: October 29 2013 $
 .Dt TASK_ADD 9
 .Os
 .Sh NAME
@@ -30,7 +30,7 @@
 .Ft struct taskq *
 .Fn "taskq_systq" "void"
 .Ft struct taskq *
-.Fn "taskq_create" "const char *name" "u_int nthreads" "int ipl"
+.Fn "taskq_create" "const char *name" "unsigned int nthreads" "int ipl"
 .Ft void
 .Fn "taskq_destroy" "struct taskq *tq"
 .Ft void
