@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/channels.c,v 1.319 2012/12/02 20:46:11 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/channels.c,v 1.319.2.1 2013/11/08 05:52:21 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -698,7 +698,7 @@ channel_register_status_confirm(int id, channel_confirm_cb *cb,
 	if ((c = channel_lookup(id)) == NULL)
 		fatal("channel_register_expect: %d: bad id", id);
 
-	cc = xmalloc(sizeof(*cc));
+	cc = xcalloc(1, sizeof(*cc));
 	cc->cb = cb;
 	cc->abandon_cb = abandon_cb;
 	cc->ctx = ctx;

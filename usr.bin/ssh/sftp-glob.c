@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.23 2011/10/04 14:17:32 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp-glob.c,v 1.23.6.1 2013/11/08 05:52:21 djm Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -45,7 +45,7 @@ fudge_opendir(const char *path)
 {
 	struct SFTP_OPENDIR *r;
 
-	r = xmalloc(sizeof(*r));
+	r = xcalloc(1, sizeof(*r));
 
 	if (do_readdir(cur.conn, (char *)path, &r->dir)) {
 		xfree(r);

@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/gss-genr.c,v 1.20 2009/06/22 05:39:28 dtucker Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/gss-genr.c,v 1.20.16.1 2013/11/08 05:52:21 djm Exp $ */
 
 /*
  * Copyright (c) 2001-2007 Simon Wilkinson. All rights reserved.
@@ -58,7 +58,7 @@ ssh_gssapi_set_oid_data(Gssctxt *ctx, void *data, size_t len)
 		xfree(ctx->oid->elements);
 		xfree(ctx->oid);
 	}
-	ctx->oid = xmalloc(sizeof(gss_OID_desc));
+	ctx->oid = xcalloc(1, sizeof(gss_OID_desc));
 	ctx->oid->length = len;
 	ctx->oid->elements = xmalloc(len);
 	memcpy(ctx->oid->elements, data, len);
