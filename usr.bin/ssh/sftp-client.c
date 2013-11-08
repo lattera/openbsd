@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.101 2013/07/25 00:56:51 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sftp-client.c,v 1.101.2.1 2013/11/08 01:33:56 djm Exp $ */
 /*
  * Copyright (c) 2001-2004 Damien Miller <djm@openbsd.org>
  *
@@ -464,7 +464,7 @@ do_lsreaddir(struct sftp_conn *conn, char *path, int printflag,
 
 	if (dir) {
 		ents = 0;
-		*dir = xmalloc(sizeof(**dir));
+		*dir = xcalloc(1, sizeof(**dir));
 		(*dir)[0] = NULL;
 	}
 
@@ -538,7 +538,7 @@ do_lsreaddir(struct sftp_conn *conn, char *path, int printflag,
 
 			if (dir) {
 				*dir = xrealloc(*dir, ents + 2, sizeof(**dir));
-				(*dir)[ents] = xmalloc(sizeof(***dir));
+				(*dir)[ents] = xcalloc(1, sizeof(***dir));
 				(*dir)[ents]->filename = xstrdup(filename);
 				(*dir)[ents]->longname = xstrdup(longname);
 				memcpy(&(*dir)[ents]->a, a, sizeof(*a));
@@ -557,7 +557,7 @@ do_lsreaddir(struct sftp_conn *conn, char *path, int printflag,
 	/* Don't return partial matches on interrupt */
 	if (interrupted && dir != NULL && *dir != NULL) {
 		free_sftp_dirents(*dir);
-		*dir = xmalloc(sizeof(**dir));
+		*dir = xcalloc(1, sizeof(**dir));
 		**dir = NULL;
 	}
 
@@ -1098,7 +1098,7 @@ do_download(struct sftp_conn *conn, char *remote_path, char *local_path,
 			    (unsigned long long)offset,
 			    (unsigned long long)offset + buflen - 1,
 			    num_req, max_req);
-			req = xmalloc(sizeof(*req));
+			req = xcalloc(1, sizeof(*req));
 			req->id = conn->msg_id++;
 			req->len = buflen;
 			req->offset = offset;
@@ -1451,7 +1451,7 @@ do_upload(struct sftp_conn *conn, char *local_path, char *remote_path,
 			    strerror(errno));
 
 		if (len != 0) {
-			ack = xmalloc(sizeof(*ack));
+			ack = xcalloc(1, sizeof(*ack));
 			ack->id = ++id;
 			ack->offset = offset;
 			ack->len = len;

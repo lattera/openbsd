@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.253 2013/06/07 15:37:52 dtucker Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/clientloop.c,v 1.253.2.1 2013/11/08 01:33:56 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -828,7 +828,7 @@ void
 client_expect_confirm(int id, const char *request,
     enum confirm_action action)
 {
-	struct channel_reply_ctx *cr = xmalloc(sizeof(*cr));
+	struct channel_reply_ctx *cr = xcalloc(1, sizeof(*cr));
 
 	cr->request_type = request;
 	cr->action = action;
@@ -851,7 +851,7 @@ client_register_global_confirm(global_confirm_cb *cb, void *ctx)
 		return;
 	}
 
-	gc = xmalloc(sizeof(*gc));
+	gc = xcalloc(1, sizeof(*gc));
 	gc->cb = cb;
 	gc->ctx = ctx;
 	gc->ref_count = 1;
@@ -1426,7 +1426,7 @@ client_new_escape_filter_ctx(int escape_char)
 {
 	struct escape_filter_ctx *ret;
 
-	ret = xmalloc(sizeof(*ret));
+	ret = xcalloc(1, sizeof(*ret));
 	ret->escape_pending = 0;
 	ret->escape_char = escape_char;
 	return (void *)ret;
