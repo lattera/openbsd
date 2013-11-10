@@ -1,6 +1,6 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/char/Makefile,v 1.6 2012/07/18 10:36:20 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/char/Makefile,v 1.7 2013/11/10 19:26:31 schwarze Exp $
 
-SUBDIR = hyphen bar space N
+SUBDIR = bar hyphen space unicode N
 
 ascii groff groff-clean obj-clean tman: _SUBDIRUSE
 
