@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/kern/spec_vnops.c,v 1.74 2013/07/09 15:37:43 beck Exp $	*/
+/*	$OpenBSD: src/sys/kern/spec_vnops.c,v 1.74.2.1 2013/11/12 02:37:04 william Exp $	*/
 /*	$NetBSD: spec_vnops.c,v 1.29 1996/04/22 01:42:38 christos Exp $	*/
 
 /*
@@ -472,10 +472,11 @@ int
 spec_close(void *v)
 {
 	struct vop_close_args *ap = v;
+	struct proc *p = ap->a_p;
 	struct vnode *vp = ap->a_vp;
 	dev_t dev = vp->v_rdev;
 	int (*devclose)(dev_t, int, int, struct proc *);
-	int mode, error;
+	int mode, relock, error;
 
 	switch (vp->v_type) {
 
@@ -541,7 +542,14 @@ spec_close(void *v)
 		panic("spec_close: not special");
 	}
 
-	return ((*devclose)(dev, ap->a_fflag, mode, ap->a_p));
+	/* release lock if held and this isn't coming from vclean() */
+	relock = VOP_ISLOCKED(vp) && !(vp->v_flag & VXLOCK);
+	if (relock)
+		VOP_UNLOCK(vp, 0, p);
+	error = (*devclose)(dev, ap->a_fflag, mode, p);
+	if (relock)
+		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	return (error);
 }
 
 int
