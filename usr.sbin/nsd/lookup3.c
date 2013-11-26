@@ -1,5 +1,5 @@
 /*
-  February 2013(Matthijs) patch defines for BSD endianness, from Brad Smith.
+  February 2013(Wouter) patch defines for BSD endianness, from Brad Smith.
   January 2012(Wouter) added randomised initial value, fallout from 28c3.
   March 2007(Wouter) adapted from lookup3.c original, add config.h include.
      added #ifdef VALGRIND to remove 298,384,660 'unused variable k8' warnings.
@@ -833,7 +833,7 @@ void driver1()
     h = hashlittle(&buf[0],1,h);
   }
   time(&z);
-  if (z-a > 0) printf("time %d %.8x\n", z-a, h);
+  if (z-a > 0) printf("time %lld %.8x\n", (long long) z-a, h);
 }
 
 /* check that every input bit changes every output bit half the time */

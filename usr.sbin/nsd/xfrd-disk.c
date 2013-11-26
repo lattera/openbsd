@@ -1,7 +1,7 @@
 /*
  * xfrd-disk.c - XFR (transfer) Daemon TCP system source file. Read/Write state to disk.
  *
- * Copyright (c) 2001-2011, NLnet Labs. All rights reserved.
+ * Copyright (c) 2001-2006, NLnet Labs. All rights reserved.
  *
  * See LICENSE for the license.
  *
@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "xfrd-disk.h"
 #include "xfrd.h"
 #include "buffer.h"
@@ -168,8 +171,8 @@ xfrd_read_state(struct xfrd_state* xfrd)
 	   !xfrd_read_check_str(in, "numzones:") ||
 	   !xfrd_read_i32(in, &numzones))
 	{
-		log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%d)",
-			statefile, (int)filetime, (int)xfrd_time());
+		log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%lld)",
+			statefile, (int)filetime, (long long)xfrd_time());
 		fclose(in);
 		region_destroy(tempregion);
 		return;
@@ -211,8 +214,8 @@ xfrd_read_state(struct xfrd_state* xfrd)
 		   !xfrd_read_state_soa(in, "soa_notify_acquired:", "soa_notify:",
 			&soa_notified_read, &soa_notified_acquired_read))
 		{
-			log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%d)",
-				statefile, (int)filetime, (int)xfrd_time());
+			log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%lld)",
+				statefile, (int)filetime, (long long)xfrd_time());
 			fclose(in);
 			region_destroy(tempregion);
 			return;
@@ -238,15 +241,15 @@ xfrd_read_state(struct xfrd_state* xfrd)
 		zone->next_master = nextmas;
 		zone->round_num = round_num;
 		zone->timeout.tv_sec = timeout;
-		zone->timeout.tv_nsec = 0;
+		zone->timeout.tv_usec = 0;
 
 		/* read the zone OK, now set the master properly */
-		zone->master = acl_find_num(
-			zone->zone_options->request_xfr, zone->master_num);
+		zone->master = acl_find_num(zone->zone_options->pattern->
+			request_xfr, zone->master_num);
 		if(!zone->master) {
 			DEBUG(DEBUG_XFRD,1, (LOG_INFO, "xfrd: masters changed for zone %s",
 				zone->apex_str));
-			zone->master = zone->zone_options->request_xfr;
+			zone->master = zone->zone_options->pattern->request_xfr;
 			zone->master_num = 0;
 			zone->round_num = 0;
 		}
@@ -290,8 +293,8 @@ xfrd_read_state(struct xfrd_state* xfrd)
 	}
 
 	if(!xfrd_read_check_str(in, XFRD_FILE_MAGIC)) {
-		log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%d)",
-			statefile, (int)filetime, (int)xfrd_time());
+		log_msg(LOG_ERR, "xfrd: corrupt state file %s dated %d (now=%lld)",
+			statefile, (int)filetime, (long long)xfrd_time());
 		region_destroy(tempregion);
 		fclose(in);
 		return;
@@ -304,27 +307,27 @@ xfrd_read_state(struct xfrd_state* xfrd)
 
 /* prints neato days hours and minutes. */
 static void
-neato_timeout(FILE* out, const char* str, uint32_t secs)
+neato_timeout(FILE* out, const char* str, time_t secs)
 {
 	fprintf(out, "%s", str);
 	if(secs <= 0) {
-		fprintf(out, " %ds", (int)secs);
+		fprintf(out, " %llds", (long long)secs);
 		return;
 	}
 	if(secs >= 3600*24) {
-		fprintf(out, " %dd", (int)secs/(3600*24));
+		fprintf(out, " %lldd", (long long)(secs/(3600*24)));
 		secs = secs % (3600*24);
 	}
 	if(secs >= 3600) {
-		fprintf(out, " %dh", (int)secs/3600);
+		fprintf(out, " %lldh", (long long)(secs/3600));
 		secs = secs%3600;
 	}
 	if(secs >= 60) {
-		fprintf(out, " %dm", (int)secs/60);
+		fprintf(out, " %lldm", (long long)(secs/60));
 		secs = secs%60;
 	}
 	if(secs > 0) {
-		fprintf(out, " %ds", (int)secs);
+		fprintf(out, " %llds", (long long)secs);
 	}
 }
 
@@ -424,7 +427,7 @@ xfrd_write_state(struct xfrd_state* xfrd)
 	fprintf(out, "# Note: if you edit this file while nsd is running,\n");
 	fprintf(out, "#       it will be overwritten on exit by nsd.\n");
 	fprintf(out, "\n");
-	fprintf(out, "filetime: %d\t# %s\n", (int)now, ctime(&now));
+	fprintf(out, "filetime: %lld\t# %s\n", (long long)now, ctime(&now));
 	fprintf(out, "# The number of zone entries in this file\n");
 	fprintf(out, "numzones: %d\n", (int)xfrd->zones->count);
 	fprintf(out, "\n");
@@ -440,8 +443,8 @@ xfrd_write_state(struct xfrd_state* xfrd)
 		fprintf(out, "\tnext_master: %d\n", zone->next_master);
 		fprintf(out, "\tround_num: %d\n", zone->round_num);
 		fprintf(out, "\tnext_timeout: %d",
-			zone->zone_handler.timeout?(int)zone->timeout.tv_sec:0);
-		if(zone->zone_handler.timeout) {
+			(zone->zone_handler_flags&EV_TIMEOUT)?(int)zone->timeout.tv_sec:0);
+		if((zone->zone_handler_flags&EV_TIMEOUT)) {
 			neato_timeout(out, "\t# =", zone->timeout.tv_sec - xfrd_time());
 		}
 		fprintf(out, "\n");
@@ -458,4 +461,83 @@ xfrd_write_state(struct xfrd_state* xfrd)
 	DEBUG(DEBUG_XFRD,1, (LOG_INFO, "xfrd: written %d zones to state file",
 		(int)xfrd->zones->count));
 	fclose(out);
+}
+
+/* return tempdirname */
+static void
+tempdirname(char* buf, size_t sz, struct nsd* nsd)
+{
+	snprintf(buf, sz, "%snsd-xfr-%d",
+		nsd->options->xfrdir, (int)nsd->pid);
+}
+
+void
+xfrd_make_tempdir(struct nsd* nsd)
+{
+	char tnm[1024];
+	tempdirname(tnm, sizeof(tnm), nsd);
+	/* create parent directories if needed (0750 permissions) */
+	if(!create_dirs(tnm)) {
+		log_msg(LOG_ERR, "parentdirs of %s failed", tnm);
+	}
+	/* restrictive permissions here, because this may be in /tmp */
+	if(mkdir(tnm, 0700)==-1) {
+		if(errno != EEXIST) {
+			log_msg(LOG_ERR, "mkdir %s failed: %s",
+				tnm, strerror(errno));
+		}
+	}
+}
+
+void
+xfrd_del_tempdir(struct nsd* nsd)
+{
+	char tnm[1024];
+	tempdirname(tnm, sizeof(tnm), nsd);
+	/* ignore parent directories, they are likely /var/tmp, /tmp or
+	 * /var/cache/nsd and do not have to be deleted */
+	if(rmdir(tnm)==-1 && errno != ENOENT) {
+		log_msg(LOG_WARNING, "rmdir %s failed: %s", tnm,
+			strerror(errno));
+	}
+}
+
+/* return name of xfrfile in tempdir */
+static void
+tempxfrname(char* buf, size_t sz, struct nsd* nsd, uint64_t number)
+{
+	char tnm[1024];
+	tempdirname(tnm, sizeof(tnm), nsd);
+	snprintf(buf, sz, "%s/xfr.%lld", tnm, (long long)number);
+}
+
+FILE*
+xfrd_open_xfrfile(struct nsd* nsd, uint64_t number, char* mode)
+{
+	char fname[1024];
+	FILE* xfr;
+	tempxfrname(fname, sizeof(fname), nsd, number);
+	xfr = fopen(fname, mode);
+	if(!xfr && errno == ENOENT) {
+		/* directory may not exist */
+		xfrd_make_tempdir(nsd);
+		xfr = fopen(fname, mode);
+	}
+	if(!xfr) {
+		log_msg(LOG_ERR, "open %s for %s failed: %s", fname, mode,
+			strerror(errno));
+		return NULL;
+	}
+	return xfr;
+}
+
+void
+xfrd_unlink_xfrfile(struct nsd* nsd, uint64_t number)
+{
+	char fname[1024];
+	tempxfrname(fname, sizeof(fname), nsd, number);
+	if(unlink(fname) == -1) {
+		log_msg(LOG_WARNING, "could not unlink %s: %s", fname,
+			strerror(errno));
+	}
 }
