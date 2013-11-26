@@ -1,4 +1,4 @@
-/* $Id: engine.c,v 1.14 2011/04/05 07:35:32 mpf Exp $	 */
+/* $Id: engine.c,v 1.15 2013/09/07 11:43:49 reyk Exp $	 */
 /*
  * Copyright (c) 2001, 2007 Can Erkin Acar <canacar@openbsd.org>
  *
@@ -168,7 +168,7 @@ tbprintft(char *format, ...)
 
 		/* count until we hit a non digit. (e.g. the prefix) */
 		for (digits = 0; digits < len; digits++)
-			if (!isdigit(buf[digits]))
+			if (!isdigit((unsigned char)buf[digits]))
 				break;
 
 		curdigit = digits;
