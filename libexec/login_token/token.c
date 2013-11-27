@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/libexec/login_token/token.c,v 1.16 2013/08/22 04:43:40 guenther Exp $	*/
+/*	$OpenBSD: src/libexec/login_token/token.c,v 1.17 2013/11/27 21:25:25 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1995 Migration Associates Corp. All Rights Reserved
@@ -383,8 +383,8 @@ static	void
 lcase(char *cp)
 {
 	while (*cp) {
-		if (isupper(*cp))
-			*cp = tolower(*cp);
+		if (isupper((unsigned char)*cp))
+			*cp = tolower((unsigned char)*cp);
 		cp++;
 	}
 }
