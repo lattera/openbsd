@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)util.c	8.1 (Berkeley) 6/6/93
- *	$Id: util.c,v 1.10 2003/03/13 22:08:02 deraadt Exp $
+ *	$Id: util.c,v 1.11 2003/06/02 23:36:51 millert Exp $
  */
 
 /*
@@ -102,7 +102,9 @@ strsplit(char *s, int ch, int qc)
 		/*
 		 * skip to split char
 		 */
-		while (*s && (ch == ' ' ? (isascii(*s) && isspace(*s)) : *s == ch))
+		while (*s && (ch == ' ' ?
+		    (isascii((unsigned char)*s) && isspace((unsigned char)*s)) :
+		    *s == ch))
 				*s++ = '\0';
 
 		/*
@@ -119,7 +121,9 @@ strsplit(char *s, int ch, int qc)
 		/*
 		 * skip to split char
 		 */
-		while (*s && !(ch == ' ' ? (isascii(*s) && isspace(*s)) : *s == ch)) {
+		while (*s && !(ch == ' ' ?
+		    (isascii((unsigned char)*s) && isspace((unsigned char)*s)) :
+		    *s == ch)) {
 			if (*s++ == qc) {
 				/*
 				 * Skip past string.
