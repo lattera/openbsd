@@ -1,10 +1,9 @@
-/* $NetBSD: crt0.c,v 1.9 2000/06/14 22:52:50 cgd Exp $ */
+/*	$OpenBSD: src/lib/csu/common_elf/crt0.c,v 1.1 2013/12/03 06:21:40 guenther Exp $	*/
 
 /*
- * Copyright (c) 1998 Christos Zoulas
  * Copyright (c) 1995 Christopher G. Demetriou
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,12 +14,11 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *          This product includes software developed for the
- *          NetBSD Project.  See http://www.netbsd.org/ for
- *          information about NetBSD.
+ *      This product includes software developed by Christopher G. Demetriou
+ *	for the NetBSD Project.
  * 4. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- * 
+ *    derived from this software without specific prior written permission
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -31,56 +29,56 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * <<Id: LICENSE,v 1.2 2000/06/14 15:57:33 cgd Exp>>
  */
 
 #include <stdlib.h>
 #include <limits.h>
 
-void ___start(int, char **, char **, void (*cleanup)(void));
+#include "md_init.h"
 
-__asm(
-"	.text\n"
-"	.align 4\n"
-"	.global	__start\n"
-"	.global	_start\n"
-"__start:\n"
-"_start:\n"
-"	mov	0, %fp\n"
-"	ld	[%sp + 64], %o0		! get argc\n"
-"	add	%sp, 68, %o1		! get argv\n"
-"	sll	%o0, 2,	%o2\n"
-"	add	%o2, 4,	%o2		! envp = argv + (argc << 2) + 4\n"
-"	add	%o1, %o2, %o2\n"
-"	andn	%sp, 7,	%sp		! align\n"
-"	sub	%sp, 24, %sp		! expand to standard stack frame size\n"
-"	call	___start\n"
-"	 mov	%g1, %o3\n"
-);
+/* some defaults */
+#ifndef	MD_START_ARGS
+#define	MD_START_ARGS	\
+	int argc, char **argv, char **envp, void (*cleanup)(void)
+#endif
+#ifndef MD_START
+#define	MD_START	___start
+static void		___start(MD_START_ARGS) __used;
+#endif
+#ifndef	MD_EPROL_LABEL
+#define	MD_EPROL_LABEL	__asm("  .text\n_eprol:")
+#endif
 
-char **environ;
-char *__progname = "";
-char __progname_storage[NAME_MAX+1];
+
+static char	*_strrchr(char *, char);
+
+char	**environ;
+char	*__progname = "";
+char	__progname_storage[NAME_MAX+1];
 
 #ifdef MCRT0
-extern void     monstartup(u_long, u_long);
-extern void     _mcleanup(void);
+extern void	monstartup(u_long, u_long);
+extern void	_mcleanup(void);
 extern unsigned char _etext, _eprol;
 #endif /* MCRT0 */
 
-static char *_strrchr(const char *, char);
+#ifdef MD_CRT0_START
+MD_CRT0_START;
+#endif
 
 void
-___start(int argc, char **argv, char **envp, void (*cleanup)(void))
+MD_START(MD_START_ARGS)
 {
-	char *s;
+	char *namep, *s;
+#ifdef MD_START_SETUP
+	MD_START_SETUP
+#endif
 
 	environ = envp;
 
-	if ((__progname = argv[0]) != NULL) {	/* NULL ptr if argc = 0 */
-		if ((__progname = _strrchr(__progname, '/')) == NULL)
-			__progname = argv[0];
+	if ((namep = argv[0]) != NULL) {	/* NULL ptr if argc = 0 */
+		if ((__progname = _strrchr(namep, '/')) == NULL)
+			__progname = namep;
 		else
 			__progname++;
 		for (s = __progname_storage; *__progname &&
@@ -90,8 +88,10 @@ ___start(int argc, char **argv, char **envp, void (*cleanup)(void))
 		__progname = __progname_storage;
 	}
 
-	if (cleanup)
+#ifndef MD_NO_CLEANUP
+	if (cleanup != NULL)
 		atexit(cleanup);
+#endif
 
 #ifdef MCRT0
 	atexit(_mcleanup);
@@ -100,23 +100,22 @@ ___start(int argc, char **argv, char **envp, void (*cleanup)(void))
 
 	__init();
 
-	exit(main(argc, argv, environ));
+	exit(main(argc, argv, envp));
 }
 
 static char *
-_strrchr(const char *p, char ch)
+_strrchr(char *p, char ch)
 {
 	char *save;
 
 	for (save = NULL;; ++p) {
 		if (*p == ch)
-			save = (char *)p;
-		if (!*p)
-			return(save);
+			save = p;
+		if (*p == '\0')
+			return (save);
 	}
 }
 
 #ifdef MCRT0
-asm ("  .text");
-asm ("_eprol:");
+MD_EPROL_LABEL;
 #endif
