@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/amd64/include/cpufunc.h,v 1.9 2013/10/05 16:58:30 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/amd64/include/cpufunc.h,v 1.10 2013/12/06 22:56:20 kettenis Exp $	*/
 /*	$NetBSD: cpufunc.h,v 1.3 2003/05/08 10:27:43 fvdl Exp $	*/
 
 /*-
@@ -267,7 +267,7 @@ wbinvd(void)
 static __inline void
 clflush(u_int64_t addr)
 {
-	__asm __volatile("clflush %0" : "+m" (addr));
+	__asm __volatile("clflush %0" : "+m" (*(volatile char *)addr));
 }
 
 static __inline void
