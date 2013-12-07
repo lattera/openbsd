@@ -1,4 +1,4 @@
-/* $OpenBSD: */
+/* $OpenBSD: src/usr.bin/ssh/hash.c,v 1.2 2013/12/07 00:26:37 djm Exp $ */
 
 /* Public Domain, from supercop-20130419/crypto_hash/sha512/ref/hash.c */
 

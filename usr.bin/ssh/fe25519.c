@@ -1,4 +1,4 @@
-/* $OpenBSD: */
+/* $OpenBSD: src/usr.bin/ssh/fe25519.c,v 1.2 2013/12/07 00:26:37 djm Exp $ */
 
 /* Public Domain, from supercop-20130419/crypto_sign/ed25519/ref/fe25519.c */
 
