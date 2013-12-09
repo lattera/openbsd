@@ -1,6 +1,10 @@
-/* $OpenBSD: src/usr.bin/ssh/ge25519.h,v 1.2 2013/12/07 00:26:37 djm Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/ge25519.h,v 1.3 2013/12/09 11:03:45 markus Exp $ */
 
-/* Public Domain, from supercop-20130419/crypto_sign/ed25519/ref/ge25519.h */
+/*
+ * Public Domain, Authors: Daniel J. Bernstein, Niels Duif, Tanja Lange,
+ * Peter Schwabe, Bo-Yin Yang.
+ * Copied from supercop-20130419/crypto_sign/ed25519/ref/ge25519.h
+ */
 
 #ifndef GE25519_H
 #define GE25519_H
