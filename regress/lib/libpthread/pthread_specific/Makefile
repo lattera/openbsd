@@ -1,5 +1,7 @@
-# $OpenBSD: src/regress/lib/libpthread/pthread_specific/Makefile,v 1.1 2002/05/03 10:08:55 wcobb Exp $
+# $OpenBSD: src/regress/lib/libpthread/pthread_specific/Makefile,v 1.2 2013/12/22 11:08:31 kettenis Exp $
 
 PROG=	pthread_specific
+
+REGRESS_MAXTIME=60
 
 .include <bsd.regress.mk>
