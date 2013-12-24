@@ -1,4 +1,4 @@
-.Dd $Mdocdate: May 29 2013 $
+.Dd $Mdocdate: December 24 2013 $
 .Dt BK-SYNOPSIS 1
 .Os OpenBSD
 .Sh NAME
@@ -7,6 +7,9 @@
 .Sh SYNOPSIS
 In the synopsis, almost all macros do not show
 .No the word keep effect they would get in a \&Bk block.
+.Pp
+.Fn xxxxxxxxxxxxxxxxxxxx "xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxx" xxxxxxxxxxxxxxxxxxxx
+.Pp
 .Nm ksh
 .Op Fl +abCefhiklmnpruvXx
 .Op Fl +o Ar option
