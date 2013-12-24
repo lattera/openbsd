@@ -1,4 +1,4 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/Makefile.inc,v 1.9 2013/11/10 17:43:11 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/Makefile.inc,v 1.10 2013/12/24 15:58:07 schwarze Exp $
 
 # --- programs ---
 
@@ -87,7 +87,7 @@ ${t}.diff_man:
 .      endif
 .    endif
 
-${t}: ${t}.diff_ascii
+${t}: ${t}.diff_ascii ${t}.diff_man
 .  else
 ${t}:
 	@echo "TODO: -Tascii disabled for: ${.TARGET}"
