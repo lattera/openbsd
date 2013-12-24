@@ -1,4 +1,4 @@
-/*	$Id: mdoc_macro.c,v 1.79 2013/09/15 18:26:39 schwarze Exp $ */
+/*	$Id: mdoc_macro.c,v 1.80 2013/10/21 23:32:32 schwarze Exp $ */
 /*
  * Copyright (c) 2008-2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010, 2012, 2013 Ingo Schwarze <schwarze@openbsd.org>
@@ -557,6 +557,9 @@ rew_sub(enum mdoc_type t, struct mdoc *mdoc,
 		case (REWIND_NONE):
 			return(1);
 		case (REWIND_THIS):
+			n->lastline = line -
+			    (MDOC_NEWLINE & mdoc->flags &&
+			     ! (MDOC_EXPLICIT & mdoc_macros[tok].flags));
 			break;
 		case (REWIND_FORCE):
 			mandoc_vmsg(MANDOCERR_SCOPEBROKEN, mdoc->parse, 
@@ -565,6 +568,8 @@ rew_sub(enum mdoc_type t, struct mdoc *mdoc,
 					mdoc_macronames[n->tok]);
 			/* FALLTHROUGH */
 		case (REWIND_MORE):
+			n->lastline = line -
+			    (MDOC_NEWLINE & mdoc->flags ? 1 : 0);
 			n = n->parent;
 			continue;
 		case (REWIND_LATER):
