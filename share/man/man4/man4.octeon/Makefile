@@ -1,6 +1,6 @@
-#	$OpenBSD: src/share/man/man4/man4.octeon/Makefile,v 1.1 2013/10/24 21:20:11 pirofti Exp $
+#	$OpenBSD: src/share/man/man4/man4.octeon/Makefile,v 1.2 2014/01/15 11:01:46 pirofti Exp $
 
-MAN=	octrng.4
+MAN=	octrng.4 octrtc.4
 MANSUBDIR=octeon
 
 .include <bsd.prog.mk>
