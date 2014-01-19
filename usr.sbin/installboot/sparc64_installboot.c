@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/installboot/sparc64/sparc64_installboot.c,v 1.4 2014/01/18 03:07:05 jsing Exp $	*/
+/*	$OpenBSD: src/usr.sbin/installboot/sparc64_installboot.c,v 1.1 2014/01/19 02:58:50 jsing Exp $	*/
 
 /*
  * Copyright (c) 2012, 2013 Joel Sing <jsing@openbsd.org>
