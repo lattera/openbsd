@@ -1,4 +1,4 @@
-/* $OpenBSD: src/sys/dev/softraid.c,v 1.324 2014/01/21 04:23:14 jsing Exp $ */
+/* $OpenBSD: src/sys/dev/softraid.c,v 1.325 2014/01/21 06:42:52 jsing Exp $ */
 /*
  * Copyright (c) 2007, 2008, 2009 Marco Peereboom <marco@peereboom.us>
  * Copyright (c) 2008 Chris Kuethe <ckuethe@openbsd.org>
@@ -2146,7 +2146,7 @@ sr_wu_free(struct sr_discipline *sd)
 		TAILQ_REMOVE(&sd->sd_wu_defq, wu, swu_link);
 
 	while ((wu = TAILQ_FIRST(&sd->sd_wu)) != NULL) {
-		TAILQ_REMOVE(&sd->sd_wu, wu, swu_link);
+		TAILQ_REMOVE(&sd->sd_wu, wu, swu_next);
 		free(wu, M_DEVBUF);
 	}
 }
