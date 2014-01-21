@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man4/agp.4,v 1.4 2008/03/16 22:23:51 jmc Exp $
+.\" $OpenBSD: src/share/man/man4/agp.4,v 1.5 2014/01/21 03:15:45 schwarze Exp $
 .\" Copyright (c) Owain Ainsworth <oga@openbsd.org>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
@@ -32,7 +32,7 @@ The following
 operations can be performed on
 .Pa /dev/agp* ,
 and are defined in
-.Aq Pa sys/agpio.h :
+.In sys/agpio.h :
 .Bl -tag -width indent
 .It Dv AGPIOC_INFO
 Returns information about the AGP subsystem.
@@ -70,7 +70,7 @@ typedef struct _agp_setup {
 .Ed
 .Pp
 The mode bits are defined in
-.Aq Pa sys/agpio.h .
+.In sys/agpio.h .
 .It Dv AGPIOC_ALLOCATE
 Allocate physical memory suitable for mapping into the AGP aperture.
 This
