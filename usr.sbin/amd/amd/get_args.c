@@ -32,7 +32,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)get_args.c	8.1 (Berkeley) 6/6/93
- *	$Id: get_args.c,v 1.10 2007/02/18 20:26:38 jmc Exp $
+ *	$Id: get_args.c,v 1.11 2009/08/12 13:21:17 deraadt Exp $
  */
 
 /*
@@ -44,6 +44,7 @@
 #include <syslog.h>
 #endif /* HAS_SYSLOG */
 #include <sys/stat.h>
+#include <unistd.h>
 
 extern int optind;
 extern char *optarg;
