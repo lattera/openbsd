@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/hppa64/include/vmparam.h,v 1.8 2014/01/23 22:06:29 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/hppa64/include/vmparam.h,v 1.9 2014/01/24 05:21:19 miod Exp $	*/
 
 /* 
  * Copyright (c) 1988-1994, The University of Utah and
@@ -92,7 +92,7 @@
 
 #define	VM_PHYSSEG_NOADD	/* XXX until uvm code is fixed */
 
-#if defined(_KERNEL) && !defined(_LOCORE)
+#if !defined(_LOCORE)
 
 #include <sys/lock.h>
 
