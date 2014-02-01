@@ -1,5 +1,5 @@
 # ex:ts=8 sw=4:
-# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/PackingList.pm,v 1.129 2014/01/11 11:51:01 espie Exp $
+# $OpenBSD: src/usr.sbin/pkg_add/OpenBSD/PackingList.pm,v 1.130 2014/02/01 11:03:50 espie Exp $
 #
 # Copyright (c) 2003-2014 Marc Espie <espie@openbsd.org>
 #
@@ -151,9 +151,7 @@ sub conflict_list
 	require OpenBSD::PkgCfl;
 
 	my $self = shift;
-
-	$self->{conflict_list} //= OpenBSD::PkgCfl->make_conflict_list($self);
-	return $self->{conflict_list};
+	return OpenBSD::PkgCfl->make_conflict_list($self);
 }
 
 sub read
