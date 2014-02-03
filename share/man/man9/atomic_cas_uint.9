@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man9/atomic_dec.9,v 1.1 2014/01/30 00:44:20 dlg Exp $
+.\" $OpenBSD: src/share/man/man9/atomic_cas_uint.9,v 1.1 2014/02/03 07:03:04 dlg Exp $
 .\"
 .\" Copyright (c) 2014 David Gwynne <dlg@openbsd.org>
 .\" All rights reserved.
@@ -15,54 +15,42 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate$
-.Dt ATOMIC_DEC 9
+.Dd $Mdocdate: January 30 2014 $
+.Dt ATOMIC_CAS 9
 .Os
 .Sh NAME
-.Nm atomic_dec_int ,
-.Nm atomic_dec_int_nv ,
-.Nm atomic_dec_long ,
-.Nm atomic_dec_long_nv
-.Nd atomic decrement operations
+.Nm atomic_cas_uint ,
+.Nm atomic_cas_ulong ,
+.Nm atomic_cas_ptr
+.Nd atomic compare-and-swap operations
 .Sh SYNOPSIS
 .In sys/atomic.h
-.Ft void
-.Fn atomic_dec_int "volatile unsigned int *p"
 .Ft unsigned int
-.Fn atomic_dec_int_nv "volatile unsigned int *p"
-.Ft void
-.Fn atomic_dec_long "volatile unsigned long *p "
+.Fn atomic_cas_uint "volatile unsigned int *p" "unsigned int expected" "unsigned int new"
 .Ft unsigned long
-.Fn atomic_dec_long_nv "volatile unsigned long *p"
+.Fn atomic_cas_ulong "volatile unsigned long *p" "unsigned long expected" "unsigned long new"
+.Ft void *
+.Fn atomic_cas_ptr "volatile void **p" "void *expected" "void *new"
 .Sh DESCRIPTION
-The
-.Nm atomic_dec
-set of functions provide an interface for atomically performing
-decrement and decrement-and-fetch operations with respect to
-interrupts and multiple processors in the system.
+The atomic_cas set of functions provide an interface for atomically
+performing compare-and-swap operations with respect to interrupts
+and multiple processors in the system.
 .Pp
 The value referenced by the pointer
 .Fa p
-is decremented by 1.
-.Sh RETURN VALUES
-.Nm atomic_dec_int
-and
-.Nm atomic_dec_long
-perform the decrement without returning any knowledge of the value at the
+is compared against
+.Fa expected .
+If these values are equal then
+.Fa new
+replaces the value stored at
 .Fa p .
-.Pp
-.Nm atomic_dec_int_nv
-and
-.Nm atomic_dec_long_nv
-return the value at
+.Sh RETURN VALUES
+These functions return the value at
 .Fa p
-after the decrement was performed.
+as it was before the attempt to swap it.
 .Sh SEE ALSO
 .Xr atomic 9 ,
-.Xr atomic_add 9 ,
-.Xr atomic_inc 9
+.Xr atomic_swap_uint 9
 .Sh HISTORY
-The
-.Nm atomic_add
-functions first appeared in
+The atomic_cas functions first appeared in
 .Ox 5.5 .

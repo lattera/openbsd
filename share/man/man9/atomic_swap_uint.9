@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man9/atomic_cas.9,v 1.2 2014/01/30 08:16:56 jmc Exp $
+.\" $OpenBSD: src/share/man/man9/atomic_swap_uint.9,v 1.1 2014/02/03 07:03:04 dlg Exp $
 .\"
 .\" Copyright (c) 2014 David Gwynne <dlg@openbsd.org>
 .\" All rights reserved.
@@ -16,45 +16,37 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .Dd $Mdocdate: January 30 2014 $
-.Dt ATOMIC_CAS 9
+.Dt ATOMIC_SWAP 9
 .Os
 .Sh NAME
-.Nm atomic_cas_uint ,
-.Nm atomic_cas_ulong ,
-.Nm atomic_cas_ptr
-.Nd atomic compare-and-swap operations
+.Nm atomic_swap_uint ,
+.Nm atomic_swap_ulong ,
+.Nm atomic_swap_ptr
+.Nd atomic swap operations
 .Sh SYNOPSIS
 .In sys/atomic.h
 .Ft unsigned int
-.Fn atomic_cas_uint "volatile unsigned int *p" "unsigned int expected" "unsigned int new"
+.Fn atomic_swap_uint "volatile unsigned int *p" "unsigned int new"
 .Ft unsigned long
-.Fn atomic_cas_ulong "volatile unsigned long *p" "unsigned long expected" "unsigned long new"
+.Fn atomic_swap_ulong "volatile unsigned long *p" "unsigned long new"
 .Ft void *
-.Fn atomic_cas_ptr "volatile void **p" "void *expected" "void *new"
+.Fn atomic_swap_ptr "volatile void **p" "void *new"
 .Sh DESCRIPTION
-The
-.Nm atomic_cas
-set of functions provide an interface for atomically performing
-compare-and-swap operations with respect to interrupts and multiple
+The atomic_swap set of functions provide an interface for atomically
+performing swap operations with respect to interrupts and multiple
 processors in the system.
 .Pp
 The value referenced by the pointer
 .Fa p
-is compared against
-.Fa expected .
-If these values are equal then
-.Fa new
-replaces the value stored at
-.Fa p .
+is replaced by the value
+.Fa new .
 .Sh RETURN VALUES
 These functions return the value at
 .Fa p
-as it was before the attempt to swap it.
+as it was before the swap operation.
 .Sh SEE ALSO
 .Xr atomic 9 ,
-.Xr atomic_swap 9
+.Xr atomic_cas_uint 9
 .Sh HISTORY
-The
-.Nm atomic_cas
-functions first appeared in
+The atomic_swap functions first appeared in
 .Ox 5.5 .
