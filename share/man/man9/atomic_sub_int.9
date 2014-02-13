@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/share/man/man9/atomic_sub_int.9,v 1.4 2014/02/13 12:03:47 dlg Exp $
+.\" $OpenBSD: src/share/man/man9/atomic_sub_int.9,v 1.5 2014/02/13 12:05:05 dlg Exp $
 .\"
 .\" Copyright (c) 2014 David Gwynne <dlg@openbsd.org>
 .\" All rights reserved.
@@ -15,7 +15,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: February 4 2014 $
+.Dd $Mdocdate: February 13 2014 $
 .Dt ATOMIC_SUB_INT 9
 .Os
 .Sh NAME
@@ -54,7 +54,7 @@ can all be called during autoconf, from process context, or from interrupt conte
 .Nm atomic_sub_int
 and
 .Nm atomic_sub_long
-perform the subtraction without returning any knowledge of the value at the
+perform the subtraction without returning any knowledge of the value at
 .Fa p .
 .Pp
 .Nm atomic_sub_int_nv
