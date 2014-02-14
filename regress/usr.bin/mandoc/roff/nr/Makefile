@@ -1,5 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/roff/nr/Makefile,v 1.2 2013/12/15 21:18:00 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/roff/nr/Makefile,v 1.3 2014/02/14 22:27:32 schwarze Exp $
 
-REGRESS_TARGETS = int argc
+REGRESS_TARGETS = int argc predef
 
 .include <bsd.regress.mk>
