@@ -1,3 +1,4 @@
+#	$OpenBSD: src/regress/usr.bin/ssh/host-expand.sh,v 1.3 2014/02/27 23:17:41 djm Exp $
 #	Placed in the Public Domain.
 
 tid="expand %h and %n"
