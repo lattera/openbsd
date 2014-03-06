@@ -1,6 +1,6 @@
 #!/bin/ksh -
 #
-# $OpenBSD: src/usr.sbin/sysmerge/sysmerge.sh,v 1.121 2014/02/08 23:58:06 ajacoutot Exp $
+# $OpenBSD: src/usr.sbin/sysmerge/sysmerge.sh,v 1.123 2014/03/06 15:07:11 ajacoutot Exp $
 #
 # Copyright (c) 2008-2014 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 1998-2003 Douglas Barton <DougB@FreeBSD.org>
@@ -80,7 +80,7 @@ error_rm_wrkdir() {
 	(($#)) && echo "**** ERROR: $@"
 	# do not remove the entire WRKDIR in case sysmerge stopped half
 	# way since it contains our backup files
-	rm -f ${WRKDIR}/{,x}etc-${SIGHASH}{,.sig}
+	rm -f ${WRKDIR}/*${SIGHASH}{,.sig}
 	rm -f ${WRKDIR}/*.tgz
 	rmdir ${WRKDIR} 2>/dev/null
 	exit 1
@@ -147,8 +147,8 @@ get_set() {
 # takes the signature file and set as arguments
 check_sig() {
 	local _sigfile=${1##*/} _tgz=${2##*/}
-	local _key="/etc/signify/${RELINT}base.pub"
-	echo "===> Verifying ${_tgz} signature and checksum"
+	local _key="/etc/signify/openbsd-${RELINT}-base.pub"
+	echo "===> Verifying ${_tgz} using ${_sigfile}.sig against ${_key}"
 	(cd ${WRKDIR} && \
 		signify -V -e -p ${_key} -x "${_sigfile}.sig" -m ${_sigfile} >/dev/null) || \
 			error_rm_wrkdir "${_sigfile}.sig: signature check failed"
