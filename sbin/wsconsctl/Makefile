@@ -1,7 +1,7 @@
-#	$OpenBSD: src/sbin/wsconsctl/Makefile,v 1.36 2013/03/25 17:22:11 deraadt Exp $
+#	$OpenBSD: src/sbin/wsconsctl/Makefile,v 1.37 2014/03/18 22:36:30 miod Exp $
 
 .if ${MACHINE} == "alpha" || ${MACHINE} == "amd64" || \
-    ${MACHINE} == "armish" || ${MACHINE} == "hp300" || \
+    ${MACHINE} == "armish" || \
     ${MACHINE} == "hppa" || ${MACHINE} == "hppa64" || \
     ${MACHINE} == "i386" || ${MACHINE} == "landisk" || \
     ${MACHINE} == "loongson" || ${MACHINE} == "luna88k" || \
