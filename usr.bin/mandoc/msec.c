@@ -1,4 +1,4 @@
-/*	$Id: msec.c,v 1.6 2011/04/24 16:22:02 schwarze Exp $ */
+/*	$Id: msec.c,v 1.7 2011/12/02 01:45:43 schwarze Exp $ */
 /*
  * Copyright (c) 2009 Kristaps Dzonsons <kristaps@bsd.lv>
  *
@@ -14,7 +14,6 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <stdlib.h>
 #include <string.h>
 
 #include "mandoc.h"

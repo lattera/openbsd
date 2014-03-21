@@ -1,4 +1,4 @@
-/*	$Id: man.c,v 1.73 2014/01/05 20:26:27 schwarze Exp $ */
+/*	$Id: man.c,v 1.74 2014/01/06 00:53:14 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2013, 2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -26,6 +26,7 @@
 
 #include "man.h"
 #include "mandoc.h"
+#include "mandoc_aux.h"
 #include "libman.h"
 #include "libmandoc.h"
 

@@ -1,4 +1,4 @@
-/*	$Id: chars.c,v 1.25 2013/06/20 22:29:38 schwarze Exp $ */
+/*	$Id: chars.c,v 1.26 2014/01/22 20:58:35 schwarze Exp $ */
 /*
  * Copyright (c) 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2011 Ingo Schwarze <schwarze@openbsd.org>
@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "mandoc.h"
+#include "mandoc_aux.h"
 #include "libmandoc.h"
 
 #define	PRINT_HI	 126
