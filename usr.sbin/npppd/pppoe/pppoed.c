@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/npppd/pppoe/pppoed.c,v 1.13 2013/04/20 23:32:32 yasuoka Exp $	*/
+/*	$OpenBSD: src/usr.sbin/npppd/pppoe/pppoed.c,v 1.14 2014/03/22 04:18:18 yasuoka Exp $	*/
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -28,7 +28,7 @@
 /**@file
  * This file provides the PPPoE(RFC2516) server(access concentrator)
  * implementaion.
- * $Id: pppoed.c,v 1.12 2013/04/16 07:27:36 yasuoka Exp $
+ * $Id: pppoed.c,v 1.13 2013/04/20 23:32:32 yasuoka Exp $
  */
 #include <sys/types.h>
 #include <sys/param.h>
@@ -420,7 +420,7 @@ pppoed_stop(pppoed *_this)
 		free(plistener);
 		slist_itr_remove(&_this->listener);
 	}
-	pppoed_log(_this, LOG_NOTICE, "Stopped");
+	PPPOED_DBG((_this, LOG_DEBUG, "Stopped"));
 }
 
 /* uninitialize (free) PPPoE daemon */
