@@ -2,7 +2,7 @@ package Encode::Alias;
 use strict;
 use warnings;
 no warnings 'redefine';
-our $VERSION = do { my @r = ( q$Revision: 2.15 $ =~ /\d+/g ); sprintf "%d." . "%02d" x $#r, @r };
+our $VERSION = do { my @r = ( q$Revision: 2.16 $ =~ /\d+/g ); sprintf "%d." . "%02d" x $#r, @r };
 use constant DEBUG => !!$ENV{PERL_ENCODE_DEBUG};
 
 use base qw(Exporter);
@@ -152,7 +152,6 @@ sub init_aliases {
     define_alias( qr/^(?:US-?)ascii$/i       => '"ascii"' );
     define_alias( 'C'                        => 'ascii' );
     define_alias( qr/\b(?:ISO[-_]?)?646(?:[-_]?US)?$/i => '"ascii"' );
-    define_alias( '646'                      => 'ascii' );
 
     # Allow variants of iso-8859-1 etc.
     define_alias( qr/\biso[-_]?(\d+)[-_](\d+)$/i => '"iso-$1-$2"' );
@@ -210,7 +209,8 @@ sub init_aliases {
     define_alias( qr/^(?:x[_-])?mac[_-](.*)$/i => '"mac$1"' );
     # http://rt.cpan.org/Ticket/Display.html?id=36326
     define_alias( qr/^macintosh$/i => '"MacRoman"' );
-
+    # https://rt.cpan.org/Ticket/Display.html?id=78125
+    define_alias( qr/^macce$/i => '"MacCentralEurRoman"' );
     # Ououououou. gone.  They are differente!
     # define_alias( qr/\bmacRomanian$/i => '"macRumanian"');
 

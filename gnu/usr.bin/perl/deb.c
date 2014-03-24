@@ -114,7 +114,7 @@ S_deb_stack_n(pTHX_ SV** stack_base, I32 stack_min, I32 stack_max,
 {
 #ifdef DEBUGGING
     dVAR;
-    register I32 i = stack_max - 30;
+    I32 i = stack_max - 30;
     const I32 *markscan = PL_markstack + mark_min;
 
     PERL_ARGS_ASSERT_DEB_STACK_N;
@@ -234,7 +234,7 @@ Perl_deb_stack_all(pTHX)
 		PerlIO_printf(Perl_debug_log, "\n");
 	    else {
 
-		/* Find the current context's stack range by searching
+		/* Find the the current context's stack range by searching
 		 * forward for any higher contexts using this stack; failing
 		 * that, it will be equal to the size of the stack for old
 		 * stacks, or PL_stack_sp for the current stack
@@ -330,8 +330,8 @@ Perl_deb_stack_all(pTHX)
  * Local variables:
  * c-indentation-style: bsd
  * c-basic-offset: 4
- * indent-tabs-mode: t
+ * indent-tabs-mode: nil
  * End:
  *
- * ex: set ts=8 sts=4 sw=4 noet:
+ * ex: set ts=8 sts=4 sw=4 et:
  */

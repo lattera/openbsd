@@ -540,9 +540,9 @@ Here's how I generate a new patch.  I'll use the hypothetical
 5.004_07 to 5.004_08 patch as an example.
 
 	# unpack perl5.004_07/
-	gzip -d -c perl5.004_07.tar.gz | tar -xf -
+	gzip -d -c perl5.004_07.tar.gz | tar -xof -
 	# unpack perl5.004_08/
-	gzip -d -c perl5.004_08.tar.gz | tar -xf -
+	gzip -d -c perl5.004_08.tar.gz | tar -xof -
 	makepatch perl5.004_07 perl5.004_08 > perl5.004_08.pat
 
 Makepatch will automatically generate appropriate B<rm> commands to remove
@@ -1205,14 +1205,14 @@ function.
   /* Beginning of modification history */
   /* Written 02-01-02 by Nick Ing-Simmons (nick@ing-simmons.net) */
   /* End of modification history */
-  
+
   /* VOS doesn't supply a truncate function, so we build one up
      from the available POSIX functions.  */
-  
+
   #include <fcntl.h>
   #include <sys/types.h>
   #include <unistd.h>
-  
+
   int
   truncate(const char *path, off_t len)
   {
@@ -1250,7 +1250,7 @@ not "vos.c".
   # VOS does not have truncate() but we supply one in vos.c
   d_truncate="define"
   archobjs="vos.o"
-  
+
   # Help gmake find vos.c
   test -h vos.c || ln -s vos/vos.c vos.c
 

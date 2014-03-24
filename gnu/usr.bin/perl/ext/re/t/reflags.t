@@ -10,26 +10,35 @@ BEGIN {
 
 use strict;
 
-use Test::More tests => 53;
+use Test::More tests => 62;
 
 my @flags = qw( a d l u );
 
 use re '/i';
 ok "Foo" =~ /foo/, 'use re "/i"';
+ok "Foo" =~ /(??{'foo'})/, 'use re "/i" (??{})';
 no re '/i';
 ok "Foo" !~ /foo/, 'no re "/i"';
+ok "Foo" !~ /(??{'foo'})/, 'no re "/i" (??{})';
 use re '/x';
 ok "foo" =~ / foo /, 'use re "/x"';
+ok "foo" =~ / (??{' foo '}) /, 'use re "/x" (??{})';
 no re '/x';
 ok "foo" !~ / foo /, 'no re "/x"';
+ok "foo" !~ /(??{' foo '})/, 'no re "/x" (??{})';
+ok "foo" !~ / (??{'foo'}) /, 'no re "/x" (??{})';
 use re '/s';
 ok "\n" =~ /./, 'use re "/s"';
+ok "\n" =~ /(??{'.'})/, 'use re "/s" (??{})';
 no re '/s';
 ok "\n" !~ /./, 'no re "/s"';
+ok "\n" !~ /(??{'.'})/, 'no re "/s" (??{})';
 use re '/m';
 ok "\nfoo" =~ /^foo/, 'use re "/m"';
+ok "\nfoo" =~ /(??{'^'})foo/, 'use re "/m" (??{})';
 no re '/m';
 ok "\nfoo" !~ /^foo/, 'no re "/m"';
+ok "\nfoo" !~ /(??{'^'})foo/, 'no re "/m" (??{})';
 
 use re '/xism';
 ok qr// =~ /(?=.*x)(?=.*i)(?=.*s)(?=.*m)/, 'use re "/multiple"';
@@ -47,11 +56,15 @@ ok 'f r e l p' =~ /f r e l p/,
 SKIP: {
   if (
       !$Config::Config{d_setlocale}
-   || $Config::Config{ccflags} =~ /\bD?NO_LOCALE(_|\b)/
+   || $Config::Config{ccflags} =~ /\bD?NO_LOCALE\b/
   ) {
     skip "no locale support", 7
   }
-  use locale;
+  BEGIN {
+      if($Config::Config{d_setlocale}) {
+          require locale; import locale;
+      }
+  }
   use re '/u';
   is qr//, '(?^u:)', 'use re "/u" with active locale';
   no re '/u';
