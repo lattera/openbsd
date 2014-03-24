@@ -25,9 +25,10 @@ my $not_installed = qr{^(?:
 
 my %dist_dir_exe;
 
-foreach (qw (podchecker podselect pod2usage)) {
-    $dist_dir_exe{lc "$_.PL"} = "../cpan/Pod-Parser/$_";
-};
+$dist_dir_exe{lc "podselect.PL"} = "../cpan/Pod-Parser/podselect";
+$dist_dir_exe{lc "podchecker.PL"} = "../cpan/Pod-Checker/podchecker";
+$dist_dir_exe{lc "pod2usage.PL"} = "../cpan/Pod-Usage/pod2usage";
+
 foreach (qw (pod2man pod2text)) {
     $dist_dir_exe{lc "$_.PL"} = "../cpan/podlators/$_";
 };
@@ -36,13 +37,13 @@ $dist_dir_exe{'pod2html.pl'} = '../ext/Pod-Html';
 my @programs;
 
 find(
-  sub {
+  { no_chidr => 1, wanted => sub {
     my $name = $File::Find::name;
     return if $name =~ /blib/;
     return unless $name =~ m{/(?:bin|scripts?)/\S+\z} && $name !~ m{/t/};
 
     push @programs, $name;
-  },
+  }},
   qw( ../cpan ../dist ../ext ),
 );
 
@@ -52,7 +53,7 @@ for my $f ( @programs ) {
   $f =~ s/\.\z// if $^O eq 'VMS';
   next if $f =~ $not_installed;
   my $bn = basename($f);
-  if(qr/\A(?i:$bn)\z/ ~~ %dist_dir_exe) {
+  if(grep { /\A(?i:$bn)\z/ } keys %dist_dir_exe) {
     ok( -f "$dist_dir_exe{lc $bn}$ext", "$f$ext");
   } else {
     ok( -f catfile('..', 'utils', "$bn$ext"), "$f$ext" );

@@ -1,6 +1,7 @@
 package B::Lint;
+use if $] > 5.017, 'deprecate';
 
-our $VERSION = '1.11_01';    ## no critic
+our $VERSION = '1.17';    ## no critic
 
 =head1 NAME
 
@@ -584,7 +585,7 @@ PRIVATE_NAMES: {
 DOLLAR_UNDERSCORE: {
 
         # Warn on uses of $_ with a few exceptions. I'm not warning on
-        # $_ inside grep, map, or statement modifer foreach because
+        # $_ inside grep, map, or statement modifier foreach because
         # they localize $_ and it'd be impossible to use these
         # features without getting warnings.
 
@@ -626,7 +627,7 @@ UNDEFINED_SUBS: {
         no strict 'refs';    ## no critic strict
         if ( not exists &$subname ) {
             $subname =~ s/\Amain:://;
-            warning q[Nonexistant subroutine '%s' called], $subname;
+            warning q[Nonexistent subroutine '%s' called], $subname;
         }
         elsif ( not defined &$subname ) {
             $subname =~ s/\A\&?main:://;
