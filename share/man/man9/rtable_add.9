@@ -1,4 +1,4 @@
-.\"     $OpenBSD: src/share/man/man9/rtable_add.9,v 1.4 2014/03/18 14:04:31 jmc Exp $
+.\"     $OpenBSD: src/share/man/man9/rtable_add.9,v 1.5 2014/03/26 13:57:54 mpi Exp $
 .\"
 .\" Copyright (c) 2011 Bret S. Lambert <blambert@openbsd.org>
 .\" All rights reserved.
@@ -73,6 +73,14 @@ Place routing table with ID of
 under the routing domain with ID of
 .Fa rdomain .
 .El
+.Sh CONTEXT
+.Fn rtable_add ,
+.Fn rtable_exists ,
+.Fn rtable_get ,
+.Fn rtable_l2 ,
+and
+.Fn task_l2set
+can be called during autoconf, from process context, or from interrupt context.
 .Sh RETURN VALUES
 .Fn rtable_add
 may fail with:
