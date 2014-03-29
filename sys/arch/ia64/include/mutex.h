@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/ia64/include/mutex.h,v 1.1 2011/07/04 23:29:08 pirofti Exp $	*/
+/*	$OpenBSD: src/sys/arch/ia64/include/mutex.h,v 1.2 2014/03/29 18:09:29 guenther Exp $	*/
 
 /*
  * Copyright (c) 2004 Artur Grabowski <art@openbsd.org>
@@ -30,7 +30,7 @@
 struct mutex {
 	int mtx_wantipl;
 	int mtx_oldipl;
-	__volatile void *mtx_owner;
+	volatile void *mtx_owner;
 };
 
 #define MUTEX_INITIALIZER(ipl) { (ipl), 0, NULL }
