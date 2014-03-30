@@ -1,4 +1,4 @@
-/*	$Id: man.h,v 1.41 2013/10/17 20:51:29 schwarze Exp $ */
+/*	$Id: man.h,v 1.42 2014/03/22 00:56:07 schwarze Exp $ */
 /*
  * Copyright (c) 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -57,6 +57,7 @@ enum	mant {
 	MAN_EE,
 	MAN_UR,
 	MAN_UE,
+	MAN_ll,
 	MAN_MAX
 };
 

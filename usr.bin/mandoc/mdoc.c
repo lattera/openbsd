@@ -1,4 +1,4 @@
-/*	$Id: mdoc.c,v 1.100 2014/03/21 22:52:21 schwarze Exp $ */
+/*	$Id: mdoc.c,v 1.101 2014/03/23 12:44:18 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010, 2012, 2013, 2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -68,7 +68,7 @@ const	char *const __mdoc_macronames[MDOC_MAX] = {
 	/* LINTED */
 	"Dx",		"%Q",		"br",		"sp",
 	/* LINTED */
-	"%U",		"Ta"
+	"%U",		"Ta",		"ll",
 	};
 
 const	char *const __mdoc_argnames[MDOC_ARG_MAX] = {		 

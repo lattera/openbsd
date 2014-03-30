@@ -1,4 +1,4 @@
-/*	$Id: mdoc_validate.c,v 1.123 2014/03/21 22:52:21 schwarze Exp $ */
+/*	$Id: mdoc_validate.c,v 1.124 2014/03/23 15:14:29 schwarze Exp $ */
 /*
  * Copyright (c) 2008-2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010-2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -300,6 +300,7 @@ static	const struct valids mdoc_valids[MDOC_MAX] = {
 	{ NULL, posts_sp },			/* sp */
 	{ NULL, posts_text1 },			/* %U */
 	{ NULL, NULL },				/* Ta */
+	{ NULL, NULL },				/* ll */
 };
 
 #define	RSORD_MAX 14 /* Number of `Rs' blocks. */
