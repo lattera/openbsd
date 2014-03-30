@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.bin/ftp/fetch.c,v 1.113 2014/02/26 20:48:06 tedu Exp $	*/
+/*	$OpenBSD: src/usr.bin/ftp/fetch.c,v 1.115 2014/03/30 22:37:41 jca Exp $	*/
 /*	$NetBSD: fetch.c,v 1.14 1997/08/18 10:20:20 lukem Exp $	*/
 
 /*-
@@ -188,7 +188,7 @@ url_get(const char *origline, const char *proxyenv, const char *outfile)
 	FILE *fin = NULL;
 	off_t hashbytes;
 	const char *errstr;
-	size_t len, wlen;
+	ssize_t len, wlen;
 #ifndef SMALL
 	char *sslpath = NULL, *sslhost = NULL;
 	char *locbase, *full_host = NULL, *auth = NULL;
@@ -605,7 +605,6 @@ again:
 		}
 		SSL_library_init();
 		SSL_load_error_strings();
-		SSLeay_add_ssl_algorithms();
 		ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 		if (ssl_ctx == NULL) {
 			ERR_print_errors_fp(ttyout);
