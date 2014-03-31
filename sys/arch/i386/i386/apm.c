@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.104 2014/03/29 18:09:29 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/apm.c,v 1.105 2014/03/31 12:11:42 mpi Exp $	*/
 
 /*-
  * Copyright (c) 1998-2001 Michael Shalayeff. All rights reserved.
@@ -249,8 +249,8 @@ apm_suspend(int state)
 #if NWSDISPLAY > 0
 	wsdisplay_suspend();
 #endif /* NWSDISPLAY > 0 */
-	bufq_quiesce();
 	config_suspend(mainbus, DVACT_QUIESCE);
+	bufq_quiesce();
 
 	s = splhigh();
 	disable_intr();
