@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/lib/libevent/event.3,v 1.42 2014/04/03 11:27:02 eric Exp $
+.\"	$OpenBSD: src/lib/libevent/event.3,v 1.43 2014/04/03 13:30:05 jmc Exp $
 .\"
 .\" Copyright (c) 2000 Artur Grabowski <art@openbsd.org>
 .\" All rights reserved.
@@ -23,7 +23,7 @@
 .\" OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 .\" ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: April 22 2010 $
+.Dd $Mdocdate: April 3 2014 $
 .Dt EVENT 3
 .Os
 .Sh NAME
@@ -561,10 +561,10 @@ return 0.
 Otherwise, \-1 is returned and the global variable errno is
 set to indicate the error.
 .Sh SEE ALSO
-.Xr asr_run 3 ,
 .Xr kqueue 2 ,
 .Xr poll 2 ,
 .Xr select 2 ,
+.Xr asr_run 3 ,
 .Xr timeout 9
 .Sh HISTORY
 The
