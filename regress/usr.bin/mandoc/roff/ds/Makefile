@@ -1,5 +1,5 @@
-# $OpenBSD: src/regress/usr.bin/mandoc/roff/ds/Makefile,v 1.3 2014/02/14 23:05:08 schwarze Exp $
+# $OpenBSD: src/regress/usr.bin/mandoc/roff/ds/Makefile,v 1.4 2014/04/07 21:00:00 schwarze Exp $
 
-REGRESS_TARGETS = quoting append
+REGRESS_TARGETS = append nested quoting
 
 .include <bsd.regress.mk>
