@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.165 2014/04/04 16:10:42 eric Exp $	*/
+/*	$OpenBSD: src/usr.sbin/smtpd/lka.c,v 1.166 2014/04/09 15:23:49 eric Exp $	*/
 
 /*
  * Copyright (c) 2008 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -413,6 +413,7 @@ lka_imsg(struct mproc *p, struct imsg *imsg)
 			return;
 
 		case IMSG_LKA_AUTHENTICATE:
+			imsg->hdr.type = IMSG_SMTP_AUTHENTICATE;
 			m_forward(p_pony, imsg);
 			return;
 		}
