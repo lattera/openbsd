@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/pcap-namedb.h,v 1.7 2005/11/18 11:05:39 djm Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/pcap-namedb.h,v 1.8 2014/04/11 04:08:58 lteo Exp $	*/
 
 /*
  * Copyright (c) 1994, 1996
@@ -31,8 +31,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * @(#) $Header: /cvs/src/lib/libpcap/pcap-namedb.h,v 1.6 2000/04/26 21:25:53 jakob Exp $ (LBL)
  */
 
 #ifndef lib_pcap_ethers_h

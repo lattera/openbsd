@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/ethertype.h,v 1.7 2008/06/11 15:02:21 dtucker Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/ethertype.h,v 1.8 2014/04/11 04:08:58 lteo Exp $	*/
 /*	$NetBSD: ethertype.h,v 1.2 1995/03/06 11:38:17 mycroft Exp $	*/
 
 /*
@@ -20,8 +20,6 @@
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @(#) $Header: /cvs/src/lib/libpcap/ethertype.h,v 1.6 2000/04/26 21:25:52 jakob Exp $ (LBL)
  */
 
 /* Types missing from some systems */

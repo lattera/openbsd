@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/llc.h,v 1.1 2005/10/07 19:32:39 mpf Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/llc.h,v 1.2 2014/04/11 04:08:58 lteo Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1997
@@ -19,8 +19,6 @@
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @(#) $Header: /cvs/src/usr.sbin/tcpdump/llc.h,v 1.7 2000/10/03 14:31:55 ho Exp $ (LBL)
  */
 
 /*

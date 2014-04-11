@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/lib/libpcap/pcap-int.h,v 1.12 2012/05/25 01:58:08 lteo Exp $	*/
+/*	$OpenBSD: src/lib/libpcap/pcap-int.h,v 1.13 2014/04/11 04:08:58 lteo Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996
@@ -31,8 +31,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * @(#) $Header: /cvs/src/lib/libpcap/pcap-int.h,v 1.11 2006/03/26 20:58:51 djm Exp $ (LBL)
  */
 
 #ifndef pcap_int_h
