@@ -1,4 +1,4 @@
-#	$OpenBSD: src/lib/libssl/crypto/arch/vax/bn_asm_vax.S,v 1.3 2013/07/05 21:10:50 miod Exp $
+#	$OpenBSD: src/lib/libcrypto/crypto/arch/vax/bn_asm_vax.S,v 1.1 2014/04/11 22:51:53 miod Exp $
 #	$NetBSD: bn_asm_vax.S,v 1.1 2003/11/03 10:22:28 ragge Exp $
 
 #include <machine/asm.h>
