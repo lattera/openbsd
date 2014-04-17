@@ -1,4 +1,4 @@
-.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.388 2014/04/17 07:36:45 nicm Exp $
+.\" $OpenBSD: src/usr.bin/tmux/tmux.1,v 1.389 2014/04/17 07:51:38 nicm Exp $
 .\"
 .\" Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
 .\"
@@ -14,7 +14,7 @@
 .\" IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 .\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: April 16 2014 $
+.Dd $Mdocdate: April 17 2014 $
 .Dt TMUX 1
 .Os
 .Sh NAME
@@ -2047,9 +2047,7 @@ flag prevents setting an option that is already set.
 .Pp
 The
 .Fl q
-flag suppresses the informational message (as if the
-.Ic quiet
-server option was set).
+flag suppresses errors about unknown options.
 .Pp
 With
 .Fl a ,
