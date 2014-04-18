@@ -1,4 +1,4 @@
-.\"	$OpenBSD: src/usr.sbin/relayd/relayd.conf.5,v 1.141 2014/04/14 15:24:25 jmc Exp $
+.\"	$OpenBSD: src/usr.sbin/relayd/relayd.conf.5,v 1.142 2014/04/18 13:55:26 reyk Exp $
 .\"
 .\" Copyright (c) 2006, 2007 Reyk Floeter <reyk@openbsd.org>
 .\" Copyright (c) 2006, 2007 Pierre-Yves Ritschard <pyr@openbsd.org>
@@ -145,7 +145,7 @@ relayed connections.
 This increases the performance and prevents delays when connecting
 to a relay.
 .Xr relayd 8
-runs 5 relay processes by default and every process will handle
+runs 3 relay processes by default and every process will handle
 all configured relays.
 .It Ic snmp Oo Ic trap Oc Op Qq Ar path
 Send an SNMP trap when the state of a host changes.
