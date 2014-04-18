@@ -33,7 +33,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id$ */
+/* $Id: krb5_locl.h,v 1.9 2013/06/17 18:57:44 robert Exp $ */
 
 #ifndef __KRB5_LOCL_H__
 #define __KRB5_LOCL_H__
@@ -46,6 +46,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+
+#ifdef HAVE_POLL_H
+#include <sys/poll.h>
+#endif
 
 #include <krb5-types.h>
 
