@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/mips64/mips64/trap.c,v 1.92 2014/04/09 21:10:35 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/mips64/mips64/trap.c,v 1.93 2014/04/18 11:51:17 guenther Exp $	*/
 
 /*
  * Copyright (c) 1988 University of Utah.
@@ -189,6 +189,7 @@ trap(struct trap_frame *trapframe)
 		atomic_add_int(&uvmexp.traps, 1);
 	if (USERMODE(trapframe->sr)) {
 		type |= T_USER;
+		refreshcreds(p);
 	}
 
 	/*

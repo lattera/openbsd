@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.113 2014/03/26 05:23:42 guenther Exp $	*/
+/*	$OpenBSD: src/sys/arch/i386/i386/trap.c,v 1.114 2014/04/18 11:51:17 guenther Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -155,7 +155,8 @@ trap(struct trapframe *frame)
 	if (!KERNELMODE(frame->tf_cs, frame->tf_eflags)) {
 		type |= T_USER;
 		p->p_md.md_regs = frame;
-	}
+	} else if (type != T_NMI)
+		refreshcreds(p);
 
 	switch (type) {
 
