@@ -1,4 +1,4 @@
-/* $OpenBSD: src/usr.bin/ssh/sshd.c,v 1.420 2014/02/26 21:53:37 markus Exp $ */
+/* $OpenBSD: src/usr.bin/ssh/sshd.c,v 1.420.4.1 2014/04/21 00:30:48 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -2314,6 +2314,9 @@ do_ssh2_kex(void)
 	}
 	if (options.kex_algorithms != NULL)
 		myproposal[PROPOSAL_KEX_ALGS] = options.kex_algorithms;
+
+	myproposal[PROPOSAL_KEX_ALGS] = compat_kex_proposal(
+	    myproposal[PROPOSAL_KEX_ALGS]);
 
 	if (options.rekey_limit || options.rekey_interval)
 		packet_set_rekey_limits((u_int32_t)options.rekey_limit,
