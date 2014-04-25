@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -96,11 +95,11 @@ main(argc, argv)
 		char *path  = getenv("HOMEPATH");
 		if (drive != NULL && path != NULL)
 		{
-			char *env = (char *) ecalloc(strlen(drive) + 
-					strlen(path) + 6, sizeof(char));
-			strcpy(env, "HOME=");
-			strcat(env, drive);
-			strcat(env, path);
+			size_t len = strlen(drive) + strlen(path) + 6;
+			char *env = (char *) ecalloc(len, sizeof(char));
+			strlcpy(env, "HOME=", len);
+			strlcat(env, drive, len);
+			strlcat(env, path, len);
 			putenv(env);
 		}
 	}
@@ -133,6 +132,13 @@ main(argc, argv)
 		less_is_more = 1;
 
 	init_prompt();
+
+	if (less_is_more) {
+		scan_option("-G");
+		scan_option("-L");
+		scan_option("-X");
+		scan_option("-c");
+	}
 
 	s = lgetenv(less_is_more ? "MORE" : "LESS");
 	if (s != NULL)
@@ -180,8 +186,10 @@ main(argc, argv)
 	 * to "register" them with the ifile system.
 	 */
 	ifile = NULL_IFILE;
+#if !SMALL
 	if (dohelp)
-		ifile = get_ifile(FAKE_HELPFILE, ifile);
+		ifile = get_ifile(HELPFILE, ifile);
+#endif /* !SMALL */
 	while (argc-- > 0)
 	{
 		char *filename;
@@ -211,6 +219,7 @@ main(argc, argv)
 		argv++;
 		(void) get_ifile(filename, ifile);
 		ifile = prev_ifile(NULL_IFILE);
+		free(filename);
 #endif
 	}
 	/*
@@ -236,7 +245,7 @@ main(argc, argv)
 		quit(QUIT_OK);
 	}
 
-	if (missing_cap && !know_dumb)
+	if (missing_cap && !know_dumb && !less_is_more)
 		error("WARNING: terminal is not fully functional", NULL_PARG);
 	init_mark();
 	open_getchr();
@@ -299,9 +308,10 @@ save(s)
 	char *s;
 {
 	register char *p;
+	size_t len = strlen(s) + 1;
 
-	p = (char *) ecalloc(strlen(s)+1, sizeof(char));
-	strcpy(p, s);
+	p = (char *) ecalloc(len, sizeof(char));
+	strlcpy(p, s, len);
 	return (p);
 }
 
@@ -337,6 +347,7 @@ skipsp(s)
 	return (s);
 }
 
+#if GNU_OPTIONS
 /*
  * See how many characters of two strings are identical.
  * If uppercase is true, the first string must begin with an uppercase
@@ -371,6 +382,7 @@ sprefix(ps, s, uppercase)
 	}
 	return (len);
 }
+#endif /* GNU_OPTIONS */
 
 /*
  * Exit the program.

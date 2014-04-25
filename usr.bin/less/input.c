@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -25,7 +24,7 @@ extern int squeeze;
 extern int chopline;
 extern int hshift;
 extern int quit_if_one_screen;
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern int ignore_eoi;
 extern int status_col;
 extern POSITION start_attnpos;
@@ -416,7 +415,7 @@ get_back_line:
 		goto get_back_line;
 	}
 
-	if (status_col && is_hilited(base_pos, ch_tell()-1, 1, NULL))
+	if (status_col && curr_pos > 0 && is_hilited(base_pos, curr_pos-1, 1, NULL))
 		set_status_col('*');
 #endif
 

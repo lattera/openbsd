@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -66,7 +65,7 @@ static struct linenum_info pool[NPOOL];	/* The pool itself */
 static struct linenum_info *spare;		/* We always keep one spare entry */
 
 extern int linenums;
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern int sc_height;
 extern int screen_trashed;
 

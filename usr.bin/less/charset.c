@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -25,6 +24,7 @@
 
 public int utf_mode = 0;
 
+#if !SMALL
 /*
  * Predefined character sets,
  * selected by the LESSCHARSET environment variable.
@@ -427,7 +427,7 @@ prchar(c)
 	if ((c < 128 || !utf_mode) && !control_char(c))
 		SNPRINTF1(buf, sizeof(buf), "%c", (int) c);
 	else if (c == ESC)
-		strcpy(buf, "ESC");
+		strlcpy(buf, "ESC", sizeof(buf));
 #if IS_EBCDIC_HOST
 	else if (!binary_char(c) && c < 64)
 		SNPRINTF1(buf, sizeof(buf), "^%c",
@@ -459,7 +459,7 @@ prutfchar(ch)
 	static char buf[32];
 
 	if (ch == ESC)
-		strcpy(buf, "ESC");
+		strlcpy(buf, "ESC", sizeof(buf));
   	else if (ch < 128 && control_char(ch))
 	{
 		if (!control_char(ch ^ 0100))
@@ -1171,3 +1171,79 @@ is_combining_char(ch1, ch2)
 	return 0;
 }
 
+#else /* !SMALL */
+
+public int binattr = AT_STANDOUT;
+
+	public void
+init_charset()
+{
+	return;
+}
+
+/*
+ * Is a given character a "binary" character?
+ */
+	public int
+binary_char(c)
+	LWCHAR c;
+{
+	return (!isprint(c) && !isspace(c));
+}
+
+/*
+ * Is a given character a "control" character?
+ */
+	public int
+control_char(c)
+	LWCHAR c;
+{
+	return (iscntrl(c));
+}
+
+/*
+ * Return the printable form of a character.
+ * For example, in the "ascii" charset '\3' is printed as "^C".
+ */
+	public char *
+prchar(c)
+	LWCHAR c;
+{
+	static char buf[8];
+
+	c &= 0377;
+	if (!iscntrl(c))
+		snprintf(buf, sizeof(buf), "%c", c);
+	else if (c == ESC)
+		strlcpy(buf, "ESC", sizeof(buf));
+	else if (c < 128 && !iscntrl(c ^ 0100))
+		snprintf(buf, sizeof(buf), "^%c", c ^ 0100);
+	else
+		snprintf(buf, sizeof(buf), "*s<%X>", c);
+	return (buf);
+}
+
+/*
+ * Step forward or backward one character in a string.
+ */
+	public LWCHAR
+step_char(pp, dir, limit)
+	char **pp;
+	signed int dir;
+	char *limit;
+{
+	LWCHAR ch;
+	int len;
+	char *p = *pp;
+
+	/* It's easy if chars are one byte. */
+	if (dir > 0)
+		ch = (LWCHAR) ((p < limit) ? *p++ : 0);
+	else
+		ch = (LWCHAR) ((p > limit) ? *--p : 0);
+
+	*pp = p;
+	return ch;
+}
+
+#endif /* !SMALL */

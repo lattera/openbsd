@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 #define NEWBOT 1
@@ -83,6 +82,7 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
+#include <signal.h>
 
 /* OS-specific includes */
 #ifdef _OSK
@@ -450,7 +450,7 @@ struct textlist
 #if _OSK_MWC32
 #define	LSIGNAL(sig,func)	os9_signal(sig,func)
 #else
-#define	LSIGNAL(sig,func)	signal(sig,func)
+#define	LSIGNAL(sig,func)	lsignal(sig,func)
 #endif
 
 #if HAVE_SIGPROCMASK
@@ -485,10 +485,13 @@ struct textlist
 #define	CH_KEEPOPEN	002
 #define	CH_POPENED	004
 #define	CH_HELPFILE	010
+#define	CH_NODATA  	020	/* Special case for zero length files */
+
 
 #define	ch_zero()	((POSITION)0)
 
 #define	FAKE_HELPFILE	"@/\\less/\\help/\\file/\\@"
+#define FAKE_EMPTYFILE	"@/\\less/\\empty/\\file/\\@"
 
 /* Flags for cvt_text */
 #define	CVT_TO_LC	01	/* Convert upper-case to lower-case */

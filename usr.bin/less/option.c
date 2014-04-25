@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -31,6 +30,7 @@ extern int screen_trashed;
 extern int less_is_more;
 extern int quit_at_eof;
 extern char *every_first_cmd;
+extern int opt_use_backslash;
 
 /*
  * Return a printable description of an option.
@@ -57,7 +57,7 @@ propt(c)
 {
 	static char buf[8];
 
-	sprintf(buf, "-%s", prchar(c));
+	snprintf(buf, sizeof(buf), "-%s", prchar(c));
 	return (buf);
 }
 
@@ -120,6 +120,7 @@ scan_option(s)
 		case END_OPTION_STRING:
 			continue;
 		case '-':
+#if GNU_OPTIONS
 			/*
 			 * "--" indicates an option name instead of a letter.
 			 */
@@ -128,6 +129,7 @@ scan_option(s)
 				optname = ++s;
 				break;
 			}
+#endif
 			/*
 			 * "-+" means set these options back to their defaults.
 			 * (They may have been set otherwise by previous 
@@ -147,10 +149,13 @@ scan_option(s)
 			 */
 			plusoption = TRUE;
 			s = optstring(s, &str, propt('+'), NULL);
+			if (s == NULL)
+				return;
 			if (*str == '+')
-				every_first_cmd = save(++str);
+				every_first_cmd = save(str+1);
 			else
 				ungetsc(str);
+			free(str);
 			continue;
 		case '0':  case '1':  case '2':  case '3':  case '4':
 		case '5':  case '6':  case '7':  case '8':  case '9':
@@ -178,7 +183,9 @@ scan_option(s)
 			printopt = propt(optc);
 			lc = ASCII_IS_LOWER(optc);
 			o = findopt(optc);
-		} else
+		}
+#if GNU_OPTIONS
+		else
 		{
 			printopt = optname;
 			lc = ASCII_IS_LOWER(optname[0]);
@@ -203,7 +210,7 @@ scan_option(s)
 					parg.p_string = printopt;
 					error("The %s option should not be followed by =",
 						&parg);
-					quit(QUIT_ERROR);
+					return;
 				}
 				s++;
 			} else
@@ -215,6 +222,7 @@ scan_option(s)
 				o = NULL;
 			}
 		}
+#endif
 		if (o == NULL)
 		{
 			parg.p_string = printopt;
@@ -224,7 +232,7 @@ scan_option(s)
 			else
 				error("There is no %s option (\"less --help\" for help)",
 					&parg);
-			quit(QUIT_ERROR);
+			return;
 		}
 
 		str = NULL;
@@ -261,6 +269,8 @@ scan_option(s)
 			while (*s == ' ')
 				s++;
 			s = optstring(s, &str, printopt, o->odesc[1]);
+			if (s == NULL)
+				return;
 			break;
 		case NUMBER:
 			if (*s == '\0')
@@ -276,6 +286,8 @@ scan_option(s)
 		 */
 		if (o->ofunc != NULL)
 			(*o->ofunc)(INIT, str);
+		if (str != NULL)
+			free(str);
 	}
 }
 
@@ -559,35 +571,33 @@ optstring(s, p_str, printopt, validchars)
 	char *validchars;
 {
 	register char *p;
+	register char *out;
 
 	if (*s == '\0')
 	{
 		nostring(printopt);
-		quit(QUIT_ERROR);
+		return (NULL);
 	}
-	*p_str = s;
+	/* Alloc could be more than needed, but not worth trimming. */
+	*p_str = (char *) ecalloc(strlen(s)+1, sizeof(char));
+	out = *p_str;
+
 	for (p = s;  *p != '\0';  p++)
 	{
-		if (*p == END_OPTION_STRING ||
-		    (validchars != NULL && strchr(validchars, *p) == NULL))
+		if (opt_use_backslash && *p == '\\' && p[1] != '\0')
 		{
-			switch (*p)
-			{
-			case END_OPTION_STRING:
-			case ' ':  case '\t':  case '-':
-				/* Replace the char with a null to terminate string. */
-				*p++ = '\0';
+			/* Take next char literally. */
+			++p;
+		} else 
+		{
+			if (*p == END_OPTION_STRING || 
+			    (validchars != NULL && strchr(validchars, *p) == NULL))
+				/* End of option string. */
 				break;
-			default:
-				/* Cannot replace char; make a copy of the string. */
-				*p_str = (char *) ecalloc(p-s+1, sizeof(char));
-				strncpy(*p_str, s, p-s);
-				(*p_str)[p-s] = '\0';
-				break;
-			}
-			break;
 		}
+		*out++ = *p;
 	}
+	*out = '\0';
 	return (p);
 }
 
@@ -610,8 +620,6 @@ num_error(printopt, errp)
 		parg.p_string = printopt;
 		error("Number is required after %s", &parg);
 	}
-	quit(QUIT_ERROR);
-	/* NOTREACHED */
 	return (-1);
 }
 
