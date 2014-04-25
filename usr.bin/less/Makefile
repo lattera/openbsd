@@ -1,4 +1,4 @@
-#	$OpenBSD: src/usr.bin/less/Makefile,v 1.1 2011/09/16 18:12:09 shadchin Exp $
+#	$OpenBSD: src/usr.bin/less/Makefile,v 1.1.1.1 2014/04/25 13:33:39 shadchin Exp $
 
 SUBDIR=	less lesskey
 
