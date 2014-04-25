@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -67,6 +66,7 @@ extern int ul_fg_color, ul_bg_color;
 extern int so_fg_color, so_bg_color;
 extern int bl_fg_color, bl_bg_color;
 #endif
+extern char *every_first_cmd;
 
 
 #if LOGFILE
@@ -176,7 +176,7 @@ opt_j(type, s)
 		} else
 		{
 
-			sprintf(buf, ".%06d", jump_sline_fraction);
+			snprintf(buf, sizeof(buf), ".%06d", jump_sline_fraction);
 			len = strlen(buf);
 			while (len > 2 && buf[len-1] == '0')
 				len--;
@@ -241,7 +241,7 @@ opt_shift(type, s)
 		} else
 		{
 
-			sprintf(buf, ".%06d", shift_count_fraction);
+			snprintf(buf, sizeof(buf), ".%06d", shift_count_fraction);
 			len = strlen(buf);
 			while (len > 2 && buf[len-1] == '0')
 				len--;
@@ -366,14 +366,17 @@ opt_p(type, s)
 		 * {{ This won't work if the "/" command is
 		 *    changed or invalidated by a .lesskey file. }}
 		 */
-		plusoption = TRUE;
-		ungetsc(s);
-		/*
-		 * In "more" mode, the -p argument is a command,
-		 * not a search string, so we don't need a slash.
-		 */
-		if (!less_is_more)
+		if (less_is_more) {
+			/*
+			 * In "more" mode, the -p argument is a command,
+			 * not a search string, run for each file.
+			 */
+			every_first_cmd = save(s);
+		} else {
+			plusoption = TRUE;
+			ungetsc(s);
 			ungetsc("/");
+		}
 		break;
 	}
 }
@@ -481,7 +484,30 @@ opt__V(type, s)
 		any_display = 1;
 		putstr("less ");
 		putstr(version);
-		putstr("\nCopyright (C) 1984-2009 Mark Nudelman\n\n");
+		putstr(" (");
+#if HAVE_GNU_REGEX
+		putstr("GNU ");
+#endif
+#if HAVE_POSIX_REGCOMP
+		putstr("POSIX ");
+#endif
+#if HAVE_PCRE
+		putstr("PCRE ");
+#endif
+#if HAVE_RE_COMP
+		putstr("BSD ");
+#endif
+#if HAVE_REGCMP
+		putstr("V8 ");
+#endif
+#if HAVE_V8_REGCOMP
+		putstr("Spencer V8 ");
+#endif
+#if !HAVE_GNU_REGEX && !HAVE_POSIX_REGCOMP && !HAVE_PCRE && !HAVE_RE_COMP && !HAVE_REGCMP && !HAVE_V8_REGCOMP
+		putstr("no ");
+#endif
+		putstr("regular expressions)\n");
+		putstr("Copyright (C) 1984-2012 Mark Nudelman\n\n");
 		putstr("less comes with NO WARRANTY, to the extent permitted by law.\n");
 		putstr("For information about the terms of redistribution,\n");
 		putstr("see the file named README in the less distribution.\n");
@@ -612,19 +638,21 @@ opt_x(type, s)
 		tabdefault = tabstops[ntabstops-1] - tabstops[ntabstops-2];
 		break;
 	case QUERY:
-		strcpy(msg, "Tab stops ");
+		strlcpy(msg, "Tab stops ", sizeof(msg));
 		if (ntabstops > 2)
 		{
 			for (i = 1;  i < ntabstops;  i++)
 			{
 				if (i > 1)
-					strcat(msg, ",");
-				sprintf(msg+strlen(msg), "%d", tabstops[i]);
+					strlcat(msg, ",", sizeof(msg));
+				snprintf(msg+strlen(msg),
+				    sizeof(msg)-strlen(msg), "%d", tabstops[i]);
 			}
-			sprintf(msg+strlen(msg), " and then ");
+			snprintf(msg+strlen(msg), sizeof(msg)-strlen(msg),
+			    " and then ");
 		}
-		sprintf(msg+strlen(msg), "every %d spaces",
-			tabdefault);
+		snprintf(msg+strlen(msg), sizeof(msg)-strlen(msg),
+		    "every %d spaces", tabdefault);
 		p.p_string = msg;
 		error("%s", &p);
 		break;

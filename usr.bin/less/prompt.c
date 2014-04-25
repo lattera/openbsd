@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -43,7 +42,7 @@ extern char *editproto;
 static constant char s_proto[] =
   "?n?f%f .?m(%T %i of %m) ..?e(END) ?x- Next\\: %x..%t";
 static constant char m_proto[] =
-  "?n?f%f .?m(%T %i of %m) ..?e(END) ?x- Next\\: %x.:?pB%pB\\%:byte %bB?s/%s...%t";
+  "?f%f .?m(%T %i of %m) .?e(END) ?x- Next\\: %x.:?pB%pB\\%:byte %bB?s/%s...%t";
 static constant char M_proto[] =
   "?f%f .?n?m(%T %i of %m) ..?ltlines %lt-%lb?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\\: %x.:?pB%pB\\%..%t";
 static constant char e_proto[] =
@@ -52,8 +51,6 @@ static constant char h_proto[] =
   "HELP -- ?eEND -- Press g to see it again:Press RETURN for more., or q when done";
 static constant char w_proto[] =
   "Waiting for data";
-static constant char more_proto[] =
-  "--More--(?eEND ?x- Next\\: %x.:?pB%pB\\%:byte %bB?s/%s...%t)";
 
 public char *prproto[3];
 public char constant *eqproto = e_proto;
@@ -70,7 +67,7 @@ static char *mp;
 init_prompt()
 {
 	prproto[0] = save(s_proto);
-	prproto[1] = save(less_is_more ? more_proto : m_proto);
+	prproto[1] = save(m_proto);
 	prproto[2] = save(M_proto);
 	eqproto = save(e_proto);
 	hproto = save(h_proto);
@@ -117,7 +114,7 @@ ap_pos(pos)
 {
 	char buf[INT_STRLEN_BOUND(pos) + 2];
 
-	postoa(pos, buf);
+	postoa(pos, buf, sizeof(buf));
 	ap_str(buf);
 }
 
@@ -130,7 +127,7 @@ ap_linenum(linenum)
 {
 	char buf[INT_STRLEN_BOUND(linenum) + 2];
 
-	linenumtoa(linenum, buf);
+	linenumtoa(linenum, buf, sizeof(buf));
 	ap_str(buf);
 }
 
@@ -143,7 +140,7 @@ ap_int(num)
 {
 	char buf[INT_STRLEN_BOUND(num) + 2];
 
-	inttoa(num, buf);
+	inttoa(num, buf, sizeof(buf));
 	ap_str(buf);
 }
 
@@ -393,9 +390,9 @@ protochar(c, where, iseditproto)
  * where to resume parsing the string.
  * We must keep track of nested IFs and skip them properly.
  */
-	static char *
+	static constant char *
 skipcond(p)
-	register char *p;
+	register constant char *p;
 {
 	register int iflevel;
 
@@ -451,9 +448,9 @@ skipcond(p)
 /*
  * Decode a char that represents a position on the screen.
  */
-	static char *
+	static constant char *
 wherechar(p, wp)
-	char *p;
+	char constant *p;
 	int *wp;
 {
 	switch (*p)
@@ -477,10 +474,10 @@ wherechar(p, wp)
  */
 	public char *
 pr_expand(proto, maxwidth)
-	char *proto;
+	constant char *proto;
 	int maxwidth;
 {
-	register char *p;
+	register constant char *p;
 	register int c;
 	int where;
 

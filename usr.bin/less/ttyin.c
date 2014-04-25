@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -25,7 +24,7 @@ static DWORD console_mode;
 #endif
 
 public int tty;
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern int utf_mode;
 
 /*

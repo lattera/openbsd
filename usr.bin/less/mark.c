@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -129,6 +128,7 @@ getmark(c)
 	return (m);
 }
 
+#if PIPEC
 /*
  * Is a mark letter is invalid?
  */
@@ -138,6 +138,7 @@ badmark(c)
 {
 	return (getmark(c) == NULL);
 }
+#endif /* PIPEC */
 
 /*
  * Set a user-defined mark.
@@ -218,6 +219,7 @@ gomark(c)
 	jump_loc(scrpos.pos, scrpos.ln);
 }
 
+#if PIPEC
 /*
  * Return the position associated with a given mark letter.
  *
@@ -242,6 +244,7 @@ markpos(c)
 	}
 	return (m->m_scrpos.pos);
 }
+#endif /* PIPEC */
 
 /*
  * Clear the marks associated with a specified ifile.

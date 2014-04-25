@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -307,12 +306,14 @@ hold_ifile(ifile, incr)
 	int_ifile(ifile)->h_hold += incr;
 }
 
+#if !SMALL
 	public int
 held_ifile(ifile)
 	IFILE ifile;
 {
 	return (int_ifile(ifile)->h_hold);
 }
+#endif /* !SMALL */
 
 	public void *
 get_filestate(ifile)

@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -126,12 +125,10 @@ static int ch_ungotchar = -1;
 static int maxbufs = -1;
 
 extern int autobuf;
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern int secure;
 extern int screen_trashed;
 extern int follow_mode;
-extern constant char helpdata[];
-extern constant int size_helpdata;
 extern IFILE curr_ifile;
 #if LOGFILE
 extern int logfile;
@@ -258,10 +255,6 @@ ch_get()
 		bp->data[bp->datasize] = ch_ungotchar;
 		n = 1;
 		ch_ungotchar = -1;
-	} else if (ch_flags & CH_HELPFILE)
-	{
-		bp->data[bp->datasize] = helpdata[ch_fpos];
-		n = 1;
 	} else
 	{
 		n = iread(ch_file, &bp->data[bp->datasize], 
@@ -580,8 +573,8 @@ ch_length()
 		return (NULL_POSITION);
 	if (ignore_eoi)
 		return (NULL_POSITION);
-	if (ch_flags & CH_HELPFILE)
-		return (size_helpdata);
+	if (ch_flags & CH_NODATA)
+		return (0);
 	return (ch_fsize);
 }
 
@@ -806,6 +799,17 @@ seekable(f)
 }
 
 /*
+ * Force EOF to be at the current read position.
+ * This is used after an ignore_eof read, during which the EOF may change.
+ */
+	public void
+ch_set_eof()
+{
+	ch_fsize = ch_fpos;
+}
+
+
+/*
  * Initialize file state for a new file.
  */
 	public void
@@ -873,7 +877,7 @@ ch_close()
 		 * But don't really close it if it was opened via popen(),
 		 * because pclose() wants to close it.
 		 */
-		if (!(ch_flags & (CH_POPENED|CH_HELPFILE)))
+		if (!(ch_flags & CH_POPENED))
 			close(ch_file);
 		ch_file = -1;
 	} else

@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -23,7 +22,7 @@ extern char *every_first_cmd;
 extern int any_display;
 extern int force_open;
 extern int is_tty;
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern IFILE curr_ifile;
 extern IFILE old_ifile;
 extern struct scrpos initial_scrpos;
@@ -47,7 +46,7 @@ public ino_t curr_ino;
 char *curr_altfilename = NULL;
 static void *curr_altpipe;
 
-
+#if EXAMINE || TAB_COMPLETE_FILENAME
 /*
  * Textlist functions deal with a list of words separated by spaces.
  * init_textlist sets up a textlist structure.
@@ -148,6 +147,7 @@ back_textlist(tlist, prev)
 		s--;
 	return (s);
 }
+#endif /* EXAMINE || TAB_COMPLETE_FILENAME */
 
 /*
  * Close the current input file.
@@ -248,6 +248,7 @@ edit_ifile(ifile)
 	{
 		chflags = ch_getflags();
 		close_file();
+#if !SMALL
 		if ((chflags & CH_HELPFILE) && held_ifile(was_curr_ifile) <= 1)
 		{
 			/*
@@ -256,6 +257,7 @@ edit_ifile(ifile)
 			del_ifile(was_curr_ifile);
 			was_curr_ifile = old_ifile;
 		}
+#endif /* !SMALL */
 	}
 
 	if (ifile == NULL_IFILE)
@@ -280,6 +282,10 @@ edit_ifile(ifile)
 	qopen_filename = shell_unquote(open_filename);
 
 	chflags = 0;
+#if !SMALL
+	if (strcmp(open_filename, HELPFILE) == 0)
+		chflags |= CH_HELPFILE;
+#endif /* !SMALL */
 	if (alt_pipe != NULL)
 	{
 		/*
@@ -310,10 +316,10 @@ edit_ifile(ifile)
 		 */
 		__djgpp_set_ctrl_c(1);
 #endif
-	} else if (strcmp(open_filename, FAKE_HELPFILE) == 0)
+	} else if (strcmp(open_filename, FAKE_EMPTYFILE) == 0)
 	{
 		f = -1;
-		chflags |= CH_HELPFILE;
+		chflags |= CH_NODATA;
 	} else if ((parg.p_string = bad_file(open_filename)) != NULL)
 	{
 		/*
@@ -447,6 +453,7 @@ edit_ifile(ifile)
 	return (0);
 }
 
+#if EXAMINE
 /*
  * Edit a space-separated list of files.
  * For each filename in the list, enter it into the ifile list.
@@ -506,6 +513,7 @@ edit_list(filelist)
 	reedit_ifile(save_ifile);
 	return (edit(good_filename));
 }
+#endif /* EXAMINE */
 
 /*
  * Edit the first file in the command line (ifile) list.

@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 1984-2011  Mark Nudelman
+ * Copyright (C) 1984-2012  Mark Nudelman
  *
  * You may distribute under the terms of either the GNU General Public
  * License or the Less License, as specified in the README file.
  *
- * For more information about less, or for information on how to 
- * contact the author, see the README file.
+ * For more information, see the README file.
  */
 
 
@@ -23,7 +22,7 @@ public int need_clr;
 public int final_attr;
 public int at_prompt;
 
-extern int sigs;
+extern volatile sig_atomic_t sigs;
 extern int sc_width;
 extern int so_s_width, so_e_width;
 extern int screen_trashed;
@@ -98,6 +97,7 @@ flush()
 {
 	register int n;
 	register int fd;
+	ssize_t nwritten;
 
 	n = ob - obuf;
 	if (n == 0)
@@ -174,6 +174,7 @@ flush()
 						 */
 						p++;
 						anchor = p_next = p;
+						at = 0;
 						WIN32setcolors(nm_fg_color, nm_bg_color);
 						continue;
 					}
@@ -198,8 +199,9 @@ flush()
 							 * in the buffer.
 							 */
 							int slop = q - anchor;
-							/* {{ strcpy args overlap! }} */
-							strcpy(obuf, anchor);
+							/* {{ strlcpy args overlap! }} */
+							strlcpy(obuf, anchor,
+							    sizeof(obuf));
 							ob = &obuf[slop];
 							return;
 						}
@@ -272,20 +274,33 @@ flush()
 						break;
 					if (at & 1)
 					{
+						/*
+						 * If \e[1m use defined bold
+						 * color, else set intensity.
+						 */
+						if (p[-2] == '[')
+						{
+#if MSDOS_COMPILER==WIN32C
+							fg |= FOREGROUND_INTENSITY;
+							bg |= BACKGROUND_INTENSITY;
+#else
 							fg = bo_fg_color;
 							bg = bo_bg_color;
+#endif
+						} else
+							fg |= 8;
 					} else if (at & 2)
 					{
-							fg = so_fg_color;
-							bg = so_bg_color;
+						fg = so_fg_color;
+						bg = so_bg_color;
 					} else if (at & 4)
 					{
-							fg = ul_fg_color;
-							bg = ul_bg_color;
+						fg = ul_fg_color;
+						bg = ul_bg_color;
 					} else if (at & 8)
 					{
-							fg = bl_fg_color;
-							bg = bl_bg_color;
+						fg = bl_fg_color;
+						bg = bl_bg_color;
 					}
 					fg &= 0xf;
 					bg &= 0xf;
@@ -303,9 +318,13 @@ flush()
 	}
 #endif
 #endif
-	fd = (any_display) ? 1 : 2;
-	if (write(fd, obuf, n) != n)
+	fd = (any_display) ? STDOUT_FILENO : STDERR_FILENO;
+	nwritten = write(fd, obuf, n);
+	if (nwritten != n) {
+		if (nwritten == -1)
+			quit(QUIT_ERROR);
 		screen_trashed = 1;
+	}
 	ob = obuf;
 }
 
@@ -379,9 +398,10 @@ putstr(s)
  * Convert an integral type to a string.
  */
 #define TYPE_TO_A_FUNC(funcname, type) \
-void funcname(num, buf) \
+void funcname(num, buf, len) \
 	type num; \
 	char *buf; \
+	size_t len; \
 { \
 	int neg = (num < 0); \
 	char tbuf[INT_STRLEN_BOUND(num)+2]; \
@@ -392,7 +412,7 @@ void funcname(num, buf) \
 		*--s = (num % 10) + '0'; \
 	} while ((num /= 10) != 0); \
 	if (neg) *--s = '-'; \
-	strcpy(buf, s); \
+	strlcpy(buf, s, len); \
 }
 
 TYPE_TO_A_FUNC(postoa, POSITION)
@@ -408,7 +428,7 @@ iprint_int(num)
 {
 	char buf[INT_STRLEN_BOUND(num)];
 
-	inttoa(num, buf);
+	inttoa(num, buf, sizeof(buf));
 	putstr(buf);
 	return (strlen(buf));
 }
@@ -422,7 +442,7 @@ iprint_linenum(num)
 {
 	char buf[INT_STRLEN_BOUND(num)];
 
-	linenumtoa(num, buf);
+	linenumtoa(num, buf, sizeof(buf));
 	putstr(buf);
 	return (strlen(buf));
 }
