@@ -1,4 +1,4 @@
-/*	$OpenBSD: src/sys/arch/m88k/m88k/trap.c,v 1.91 2014/05/08 22:17:33 miod Exp $	*/
+/*	$OpenBSD: src/sys/arch/m88k/m88k/trap.c,v 1.92 2014/05/10 05:33:00 guenther Exp $	*/
 /*
  * Copyright (c) 2004, Miodrag Vallat.
  * Copyright (c) 1998 Steve Murphree, Jr.
@@ -205,16 +205,9 @@ ast(struct trapframe *frame)
 	struct cpu_info *ci = curcpu();
 	struct proc *p = ci->ci_curproc;
 
-	uvmexp.softs++;
 	p->p_md.md_astpending = 0;
-	if (p->p_flag & P_OWEUPC) {
-		KERNEL_LOCK();
-		ADDUPROF(p);
-		KERNEL_UNLOCK();
-	}
-	if (ci->ci_want_resched)
-		preempt(NULL);
 
+	mi_ast(p, ci->ci_want_resched);
 	userret(p);
 }
 
